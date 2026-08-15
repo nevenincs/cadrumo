@@ -3,6 +3,11 @@ id = "modelo-714-fichero-aeat"
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
+# Positions 93-96 (Version del Programa) and 101-109 (NIF Empresa Desarrollo)
+# carry the design's "(**) A cumplimentar por las entidades desarrolladoras
+# (EEDD)" marking. No such developer identity is declared anywhere in this
+# project, so they are deliberately left unwritten rather than guessed, exactly
+# as Modelo 131 records for the same pair of slots.
 [[revisions."2025".export_layouts.records]]
 id = "modelo-714-envelope-header"
 record_type = "envelope_header"
@@ -100,6 +105,20 @@ data_type = "text"
 required = true
 padding = "none"
 justification = "none"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-decl-idioma"
+offset = 53
+length = 1
+kind = "casilla"
+casilla_id = "decl.idioma"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
@@ -1346,6 +1365,34 @@ data_type = "text"
 required = true
 padding = "none"
 justification = "none"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-bienes-c2-total"
+offset = 1083
+length = 13
+kind = "casilla"
+casilla_id = "bienes.c2-total"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-277-2026:art-4"]
+source_refs = ["aeat-dr-714-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-714-bienes-c1-total"
+offset = 620
+length = 13
+kind = "casilla"
+casilla_id = "bienes.c1-total"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
 signed = false
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
