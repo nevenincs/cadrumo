@@ -197,6 +197,26 @@ def test_portable_export_schema_rejects_extra_fields_and_is_frozen() -> None:
         bundle.bundle_schema_version = 4
 
 
+def test_the_bundle_version_has_no_default_so_an_unstamped_payload_refuses() -> None:
+    """A payload carrying no version must refuse rather than assume one.
+
+    The field previously defaulted to a literal, which did two things at once:
+    it declared the current write version a second time, in a layer that cannot
+    see the durability floor or the upgrader table that must move with it; and
+    it silently accepted a payload with no version at all, parsing it as
+    whichever number happened to be written here. A bundle nothing wrote would
+    have read as current.
+
+    Asserting the absence of a default is what stops it coming back. A reader
+    who sees the field required will look for who stamps it; a reader who sees a
+    default will assume it is the answer.
+    """
+    with pytest.raises(ValidationError, match="bundle_schema_version"):
+        UserProfilePortableExport.model_validate({"profile": _profile(), "exported_at": _INSTANT})
+
+    assert UserProfilePortableExport.model_fields["bundle_schema_version"].is_required()
+
+
 def test_carried_secure_object_rejects_invalid_fields() -> None:
     cases = (
         (_OBJECT_KEY, "{not-base64", "payload_b64 must be canonical base64"),
