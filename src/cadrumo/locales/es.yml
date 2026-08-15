@@ -5704,7 +5704,6 @@ cli:
         profile_list: Listar los perfiles de contribuyente disponibles.
         profile_login: Inicia sesión en un perfil y lo convierte en el activo.
         profile_logout: Cierra la sesión del perfil activo.
-        profile_rename: Renombrar un perfil de contribuyente.
         profile_sar: Exporta un paquete de datos de acceso del interesado.
         profile_show: Mostrar los datos del perfil activo.
         profile_status: Mostrar el estado del perfil activo.

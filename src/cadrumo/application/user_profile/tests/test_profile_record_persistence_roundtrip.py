@@ -45,14 +45,12 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import SecureObjectWrite
-from ....domain.buckets import BucketEventType
 from ....domain.user_profile import ProfileSetupState, UserProfileRecord
 from ...profile_custody import (
     profile_custody_secure_object_namespace,
     profile_custody_secure_object_repository,
 )
 from .._capsule_record import (
-    ProfileRecordCommandEvent,
     ProfileRecordIntegrityError,
     ProfileRecordSession,
     ProfileRecordStore,
@@ -64,6 +62,7 @@ from ._profile_record_boundary_support import (
     RECORD_NAMESPACE,
     REPLACED_AT,
     UPDATED_AT,
+    advance_to_revision_two,
     defaultable_fields_at_default,
     open_record_session,
     populated_facts,
@@ -167,7 +166,7 @@ def test_replacement_record_survives_the_boundary_with_its_lineage_intact(
     cover those two fields is to drive the real replacement.
     """
     session, written, root = capsule
-    replacement = _advance_to_revision_two(
+    replacement = advance_to_revision_two(
         session,
         root,
         written,
@@ -192,7 +191,7 @@ def test_every_defaultable_field_is_populated_non_default_across_the_boundary(
     day it lands rather than when someone remembers to extend a list.
     """
     session, written, root = capsule
-    _advance_to_revision_two(session, root, written)
+    advance_to_revision_two(session, root, written)
     loaded = _store(session, root).load().record
 
     at_default = defaultable_fields_at_default(loaded)
@@ -251,7 +250,7 @@ def test_load_refuses_a_persisted_payload_with_a_required_field_deleted(
     validating on read and every roundtrip assertion above is vacuous.
     """
     session, written, root = capsule
-    _advance_to_revision_two(session, root, written)
+    advance_to_revision_two(session, root, written)
     _rewrite_persisted_payload(session, root, lambda payload: payload.pop("profile_id"))
 
     with pytest.raises(ProfileRecordIntegrityError) as refusal:
@@ -277,7 +276,7 @@ def test_load_refuses_a_persisted_payload_with_a_defaultable_field_deleted(
     assert written.setup_state is not UserProfileRecord.model_fields["setup_state"].default, (
         "the fixture must not persist the default setup_state, or deleting it proves nothing"
     )
-    _advance_to_revision_two(session, root, written)
+    advance_to_revision_two(session, root, written)
     _rewrite_persisted_payload(session, root, lambda payload: payload.pop("setup_state"))
 
     with pytest.raises(ProfileRecordIntegrityError) as refusal:

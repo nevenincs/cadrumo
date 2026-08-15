@@ -5660,7 +5660,6 @@ cli:
         profile_list: Llistar els perfils de contribuent disponibles.
         profile_login: Inicia la sessió en un perfil i el converteix en l'actiu.
         profile_logout: Tanca la sessió del perfil actiu.
-        profile_rename: Reanomenar un perfil de contribuent.
         profile_sar: Exporta un paquet de dades d'accés de l'interessat.
         profile_show: Mostrar les dades del perfil actiu.
         profile_status: Mostrar l'estat del perfil actiu.

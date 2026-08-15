@@ -140,7 +140,7 @@ def persist_active_profile_field(path: str, value: str, *, label: str | None = N
     apply_wizard_fact_changes(
         profile_id=require_active_bucket_id(),
         changes=(fact,),
-        event_type="profile.manager.field.applied",
+        door=WizardFactWriteDoor.MANAGER_FIELD,
     )
     return build_active_profile_overview(label=label)
 
@@ -288,7 +288,7 @@ def _active_profile_manager_storage(
         ProfileRecordRepository,
         build_profile_overview,
     )
-    from ....application.wizard import apply_wizard_fact_changes
+    from ....application.wizard import WizardFactWriteDoor, apply_wizard_fact_changes
     from ....core import require_active_bucket_id
     from ....domain.user_profile import UserProfileFact, UserProfileRecord, load_user_profile_schema
 
@@ -310,7 +310,7 @@ def _active_profile_manager_storage(
         applied = apply_wizard_fact_changes(
             profile_id=profile_id,
             changes=(fact,),
-            event_type="profile.manager.field.applied",
+            door=WizardFactWriteDoor.MANAGER_FIELD,
         )
         return _page(applied)
 

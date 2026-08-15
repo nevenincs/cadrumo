@@ -5574,7 +5574,6 @@ cli:
           az env változókat; CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file,
           CADRUMO_SECRET_STORE_DIR és CADRUMO_SECRET_PASSPHRASE; a naplók alapértelmezés
           szerint ezen tárhelygyökér alatt vannak.
-        profile_export: Hordozható profilcsomagot exportál.
         profile_history: Az append-only profil eseménytörténet megtekintése.
         profile_list: Profiladatok listázása.
         profile_login: Bejelentkezés egy profilba, és aktívvá tétele.
