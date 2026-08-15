@@ -37,6 +37,8 @@ from ...core import CasillaId, FilingProducerKey, Modelo
 from ...core.decimal import coerce_decimal, try_parse_canonical_decimal
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...domain.calculations.registry import (
+    SINO_DICTIONARY_TYPE,
+    XML_DICTIONARY_BOOLEAN_TYPES,
     ExportLayoutDefinition,
     SourceReference,
     XmlDictionaryEntry,
@@ -68,17 +70,13 @@ _TOMA_DATOS_TAG = "TomaDatosAmpliada"
 # elements.
 _XSD_MODEL_GROUP_TAGS = frozenset({"complexType", "complexContent", "sequence", "choice", "all"})
 
-# The one dictionary type whose boolean states are spelled out.
-_SINO_DICTIONARY_TYPE = "S_N"
-
-# The other, and the common one: ``tipo_logico``, whose pattern is ``([0-1]){1}``.
-_LOGICAL_DICTIONARY_TYPE = "LGC"
-
-# The complete set of row types AEAT declares boolean. Naming it positively is
-# what makes a boolean on any other row an error by default: a row type added to
-# the dictionary later is simply not on this list, so it refuses rather than
-# inheriting whatever the last branch happened to do.
-_BOOLEAN_DICTIONARY_TYPES = frozenset({_SINO_DICTIONARY_TYPE, _LOGICAL_DICTIONARY_TYPE})
+# The two boolean row types (``S_N``'s spelled-out ``SI``/``NO`` and ``LGC``'s
+# ``tipo_logico`` pattern ``([0-1]){1}``) and their complete set are the one
+# canonical declaration in ``domain.calculations.registry`` (``_export_parse.py``),
+# imported above rather than re-declared here. Naming the set positively is what
+# makes a boolean on any other row an error by default: a row type added to the
+# dictionary later is simply not in it, so it refuses rather than inheriting
+# whatever the last branch happened to do.
 
 # The date row type, and the exact form AEAT accepts in it. The pattern is
 # copied from the ``tipo_Fecha`` facet the bundled XSD declares -- an
@@ -703,14 +701,14 @@ def _format_xml_dictionary_value(data_type: str, value: object) -> str:
         # one for every declared family, and no Modelo 100 revision declares a
         # boolean casilla on a non-boolean row. This guards a route added later,
         # so it stays total and cheap rather than trying to interpret the value.
-        if normalized_type not in _BOOLEAN_DICTIONARY_TYPES:
+        if normalized_type not in XML_DICTIONARY_BOOLEAN_TYPES:
             raise FilingExportValidationError(
                 f"a {data_type} row cannot carry the boolean {value!r}. Only "
-                f"{'/'.join(sorted(_BOOLEAN_DICTIONARY_TYPES))} rows are declared boolean by AEAT. "
+                f"{'/'.join(sorted(XML_DICTIONARY_BOOLEAN_TYPES))} rows are declared boolean by AEAT. "
                 "The value reaching this row has the wrong type; correct it at the source rather "
                 "than rendering it, because a boolean written to an amount row is filed as 1 or 0.",
             )
-        if normalized_type == _SINO_DICTIONARY_TYPE:
+        if normalized_type == SINO_DICTIONARY_TYPE:
             return "SI" if value else "NO"
         return "1" if value else "0"
     if isinstance(value, date):

@@ -79,7 +79,6 @@ _SWEPT_MODULES: tuple[str, ...] = (
     "_import.py",
     "_m303_exonerado_390.py",
     "_m303_export_applicability.py",
-    "_m303_prorrata_activity_rows.py",
     "_review.py",
     "runtime.py",
 )

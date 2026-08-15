@@ -65,7 +65,6 @@ CANONICAL_LAYOUT_PACKAGES: tuple[str, ...] = (
     "cadrumo.application.invoices",
     "cadrumo.application.aggregation",
     "cadrumo.application.workflow",
-    "cadrumo.application.setup",
     "cadrumo.application.review",
     "cadrumo.application.auth",
     "cadrumo.entrypoints",

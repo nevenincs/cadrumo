@@ -35,8 +35,8 @@ from ....core import read_pointer
 from ....core.config import load_settings
 from ....domain.user_profile import ProfileSchemaValidationError, UserProfileFact
 from ....tests.profile_storage_root_fixture import profile_storage_root_fixture
-from ...user_profile import register_profile_with_credentials
 from ...workflow import read_profile_bucket
+from .. import register_profile_with_credentials
 
 __all__ = ["profile_storage_root_fixture"]
 

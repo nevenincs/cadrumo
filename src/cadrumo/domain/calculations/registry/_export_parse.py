@@ -31,10 +31,16 @@ from ._schema import (
 
 # The dictionary's two boolean row types. ``LGC`` resolves to the XSD's
 # ``tipo_logico`` (``0``/``1``) and ``S_N`` to ``tipo_SINO_Exclusivo``
-# (``NO``/``SI``); the tokens differ but both rows carry a boolean. Named as a set
-# rather than matched by prefix so a future type code beginning with the same
-# letter is not silently read as a boolean.
-_BOOLEAN_DICTIONARY_TYPES = frozenset({"LGC", "S_N"})
+# (``NO``/``SI``); the tokens differ but both rows carry a boolean. Public: this
+# is the one canonical declaration of the vocabulary. The application-layer XML
+# dictionary renderer (``_export_xml_dictionary.py``) shares the exact same two
+# type codes for the write direction and imports them through this package's
+# facade rather than re-declaring its own copy.
+LOGICAL_DICTIONARY_TYPE = "LGC"
+SINO_DICTIONARY_TYPE = "S_N"
+# Named as a set rather than matched by prefix so a future type code beginning
+# with the same letter is not silently read as a boolean.
+XML_DICTIONARY_BOOLEAN_TYPES = frozenset({LOGICAL_DICTIONARY_TYPE, SINO_DICTIONARY_TYPE})
 _DICTIONARY_LINE_RE = re.compile(
     r"^(?P<field>[^=#]+)=\[(?P<path>[^\]]*)\]\[(?P<type>[^\]]*)\]\[(?P<casilla>[^\]]*)\]\[(?P<label>.*)\]$",
 )
@@ -338,7 +344,7 @@ def _parse_xml_dictionary_value(data_type: str, raw: str) -> Decimal | str | boo
     normalized = data_type.upper()
     if normalized.startswith(("N", "P")):
         return _parse_xml_decimal(raw)
-    if normalized in _BOOLEAN_DICTIONARY_TYPES:
+    if normalized in XML_DICTIONARY_BOOLEAN_TYPES:
         return _parse_xml_boolean(normalized, raw)
     return raw
 
@@ -466,8 +472,8 @@ def _parse_field_value(
 
 
 _XML_BOOLEAN_TOKENS = {
-    "LGC": {"1": True, "0": False},
-    "S_N": {"si": True, "no": False},
+    LOGICAL_DICTIONARY_TYPE: {"1": True, "0": False},
+    SINO_DICTIONARY_TYPE: {"si": True, "no": False},
 }
 
 
@@ -497,6 +503,9 @@ def _line_ending_bytes(line_ending: str) -> bytes:
 
 
 __all__ = [
+    "LOGICAL_DICTIONARY_TYPE",
+    "SINO_DICTIONARY_TYPE",
+    "XML_DICTIONARY_BOOLEAN_TYPES",
     "ParsedExportFieldValue",
     "ParsedExportPayload",
     "XmlDictionaryEntry",

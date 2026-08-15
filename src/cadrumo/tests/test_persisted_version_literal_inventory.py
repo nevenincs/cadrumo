@@ -70,10 +70,12 @@ if TYPE_CHECKING:
 #: both the class and the constant must exist in the production tree, so a
 #: rename cannot leave this table quietly enforcing nothing.
 VERSIONED_RECORDS: dict[tuple[str, str], str] = {
-    # The two whose field carries NO default, so a caller must supply the
-    # number and can therefore supply a stale one. This is where the drift
-    # that motivated the gate actually happened.
-    ("BucketManifest", "schema_version"): "BUCKET_MANIFEST_SCHEMA_VERSION",
+    # The field carries NO default, so a caller must supply the number and can
+    # therefore supply a stale one. This is where the drift that motivated the
+    # gate actually happened -- the bucket manifest carried the same shape
+    # until the format itself was retired, and its entry retired with it
+    # rather than outliving the class :func:`test_versioned_record_anchors_resolve`
+    # now has nothing to check it against.
     ("PersistedProfileSession", "schema_version"): "PROFILE_SESSION_SCHEMA_VERSION",
     # Enrolled at birth though their fields default to the constant today: a
     # later change that makes the field required would otherwise open the same

@@ -528,11 +528,6 @@ def test_profile_lifecycle_storage_spans_are_application_owned() -> None:
             "restore_active_profile_pointer",
             "override_settings(cadrumo_active_profile",
         ),
-        "src/cadrumo/application/setup/_service.py": (
-            "_write_active_profile_pointer",
-            "capture_active_profile_pointer",
-            "restore_active_profile_pointer",
-        ),
     }
     offenders: list[str] = []
     for relative_path, forbidden_tokens in scanned.items():

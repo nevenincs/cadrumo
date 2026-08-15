@@ -229,7 +229,7 @@ def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(_cli_st
         assert _json(imported_show)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
         imported_facts = {row["path"]: row["value"] for row in _json(imported_show)["facts"]}
         assert imported_facts == source_facts
-        from ...user_profile import CommittedProfileRepository
+        from .. import CommittedProfileRepository
 
         with open_test_profile_session(exported_id):
             imported = CommittedProfileRepository().load(exported_id)

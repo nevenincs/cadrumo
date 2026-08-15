@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from typing import Self
 
-from ....core import CasillaId
+from ....core import CasillaId, Modelo
 from ....core.errors import CadrumoError, CoreValidationError
 from ._ids import BindingId, RelationId, RevisionId
 
@@ -256,6 +256,29 @@ class RegistryValidationError(RegistryError, CoreValidationError):
         return cls(
             "empty formula expression",
             translated_message="errors.calc.empty_expression",
+        )
+
+    @classmethod
+    def for_prorrata_activity_rows_incomplete(cls, *, ejercicio: int) -> Self:
+        """An applicable Modelo 303 ejercicio is missing a DP30305 activity row.
+
+        An absent row collection is honest only when the register's regime
+        says prorrata does not apply for ``ejercicio``; once it applies, a
+        partial collection must fail before a target export file can mask the
+        under-declaration. Canonical key: shares the filing package's
+        pre-existing ``application.filing.m303_prorrata_activity_rows.errors.
+        activity_rows_incomplete`` catalogue entry, which already carries the
+        operator-facing sentence in all four locales.
+        """
+        return cls(
+            f"modelo 303 per-activity prorrata rows are incomplete for ejercicio {ejercicio}",
+            translated_message="application.filing.m303_prorrata_activity_rows.errors.activity_rows_incomplete",
+            context={
+                "modelo": Modelo.M303.value,
+                "filing_year": ejercicio,
+                "required_slot_first": 1,
+                "required_slot_last": 5,
+            },
         )
 
 
