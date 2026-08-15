@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:702445d98b75eddf16e16b55a9fdcddfab4f5a92213db939cf963ca76fa77a00'
+body_hash: 'sha256:b75016a13cc5e8ec944a22a9f0a0cc32d5bd1a0a4b2735d977b23b2932df0947'
 step_id: 'S188'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -48,7 +48,10 @@ snapshot makes the same assessment refuse again. Written as a pair in one test
 because absence and recorded-emptiness converging is precisely the failure this
 guards, and two separate tests would both stay green through it. The proof that
 the assertion is load-bearing is a runtime plugin, from outside the repository,
-that neuters the recorder: the seeding test reds and its neighbour does not.
+that neuters the recorder at this door alone: the seeding test reds, and so does
+the one other test in the suite that seeds through the same door and needs the
+resulting profile to be assessable. The rest of the suite is unmoved, which is
+what makes the reaction a signal rather than a blanket.
 
 **The consumer set is fifty-nine modules besides the door itself**, spanning the authority suite,
 modelo, ledger, review, filing, live capture, storage sync runs, user profile,

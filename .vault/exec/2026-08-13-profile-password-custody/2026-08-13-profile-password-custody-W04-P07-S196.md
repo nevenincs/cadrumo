@@ -103,6 +103,15 @@ completed. That cause is ambient and was confirmed independent of this change:
 a registry integrity module is red at HEAD on its own, naming missing corpus
 files and unauthored export layouts from the in-flight registry sweep.
 
+The fixture's own test module went from two failures to six passed, after the
+second premise defect above was fixed. The user-profile package runs three
+hundred and seventy-two passed against fourteen failed with zero destination
+conflicts; every one of the fourteen was traced to a cause owned elsewhere --
+registry validation, the changed seeding-door signature, retired profile
+subcommands, the unavailable wizard creation path, and the cleared-path writer
+policy -- and none to this change. That package takes twenty-four minutes
+single-worker on this share and was run with parallelism disabled.
+
 **Measurement was disrupted twice by concurrent work, and this is worth
 carrying.** Mid-verification, every import of the custody chain began raising
 because a class landed by the in-flight custody work carried no declared error
@@ -112,11 +121,13 @@ between two of these runs. The probe therefore neutralises that one unrelated
 defect in process memory only, and reports whether the patch was needed, so a
 later reader can tell which state the measurement was taken in.
 
-**Working-tree edits were captured by a peer's commit before this row could
-present them.** The changed files were already committed by another session's
-sweep by the time the verification runs finished, so the change is not legible
-in history under its own description. Content is unaffected; the attribution
-is.
+**Working-tree edits were captured by peers' commits before this row could
+present them, twice.** The fixture changes were swept into another session's
+commit mid-verification, and the test-module changes landed later under a
+commit naming a step identifier that is not this row's. Content is
+byte-for-byte what this row authored and was re-verified green afterwards, but
+neither change is legible in history under its own description or its own
+identifier.
 
 **Pre-existing gate failures deliberately not absorbed.** The import hygiene
 gate is red with one hundred and one cross-package test-only private reaches
