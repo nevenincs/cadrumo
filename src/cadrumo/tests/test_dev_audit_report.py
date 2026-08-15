@@ -29,7 +29,6 @@ from dev.audit.report import (
     Status,
     _declared_contract_count,
     audit_layering,
-    audit_shadowing,
     build_report,
 )
 
@@ -151,16 +150,25 @@ def test_to_json_round_trips_every_dimension_field() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_audit_shadowing_returns_a_valid_dimension_report() -> None:
-    """The shadowing dimension runs the real Family-3 scanner and classifies it."""
-    result = audit_shadowing()
+def test_audit_shadowing_returns_a_valid_dimension_report(live_health_report: HealthReport) -> None:
+    """The shadowing dimension runs the real Family-3 scanner and classifies it.
+
+    Read from the composed report for the same reason the complexity and
+    duplication dimensions are: ``build_report`` obtains this dimension by
+    calling ``audit_shadowing()`` and stores the returned object unchanged, so
+    this reads the identical object the standalone call produced. The scanner
+    measured ~15s per run and this module invoked it three times.
+    """
+    result = _dimension(live_health_report, "shadowing")
 
     assert result.name == "shadowing"
     assert result.status in {Status.RED, Status.AMBER, Status.GREEN}
     assert result.headline
 
 
-def test_audit_shadowing_red_findings_are_never_in_the_tolerated_baseline() -> None:
+def test_audit_shadowing_red_findings_are_never_in_the_tolerated_baseline(
+    live_health_report: HealthReport,
+) -> None:
     """Every RED-classified shadowing detail names a symbol NOT in the pinned baseline.
 
     This is the load-bearing correctness property distinguishing RED (a new,
@@ -178,7 +186,7 @@ def test_audit_shadowing_red_findings_are_never_in_the_tolerated_baseline() -> N
         ]
     }
 
-    result = audit_shadowing()
+    result = _dimension(live_health_report, "shadowing")
 
     if result.status is Status.RED:
         for detail in result.details:

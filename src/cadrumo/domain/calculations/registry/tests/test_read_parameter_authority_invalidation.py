@@ -38,7 +38,7 @@ from .._loader import (
 from .._loader_cache import _bundled_registry_root
 from .._m303_orden_manifest import collect_m303_annual_orden_fingerprints
 from .._source_evidence_fingerprint import collect_source_evidence_fingerprints
-from .._validate_verdict import certify_registry_validation, compute_verdict_key
+from .._verdict_cache import certify_registry_validation, compute_verdict_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

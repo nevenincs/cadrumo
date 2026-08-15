@@ -306,7 +306,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.VALIDATION_VERDICT_CACHE,
         "cache/registry-verdict",
-        consumer_module="domain/calculations/registry/_validate_verdict.py",
+        consumer_module="domain/calculations/registry/_verdict_cache.py",
         settings_field="cadrumo_validation_verdict_cache_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.CACHE,
@@ -346,7 +346,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         # Fingerprint-keyed flat-map cache of one shared locale catalogue
         # (source YAML -> flattened dict), mirroring
-        # domain/calculations/registry/_validate_verdict.py's shape: JSON, a
+        # domain/calculations/registry/_verdict_cache.py's shape: JSON, a
         # source-digest key embedded in the payload, delete-not-migrate on any
         # mismatch. FIXED (no dedicated settings field) because the shared
         # storage-root override already gives tests private isolation, the

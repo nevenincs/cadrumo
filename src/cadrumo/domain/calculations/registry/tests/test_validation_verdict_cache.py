@@ -30,7 +30,7 @@ from .. import _validate_evidence as ve
 from .._authority import _load_authority, bundled_authority
 from .._loader import _load_registry_tree_cached, clear_fingerprint_cache, load_registry_tree
 from .._validate import RegistryValidator
-from .._validate_verdict import (
+from .._verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
     read_verdict,

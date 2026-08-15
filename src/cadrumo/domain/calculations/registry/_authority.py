@@ -34,7 +34,7 @@ from ._supplementary_orden import collect_supplementary_orden_fingerprints, comp
 from ._temporal import select_revision
 from ._validate import RegistryValidator
 from ._validate_evidence import flush_corpus_text_cache
-from ._validate_verdict import (
+from ._verdict_cache import (
     certify_registry_validation,
     compute_verdict_key,
     registry_validation_is_certified,

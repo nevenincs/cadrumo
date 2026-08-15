@@ -53,7 +53,7 @@ _REDUCIBLE_ONE_SHOT_BASELINE: dict[str, int] = {
     # The file keeps `import hashlib` regardless for two non-reducible streaming
     # digests, so the delegation buys almost nothing; left as-is rather than
     # degrading the module's prose or raising its size baseline to fit.
-    "domain/calculations/registry/_validate_verdict.py": 1,
+    "domain/calculations/registry/_verdict_cache.py": 1,
 }
 
 

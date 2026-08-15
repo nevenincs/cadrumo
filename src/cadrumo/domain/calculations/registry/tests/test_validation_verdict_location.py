@@ -1,6 +1,6 @@
 """Validation-verdict cache location and helper roundtrip behavior.
 
-These tests exercise the real filesystem helpers of ``_validate_verdict``:
+These tests exercise the real filesystem helpers of ``_verdict_cache``:
 the settings-derived writable location, the shipped bundled-tree location, the
 atomic write/read roundtrip, foreign-file tolerance, and the delete-on-mismatch
 branch. The authority-integration regression pin (skip-validation on a hit,
@@ -17,7 +17,7 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.resources import bundled_path
-from .._validate_verdict import (
+from .._verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
     bundled_verdict_path,

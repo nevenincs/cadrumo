@@ -20,7 +20,7 @@ import pytest
 from .....core import scan_directory
 from .._authority import stamp_bundled_registry_verdict
 from .._loader import clear_fingerprint_cache
-from .._validate_verdict import VERDICT_OUTCOME_GREEN, read_verdict, shipped_verdict_location
+from .._verdict_cache import VERDICT_OUTCOME_GREEN, read_verdict, shipped_verdict_location
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
