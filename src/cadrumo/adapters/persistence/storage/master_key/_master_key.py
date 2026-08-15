@@ -103,7 +103,6 @@ from ._master_key_records import (
 )
 from ._master_key_tax_id import looks_like_real_tax_id as looks_like_real_tax_id
 from ._provider_session import exit_provider_session
-from ._session_windows import idle_minutes_for_bucket, session_absolute_minutes_for_bucket
 
 _MASTER_KEY_AAD: Final[bytes] = b"cadrumo.master-key.v1"
 
@@ -894,16 +893,8 @@ def _provider_enter(
             "before invoking commands that decrypt or persist stored records.",
         )
     dek_bytes = key_bytes
-    idle_minutes = idle_minutes_for_bucket(
-        storage_root=settings.cadrumo_local_storage_root,
-        bucket_id=bucket_id,
-        default_minutes=settings.cadrumo_bucket_default_idle_lock_minutes,
-    )
-    absolute_minutes = session_absolute_minutes_for_bucket(
-        storage_root=settings.cadrumo_local_storage_root,
-        bucket_id=bucket_id,
-        default_minutes=settings.cadrumo_bucket_default_session_absolute_minutes,
-    )
+    idle_minutes = settings.cadrumo_bucket_default_idle_lock_minutes
+    absolute_minutes = settings.cadrumo_bucket_default_session_absolute_minutes
     session = BucketSession.open(
         bucket_id=bucket_id,
         kek=key_bytes,

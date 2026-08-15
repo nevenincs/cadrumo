@@ -103,7 +103,6 @@ from ._recovery import (
     wrap_master_key,
 )
 from ._recovery_record import RecoveryRecord
-from ._session_windows import idle_minutes_for_bucket, session_absolute_minutes_for_bucket
 
 __all__ = [
     "ARGON2_MEMORY_COST_KIB",
@@ -142,7 +141,6 @@ __all__ = [
     "get_active_master_key",
     "get_master_key_provider",
     "has_active_bucket_session",
-    "idle_minutes_for_bucket",
     "load_wrapped_master_key",
     "login_throttle_path",
     "looks_like_real_tax_id",
@@ -151,7 +149,6 @@ __all__ = [
     "refuse_unsecured_with_real_nif",
     "reset_login_throttle",
     "save_wrapped_master_key",
-    "session_absolute_minutes_for_bucket",
     "session_serves_bucket",
     "suspend_active_session",
     "unwrap_master_key",

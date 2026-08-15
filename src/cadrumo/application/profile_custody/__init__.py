@@ -688,28 +688,6 @@ def profile_reset_login_throttle(*, storage_root: Path, bucket_id: str) -> None:
     master_key.reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
 
 
-def profile_session_idle_minutes(*, storage_root: Path, bucket_id: str, default_minutes: int) -> int:
-    """Resolve the current profile's sliding idle window."""
-    return int(
-        master_key.idle_minutes_for_bucket(
-            storage_root=storage_root,
-            bucket_id=bucket_id,
-            default_minutes=default_minutes,
-        )
-    )
-
-
-def profile_session_absolute_minutes(*, storage_root: Path, bucket_id: str, default_minutes: int) -> int:
-    """Resolve the current profile's immutable session cap."""
-    return int(
-        master_key.session_absolute_minutes_for_bucket(
-            storage_root=storage_root,
-            bucket_id=bucket_id,
-            default_minutes=default_minutes,
-        )
-    )
-
-
 def profile_session_path(*, storage_root: Path, profile_id: UUID) -> Path:
     """Return the persisted profile-session sidecar path."""
     return custody.profile_session_path(storage_root=storage_root, profile_id=profile_id)
@@ -941,8 +919,6 @@ __all__ = [
     "profile_refuse_unsecured_bucket_with_real_profile",
     "profile_reset_login_throttle",
     "profile_resume_session",
-    "profile_session_absolute_minutes",
-    "profile_session_idle_minutes",
     "profile_session_path",
     "profile_session_serves_bucket",
     "profile_zeroise",
