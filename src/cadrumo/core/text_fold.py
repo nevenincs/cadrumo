@@ -15,6 +15,16 @@ import unicodedata
 
 __all__ = ["fold_diacritics", "fold_printed_phrase", "unicode_compose"]
 
+#: Every codepoint in Unicode category ``Mn`` (Mark, nonspacing), mapped to
+#: ``None`` for :meth:`str.translate`. Built once at import so folding a
+#: string costs one C-level table lookup per character instead of one
+#: ``unicodedata.category`` call: a cold bundled-registry load profiled at
+#: 11M+ ``category`` calls inside this function alone, all doing the same
+#: per-character category check this table now answers by lookup.
+_COMBINING_MARK_STRIP_TABLE = {
+    codepoint: None for codepoint in range(0x110000) if unicodedata.category(chr(codepoint)) == "Mn"
+}
+
 
 def fold_diacritics(text: str) -> str:
     """Return *text* with combining diacritical marks removed.
@@ -40,8 +50,7 @@ def fold_diacritics(text: str) -> str:
     Returns:
         *text* with every combining diacritical mark removed.
     """
-    decomposed = unicodedata.normalize("NFKD", text)
-    return "".join(char for char in decomposed if unicodedata.category(char) != "Mn")
+    return unicodedata.normalize("NFKD", text).translate(_COMBINING_MARK_STRIP_TABLE)
 
 
 def fold_printed_phrase(printed: str) -> str:
