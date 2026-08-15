@@ -1047,8 +1047,14 @@ def resume_profile_session(
     custody_generation: int,
     dek_epoch: str,
     now: datetime,
-) -> tuple[ProfileSessionResumeOutcome, bytes | None]:
+) -> tuple[ProfileSessionResumeOutcome, bytearray | None]:
     """Fail-closed evaluation of one current profile acceleration receipt.
+
+    The recovered key is a WIPEABLE ``bytearray``, and the annotation says so:
+    the caller owns it and is expected to zeroise it once the session holds its
+    own copy. Declaring immutable ``bytes`` here would leave every caller typed
+    to receive material it cannot wipe, which is what the unwrap was widened to
+    avoid.
 
     Expired and tampered receipts are narrowly removed when the matching
     keychain entry is reachable.  If the OS keychain is unavailable, the
