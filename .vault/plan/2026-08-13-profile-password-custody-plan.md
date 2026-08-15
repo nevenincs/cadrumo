@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:25adc36a2f44afe7b31b74ab31ee1b61a746f652ee46ddd0e447b60ac8e9e669'
+body_hash: 'sha256:bc3641d9c97d0e9eaec4afdf31407deee97b621494a5e5808468adcbbaf19396'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -86,7 +86,7 @@ Authenticate a candidate profile without disturbing the active one, then publish
 - [x] `W02.P04.S176` - Have Terra XHigh repair the five standing parity-suite failures the locale attribution left named but unowned, being a lookup of custody passphrase keys the cutover removed while the test was never swept, two operator-surface heading assertions hardcoded against text that has since changed, and one residual inter-locale key drift; `src/cadrumo/tests/test_parity.py`.
 - [x] `W02.P04.S193` - Have Terra XHigh retire the displaced profile's session material inside the registration transaction itself, since registration selects the new profile by pointer compare-and-swap and retires nothing, so the previously active profile keeps a resumable acceleration receipt until some later login happens to observe the boundary, leaving its bucket key recoverable with no passphrase across the whole window and permanently for a registration no login ever follows, which is the same leak the handover revocation was rebuilt to close reached through the creation door instead; `src/cadrumo/application/user_profile/_custody_service.py and src/cadrumo/application/user_profile/_registration.py`.
 - [ ] `W02.P04.S200` - Have Terra XHigh make closing a bucket session retire the process-local record authority with it, since a latched authority for the same profile survives the close, so logged out and record authority gone are different states within one process and a health check after a logout can still read facts through the surviving authority, which is why a shipped cold-profile test passes while exercising a profile that is not genuinely locked; `src/cadrumo/application/user_profile/_profile_record_repository.py and src/cadrumo/adapters/persistence/storage/custody/`.
-- [ ] `W02.P04.S202` - Have Sol Medium carry the residual codebase-to-locale parity debt to the registry campaign that owns it, being thirty-five missing modelo casilla keys and twenty stale ones left by a revision-id rename that re-keys rather than retires them, since closing it requires authoring real AEAT Spanish casilla terminology which the grounding rules forbid inventing and which the standing authority sweep already owns, and deleting the stale twenty would destroy real Catalan Spanish and Hungarian labels the renamed revision still needs; `src/cadrumo/locales/ and src/cadrumo/_data/registry/`.
+- [ ] `W02.P04.S202` - Have Sol Medium carry the codebase-to-locale parity debt to the registry campaign that owns it, being several hundred missing modelo casilla keys and a set left stale by a revision-id rename that re-keys rather than retires them, the population having grown by an order of magnitude while this campaign ran because the concurrent authority sweep adds modelos faster than their Spanish terminology is authored, since closing it requires real AEAT terminology the grounding rules forbid inventing and deleting the stale set would destroy real Catalan Spanish and Hungarian labels the renamed revisions still need; `src/cadrumo/locales/ and src/cadrumo/_data/registry/`.
 
 ## Wave `W03` - restorative transport and operator surfaces
 
