@@ -937,6 +937,18 @@ def _active_profile_storage_check(health: ActiveProfileHealth) -> DiagnosticChec
 
 def _profile_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
     """Render a profile-readiness row when only :class:`ActiveProfileHealth` is available."""
+    if health.status == "profile_locked":
+        # A locked profile is neither absent nor broken: the capsule is
+        # committed and the record is intact, merely not knowable until
+        # someone logs in. Falling through to either sibling branch below
+        # would tell the operator something untrue -- "unreadable" implies
+        # damage, "no profile configured" implies nothing was ever set up.
+        return DiagnosticCheck(
+            name="profile.readiness",
+            status="warn",
+            summary=tr("cli.diagnostics.summary.profile_locked"),
+            precondition_verdict=_required_profile_health_verdict(health),
+        )
     if health.status in {"dangling_pointer", "missing_profile_record", "profile_record_unreadable"}:
         return DiagnosticCheck(
             name="profile.readiness",
@@ -1011,6 +1023,17 @@ def _profile_check(
     profile keys from :class:`~application.workflow.WorkflowState` into
     per-key :class:`DiagnosticFinding` rows.
     """
+    if profile_health is not None and profile_health.status == "profile_locked":
+        # Same distinction as `_profile_unavailable_check`: a locked profile
+        # is benign, so it gets its own sentence rather than falling through
+        # to `report.active_profile is None` below, which reports the
+        # "no profile configured" summary that is untrue of a locked one.
+        return DiagnosticCheck(
+            name="profile.readiness",
+            status="warn",
+            summary=tr("cli.diagnostics.summary.profile_locked"),
+            precondition_verdict=_required_profile_health_verdict(profile_health),
+        )
     if profile_health is not None and profile_health.status in {
         "dangling_pointer",
         "missing_profile_record",
