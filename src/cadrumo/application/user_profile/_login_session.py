@@ -256,7 +256,9 @@ class ProfileLoginOutcome(BaseModel):
         already_authenticated: ``True`` when a still-valid persisted
             session was resumed as a no-op (no re-prompt, no new record).
         closed_previous_bucket_id: Bucket whose session this login closed
-            during a cross-profile handover, or ``None``.
+            during a cross-profile handover, or ``None`` when the login
+            re-entered the profile already selected. Populated whether or
+            not that profile still had a live session in this process.
     """
 
     model_config = _STRICT_FROZEN
@@ -511,9 +513,31 @@ def _recover_interrupted_handover(
     if current != after:
         _refuse_handover_journal("pointer no longer matches either witnessed handover state")
     if journal.phase in {_HandoverPhase.ACTIVATED, _HandoverPhase.A_RETIRED}:
+        _complete_witnessed_retirement(storage_root=storage_root, journal=journal)
         _clear_handover_journal(storage_root=storage_root, journal=journal)
         return None
     return journal
+
+
+def _complete_witnessed_retirement(*, storage_root: Path, journal: _ProfileLoginHandoverJournal) -> None:
+    """Retire the profile a witnessed-complete handover may not have finished.
+
+    A handover that reached activation already serves the operator, so recovery
+    classifies it as needing no replay and the next login can resume B as a
+    no-op. Retiring A on disk is then the one step that may still be
+    outstanding, and stranding it leaves A's acceleration receipt resumable
+    without A's passphrase. It is a durable delete needing neither
+    authentication nor key material, so it is finished here rather than left to
+    a replay path a complete handover never takes.
+
+    Idempotent, and it deliberately routes through the same single revocation
+    authority the handover itself uses, so recovery finishes exactly what that
+    handover would have done and nothing more.
+    """
+    retired = journal.profile_a
+    if retired is None or retired == journal.profile_b:
+        return
+    _revoke_profile_session_artefacts(storage_root=storage_root, bucket_id=retired)
 
 
 def _revoke_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> None:
@@ -556,6 +580,19 @@ def close_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> No
     _revoke_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
 
 
+def _distinct_bucket_ids(*bucket_ids: str | None) -> tuple[str, ...]:
+    """Return the supplied identities once each, in order, dropping absent ones.
+
+    Every profile identity a command-line process can observe is partial on its
+    own: the live in-process session is absent in a fresh process, and the
+    durable pointer is already moved on mid-handover. Both revocation owners --
+    logout and the login handover -- therefore act on the UNION of their
+    observations rather than on one of them, and share this one folding so the
+    two cannot drift.
+    """
+    return tuple(dict.fromkeys(value for value in bucket_ids if value is not None))
+
+
 def logout_active_profile() -> str | None:
     """Strong-close the selected profile without any provider fallback.
 
@@ -571,7 +608,7 @@ def logout_active_profile() -> str | None:
     with active_profile_pointer_transaction(storage_root) as pointer_transaction:
         selected = pointer_transaction.read()
         selected_bucket_id = selected.bucket_id if selected is not None else None
-        target_ids = tuple(dict.fromkeys(value for value in (live_bucket_id, selected_bucket_id) if value is not None))
+        target_ids = _distinct_bucket_ids(live_bucket_id, selected_bucket_id)
         if not target_ids:
             return None
         profile_close_bucket_session()
@@ -997,6 +1034,7 @@ def _finish_candidate_login(
         return _promote_candidate_login(
             candidate=candidate,
             target_label=attempt.target.label,
+            selected_bucket_id=attempt.selected.bucket_id if attempt.selected is not None else None,
             prior_pointer=attempt.prior_pointer,
             pointer_transaction=attempt.pointer_transaction,
             storage_root=attempt.storage_root,
@@ -1056,6 +1094,7 @@ def _promote_candidate_login(
     *,
     candidate: _CandidateProfileLogin,
     target_label: str,
+    selected_bucket_id: str | None,
     prior_pointer: bytes | None,
     pointer_transaction: ActiveProfilePointerTransaction,
     storage_root: Path,
@@ -1063,10 +1102,16 @@ def _promote_candidate_login(
 ) -> ProfileLoginOutcome:
     """CAS-publish, activate, then retire A through durable phases."""
     previous_live = profile_current_bucket_session()
-    previous_bucket_id = _live_bucket_id(previous_live)
+    retired_bucket_ids = _retired_bucket_ids(
+        live_bucket_id=_live_bucket_id(previous_live),
+        selected_bucket_id=selected_bucket_id,
+        interrupted_bucket_id=None if interrupted_handover is None else interrupted_handover.profile_a,
+        candidate_bucket_id=candidate.bucket_id,
+    )
+    retired_bucket_id = retired_bucket_ids[0] if retired_bucket_ids else None
     publication = _publish_candidate_handover(
         candidate=candidate,
-        previous_bucket_id=previous_bucket_id,
+        retired_bucket_id=retired_bucket_id,
         prior_pointer=prior_pointer,
         pointer_transaction=pointer_transaction,
         storage_root=storage_root,
@@ -1081,17 +1126,13 @@ def _promote_candidate_login(
         storage_root=storage_root,
     )
 
-    closed_previous = _closed_previous_bucket_id(
-        previous_bucket_id=previous_bucket_id,
-        candidate_bucket_id=candidate.bucket_id,
-    )
     # Only now can A be retired.  B is durable (or deliberately process-local)
     # and both current-context authorities serve its exact UUID.
     _retire_previous_authorities(
         candidate=candidate,
         previous_live=previous_live,
         previous_record=promotion.previous_record,
-        retired_bucket_id=closed_previous,
+        retired_bucket_ids=retired_bucket_ids,
         storage_root=storage_root,
     )
     handover = promotion.journal.at_phase(_HandoverPhase.A_RETIRED)
@@ -1108,7 +1149,7 @@ def _promote_candidate_login(
         absolute_deadline=candidate.session.absolute_deadline,
         session_persisted=promotion.persisted,
         already_authenticated=False,
-        closed_previous_bucket_id=closed_previous,
+        closed_previous_bucket_id=retired_bucket_id,
     )
 
 
@@ -1122,7 +1163,7 @@ def _live_bucket_id(session: ProfileBucketSessionPort | None) -> str | None:
 def _publish_candidate_handover(
     *,
     candidate: _CandidateProfileLogin,
-    previous_bucket_id: str | None,
+    retired_bucket_id: str | None,
     prior_pointer: bytes | None,
     pointer_transaction: ActiveProfilePointerTransaction,
     storage_root: Path,
@@ -1132,7 +1173,7 @@ def _publish_candidate_handover(
     if interrupted_handover is None:
         return _publish_fresh_candidate_handover(
             candidate=candidate,
-            previous_bucket_id=previous_bucket_id,
+            retired_bucket_id=retired_bucket_id,
             prior_pointer=prior_pointer,
             pointer_transaction=pointer_transaction,
             storage_root=storage_root,
@@ -1146,16 +1187,22 @@ def _publish_candidate_handover(
 def _publish_fresh_candidate_handover(
     *,
     candidate: _CandidateProfileLogin,
-    previous_bucket_id: str | None,
+    retired_bucket_id: str | None,
     prior_pointer: bytes | None,
     pointer_transaction: ActiveProfilePointerTransaction,
     storage_root: Path,
 ) -> _HandoverPublication:
-    """Prepare and compare-and-swap the pointer for a new candidate."""
+    """Prepare and compare-and-swap the pointer for a new candidate.
+
+    ``profile_a`` witnesses the profile this handover is moving AWAY from, and
+    is therefore taken from the same durable-first union the retirement acts on.
+    Once the pointer is published it names B, so the journal is the only place a
+    later recovery process can still learn A's identity.
+    """
     replacement = BucketPointer(bucket_id=candidate.bucket_id, schema_version=1)
     planned_pointer = replacement.to_toml().encode("utf-8")
     handover = _ProfileLoginHandoverJournal.prepare(
-        profile_a=previous_bucket_id,
+        profile_a=retired_bucket_id,
         profile_b=candidate.bucket_id,
         pointer_before=prior_pointer,
         pointer_after=planned_pointer,
@@ -1245,7 +1292,7 @@ def _retire_previous_authorities(
     candidate: _CandidateProfileLogin,
     previous_live: ProfileBucketSessionPort | None,
     previous_record: ProfileRecordSession | None,
-    retired_bucket_id: str | None,
+    retired_bucket_ids: tuple[str, ...],
     storage_root: Path,
 ) -> None:
     """Retire A completely, in process and on disk, after B is fully durable.
@@ -1258,24 +1305,50 @@ def _retire_previous_authorities(
     exists to refuse. Revoking the durable artefacts is therefore part of
     retiring A, not cleanup that can be deferred.
 
-    ``retired_bucket_id`` is the bucket the handover actually moved away from,
-    and is ``None`` when the login re-entered the profile already live. That
-    distinction is load-bearing: revoking on a same-profile re-login would
+    ``retired_bucket_ids`` holds every bucket the handover actually moved away
+    from, and is empty when the login re-entered the profile already selected.
+    That distinction is load-bearing: revoking on a same-profile re-login would
     destroy the receipt this very login just minted.
     """
     if previous_live is not None and previous_live is not candidate.session:
         previous_live.close()
     if previous_record is not None and previous_record is not candidate.record_session:
         previous_record.close()
-    if retired_bucket_id is not None:
-        _revoke_profile_session_artefacts(storage_root=storage_root, bucket_id=retired_bucket_id)
+    for bucket_id in retired_bucket_ids:
+        _revoke_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
 
 
-def _closed_previous_bucket_id(*, previous_bucket_id: str | None, candidate_bucket_id: str) -> str | None:
-    """Report A only when the handover actually changed the active bucket."""
-    if previous_bucket_id == candidate_bucket_id:
-        return None
-    return previous_bucket_id
+def _retired_bucket_ids(
+    *,
+    live_bucket_id: str | None,
+    selected_bucket_id: str | None,
+    interrupted_bucket_id: str | None,
+    candidate_bucket_id: str,
+) -> tuple[str, ...]:
+    """Report every prior profile this handover actually moves away from.
+
+    Three observations are folded because no single one is complete, and a
+    profile whose durable session artefacts survive the handover is resumable
+    without its passphrase:
+
+    * the live in-process session, which is the only source when one process
+      switches profiles, and is absent in an ordinary command-line invocation
+      because every invocation is a fresh process;
+    * the durable active pointer captured before publication, which names the
+      retired profile in a fresh process, and has already moved on to B once
+      an interrupted handover is being replayed;
+    * the interrupted handover's own witness, which is the only source left
+      once that publication happened in a process that then died.
+
+    The candidate is excluded rather than filtered later: a login that re-enters
+    the profile already selected retires nothing, and revoking there would
+    destroy the receipt that same login just minted.
+    """
+    return tuple(
+        value
+        for value in _distinct_bucket_ids(live_bucket_id, selected_bucket_id, interrupted_bucket_id)
+        if value != candidate_bucket_id
+    )
 
 
 def _rollback_candidate_promotion(

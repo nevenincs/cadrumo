@@ -79,6 +79,17 @@ class _RecoveryResult(TypedDict):
     record_profile: str
 
 
+class _ChildLoginResult(TypedDict):
+    bucket_id: str
+    closed_previous: str | None
+
+
+class _ResumeProbeResult(TypedDict):
+    resumed: bool
+    dek_length: int
+    refusal: str | None
+
+
 def _register_two_profiles(storage_root: Path) -> tuple[str, str]:
     first = register_profile_with_credentials(label="Handover A", passphrase=_PASSWORD_A)
     second = register_profile_with_credentials(label="Handover B", passphrase=_PASSWORD_B)
@@ -354,14 +365,120 @@ def _recover_selected_profile_child(
         _close_child_login(token)
 
 
+def _login_in_separate_process_child(
+    storage_root: Path,
+    profile: str,
+    password: str,
+    now: datetime | None,
+    result_queue: Queue[_ChildLoginResult],
+) -> None:
+    """Authenticate one profile the way an operator invocation does: a fresh process."""
+    settings, token = _child_settings(storage_root)
+    _ = settings
+    try:
+        outcome = login_profile(name=profile, now=now, passphrase_callback=lambda: password)
+        result_queue.put({"bucket_id": outcome.bucket_id, "closed_previous": outcome.closed_previous_bucket_id})
+    finally:
+        _close_child_login(token)
+
+
+def _resume_probe_child(
+    storage_root: Path,
+    profile: str,
+    result_queue: Queue[_ResumeProbeResult],
+) -> None:
+    """Recover one profile's session material with no passphrase, in its own process."""
+    settings, token = _child_settings(storage_root)
+    _ = settings
+    try:
+        material = load_committed_profile_password_material(UUID(profile), root=storage_root)
+        outcome, dek = resume_profile_session(
+            storage_root=storage_root,
+            profile_id=UUID(profile),
+            custody_generation=material.envelope.password_generation,
+            dek_epoch=material.envelope.dek_epoch,
+            now=_now(),
+        )
+        result_queue.put(
+            {
+                "resumed": outcome.resumed,
+                "dek_length": 0 if dek is None else len(dek),
+                "refusal": None if outcome.refusal is None else outcome.refusal.value,
+            }
+        )
+    finally:
+        _close_child_login(token)
+
+
+def _login_in_separate_process(
+    storage_root: Path,
+    profile: str,
+    password: str,
+    *,
+    now: datetime | None = None,
+) -> _ChildLoginResult:
+    """Run one login in its own interpreter, which is what every ``aeat`` call is."""
+    context = get_context("spawn")
+    result_queue: Queue[_ChildLoginResult] = context.Queue()
+    child = context.Process(
+        target=_login_in_separate_process_child,
+        args=(storage_root, profile, password, now, result_queue),
+    )
+    child.start()
+    try:
+        result = result_queue.get(timeout=180)
+        child.join(timeout=30)
+        assert child.exitcode == 0
+        return result
+    finally:
+        if child.is_alive():
+            child.terminate()
+            child.join(timeout=30)
+
+
+def _probe_resumable_session(storage_root: Path, profile: str) -> _ResumeProbeResult:
+    """Measure recovered key material from a process that never held the session."""
+    context = get_context("spawn")
+    result_queue: Queue[_ResumeProbeResult] = context.Queue()
+    child = context.Process(target=_resume_probe_child, args=(storage_root, profile, result_queue))
+    child.start()
+    try:
+        result = result_queue.get(timeout=180)
+        child.join(timeout=30)
+        assert child.exitcode == 0
+        return result
+    finally:
+        if child.is_alive():
+            child.terminate()
+            child.join(timeout=30)
+
+
+def _assert_no_resumable_material(storage_root: Path, profile: str, *, after: str) -> None:
+    """Refuse every route by which a retired profile's DEK is still recoverable."""
+    probe = _probe_resumable_session(storage_root, profile)
+    assert probe["dek_length"] == 0, (
+        f"after {after}: the retired profile's DEK is still recoverable without its passphrase"
+    )
+    assert probe["resumed"] is False
+    assert probe["refusal"] == ProfileSessionRefusalReason.ABSENT.value
+
+
 def _crash_at_handover_phase_child(
     storage_root: Path,
     profile_a: str,
     profile_b: str,
     phase: _HandoverPhase,
-    observed_phase_path: Path,
 ) -> None:
-    """Crash the real handover process immediately after one durable receipt."""
+    """Crash the real handover process immediately after one durable receipt.
+
+    The observation rides on the exit status rather than on a file the child
+    writes: exit 0 is reached only from a death at the exact target phase, and
+    exit 1 from a handover that ran to completion without one. Recording the
+    observation first put a filesystem write between seeing the phase and
+    dying, which is long enough for the remaining handover work to finish --
+    leaving a test named for a crash that never happened, and a retirement that
+    silently did run.
+    """
     settings, token = _child_settings(storage_root)
     _ = settings
     stop_watcher = ThreadEvent()
@@ -377,7 +494,6 @@ def _crash_at_handover_phase_child(
                     time.sleep(0.001)
                     continue
                 if observed_phase == phase.value:
-                    observed_phase_path.write_text(phase.value, encoding="utf-8")
                     os._exit(0)
             time.sleep(0.001)
 
@@ -392,7 +508,6 @@ def _crash_at_handover_phase_child(
             payload = json.loads(_handover_journal_path(storage_root).read_text(encoding="utf-8"))
             if payload["phase"] != phase.value:
                 os._exit(1)
-            observed_phase_path.write_text(phase.value, encoding="utf-8")
             os._exit(0)
         watcher: Thread | None = None
 
@@ -406,7 +521,6 @@ def _crash_at_handover_phase_child(
         stop_watcher.set()
         if watcher is not None:
             watcher.join(timeout=5)
-        observed_phase_path.write_text("missed-phase", encoding="utf-8")
         os._exit(1)
     finally:
         _close_child_login(token)
@@ -815,42 +929,74 @@ def test_handover_leaves_no_resumable_session_material_for_the_retired_profile(t
     back with no passphrase. That is the profile-A resurrection this phase
     exists to refuse.
 
+    Every login here runs in its own interpreter, because that is what the
+    operator flow is: one process per command, with no session live from the
+    previous one. A handover measured with both logins inside a single process
+    exercises only the configuration in which a live in-process session is
+    available to identify the profile being retired, so it can confirm the
+    property exactly where its precondition already holds and nowhere else.
+
     The assertion is on the recovered material rather than on the file, because
     a variant that unlinks the receipt while leaving the key recoverable by any
     other route would satisfy a file-absence check and still be the same defect.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_a, profile_b = _register_two_profiles(storage_root)
-        try:
-            login_profile(name=profile_a, passphrase_callback=lambda: _PASSWORD_A)
-            material = load_committed_profile_password_material(UUID(profile_a), root=storage_root)
-            live_outcome, live_dek = resume_profile_session(
-                storage_root=storage_root,
-                profile_id=UUID(profile_a),
-                custody_generation=material.envelope.password_generation,
-                dek_epoch=material.envelope.dek_epoch,
-                now=_now(),
-            )
-            # Anti-tautology: prove the receipt IS resumable while A is live, so
-            # the refusal below cannot pass against a profile that never had one.
-            assert live_outcome.resumed is True
-            assert live_dek is not None
-            assert len(live_dek) == 32
 
-            login_profile(name=profile_b, passphrase_callback=lambda: _PASSWORD_B)
+        first = _login_in_separate_process(storage_root, profile_a, _PASSWORD_A)
+        assert first["bucket_id"] == profile_a
 
-            retired_outcome, retired_dek = resume_profile_session(
-                storage_root=storage_root,
-                profile_id=UUID(profile_a),
-                custody_generation=material.envelope.password_generation,
-                dek_epoch=material.envelope.dek_epoch,
-                now=_now(),
-            )
-            assert retired_dek is None, "the retired profile's DEK is still recoverable without its passphrase"
-            assert retired_outcome.resumed is False
-            assert retired_outcome.refusal is ProfileSessionRefusalReason.ABSENT
-        finally:
-            _close_live_login()
+        # Anti-tautology: prove the receipt IS resumable from a THIRD process
+        # while A is the selected profile. This arm carries the cross-process
+        # weight too -- without it the refusal below could pass merely because
+        # a separate process cannot reach the material at all.
+        live = _probe_resumable_session(storage_root, profile_a)
+        assert live["resumed"] is True
+        assert live["dek_length"] == 32
+
+        second = _login_in_separate_process(storage_root, profile_b, _PASSWORD_B)
+        assert second["bucket_id"] == profile_b
+
+        # The recovered material is the property, so it is measured before the
+        # reported outcome: a run that lost the retirement must fail here, on
+        # the recoverable DEK, rather than on how the login described itself.
+        _assert_no_resumable_material(storage_root, profile_a, after="a cross-process handover")
+        assert second["closed_previous"] == profile_a
+
+
+def test_same_profile_relogin_in_a_new_process_keeps_its_own_session_material(tmp_path: Path) -> None:
+    """Re-entering the selected profile retires nothing and revokes nothing.
+
+    The retirement identity is read from the durable pointer as well as from
+    any live session, and in a fresh process the pointer names the profile
+    being logged into. Excluding that profile is load-bearing rather than
+    defensive: revocation runs after the new receipt is minted, so a widened
+    identity that failed to exclude it would destroy the receipt this very
+    login just produced.
+
+    The second login is deliberately placed past the first session's idle
+    window so it is a real authentication that reaches the retirement step,
+    rather than the idempotent no-op that returns before it.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        profile = register_profile_with_credentials(label="Relogin", passphrase=_PASSWORD_A).profile_id
+
+        first = _login_in_separate_process(storage_root, profile, _PASSWORD_A)
+        assert first["bucket_id"] == profile
+        assert first["closed_previous"] is None
+
+        second = _login_in_separate_process(
+            storage_root,
+            profile,
+            _PASSWORD_A,
+            now=_now() + timedelta(days=1),
+        )
+        assert second["bucket_id"] == profile
+        assert second["closed_previous"] is None
+
+        surviving = _probe_resumable_session(storage_root, profile)
+        assert surviving["resumed"] is True
+        assert surviving["dek_length"] == 32
 
 
 def test_pointer_conflict_rolls_back_candidate_and_keeps_live_a(tmp_path: Path) -> None:
@@ -1009,24 +1155,43 @@ def test_crash_at_each_durable_handover_phase_recovers_selected_b(
     tmp_path: Path,
     phase: _HandoverPhase,
 ) -> None:
-    """A real process death at every published phase has one B recovery result."""
+    """A real process death at every published phase has one B recovery result.
+
+    Recovery is also where the retirement of A must land. The crash always
+    predates the operator's next command, so the recovering process is a new
+    one with no session live from the crashed handover, and A's acceleration
+    receipt survives every phase whose retirement had not yet run. Measuring
+    only that B comes back would leave the retired profile's DEK recoverable
+    with no passphrase at four of the five phases.
+    """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_a, profile_b = _register_two_profiles(storage_root)
         context = get_context("spawn")
-        observed_phase_path = tmp_path / f"handover-{phase.value}.txt"
         crashing_child = context.Process(
             target=_crash_at_handover_phase_child,
-            args=(storage_root, profile_a, profile_b, phase, observed_phase_path),
+            args=(storage_root, profile_a, profile_b, phase),
         )
         crashing_child.start()
         crashing_child.join(timeout=240)
         try:
-            assert crashing_child.exitcode == 0
-            assert observed_phase_path.read_text(encoding="utf-8") == phase.value
+            assert crashing_child.exitcode == 0, (
+                f"the injected crash never landed at {phase.value}; the handover ran to completion"
+            )
             current_pointer = read_pointer(storage_root)
             assert current_pointer is not None
             assert current_pointer.bucket_id == profile_b
             assert _handover_journal_path(storage_root).is_file()
+
+            # Anti-tautology, phase by phase: the refusal after recovery is only
+            # evidence where there was something to refuse. Every phase before
+            # the terminal receipt crashed with A's receipt still resumable; the
+            # terminal one crashed after retirement had already run.
+            crashed = _probe_resumable_session(storage_root, profile_a)
+            if phase is _HandoverPhase.A_RETIRED:
+                assert crashed["resumed"] is False
+            else:
+                assert crashed["resumed"] is True
+                assert crashed["dek_length"] == 32
 
             result_queue: Queue[_RecoveryResult] = context.Queue()
             recovery_child = context.Process(
@@ -1045,6 +1210,11 @@ def test_crash_at_each_durable_handover_phase_recovers_selected_b(
                     "record_profile": profile_b,
                 }
                 _assert_journal_settled_for(phase, storage_root=storage_root)
+                _assert_no_resumable_material(
+                    storage_root,
+                    profile_a,
+                    after=f"recovery from a crash at {phase.value}",
+                )
             finally:
                 if recovery_child.is_alive():
                     recovery_child.terminate()
