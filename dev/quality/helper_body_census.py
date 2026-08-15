@@ -166,19 +166,41 @@ def _is_test_owned(relative: str) -> bool:
     return _TEST_OWNED_DIRECTORY in path.parts or path.name.startswith(_TEST_OWNED_FILENAME_PREFIX)
 
 
-def _is_candidate_name(name: str) -> bool:
-    """Return whether ``name`` is a private, non-dunder, non-test identifier."""
-    return name.startswith("_") and not name.startswith("__") and not name.startswith("test")
+def _is_candidate_name(name: str, *, module_is_private: bool) -> bool:
+    """Return whether ``name`` is a test-support identifier this census owns.
+
+    A private (leading-underscore) name is always a candidate wherever it is
+    defined.  A module whose OWN filename starts with ``_`` (this repo's
+    established support-module convention -- ``_secure_objects_support.py``,
+    ``_risk_table_support.py``, ``_smoke_common.py``) is itself the private
+    surface, so a promoted, non-underscore export from it (``declared_live_
+    write``, ``sha256_path``) is candidate too: restricting to underscored
+    NAMES only would miss exactly the alias this census exists to catch --
+    B18's canonical ``declared_live_write`` next to a copy still spelled
+    ``_declared_live_write`` in a file the project cannot import it from.
+    """
+    if name.startswith("__") or name.startswith("test"):
+        return False
+    return name.startswith("_") or module_is_private
 
 
 class _HelperVisitor(ast.NodeVisitor):
     """Collect private, non-fixture function definitions from one module."""
 
-    def __init__(self, path: str, symbol_origins: dict[str, str], pytest_modules: frozenset[str], fixture_aliases: frozenset[str]) -> None:
+    def __init__(
+        self,
+        path: str,
+        symbol_origins: dict[str, str],
+        pytest_modules: frozenset[str],
+        fixture_aliases: frozenset[str],
+        *,
+        module_is_private: bool,
+    ) -> None:
         self.path = path
         self.symbol_origins = symbol_origins
         self.pytest_modules = pytest_modules
         self.fixture_aliases = fixture_aliases
+        self.module_is_private = module_is_private
         self.records: list[HelperRecord] = []
         self._qualname: list[str] = []
 
@@ -199,7 +221,7 @@ class _HelperVisitor(ast.NodeVisitor):
             is not None
             for decorator in node.decorator_list
         )
-        if _is_candidate_name(node.name) and not is_fixture:
+        if _is_candidate_name(node.name, module_is_private=self.module_is_private) and not is_fixture:
             executable_body = _executable_body(node.body)
             if executable_body:
                 normalized_body = ast.dump(
@@ -259,7 +281,13 @@ def census(repo_root: Path = REPO_ROOT) -> HelperCensus:
             continue
         pytest_modules, fixture_aliases = _pytest_bindings(tree)
         symbol_origins = _module_symbol_origins(tree, path, root)
-        visitor = _HelperVisitor(relative, symbol_origins, pytest_modules, fixture_aliases)
+        visitor = _HelperVisitor(
+            relative,
+            symbol_origins,
+            pytest_modules,
+            fixture_aliases,
+            module_is_private=path.name.startswith("_"),
+        )
         visitor.visit(tree)
         records.extend(visitor.records)
     return HelperCensus(

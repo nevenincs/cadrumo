@@ -41,7 +41,6 @@ from .._active_session import (
     has_active_bucket_session,
 )
 from .._master_key import _KdfParameters
-from .._master_key_bucket_dek import bucket_dek_path as production_bucket_dek_path
 from .._master_key_derivation import KDF_PARAMS_VERSION
 from ._master_key_support import (
     _ALPHA,
@@ -68,40 +67,6 @@ directory-segment case these are NOT the same as.
 """
 
 
-def _bucket_dek_path(settings: Settings, bucket_id: str) -> Path:
-    """Resolve the bucket DEK through the declared member, anchored to production.
-
-    The tests below used to spell this coordinate out. A literal is a poor
-    guard here and the history proves it: the keystore member was declared at
-    the wrong scope for months, and the test that should have caught it had
-    pinned the wrong location as correct. A literal only defends the answer
-    whoever typed it believed.
-
-    Re-pointing at the accessor alone would be no better, and for the
-    ``not exists()`` assertions it would be worse -- an accessor aimed
-    anywhere production never writes satisfies them trivially, which is an
-    assertion placed where its own failure cannot occur.
-
-    So the declared resolution is checked against ``bucket_dek_path``, the
-    function the write path itself calls (imported here under an explicit
-    ``production_`` alias, because the tests bind a local of the same name), before being handed back. Two
-    independent routes to one location: a drift in either is a mismatch here,
-    and the ``is_file()`` assertions downstream then confirm the bytes really
-    land there. ``bucket_dek_path`` reaches the location through
-    ``keystore_sidecar_path``, which runs the separation invariant on the way,
-    so a renested keystore is refused rather than compared.
-
-    What this does NOT independently confirm is the leaf name:
-    ``BUCKET_DEK_FILENAME`` is read from the same declared member the accessor
-    uses, so both sides agree on it by construction. The directory is the part
-    under independent guard.
-    """
-    resolved = bucket_scoped_storage_path(StorageCategory.KEYSTORE_BUCKET_DEK, bucket_id, settings=settings)
-    expected = production_bucket_dek_path(storage_root=settings.cadrumo_local_storage_root, bucket_id=bucket_id)
-    assert resolved == expected, (
-        f"the declared keystore member resolves to {resolved}, but the write path uses {expected}"
-    )
-    return resolved
 
 
 _PROVIDER_SESSION_HARNESS = dedent(
@@ -206,114 +171,8 @@ class TestFileFallbackProvider:
         with pytest.raises(MasterKeyUnavailableError, match="KDF parameters"):
             reopened.get_master_key()
 
-    def test_bootstrap_activation_mints_distinct_persisted_bucket_dek(self, tmp_path: Path) -> None:
-        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
-        provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.cadrumo_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
-        )
-        master_key = provider.provision_master_key()
-        bucket_dek_path = _bucket_dek_path(settings, _ALPHA)
 
-        with (
-            override_settings(
-                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
-                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
-                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-            ),
-            activate_master_key_provider(
-                provider,
-                fallback_bucket_id=_ALPHA,
-                allow_bucket_dek_enrollment=True,
-            ),
-        ):
-            first_dek = get_active_master_key()
 
-        assert bucket_dek_path.is_file()
-        assert first_dek != master_key
-        _write_registered_bucket(
-            settings.cadrumo_local_storage_root,
-            _ALPHA,
-            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-        )
-
-        second = FileFallbackMasterKeyProvider(
-            store_dir=settings.cadrumo_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
-        )
-        with (
-            override_settings(
-                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
-                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
-                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-            ),
-            activate_master_key_provider(second, fallback_bucket_id=_ALPHA),
-        ):
-            assert get_active_master_key() == first_dek
-
-    def test_same_provider_exit_closes_real_storage_and_reopens_fresh(self, tmp_path: Path) -> None:
-        """File-provider exit evicts real bucket storage before same-object reentry."""
-        bucket_id = _PROVIDER_REOPEN
-        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
-        with override_settings(
-            cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
-            cadrumo_active_profile=bucket_id,
-            cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
-            cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-            cadrumo_secret_passphrase="correct horse battery staple",
-        ) as active_settings:
-            provider = FileFallbackMasterKeyProvider(
-                store_dir=settings.cadrumo_secret_store_dir,
-            )
-            master_key = provider.provision_master_key()
-            expected_dek = load_or_mint_bucket_dek(
-                kek=master_key,
-                storage_root=settings.cadrumo_local_storage_root,
-                bucket_id=bucket_id,
-                allow_bootstrap_mint=True,
-            )
-            _write_registered_bucket(
-                settings.cadrumo_local_storage_root,
-                bucket_id,
-                key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-            )
-
-            with activate_master_key_provider(provider):
-                first_session = current_active_bucket_session()
-                assert first_session is not None
-                assert has_active_bucket_session() is True
-                assert get_active_master_key() == expected_dek
-                first_engine = first_session.acquire_engine(lambda: active_settings)
-                with first_engine.connect() as connection:
-                    assert connection.execute(text("SELECT 1")).scalar_one() == 1
-
-            assert current_active_bucket_session() is None
-            assert has_active_bucket_session() is False
-            assert first_session.sealed is True
-            assert provider._session is None
-            assert provider._activation_cm is None
-
-            with activate_master_key_provider(provider):
-                second_session = current_active_bucket_session()
-                assert second_session is not None
-                assert second_session is not first_session
-                assert second_session.sealed is False
-                assert has_active_bucket_session() is True
-                assert get_active_master_key() == expected_dek
-                second_engine = second_session.acquire_engine(lambda: active_settings)
-                assert second_engine is not first_engine
-                with second_engine.connect() as connection:
-                    assert connection.execute(text("SELECT 1")).scalar_one() == 1
-
-            assert current_active_bucket_session() is None
-            assert has_active_bucket_session() is False
-            assert second_session.sealed is True
-            assert provider._session is None
-            assert provider._activation_cm is None
-
-    def test_read_only_provider_sessions_do_not_exclude_another_process(
-        self,
-        tmp_path: Path,
     ) -> None:
         bucket_id = _PROVIDER_READ_CONCURRENCY
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
@@ -373,9 +232,6 @@ class TestFileFallbackProvider:
                 returncode = holder.wait(timeout=10)
             assert returncode == 0
 
-    def test_tampered_bucket_dek_raises_localized_master_key_unavailable_without_path(
-        self,
-        tmp_path: Path,
     ) -> None:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
         provider = FileFallbackMasterKeyProvider(
@@ -429,218 +285,11 @@ class TestFileFallbackProvider:
         envelope = build_error_envelope(excinfo.value)
         assert str(tmp_path) not in envelope.model_dump_json()
 
-    def test_bucket_dek_manifest_without_dek_fails_closed(self, tmp_path: Path) -> None:
-        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
-        settings.cadrumo_local_storage_root.mkdir(parents=True, exist_ok=True)
-        _write_registered_bucket(
-            settings.cadrumo_local_storage_root,
-            _CURRENT,
-            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-        )
-        provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.cadrumo_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
-        )
-        provider.provision_master_key()
-        bucket_dek_path = _bucket_dek_path(settings, _CURRENT)
 
-        with (
-            override_settings(
-                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
-                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
-                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-            ),
-            pytest.raises(MasterKeyMaterialMissingError, match="bucket-dek-v1"),
-            activate_master_key_provider(provider, fallback_bucket_id=_CURRENT),
-        ):
-            pass
 
-        assert not bucket_dek_path.exists()
 
-    def test_fallback_bucket_id_does_not_authorize_dek_enrollment(self, tmp_path: Path) -> None:
-        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
-        provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.cadrumo_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
-        )
-        provider.provision_master_key()
-        bucket_dek_path = _bucket_dek_path(settings, _MISSING)
 
-        with (
-            override_settings(
-                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
-                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
-                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-            ),
-            pytest.raises(MasterKeyMaterialMissingError, match="no published profile capsule"),
-            activate_master_key_provider(provider, fallback_bucket_id=_MISSING),
-        ):
-            pass
 
-        assert not bucket_dek_path.exists()
-
-    def test_existing_dek_without_registration_does_not_authorize_activation(self, tmp_path: Path) -> None:
-        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
-        provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.cadrumo_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
-        )
-        provider.provision_master_key()
-        with (
-            override_settings(
-                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
-                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
-                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-            ),
-            activate_master_key_provider(
-                provider,
-                fallback_bucket_id=_ORPHANED,
-                allow_bucket_dek_enrollment=True,
-            ),
-        ):
-            assert len(get_active_master_key()) == KEY_SIZE
-        assert _bucket_dek_path(settings, _ORPHANED).is_file()
-
-        second = FileFallbackMasterKeyProvider(
-            store_dir=settings.cadrumo_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
-        )
-        with (
-            override_settings(
-                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
-                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
-                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-            ),
-            pytest.raises(MasterKeyMaterialMissingError, match="no published profile capsule"),
-            activate_master_key_provider(second, fallback_bucket_id=_ORPHANED),
-        ):
-            pass
-        assert _bucket_dek_path(settings, _ORPHANED).is_file()
-
-    def test_bucket_manifest_idle_lock_overrides_settings_default(self, tmp_path: Path) -> None:
-        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
-        settings.cadrumo_local_storage_root.mkdir(parents=True, exist_ok=True)
-        provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.cadrumo_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
-        )
-        provider.provision_master_key()
-
-        # Mint the per-bucket DEK first (the BUCKET_DEK_V1 schedule requires a
-        # wrapped DEK on disk), then register the idle-lock manifest.
-        with (
-            override_settings(
-                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
-                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
-                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-            ),
-            activate_master_key_provider(
-                provider,
-                fallback_bucket_id=_SHORT_IDLE,
-                allow_bucket_dek_enrollment=True,
-            ),
-        ):
-            assert get_active_master_key() != provider.get_master_key()
-        _write_registered_bucket(settings.cadrumo_local_storage_root, _SHORT_IDLE, idle_lock_minutes=3)
-
-        with (
-            override_settings(
-                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
-                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
-                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-                cadrumo_bucket_default_idle_lock_minutes=15,
-            ),
-            activate_master_key_provider(provider, fallback_bucket_id=_SHORT_IDLE),
-        ):
-            session = provider._session
-            assert session is not None
-            probe_time = datetime(2026, 5, 28, 12, 15, 0, tzinfo=UTC)
-            session.touch(probe_time)
-            assert session.idle_deadline == probe_time + timedelta(minutes=3)
-
-    def test_provider_enter_observes_configured_absolute_cap_on_opened_session(self, tmp_path: Path) -> None:
-        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
-        settings.cadrumo_local_storage_root.mkdir(parents=True, exist_ok=True)
-        provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.cadrumo_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
-        )
-        provider.provision_master_key()
-
-        # Mint the per-bucket DEK first, then register the manifest carrying a
-        # session-absolute-cap override that diverges from the settings default.
-        with (
-            override_settings(
-                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
-                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
-                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-            ),
-            activate_master_key_provider(
-                provider,
-                fallback_bucket_id=_SHORT_CAP,
-                allow_bucket_dek_enrollment=True,
-            ),
-        ):
-            assert get_active_master_key() != provider.get_master_key()
-        _write_registered_bucket(
-            settings.cadrumo_local_storage_root,
-            _SHORT_CAP,
-            session_absolute_minutes=90,
-        )
-
-        with (
-            override_settings(
-                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
-                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
-                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-                cadrumo_bucket_default_session_absolute_minutes=240,
-            ),
-            activate_master_key_provider(provider, fallback_bucket_id=_SHORT_CAP),
-        ):
-            session = provider._session
-            assert session is not None
-            # The opened session carries the manifest override (90), fixed as
-            # opened_at + cap, not the 240-minute settings default.
-            assert session.absolute_deadline == session.opened_at + timedelta(minutes=90)
-
-    def test_provider_enter_falls_back_to_settings_absolute_cap_default(self, tmp_path: Path) -> None:
-        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
-        settings.cadrumo_local_storage_root.mkdir(parents=True, exist_ok=True)
-        provider = FileFallbackMasterKeyProvider(
-            store_dir=settings.cadrumo_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
-        )
-        provider.provision_master_key()
-
-        with (
-            override_settings(
-                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
-                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
-                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-            ),
-            activate_master_key_provider(
-                provider,
-                fallback_bucket_id=_DEFAULT_CAP,
-                allow_bucket_dek_enrollment=True,
-            ),
-        ):
-            assert get_active_master_key() != provider.get_master_key()
-        # Register the bucket with NO absolute-cap override on the manifest.
-        _write_registered_bucket(settings.cadrumo_local_storage_root, _DEFAULT_CAP)
-
-        with (
-            override_settings(
-                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
-                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
-                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-                cadrumo_bucket_default_session_absolute_minutes=180,
-            ),
-            activate_master_key_provider(provider, fallback_bucket_id=_DEFAULT_CAP),
-        ):
-            session = provider._session
-            assert session is not None
-            # No manifest override: the settings default (180) flows through.
-            assert session.absolute_deadline == session.opened_at + timedelta(minutes=180)
 
     def test_round_trip_across_provider_instances(self, tmp_path: Path) -> None:
         """A second provider over the same dir + passphrase recovers the same key."""

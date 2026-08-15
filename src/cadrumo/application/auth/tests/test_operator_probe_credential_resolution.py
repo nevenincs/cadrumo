@@ -15,16 +15,12 @@ real lifecycle service; no test doubles stand in for the read.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from pathlib import Path
-
 import pytest
 from pydantic import SecretStr
 
 from ....core import AuthProviderKind
 from ....core.config import load_settings, override_settings
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ..._state_projection_auth import build_auth_readiness
 from ...workflow import workflow_state_repository
@@ -299,10 +295,4 @@ def test_certificate_provider_is_not_probed_for_clave_credentials() -> None:
     assert probe_clave_credentials(AuthProviderKind.CERTIFICATE, settings=load_settings()) is None
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_BUCKET_ID),
-    ):
-        yield
+_isolated_backend = bucket_session_storage_fixture(_BUCKET_ID)

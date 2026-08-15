@@ -20,17 +20,19 @@ _SECURE_OBJECT_HASH_COLUMNS: tuple[str, ...] = (
 
 def _reflected_hash_lengths(table_name: str) -> dict[str, int | None]:
     engine = create_engine("sqlite:///:memory:")
-    if table_name == "secure_objects":
-        SecureObjectRow.metadata.create_all(engine)
-    else:
-        ensure_quarantine_table(engine)
-    reflected = {column["name"]: column["type"] for column in inspect(engine).get_columns(table_name)}
-    lengths: dict[str, int | None] = {}
-    for name in _SECURE_OBJECT_HASH_COLUMNS:
-        column_type = reflected[name]
-        assert isinstance(column_type, String)
-        lengths[name] = column_type.length
-    engine.dispose()
+    try:
+        if table_name == "secure_objects":
+            SecureObjectRow.metadata.create_all(engine)
+        else:
+            ensure_quarantine_table(engine)
+        reflected = {column["name"]: column["type"] for column in inspect(engine).get_columns(table_name)}
+        lengths: dict[str, int | None] = {}
+        for name in _SECURE_OBJECT_HASH_COLUMNS:
+            column_type = reflected[name]
+            assert isinstance(column_type, String)
+            lengths[name] = column_type.length
+    finally:
+        engine.dispose()
     return lengths
 
 

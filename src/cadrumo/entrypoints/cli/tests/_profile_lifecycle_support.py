@@ -26,6 +26,7 @@ from ....adapters.persistence.storage.bucket import (
 from ....core.config import load_settings
 from ....core.identity import nif_check_letter
 from ....tests.bucket_layout import provision_bucket_directory
+from ....tests.user_profile import register_cli_profile
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
@@ -120,27 +121,15 @@ def distinct_nif(name: str) -> str:
 
 
 def create_profile_via_cli(name: str, *, tax_id: str | None = None) -> None:
-    """Create a profile through the real cached root CLI command."""
-
-    result = invoke_cached_cli(
-        (
-            "config",
-            "profile",
-            "create",
-            name,
-            "--quiet",
-            "--tax-id",
-            tax_id or distinct_nif(name),
-            "--entity-type",
-            "natural_person",
-            "--name",
-            name.capitalize(),
-            "--surnames",
-            "Operator",
-            "--activity",
-            "design",
-            "--iva-regime",
-            "GENERAL",
-        )
+    """Register a profile through the shared CLI registration door."""
+    register_cli_profile(
+        label=name,
+        facts={
+            "identity.tax_id": tax_id or distinct_nif(name),
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": name.capitalize(),
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
+        },
     )
-    assert result.exit_code == 0, f"create {name!r} failed: {result.output}"

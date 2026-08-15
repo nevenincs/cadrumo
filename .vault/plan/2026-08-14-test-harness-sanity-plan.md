@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-15'
-body_hash: 'sha256:224bd9739ade6781fbe28f1a97bd86591a4d2a0a816af4eda71106fb148245dd'
+body_hash: 'sha256:80867603ffa30bfb5d2aee4072cf461c32f0a9894026f2836b39a9c0594813c7'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -212,8 +212,8 @@ The classes the name-keyed census cannot reach. Drift is scored by structural si
 - [ ] `W09.P30.S125` - Re-key the duplication gate on body rather than name so a renamed twin cannot sit outside its own comparison; `dev/quality`.
 - [ ] `W09.P30.S126` - Sweep the thirty-seven pre-provisioned-bucket isolated-backend fixtures onto the canonical factory after extending it with settings and profile override passthroughs; `src/cadrumo/tests/active_profile_isolated_backend_fixture.py, src/cadrumo/entrypoints/cli/tests`.
 - [ ] `W09.P30.S127` - Converge the two independently written synthetic text-layer PDF builders and the four differently-named twins onto the canonical fixture; `src/cadrumo/tests/pdf_fixtures.py, src/cadrumo/application/live/tests/_notification_document_support.py`.
-- [ ] `W09.P30.S128` - Fold the four differently-named review-package builders onto a path-returning sibling of the canonical bytes builder; `src/cadrumo/application/modelo/tests, src/cadrumo/entrypoints/cli/tests`.
-- [ ] `W09.P30.S129` - Route the secure-object namespace registration mirror in the persistence package to an owner both test packages may import; `src/cadrumo/adapters/persistence/operations/tests`.
+- [x] `W09.P30.S128` - Fold the four differently-named review-package builders onto a path-returning sibling of the canonical bytes builder; `src/cadrumo/application/modelo/tests, src/cadrumo/entrypoints/cli/tests`.
+- [x] `W09.P30.S129` - Route the secure-object namespace registration mirror in the persistence package to an owner both test packages may import; `src/cadrumo/adapters/persistence/operations/tests`.
 - [x] `W09.P30.S130` - Consolidate the drifted release-cohort builders onto a deterministic clock and retire the wall-clock variant; `dev/packaging/tests/_release_cohort_support.py`.
 - [ ] `W09.P30.S131` - Rename the worked-example oracle reader to oracle_declared_figures so it stops sharing vocabulary with the manual-input allowlist that governs silent-blank casillas; `src/cadrumo/domain/calculations/registry/tests/_manual_oracle_support.py`.
 - [ ] `W09.P30.S132` - Converge the hand-spelled CLI runtime isolation fixture onto the taxonomy-derived canonical helper, closing a storage-path defect the canonical docstring records as already fixed elsewhere; `src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`.

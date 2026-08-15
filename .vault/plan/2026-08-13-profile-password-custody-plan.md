@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:4d9a302ae99dd93c6fe2795980dc7a16b71b9a34da7494c581a9669929d369ef'
+body_hash: 'sha256:47104af978b0695b4618476cda05c21e34257ca6fa2e739284642e0a00502777'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -187,7 +187,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S114` - Have Terra XHigh repair the two stale schema tests the build crash was masking, one asserting a required profile argument on a command whose parameters are all optional and which resolves to a different verb, the other parametrised against a command key carrying zero production declarations, both unreachable while the coverage gate crashed and neither attributable to the step that revealed them; `src/cadrumo/entrypoints/mcp/tests/`.
 - [x] `W04.P07.S115` - Have Sol Medium decide whether per-profile session windows survive the cutover as a capsule field or drop to settings only, since the idle and absolute window overrides are the manifest's last functional dependency and the capsule has no home for them, so removing the reader without ruling would collapse every profile to the configured default as a behaviour change disguised as a deletion; `src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/core/config/`.
 - [ ] `W04.P07.S116` - Have Terra XHigh delete the bucket manifest digest and deletion fingerprint helpers, exported from the maintenance package with zero production callers, being dead capacity rather than a dependency; `src/cadrumo/application/bucket_maintenance/_manifest_digest.py`.
-- [ ] `W04.P07.S117` - Have Terra XHigh remove the bucket manifest reader and its two session-window consumers now that the amended decision records the manifest as retired but present, sequencing behind the per-profile session-window ruling because removing the reader IS that behaviour change rather than a precondition for it, and coordinating with the keystore work that is deleting from the same data-key module so the two do not collide on one file; `src/cadrumo/adapters/persistence/storage/bucket/_manifest_io.py and src/cadrumo/adapters/persistence/storage/master_key/_master_key_bucket_dek.py`.
+- [x] `W04.P07.S117` - Have Terra XHigh remove the bucket manifest reader and its two session-window consumers now that the amended decision records the manifest as retired but present, sequencing behind the per-profile session-window ruling because removing the reader IS that behaviour change rather than a precondition for it, and coordinating with the keystore work that is deleting from the same data-key module so the two do not collide on one file; `src/cadrumo/adapters/persistence/storage/bucket/_manifest_io.py and src/cadrumo/adapters/persistence/storage/master_key/_master_key_bucket_dek.py`.
 - [ ] `W04.P07.S118` - Have Terra XHigh re-derive every stated reason in the runtime bootstrap-exempt allowlist against the tree, since two of its justifications were found false in one day, one citing a test that was never written and one asserting a manifest read that no longer happens, and the entries were correct in both cases so the defect is that a reader inherits a false reason rather than re-deriving it, which is worse than a file carrying no comments at all; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
 
 ## Wave `W05` - end-to-end proof

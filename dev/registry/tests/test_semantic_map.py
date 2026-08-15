@@ -133,7 +133,7 @@ def test_semantic_map_retains_a_complete_workbook_anchor_and_canonical_grounding
     assert entry.anchor.sheet == "Registro tipo 1"
     assert entry.anchor.source_row == 14
     assert entry.anchor.source_cell == "A14"
-    assert entry.anchor.ordinal == 3
+    assert entry.anchor.ordinal == "3"
     assert entry.anchor.record_identity == "registro-tipo-1"
     assert entry.export_field_id == "registro-tipo-1.declarante-nif"
     assert entry.legal_refs == ("liva-art-164",)
@@ -149,7 +149,7 @@ def test_semantic_map_supports_exact_pdf_anchors_without_a_workbook_cell() -> No
 
     assert entry.anchor.source_row == 14
     assert entry.anchor.source_cell is None
-    assert entry.anchor.ordinal == 3
+    assert entry.anchor.ordinal == "3"
     assert entry.anchor.record_identity == "registro-tipo-1"
 
 

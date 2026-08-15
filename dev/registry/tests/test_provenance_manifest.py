@@ -74,7 +74,7 @@ def _intermediate() -> RecordDesignIntermediate:
                             "record_identity": "registro-tipo-1",
                             "source_row": 14,
                             "source_cell": "A14",
-                            "ordinal": 1,
+                            "ordinal": "1",
                             "offset": 1,
                             "length": 1,
                             "aeat_type": "AN",

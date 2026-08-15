@@ -23,6 +23,7 @@ from datetime import date
 from ...core.errors import BaseSeverity, CadrumoError
 from ...core.i18n import describe_auth_provider_operator_impact
 from ...core.logging import get_logger
+from ...core.parsing import enum_value as _enum_value
 from ._errors import SubmissionPreflightError
 from ._protocols import (
     AuthProviderProbe,
@@ -204,11 +205,3 @@ class Preflight:
             description.kind,
             description.expires_on,
         )
-
-
-def _enum_value(value: object) -> str:
-    """Return ``Enum.value`` when present, otherwise ``str(value)``."""
-    if value is None:
-        return ""
-    raw = getattr(value, "value", value)
-    return str(raw)

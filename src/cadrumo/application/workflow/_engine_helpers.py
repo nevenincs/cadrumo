@@ -55,19 +55,10 @@ def classify_cert_expiry(
     return ("OK", days_until_expiry)
 
 
-def enum_value(value: object) -> str:
-    """Return ``Enum.value`` when present, otherwise ``str(value)``."""
-    if value is None:
-        return ""
-    raw = getattr(value, "value", value)
-    return str(raw)
-
-
 __all__ = [
     "DeadlineRole",
     "FilingWindowState",
     "classify_cert_expiry",
-    "enum_value",
     "registry_filing_year",
     "registry_period_token",
 ]

@@ -20,7 +20,6 @@ goes through the real decode rather than a stand-in for it.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -28,10 +27,8 @@ import pytest
 from pydantic import SecretStr
 
 from ....adapters.outbound.aeat.auth.certificate import read_certificate_subject_nif
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
 from ...workflow import workflow_state_repository
 from .. import (
@@ -50,11 +47,7 @@ _OTHER_NIF = "00000001R"
 _WRONGCERTIFICATE_BUNDLE_PASSPHRASE = "not-the-passphrase"  # noqa: S105 - synthetic wrong passphrase, not a secret
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
-        register_minimal_profile(profile_id=_BUCKET_ID, display_name=_PROFILE_LABEL)
-        yield
+_isolated_backend = active_profile_isolated_backend_fixture(bucket_id=_BUCKET_ID, display_name=_PROFILE_LABEL)
 
 
 def _bundle(tmp_path: Path, *, name: str, subject_cn: str) -> Path:
