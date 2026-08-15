@@ -223,9 +223,7 @@ def _record_literals(record: ExportRecordDefinition) -> dict[tuple[int, int], st
 
 def _record_written_positions(record: ExportRecordDefinition) -> set[tuple[int, int]]:
     return {
-        (field.offset, field.length)
-        for field in record.fields
-        if field.offset is not None and field.length is not None
+        (field.offset, field.length) for field in record.fields if field.offset is not None and field.length is not None
     }
 
 
@@ -377,8 +375,7 @@ def _layout_failure(
         f"omissible (reserved for the Administración, or declared fill); a position AEAT marks "
         f"OBLIGATORIO is required regardless. There is no percentage floor and no exemption: author "
         f"the missing positions from the design at "
-        f"{', '.join(repr(source.corpus_path) for source in design_sources)}. "
-        + " | ".join(lines)
+        f"{', '.join(repr(source.corpus_path) for source in design_sources)}. " + " | ".join(lines)
     )
 
 

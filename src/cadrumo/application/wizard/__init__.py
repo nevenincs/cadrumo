@@ -46,6 +46,7 @@ from ._commands import (
     DEFAULT_PROFILE_NEXT_COMMAND,
     build_wizard_command,
     next_step_command_for_profile_values,
+    profile_next_step_modelo,
     setup_flow_definition,
 )
 from ._compiler import ensure_profile_keys_registered
@@ -153,6 +154,7 @@ __all__ = [
     "load_active_taxpayer_profile",
     "next_step_command_for_profile_values",
     "persist_descendant_door_answers",
+    "profile_next_step_modelo",
     "project_answers",
     "register_profile_copy_sources",
     "register_taxpayer_projection_validator",

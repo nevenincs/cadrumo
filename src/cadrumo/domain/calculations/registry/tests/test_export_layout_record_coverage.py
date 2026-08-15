@@ -39,6 +39,7 @@ from .._schema import ExportLayoutDefinition, ModeloDefinition, ModeloRevision, 
 from .._validate_export_layout_coverage import (
     _design_sources,
     _read_design_sheets,
+    _required_positions,
     validate_export_layout_record_coverage,
 )
 
@@ -180,10 +181,7 @@ def test_an_unwritable_obligatorio_position_forces_a_refusal(
     modelos, catalogues = registry_tree
     unreported: list[str] = []
     for modelo_id, revision_id, revision in _revisions_with_fixed_width_layouts(modelos):
-        gaps = {
-            layout.id: _obligatorio_gap(layout, catalogues)
-            for layout in _fixed_width_layouts(revision)
-        }
+        gaps = {layout.id: _obligatorio_gap(layout, catalogues) for layout in _fixed_width_layouts(revision)}
         if not any(gaps.values()):
             continue
         if not _gate(revision, catalogues):
@@ -207,9 +205,7 @@ def test_every_enumerated_coordinate_is_a_real_unwritten_design_position(
     for _modelo_id, _revision_id, revision in _revisions_with_fixed_width_layouts(modelos):
         for layout in _fixed_width_layouts(revision):
             declared = {
-                (field.offset, field.length)
-                for sheet in _design_sheets(layout, catalogues)
-                for field in sheet.fields
+                (field.offset, field.length) for sheet in _design_sheets(layout, catalogues) for field in sheet.fields
             }
             if not declared:
                 continue
@@ -260,11 +256,16 @@ def test_deleting_one_required_slot_reds_an_accepted_layout(
             "gate is unexercised. Do not delete this test: a gate that only ever refuses proves nothing"
         )
     revision, layout = accepted[0]
+    # The victim is CHOSEN through the production requiredness derivation, not
+    # asserted by it: the claim under test is that deleting a slot the gate
+    # calls required makes the gate red, so the gate's own notion of required is
+    # the right selector. The two accepted layouts back designs AEAT publishes
+    # with no obligatoriness column at all, so the narrower marking this module
+    # derives gaps from selects nothing here.
     declared = {
-        (field.offset, field.length)
+        (position.offset, position.length)
         for sheet in _design_sheets(layout, catalogues)
-        for field in sheet.fields
-        if _OBLIGATORIO.search(field.validation or "")
+        for position in _required_positions(sheet)
     }
     victim_record, victim = next(
         (record, field)
@@ -333,9 +334,7 @@ def test_an_unreachable_design_refuses_instead_of_passing(
     rather than by patching it away.
     """
     _modelos, catalogues = registry_tree
-    real = next(
-        source for source in catalogues.sources.values() if source.kind == "record_design"
-    )
+    real = next(source for source in catalogues.sources.values() if source.kind == "record_design")
     missing = real.model_copy(update={"corpus_path": "corpus/aeat_official/disenos_registro/does/not/exist.xls"})
     read = _read_design_sheets(missing)
     assert isinstance(read, str), "an unreachable official design was read as sheets"

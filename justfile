@@ -624,9 +624,31 @@ test-resident-service:
 # invocation is pinned to the unit lane by addopts, so `just test-unit` green
 # says nothing about the ~3k integration tests; this is the recipe to reach for
 # before claiming a suite is clean.
-[doc('Run both the unit and integration lanes in sequence and report them separately.')]
+#
+# The harness verdict runs FIRST, and this is the only local composition that
+# reaches it. Every corpus-walking lane `--ignore`s the harness members by
+# design -- a member spawns a real child pytest, so a lane that collected one
+# would nest a worker pool inside a pool -- which left the full-corpus
+# collectability proof enrolled nowhere a routine local run could see it. A
+# module that cannot IMPORT is silently absent from a lane's summary, so both
+# lane verdicts below are claims about whatever happened to be collectable, and
+# neither can report the modules that were not. That is the whole reason this
+# runs before them rather than after: an uncollectable corpus invalidates the
+# green they produce, and `just` stops at the first failing line, so a trailing
+# position would never report on a tree whose lanes are already red.
+#
+# It is a separate `just` invocation, never folded into either lane's pytest
+# command line, so the outer-serial `-n0` contract and the per-member collect
+# preflight the harness recipe owns stay intact.
+#
+# Collectable is not passing, and this composition does not make it so: the
+# proof establishes that every discovered first-party test module IMPORTS. A
+# construction that breaks inside a deferred function-local import is invisible
+# to it, as it is to `--collect-only` generally, because no test body runs.
+[doc('Run the full-corpus harness verdict, then both lanes in sequence, reporting each separately.')]
 [group('testing')]
 test-both-lanes:
+    @just test-harness
     @just test-unit
     @just test-integration
 
