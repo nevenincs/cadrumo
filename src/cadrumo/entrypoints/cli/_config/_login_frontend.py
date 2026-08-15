@@ -54,7 +54,7 @@ if TYPE_CHECKING:
 
 def login_tui_is_the_right_frontend(
     *,
-    secrets_stdin: bool,
+    machine_secret_supplied: bool,
     headless_secret: bool,
     json_format: bool,
     full_screen: bool,
@@ -69,8 +69,11 @@ def login_tui_is_the_right_frontend(
     exists to ask, so the screen would either strand their answer or
     block a host that cannot type into it.
 
-    - ``secrets_stdin`` — the password has already arrived on the bounded
-      stdin channel; there is nothing left to type.
+    - ``machine_secret_supplied`` — the password has already arrived on a
+      bounded machine channel, either the stdin object or the one-shot
+      descriptor; there is nothing left to type. The two are one condition
+      here because the screen's question is "has the factor been supplied",
+      not "through which pipe".
     - ``headless_secret`` — ``CADRUMO_SECRET_PASSPHRASE`` is the sanctioned
       non-interactive channel and supplies the factor without any prompt.
     - ``json_format`` — a machine is reading; a screen would write over
@@ -86,10 +89,10 @@ def login_tui_is_the_right_frontend(
     password — the whole reason the page exists — still to be typed. See
     :func:`preselected_profile_id`.
     """
-    return not (secrets_stdin or headless_secret or json_format or not full_screen or profile_count == 0)
+    return not (machine_secret_supplied or headless_secret or json_format or not full_screen or profile_count == 0)
 
 
-def login_screen_is_available(ctx: typer.Context, *, secrets_stdin: bool) -> bool:
+def login_screen_is_available(ctx: typer.Context, *, secrets_stdin: bool, secrets_fd: int | None = None) -> bool:
     """Resolve the routing predicate against this host and this storage root.
 
     Kept separate from the predicate it feeds so the rule stays pure and
@@ -99,7 +102,7 @@ def login_screen_is_available(ctx: typer.Context, *, secrets_stdin: bool) -> boo
     from ._manager_frontend import host_can_run_full_screen
 
     return login_tui_is_the_right_frontend(
-        secrets_stdin=secrets_stdin,
+        machine_secret_supplied=secrets_stdin or secrets_fd is not None,
         headless_secret=_headless_secret_channel_active(),
         json_format=_format_of(ctx) == "json",
         full_screen=host_can_run_full_screen(),

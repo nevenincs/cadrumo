@@ -183,14 +183,22 @@ def _login_through_the_prompt(
     *,
     name: str | None,
     secrets_stdin: bool,
+    secrets_fd: int | None,
 ) -> ProfileLoginOutcome:
-    """Log in through the line prompt, the stdin channel, or the env secret.
+    """Log in through the line prompt, a machine secret channel, or the env secret.
 
     The path every scripted, piped, CI, and JSON caller takes: a named
-    target, a bounded ``--secrets-stdin`` payload, a configured
+    target, a bounded ``--secrets-stdin`` payload, a one-shot
+    ``--secrets-fd`` descriptor, a configured
     ``CADRUMO_SECRET_PASSPHRASE``, or a line prompt on a real console that
     cannot go full-screen — and the same refusal when none of those
     supplied a passphrase.
+
+    The descriptor is drained before the login call rather than inside the
+    callback, so an unreadable or already-consumed descriptor refuses
+    before any custody work begins. Both machine channels close over the
+    value they read; neither re-reads if the login layer invokes the
+    callback more than once.
 
     That line prompt is explicitly supplied rather than left to default.
     Passing no callback hands the read to the storage substrate's own
@@ -209,14 +217,27 @@ def _login_through_the_prompt(
     """
     from ....application.user_profile import login_profile
     from .. import _headless_secret_channel_active
-    from ._secure_input import prompt_secret_no_echo, read_secrets_stdin, terminal_can_prompt_for_secrets
+    from ._secure_input import (
+        prompt_secret_no_echo,
+        read_secrets_fd,
+        read_secrets_stdin,
+        terminal_can_prompt_for_secrets,
+    )
+
+    # Naming both machine channels is already refused upstream, so this reads
+    # at most one of them; the ordering expresses no precedence.
+    secrets: _LoginSecrets | None = None
+    if secrets_fd is not None:
+        secrets = read_secrets_fd(_LoginSecrets, descriptor=secrets_fd)
+    elif secrets_stdin:
+        secrets = read_secrets_stdin(_LoginSecrets)
 
     passphrase_callback: Callable[[], str] | None = None
-    if secrets_stdin:
-        secret = read_secrets_stdin(_LoginSecrets).passphrase.get_secret_value()
+    if secrets is not None:
+        secret = secrets.passphrase.get_secret_value()
 
         def passphrase_callback() -> str:
-            """Resolve the passphrase already read from the bounded stdin channel."""
+            """Resolve the passphrase already read from the bounded machine channel."""
             return secret
 
     elif not _headless_secret_channel_active() and terminal_can_prompt_for_secrets():
@@ -253,6 +274,11 @@ def _register_login_command(app: typer.Typer) -> None:
             "--secrets-stdin",
             help=tr("cli.config.custody.secrets_stdin_help"),
         ),
+        secrets_fd: int | None = typer.Option(
+            None,
+            "--secrets-fd",
+            help=tr("cli.config.custody.secrets_fd_help"),
+        ),
         output_language: OutputLanguage | None = typer.Option(
             None,
             "--output-language",
@@ -263,11 +289,18 @@ def _register_login_command(app: typer.Typer) -> None:
         """Authenticate one profile and mint its resumable session."""
         _activate_subcommand_output_language(ctx, output_language)
         from ._login_frontend import login_screen_is_available
+        from ._secure_input import resolve_secrets_channel
 
-        if login_screen_is_available(ctx, secrets_stdin=secrets_stdin):
+        resolve_secrets_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
+        if login_screen_is_available(ctx, secrets_stdin=secrets_stdin, secrets_fd=secrets_fd):
             outcome = _login_through_the_screen(name=name)
         else:
-            outcome = _login_through_the_prompt(ctx, name=name, secrets_stdin=secrets_stdin)
+            outcome = _login_through_the_prompt(
+                ctx,
+                name=name,
+                secrets_stdin=secrets_stdin,
+                secrets_fd=secrets_fd,
+            )
 
         from .._config_payloads import ConfigLoginResult
 
