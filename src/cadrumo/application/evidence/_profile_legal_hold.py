@@ -33,9 +33,13 @@ from ..profile_custody import (
 
 _MAX_BYTES = 8 * 1024
 
-LEGAL_HOLD_OWNER_DIRNAME: Final[str] = storage_location(
-    StorageCategory.PROFILE_CUSTODY_HOLD_LEGAL_OWNER,
-).relative_path().name
+LEGAL_HOLD_OWNER_DIRNAME: Final[str] = (
+    storage_location(
+        StorageCategory.PROFILE_CUSTODY_HOLD_LEGAL_OWNER,
+    )
+    .relative_path()
+    .name
+)
 """This owner's directory name, read from its one declaration in the taxonomy.
 
 The storage path registry spells the same segment in this format's grammar, so
@@ -239,7 +243,7 @@ def try_record_legal_hold_snapshot(
             open_case_ids=tuple(open_case_ids),
             observed_at=observed_at,
         )
-    except Exception:  # noqa: BLE001 - no caller may fail on a deletion-support record
+    except Exception:
         get_logger(__name__).warning(
             "legal hold snapshot not recorded; a later deletion preflight will refuse",
             exc_info=True,

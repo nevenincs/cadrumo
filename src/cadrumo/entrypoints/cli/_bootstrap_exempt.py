@@ -170,9 +170,16 @@ class LoginGatedVerb:
 #: was deleted with the surrounding block, and the principle survived nowhere.
 #: It is data now, and ``test_login_gated_verbs_never_exempt.py`` enforces it.
 #:
-#: The profile restore, export and import surface is being rebuilt. These paths
-#: are the ones the operator-surface contract declares for it; a rename of the
-#: declared command reds the gate rather than silently retiring the refusal.
+#: The profile restore, export and import surface is being rebuilt. The first
+#: two paths below are the ones the operator-surface contract declares for it;
+#: a rename of the declared command reds the gate rather than silently retiring
+#: the refusal.
+#:
+#: The list is NOT limited to that surface, and the third entry says why in its
+#: own reason: a verb can need a currently-valid login for a reason other than
+#: its output leaving the encrypted store. Each entry states the ground it
+#: stands on, because a single shared justification would silently extend to a
+#: verb it does not actually fit.
 LOGIN_GATED_VERB_PATHS: tuple[LoginGatedVerb, ...] = (
     LoginGatedVerb(
         verb_path="config profile archive export",

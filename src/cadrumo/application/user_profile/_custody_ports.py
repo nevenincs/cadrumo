@@ -240,7 +240,19 @@ class ProfileCustodySentinelPort(Protocol):
 
 
 class ProfileCustodyRecoveryEnvelopePort(Protocol):
-    """Opaque recovery-envelope contract forwarded to custody storage."""
+    """Recovery-envelope contract forwarded to custody storage.
+
+    The two identity fields are declared because the application genuinely
+    reads them: a recovery wrapper is only valid for the exact profile and
+    DEK epoch it was minted against, and an enrollment that cannot be
+    checked against the password envelope beside it is an enrollment nothing
+    can prove belongs to this capsule. Everything else about the record --
+    the KDF parameters, the wrapped key, the AAD descriptor -- stays opaque,
+    because the application has no business reading key material.
+    """
+
+    profile_id: UUID
+    dek_epoch: str
 
 
 __all__ = [
