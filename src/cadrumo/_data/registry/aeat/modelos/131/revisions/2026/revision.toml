@@ -13,3 +13,22 @@ source_refs = [
     "aeat-modelo-131-recuperacion-declaraciones",
     "boe-modelo-131-2007-form",
 ]
+
+
+[revisions."2026".family_dispositions.projection_endpoints]
+reason = "FilingProjectionRef (cadrumo.core) is a closed discriminated union of exactly seven projection_kind members, all prefixed m303_ and used exclusively by modelo 303's engine-computed IVA facts; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming modelo 131's own casillas can validate. Modelo 131 is not modelo 303, so the projection_endpoints family cannot be populated by construction. This revision's own export_layouts already demonstrate the mechanism that serves its repeating rows: at least one authored ExportRecordDefinition declares repeat == \"binding_rows\", materializing repeating rows from binding values rather than from a projection_endpoints declaration."
+legal_refs = [
+    "rd-439-2007:art-110",
+    "orden-eha-672-2007:art-3",
+    "orden-hac-1425-2025:art-4",
+    "ley-35-2006:art-68.4",
+    "rd-439-2007:art-95",
+]
+source_refs = [
+    "aeat-dr-131-2026",
+    "aeat-modelo-131-procedure",
+    "aeat-modelo-131-instructions",
+    "aeat-modelo-131-formulario-presentacion",
+    "aeat-modelo-131-recuperacion-declaraciones",
+    "boe-modelo-131-2007-form",
+]

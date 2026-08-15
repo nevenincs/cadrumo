@@ -80,7 +80,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
+import tempfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -346,7 +348,19 @@ def apply_dispositions(dispositions: tuple[Disposition, ...]) -> None:
 
 
 def prove(dispositions: tuple[Disposition, ...]) -> list[str]:
-    """Reload the whole tree and prove every intended declaration reads back exactly."""
+    """Reload the whole tree and prove every intended declaration reads back exactly.
+
+    MUST run in a fresh process, never called a second time in the same
+    process as the pre-write load. ``load_registry_tree`` memoizes on
+    ``lru_cache(maxsize=32)`` keyed by ``(root, fingerprints)``
+    (``_loader.py`` ``_load_registry_tree_cached``), and this worktree's
+    backing share has been observed to serve a coarse-grained mtime that
+    does not always change within the same process's write-then-reread
+    window -- a same-process reload can silently return the PRE-WRITE cached
+    tuple, which reads as every disposition missing. ``main()`` never calls
+    this directly; it shells out to ``--verify-against`` in a new
+    interpreter, whose ``lru_cache`` starts cold.
+    """
     modelos, _catalogues = load_registry_tree(REGISTRY_ROOT)
     by_id = {modelo.id: modelo for modelo in modelos}
     mismatches: list[str] = []
@@ -376,12 +390,54 @@ def prove(dispositions: tuple[Disposition, ...]) -> list[str]:
     return mismatches
 
 
+def _dispositions_from_json(payload: object) -> tuple[Disposition, ...]:
+    records = payload["dispositions"] if isinstance(payload, dict) else payload
+    return tuple(
+        Disposition(
+            modelo=record["modelo"],
+            revision=record["revision"],
+            family=record["family"],
+            reason=record["reason"],
+            legal_refs=tuple(record["legal_refs"]),
+            source_refs=tuple(record["source_refs"]),
+        )
+        for record in records
+    )
+
+
+def _run_verify_against(path: Path) -> int:
+    """Load a dispositions JSON file and prove it against a FRESH tree load.
+
+    The entry point ``--apply`` shells out to, in a new interpreter, so
+    ``prove`` never shares an ``lru_cache`` with the pre-write load in the
+    parent process (see ``prove``'s docstring).
+    """
+    dispositions = _dispositions_from_json(json.loads(path.read_text(encoding="utf-8")))
+    mismatches = prove(dispositions)
+    if mismatches:
+        print(f"{len(mismatches)} disposition(s) FAILED the reload-and-read-back proof:")
+        for mismatch in mismatches:
+            print(f"  {mismatch}")
+        return 1
+    print(f"All {len(dispositions)} disposition(s) verified by a fresh reload.")
+    return 0
+
+
 def main() -> int:
     """Run the transcriber: dry-run by default, ``--apply`` to write and prove."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply", action="store_true", help="Write and prove (default: dry run, writes nothing)")
     parser.add_argument("--json", type=Path, default=None, help="Write the candidate report as JSON to this path")
+    parser.add_argument(
+        "--verify-against",
+        type=Path,
+        default=None,
+        help=argparse.SUPPRESS,  # internal: re-invoked as a fresh subprocess by --apply
+    )
     args = parser.parse_args()
+
+    if args.verify_against is not None:
+        return _run_verify_against(args.verify_against)
 
     modelos, _catalogues = load_registry_tree(REGISTRY_ROOT)
     dispositions, held = compute_dispositions(modelos)
@@ -419,14 +475,33 @@ def main() -> int:
         return 0
 
     apply_dispositions(dispositions)
-    mismatches = prove(dispositions)
-    if mismatches:
-        print(f"\n{len(mismatches)} disposition(s) FAILED the reload-and-read-back proof:")
-        for mismatch in mismatches:
-            print(f"  {mismatch}")
-        return 1
-    print(f"\nAll {len(dispositions)} disposition(s) verified by reload.")
-    return 0
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".json", delete=False, encoding="utf-8",
+    ) as handle:
+        json.dump([asdict(d) for d in dispositions], handle, ensure_ascii=False)
+        verify_payload_path = Path(handle.name)
+    try:
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "dev.registry_authoring.transcribe_structural_family_dispositions",
+                "--verify-against",
+                str(verify_payload_path),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    finally:
+        verify_payload_path.unlink(missing_ok=True)
+
+    print(f"\n--- fresh-process verification ({len(dispositions)} disposition(s)) ---")
+    print(result.stdout, end="")
+    if result.stderr:
+        print(result.stderr, end="", file=sys.stderr)
+    return result.returncode
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:a63b71c05c5b9adc02ae3d513baeb61b4e5317f05d2b5544b74bd2cf291f1c83'
+body_hash: 'sha256:2a64bb8f02930389ca02aef0ab55b6268303780dfdcd01337c4051938ab4d6a2'
 step_id: 'S94'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -76,18 +76,36 @@ scratchpad outside the tree; no tracked file was mutated for either.
 
 ## Notes
 
-The sequential integration lane is runnable and terminates; it is not green, and none of
-what is red belongs to this row. This tree is shared with concurrently working agents and
-their in-flight edits are live in it. A first full sequential run aborted at COLLECTION on
-an unrelated `ImportError` for `HARNESS_SRC_DIR` from `dev.locales`; re-reading the tree
-showed a peer had landed that symbol between the run starting and finishing, and a re-run
-collected cleanly — a reminder that a finding in this tree must be recomputed at report
-time rather than trusted from when it was observed.
+The full sequential integration lane was NOT observed to completion, and no verdict is
+claimed for it. What was observed is the part this row is answerable for: the lane
+collects, starts, and grinds forward steadily past the point where it previously died,
+reaching a tenth of the corpus before the measurement was abandoned as worthless. It was
+abandoned because the tree mutated underneath the run — peers committed on the order of
+ninety files while it was executing — so whatever it eventually printed would describe a
+tree that no longer exists. A first attempt had already aborted at COLLECTION on an
+unrelated `ImportError` for `HARNESS_SRC_DIR` from `dev.locales`, and re-reading showed a
+peer had landed that symbol between the run starting and finishing. Both incidents say the
+same thing: in this tree a finding has to be recomputed at report time, never trusted from
+when it was seen.
+
+The scoped measurement that IS meaningful was taken twice at current HEAD and is stable:
+the whole operations package under the integration marker, sequentially, gives 53 passed
+and 3 failed in 23s. All three failures are in the executor-contract module, which this row
+did not touch, and every production file under `application/operations` is byte-identical
+to HEAD, so they cannot be this change. They deserve their own row rather than a mention
+here: all three assert that a supervisor context REFUSES an undeclared event claim or an
+undeclared resource ownership, and all three fail with "DID NOT RAISE ValueError". That is
+a declaration guard failing open, which is a worse failure mode than the wedge this row
+was opened for.
 
 Seven test-framework ratchets are failing, and the type-check gate reports diagnostics
 across roughly twenty files. Neither set names `application/operations` anywhere; they sit
 in the registry, modelo, filing and `dev/` trees that peers are actively editing. They are
 reported, not absorbed, because this row's ownership does not reach them.
+
+This work was not committed by this row. A peer's broad commit swept both the test change
+and this record into unrelated registry and refactor commits while the row was still
+measuring, which is the shared-tree capture hazard rather than anything done here.
 
 The pre-existing format drift absorbed here was a 123-character line in the repositories
 helper, over the configured 120 limit and already failing `ruff format --check` at HEAD.

@@ -182,7 +182,7 @@ When unreadable encrypted records block other commands, move them aside. Preview
 :verify: Confirm the quarantine preview and the real run both complete.
 ```
 
-The preview lists how many records would move, per storage area, without changing anything. The real run requires `--yes`. Quarantine does not delete anything: each unreadable record is moved, still encrypted, into a quarantine archive inside the same storage, and readable records are untouched. If the cause was a missing key that you later recover (for example with the recovery key, see [Protect access to your data](protect-data-access.md)), the archived records still exist.
+The preview lists how many records would move, per storage area, without changing anything. The real run requires `--yes`. Quarantine does not delete anything: each unreadable record is moved, still encrypted, into a quarantine archive inside the same storage, and readable records are untouched. If the cause was a missing key that you later restore, the archived records still exist. See [Protect access to your data](protect-data-access.md).
 
 To find which finalized calculations and filings used a transaction, query the
 participation index. Rebuild it first if the lookup appears incomplete:

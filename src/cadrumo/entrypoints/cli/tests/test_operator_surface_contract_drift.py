@@ -93,32 +93,33 @@ def _resolve_live_surface() -> dict[str, dict[str, frozenset[str]]]:
     return surface
 
 
-def _declared_surface() -> dict[str, dict[str, frozenset[str]]]:
-    """Resolve ``{root: {family-child: frozenset(command)}}`` from the contract."""
-    declared: dict[str, dict[str, frozenset[str]]] = {}
+def _declared_families() -> dict[str, frozenset[str]]:
+    """Resolve ``{root: frozenset(family-child)}`` from the contract."""
+    declared: dict[str, set[str]] = {}
     for family in get_operator_surface_contract().command_families:
-        declared.setdefault(family.root.value, {})[family.child] = frozenset(
-            str(command) for command in family.commands
-        )
-    return declared
+        declared.setdefault(family.root.value, set()).add(family.child)
+    return {root: frozenset(children) for root, children in declared.items()}
 
 
 def test_operator_surface_contract_covers_the_live_tree() -> None:
-    """The contract declares exactly the mounted families and their sub-verbs.
+    """The contract declares exactly the mounted families.
 
-    Symmetric difference, both levels, no allowlist:
+    Symmetric difference, no allowlist: a ``root -> child`` group/leaf mounted
+    by the CLI but absent from ``command_families`` (the agent's manifest would
+    omit it), or a contract family with no live mount (a dead manifest entry).
 
-    * **Family drift** — a ``root -> child`` group/leaf mounted by the CLI but
-      absent from ``command_families`` (the agent's manifest would omit it), or a
-      contract family with no live mount (a dead manifest entry).
-    * **Sub-verb drift** — within a shared family, a sub-command mounted by the
-      CLI but missing from the family's ``commands`` tuple (or the reverse).
+    The sub-verb half of this gate is gone because its subject is gone. A family
+    no longer declares a command tuple to compare against — membership is derived
+    from the live tree — so there is nothing left that can drift, and asserting
+    a derivation against the thing it derives from would be tautological. That
+    half caught real drift in both directions while it existed, which is the
+    argument for deriving rather than declaring, not for keeping the assertion.
 
-    The diagnostic names every drifted family and sub-verb so a regression run
-    states the exact contract edit without further investigation.
+    The diagnostic names every drifted family so a regression run states the
+    exact contract edit without further investigation.
     """
     live = _resolve_live_surface()
-    declared = _declared_surface()
+    declared = _declared_families()
 
     # Anti-vacuity floor. A symmetric-difference assertion over two empty maps
     # passes while checking nothing, and the lazy-Typer tree is a documented
@@ -141,25 +142,15 @@ def test_operator_surface_contract_covers_the_live_tree() -> None:
 
     lines: list[str] = []
     for root in sorted(set(live) | set(declared)):
-        live_families = live.get(root, {})
-        declared_families = declared.get(root, {})
+        live_families = frozenset(live.get(root, {}))
+        declared_families = declared.get(root, frozenset())
 
-        families_missing = sorted(set(live_families) - set(declared_families))
-        families_orphan = sorted(set(declared_families) - set(live_families))
+        families_missing = sorted(live_families - declared_families)
+        families_orphan = sorted(declared_families - live_families)
         if families_missing:
             lines.append(f"[{root}] families mounted by the CLI but ABSENT from the contract: {families_missing}")
         if families_orphan:
             lines.append(f"[{root}] contract families with NO live CLI mount: {families_orphan}")
-
-        for child in sorted(set(live_families) & set(declared_families)):
-            sub_missing = sorted(live_families[child] - declared_families[child])
-            sub_orphan = sorted(declared_families[child] - live_families[child])
-            if sub_missing:
-                lines.append(
-                    f"[{root} {child}] sub-verbs mounted by the CLI but ABSENT from the contract: {sub_missing}",
-                )
-            if sub_orphan:
-                lines.append(f"[{root} {child}] contract sub-verbs with NO live CLI mount: {sub_orphan}")
 
     assert not lines, "OperatorSurfaceContract drifted from the live CLI tree:\n" + "\n".join(lines)
 

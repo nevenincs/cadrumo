@@ -5,44 +5,11 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:ddee1323edd05a814ae6ffb94acfd5753c13f5eb9f741068d5e129a823b073cf'
+body_hash: 'sha256:6e4019c50e25f7c8c51ac7d381e9b18a2bb14b62ce8a4a926d9101c6d24e05e8'
 step_id: 'S170'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace profile-password-custody with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S170 and 2026-08-13-profile-password-custody-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Have Sol Medium correct the two remaining docstrings that assert the retired plaintext manifest as the current mechanism, one describing a label-to-identifier resolution as reading manifest files and one describing the active-profile pointer as derived from them, both consuming resolvers that are now capsule-only, this being the same false-stated-reason class already corrected on the listing surface and ## Scope
-
-- `src/cadrumo/entrypoints/cli/_config/_custody.py and src/cadrumo/core/_bucket_pointer.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Have Sol Medium correct the two remaining docstrings that assert the retired plaintext manifest as the current mechanism, one describing a label-to-identifier resolution as reading manifest files and one describing the active-profile pointer as derived from them, both consuming resolvers that are now capsule-only, this being the same false-stated-reason class already corrected on the listing surface
 

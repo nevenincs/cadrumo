@@ -25,3 +25,25 @@ source_refs = [
     "boe-modelo-190-2025-form",
     "boe-modelo-190-2025-amendment",
 ]
+
+
+[revisions."2024-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2024-y-siguientes' of modelo 190 has no strictly-earlier sibling revision of this modelo (valid_from 2024-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+legal_refs = [
+    "ley-35-2006:art-99",
+    "orden-eha-3127-2009:art-1",
+    "orden-hac-1431-2025:art-2",
+    "rd-439-2007:art-108",
+    "rd-439-2007:art-80",
+    "ley-35-2006:art-101",
+    "rd-439-2007:art-86",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-190-2024",
+    "aeat-dr-190-2025",
+    "aeat-modelo-190-instructions-2025",
+    "aeat-modelo-190-procedure",
+    "boe-modelo-190-2025-form",
+    "boe-modelo-190-2025-amendment",
+]

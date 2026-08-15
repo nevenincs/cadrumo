@@ -168,13 +168,16 @@ def _provision_profile(tmp_path: Path, passphrase: str) -> None:
         (["app", "--help"], "aeat app ledger import"),
         (["app", "ledger", "--help"], "import"),
         (["app", "modelo", "--help"], "work"),
-        # Custody surfaces: browsing the recovery/recover/passphrase help must
-        # never open the encrypted session or demand any secret.
-        (["config", "recovery", "--help"], "status"),
-        (["config", "recovery", "create", "--help"], "retyped"),
-        (["config", "recovery", "verify", "--help"], "--secrets-stdin"),
-        (["config", "recover", "--help"], "--secrets-stdin"),
-        (["config", "passphrase", "--help"], "change"),
+        # Custody surfaces: browsing the session and repair help must never
+        # open the encrypted session or demand any secret. These rows covered
+        # `config recovery`, `config recovery create`, `config recovery
+        # verify`, `config recover` and `config passphrase` until the custody
+        # cutover left all five unregistered, at which point they asserted
+        # nothing about secret handling and only reported the absent verbs.
+        # The property is re-founded on the custody verbs that do resolve.
+        (["config", "login", "--help"], "login"),
+        (["config", "logout", "--help"], "logout"),
+        (["config", "repair", "--help"], "quarantine"),
     ],
 )
 def test_subgroup_help_renders_without_passphrase(

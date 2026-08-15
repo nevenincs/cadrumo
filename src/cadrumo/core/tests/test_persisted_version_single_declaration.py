@@ -431,27 +431,38 @@ def test_the_two_repaired_formats_stay_repaired(source_tree_ast: Mapping[Path, a
     Both were repaired before this gate existed, so neither appears in the
     standing table. That is exactly the state a rename could make vacuous -- if
     either module moved, this gate would pass while saying nothing about the two
-    cases that motivated it. Anchoring on the constants proves they are still the
-    modules in question, and asserting no authoring site proves the repair holds.
+    cases that motivated it. So each anchor names BOTH halves: the module that
+    declares the owning constant, and the module whose field was carrying the
+    duplicate literal. Finding the constant proves the anchor still names the
+    right pair; finding no authoring site proves the repair holds.
     """
-    anchors = {
-        "src/cadrumo/application/user_profile/_bundle.py": "BUNDLE_SCHEMA_VERSION",
-        "src/cadrumo/domain/fincas/_models.py": "FINCA_SCHEMA_VERSION",
-    }
+    anchors = (
+        (
+            "src/cadrumo/application/user_profile/_bundle.py",
+            "BUNDLE_SCHEMA_VERSION",
+            "src/cadrumo/application/user_profile/_bundle_export_contracts.py",
+        ),
+        (
+            "src/cadrumo/domain/fincas/_models.py",
+            "FINCA_SCHEMA_VERSION",
+            "src/cadrumo/adapters/persistence/storage/sql/_orm.py",
+        ),
+    )
     sites_by_path: dict[str, list[LiteralVersionAuthoringSite]] = {}
     for site in scan_items(production_ast_items(source_tree_ast)):
         sites_by_path.setdefault(site.display_path, []).append(site)
 
-    for display_path, constant in anchors.items():
-        source = (SRC_CADRUMO.parents[1] / display_path).read_text(encoding="utf-8")
-        assert f"{constant}" in source, (
-            f"{display_path} no longer declares {constant}; this anchor names the wrong module and "
+    for constant_path, constant, field_path in anchors:
+        source = (SRC_CADRUMO.parents[1] / constant_path).read_text(encoding="utf-8")
+        assert constant in source, (
+            f"{constant_path} no longer declares {constant}; this anchor names the wrong module and "
             "the gate would pass without covering the case it was built from"
         )
-        assert not sites_by_path.get(display_path), (
-            f"{display_path} authors a literal version again:\n"
-            + "\n".join(site.format() for site in sites_by_path.get(display_path, []))
-        )
+        for display_path in (constant_path, field_path):
+            assert not sites_by_path.get(display_path), (
+                f"{display_path} authors a literal version again:\n"
+                + "\n".join(site.format() for site in sites_by_path.get(display_path, []))
+            )
 
 
 _SYNTHETIC_BARE_DEFAULT = """

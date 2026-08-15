@@ -1324,7 +1324,7 @@ def _scan_planted_orphans(root: Path, modules: dict[str, str]) -> list[object]:
     """Plant a synthetic tree and return its orphaned modules."""
     planted = [_plant_module(root, rel, body) for rel, body in modules.items()]
     census = [(path, root) for path in planted]
-    return list(find_orphaned_modules(planted, census, (), repo_root=root))
+    return list(find_orphaned_modules(planted, census, (), repo_root=root, src_root=root))
 
 
 def test_family9_has_no_orphaned_reexport_bridges() -> None:

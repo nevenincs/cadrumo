@@ -103,7 +103,7 @@ Ask which modelos apply to you and why, from your saved profile facts.
 :link: protect-data-access
 :link-type: doc
 
-Set up a recovery key, change or recover your passphrase, log out, or reset.
+Store your passphrase safely, log out, or reset local state.
 :::
 
 ::::

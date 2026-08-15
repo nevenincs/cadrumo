@@ -36,3 +36,33 @@ source_refs = [
     "aeat-modelo-840-procedure",
     "boe-modelo-840-2003-form",
 ]
+
+[revisions."2003-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2003-y-siguientes' of modelo 840 has no strictly-earlier sibling revision of this modelo (valid_from 2003-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+legal_refs = [
+    "rdl-2-2004:art-78",
+    "rdl-2-2004:art-82",
+    "rdl-2-2004:art-90",
+    "orden-hac-2572-2003:apartado-1",
+    "orden-hac-2572-2003:apartado-6",
+]
+source_refs = [
+    "aeat-dr-840",
+    "aeat-modelo-840-procedure",
+    "boe-modelo-840-2003-form",
+]
+
+[revisions."2003-y-siguientes".family_dispositions.relations]
+reason = "Modelo 840 declares calculation_class = \"informative\". validate_informative_class_invariant hard-refuses any revision of an informative-class modelo that declares a non-empty relations family -- cross-model relations feed a filing-grade calculation this modelo does not perform. The relations family cannot be populated for this modelo by registry construction."
+legal_refs = [
+    "rdl-2-2004:art-78",
+    "rdl-2-2004:art-82",
+    "rdl-2-2004:art-90",
+    "orden-hac-2572-2003:apartado-1",
+    "orden-hac-2572-2003:apartado-6",
+]
+source_refs = [
+    "aeat-dr-840",
+    "aeat-modelo-840-procedure",
+    "boe-modelo-840-2003-form",
+]

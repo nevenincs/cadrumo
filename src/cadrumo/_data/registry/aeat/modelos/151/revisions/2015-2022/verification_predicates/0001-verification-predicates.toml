@@ -1,0 +1,15 @@
+# Soundness gate: the régimen impatriados base liquidable general must be
+# determined when it resolves to a positive amount. The cuota íntegra general
+# (`impatriado.cuota-integra-general`) is formula-derived from the base
+# liquidable general via `lookup_bracket` against the art. 93.2.e.1º escala
+# (24% hasta 600.000 €, 47% sobre el exceso), so a positive base with a zero
+# cuota would only be reachable through a registry regression in the formula
+# chain or lookup table, not a legitimate operator omission -- but the verify
+# gate must still surface it rather than silently grant VERIFICADO_COMPLETO
+# (no-silent-under-declaration). ADVISORY (non-blocking): mirrors the M131
+# 01->02 and M200 00501->DP200014:00552 worked-pattern guards.
+[[revisions."2015-2022".verification_predicates]]
+predicate_id = "modelo-151-base-liquidable-implica-cuota-integra"
+expression = 'implies_nonzero(["impatriado.base-liquidable-general", "impatriado.cuota-integra-general"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-93"]

@@ -95,6 +95,7 @@ if TYPE_CHECKING:
         redact_for_log,
         redact_structured,
     )
+    from ._kdf_salt import KDF_SALT_BYTES
     from ._namespace_registry import (
         AEAT_BROWSER_SESSION_NAMESPACE,
         AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
@@ -443,6 +444,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "KEYSTORE_DIRNAME": "._storage_path_definitions",
     "KEY_SIZE": ".crypto",
     "KeyDerivationError": ".errors",
+    "KDF_SALT_BYTES": "._kdf_salt",
     "KeyringMasterKeyProvider": ".master_key",
     "KeyringUnavailableError": ".errors",
     "LEDGER_CLASSIFICATION_RULES_NAMESPACE": "._namespace_registry",
@@ -725,6 +727,7 @@ __all__ = [
     "IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE",
     "IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE",
     "JUSTIFICANTE_METADATA_NAMESPACE",
+    "KDF_SALT_BYTES",
     "KEYSTORE_DIRNAME",
     "KEY_SIZE",
     "LEDGER_CLASSIFICATION_RULES_NAMESPACE",
