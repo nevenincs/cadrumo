@@ -1979,6 +1979,10 @@ application:
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
       profile_already_exists: El perfil '%{profile}' ja existeix; executa aeat config
         login NAME per activar-lo o aeat config profile delete NAME primer.
+      registration_displaced_session_not_retired: No s'ha pogut crear el perfil. No
+        s'ha pogut eliminar la sessió emmagatzemada del perfil que substitueix. Tanca
+        qualsevol programa que estigui utilitzant el magatzem de perfils i torna-ho
+        a provar.
       registration_label_blank: El nom del perfil no pot estar buit.
       registration_passphrase_too_short: La contrasenya ha de tenir com a mínim {minimum_length}
         caràcters.
@@ -71395,6 +71399,162 @@ modelo:
             label: Recàrrec d'equivalència al tipus 5,2% - base imposable
           iva-resultado-liquidacion:
             label: Resultat de la liquidació
+          iva-sector-diferenciado-1-aic-corrientes-base:
+            label: Sector diferenciat 1 - IVA deduïble en adquisicions intracomunitàries
+              de béns corrents - Base imposable [147]
+          iva-sector-diferenciado-1-aic-corrientes-cuota:
+            label: Sector diferenciat 1 - IVA deduïble en adquisicions intracomunitàries
+              de béns corrents - Quota deduïble [148]
+          iva-sector-diferenciado-1-aic-inversion-base:
+            label: Sector diferenciat 1 - IVA deduïble en adquisicions intracomunitàries
+              de béns d'inversió - Base imposable [149]
+          iva-sector-diferenciado-1-aic-inversion-cuota:
+            label: Sector diferenciat 1 - IVA deduïble en adquisicions intracomunitàries
+              de béns d'inversió - Quota deduïble [150]
+          iva-sector-diferenciado-1-compensaciones-reagp-base:
+            label: Sector diferenciat 1 - Compensacions del règim especial de l'agricultura,
+              ramaderia i pesca - Base imposable [151]
+          iva-sector-diferenciado-1-compensaciones-reagp-cuota:
+            label: Sector diferenciat 1 - Compensacions del règim especial de l'agricultura,
+              ramaderia i pesca - Quota deduïble [152]
+          iva-sector-diferenciado-1-importaciones-corrientes-base:
+            label: Sector diferenciat 1 - IVA deduïble en importacions de béns corrents
+              - Base imposable [143]
+          iva-sector-diferenciado-1-importaciones-corrientes-cuota:
+            label: Sector diferenciat 1 - IVA deduïble en importacions de béns corrents
+              - Quota deduïble [144]
+          iva-sector-diferenciado-1-importaciones-inversion-base:
+            label: Sector diferenciat 1 - IVA deduïble en importacions de béns d'inversió
+              - Base imposable [145]
+          iva-sector-diferenciado-1-importaciones-inversion-cuota:
+            label: Sector diferenciat 1 - IVA deduïble en importacions de béns d'inversió
+              - Quota deduïble [146]
+          iva-sector-diferenciado-1-interiores-corrientes-base:
+            label: Sector diferenciat 1 - IVA deduïble en operacions interiors de
+              béns i serveis corrents - Base imposable [139]
+          iva-sector-diferenciado-1-interiores-corrientes-cuota:
+            label: Sector diferenciat 1 - IVA deduïble en operacions interiors de
+              béns i serveis corrents - Quota deduïble [140]
+          iva-sector-diferenciado-1-interiores-inversion-base:
+            label: Sector diferenciat 1 - IVA deduïble en operacions interiors de
+              béns d'inversió - Base imposable [141]
+          iva-sector-diferenciado-1-interiores-inversion-cuota:
+            label: Sector diferenciat 1 - IVA deduïble en operacions interiors de
+              béns d'inversió - Quota deduïble [142]
+          iva-sector-diferenciado-1-rectificacion-base:
+            label: Sector diferenciat 1 - Rectificació de deduccions - Base imposable
+              [640]
+          iva-sector-diferenciado-1-rectificacion-cuota:
+            label: Sector diferenciat 1 - Rectificació de deduccions - Quota deduïble
+              [153]
+          iva-sector-diferenciado-1-regularizacion-inversiones:
+            label: Sector diferenciat 1 - Regularització d'inversions [154]
+          iva-sector-diferenciado-1-suma-deducciones:
+            label: Sector diferenciat 1 - Suma de deduccions [155]
+          iva-sector-diferenciado-2-aic-corrientes-base:
+            label: Sector diferenciat 2 - IVA deduïble en adquisicions intracomunitàries
+              de béns corrents - Base imposable [164]
+          iva-sector-diferenciado-2-aic-corrientes-cuota:
+            label: Sector diferenciat 2 - IVA deduïble en adquisicions intracomunitàries
+              de béns corrents - Quota deduïble [165]
+          iva-sector-diferenciado-2-aic-inversion-base:
+            label: Sector diferenciat 2 - IVA deduïble en adquisicions intracomunitàries
+              de béns d'inversió - Base imposable [166]
+          iva-sector-diferenciado-2-aic-inversion-cuota:
+            label: Sector diferenciat 2 - IVA deduïble en adquisicions intracomunitàries
+              de béns d'inversió - Quota deduïble [167]
+          iva-sector-diferenciado-2-compensaciones-reagp-base:
+            label: Sector diferenciat 2 - Compensacions del règim especial de l'agricultura,
+              ramaderia i pesca - Base imposable [168]
+          iva-sector-diferenciado-2-compensaciones-reagp-cuota:
+            label: Sector diferenciat 2 - Compensacions del règim especial de l'agricultura,
+              ramaderia i pesca - Quota deduïble [169]
+          iva-sector-diferenciado-2-importaciones-corrientes-base:
+            label: Sector diferenciat 2 - IVA deduïble en importacions de béns corrents
+              - Base imposable [160]
+          iva-sector-diferenciado-2-importaciones-corrientes-cuota:
+            label: Sector diferenciat 2 - IVA deduïble en importacions de béns corrents
+              - Quota deduïble [161]
+          iva-sector-diferenciado-2-importaciones-inversion-base:
+            label: Sector diferenciat 2 - IVA deduïble en importacions de béns d'inversió
+              - Base imposable [162]
+          iva-sector-diferenciado-2-importaciones-inversion-cuota:
+            label: Sector diferenciat 2 - IVA deduïble en importacions de béns d'inversió
+              - Quota deduïble [163]
+          iva-sector-diferenciado-2-interiores-corrientes-base:
+            label: Sector diferenciat 2 - IVA deduïble en operacions interiors de
+              béns i serveis corrents - Base imposable [156]
+          iva-sector-diferenciado-2-interiores-corrientes-cuota:
+            label: Sector diferenciat 2 - IVA deduïble en operacions interiors de
+              béns i serveis corrents - Quota deduïble [157]
+          iva-sector-diferenciado-2-interiores-inversion-base:
+            label: Sector diferenciat 2 - IVA deduïble en operacions interiors de
+              béns d'inversió - Base imposable [158]
+          iva-sector-diferenciado-2-interiores-inversion-cuota:
+            label: Sector diferenciat 2 - IVA deduïble en operacions interiors de
+              béns d'inversió - Quota deduïble [159]
+          iva-sector-diferenciado-2-rectificacion-base:
+            label: Sector diferenciat 2 - Rectificació de deduccions - Base imposable
+              [641]
+          iva-sector-diferenciado-2-rectificacion-cuota:
+            label: Sector diferenciat 2 - Rectificació de deduccions - Quota deduïble
+              [170]
+          iva-sector-diferenciado-2-regularizacion-inversiones:
+            label: Sector diferenciat 2 - Regularització d'inversions [171]
+          iva-sector-diferenciado-2-suma-deducciones:
+            label: Sector diferenciat 2 - Suma de deduccions [172]
+          iva-sector-diferenciado-3-aic-corrientes-base:
+            label: Sector diferenciat 3 - IVA deduïble en adquisicions intracomunitàries
+              de béns corrents - Base imposable [181]
+          iva-sector-diferenciado-3-aic-corrientes-cuota:
+            label: Sector diferenciat 3 - IVA deduïble en adquisicions intracomunitàries
+              de béns corrents - Quota deduïble [182]
+          iva-sector-diferenciado-3-aic-inversion-base:
+            label: Sector diferenciat 3 - IVA deduïble en adquisicions intracomunitàries
+              de béns d'inversió - Base imposable [183]
+          iva-sector-diferenciado-3-aic-inversion-cuota:
+            label: Sector diferenciat 3 - IVA deduïble en adquisicions intracomunitàries
+              de béns d'inversió - Quota deduïble [184]
+          iva-sector-diferenciado-3-compensaciones-reagp-base:
+            label: Sector diferenciat 3 - Compensacions del règim especial de l'agricultura,
+              ramaderia i pesca - Base imposable [185]
+          iva-sector-diferenciado-3-compensaciones-reagp-cuota:
+            label: Sector diferenciat 3 - Compensacions del règim especial de l'agricultura,
+              ramaderia i pesca - Quota deduïble [186]
+          iva-sector-diferenciado-3-importaciones-corrientes-base:
+            label: Sector diferenciat 3 - IVA deduïble en importacions de béns corrents
+              - Base imposable [177]
+          iva-sector-diferenciado-3-importaciones-corrientes-cuota:
+            label: Sector diferenciat 3 - IVA deduïble en importacions de béns corrents
+              - Quota deduïble [178]
+          iva-sector-diferenciado-3-importaciones-inversion-base:
+            label: Sector diferenciat 3 - IVA deduïble en importacions de béns d'inversió
+              - Base imposable [179]
+          iva-sector-diferenciado-3-importaciones-inversion-cuota:
+            label: Sector diferenciat 3 - IVA deduïble en importacions de béns d'inversió
+              - Quota deduïble [180]
+          iva-sector-diferenciado-3-interiores-corrientes-base:
+            label: Sector diferenciat 3 - IVA deduïble en operacions interiors de
+              béns i serveis corrents - Base imposable [173]
+          iva-sector-diferenciado-3-interiores-corrientes-cuota:
+            label: Sector diferenciat 3 - IVA deduïble en operacions interiors de
+              béns i serveis corrents - Quota deduïble [174]
+          iva-sector-diferenciado-3-interiores-inversion-base:
+            label: Sector diferenciat 3 - IVA deduïble en operacions interiors de
+              béns d'inversió - Base imposable [175]
+          iva-sector-diferenciado-3-interiores-inversion-cuota:
+            label: Sector diferenciat 3 - IVA deduïble en operacions interiors de
+              béns d'inversió - Quota deduïble [176]
+          iva-sector-diferenciado-3-rectificacion-base:
+            label: Sector diferenciat 3 - Rectificació de deduccions - Base imposable
+              [642]
+          iva-sector-diferenciado-3-rectificacion-cuota:
+            label: Sector diferenciat 3 - Rectificació de deduccions - Quota deduïble
+              [187]
+          iva-sector-diferenciado-3-regularizacion-inversiones:
+            label: Sector diferenciat 3 - Regularització d'inversions [188]
+          iva-sector-diferenciado-3-suma-deducciones:
+            label: Sector diferenciat 3 - Suma de deduccions [189]
           iva-suma-resultados:
             label: Suma de resultats
           iva-total-bases-iva:
@@ -72991,9 +73151,17 @@ modelo:
             identificacion-8:
               help: null
               label: Comunitat o Ciutat Autònoma de residència el 2020
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Béns i drets - C1. No exempts afectes a activitats empresarials
+                i professionals (no immobles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Béns i drets - C2. Béns immobles no exempts afectes a activitats
+                empresarials i professionals - Total
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici a què es refereix la declaració
+            x-chim6r1ed5i6irrdc4:
+              label: Idioma de la declaració
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període (anual, 0A)
@@ -73377,9 +73545,17 @@ modelo:
             identificacion-8:
               help: null
               label: Comunitat o Ciutat Autònoma de residència el 2022
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Béns i drets - C1. No exempts afectes a activitats empresarials
+                i professionals (no immobles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Béns i drets - C2. Béns immobles no exempts afectes a activitats
+                empresarials i professionals - Total
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici a què es refereix la declaració
+            x-chim6r1ed5i6irrdc4:
+              label: Idioma de la declaració
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període (anual, 0A)
@@ -73763,9 +73939,17 @@ modelo:
             identificacion-8:
               help: null
               label: Comunitat o Ciutat Autònoma de residència el 2023
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Béns i drets - C1. No exempts afectes a activitats empresarials
+                i professionals (no immobles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Béns i drets - C2. Béns immobles no exempts afectes a activitats
+                empresarials i professionals - Total
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici a què es refereix la declaració
+            x-chim6r1ed5i6irrdc4:
+              label: Idioma de la declaració
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període (anual, 0A)
@@ -74149,9 +74333,17 @@ modelo:
             identificacion-8:
               help: null
               label: Comunitat o Ciutat Autònoma de residència el 2024
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Béns i drets - C1. No exempts afectes a activitats empresarials
+                i professionals (no immobles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Béns i drets - C2. Béns immobles no exempts afectes a activitats
+                empresarials i professionals - Total
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici a què es refereix la declaració
+            x-chim6r1ed5i6irrdc4:
+              label: Idioma de la declaració
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període (anual, 0A)
@@ -74535,9 +74727,17 @@ modelo:
             identificacion-8:
               help: null
               label: Comunitat o Ciutat Autònoma de residència el 2025
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Béns i drets - C1. No exempts afectes a activitats empresarials
+                i professionals (no immobles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Béns i drets - C2. Béns immobles no exempts afectes a activitats
+                empresarials i professionals - Total
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici a què es refereix la declaració
+            x-chim6r1ed5i6irrdc4:
+              label: Idioma de la declaració
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període (anual, 0A)

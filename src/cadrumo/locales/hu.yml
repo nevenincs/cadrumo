@@ -1886,6 +1886,10 @@ application:
       profile_already_exists: A(z) %{profile} profil már létezik; futtassa az aeat
         config login NÉV parancsot az aktiváláshoz, vagy az aeat config profile delete
         NÉV parancsot a törléshez.
+      registration_displaced_session_not_retired: A profilt nem sikerült létrehozni.
+        Nem sikerült eltávolítani annak a profilnak a tárolt munkamenetét, amelyet
+        felvált. Zárj be minden programot, amely a profiltárat használja, és próbáld
+        újra.
       registration_label_blank: A profil neve nem lehet üres.
       registration_passphrase_too_short: A jelszónak legalább {minimum_length} karakter
         hosszúnak kell lennie.
@@ -71474,6 +71478,165 @@ modelo:
             label: Egyenértékűségi felár 5.2% kulccsal - adóalap
           iva-resultado-liquidacion:
             label: Az elszámolás eredménye
+          iva-sector-diferenciado-1-aic-corrientes-base:
+            label: 1. elkülönült tevékenységi kör - Folyó termékek Közösségen belüli
+              beszerzésének levonható áfája - Adóalap [147]
+          iva-sector-diferenciado-1-aic-corrientes-cuota:
+            label: 1. elkülönült tevékenységi kör - Folyó termékek Közösségen belüli
+              beszerzésének levonható áfája - Levonható adó [148]
+          iva-sector-diferenciado-1-aic-inversion-base:
+            label: 1. elkülönült tevékenységi kör - Tárgyi eszközök Közösségen belüli
+              beszerzésének levonható áfája - Adóalap [149]
+          iva-sector-diferenciado-1-aic-inversion-cuota:
+            label: 1. elkülönült tevékenységi kör - Tárgyi eszközök Közösségen belüli
+              beszerzésének levonható áfája - Levonható adó [150]
+          iva-sector-diferenciado-1-compensaciones-reagp-base:
+            label: 1. elkülönült tevékenységi kör - A mezőgazdasági, állattenyésztési
+              és halászati különös szabályozás átalánytérítése - Adóalap [151]
+          iva-sector-diferenciado-1-compensaciones-reagp-cuota:
+            label: 1. elkülönült tevékenységi kör - A mezőgazdasági, állattenyésztési
+              és halászati különös szabályozás átalánytérítése - Levonható adó [152]
+          iva-sector-diferenciado-1-importaciones-corrientes-base:
+            label: 1. elkülönült tevékenységi kör - Folyó termékek importjának levonható
+              áfája - Adóalap [143]
+          iva-sector-diferenciado-1-importaciones-corrientes-cuota:
+            label: 1. elkülönült tevékenységi kör - Folyó termékek importjának levonható
+              áfája - Levonható adó [144]
+          iva-sector-diferenciado-1-importaciones-inversion-base:
+            label: 1. elkülönült tevékenységi kör - Tárgyi eszközök importjának levonható
+              áfája - Adóalap [145]
+          iva-sector-diferenciado-1-importaciones-inversion-cuota:
+            label: 1. elkülönült tevékenységi kör - Tárgyi eszközök importjának levonható
+              áfája - Levonható adó [146]
+          iva-sector-diferenciado-1-interiores-corrientes-base:
+            label: 1. elkülönült tevékenységi kör - Belföldi folyó termék- és szolgáltatásbeszerzés
+              levonható áfája - Adóalap [139]
+          iva-sector-diferenciado-1-interiores-corrientes-cuota:
+            label: 1. elkülönült tevékenységi kör - Belföldi folyó termék- és szolgáltatásbeszerzés
+              levonható áfája - Levonható adó [140]
+          iva-sector-diferenciado-1-interiores-inversion-base:
+            label: 1. elkülönült tevékenységi kör - Belföldi tárgyieszköz-beszerzés
+              levonható áfája - Adóalap [141]
+          iva-sector-diferenciado-1-interiores-inversion-cuota:
+            label: 1. elkülönült tevékenységi kör - Belföldi tárgyieszköz-beszerzés
+              levonható áfája - Levonható adó [142]
+          iva-sector-diferenciado-1-rectificacion-base:
+            label: 1. elkülönült tevékenységi kör - Levonások helyesbítése - Adóalap
+              [640]
+          iva-sector-diferenciado-1-rectificacion-cuota:
+            label: 1. elkülönült tevékenységi kör - Levonások helyesbítése - Levonható
+              adó [153]
+          iva-sector-diferenciado-1-regularizacion-inversiones:
+            label: 1. elkülönült tevékenységi kör - Tárgyi eszközök levonásának korrekciója
+              [154]
+          iva-sector-diferenciado-1-suma-deducciones:
+            label: 1. elkülönült tevékenységi kör - Levonások összege [155]
+          iva-sector-diferenciado-2-aic-corrientes-base:
+            label: 2. elkülönült tevékenységi kör - Folyó termékek Közösségen belüli
+              beszerzésének levonható áfája - Adóalap [164]
+          iva-sector-diferenciado-2-aic-corrientes-cuota:
+            label: 2. elkülönült tevékenységi kör - Folyó termékek Közösségen belüli
+              beszerzésének levonható áfája - Levonható adó [165]
+          iva-sector-diferenciado-2-aic-inversion-base:
+            label: 2. elkülönült tevékenységi kör - Tárgyi eszközök Közösségen belüli
+              beszerzésének levonható áfája - Adóalap [166]
+          iva-sector-diferenciado-2-aic-inversion-cuota:
+            label: 2. elkülönült tevékenységi kör - Tárgyi eszközök Közösségen belüli
+              beszerzésének levonható áfája - Levonható adó [167]
+          iva-sector-diferenciado-2-compensaciones-reagp-base:
+            label: 2. elkülönült tevékenységi kör - A mezőgazdasági, állattenyésztési
+              és halászati különös szabályozás átalánytérítése - Adóalap [168]
+          iva-sector-diferenciado-2-compensaciones-reagp-cuota:
+            label: 2. elkülönült tevékenységi kör - A mezőgazdasági, állattenyésztési
+              és halászati különös szabályozás átalánytérítése - Levonható adó [169]
+          iva-sector-diferenciado-2-importaciones-corrientes-base:
+            label: 2. elkülönült tevékenységi kör - Folyó termékek importjának levonható
+              áfája - Adóalap [160]
+          iva-sector-diferenciado-2-importaciones-corrientes-cuota:
+            label: 2. elkülönült tevékenységi kör - Folyó termékek importjának levonható
+              áfája - Levonható adó [161]
+          iva-sector-diferenciado-2-importaciones-inversion-base:
+            label: 2. elkülönült tevékenységi kör - Tárgyi eszközök importjának levonható
+              áfája - Adóalap [162]
+          iva-sector-diferenciado-2-importaciones-inversion-cuota:
+            label: 2. elkülönült tevékenységi kör - Tárgyi eszközök importjának levonható
+              áfája - Levonható adó [163]
+          iva-sector-diferenciado-2-interiores-corrientes-base:
+            label: 2. elkülönült tevékenységi kör - Belföldi folyó termék- és szolgáltatásbeszerzés
+              levonható áfája - Adóalap [156]
+          iva-sector-diferenciado-2-interiores-corrientes-cuota:
+            label: 2. elkülönült tevékenységi kör - Belföldi folyó termék- és szolgáltatásbeszerzés
+              levonható áfája - Levonható adó [157]
+          iva-sector-diferenciado-2-interiores-inversion-base:
+            label: 2. elkülönült tevékenységi kör - Belföldi tárgyieszköz-beszerzés
+              levonható áfája - Adóalap [158]
+          iva-sector-diferenciado-2-interiores-inversion-cuota:
+            label: 2. elkülönült tevékenységi kör - Belföldi tárgyieszköz-beszerzés
+              levonható áfája - Levonható adó [159]
+          iva-sector-diferenciado-2-rectificacion-base:
+            label: 2. elkülönült tevékenységi kör - Levonások helyesbítése - Adóalap
+              [641]
+          iva-sector-diferenciado-2-rectificacion-cuota:
+            label: 2. elkülönült tevékenységi kör - Levonások helyesbítése - Levonható
+              adó [170]
+          iva-sector-diferenciado-2-regularizacion-inversiones:
+            label: 2. elkülönült tevékenységi kör - Tárgyi eszközök levonásának korrekciója
+              [171]
+          iva-sector-diferenciado-2-suma-deducciones:
+            label: 2. elkülönült tevékenységi kör - Levonások összege [172]
+          iva-sector-diferenciado-3-aic-corrientes-base:
+            label: 3. elkülönült tevékenységi kör - Folyó termékek Közösségen belüli
+              beszerzésének levonható áfája - Adóalap [181]
+          iva-sector-diferenciado-3-aic-corrientes-cuota:
+            label: 3. elkülönült tevékenységi kör - Folyó termékek Közösségen belüli
+              beszerzésének levonható áfája - Levonható adó [182]
+          iva-sector-diferenciado-3-aic-inversion-base:
+            label: 3. elkülönült tevékenységi kör - Tárgyi eszközök Közösségen belüli
+              beszerzésének levonható áfája - Adóalap [183]
+          iva-sector-diferenciado-3-aic-inversion-cuota:
+            label: 3. elkülönült tevékenységi kör - Tárgyi eszközök Közösségen belüli
+              beszerzésének levonható áfája - Levonható adó [184]
+          iva-sector-diferenciado-3-compensaciones-reagp-base:
+            label: 3. elkülönült tevékenységi kör - A mezőgazdasági, állattenyésztési
+              és halászati különös szabályozás átalánytérítése - Adóalap [185]
+          iva-sector-diferenciado-3-compensaciones-reagp-cuota:
+            label: 3. elkülönült tevékenységi kör - A mezőgazdasági, állattenyésztési
+              és halászati különös szabályozás átalánytérítése - Levonható adó [186]
+          iva-sector-diferenciado-3-importaciones-corrientes-base:
+            label: 3. elkülönült tevékenységi kör - Folyó termékek importjának levonható
+              áfája - Adóalap [177]
+          iva-sector-diferenciado-3-importaciones-corrientes-cuota:
+            label: 3. elkülönült tevékenységi kör - Folyó termékek importjának levonható
+              áfája - Levonható adó [178]
+          iva-sector-diferenciado-3-importaciones-inversion-base:
+            label: 3. elkülönült tevékenységi kör - Tárgyi eszközök importjának levonható
+              áfája - Adóalap [179]
+          iva-sector-diferenciado-3-importaciones-inversion-cuota:
+            label: 3. elkülönült tevékenységi kör - Tárgyi eszközök importjának levonható
+              áfája - Levonható adó [180]
+          iva-sector-diferenciado-3-interiores-corrientes-base:
+            label: 3. elkülönült tevékenységi kör - Belföldi folyó termék- és szolgáltatásbeszerzés
+              levonható áfája - Adóalap [173]
+          iva-sector-diferenciado-3-interiores-corrientes-cuota:
+            label: 3. elkülönült tevékenységi kör - Belföldi folyó termék- és szolgáltatásbeszerzés
+              levonható áfája - Levonható adó [174]
+          iva-sector-diferenciado-3-interiores-inversion-base:
+            label: 3. elkülönült tevékenységi kör - Belföldi tárgyieszköz-beszerzés
+              levonható áfája - Adóalap [175]
+          iva-sector-diferenciado-3-interiores-inversion-cuota:
+            label: 3. elkülönült tevékenységi kör - Belföldi tárgyieszköz-beszerzés
+              levonható áfája - Levonható adó [176]
+          iva-sector-diferenciado-3-rectificacion-base:
+            label: 3. elkülönült tevékenységi kör - Levonások helyesbítése - Adóalap
+              [642]
+          iva-sector-diferenciado-3-rectificacion-cuota:
+            label: 3. elkülönült tevékenységi kör - Levonások helyesbítése - Levonható
+              adó [187]
+          iva-sector-diferenciado-3-regularizacion-inversiones:
+            label: 3. elkülönült tevékenységi kör - Tárgyi eszközök levonásának korrekciója
+              [188]
+          iva-sector-diferenciado-3-suma-deducciones:
+            label: 3. elkülönült tevékenységi kör - Levonások összege [189]
           iva-suma-resultados:
             label: Eredmények összege
           iva-total-bases-iva:
@@ -73074,9 +73237,17 @@ modelo:
             identificacion-8:
               help: null
               label: 2020. évi lakóhely szerinti autonóm közösség vagy város
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Vagyontárgyak és jogok - C1. Üzleti és szakmai tevékenységhez
+                kötött, nem mentes vagyontárgyak (ingatlanok nélkül) - Összesen
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Vagyontárgyak és jogok - C2. Üzleti és szakmai tevékenységhez
+                kötött, nem mentes ingatlanok - Összesen
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: A bevallás adóéve
+            x-chim6r1ed5i6irrdc4:
+              label: A bevallás nyelve
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Időszak (éves, 0A)
@@ -73466,9 +73637,17 @@ modelo:
             identificacion-8:
               help: null
               label: 2022. évi lakóhely szerinti autonóm közösség vagy város
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Vagyontárgyak és jogok - C1. Üzleti és szakmai tevékenységhez
+                kötött, nem mentes vagyontárgyak (ingatlanok nélkül) - Összesen
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Vagyontárgyak és jogok - C2. Üzleti és szakmai tevékenységhez
+                kötött, nem mentes ingatlanok - Összesen
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: A bevallás adóéve
+            x-chim6r1ed5i6irrdc4:
+              label: A bevallás nyelve
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Időszak (éves, 0A)
@@ -73858,9 +74037,17 @@ modelo:
             identificacion-8:
               help: null
               label: 2023. évi lakóhely szerinti autonóm közösség vagy város
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Vagyontárgyak és jogok - C1. Üzleti és szakmai tevékenységhez
+                kötött, nem mentes vagyontárgyak (ingatlanok nélkül) - Összesen
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Vagyontárgyak és jogok - C2. Üzleti és szakmai tevékenységhez
+                kötött, nem mentes ingatlanok - Összesen
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: A bevallás adóéve
+            x-chim6r1ed5i6irrdc4:
+              label: A bevallás nyelve
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Időszak (éves, 0A)
@@ -74250,9 +74437,17 @@ modelo:
             identificacion-8:
               help: null
               label: 2024. évi lakóhely szerinti autonóm közösség vagy város
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Vagyontárgyak és jogok - C1. Üzleti és szakmai tevékenységhez
+                kötött, nem mentes vagyontárgyak (ingatlanok nélkül) - Összesen
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Vagyontárgyak és jogok - C2. Üzleti és szakmai tevékenységhez
+                kötött, nem mentes ingatlanok - Összesen
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: A bevallás adóéve
+            x-chim6r1ed5i6irrdc4:
+              label: A bevallás nyelve
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Időszak (éves, 0A)
@@ -74643,9 +74838,17 @@ modelo:
             identificacion-8:
               help: null
               label: 2025. évi lakóhely szerinti autonóm közösség vagy város
+            x-c9kmarj5ecn66c9dehnn8obc:
+              label: Vagyontárgyak és jogok - C1. Üzleti és szakmai tevékenységhez
+                kötött, nem mentes vagyontárgyak (ingatlanok nélkül) - Összesen
+            x-c9kmarj5ecn66chdehnn8obc:
+              label: Vagyontárgyak és jogok - C2. Üzleti és szakmai tevékenységhez
+                kötött, nem mentes ingatlanok - Összesen
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: A bevallás adóéve
+            x-chim6r1ed5i6irrdc4:
+              label: A bevallás nyelve
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Időszak (éves, 0A)
