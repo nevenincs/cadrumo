@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:964809736000c102310e5e8d3c69d7ce00e45a41ed9517bc2c061f5f8f3c04da'
+body_hash: 'sha256:a668fdba5666d6d72381b176ab9ca7f5161fbf2ebe23c0445f3e774571b0952b'
 step_id: 'S81'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -69,7 +69,6 @@ journal's stored identity is populated from the same live-session value and is
 therefore empty in exactly the failing cases, and the change-of-bucket guard had
 to survive the widening of its input.
 
-
 Three further facts arrived after this record was first written, none of which
 the dispatcher's brief had anticipated.
 
@@ -109,7 +108,6 @@ recovered key material, four of five phases leaking and the already-retired phas
 clean. The first injection attempt reddened on the reported outcome rather than
 the material and was reordered so the material is measured first.
 
-
 **The decision record already specified this, so the defect was implementation
 drift from a written contract rather than an unspecified area.** The governing
 rollup record states that success atomically swaps the active reference, promotes
@@ -148,4 +146,3 @@ non-revocation ones are liveness guards for the idempotent-login no-op rather
 than identity derivations, and the one live-session-only revocation is so BY
 DESIGN, because it zeroises this process's key material and must not reach
 another profile.
-

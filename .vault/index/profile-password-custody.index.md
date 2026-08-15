@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:86800a85191758ad55b52a5e00521e3367b55122620269c6af0a996ecfb78b54'
+body_hash: 'sha256:aa5324707b95d9ab90d8409c05d51571a9120c0e9bdd587f8b5e843b1fd1c5d8'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -26,8 +26,14 @@ related:
   - '[[2026-08-13-profile-password-custody-W02-P04-S56]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S57]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S58]]'
+  - '[[2026-08-13-profile-password-custody-W02-P04-S81]]'
+  - '[[2026-08-13-profile-password-custody-W02-P04-S82]]'
+  - '[[2026-08-13-profile-password-custody-W02-P04-S89]]'
+  - '[[2026-08-13-profile-password-custody-W02-P04-S90]]'
+  - '[[2026-08-13-profile-password-custody-W02-P04-S95]]'
   - '[[2026-08-13-profile-password-custody-W03-P05-S13]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S42]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S88]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S19]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S32]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S35]]'
@@ -42,12 +48,17 @@ related:
   - '[[2026-08-13-profile-password-custody-W04-P07-S50]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S53]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S54]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S61]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S62]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S63]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S64]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S69]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S70]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S72]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S80]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S83]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S87]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S91]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -62,6 +73,8 @@ related:
   - '[[2026-08-14-profile-password-custody-s11-session-review-audit]]'
   - '[[2026-08-14-profile-password-custody-s12-phase-review-audit]]'
   - '[[2026-08-14-profile-password-custody-s43-absence-gate-independent-review-audit]]'
+  - '[[2026-08-15-profile-password-custody-capabilities-removed-without-a-decision-audit]]'
+  - '[[2026-08-15-profile-password-custody-s12-phase-review-close-audit]]'
   - '[[2026-08-15-profile-password-custody-s12-phase-review-rerun-audit]]'
 ---
 
@@ -88,6 +101,8 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-14-profile-password-custody-s11-session-review-audit` - `profile-password-custody` audit: `s11 session review`
 - `2026-08-14-profile-password-custody-s12-phase-review-audit` - `profile-password-custody` audit: `s12 phase review`
 - `2026-08-14-profile-password-custody-s43-absence-gate-independent-review-audit` - `profile-password-custody` audit: `s43 absence gate independent review`
+- `2026-08-15-profile-password-custody-capabilities-removed-without-a-decision-audit` - `profile-password-custody` audit: `capabilities removed without a decision`
+- `2026-08-15-profile-password-custody-s12-phase-review-close-audit` - `profile-password-custody` audit: `s12 phase review close`
 - `2026-08-15-profile-password-custody-s12-phase-review-rerun-audit` - `profile-password-custody` audit: `s12 phase review rerun`
 
 ### exec
@@ -129,9 +144,20 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W04-P07-S64` - Have Terra XHigh open the core facade as the next import-cost lever
 - `2026-08-13-profile-password-custody-W04-P07-S70` - Have Sol Medium triage the rehoming-ledger findings the repaired gate can now report
 - `2026-08-13-profile-password-custody-W04-P07-S72` - Have Terra XHigh make the settings-override test control its own environment instead of inheriting the operator's
+- `2026-08-13-profile-password-custody-W02-P04-S81` - Have Terra XHigh revoke the retired profile's session material on the durable pointer unioned with the live session
+- `2026-08-13-profile-password-custody-W02-P04-S82` - Have Terra XHigh re-site the non-resurrection proof across separate processes
+- `2026-08-13-profile-password-custody-W02-P04-S89` - Have Terra XHigh make the operator status projection report a verdict for an unregistered pointer
+- `2026-08-13-profile-password-custody-W02-P04-S90` - Have Terra XHigh make the cold-pointer logout refusal name what it could not do and re-author the nine tests
+- `2026-08-13-profile-password-custody-W02-P04-S95` - Have Terra XHigh make the receipt deletion honour the clear outcome it already computes, since the discard helper returns whether the compare-and-clear succeeded and the resume path branches on it, while the revocation entry point calls the same helper bare and returns nothing, so a refused clear is silent and a login can report the prior profile as closed while its acceleration receipt survives on disk, the reachability being narrow because the bytes must change under a held per-profile lock but the reporting value already existing
+- `2026-08-13-profile-password-custody-W03-P06-S88` - Have Terra XHigh resolve the command-line lifecycle module that asserts custody verbs are mounted
 - `2026-08-13-profile-password-custody-W04-P07-S19` - Have Terra XHigh dissolve the forwarding port package in five ordered parts
+- `2026-08-13-profile-password-custody-W04-P07-S61` - Have Terra XHigh bring the integration test lane under a standing watch
 - `2026-08-13-profile-password-custody-W04-P07-S62` - Have Sol Medium rule which layer owns the bucket manifest
+- `2026-08-13-profile-password-custody-W04-P07-S69` - Have Terra XHigh remove the second bucket-root creator that survives as dead production code
 - `2026-08-13-profile-password-custody-W04-P07-S80` - Have Terra XHigh restore lane reachability for the eight keychain-marked tests placed where no keychain lane names them
+- `2026-08-13-profile-password-custody-W04-P07-S83` - Have Terra XHigh make the session-receipt tamper test actually reach the authenticated-data check it exists to cover
+- `2026-08-13-profile-password-custody-W04-P07-S87` - Have Terra XHigh stop the configuration-reset retention decision failing OPEN when no assessment is supplied
+- `2026-08-13-profile-password-custody-W04-P07-S91` - Have Sol Medium rule on the overloaded session vocabulary that caused a wrong architectural premise to survive two rounds of review
 
 ### plan
 

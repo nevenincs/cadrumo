@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:be2790ad3931ffd51ec5809dff5804d62c372d2a805995336e940fd92620f91e'
+body_hash: 'sha256:b4af5ea0667d97bc7b7acacfe2b97c75c0e7c9ec516b6206d0a4855868ed012b'
 step_id: 'S69'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -110,7 +110,6 @@ suite reads them.
 The verdict on the change is unaffected, resting on the consumer suite and the
 behavioural probe rather than on the unmeasured suites.
 
-
 **Second correction, from the same author a step later.** This record stated that
 publication renames a staged capsule into place and does NOT create the database
 and blob children. A controlled probe run afterwards shows that after registration
@@ -129,4 +128,3 @@ an inference stated as a measurement propagated past its author. The rule that
 came out of the first instance applies to this one: mark the boundary between what
 was measured and what was inferred inside the sentence, because that boundary is
 the only part that survives being copied.
-
