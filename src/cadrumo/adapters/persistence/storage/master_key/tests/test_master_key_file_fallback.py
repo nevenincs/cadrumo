@@ -15,6 +15,7 @@ import pytest
 from sqlalchemy import text
 
 from ......core import StorageCategory, bucket_scoped_storage_path
+from ......core.base64_codec import b64_decode
 from ......core.config import SecretStoreBackend, Settings, override_settings
 from ......core.errors import build_error_envelope
 from ......core.external_constants import UTF_8_ENCODING
@@ -39,7 +40,7 @@ from .._active_session import (
     get_active_master_key,
     has_active_bucket_session,
 )
-from .._master_key import _b64decode, _KdfParameters
+from .._master_key import _KdfParameters
 from .._master_key_bucket_dek import bucket_dek_path as production_bucket_dek_path
 from .._master_key_derivation import KDF_PARAMS_VERSION
 from ._master_key_support import (
@@ -700,7 +701,7 @@ class TestFileFallbackProvider:
         assert params.memory_cost == 19 * 1024
         assert params.time_cost == 2
         assert params.parallelism == 1
-        assert len(_b64decode(params.salt_b64)) == 16
+        assert len(b64_decode(params.salt_b64)) == 16
 
     def test_master_key_file_is_ciphertext_not_plaintext(self, tmp_path: Path) -> None:
         """The persisted master.key MUST not contain the plaintext key bytes."""

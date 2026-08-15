@@ -618,11 +618,11 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.persistence.storage.master_key._errors.MasterKeyTypeError",
+        "cadrumo.adapters.persistence.storage.custody._errors.WipeTypeError",
         ErrorCode(
-            code="INTERNAL_MASTER_KEY_TYPE",
+            code="INTERNAL_WIPE_TYPE",
             category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_master_key_type",
+            message_key="errors.internal.internal_wipe_type",
             retryable=False,
             runbook_id=None,
         ),

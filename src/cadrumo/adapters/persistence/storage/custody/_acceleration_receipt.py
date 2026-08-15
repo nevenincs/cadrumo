@@ -31,7 +31,7 @@ deleted and refused with a typed
 tolerated. No plaintext KEK, DEK, or session-key byte ever lands on disk.
 
 Zeroisation honesty: the session key and DEK are held in ``bytearray``
-buffers wiped through :func:`~adapters.persistence.storage.master_key._zeroise.zeroise`
+buffers wiped through :func:`~adapters.persistence.storage.custody._zeroise.zeroise`
 on every exit path, but the AEAD primitives and the pydantic boundary
 require transient immutable ``bytes`` views whose lifetime the garbage
 collector owns — the same best-effort contract
@@ -83,14 +83,6 @@ from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
 from .._storage_path_definitions import PROFILE_SESSION_FILENAME
 from ..crypto import EncryptedBlob, decrypt_record, encrypt_record
-from ..custody import (
-    ProfileCustodyRecordError,
-    compare_and_clear_profile_custody_local_record,
-    compare_and_replace_profile_custody_local_record,
-    ensure_profile_custody_local_directory,
-    profile_custody_local_lock,
-    read_optional_profile_custody_local_record,
-)
 from ..errors import (
     DecryptionError,
     EncryptionError,
@@ -98,7 +90,15 @@ from ..errors import (
     StorageError,
     StorageValidationError,
 )
-from ..custody import zeroise as _zeroise
+from ._errors import ProfileCustodyRecordError
+from ._filesystem import (
+    compare_and_clear_profile_custody_local_record,
+    compare_and_replace_profile_custody_local_record,
+    ensure_profile_custody_local_directory,
+    profile_custody_local_lock,
+    read_optional_profile_custody_local_record,
+)
+from ._zeroise import zeroise as _zeroise
 
 _log = get_logger(__name__)
 

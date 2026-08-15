@@ -21,10 +21,7 @@ from ...errors import (
     SecretStoreError,
     StorageValidationError,
 )
-from .._errors import (
-    MasterKeyReentrantError,
-    MasterKeyTypeError,
-)
+from .._errors import MasterKeyReentrantError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -46,7 +43,6 @@ def test_cluster_error_envelope_round_trips() -> None:
 
     error_instances = (
         MasterKeyReentrantError("SomeProvider"),
-        MasterKeyTypeError("wrong type"),
         KeyDerivationError("unsupported KDF algorithm 'bcrypt'"),
         EncryptionError("kek must be exactly 32 bytes"),
         StorageValidationError("bucket_id must be non-empty"),
@@ -61,12 +57,3 @@ def test_master_key_reentrant_error_is_secret_store_error_subtype() -> None:
     """MasterKeyReentrantError must sit in the SecretStoreError family."""
 
     assert issubclass(MasterKeyReentrantError, SecretStoreError)
-
-
-def test_master_key_type_error_is_storage_error_and_type_error() -> None:
-    """MasterKeyTypeError must be catchable as both StorageError and TypeError."""
-
-    from ...errors import StorageError
-
-    assert issubclass(MasterKeyTypeError, StorageError)
-    assert issubclass(MasterKeyTypeError, TypeError)

@@ -7121,8 +7121,6 @@ errors:
       elutasította a műveletet.'
     internal_master_key_reentrant: 'Belső hiba: a mesterkulcs-szolgáltató reentráns
       módon lett meghívva; zárja be az aktív munkamenetet, mielőtt újra belépne.'
-    internal_master_key_type: 'Belső hiba: a mesterkulcs-művelet hibás típusú értéket
-      kapott.'
     internal_observability_run_context_missing: 'Belső hiba: telemetriai eseményt
       rögzítettek aktív futási kontextuson kívül.'
     internal_output_rendering: 'Belső hiba: a parancs kimenetét nem sikerült biztonságosan
@@ -7132,6 +7130,8 @@ errors:
     internal_profile_project_answers_not_registered: 'Belső hiba: a project_answers
       nincs regisztrálva az alkalmazás indításakor.'
     internal_profile_registration: 'Belső hiba: a profil regisztrálása sikertelen.'
+    internal_wipe_type: 'Belső hiba: a törlési művelet olyan értéket kapott, amelyet
+      nem tud felülírni.'
     internal_wizard_catalogue_already_registered: 'Belső hiba: a varázsló-katalógus
       másodszor is regisztrálva lett, eltérő objektumokkal.'
     internal_wizard_catalogue_not_registered: 'Belső hiba: a varázsló-katalógus nincs

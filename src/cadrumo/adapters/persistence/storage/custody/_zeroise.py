@@ -1,4 +1,4 @@
-"""In-memory zeroisation primitives for the master-key surface.
+"""In-memory zeroisation primitives for key material held by this process.
 
 The substrate holds the unlocked KEK and DEK in `bytearray` buffers
 attached to a `BucketSession` instance. On `lock`
@@ -24,16 +24,16 @@ from __future__ import annotations
 
 from typing import Final
 
-from ._errors import MasterKeyTypeError
+from ._errors import WipeTypeError
 
-_MASTER_KEY_TYPE_MESSAGE_KEY: Final[str] = "errors.internal.internal_master_key_type"
+_WIPE_TYPE_MESSAGE_KEY: Final[str] = "errors.internal.internal_wipe_type"
 
 
-def _master_key_type_error(buffer: object) -> MasterKeyTypeError:
-    return MasterKeyTypeError(
+def _wipe_type_error(buffer: object) -> WipeTypeError:
+    return WipeTypeError(
         "zeroise() requires a mutable bytearray buffer",
         context={"received_type": type(buffer).__name__},
-        translated_message=_MASTER_KEY_TYPE_MESSAGE_KEY,
+        translated_message=_WIPE_TYPE_MESSAGE_KEY,
     )
 
 
@@ -50,10 +50,10 @@ def zeroise(buffer: object) -> None:
             runtime with :exc:`TypeError`.
 
     Raises:
-        MasterKeyTypeError: When ``buffer`` is not a ``bytearray``.
+        WipeTypeError: When ``buffer`` is not a ``bytearray``.
     """
     if not isinstance(buffer, bytearray):
-        raise _master_key_type_error(buffer)
+        raise _wipe_type_error(buffer)
     for index in range(len(buffer)):
         buffer[index] = 0
 

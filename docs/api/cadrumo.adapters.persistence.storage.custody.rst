@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.adapters.persistence.storage.custody._acceleration_receipt
    cadrumo.adapters.persistence.storage.custody._capsule
    cadrumo.adapters.persistence.storage.custody._capsule_data
    cadrumo.adapters.persistence.storage.custody._capsule_discovery
@@ -38,3 +39,4 @@ Submodules
    cadrumo.adapters.persistence.storage.custody._recovery_artifact
    cadrumo.adapters.persistence.storage.custody._sentinel
    cadrumo.adapters.persistence.storage.custody._sentinel_contract
+   cadrumo.adapters.persistence.storage.custody._zeroise

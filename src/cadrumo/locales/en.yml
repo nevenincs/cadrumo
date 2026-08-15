@@ -6789,8 +6789,6 @@ errors:
       rejected the operation.'
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
       close the active session before re-entering.'
-    internal_master_key_type: 'Internal error: master-key operation received a value
-      of the wrong type.'
     internal_observability_run_context_missing: 'Internal error: a telemetry event
       was recorded outside an active run context.'
     internal_output_rendering: 'Internal error: the command output could not be rendered
@@ -6800,6 +6798,8 @@ errors:
     internal_profile_project_answers_not_registered: 'Internal error: project_answers
       has not been registered at application startup.'
     internal_profile_registration: 'Internal error: profile could not be registered.'
+    internal_wipe_type: 'Internal error: the wipe operation received a value it cannot
+      overwrite.'
     internal_wizard_catalogue_already_registered: 'Internal error: the wizard catalogue
       was registered a second time with different objects.'
     internal_wizard_catalogue_not_registered: 'Internal error: the wizard catalogue

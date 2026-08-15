@@ -7262,8 +7262,6 @@ errors:
       flux guiat ha rebutjat l''operació.'
     internal_master_key_reentrant: 'Error intern: el proveïdor de la clau mestra s''ha
       invocat de manera reentrant; tanca la sessió activa abans de tornar a entrar-hi.'
-    internal_master_key_type: 'Error intern: l''operació de clau mestra ha rebut un
-      valor de tipus incorrecte.'
     internal_observability_run_context_missing: 'Error intern: s''ha intentat registrar
       un esdeveniment de telemetria fora d''un context d''execució actiu.'
     internal_output_rendering: 'Error intern: la sortida de l''ordre no s''ha pogut
@@ -7273,6 +7271,8 @@ errors:
     internal_profile_project_answers_not_registered: 'Error intern: les respostes
       del projecte de perfil no estan registrades.'
     internal_profile_registration: 'Error intern: no s''ha pogut registrar el perfil.'
+    internal_wipe_type: 'Error intern: l''operació d''esborrat segur ha rebut un valor
+      que no pot sobreescriure.'
     internal_wizard_catalogue_already_registered: 'Error intern: el catàleg de l''assistent
       ja està registrat.'
     internal_wizard_catalogue_not_registered: 'Error intern: el catàleg de l''assistent

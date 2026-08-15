@@ -296,7 +296,7 @@ from datetime import datetime
 from pathlib import Path
 from uuid import UUID
 
-from cadrumo.adapters.persistence.storage.master_key import resume_profile_session
+from cadrumo.adapters.persistence.storage.custody import resume_profile_session
 
 outcome, _ = resume_profile_session(
     storage_root=Path(__import__('sys').argv[1]),

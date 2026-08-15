@@ -13,7 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.adapters.persistence.storage.master_key._acceleration_receipt
    cadrumo.adapters.persistence.storage.master_key._active_session
    cadrumo.adapters.persistence.storage.master_key._bucket_identity
    cadrumo.adapters.persistence.storage.master_key._bucket_session
@@ -32,4 +31,3 @@ Submodules
    cadrumo.adapters.persistence.storage.master_key._provider_session
    cadrumo.adapters.persistence.storage.master_key._recovery
    cadrumo.adapters.persistence.storage.master_key._recovery_record
-   cadrumo.adapters.persistence.storage.master_key._zeroise

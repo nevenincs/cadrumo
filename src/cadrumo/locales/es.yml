@@ -7309,8 +7309,6 @@ errors:
       flujo guiado rechazó la operación.'
     internal_master_key_reentrant: 'Error interno: el proveedor de clave maestra se
       invocó de forma reentrante; cierra la sesión activa antes de volver a entrar.'
-    internal_master_key_type: 'Error interno: la operación de clave maestra recibió
-      un valor de tipo incorrecto.'
     internal_observability_run_context_missing: 'Error interno: se intentó registrar
       un evento de telemetría fuera de un contexto de ejecución activo.'
     internal_output_rendering: 'Error interno: la salida del comando no se pudo representar
@@ -7320,6 +7318,8 @@ errors:
     internal_profile_project_answers_not_registered: 'Error interno: las respuestas
       del proyecto de perfil no están registradas.'
     internal_profile_registration: 'Error interno: no se pudo registrar el perfil.'
+    internal_wipe_type: 'Error interno: la operación de borrado seguro recibió un
+      valor que no puede sobrescribir.'
     internal_wizard_catalogue_already_registered: 'Error interno: el catálogo del
       asistente ya está registrado.'
     internal_wizard_catalogue_not_registered: 'Error interno: el catálogo del asistente

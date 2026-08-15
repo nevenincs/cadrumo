@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._errors import MasterKeyTypeError
+from ...custody import WipeTypeError, zeroise
 from .._recovery import (
     RecoveryKey,
     decode_mnemonic,
@@ -32,7 +32,6 @@ from .._recovery import (
     unwrap_master_key,
     wrap_master_key,
 )
-from .._zeroise import zeroise
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -47,9 +46,9 @@ def test_zeroise_refuses_immutable_bytes_and_str() -> None:
     the value's type, not a vacuous one. If the recovery surface regressed to
     handing back ``bytes``, the assertions below would raise rather than pass.
     """
-    with pytest.raises(MasterKeyTypeError):
+    with pytest.raises(WipeTypeError):
         zeroise(bytes(32))
-    with pytest.raises(MasterKeyTypeError):
+    with pytest.raises(WipeTypeError):
         zeroise("abandon abandon abandon")
 
 

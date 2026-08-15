@@ -34,31 +34,17 @@ retired. Importing this package does not resolve providers, acquire
 keys, unwrap recovery material, or write custody files; callers must
 invoke the exported operations explicitly.
 
-The persisted cross-process profile session (the ``aeat config login``
-state) is exported through :class:`PersistedProfileSession`,
-:class:`ProfileSessionResumeOutcome`, and the
-:func:`mint_profile_session` / :func:`resume_profile_session` /
-:func:`delete_profile_session` lifecycle, with the failed-login
-throttle riding beside it (:class:`LoginThrottleState`,
-:func:`evaluate_login_throttle`).
+The per-profile acceleration receipt that carries the ``aeat config login``
+state across processes is NOT here: it belongs to
+:mod:`cadrumo.adapters.persistence.storage.custody`, which owns per-profile
+password custody. What remains is the shared-master surface plus the live
+key-holding session machinery both surfaces use — :class:`BucketSession` and
+its activation context, which the providers own — and the failed-login
+throttle (:class:`LoginThrottleState`, :func:`evaluate_login_throttle`).
 """
 
 from __future__ import annotations
 
-from ._acceleration_receipt import (
-    PROFILE_SESSION_KEYCHAIN_SERVICE,
-    PROFILE_SESSION_SCHEMA_VERSION,
-    PersistedProfileSession,
-    ProfileSessionResumeOutcome,
-    advance_persisted_profile_session_idle_deadline,
-    advance_profile_session_idle_deadline,
-    delete_profile_session,
-    mint_profile_session,
-    profile_session_path,
-    resume_profile_session,
-    unwrap_profile_session_dek,
-    wrap_profile_session_dek,
-)
 from ._active_session import (
     NoActiveBucketSessionError,
     activate_session,
@@ -126,14 +112,11 @@ from ._recovery import (
     wrap_master_key,
 )
 from ._recovery_record import RecoveryRecord
-from ._zeroise import zeroise
 
 __all__ = [
     "ARGON2_MEMORY_COST_KIB",
     "ARGON2_PARALLELISM",
     "ARGON2_TIME_COST",
-    "PROFILE_SESSION_KEYCHAIN_SERVICE",
-    "PROFILE_SESSION_SCHEMA_VERSION",
     "BucketSession",
     "FileFallbackMasterKeyProvider",
     "KdfParams",
@@ -143,8 +126,6 @@ __all__ = [
     "MasterKeyReentrantError",
     "NoActiveBucketSessionError",
     "PassphraseCallback",
-    "PersistedProfileSession",
-    "ProfileSessionResumeOutcome",
     "RecoveryKey",
     "RecoveryRecord",
     "ThrottleEvaluation",
@@ -154,8 +135,6 @@ __all__ = [
     "activate_master_key_provider",
     "activate_session",
     "active_bucket_session_serves",
-    "advance_persisted_profile_session_idle_deadline",
-    "advance_profile_session_idle_deadline",
     "atomic_write_secure_bytes",
     "bind_active_bucket_session",
     "bucket_dek_path",
@@ -163,7 +142,6 @@ __all__ = [
     "close_all_live_bucket_sessions",
     "current_active_bucket_session",
     "decode_mnemonic",
-    "delete_profile_session",
     "derive_kek_with_params",
     "encode_mnemonic",
     "evaluate_idle",
@@ -179,24 +157,18 @@ __all__ = [
     "load_wrapped_master_key",
     "login_throttle_path",
     "looks_like_real_tax_id",
-    "mint_profile_session",
-    "profile_session_path",
     "read_wrapped_bucket_dek",
     "record_login_failure",
     "refuse_unsecured_bucket_with_real_profile",
     "refuse_unsecured_with_real_nif",
     "reset_login_throttle",
-    "resume_profile_session",
     "save_wrapped_master_key",
     "session_absolute_minutes_for_bucket",
     "session_serves_bucket",
     "suspend_active_session",
     "unwrap_dek",
     "unwrap_master_key",
-    "unwrap_profile_session_dek",
     "wrap_dek",
     "wrap_master_key",
-    "wrap_profile_session_dek",
     "write_wrapped_bucket_dek",
-    "zeroise",
 ]

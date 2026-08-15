@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import base64
 import getpass
 from collections.abc import Callable
 from pathlib import Path
@@ -15,8 +14,6 @@ from ..errors import SecretStoreError
 __all__ = [
     "PASSPHRASE_ENV_VAR",
     "PassphraseCallback",
-    "_b64decode",
-    "_b64encode",
     "_default_passphrase_callback",
     "_zeroise",
     "atomic_write_secure_bytes",
@@ -27,14 +24,6 @@ PASSPHRASE_ENV_VAR: Final[str] = "CADRUMO_SECRET_PASSPHRASE"  # noqa: S105 - env
 
 PassphraseCallback = Callable[[], str]
 """Pluggable hook for tests — callable returning the passphrase as a str."""
-
-
-def _b64encode(data: bytes) -> str:
-    return base64.b64encode(data).decode("ascii")
-
-
-def _b64decode(text: str) -> bytes:
-    return base64.b64decode(text.encode("ascii"), validate=True)
 
 
 def atomic_write_secure_bytes(target: Path, payload: bytes) -> None:

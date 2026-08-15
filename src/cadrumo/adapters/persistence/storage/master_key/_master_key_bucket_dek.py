@@ -10,10 +10,11 @@ from typing import Final
 
 from pydantic import ValidationError
 
+from .....core.base64_codec import b64_decode, b64_encode
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..crypto import KEY_SIZE
 from ..errors import DecryptionError, MasterKeyMaterialMissingError, MasterKeyUnavailableError
-from ._master_key_io import _b64decode, _b64encode, atomic_write_secure_bytes
+from ._master_key_io import atomic_write_secure_bytes
 from ._master_key_records import _WrappedBucketDekDocument
 
 _MASTER_KEY_UNAVAILABLE_MESSAGE_KEY: Final[str] = "errors.auth.auth_storage_master_key_unavailable"
@@ -147,9 +148,9 @@ def wrapped_dek_from_document(document: _WrappedBucketDekDocument):
     from ._dek_wrap import WrappedDek
 
     try:
-        nonce = _b64decode(document.nonce_b64)
-        ciphertext = _b64decode(document.ciphertext_b64)
-        tag = _b64decode(document.tag_b64)
+        nonce = b64_decode(document.nonce_b64)
+        ciphertext = b64_decode(document.ciphertext_b64)
+        tag = b64_decode(document.tag_b64)
     except (ValueError, binascii.Error) as exc:
         raise master_key_unavailable_error("bucket DEK document carries malformed base64.") from exc
     try:
@@ -161,9 +162,9 @@ def wrapped_dek_from_document(document: _WrappedBucketDekDocument):
 def document_from_wrapped_dek(wrapped) -> _WrappedBucketDekDocument:
     """Return the JSON document shape for a wrapped bucket DEK."""
     return _WrappedBucketDekDocument(
-        nonce_b64=_b64encode(wrapped.nonce),
-        ciphertext_b64=_b64encode(wrapped.ciphertext),
-        tag_b64=_b64encode(wrapped.tag),
+        nonce_b64=b64_encode(wrapped.nonce),
+        ciphertext_b64=b64_encode(wrapped.ciphertext),
+        tag_b64=b64_encode(wrapped.tag),
     )
 
 
