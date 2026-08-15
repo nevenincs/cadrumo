@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:bd4bc35c79f4880cf36afc5f228ee0b41254aeed638752c8808f36586a001ecc'
+body_hash: 'sha256:92bce2443c06e3db5f44aedcda263ab25bcd308680684862d3d389eb18ee77a5'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -20,6 +20,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W02-P04-S10]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S11]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S12]]'
+  - '[[2026-08-13-profile-password-custody-W02-P04-S26]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S27]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S43]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S51]]'
@@ -145,6 +146,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W04-P07-S64` - Have Terra XHigh open the core facade as the next import-cost lever
 - `2026-08-13-profile-password-custody-W04-P07-S70` - Have Sol Medium triage the rehoming-ledger findings the repaired gate can now report
 - `2026-08-13-profile-password-custody-W04-P07-S72` - Have Terra XHigh make the settings-override test control its own environment instead of inheriting the operator's
+- `2026-08-13-profile-password-custody-W02-P04-S26` - Have Terra XHigh restore wipeable key material across the current custody surface so recovery and password unwrap return zeroise-reachable buffers, noting the primitive is reachable today only through the forwarding port and must land after the surviving session package is renamed
 - `2026-08-13-profile-password-custody-W02-P04-S81` - Have Terra XHigh revoke the retired profile's session material on the durable pointer unioned with the live session
 - `2026-08-13-profile-password-custody-W02-P04-S82` - Have Terra XHigh re-site the non-resurrection proof across separate processes
 - `2026-08-13-profile-password-custody-W02-P04-S89` - Have Terra XHigh make the operator status projection report a verdict for an unregistered pointer
