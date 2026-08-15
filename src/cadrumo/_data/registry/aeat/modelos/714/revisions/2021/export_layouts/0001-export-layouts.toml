@@ -771,6 +771,242 @@ justification = "left"
 signed = false
 legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-identificacion-tipo-declaracion"
+offset = 13
+length = 1
+kind = "casilla"
+casilla_id = "identificacion.tipo-declaracion"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-identificacion-sexo"
+offset = 109
+length = 1
+kind = "casilla"
+casilla_id = "identificacion.sexo"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-identificacion-estado-civil"
+offset = 110
+length = 1
+kind = "casilla"
+casilla_id = "identificacion.estado-civil"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+value_policy = "enumerated-digits"
+allowed_values = ["1", "2", "3", "4"]
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-identificacion-fecha-nacimiento"
+offset = 111
+length = 8
+kind = "casilla"
+casilla_id = "identificacion.fecha-nacimiento"
+data_type = "date"
+required = false
+padding = "none"
+justification = "none"
+date_format = "ddmmaaaa"
+value_policy = "ddmmyyyy"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-identificacion-discapacidad-porcentaje"
+offset = 119
+length = 2
+kind = "casilla"
+casilla_id = "identificacion.discapacidad-porcentaje"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+value_policy = "unsigned-integer"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-identificacion-discapacidad-clase"
+offset = 121
+length = 1
+kind = "casilla"
+casilla_id = "identificacion.discapacidad-clase"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+value_policy = "enumerated-digits"
+allowed_values = ["0", "1", "2"]
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-identificacion-codigo-provincia"
+offset = 318
+length = 2
+kind = "casilla"
+casilla_id = "identificacion.codigo-provincia"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+value_policy = "unsigned-integer"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-identificacion-nacionalidad"
+offset = 662
+length = 1
+kind = "casilla"
+casilla_id = "identificacion.nacionalidad"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+value_policy = "enumerated-digits"
+allowed_values = ["0", "1", "2"]
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-identificacion-regimen-economico-matrimonio"
+offset = 701
+length = 1
+kind = "casilla"
+casilla_id = "identificacion.regimen-economico-matrimonio"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-identificacion-representante-nif"
+offset = 705
+length = 9
+kind = "casilla"
+casilla_id = "identificacion.representante-nif"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-identificacion-representante-nombre"
+offset = 714
+length = 32
+kind = "casilla"
+casilla_id = "identificacion.representante-nombre"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-identificacion-fecha-declaracion-localidad"
+offset = 746
+length = 20
+kind = "casilla"
+casilla_id = "identificacion.fecha-declaracion-localidad"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-identificacion-fecha-declaracion-dia"
+offset = 766
+length = 2
+kind = "casilla"
+casilla_id = "identificacion.fecha-declaracion-dia"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+value_policy = "two-digit-day"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-identificacion-fecha-declaracion-mes"
+offset = 768
+length = 10
+kind = "casilla"
+casilla_id = "identificacion.fecha-declaracion-mes"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-identificacion-fecha-declaracion-anio"
+offset = 778
+length = 4
+kind = "casilla"
+casilla_id = "identificacion.fecha-declaracion-anio"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+value_policy = "four-digit-year"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
+
+[[revisions."2021".export_layouts.records.fields]]
+id = "modelo-714-identificacion-complementaria-cuotas-anteriores"
+offset = 817
+length = 13
+kind = "casilla"
+casilla_id = "identificacion.complementaria-cuotas-anteriores"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-207-2022:art-4"]
+source_refs = ["aeat-dr-714-2021"]
 [[revisions."2021".export_layouts.records]]
 id = "modelo-714-page-02"
 record_type = "714-02"
@@ -3177,10 +3413,11 @@ offset = 104
 length = 1
 kind = "casilla"
 casilla_id = "ingreso.forma-de-pago"
-data_type = "text"
+data_type = "integer"
 required = false
-padding = "right_space"
-justification = "left"
+padding = "left_zero"
+justification = "right"
+value_policy = "enumerated-digits"
 allowed_values = ["0", "2", "3"]
 signed = false
 legal_refs = ["orden-hfp-207-2022:art-4"]

@@ -593,6 +593,53 @@ def _roll_forward(
     return operation
 
 
+def _clear_auth_for_target(bucket_id: str) -> ConfigResetAuthClearance:
+    """End one target's auth custody by whichever means its key state allows.
+
+    A reset holds locks on profiles it has NOT unlocked, and the two halves of
+    auth custody answer to different keys. The acquisition locks are plaintext
+    files outside the capsule: key-free to clear, and NOT reaped by the capsule's
+    deletion, so they are cleared here or they outlive the erase. Everything the
+    revocation reaches beyond them -- the AEAT browser session and the auth
+    workflow state -- are encrypted rows INSIDE the capsule, which the deletion
+    destroys wholesale; the revocation cannot open them without the key and does
+    not need to.
+
+    So a locked target gets the key-free half only. Driving the full revocation
+    at it was the defect: it refused, correctly, and stalled every reset. The
+    tempting repair -- catching that refusal and carrying on -- would report a
+    revocation that never happened, which is the failure an earlier ruling in
+    this campaign closed.
+
+    An open custody session is a different case and keeps the full revocation,
+    because it can reach one thing capsule destruction cannot: the
+    certificate-source secrets, which live outside the capsule under a
+    key-derived lookup digest. Those are the residue a locked target leaves
+    behind, and the returned clearance records that it did rather than implying
+    a clean sweep.
+    """
+    settings = load_settings()
+    cleared_lock_provider_ids = tuple(
+        sorted(clear_operator_auth_acquisition_locks(settings, bucket_id=bucket_id)),
+    )
+    # Asked on the ambient route, with no injected Settings, because that is
+    # exactly the route the revocation below would take: a probe on a different
+    # route would answer about a profile the operation is not about to touch.
+    if not operator_auth_revocation_is_reachable(bucket_id=bucket_id):
+        return ConfigResetAuthClearance(
+            mode=ConfigResetAuthClearanceMode.CAPSULE_DESTRUCTION,
+            cleared_at=now(),
+            cleared_lock_provider_ids=cleared_lock_provider_ids,
+        )
+    result = reset_operator_auth(all_providers=True, target_bucket_id=bucket_id)
+    return ConfigResetAuthClearance(
+        mode=ConfigResetAuthClearanceMode.UNLOCKED_REVOCATION,
+        cleared_at=now(),
+        cleared_lock_provider_ids=cleared_lock_provider_ids,
+        removed_out_of_bucket_secret_records=result.removed_certificate_secrets,
+    )
+
+
 def _clear_auth_for_targets(
     repository: ConfigResetJournalRepository,
     operation: ConfigResetOperation,
@@ -601,17 +648,24 @@ def _clear_auth_for_targets(
         if _phase_at_least(target.phase, ConfigResetTargetPhase.AUTH_CLEARED):
             continue
         if not target.exists_at_snapshot:
+            # An absent capsule still leaves the key-free locks behind, because
+            # they were never inside it. Skipping auth entirely here left one
+            # per provider for every dangling target.
             operation = _replace_target(
                 operation,
                 index,
-                _update_target(target, phase=ConfigResetTargetPhase.AUTH_CLEARED),
+                _update_target(
+                    target,
+                    phase=ConfigResetTargetPhase.AUTH_CLEARED,
+                    auth_clearance=_clear_auth_for_target(target.bucket_id),
+                ),
             )
             repository.save(operation)
             continue
         target = _update_target(target, phase=ConfigResetTargetPhase.AUTH_CLEARING)
         operation = _replace_target(operation, index, target)
         repository.save(operation)
-        reset_operator_auth(all_providers=True, target_bucket_id=target.bucket_id)
+        clearance = _clear_auth_for_target(target.bucket_id)
         assessment = BucketMaintenanceService().assess_deletion(
             AssessBucketDeletionCommand(bucket_id=target.bucket_id),
         )
@@ -627,6 +681,7 @@ def _clear_auth_for_targets(
                 assessment.retention,
                 target.retention,
             ),
+            auth_clearance=clearance,
             phase=ConfigResetTargetPhase.AUTH_CLEARED,
         )
         operation = _replace_target(operation, index, target)

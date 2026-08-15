@@ -7559,7 +7559,7 @@ flows:
         value: Value
       field_unavailable: Profile field unavailable in this version
       none: No active profile.
-      repeated_field: '{label} — entry {row}'
+      repeated_field: '{label} - entry {row}'
       value_unavailable: Unavailable value
     profiles:
       column:
@@ -7596,7 +7596,7 @@ flows:
         This cannot be undone.
       title: Restart the whole flow?
     header: '{flow} - question {position} of {total}, section {section}'
-    header_single_section: '{flow} — question {position} of {total}'
+    header_single_section: '{flow} - question {position} of {total}'
     section_unavailable: Unavailable section
 ledger:
   evidence:
@@ -49015,12 +49015,16 @@ modelo:
         '2025':
           casilla:
             clave-identificacion:
+              help: null
               label: Identification method code
             clave-mercado:
+              help: null
               label: Market type code
             clave-representacion:
+              help: null
               label: Securities representation code
             clave-titularidad:
+              help: null
               label: Ownership type code
             clave-valor:
               help: null
@@ -49029,8 +49033,10 @@ modelo:
               help: null
               label: Country code
             codigo-provincia:
+              help: null
               label: Province code
             declaracion-complementaria-sustitutiva:
+              help: null
               label: Supplementary or replacement return
             declarado-nif:
               help: null
@@ -49043,36 +49049,46 @@ modelo:
               help: null
               label: Tax ID of the filer
             declarante-razon-social:
+              help: null
               label: Business name of the filer
             ejercicio-declaracion:
               help: null
               label: Filing year
             identificacion-valores:
+              help: null
               label: Securities identifier
             nominal-unitario-valores:
               help: null
               label: Unit nominal value of the securities
             numero-identificativo-anterior:
+              help: null
               label: Identifying number of the previous return
             numero-justificante:
+              help: null
               label: Filing receipt number
             numero-total-declarados:
+              help: null
               label: Total number of reported holders
             numero-valores:
               help: null
               label: Number of securities
             persona-relacion:
+              help: null
               label: Contact person
             porcentaje-participacion:
+              help: null
               label: Ownership percentage
             representante-legal-nif:
+              help: null
               label: Tax ID of the legal representative
             tipo-soporte:
+              help: null
               label: Submission medium
             valoracion:
               help: null
               label: Valuation
             valoracion-total:
+              help: null
               label: Total valuation
           field:
             label: null
@@ -70475,9 +70491,26 @@ modelo:
               base
           iva-repercutido-intragrupo-tipo-0-cuota:
             label: Output VAT on intra-group transactions at the 0% rate - VAT amount
+          iva-repercutido-intragrupo-tipo-10-base:
+            label: Output VAT on intra-group transactions at the 10% rate - taxable
+              base
+          iva-repercutido-intragrupo-tipo-10-cuota:
+            label: Output VAT on intra-group transactions at the 10% rate - VAT amount
+          iva-repercutido-intragrupo-tipo-21-base:
+            label: Output VAT on intra-group transactions at the 21% rate - taxable
+              base
+          iva-repercutido-intragrupo-tipo-21-cuota:
+            label: Output VAT on intra-group transactions at the 21% rate - VAT amount
           iva-repercutido-intragrupo-tipo-4-base:
             label: Output VAT on intra-group transactions at the 4% rate - taxable
               base
+          iva-repercutido-intragrupo-tipo-4-cuota:
+            label: Output VAT on intra-group transactions at the 4% rate - VAT amount
+          iva-repercutido-intragrupo-tipo-5-base:
+            label: Output VAT on intra-group transactions at the 5% rate - taxable
+              base
+          iva-repercutido-intragrupo-tipo-5-cuota:
+            label: Output VAT on intra-group transactions at the 5% rate - VAT amount
           iva-volumen-operaciones-entregas-intracomunitarias:
             help: null
             label: Intra-Community supplies of goods and services

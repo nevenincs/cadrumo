@@ -26,20 +26,26 @@ _IDENTITY_HEADING_KEYS = {
     "cli.operator_surface.help.root.heading",
     "cli.root.landing.headline",
 }
+# Keys whose value names the product in sentence prose. A hand-maintained
+# inventory is the point: a NEW key mentioning the product must be a deliberate
+# addition here, not a silent one. Its cost is that a deleted key leaves a dead
+# entry, which the staleness assertion below reports as itself rather than as an
+# unreadable set difference.
+#
+# The ``cli.config.passphrase.*`` prompts were entries here until the custody
+# cutover removed the verb. They are absent from the catalogues rather than
+# retired: the operator surface still declares that command family, with credential
+# rotation recorded as owed. When the capability ships and the prompts come back,
+# they belong in this inventory again.
 _PROSE_KEYS = {
     "ca": {
         "errors.auth.auth_former_product_session_state",
-        "errors.integrity.integrity_storage_bucket_manifest_version_below_floor",
-        "errors.integrity.integrity_storage_bucket_manifest_version_from_future",
         "errors.internal.cli_outbound_payload_boundary",
         "adapters.google.calc_sheets.errors.foreign_spreadsheet_not_owned",
         "adapters.google.oauth_flow.errors.profile_state_unresolved",
         "adapters.google.profile_binding.errors.no_active_profile",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted",
-        "cli.config.passphrase.confirm_new_passphrase_prompt",
-        "cli.config.passphrase.current_passphrase_prompt",
-        "cli.config.passphrase.new_passphrase_prompt",
         "cli.config.google.profile_help",
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",
@@ -50,17 +56,12 @@ _PROSE_KEYS = {
     },
     "en": {
         "errors.auth.auth_former_product_session_state",
-        "errors.integrity.integrity_storage_bucket_manifest_version_below_floor",
-        "errors.integrity.integrity_storage_bucket_manifest_version_from_future",
         "errors.internal.cli_outbound_payload_boundary",
         "adapters.google.calc_sheets.errors.foreign_spreadsheet_not_owned",
         "adapters.google.oauth_flow.errors.profile_state_unresolved",
         "adapters.google.profile_binding.errors.no_active_profile",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted",
-        "cli.config.passphrase.confirm_new_passphrase_prompt",
-        "cli.config.passphrase.current_passphrase_prompt",
-        "cli.config.passphrase.new_passphrase_prompt",
         "cli.config.google.profile_help",
         "mcp.elicitation.refusal.no_channel",
         "provisioning.model.licence.non_commercial_advisory",
@@ -69,14 +70,9 @@ _PROSE_KEYS = {
     },
     "es": {
         "errors.auth.auth_former_product_session_state",
-        "errors.integrity.integrity_storage_bucket_manifest_version_below_floor",
-        "errors.integrity.integrity_storage_bucket_manifest_version_from_future",
         "errors.internal.cli_outbound_payload_boundary",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted",
-        "cli.config.passphrase.confirm_new_passphrase_prompt",
-        "cli.config.passphrase.current_passphrase_prompt",
-        "cli.config.passphrase.new_passphrase_prompt",
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",
         "mcp.elicitation.refusal.no_channel",
@@ -86,14 +82,9 @@ _PROSE_KEYS = {
     },
     "hu": {
         "errors.auth.auth_former_product_session_state",
-        "errors.integrity.integrity_storage_bucket_manifest_version_below_floor",
-        "errors.integrity.integrity_storage_bucket_manifest_version_from_future",
         "errors.internal.cli_outbound_payload_boundary",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted",
-        "cli.config.passphrase.confirm_new_passphrase_prompt",
-        "cli.config.passphrase.current_passphrase_prompt",
-        "cli.config.passphrase.new_passphrase_prompt",
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",
         "mcp.elicitation.refusal.no_channel",
@@ -366,6 +357,14 @@ def test_committed_catalogues_follow_contextual_product_identity_contract() -> N
         assert len(leaves) > 10_000, (
             f"{locale}: only {len(leaves)} non-null leaves survived filtering, so the product-identity "
             f"contract below would be asserted against a near-empty catalogue"
+        )
+        # Report a dead inventory entry as what it is. Without this, a key deleted
+        # from the catalogue surfaces only as an opaque set difference alongside any
+        # genuine contract breach, and the two read identically.
+        stale_prose_keys = _PROSE_KEYS[locale] - leaves.keys()
+        assert not stale_prose_keys, (
+            f"{locale}: _PROSE_KEYS names {sorted(stale_prose_keys)}, absent from the catalogue. "
+            "Remove the dead entries, or restore the keys alongside the code that renders them."
         )
         assert {key for key, value in leaves.items() if _PROSE_NAME_RE.search(value)} == _PROSE_KEYS[locale]
         assert {key for key, value in leaves.items() if _DISPLAY_NAME_RE.search(value)} == _IDENTITY_HEADING_KEYS

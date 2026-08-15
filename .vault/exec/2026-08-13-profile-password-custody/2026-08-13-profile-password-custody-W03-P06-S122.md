@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:f7d68d897f6b434cc2c164fc65ea71153e275da372e1355474599924e74b4bc6'
+body_hash: 'sha256:f3d865342635570e51d719f314aa100400a3b7e38d2fd7db260440f9a8210384'
 step_id: 'S122'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -174,16 +174,28 @@ plugin it is green. Nothing under source control was mutated to prove it, so
 no peer sweep could have captured the break.
 
 The anti-tautology companion — a committed profile that must be counted and
-must raise no marker row — is UNPROVEN, and is recorded as unproven rather
-than quietly dropped. It is the only case that builds an actual calendar, so
-it is the only one that loads the registry authority, and the concurrent
-authority-grade sweep has that load refusing tree-wide over unrelated
-export-layout and authority-grade complaints against several modelo
-revisions. Every retry across a wide window refused for that same cause. The
-case is landed and correct by construction; it has simply never been observed
-green, and an anti-tautology case that was never observed to pass is not yet
-evidence of anything. It must be re-run once the sweep settles before this
-row's coverage claim is complete.
+must raise no marker row — is UNPROVEN. It is landed, and it is recorded here
+as unproven rather than dropped silently or written up as a proof that was
+never obtained.
+
+The cause is entirely outside this row. It is the only one of the four cases
+that builds an actual calendar, so it is the only one that loads the registry
+authority, and the concurrent authority-grade sweep has that load refusing.
+Roughly two dozen attempts across the row, spanning several sweep rounds and
+a window of well over an hour, refused every single time. The refusals came
+in three shapes, all of them registry-authoring rather than surface faults: a
+revision failing its own export-layout schema, because an export field
+declares allowed values without the matching value policy; a set of revisions
+whose declared authority grade outruns the families they have populated; and
+the loader's own concurrency guard reporting the registry directory changed
+during cache fingerprinting and asking for a retry once concurrent writes
+settle. That third shape is the tell — the tree was being rewritten
+underneath each attempt.
+
+So the case has never been observed green, and an anti-tautology case never
+observed to pass is not yet evidence of anything. Re-running this ONE test
+once the registry sweep settles is what completes this row's coverage claim;
+until then the claim is three cases proven and one landed-but-unwitnessed.
 
 One incidental finding shapes the assertion and is worth recording: the bucket
 id is REDACTED on this surface. An assertion embedding the registered id fails

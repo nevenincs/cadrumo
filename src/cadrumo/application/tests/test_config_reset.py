@@ -40,16 +40,12 @@ def _create_profile(
 ) -> None:
     """Seed one profile in the state the production registration door leaves.
 
-    The seeding door publishes a capsule directly; it is not the registration
-    door, and registration is where the empty filing catalogue snapshot is
-    recorded. Recording it here is not test scaffolding around a guard -- it
-    restores the one fact a real profile is born carrying, through the same
-    recorder registration calls. Without it every seeded profile looks like a
-    profile nobody ever asked about its filings, and the deletion preflight
-    refuses, correctly, for a reason that has nothing to do with these tests.
+    The empty filing catalogue snapshot this used to record here is now written
+    by the shared seeding door itself, through the same recorder registration
+    calls, so every suite that seeds a profile gets the fact rather than only
+    the ones that remembered to restore it.
     """
     from ...tests.user_profile import register_minimal_profile
-    from ..filing import try_record_filing_retention_snapshot
 
     with open_test_profile_session(profile_id):
         register_minimal_profile(
@@ -57,11 +53,6 @@ def _create_profile(
             display_name=label,
             overrides={"identity.tax_id": tax_id, "identity.name": label},
         )
-    assert try_record_filing_retention_snapshot(
-        bucket_id=profile_id,
-        records=(),
-        observed_at=datetime.now(UTC),
-    )
 
 
 def _delete_profile_through_custody(profile_id: str, *, root: Path) -> None:
@@ -208,7 +199,11 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
     from ...adapters.persistence.storage.bucket import bucket_paths
     from ...core import AuthProviderKind, StorageCategory, pointer_path, storage_location
     from ...core.config import load_settings
-    from .._config_reset_models import ConfigResetOperationStatus, ConfigResetTargetPhase
+    from .._config_reset_models import (
+        ConfigResetAuthClearanceMode,
+        ConfigResetOperationStatus,
+        ConfigResetTargetPhase,
+    )
     from .._config_reset_repository import ConfigResetJournalRepository
     from ..auth import (
         acquire_auth_acquisition_lock,
@@ -217,6 +212,7 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
         set_operator_certificate_source_secret,
     )
     from ..config_reset import start_config_reset
+    from ..profile_custody import profile_session_path
 
     with _isolated_reset_root(tmp_path) as root:
         root.mkdir(parents=True, exist_ok=True)
@@ -230,14 +226,19 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
         certificate_path = tmp_path / "operator.p12"
         certificate_path.write_bytes(b"test certificate")
         _write_active_pointer(root, _PROFILE_A_ID)
-        register_operator_certificate_source(
-            name="personal",
-            certificate_path=certificate_path,
-        )
-        set_operator_certificate_source_secret(
-            name="personal",
-            secret=SecretStr("test-passphrase"),
-        )
+        # Registering a certificate source and its secret needs the profile
+        # OPEN: the source record is a row inside the capsule and the secret's
+        # lookup digest is derived from the bucket's key. Doing it cold refuses,
+        # which is the same wall the reset meets from the other side.
+        with open_test_profile_session(_PROFILE_A_ID):
+            register_operator_certificate_source(
+                name="personal",
+                certificate_path=certificate_path,
+            )
+            set_operator_certificate_source_secret(
+                name="personal",
+                secret=SecretStr("test-passphrase"),
+            )
 
         settings = load_settings()
         secret_blob_root = settings.cadrumo_blob_store_dir
@@ -289,8 +290,101 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
         assert bucket_paths(root, _PROFILE_B_ID).bucket_dir.exists() is False
         assert bucket_paths(root, _DANGLING_ID).bucket_dir.exists() is False
         assert cold_default_database.read_bytes() == cold_default_bytes
-        assert tuple(path for path in scan_directory(secret_blob_root, recursive=True) if path.is_file()) == ()
+        # Every target here was LOCKED, so the certificate secret held outside
+        # the capsule could be neither addressed nor removed, and it outlives
+        # the erase. The reset records that it did rather than reporting a
+        # clean sweep; the ciphertext is unreadable, every wrapping of its key
+        # having gone with the capsule.
+        assert any(path.is_file() for path in scan_directory(secret_blob_root, recursive=True))
+        # The claim that the residue is unreadable rests on this: the capsule
+        # carried the password and recovery envelopes and the key sentinel, and
+        # the session receipt outside it is the only other wrapping of the same
+        # key. Both are gone, so nothing that could unwrap the leftover remains.
+        assert profile_session_path(storage_root=root, profile_id=UUID(_PROFILE_A_ID)).exists() is False
+        for target in operation.targets:
+            clearance = target.auth_clearance
+            assert clearance is not None
+            assert clearance.mode is ConfigResetAuthClearanceMode.CAPSULE_DESTRUCTION
+            assert clearance.removed_out_of_bucket_secret_records is None
+        cleared_locks = {
+            target.bucket_id: target.auth_clearance.cleared_lock_provider_ids
+            for target in operation.targets
+            if target.auth_clearance is not None
+        }
+        assert cleared_locks[_PROFILE_B_ID] == (AuthProviderKind.CLAVE_PERMANENTE.value,)
+        assert cleared_locks[_PROFILE_A_ID] == ()
+        assert cleared_locks[_DANGLING_ID] == ()
         assert ConfigResetJournalRepository().load(operation.operation_id) == operation
+
+
+def test_an_unlocked_target_has_its_out_of_bucket_secret_removed_and_says_so(
+    tmp_path: Path,
+) -> None:
+    """The unlocked path still revokes everything, and records that it did.
+
+    Paired deliberately with the locked case above: a clearance rule that
+    reported the degraded mode for every target would be exactly as wrong as
+    one that claimed a full revocation for every target.
+    """
+    from ...core.config import load_settings
+    from .._config_reset_models import ConfigResetAuthClearanceMode, ConfigResetOperationStatus
+    from ..auth import register_operator_certificate_source, set_operator_certificate_source_secret
+    from ..config_reset import start_config_reset
+
+    with _isolated_reset_root(tmp_path) as root:
+        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+        certificate_path = tmp_path / "operator.p12"
+        certificate_path.write_bytes(b"test certificate")
+        _write_active_pointer(root, _PROFILE_A_ID)
+        secret_blob_root = load_settings().cadrumo_blob_store_dir
+
+        with open_test_profile_session(_PROFILE_A_ID):
+            register_operator_certificate_source(name="personal", certificate_path=certificate_path)
+            set_operator_certificate_source_secret(name="personal", secret=SecretStr("test-passphrase"))
+            assert any(path.is_file() for path in scan_directory(secret_blob_root, recursive=True))
+            operation = start_config_reset(confirmed=True)
+
+        assert operation.status is ConfigResetOperationStatus.COMPLETE
+        clearance = operation.targets[0].auth_clearance
+        assert clearance is not None
+        assert clearance.mode is ConfigResetAuthClearanceMode.UNLOCKED_REVOCATION
+        assert clearance.removed_out_of_bucket_secret_records == 1
+        assert tuple(path for path in scan_directory(secret_blob_root, recursive=True) if path.is_file()) == ()
+
+
+def test_a_profile_from_the_seeding_door_alone_is_deletion_assessable(
+    tmp_path: Path,
+) -> None:
+    """Seeding a profile records the same empty filing snapshot registration does.
+
+    The distinction under test is between an EMPTY recorded snapshot and an
+    ABSENT one, which are not the same fact: absence means nobody asked the
+    filing owner and refuses, emptiness means it answered and clears. Asserting
+    the assessment answers is therefore the whole point -- a seeded profile
+    whose snapshot were merely defaulted to nothing-retained would pass this
+    while destroying the distinction, so the paired assertion is that a
+    profile whose recorded snapshot is REMOVED refuses again.
+    """
+    from ...domain.buckets import BucketDeleteRefusedError
+    from ..bucket_maintenance import AssessBucketDeletionCommand, BucketMaintenanceService
+    from ..filing import FilingRetentionAuthority
+
+    with _isolated_reset_root(tmp_path) as root:
+        from ...tests.user_profile import register_minimal_profile
+
+        with open_test_profile_session(_PROFILE_A_ID):
+            register_minimal_profile(profile_id=_PROFILE_A_ID, display_name="Alpha operator")
+
+        service = BucketMaintenanceService()
+        assessment = service.assess_deletion(AssessBucketDeletionCommand(bucket_id=_PROFILE_A_ID))
+        assert assessment.exists is True
+        assert assessment.retention is not None
+        assert assessment.retention.blocks_erase is False
+        assert assessment.retention.retained == ()
+
+        FilingRetentionAuthority(root=root).path(UUID(_PROFILE_A_ID)).unlink()
+        with pytest.raises(BucketDeleteRefusedError):
+            service.assess_deletion(AssessBucketDeletionCommand(bucket_id=_PROFILE_A_ID))
 
 
 def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
