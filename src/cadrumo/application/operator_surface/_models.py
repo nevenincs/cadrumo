@@ -225,13 +225,31 @@ class SourceKindAlias(BaseModel):
     canonical: BindingSourceKind
 
 
+class FamilyMountState(StrEnum):
+    """Why a declared command family is, or is not, reachable in the live tree.
+
+    A family that no live path reaches has two utterly different causes, and
+    collapsing them loses the only thing worth knowing. ``MOUNTED`` asserts the
+    tree reaches it. ``DECLARED_UNIMPLEMENTED`` asserts the opposite ON PURPOSE:
+    the operator surface has an answer for this family, and the capability
+    behind it has not been built, so the declaration is the record of an open
+    gap rather than residue of a retirement.
+
+    A family retired by an accepted ruling is neither state. It is deleted,
+    because nothing is owed and nothing is pending.
+    """
+
+    MOUNTED = "mounted"
+    DECLARED_UNIMPLEMENTED = "declared_unimplemented"
+
+
 class MountedCommandFamily(BaseModel):
     """One accepted command-family declaration and its backend owner.
 
     A family declares only what the live command tree cannot supply: which
     ``root`` it hangs from, its ``child`` token, its :class:`MountedCommandDomain`,
-    the ``operator_question`` it answers, its backend ``service_owner``, and its
-    :class:`OperatorMutability`.
+    the ``operator_question`` it answers, its backend ``service_owner``, its
+    :class:`OperatorMutability`, and its :class:`FamilyMountState`.
 
     It deliberately declares NO command inventory. Which verbs a family contains
     is established solely by the live command tree, projected once as the
@@ -249,6 +267,8 @@ class MountedCommandFamily(BaseModel):
     operator_question: str = Field(min_length=1)
     service_owner: str = Field(pattern=r"^cadrumo\.(application|domain|adapters|core)(\.[a-z_][a-z0-9_]*)*$")
     mutability: OperatorMutability
+    mount_state: FamilyMountState = FamilyMountState.MOUNTED
+    unimplemented_reason: str | None = None
 
     @field_validator("child")
     @classmethod
@@ -256,6 +276,23 @@ class MountedCommandFamily(BaseModel):
         if value != value.strip().lower() or " " in value:
             raise ValueError("mounted command child must be a lower-case command token")
         return value
+
+    @model_validator(mode="after")
+    def _unimplemented_families_state_the_missing_capability(self) -> MountedCommandFamily:
+        """Bind the reason to the state, in both directions.
+
+        A ``DECLARED_UNIMPLEMENTED`` family without a reason would pass every
+        membership check while telling a future reader nothing about what is
+        missing, which is the failure mode a bare carve-out flag always has. A
+        ``MOUNTED`` family carrying one would leave a stale gap note attached to
+        a capability that has since shipped.
+        """
+        if self.mount_state is FamilyMountState.DECLARED_UNIMPLEMENTED:
+            if self.unimplemented_reason is None or not self.unimplemented_reason.strip():
+                raise ValueError("a declared-unimplemented family must state the capability it is waiting on")
+        elif self.unimplemented_reason is not None:
+            raise ValueError("only a declared-unimplemented family may carry an unimplemented reason")
+        return self
 
 
 class ManifestActionProfile(BaseModel):

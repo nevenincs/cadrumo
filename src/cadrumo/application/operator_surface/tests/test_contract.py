@@ -51,9 +51,11 @@ from ....core.errors import get_registered_error_code
 from ....core.external_constants import OutputLanguage
 from ... import operator_surface
 from .. import (
+    FamilyMountState,
     FilingStatus,
     ModeloLifecycleStep,
     MountedCommandDomain,
+    MountedCommandFamily,
     OperatorMutability,
     OperatorSurfaceContractError,
     RootSurfaceName,
@@ -219,7 +221,7 @@ def test_mounted_command_families_are_backend_owned_and_service_backed() -> None
     custody_children = {
         family.child for family in contract.command_families if family.domain is MountedCommandDomain.CUSTODY
     }
-    assert custody_children == {"login", "logout"}
+    assert custody_children == {"login", "logout", "passphrase"}
     # The append-only event-history verb merged into the `config profile` group
     # as `config profile history` (D1 family rename); the standalone
     # `config bucket` group was retired, so there is no BUCKET family.
@@ -504,6 +506,67 @@ def test_filing_status_filed_is_sole_source_for_filed_token() -> None:
     contract = get_operator_surface_contract()
     live_family = next(f for f in contract.command_families if f.domain is MountedCommandDomain.LIVE)
     assert live_family.child == "live"
+
+
+def test_passphrase_family_records_an_owed_capability_rather_than_a_retirement() -> None:
+    """The one family the contract declares as not yet mounted, and why.
+
+    Custody passphrase rotation exists at no layer, and its absence is not a
+    ruling. Two things must therefore both stay true: the declaration survives,
+    so the operator surface keeps the record that the capability is owed, and
+    it is marked unmounted, so nothing reads it as an advertised door. Deleting
+    it would assert a retirement nobody decided; marking it MOUNTED would claim
+    a verb the tree does not carry.
+
+    A retired family is neither state -- the global recovery facade left no
+    declaration behind, and this asserts that too, so the two dispositions
+    cannot quietly converge.
+    """
+    contract = get_operator_surface_contract()
+    by_child = {family.child: family for family in contract.command_families}
+
+    unmounted = {
+        family.child
+        for family in contract.command_families
+        if family.mount_state is FamilyMountState.DECLARED_UNIMPLEMENTED
+    }
+    assert unmounted == {"passphrase"}
+
+    passphrase = by_child["passphrase"]
+    assert passphrase.unimplemented_reason is not None
+    assert "rotation" in passphrase.unimplemented_reason
+    assert "retired" in passphrase.unimplemented_reason
+
+    assert "recover" not in by_child
+    assert "recovery" not in by_child
+
+
+def test_a_mounted_family_may_not_carry_an_unimplemented_reason() -> None:
+    """A shipped capability must lose its gap note, not keep it as decoration."""
+    with pytest.raises(ValidationError, match="only a declared-unimplemented family"):
+        MountedCommandFamily(
+            domain=MountedCommandDomain.CUSTODY,
+            root=RootSurfaceName.CONFIG,
+            child="login",
+            operator_question="authenticate a taxpayer profile",
+            service_owner="cadrumo.application.user_profile",
+            mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+            unimplemented_reason="stale note left behind after the capability shipped",
+        )
+
+
+def test_an_unimplemented_family_must_name_the_capability_it_waits_on() -> None:
+    """Without a stated reason the marker is an unattributable silencer."""
+    with pytest.raises(ValidationError, match="must state the capability"):
+        MountedCommandFamily(
+            domain=MountedCommandDomain.CUSTODY,
+            root=RootSurfaceName.CONFIG,
+            child="passphrase",
+            operator_question="rotate the profile custody passphrase",
+            service_owner="cadrumo.application.user_profile",
+            mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+            mount_state=FamilyMountState.DECLARED_UNIMPLEMENTED,
+        )
 
 
 def test_filing_status_has_no_token_shim_module() -> None:

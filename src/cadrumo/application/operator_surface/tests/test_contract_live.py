@@ -148,6 +148,7 @@ def _live_reconciliation() -> OperatorSurfaceReconciliation:
                 root=family.root.value,
                 child=family.child,
                 provenance="OperatorSurfaceContract.command_families",
+                unimplemented_reason=family.unimplemented_reason,
             )
             for family in get_operator_surface_contract().command_families
         ),
@@ -284,6 +285,7 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
             root=family.root.value,
             child=family.child,
             provenance="OperatorSurfaceContract.command_families",
+            unimplemented_reason=family.unimplemented_reason,
         )
         for family in get_operator_surface_contract().command_families
     )

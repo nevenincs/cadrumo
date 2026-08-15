@@ -39,6 +39,7 @@ from .. import (
     OperationClosePolicy,
     OperationConflictScope,
     OperationDeadline,
+    OperationDeclarationError,
     OperationDefinition,
     OperationDiagnosticEvent,
     OperationDurability,
@@ -52,6 +53,7 @@ from .. import (
     OperationInteractionRequest,
     OperationLeaseDisposition,
     OperationLifecycle,
+    OperationNoticeEvent,
     OperationOwnedResource,
     OperationOwnerLease,
     OperationPendingInteraction,
@@ -814,11 +816,17 @@ def test_submit_excludes_only_the_exact_definition_subject_conflict_scope(tmp_pa
         UndeclaredInteractionExecutor(),
     ),
 )
-def test_start_normalizes_each_undeclared_executor_mutation_after_only_the_safe_started_transition(
+def test_start_refuses_each_undeclared_executor_mutation_after_only_the_safe_started_transition(
     tmp_path: Path,
     executor: OperationExecutor[BaseModel],
 ) -> None:
-    """The context rejects undeclared work and the supervisor closes it as a safe failure."""
+    """A definition-undeclared claim reaches its caller and settles nothing durable.
+
+    A declaration breach is a definition-contract fault the supervisor detects
+    before mutation, not an executor runtime outcome, so it leaves the journal
+    at the safe started transition instead of inventing a terminal receipt that
+    reads as an operator-facing failure.
+    """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         journal, leases, operands = _repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
@@ -833,19 +841,19 @@ def test_start_normalizes_each_undeclared_executor_mutation_after_only_the_safe_
         )
         operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
 
-        terminal = asyncio.run(supervisor.start(operation_id))
-        assert terminal.lifecycle is OperationLifecycle.TERMINAL
-        assert terminal.terminal_condition is OperationTerminalCondition.FAILED
-        assert terminal.revision == 2
-        assert terminal.phase_code is None
-        assert terminal.pending_interaction is None
-        assert terminal.effect is OperationEffect.NONE
-        assert terminal.terminal_receipt is not None
-        assert terminal.terminal_receipt.diagnostic_ref is not None
-        assert tuple(type(event) for event in terminal.events) == (
-            OperationDiagnosticEvent,
-            OperationTerminalEvent,
-        )
+        with pytest.raises(OperationDeclarationError, match="not declared"):
+            asyncio.run(supervisor.start(operation_id))
+
+        refused = asyncio.run(supervisor.inspect(operation_id))
+        assert refused.lifecycle is OperationLifecycle.RUNNING
+        assert refused.terminal_condition is None
+        assert refused.terminal_receipt is None
+        assert refused.revision == 1
+        assert refused.phase_code is None
+        assert refused.pending_interaction is None
+        assert refused.effect is OperationEffect.NONE
+        assert tuple(type(event) for event in refused.events) == (OperationNoticeEvent,)
+        assert refused.events[0].notice_code == "operation.started"
         if isinstance(executor, UndeclaredResourceExecutor):
             assert executor.resource is not None
             assert executor.resource.close_calls == 0

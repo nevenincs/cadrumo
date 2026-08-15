@@ -88,16 +88,28 @@ _BLOCKED_RESET_HARNESS = _SETTINGS_PREAMBLE + dedent(
     """,
 )
 
+# The writer this harness runs is an AUTH revocation, not the retired bucket
+# rename it was first written against. The rename verb went with the read-only
+# narrowing of bucket maintenance, and nothing replaced it: the surviving
+# label mutation is a custody transaction taking the custody lock, not the
+# per-bucket lockfile, so it could not prove this exclusion at all. Auth
+# revocation is the writer that still enters a named bucket through
+# ``auth_mutation_span``, which is the same per-bucket lockfile a reset holds
+# across its targets -- so the exclusion the test asserts is the real one and
+# not a lock the reset happens to share with itself.
+#
+# The session is opened first because auth revocation refuses outright without
+# one: the browser session it revokes is an encrypted row inside the bucket.
+# Opening it is what makes this a genuine write attempt rather than a refusal
+# that would pass the busy assertion for the wrong reason.
 _WRITER_HARNESS = _SETTINGS_PREAMBLE + dedent(
     """
     import json
     import time
 
     from cadrumo.adapters.persistence.storage.bucket import BucketBusyError
-    from cadrumo.application.bucket_maintenance import (
-        BucketMaintenanceService,
-        RenameBucketCommand,
-    )
+    from cadrumo.application.auth import reset_operator_auth
+    from cadrumo.tests.profile_capsule import open_test_profile_session
 
     config_module._settings_override.reset(token)
     settings = settings.model_copy(
@@ -109,12 +121,8 @@ _WRITER_HARNESS = _SETTINGS_PREAMBLE + dedent(
     token = config_module._settings_override.set(settings)
     started = time.monotonic()
     try:
-        BucketMaintenanceService().rename(
-            RenameBucketCommand(
-                bucket_id=sys.argv[2],
-                new_label="Concurrent writer label",
-            ),
-        )
+        with open_test_profile_session(sys.argv[2]):
+            reset_operator_auth(all_providers=True, target_bucket_id=sys.argv[2])
     except BucketBusyError as exc:
         print(
             json.dumps(
