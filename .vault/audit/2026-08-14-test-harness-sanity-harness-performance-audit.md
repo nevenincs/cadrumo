@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:462aecb6344737a465b8e40b53d56393f382341fa84e0fe797fe898bd70044d9'
+body_hash: 'sha256:2a01a31f0502072c18b8da0f98360b7b7ef9ec68ddbe5f6f63f4f3886b7d3adc'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1364,3 +1364,43 @@ direct in-process callers, and an explicit argument for spawned children. Each
 was invisible from the others -- the first fix looked complete, and only
 measuring a module that still had not moved showed it was not. A cascade that
 stops at a process boundary looks exactly like a cascade that finished.
+
+## Ruled out: the cold-start CLI children do NOT calibrate
+
+The previous round ended by suspecting the cold-start CLI tests: they spawn real
+`aeat` subprocesses, and the spawn boundary had just been shown to defeat both
+the session default and any environment default. Two of them still cost ~30s
+each, which fit the shape of one unfixed calibration.
+
+They do not calibrate. `calibrate_profile_kdf` is reached only from
+`create_profile_custody_registration_material` -- at REGISTRATION -- and these
+children log in and run work commands against a profile the PARENT registered
+in-process. The child's cost is CLI boot and the work itself.
+
+Settled by experiment rather than by reading the call graph, because the call
+graph is what produced the wrong hypothesis in the first place. The setting was
+added to the child's environment dict and the module re-run, same box, back to
+back:
+
+    work_create_registers_wizard_catalogue     30.05s -> 30.81s
+    m100_2025_work_create_keeps_intracom...    29.29s -> 29.85s
+
+No effect beyond noise, so the hypothesis is dead and the setting was removed.
+
+### The probe was swept into HEAD before it could be judged
+
+The experiment ran for about a minute; a concurrent sweep committed it during
+that window, under a subject asserting the benefit the measurement was about to
+disprove. It has been removed with a commit that says so.
+
+Recorded because it is a hazard this campaign has been navigating all along and
+this is the first time it caught an EXPERIMENT rather than finished work. A
+speculative edit in this worktree is publishable state from the moment it
+touches disk. The lesson is not "stop probing" -- the probe was the right move
+and cheaply killed a plausible wrong idea -- it is that a probe must be measured
+and then reverted or committed deliberately in one go, never left resident while
+a run finishes.
+
+A disproven setting is also worth removing rather than keeping as
+belt-and-braces: kept, it reads as a tuned knob and the next reader inherits the
+hypothesis rather than the measurement.
