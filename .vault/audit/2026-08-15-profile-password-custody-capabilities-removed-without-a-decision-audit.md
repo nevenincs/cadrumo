@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:946bb5e6197ebc6c32b7d953c2f4a8d5760be09822a1a71672575d2f253c4f78'
+body_hash: 'sha256:53419b8fbb38adce4d5fc5383fa083aef8aa1ed882a8d467660c501c65f818de'
 related: []
 ---
 
@@ -192,3 +192,51 @@ registry validation never reaches a bucket record and passes cleanly; only work
 that reads or writes records surfaces it. So a green suite is not evidence that
 a creation door produces a usable profile, and the conversion sweep's early
 successes should not be read as clearing this.
+
+### Correction: the creation door is right and the read path is wrong
+
+The section above concluded that whatever creation door is sanctioned "must mint
+the wrapped bucket key BEFORE publishing the capsule". **That is wrong, and
+acting on it would have regressed the security property this campaign exists to
+establish.** The corrected diagnosis follows from a live reproduction through
+the sanctioned door reaching an actual record read.
+
+The DEK is not missing. Registration mints it and wraps it into the password
+custody envelope, and never writes the master-key keystore artefact -- which is
+correct, because the capsule establishes PASSWORD custody. The schedule resolver
+is what is wrong: it reports the master-key schedule purely because a capsule
+exists, reading no stored enrolment at all, so it equates "registered" with
+"enrolled in the master-key schedule" when the capsule never established that
+schedule. The read path then demands a second copy of the key under a different
+KEK that nothing was ever asked to write.
+
+In one sentence: the resolver mis-states which custody a bucket is under.
+
+Minting the keystore artefact would have created a second wrapped copy of the
+same DEK under a different KEK, permanently, for every profile. A keychain or
+master-key compromise would then yield the bucket DEK **without the operator's
+passphrase** -- defeating precisely the property the capsule cutover was
+undertaken to establish. It would also enrol every bucket in two schedules at
+once, which is the one ambiguity a key schedule exists to prevent.
+
+The correct shape is for the resolver to report the schedule a bucket is
+actually enrolled in, read from stored custody rather than inferred from capsule
+existence, with the master-key schedule left to buckets that genuinely carry the
+keystore artefact. That change is not being made autonomously: it alters which
+key opens a bucket, and key-schedule and derivation changes are owner-gated
+under this project's rules. It is escalated with its own decision record.
+
+Two things worth carrying beyond this instance.
+
+The ordering was never decided by anyone. The nearest candidate record concerns
+format enrollment for the compatibility checkpoint and states in its own
+consequences that it touched no key derivation or wrapping. So what exists is
+not a decision to overturn but a gap left when the cutover moved custody and the
+resolver kept answering the question it had always answered.
+
+And this is the third time in one campaign that a search by meaning returned a
+confident, correct answer about a DIFFERENT subject sharing one word --
+after the profile-session versus authority-session collision and the reserved
+"binding" term. Here "enrollment" named both format enrollment and key-schedule
+enrollment. In every instance the defence was the same: confirm the hit is about
+your artefact before building on it, by reading what the source says it touches.

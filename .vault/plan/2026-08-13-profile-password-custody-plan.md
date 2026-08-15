@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:4af9db63cfe816010c4320811b682594527076f1e0fae4b0f7d4661911a58d59'
+body_hash: 'sha256:737801721ad7b0189edde0f6b2d8e6875b7e58f1e9605be56c24f3455aefe774'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -180,6 +180,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [x] `W04.P07.S107` - Have Terra XHigh rule whether the master key and derived key encryption key should become wipeable like the two data encryption key unwraps now are, since six provider implementations and the derivation helper all return immutable material, or record why the master key is deliberately out of scope given each provider carries its own lifetime and a mutable buffer changes what every consumer holds; `src/cadrumo/adapters/persistence/storage/master_key/`.
 - [ ] `W04.P07.S109` - Have Terra XHigh extend the re-export bridge and orphan detector to walk the test tree, since it currently skips it entirely and a whole class of orphaned export module is therefore invisible, which is how an adapter export survived its only consumer's deletion with zero importers anywhere; `dev/import_hygiene_scan.py`.
 - [ ] `W04.P07.S110` - Have Sol Medium rule on the bucket key enrolment ordering defect, since a bucket counts as registered purely because its capsule exists rather than by any stored enrolment, and registration permanently refuses minting by tested design, so the only window to mint the wrapped bucket key closes at capsule publication while the enrolment flag that opens it defaults false and is passed true by no production code anywhere, leaving no path that creates a bucket the storage layer will open; `src/cadrumo/adapters/persistence/storage/master_key/_master_key_bucket_dek.py and src/cadrumo/application/user_profile/`.
+- [ ] `W04.P07.S111` - Have Sol Medium author the decision record for which custody a bucket is enrolled in and pin the defect with a failing regression that reaches an actual record read through the sanctioned door, stating both the resolver-reads-stored-custody option and the rejected mint-a-second-wrapped-copy option with the exposure-widening argument that defeats it, and establishing whether any profile on real disk is currently in the unopenable state since that decides whether a migration question exists at all; `.vault/adr/ and src/cadrumo/adapters/persistence/storage/master_key/tests/`.
 
 ## Wave `W05` - end-to-end proof
 

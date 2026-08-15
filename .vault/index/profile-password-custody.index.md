@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:6e77350b25ecec9578e50490b575f0f71983d365c825b37d65bf59b2e3c4390a'
+body_hash: 'sha256:5e4ea4d80093ec1a4e6cf48a251d53b6e2b8e0ffe0fb56d51e6ecdffbd53cbf1'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -78,6 +78,7 @@ related:
   - '[[2026-08-14-profile-password-custody-s11-session-review-audit]]'
   - '[[2026-08-14-profile-password-custody-s12-phase-review-audit]]'
   - '[[2026-08-14-profile-password-custody-s43-absence-gate-independent-review-audit]]'
+  - '[[2026-08-15-profile-password-custody-bucket-key-schedule-custody-mismatch-adr]]'
   - '[[2026-08-15-profile-password-custody-capabilities-removed-without-a-decision-audit]]'
   - '[[2026-08-15-profile-password-custody-s12-phase-review-close-audit]]'
   - '[[2026-08-15-profile-password-custody-s12-phase-review-rerun-audit]]'
@@ -92,6 +93,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 ### adr
 
 - `2026-08-13-profile-password-custody-rollup-adr` - `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
+- `2026-08-15-profile-password-custody-bucket-key-schedule-custody-mismatch-adr` - `profile-password-custody` adr: `the bucket key schedule must report enrolled custody, not capsule existence` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
 
 ### audit
 
