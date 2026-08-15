@@ -37,7 +37,6 @@ from ....domain.transactions import (
 )
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import WorkflowState
 from .. import (
     ReviewItemKind,
     ReviewQueue,
@@ -79,7 +78,6 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
         # ``buckets/<profile-id>``, which a workflow-state repository
         # construction would otherwise materialise first and collide with.
         register_minimal_profile(
-            WorkflowState(),
             profile_id=_PROFILE_ID,
             overrides={"identity.tax_id": "00000000T"},
         )

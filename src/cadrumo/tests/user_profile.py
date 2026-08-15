@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING
 from ..application.user_profile import conditional_profile_missing_required
 from ..application.user_profile._lifecycle import ProfileCapsuleLifecycle
 from ..application.user_profile._validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
-from ..application.workflow import WorkflowState
 from ..core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ..core.hashing import sha256_hex
 from ..core.identity import nif_check_letter

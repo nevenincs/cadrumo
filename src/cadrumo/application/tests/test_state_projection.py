@@ -146,7 +146,6 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
     _ACTIVE_STORAGE_STACK.callback(profile_close_bucket_session)
     _ACTIVE_STORAGE_STACK.callback(close_active_profile_record_session)
     register_minimal_profile(
-        WorkflowState(),
         profile_id=outcome.profile_id,
         overrides=profile_overrides,
     )

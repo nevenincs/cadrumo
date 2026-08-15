@@ -10,7 +10,6 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.storage.bucket import bucket_paths
-from ....application.workflow import WorkflowState
 from ....core import Period
 from ....core.config import override_settings
 from ....domain.modelos import (
@@ -82,7 +81,7 @@ def test_config_reset_start_status_and_resume_exact_durable_journal(
 ) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         with open_test_profile_session(_PROFILE_ID):
-            register_minimal_profile(WorkflowState(), profile_id=_PROFILE_ID)
+            register_minimal_profile(profile_id=_PROFILE_ID)
         _persist_retained_filing()
 
         empty_status = _invoke_json(["config", "reset", "status"])

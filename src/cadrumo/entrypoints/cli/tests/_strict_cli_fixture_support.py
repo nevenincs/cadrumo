@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.workflow import WorkflowState
 from ....core.config import override_settings
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -28,7 +27,7 @@ def diagnostics_isolated_backend(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_DIAGNOSTICS_BUCKET_ID),
     ):
-        register_minimal_profile(WorkflowState(), profile_id=_DIAGNOSTICS_BUCKET_ID)
+        register_minimal_profile(profile_id=_DIAGNOSTICS_BUCKET_ID)
         yield
 
 
@@ -40,7 +39,7 @@ def binding_isolated_backend(tmp_path: Path) -> Iterator[None]:
         open_test_profile_session("11111111-1111-4111-8111-111111111111"),
     ):
         try:
-            register_minimal_profile(WorkflowState(), profile_id="11111111-1111-4111-8111-111111111111")
+            register_minimal_profile(profile_id="11111111-1111-4111-8111-111111111111")
             yield
         finally:
             dispose_engine()
@@ -58,5 +57,5 @@ def inventory_isolated_backend(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session("00000000-0000-4000-8000-000000000000"),
     ):
-        register_minimal_profile(WorkflowState(), profile_id="00000000-0000-4000-8000-000000000000")
+        register_minimal_profile(profile_id="00000000-0000-4000-8000-000000000000")
         yield

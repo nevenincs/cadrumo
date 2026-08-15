@@ -33,7 +33,6 @@ from ....core.resources import resources
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import WorkflowState
 from .. import create_work_unit
 from .._calculate_input import WorkCalculateInputBundle, build_work_calculate_input_bundle
 from .._semantic_role_resolution import casilla_id_for_unique_semantic_role
@@ -67,7 +66,7 @@ def _create_m100_work_unit() -> tuple[str, str]:
     # capsule publishes by an atomic no-replace rename onto
     # ``buckets/<profile-id>``, which a workflow-state repository
     # construction would otherwise materialise first and collide with.
-    register_minimal_profile(WorkflowState(), profile_id=_BUCKET_ID)
+    register_minimal_profile(profile_id=_BUCKET_ID)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="100",

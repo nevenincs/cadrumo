@@ -49,7 +49,6 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...calculations import IvaCompensationHistoryRepository
-from ...workflow import WorkflowState
 from .. import (
     ModeloIvaWalletCorrectionNoRecordError,
     ModeloIvaWalletCorrectionSealedError,
@@ -85,7 +84,6 @@ def _runtime(tmp_path: Path) -> Iterator[None]:
         # ``buckets/<profile-id>``, which a workflow-state repository
         # construction would otherwise materialise first and collide with.
         register_minimal_profile(
-            WorkflowState(),
             profile_id=_BUCKET_ID,
             display_name=_BUCKET_LABEL,
         )

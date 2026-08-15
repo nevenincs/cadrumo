@@ -15,7 +15,6 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....application.workflow import WorkflowState
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
@@ -32,7 +31,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         override_settings(cadrumo_invoices_dir=tmp_path / "invoices"),
         open_test_profile_session("00000000-0000-4000-8000-000000000000"),
     ):
-        register_minimal_profile(WorkflowState(), profile_id="00000000-0000-4000-8000-000000000000")
+        register_minimal_profile(profile_id="00000000-0000-4000-8000-000000000000")
         yield
 
 

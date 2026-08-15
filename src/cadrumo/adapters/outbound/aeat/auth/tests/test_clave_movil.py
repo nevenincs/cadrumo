@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 from pydantic import AnyUrl, SecretStr
 
-from ......application.workflow import WorkflowState
 from ......core import AuthProviderKind
 from ......core.config import Settings
 from ......core.i18n import tr
@@ -117,7 +116,6 @@ def test_attempt_context_uses_profile_storage_and_redacts_identity_values() -> N
     bucket_id = "25252525-2525-4252-8252-252525252525"
     with open_test_profile_session(bucket_id):
         register_minimal_profile(
-            WorkflowState(),
             profile_id=bucket_id,
             display_name="Clave Movil Test",
             overrides={"identity.tax_id": "X1234567L"},

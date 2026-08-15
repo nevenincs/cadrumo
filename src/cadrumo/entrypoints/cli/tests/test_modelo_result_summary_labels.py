@@ -12,7 +12,7 @@ import pytest
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.modelo import calculation_result_summary
-from ....application.workflow import WorkflowState, workflow_state_repository
+from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.config import override_settings
 from ....domain.modelos import (
@@ -46,7 +46,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         open_test_profile_session(_PROFILE_ID),
     ):
         try:
-            register_minimal_profile(WorkflowState(), profile_id=_PROFILE_ID)
+            register_minimal_profile(profile_id=_PROFILE_ID)
             yield
         finally:
             dispose_engine()

@@ -13,7 +13,6 @@ from click.testing import Result
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....application.aggregation import CalculationSourceContext
 from ....application.invoices import InvoiceCatalogueSourceResolver
-from ....application.workflow import WorkflowState
 from ....core import Period
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import load_modelo_path
@@ -256,7 +255,7 @@ def test_m349_business_invoices_persist_and_export_operador_rows(tmp_path: Path)
 
 def test_emilio_catalogue_service_invoice_feeds_m349() -> None:
     with open_test_profile_session("11111111-1111-4111-8111-111111111111"):
-        register_minimal_profile(WorkflowState(), profile_id="11111111-1111-4111-8111-111111111111")
+        register_minimal_profile(profile_id="11111111-1111-4111-8111-111111111111")
         created_invoice = _invoke(
             [
                 "app",

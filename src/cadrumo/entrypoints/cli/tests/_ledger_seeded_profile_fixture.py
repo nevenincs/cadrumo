@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.workflow import WorkflowState
 from ....core.config import override_settings
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -28,7 +27,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         open_test_profile_session(_BUCKET_ID),
     ):
         try:
-            register_minimal_profile(WorkflowState(), profile_id=_BUCKET_ID)
+            register_minimal_profile(profile_id=_BUCKET_ID)
             yield
         finally:
             dispose_engine()

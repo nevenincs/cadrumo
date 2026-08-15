@@ -22,7 +22,6 @@ from ....tests._bucket_id_fixture import bucket_id  # noqa: F401
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import WorkflowState
 
 
 @pytest.fixture(autouse=True)
@@ -35,5 +34,5 @@ def _bucket(tmp_path: Path, bucket_id: str) -> Iterator[None]:
         # the capsule publishes by an atomic no-replace rename onto
         # ``buckets/<profile-id>``, which a workflow-state repository
         # construction would otherwise materialise first and collide with.
-        register_minimal_profile(WorkflowState(), profile_id=bucket_id)
+        register_minimal_profile(profile_id=bucket_id)
         yield

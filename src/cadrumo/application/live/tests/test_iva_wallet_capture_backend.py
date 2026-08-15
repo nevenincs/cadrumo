@@ -37,7 +37,6 @@ from ...calculations import (
     IvaWalletDecisionRepository,
     iva_wallet_decision_key,
 )
-from ...workflow import WorkflowState
 from .. import load_iva_remote_state, persist_and_reconcile_iva_compensation_wallet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -383,7 +382,7 @@ def test_remote_iva_evidence_reload_opens_active_profile_session_without_cli_boo
             # onto ``buckets/<profile-id>``, which a workflow-state
             # repository construction would otherwise materialise first
             # and collide with.
-            register_minimal_profile(WorkflowState(), profile_id=_SESSION_BUCKET_ID)
+            register_minimal_profile(profile_id=_SESSION_BUCKET_ID)
             IvaCompensationHistoryRepository().save_period(
                 IvaCompensationPeriodState(
                     provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,

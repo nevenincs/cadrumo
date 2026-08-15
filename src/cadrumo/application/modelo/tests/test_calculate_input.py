@@ -14,7 +14,6 @@ from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import WorkflowState
 from .. import create_work_unit
 from .._calculate_input import (
     ModeloCalculateCasillaInputError,
@@ -58,7 +57,6 @@ def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(tmp
         # ``buckets/<profile-id>``, which a workflow-state repository
         # construction would otherwise materialise first and collide with.
         register_minimal_profile(
-            WorkflowState(),
             profile_id=bucket_id,
             overrides={
                 "identity.tax_id": "B66012345",
@@ -138,7 +136,6 @@ def _m200_bundle_with_casilla_value(raw_value: str, *, tmp_path: Path) -> WorkCa
         # ``buckets/<profile-id>``, which a workflow-state repository
         # construction would otherwise materialise first and collide with.
         register_minimal_profile(
-            WorkflowState(),
             profile_id=bucket_id,
             overrides={
                 "identity.tax_id": "B66012345",
@@ -207,7 +204,6 @@ def _m303_bundle_with_period_override(raw_value: str, *, tmp_path: Path) -> Work
         # ``buckets/<profile-id>``, which a workflow-state repository
         # construction would otherwise materialise first and collide with.
         register_minimal_profile(
-            WorkflowState(),
             profile_id=bucket_id,
             overrides={
                 "identity.tax_id": "B66012345",
@@ -297,7 +293,6 @@ def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_eve
         # ``buckets/<profile-id>``, which a workflow-state repository
         # construction would otherwise materialise first and collide with.
         register_minimal_profile(
-            WorkflowState(),
             profile_id=_MATERNIDAD_BUCKET_ID,
             overrides=descendant_overrides,
         )

@@ -19,7 +19,6 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.storage import SensitivityClass
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....application.live import ExpedientesCapture, ExpedientesService, NotificationsService
-from ....application.workflow import WorkflowState
 from ....core import Period
 from ....core.config import override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
@@ -782,9 +781,7 @@ def test_all_profiles_flag_iterates_every_registered_profile() -> None:
     """
 
     with open_test_profile_session("22222222-2222-4222-8222-222222222222"):
-        register_minimal_profile(
-            WorkflowState(), profile_id="22222222-2222-4222-8222-222222222222", display_name="Second Operator"
-        )
+        register_minimal_profile(profile_id="22222222-2222-4222-8222-222222222222", display_name="Second Operator")
 
     result = _invoke(
         [

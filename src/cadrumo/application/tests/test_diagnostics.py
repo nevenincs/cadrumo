@@ -433,14 +433,13 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
     """
     from ...tests.profile_capsule import open_test_profile_session
     from ..auth import update_auth
-    from ..workflow import WorkflowState, workflow_state_repository
+    from ..workflow import workflow_state_repository
 
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session("11111111-1111-4111-8111-111111111111"),
     ):
         base = register_minimal_profile(
-            WorkflowState(),
             profile_id="11111111-1111-4111-8111-111111111111",
             overrides={
                 "identity.tax_id": "00000000T",

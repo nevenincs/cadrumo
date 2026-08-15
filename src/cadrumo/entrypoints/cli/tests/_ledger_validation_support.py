@@ -10,7 +10,6 @@ from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.ledger import FILER_POSTCODE_FACT_PATH
-from ....application.workflow import WorkflowState
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.config import override_settings
 from ....domain.user_profile import UserProfileFact
@@ -56,7 +55,7 @@ def open_bucket_session(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_PROFILE_ID),
     ):
-        register_minimal_profile(WorkflowState(), profile_id=_PROFILE_ID, display_name=_PROFILE_LABEL)
+        register_minimal_profile(profile_id=_PROFILE_ID, display_name=_PROFILE_LABEL)
         _declare_general_regime_iva_profile()
         try:
             yield

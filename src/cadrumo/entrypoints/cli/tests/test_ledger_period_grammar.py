@@ -28,7 +28,6 @@ from pathlib import Path
 import pytest
 import typer
 
-from ....application.workflow import WorkflowState
 from ....core import Period, StandardPeriodCode
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
@@ -243,7 +242,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session("11111111-1111-4111-8111-111111111111"),
     ):
-        register_minimal_profile(WorkflowState(), profile_id="11111111-1111-4111-8111-111111111111")
+        register_minimal_profile(profile_id="11111111-1111-4111-8111-111111111111")
         yield
 
 

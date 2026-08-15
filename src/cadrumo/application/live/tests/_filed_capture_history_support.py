@@ -20,7 +20,14 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import CasillaId, CasillaValueKind, ObservedHeaderFact, Period, RegistryAuthorityGrade, validated_casilla_id
+from ....core import (
+    CasillaId,
+    CasillaValueKind,
+    ObservedHeaderFact,
+    Period,
+    RegistryAuthorityGrade,
+    validated_casilla_id,
+)
 from ....core.external_constants import load_external_constants
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import load_registry_tree
@@ -40,7 +47,7 @@ from ....tests import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import WorkflowState, workflow_state_repository
+from ...workflow import workflow_state_repository
 
 _CAPTURED_AT = datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC)
 #: A checksum-valid synthetic NIF. This value reaches
@@ -158,7 +165,6 @@ def _profile_backend(tmp_path: Path, *, tax_id: str):
         # ``buckets/<profile-id>``, which a workflow-state repository
         # construction would otherwise materialise first and collide with.
         register_minimal_profile(
-            WorkflowState(),
             profile_id="11111111-1111-4111-8111-111111111111",
             overrides={"identity.tax_id": tax_id},
         )
