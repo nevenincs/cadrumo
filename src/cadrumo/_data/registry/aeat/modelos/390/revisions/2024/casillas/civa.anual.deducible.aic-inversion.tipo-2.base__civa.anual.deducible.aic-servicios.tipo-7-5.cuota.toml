@@ -1,0 +1,142 @@
+# Modelo 390 revision 2024, pagina 4: the Real Decreto-ley 4/2024
+# temporary 2 % and 7,5 % rungs of the apartado 5 IVA deducible block for
+# adquisiciones intracomunitarias (bienes de inversion and servicios).
+#
+# These rungs do not exist on the 2022 design, so they are genuinely new
+# boxes rather than a cross-year reuse. Naming, section, cardinality and LIVA
+# grounding follow the sibling rate rungs of this same block already
+# registered in revision 2024; real-decreto-ley-4-2024:art-1 is added
+# because it is the instrument that establishes these two rates, and it is
+# the reference this registry already cites for its 2 % and 7,5 % repercutido
+# boxes.
+#
+# Offsets, lengths and box numbers transcribed from aeat-dr-390-2024
+# (sha256 8be79bacc86034c3c7951d2ea671c030800ed9a4cc3f52b9e5d407bc19bc03f0), pagina 4.
+
+# Box [769] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 2% - Base imponible [769]' (offset 13, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.deducible.aic-inversion.tipo-2.base"
+number = "769"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_aic_inversion_tipo_2_base"
+continuidad_id = "iva-deducible-aic-inversion-tipo-2-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-04-casilla-deducible-aic-inversion-tipo-2-base"]
+
+# Box [770] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 2% - Cuota [770]' (offset 30, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.deducible.aic-inversion.tipo-2.cuota"
+number = "770"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_aic_inversion_tipo_2_cuota"
+continuidad_id = "iva-deducible-aic-inversion-tipo-2-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-04-casilla-deducible-aic-inversion-tipo-2-cuota"]
+
+# Box [771] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 7,5% - Base imponible [771]' (offset 115, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.deducible.aic-inversion.tipo-7-5.base"
+number = "771"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_aic_inversion_tipo_7_5_base"
+continuidad_id = "iva-deducible-aic-inversion-tipo-7-5-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-04-casilla-deducible-aic-inversion-tipo-7-5-base"]
+
+# Box [772] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 7,5% - Cuota [772]' (offset 132, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.deducible.aic-inversion.tipo-7-5.cuota"
+number = "772"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_aic_inversion_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-aic-inversion-tipo-7-5-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-04-casilla-deducible-aic-inversion-tipo-7-5-cuota"]
+
+# Box [773] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 2% - Base imponible [773]' (offset 251, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.deducible.aic-servicios.tipo-2.base"
+number = "773"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_aic_servicios_tipo_2_base"
+continuidad_id = "iva-deducible-aic-servicios-tipo-2-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-04-casilla-deducible-aic-servicios-tipo-2-base"]
+
+# Box [774] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 2% - Cuota [774]' (offset 268, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.deducible.aic-servicios.tipo-2.cuota"
+number = "774"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_aic_servicios_tipo_2_cuota"
+continuidad_id = "iva-deducible-aic-servicios-tipo-2-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-04-casilla-deducible-aic-servicios-tipo-2-cuota"]
+
+# Box [775] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 7,5% - Base imponible [775]' (offset 353, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.deducible.aic-servicios.tipo-7-5.base"
+number = "775"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_aic_servicios_tipo_7_5_base"
+continuidad_id = "iva-deducible-aic-servicios-tipo-7-5-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-04-casilla-deducible-aic-servicios-tipo-7-5-base"]
+
+# Box [776] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 7,5% - Cuota [776]' (offset 370, length 17).
+[[revisions."2024".casillas]]
+id = "iva.anual.deducible.aic-servicios.tipo-7-5.cuota"
+number = "776"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_aic_servicios_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-aic-servicios-tipo-7-5-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-04-casilla-deducible-aic-servicios-tipo-7-5-cuota"]
