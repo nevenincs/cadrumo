@@ -47250,21 +47250,46 @@ modelo:
       revision:
         2017-y-siguientes:
           casilla:
+            x-c5pm6pbechkmarjkckmm8rrj5lk6iqjfecn62ojfdpniqobeehkm6qbgc5i6u:
+              help: Amount of the advance payment of the deduction actually received
+                in the tax period. Regularisation applies where what was received
+                exceeds the deduction the taxpayer was entitled to.
+              label: Regularisation for a legally separated ascendant, or one with
+                no marital bond, having two children. Advance payment amount
+            x-c5pm6pbechkmarjkckmm8rrj5lk6iqjfecn68pb4elhm6qbfdo:
+              help: Amount of the deduction the taxpayer was entitled to in the tax
+                period, under article 81 bis of Law 35/2006.
+              label: Regularisation for a legally separated ascendant, or one with
+                no marital bond, having two children. Deduction amount
             x-c5pm6pbechkmarjkclpisob2dtn6ubb1dpq6ior9e1gm8ro:
+              help: Amount of the advance payment of the deduction actually received
+                in the tax period. Regularisation applies where what was received
+                exceeds the deduction the taxpayer was entitled to.
               label: Regularisation for ascendants with a disability. Advance payment
                 amount
             x-c5pm6pbechkmarjkclpisp35chqm6or9dtn0:
+              help: Amount of the deduction the taxpayer was entitled to in the tax
+                period, under article 81 bis of Law 35/2006.
               label: Regularisation for ascendants with a disability. Deduction amount
             x-c5pm6pbechkmarjkclpisrj9co:
+              help: Tax identification number of the ascendant with a disability the
+                deduction was taken for.
               label: Regularisation for ascendants with a disability. Ascendant's
                 tax identification number
             x-c5pm6pbechkmarjkclpisrjfdlh74p8:
+              help: First surname, a space, second surname, a space and the full given
+                name of the ascendant with a disability.
               label: Regularisation for ascendants with a disability. Ascendant's
                 surnames and given name
             x-cdnmsublctiisob2dtn6ubb1dpq6ior9e1gm8ro:
+              help: Amount of the advance payment of the deduction actually received
+                in the tax period. Regularisation applies where what was received
+                exceeds the deduction the taxpayer was entitled to.
               label: Regularisation for a non-separated spouse with a disability.
                 Advance payment amount
             x-cdnmsublctiisp35chqm6or9dtn0:
+              help: Amount of the deduction the taxpayer was entitled to in the tax
+                period, under article 81 bis of Law 35/2006.
               label: Regularisation for a non-separated spouse with a disability.
                 Deduction amount
             x-chim6r1ecll6asj3d5hmiro:
@@ -47274,21 +47299,57 @@ modelo:
               help: null
               label: Return type (original / substitute / supplementary)
             x-chin6or5dpi6ipbeehin6bj1c9nmsrpdc5n78qb3d5o62p3f:
+              help: Amount of the advance payment of the deduction actually received
+                in the tax period. Regularisation applies where what was received
+                exceeds the deduction the taxpayer was entitled to.
               label: Regularisation for descendants with a disability. Advance payment
                 amount
             x-chin6or5dpi6ipbeehin6bj4cli7aor3d5nms:
+              help: Amount of the deduction the taxpayer was entitled to in the tax
+                period, under article 81 bis of Law 35/2006.
               label: Regularisation for descendants with a disability. Deduction amount
             x-chin6or5dpi6ipbeehin6bjed5j0:
+              help: Tax identification number of the descendant with a disability
+                the deduction was taken for.
               label: Regularisation for descendants with a disability. Descendant's
                 tax identification number
             x-chin6or5dpi6ipbeehin6bjedtmm4sj5:
+              help: First surname, a space, second surname, a space and the full given
+                name of the descendant with a disability.
               label: Regularisation for descendants with a disability. Descendant's
                 surnames and given name
+            x-cpgmqqbcd5giqrjldlin4rrjc4n62ojfdpniqobeehkm6qbgc5i6u:
+              help: Amount of the advance payment of the deduction actually received
+                in the tax period. Regularisation applies where what was received
+                exceeds the deduction the taxpayer was entitled to.
+              label: Large-family regularisation. Advance payment amount
             x-cpgmqqbcd5giqrjldlin4rrjc4n68pb4elhm6qbfdo:
+              help: Amount of the deduction the taxpayer was entitled to in the tax
+                period, under article 81 bis of Law 35/2006.
               label: Large-family regularisation. Deduction amount
             x-cpgmqqbcd5giqrjldlin4rrjc4n78qbkelm6u:
+              help: Identification number shown on the official large-family certificate
+                issued by the autonomous community.
               label: Large-family regularisation. Large-family certificate identification
                 number
+            x-e9in0shec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              help: Surnames of the representative if a natural person, or the complete
+                business name if a legal person or entity.
+              label: Representative's surnames or business name
+            x-e9in0shedpkmc:
+              help: Tax identification number of the person or entity filing the return
+                on the taxpayer's behalf. Left blank where the taxpayer files in person.
+              label: Representative's tax identification number
+            x-e9in0shedpnmqojick:
+              help: Given name of the representative where the representative is a
+                natural person. Blank otherwise.
+              label: Representative's given name
+            x-e9in6tbcehgm8rpec4mmirj7e9in6obi:
+              help: Total amount payable for the regularisation. The record design
+                prints the expression (558-557+573-572+589-588+591-590), which omits
+                the spouse pair [574]/[575] declared in the same record; the box is
+                therefore taken from the taxpayer rather than computed.
+              label: Result of the regularisation payable
           construct:
             modelo-122-regularizacion:
               field:
