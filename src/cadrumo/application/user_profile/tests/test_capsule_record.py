@@ -206,10 +206,14 @@ def test_restore_refuses_duplicate_or_mismatched_current_record_lineage(tmp_path
     # Two rows: the count really is what failed, so the count is what is named.
     assert "exactly one current record row; it holds 2" in str(duplicate_refusal.value.__cause__)
 
+    # A session minted from a different envelope is now refused BEFORE the
+    # capsule is staged, on the envelope digest the session copied at mint.
+    # The record store still refuses the same shape on its row provenance --
+    # proved directly against the store in this module -- but the earlier
+    # refusal is the better one: nothing is written and the message names the
+    # material that disagreed rather than the symptom two layers down.
     mismatched_session = ProfileRecordSession.from_envelope(envelope=_envelope(password_generation=8), dek=_DEK)
-    with pytest.raises(
-        ProfileRecordIntegrityError, match="authenticated current-record validation"
-    ) as mismatch_refusal:
+    with pytest.raises(ValueError, match="was not minted from this password envelope"):
         ProfileCapsuleLifecycle(root=tmp_path / "mismatch").restore(
             label="Restore target",
             password_envelope=envelope,
@@ -219,8 +223,6 @@ def test_restore_refuses_duplicate_or_mismatched_current_record_lineage(tmp_path
             database_bytes=_database(tmp_path / "source").read_bytes(),
             authority="password",
         )
-    assert isinstance(mismatch_refusal.value.__cause__, ProfileRecordIntegrityError)
-    assert "provenance" in str(mismatch_refusal.value.__cause__)
 
 
 def test_restore_refuses_a_database_bound_to_a_different_profile_uuid(tmp_path: Path) -> None:
