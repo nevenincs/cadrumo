@@ -18,21 +18,42 @@ past that contract:
   end in ``_LOCALE_KEY`` or ``_LOCALE_KEYS``. These constants centralize
   key selection for application policies that return translation keys
   to a later caller instead of calling :func:`tr` locally.
+* Dict literals SHAPED as a locale-key registry (every value a
+  dotted-key string) regardless of what their assignment target is
+  named — a status/enum-token-to-key mapping read through a lowercase
+  local (``SOME_DICT.get(token)``) into :func:`tr`. Recognized by shape
+  (:func:`_is_locale_key_dict_literal`), not by the naming convention the
+  previous bullet depends on.
 
 These findings feed into
 :meth:`locales.manager.LocaleManager.get_codebase_keys` so the
 parity audit covers programmatic emissions and dynamic namespaces.
 
-A fourth surface is a structural HAZARD rather than a discovery gap:
-``tr(SOME_CONSTANT)`` where ``SOME_CONSTANT`` is a bare, ALL-CAPS
-constant reference that does NOT carry the ``_LOCALE_KEY``/``_LOCALE_KEYS``
-suffix. Neither the literal-argument resolver nor the constant-declaration
-resolver above finds it, so the key is invisible to every downstream
-audit — a missing catalogue entry, a typo, or an orphaned key on that
-site raises nothing. :func:`find_tr_constant_naming_violations` is a
-repo-wide structural gate (not a key-discovery feed) that holds every
-call site to the same naming contract the declaration side already
-enforces.
+Two further surfaces are structural HAZARDS rather than discovery gaps:
+
+* ``tr(SOME_CONSTANT)`` where ``SOME_CONSTANT`` is a bare, ALL-CAPS
+  constant reference that does NOT carry the ``_LOCALE_KEY``/``_LOCALE_KEYS``
+  suffix. Neither the literal-argument resolver nor the constant-declaration
+  resolver above finds it, so the key is invisible to every downstream
+  audit — a missing catalogue entry, a typo, or an orphaned key on that
+  site raises nothing. :func:`find_tr_constant_naming_violations` is a
+  repo-wide structural gate (not a key-discovery feed) that holds every
+  call site to the same naming contract the declaration side already
+  enforces.
+* A dict literal shaped as a locale-key registry (the discovery bullet
+  above) but named without the required suffix. Key discovery no longer
+  depends on the rename, but the un-suffixed declaration is exactly the
+  concealed form that let a production dict orphan invisibly — neither
+  the declaration-side suffix check nor the call-site naming gate (which
+  explicitly excludes the lowercase local it is read through) could see
+  it. :func:`find_dict_constant_naming_violations` surfaces the hazard so
+  a human renames it into the same contract the call-site gate already
+  enforces.
+
+Both hazard gates hold different HALVES of the same naming contract
+(:data:`_LOCALE_KEY_CONSTANT_SUFFIXES`) to account: the call-site gate
+holds the USE to the DECLARATION's contract; the dict gate holds a
+SHAPE-MATCHED DECLARATION to its OWN contract.
 """
 
 from __future__ import annotations
