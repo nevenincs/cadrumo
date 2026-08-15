@@ -94,7 +94,7 @@ class ProfileRecordCommandEvent(BaseModel):
 
     model_config = _RECORD_CONFIG
 
-    event_type: str = Field(min_length=1, max_length=128)
+    event_type: BucketEventType
     occurred_at: str = Field(min_length=20, max_length=64)
     payload: Mapping[str, str] = Field(default_factory=dict)
 
@@ -308,7 +308,7 @@ class ProfileRecordStore:
                 expected_row_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
                 expected_event_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
                 event=ProfileRecordCommandEvent(
-                    event_type=BucketEventType.PROFILE_BUCKET_CREATED.value,
+                    event_type=BucketEventType.PROFILE_BUCKET_CREATED,
                     occurred_at=record.updated_at.isoformat(),
                 ),
             )
@@ -493,10 +493,6 @@ def _build_record_event(
     command: ProfileRecordCommandEvent,
 ):
     try:
-        event_type = BucketEventType(command.event_type)
-    except ValueError as exc:
-        raise ProfileRecordIntegrityError("profile record command event names no current bucket event type") from exc
-    try:
         occurred_at = datetime.fromisoformat(command.occurred_at).astimezone(UTC)
     except ValueError as exc:
         raise ProfileRecordIntegrityError("profile record command event instant is not a parsable timestamp") from exc
@@ -515,7 +511,7 @@ def _build_record_event(
     }
     return build_bucket_event(
         bucket_id=str(session.profile_id),
-        event_type=event_type,
+        event_type=command.event_type,
         occurred_at=occurred_at,
         actor=_RECORD_ACTOR,
         object_type=BucketEventObjectType.PROFILE,

@@ -30,6 +30,7 @@ from ..adapters.persistence.storage import (
 )
 from ..adapters.persistence.storage.bucket import (
     BucketPaths,
+    bucket_paths,
 )
 from ..adapters.persistence.storage.crypto import (
     decrypt_secure_object_payload,
@@ -46,7 +47,6 @@ from ..adapters.persistence.storage.sql.session import session_scope
 from ..core import DirectoryEntryKind, StorageCategory, scan_directory
 from ..core.config import Settings, load_settings, override_settings
 from ..core.errors import CadrumoError
-from ..tests.bucket_layout import provision_bucket_directory
 from .master_key import EphemeralMasterKeyProvider
 from .storage_scope import storage_overrides
 
@@ -105,22 +105,42 @@ def _provision_bucket_session(
     storage_root: Path,
     opened_at: datetime,
 ) -> tuple[BucketSession, BucketPaths]:
-    """Provision a real encrypted bucket and open its session.
+    """Publish a real encrypted bucket and open its session.
+
+    The bucket root is brought into existence by capsule publication and by
+    nothing else. That is not a stylistic preference: the storage layer
+    refuses every other creator, and publication claims the destination with
+    an atomic no-replace rename, so a fixture that materialised
+    ``buckets/<id>/`` directly would sit in that destination and make the
+    NEXT capsule published for the identity fail outright -- which is exactly
+    what happened while this helper provisioned the tree by hand. Tests
+    combining this fixture with the capsule seeding door share one identity,
+    so the two were racing for one directory with only one of them allowed to
+    win.
+
+    Publishing here also makes the fixture's premise honest. It claims to
+    provision the durable surfaces production uses; a raw directory tree with
+    no capsule is a state no production path can reach, whereas a published
+    capsule carrying one incomplete revision-one record is precisely what the
+    credential door leaves behind. The seeding door then finds a committed
+    capsule and takes its replacement branch, through the same
+    compare-and-swap writer a real fact update uses.
 
     The bucket's keys are derived deterministically from its immutable
     identity through the one test-owned derivation
     (:func:`~cadrumo.tests.profile_capsule._test_bucket_key`), which is also
-    what a nested :func:`open_test_profile_session` binds. Sharing that single
+    what a nested :func:`open_test_profile_session` binds and what the
+    published capsule's custody material wraps. Sharing that single
     derivation is what makes the write side and the read side agree; it
     replaces a persisted keystore artefact no production path writes.
 
     Nothing here is faked: real 32-byte keys open a real session over really
-    encrypted records. No manifest is written -- a bucket's registration is
-    proven by its published profile capsule.
+    encrypted records.
     """
-    from .profile_capsule import _test_bucket_key
+    from .profile_capsule import _test_bucket_key, publish_test_profile_capsule
 
-    paths = provision_bucket_directory(storage_root, bucket_id)
+    publish_test_profile_capsule(bucket_id, label=label, root=storage_root)
+    paths = bucket_paths(storage_root, bucket_id)
     session = BucketSession.open(
         bucket_id=bucket_id,
         kek=_test_bucket_key(bucket_id, purpose="kek"),

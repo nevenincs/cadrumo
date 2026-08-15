@@ -257,7 +257,7 @@ class ProfileRecordRepository:
             record_session=self._session,
             replacement=replacement,
             event=ProfileRecordCommandEvent(
-                event_type=BucketEventType.PROFILE_SETUP_COMPLETED.value,
+                event_type=BucketEventType.PROFILE_SETUP_COMPLETED,
                 occurred_at=occurred_at.isoformat(),
             ),
             expected_revision=expected_revision,
@@ -285,21 +285,19 @@ class ProfileRecordRepository:
         encrypted replacement and its authenticated event in the same capsule
         data-file replacement.
 
-        ``event_type`` is the closed catalogue member, never a free string.
-        The capsule writer coerces whatever reaches it through
-        :class:`~cadrumo.domain.buckets.BucketEventType` and refuses the whole
-        command when the coercion fails, so a caller-invented string does not
-        degrade the record -- it loses it, along with every fact the command
-        carried.  Taking the member here moves that refusal from a runtime
-        integrity error deep inside the writer to the call site, where the
-        caller can see which values exist.
+        ``event_type`` is the closed catalogue member, never a free string, and
+        the command witness it is carried on declares the same closed type, so a
+        caller-invented string can no longer travel as far as the capsule
+        writer.  Taking the member here rather than a string puts the accepted
+        set in front of the caller at the call site, where the alternative was a
+        refusal deep inside the writer that cost the whole command -- every fact
+        it carried included.
         """
         identity = UUID(str(profile_id))
         # Narrowed here rather than trusted, so an untyped caller is refused
-        # BEFORE the record is read and the replacement composed.  The event
-        # travels onward as a plain string through a model that accepts any
-        # string, and the coercion that would have caught it lives inside the
-        # writer, past the point where refusing costs the whole command.
+        # BEFORE the record is read and the replacement composed.  The command
+        # witness below now declares the closed member itself and would refuse
+        # too, but only after the load and the compare-and-swap have run.
         event = BucketEventType(event_type)
         if identity != self._session.profile_id:
             raise ProfileNotFoundError("profile record session does not serve the requested UUID")
@@ -328,7 +326,7 @@ class ProfileRecordRepository:
             record_session=self._session,
             replacement=replacement,
             event=ProfileRecordCommandEvent(
-                event_type=event.value,
+                event_type=event,
                 occurred_at=occurred_at.isoformat(),
                 payload=event_payload,
             ),

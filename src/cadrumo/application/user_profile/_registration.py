@@ -42,6 +42,7 @@ from ...domain.user_profile import ProfileSetupState, UserProfileRecord, new_pro
 from ..filing import try_record_filing_retention_snapshot
 from ..profile_custody import create_profile_custody_registration_material
 from ._capsule_record import ProfileRecordSession
+from ._custody_service import ProfileCustodyDisplacedSessionRetirementError
 from ._custody_transactions import ProfileCustodyTransactionConflictError
 from ._lifecycle import ProfileCapsuleLifecycle
 from ._validation import reject_invalid_profile_facts
@@ -199,6 +200,17 @@ def register_profile_with_credentials(
                 ),
                 record_session=session,
             )
+        except ProfileCustodyDisplacedSessionRetirementError as exc:
+            # Creating a profile displaces whichever one the pointer named, and
+            # the create transaction voids that profile's stored session before
+            # it moves the pointer. When that removal cannot complete the
+            # transaction refuses with the pointer untouched -- correct, but
+            # indistinguishable from a label collision unless it is caught
+            # ahead of one, and telling the operator their brand-new label is
+            # taken would send them to rename a profile that is not the problem.
+            raise ProfileRegistrationError(
+                translated_message="application.user_profile.errors.registration_displaced_session_not_retired",
+            ) from exc
         except ProfileCustodyTransactionConflictError as exc:
             raise ProfileRegistrationError(
                 translated_message="application.user_profile.errors.profile_already_exists",

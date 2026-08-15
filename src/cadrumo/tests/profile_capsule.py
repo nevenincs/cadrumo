@@ -33,7 +33,7 @@ from ..application.user_profile._profile_record_repository import (
 )
 from ..core.paths import effective_storage_root
 from ..domain.buckets import BucketEventType
-from ..domain.user_profile import UserProfileFact, UserProfileRecord
+from ..domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 
 def _active_bucket_dek(profile_id: UUID) -> bytes:
@@ -270,6 +270,54 @@ def set_active_test_profile_facts(
     return upsert_test_profile_facts(active, facts, root=root)
 
 
+def publish_test_profile_capsule(
+    profile_id: str | UUID,
+    *,
+    label: str,
+    root: Path | None = None,
+) -> UserProfileRecord:
+    """Bring one test bucket into existence the only way production ever does.
+
+    A bucket root under ``buckets/`` is created exactly once, by capsule
+    publication's atomic no-replace rename; the storage layer refuses every
+    other creator. A fixture that materialises the directory tree directly
+    therefore builds a state no production path can reach, AND occupies the
+    destination publication must claim -- so the next capsule published for
+    that identity is refused outright. This is the fixture-side door onto the
+    one creating authority, for helpers that need a real bucket before any
+    record exists.
+
+    Custody material is derived from the profile's immutable identity through
+    the same :func:`_test_bucket_key` derivation a later
+    :func:`open_test_profile_session` binds, so the published capsule opens
+    under the session the caller goes on to activate. No active session is
+    required here, which is what lets this run BEFORE the bucket exists.
+
+    The record is exactly what the production credential door publishes: one
+    revision-one record with no facts, left deliberately incomplete, because
+    completing setup is a separate operator act.
+    """
+    identity = UUID(str(profile_id))
+    storage_root = effective_storage_root(root)
+    dek = _test_bucket_key(str(identity), purpose="dek")
+    envelope = _new_test_envelope(identity)
+    initial = UserProfileRecord(profile_id=str(identity), setup_state=ProfileSetupState.INCOMPLETE)
+    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
+    try:
+        ProfileCapsuleLifecycle(root=storage_root).create(
+            label=label,
+            profile_id=identity,
+            password_envelope=envelope,
+            sentinel=create_profile_custody_sentinel(envelope=envelope, dek=dek),
+            data_files={},
+            initial_record=initial,
+            record_session=session,
+        )
+    finally:
+        session.close()
+    return initial
+
+
 def seed_test_profile_record(
     record: UserProfileRecord,
     *,
@@ -375,6 +423,7 @@ __all__ = [
     "forge_colliding_capsule_label",
     "load_test_profile_record",
     "open_test_profile_session",
+    "publish_test_profile_capsule",
     "replace_test_profile_record",
     "seed_test_profile_record",
     "set_active_test_profile_facts",
