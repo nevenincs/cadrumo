@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:1ce3d687a3361d5e8f7f2fdd62ff722722ea6929b81c45313c0273d932c1af7f'
+body_hash: 'sha256:620780a196b08afb4108e542354dae1c28b20cb85accedc71fe414eb69b6faad'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -211,6 +211,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S142` - Have Terra XHigh repair the telemetry producer test that imports a private helper from a sibling test module which no longer defines it, the helper having been removed rather than renamed with no equivalent surviving, and rule on the shape independently since a test module importing another test module's private helper is fragile by construction; `src/cadrumo/core/telemetry/tests/`.
 - [ ] `W04.P07.S143` - Have Sol Medium rule where companion distributions built from this repository live, since two established companions sit under one directory and a third was placed elsewhere, which is one concept in two homes and the fragmentation this campaign exists to remove; `pyproject.toml`.
 - [ ] `W04.P07.S144` - Have Sol Medium rule whether a deletion landing without its consumer sweep should be mechanically detectable, since three separate removals in one session each shipped the deletion in one commit and the consumer repair in another or not at all, blocking collection tree-wide for every agent until somebody noticed, which makes the split the norm on this tree rather than the exception; `.vault/audit/ and dev/import_hygiene_scan.py`.
+- [ ] `W04.P07.S145` - Have Terra XHigh sever the dependency cycle between the core distribution and the extracted harness by moving the four harness-delivery surfaces into the harness package and dropping the core dependency, since the harness project file states that it consumes the core library and never the reverse while a repair added exactly that reverse edge, making the current shape a deliberate temporary the sever supersedes; `pyproject.toml and src/cadrumo/entrypoints/ and src/cadrumo-harness/`.
 
 ## Wave `W05` - end-to-end proof
 

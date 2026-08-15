@@ -5,6 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
+body_hash: 'sha256:4364c8c604d7b4c099bdbdf77788cdc55a05c046fa147890a8d655d9d6ed41d9'
 step_id: 'S141'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -80,3 +81,36 @@ effect outside the author's worktree and was declared rather than left to be
 discovered — with the open question of whether a clean dependency sync now
 reproduces it from the declaration, since a shared environment holding state the
 project file does not describe is invisible until someone rebuilds.
+
+## Correction
+
+The decision this record describes as "deliberately not made" **had been made**,
+and was found shortly afterwards in the extracted package's own project file:
+
+> cadrumo-harness is a consumer of the cadrumo CLI/library, never the reverse
+> … cadrumo itself carries no dependency on this package.
+
+So the four entrypoint surfaces were not meant to survive importing it. The
+repair added exactly the reverse edge that comment forbids and closed a
+dependency cycle between the two distributions. The proper shape is to move
+those four harness-delivery surfaces into the harness package and drop core's
+dependency, which is rowed separately; this repair and its lock regeneration are
+a deliberate temporary that the sever supersedes.
+
+**The search that missed it is the transferable part.** The commit message was
+searched, found silent, and silence was read as absence. The statement was in
+the new package's project file — one section below the build configuration
+already opened twice for other reasons. **A relocation's rationale can live in
+the artefact it creates rather than in the commit that creates it**, and a
+silent commit is not evidence of a silent author.
+
+This campaign has repeatedly met the inverse — a comment asserting something the
+code does not do. This is the first instance of a correct and load-bearing
+statement sitting unread in exactly the file everyone was already in.
+
+A second defect surfaced from the same thread and is fixed. The lock carried no
+entry for the new package while the project file declared one, so the
+environment held it only because it had been installed by hand: a frozen sync
+would have failed, and a local sync would have UNINSTALLED it and re-broken
+collection. The environment was standing on a manual step nobody else knew
+about, and the next person to sync would have appeared to break it.
