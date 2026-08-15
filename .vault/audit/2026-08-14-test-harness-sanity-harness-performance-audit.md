@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:1d395509a87db08471d07e1aecefb967b4f3e5242bbfc8d6dec5b6897f1cedd2'
+body_hash: 'sha256:0eab071bbe6201acd7ae66bf59f08a31b7dbbe16f174e178a910dcbc01fc986c'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -548,3 +548,71 @@ with an anti-vacuity guard that exits non-zero if every list is empty, since an
 all-empty comparison agrees no matter what the code does. The `identity_tokens`
 row being legitimately 0 is precisely why that guard is needed: one empty pair
 proves nothing on its own and only the populated rows carry the result.
+
+## Round: the import-hygiene gate, and two levers correctly declined
+
+### Fixed: one package scan serving forty-three gates
+
+`test_import_hygiene_gate` opened seven of its gates with a byte-identical walk
+of the shipped package, and five of those then ran an identical
+`walk_module_imports` pass over the result. That pass measured 18.16s and 18.25s
+on two consecutive calls -- no memo -- and `_current_production_family1_sites`
+alone was called by two different tests, each paying it in full.
+
+Both stages are now memoised once per process, with thin wrappers handing each
+caller a fresh `list` rather than the cached tuple, so no gate's arguments
+change type and none inherits a sequence another gate could mutate. Copying
+~4900 paths costs microseconds against an 18s scan.
+
+    before : 248.81s, 262.89s
+    after  : 116.04s, 100.93s
+
+Roughly 2.4x, with the SAME seven failures by name -- the sets were diffed, not
+counted, because a refactor can fail the same count for different reasons.
+
+### The baseline that was not a baseline
+
+The first attempt at a before-figure snapshotted `HEAD` and measured 125.10s --
+suspiciously close to the after-figure. The snapshot's own guard explained it:
+the check printed 3 where 0 was expected, because a peer's sweep had already
+captured the edit mid-session, so `HEAD` CONTAINED the change. That "baseline"
+was re-measuring the optimisation against itself and would have reported a
+worthless 7% improvement as the result.
+
+The fix was to find the first commit carrying the new helper by walking the
+file's history and testing each revision's content, then snapshot its PARENT
+(`a295ac3032`). Recorded because in this worktree `HEAD` is not a safe stand-in
+for "before" at any point -- peers commit continuously, and a snapshot taken for
+attribution needs a positive check that it lacks the change, not an assumption
+that it does.
+
+### Declined: `test_tax_id_respelling_gate` (22.39s setup + 21.83s call)
+
+Looks like textbook duplication -- a module-scoped `findings` fixture runs
+`census("HEAD")`, and `test_the_scanner_reaches_a_real_population` runs it AGAIN.
+It is not duplication. That test asserts `findings == scanned`, so the second
+run is a determinism check, and a memo on `census` (or reusing the fixture)
+would make it compare an object with itself and pass however unstable the
+scanner became.
+
+This is the same shape as the drift-census trap recorded above, and it is now
+the second instance, which makes it a class rather than an anecdote: a
+module-scoped fixture PLUS a direct call to the same function is a determinism
+pair until proven otherwise. Read what the second result is compared against
+before removing it.
+
+### Declined: `test_tui_migration_manifest` (42.70s, single test)
+
+The test generates the manifest and then INDEPENDENTLY walks and AST-parses the
+same modules, asserting the two agree. The duplicated work is the oracle: one
+side generated, one side directly measured. Removing it would leave the manifest
+being compared to itself.
+
+Separately, `generate_tui_migration_manifest()` currently raises
+`TuiMigrationManifestError` on a digest mismatch, which is this module's
+standing failure and a tree-state matter, not a performance one.
+
+### Already optimised, left alone: `test_storage_provenance_gate` (34.30s)
+
+Its scan is already `@cache`d at module level; the 34.30s is simply the first
+caller paying the shared cost. Nothing to collapse.
