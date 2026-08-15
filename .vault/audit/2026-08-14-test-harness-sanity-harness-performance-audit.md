@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:f2b7c12640af20be184838f3d6a61f9de61a7be259078347b80f8c0f2b92f76a'
+body_hash: 'sha256:b382170c858c1bb529662b31c9f53f2248fbd2fb0c5bedd50e7d3bc37a528da9'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -83,3 +83,58 @@ minutes. Splitting the work per module does not rescue it either, because separa
 processes each pay the per-process authority load instead of sharing one.
 
 The collection figures above are trustworthy because they do not depend on tests passing.
+
+## Why separate test processes do not share the compiled registry
+
+Asked directly: 24 xdist workers each pay a full authority load, which is the
+same derivation 24 times. The reuse machinery for it EXISTS and is correct. It
+is starved, and by two independent causes.
+
+**The compile disk cache is starved by tree churn.** `registry_disk_cache_enabled`
+returns true, the bundled root is recognised, and the cache directory holds
+16.7 MB pickles — eight of them, written across twenty-two minutes under eight
+different keys, none ever read back. The key is the registry tree fingerprint,
+and 52 files under `_data/registry/aeat/legal/` were dirty and being edited by
+other agents while these runs happened. A changed tree SHOULD miss, so the cache
+is behaving correctly; it simply never sees the same tree twice.
+
+Proven by removing the churn rather than by argument. Against a `git archive HEAD`
+snapshot of `_data`, which cannot move, three separate processes compiled in
+29.77s, 9.94s and 8.36s: the first populates, the rest reuse. Cross-process
+sharing works.
+
+**The validation verdict cache is starved by the tree being red.**
+`registry_validation_is_certified` skips `validate_registry` entirely on a hit,
+and `certify_registry_validation` writes a verdict only on a GREEN outcome.
+Neither the writable verdict
+(`…/cache/registry-verdict/cadrumo_validation_verdict_*.json`) nor the shipped
+one (`_data/registry/aeat-validation-verdict.json`) exists, because this tree
+fails validation. So every process re-runs validation in full, and will keep
+doing so until the registry lane's failures are cleared. That is roughly half
+the load and it is not cacheable from here.
+
+## A cache HIT was itself paying for a path-part walk
+
+The snapshot runs exposed something the churn had been hiding: even a hit cost
+8-10s. Profiling one showed `is_bundled_registry_path` at 4.7s of a 14.7s warm
+compile. It is asked about every registry TOML — 17,234 times — and answered
+with `Path.is_relative_to`, roughly a quarter of a millisecond per call on
+Windows, deciding the same containment question against a root that cannot
+change during the process.
+
+Replaced by a normcased string prefix comparison, memoised once:
+
+    warm compile                  14.678s -> 8.991s   (-39%)
+    function calls             16,477,054 -> 5,039,574 (-69%)
+    collect_cached (fingerprints)  9.834s -> 4.393s
+    _toml_content_digest           7.793s -> 2.274s
+
+Equivalence proven against the previous implementation on all 17,273 registry
+TOML paths and on adversarial cases: the root itself, its parent, an `aeat-old`
+sibling whose name prefixes the root, an `aeatx` sibling, an upper-cased
+spelling, and an unrelated absolute path. Zero mismatches.
+
+The code landed in `459db261e2`, a peer's broad commit that captured the working
+tree before this session could commit it under its own message. Recorded here
+because the measurement and the equivalence proof are otherwise unattached to
+the change.
