@@ -20,7 +20,6 @@ from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._errors import OperatorSurfaceContractError
 from ._models import (
-    FilingStatus,
     LifecycleContract,
     ModeloLifecycleStep,
     MountedCommandDomain,

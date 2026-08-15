@@ -75,3 +75,11 @@ consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31"]
 source_refs = ["aeat-modelo-714-procedure"]
+
+[[revisions."2023".application_links]]
+id = "modelo-714-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]

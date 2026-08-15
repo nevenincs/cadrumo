@@ -65,6 +65,9 @@ VERSIONED_FORMAT_IMPLEMENTATIONS: Final[Mapping[str, str]] = {
     "aeat_certificate_session_metadata": "AEAT_STORAGE_STATE_SCHEMA_VERSION",
     "aeat_clave_movil_session_metadata": "AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION",
     "aeat_clave_permanente_session_metadata": "AEAT_CLAVE_PERMANENTE_METADATA_SCHEMA_VERSION",
+    "profile_session_retirement_journal": "PROFILE_SESSION_RETIREMENT_SCHEMA_VERSION",
+    "profile_filing_retention_snapshot": "FILING_RETENTION_SNAPSHOT_SCHEMA_VERSION",
+    "profile_legal_hold_snapshot": "LEGAL_HOLD_SNAPSHOT_SCHEMA_VERSION",
 }
 """Inventory key -> the module-level version constant that declares its format.
 
@@ -145,10 +148,6 @@ CONSTANTS_AWAITING_CLASSIFICATION: Final[Mapping[str, str]] = {
     "BIENES_INVERSION_SCHEMA_VERSION": "Investment-goods register; same correction as the asset register above.",
     "INVENTORY_SCHEMA_VERSION": "Taxpayer inventory register; same correction as the asset register above.",
     "PRORRATA_REGISTER_SCHEMA_VERSION": "Prorrata register; same correction as the asset register above.",
-    "PROFILE_SESSION_RETIREMENT_SCHEMA_VERSION": (
-        "Private crash-window sidecar for an interrupted session-key swap; unrecognised by the "
-        "storage taxonomy, so a key would assert a boundary nothing else acknowledges."
-    ),
     "FINCA_SCHEMA_VERSION": (
         "Rental-register finca record. These five arrive here by being NAMED, not by being new: "
         "each was a bare literal on the domain model duplicated by a column default on the "
@@ -312,16 +311,23 @@ def test_the_unclassified_gap_is_a_number_a_reader_can_see() -> None:
     Raise it only when a genuinely new format arrives unclassified; lower it as
     each one is argued. Never adjust it to make a run pass.
 
-    It last moved UP, from 14 to 19, and that direction was the good outcome:
+    It moved UP, from 14 to 19, and that direction was the good outcome:
     five rental-register shapes had been carrying their version as a bare
     literal, which this gate discovers by constant NAME and therefore could not
     see at all. Naming them did not classify them. A number that grows because
     five hidden formats became visible is worth more than one that stayed still
     while they hid.
+
+    It then moved DOWN to 18, because the interrupted-session-key-swap journal
+    was argued and enrolled rather than left excused for being privately named.
+    Two further formats were enrolled in the same change without ever passing
+    through here -- the legal-hold and filing-retention snapshots carried their
+    version as a bare literal, so like the five above they were invisible to
+    this gate until named, and they were named and classed in one move.
     """
-    assert len(CONSTANTS_AWAITING_CLASSIFICATION) == 19, (
+    assert len(CONSTANTS_AWAITING_CLASSIFICATION) == 18, (
         f"{len(CONSTANTS_AWAITING_CLASSIFICATION)} persisted formats await a durability class, not "
-        "the 19 recorded here. If one has been argued, remove it from "
+        "the 18 recorded here. If one has been argued, remove it from "
         "CONSTANTS_AWAITING_CLASSIFICATION and lower this number in the same change; if a new "
         "format arrived unclassified, raise it deliberately rather than to restore green."
     )

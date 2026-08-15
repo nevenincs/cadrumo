@@ -266,6 +266,12 @@ class ProfileRecordRepository:
         caller can see which values exist.
         """
         identity = UUID(str(profile_id))
+        # Narrowed here rather than trusted, so an untyped caller is refused
+        # BEFORE the record is read and the replacement composed.  The event
+        # travels onward as a plain string through a model that accepts any
+        # string, and the coercion that would have caught it lives inside the
+        # writer, past the point where refusing costs the whole command.
+        event = BucketEventType(event_type)
         if identity != self._session.profile_id:
             raise ProfileNotFoundError("profile record session does not serve the requested UUID")
         current = self.load(identity)
@@ -293,7 +299,7 @@ class ProfileRecordRepository:
             record_session=self._session,
             replacement=replacement,
             event=ProfileRecordCommandEvent(
-                event_type=event_type.value,
+                event_type=event.value,
                 occurred_at=occurred_at.isoformat(),
                 payload=event_payload,
             ),

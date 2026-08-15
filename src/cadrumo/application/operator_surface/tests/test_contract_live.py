@@ -48,6 +48,7 @@ from .._manifest import (
     LiveLeafInventoryRow,
     McpExposureInventoryRow,
     MountedFamilyInventoryRow,
+    OperatorSurfaceReconciliation,
     ProfilePolicyInventoryRow,
     ReconciliationSurface,
     ResultSchemaInventoryRow,
@@ -95,6 +96,103 @@ def _raw_live_click_surface() -> tuple[
 
     walk(root, ClickContext(root, info_name=str(root.name)), ())
     return terminals, frozenset(callbacks), children_by_group
+
+
+def _live_reconciliation() -> OperatorSurfaceReconciliation:
+    """Build the reconciliation from the raw walk, for membership-only assertions.
+
+    Kept deliberately thin: it repeats none of the sibling test's independence
+    proofs, and asserts nothing itself. Its only job is to hand a second test
+    the same joined report without either test importing the CLI adapter's
+    private per-invocation cache.
+    """
+    raw_terminals, _, _ = _raw_live_click_surface()
+    primary_path_by_key = {normalise_cli_path_to_schema_key(path): path for path in raw_terminals}
+    for callback_path, key in CALLBACK_SCHEMA_KEY_BY_CLI_PATH.items():
+        primary_path_by_key[key] = callback_path
+    callback_reuse_paths_by_key: dict[str, set[tuple[str, ...]]] = {}
+    for callback_path, key in CALLBACK_RESULT_REUSE_BY_CLI_PATH.items():
+        callback_reuse_paths_by_key.setdefault(key, set()).add(callback_path)
+
+    keys = tuple(sorted(primary_path_by_key))
+    input_schemas = build_verb_input_schemas(keys)
+    return reconcile_operator_surface_inventory(
+        live_leaves=tuple(
+            LiveLeafInventoryRow(
+                subject_leaf_key=key,
+                canonical_cli_path=primary_path_by_key[key],
+                alias_cli_paths=tuple(sorted(callback_reuse_paths_by_key.get(key, set()))),
+                provenance="raw materialised Click traversal with declared callback reuse",
+            )
+            for key in keys
+        ),
+        result_schemas=tuple(
+            ResultSchemaInventoryRow(
+                subject_leaf_key=ref.command,
+                schema_name=ref.schema_name,
+                provenance="SCHEMA_REGISTRY through command_schema_refs",
+            )
+            for ref in command_schema_refs()
+            if ref.command in primary_path_by_key
+        ),
+        input_schemas=tuple(
+            InputSchemaInventoryRow(
+                subject_leaf_key=key,
+                required_input_names=tuple(parameter.name for parameter in schema.required_inputs),
+                provenance="VerbInputSchema.required_inputs",
+            )
+            for key, schema in sorted(input_schemas.items())
+        ),
+        mounted_families=tuple(
+            MountedFamilyInventoryRow(
+                root=family.root.value,
+                child=family.child,
+                provenance="OperatorSurfaceContract.command_families",
+            )
+            for family in get_operator_surface_contract().command_families
+        ),
+        profile_policies=tuple(
+            ProfilePolicyInventoryRow(
+                subject_leaf_key=key,
+                classification=(
+                    "profile_bound_write"
+                    if is_profile_bound_write_verb_path(" ".join(primary_path_by_key[key]))
+                    else "non_profile_bound"
+                ),
+                should_expose_via_mcp=key not in ROOT_LANDING_SCHEMA_KEYS,
+                provenance="application storage policy plus root landing exposure contract",
+            )
+            for key in keys
+        ),
+        mcp_exposures=tuple(
+            McpExposureInventoryRow(
+                subject_leaf_key=key,
+                exposed=is_exposable_command(key),
+                provenance="is_exposable_command",
+            )
+            for key in keys
+        ),
+        exclusions=tuple(
+            exclusion
+            for key in sorted(ROOT_LANDING_SCHEMA_KEYS)
+            for exclusion in (
+                ExplicitExclusionInventoryRow(
+                    subject_leaf_key=key,
+                    surface=ReconciliationSurface.MOUNTED_FAMILY,
+                    reason="root landing callback has no mounted command family",
+                    authority="ROOT_LANDING_SCHEMA_KEYS",
+                    provenance="entrypoints.schema_surface",
+                ),
+                ExplicitExclusionInventoryRow(
+                    subject_leaf_key=key,
+                    surface=ReconciliationSurface.MCP_EXPOSURE,
+                    reason="root landing callback is excluded from MCP tools",
+                    authority="ROOT_LANDING_SCHEMA_KEYS",
+                    provenance="entrypoints.schema_surface",
+                ),
+            )
+        ),
+    )
 
 
 def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_policy_by_identity() -> None:
@@ -283,5 +381,45 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
     assert provisioning.mutability is OperatorMutability.LOCAL_STATE_MUTATING
     assert "provision" in provisioning.operator_question.lower()
     assert "readiness" in provisioning.operator_question.lower()
-    assert provisioning.commands == ("report", "pull", "verify")
-    assert provisioning.commands == children_by_group[("config", "provision")]
+    assert sorted(children_by_group[("config", "provision")]) == sorted(report.commands_for_family(provisioning))
+
+
+def test_derived_family_membership_equals_the_independently_walked_tree() -> None:
+    """Every family's derived verbs equal its live children, for every family.
+
+    The property this replaces was a spot check on one family, which is how the
+    contract's hand-written command tuples drifted in both directions while the
+    suite stayed green -- verbs the CLI mounted that no family listed, and verbs
+    families listed that the CLI does not mount.
+
+    Membership is no longer declared, so the assertion is not "the two lists
+    agree" but "the derivation reproduces the tree it was derived from" for
+    EVERY family: a grouping bug that silently returned an empty or truncated
+    set for some families would otherwise be invisible. The walk here is the
+    raw one, independent of the reconciliation's own path projection.
+    """
+    raw_terminals, raw_callback_paths, _ = _raw_live_click_surface()
+    report = _live_reconciliation()
+
+    families = get_operator_surface_contract().command_families
+    assert families, "the contract declared no families, so this gate would check nothing"
+
+    # Callback paths are dispatch surfaces that are not terminal children, so a
+    # terminals-only denominator understates a family: `config repair` and
+    # `app ledger participation` are both reachable verbs with no leaf entry.
+    dispatch_paths = frozenset(raw_terminals) | raw_callback_paths
+    mismatches: list[str] = []
+    for family in families:
+        identity = (family.root.value, family.child)
+        derived = frozenset(report.commands_for_family(family))
+        expected = frozenset(
+            ".".join(path[2:]) if len(path) > 2 else family.child
+            for path in dispatch_paths
+            if len(path) > 1 and (path[0], path[1]) == identity
+        )
+        if derived != expected:
+            mismatches.append(
+                f"{' '.join(identity)}: derived-only={sorted(derived - expected)}, "
+                f"live-only={sorted(expected - derived)}"
+            )
+    assert not mismatches, "derived family membership did not reproduce the live tree:\n" + "\n".join(mismatches)

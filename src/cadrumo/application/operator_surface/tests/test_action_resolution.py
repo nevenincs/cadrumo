@@ -15,6 +15,7 @@ from ...operator_actions import (
     ActionReference,
 )
 from .. import ManifestActionProfile
+from .._errors import OperatorSurfaceContractError
 from .._manifest import (
     InputSchemaInventoryRow,
     LiveLeafInventoryRow,
@@ -145,7 +146,7 @@ def test_every_catalogue_target_is_live_even_when_no_profile_references_it() -> 
         action=ActionReference(action_id=live_entry.action_id),
     )
 
-    with pytest.raises(ValueError, match="orphan action target command identity") as exc_info:
+    with pytest.raises(OperatorSurfaceContractError, match="orphan action target command identity") as exc_info:
         resolve_manifest_action_profiles(
             profiles=(profile,),
             catalogue=ActionCatalogue(entries=(live_entry, dead_entry)),
@@ -213,7 +214,7 @@ def test_action_resolution_rejects_unknown_action_and_orphan_subject_identities(
         scenario_id="scenario.subject.absent",
         action=ActionReference(action_id="operator.recovery.unknown"),
     )
-    with pytest.raises(ValueError, match="unknown manifest action-profile action identity"):
+    with pytest.raises(OperatorSurfaceContractError, match="unknown manifest action-profile action identity"):
         resolve_manifest_action_profiles(
             profiles=(unknown_action,),
             catalogue=catalogue,
@@ -226,7 +227,7 @@ def test_action_resolution_rejects_unknown_action_and_orphan_subject_identities(
         scenario_id="scenario.subject.absent",
         no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
     )
-    with pytest.raises(ValueError, match="orphan manifest action-profile subject identity"):
+    with pytest.raises(OperatorSurfaceContractError, match="orphan manifest action-profile subject identity"):
         resolve_manifest_action_profiles(
             profiles=(orphan_subject,),
             catalogue=catalogue,
@@ -246,14 +247,14 @@ def test_action_resolution_rejects_duplicate_profile_and_ambiguous_live_identiti
         _leaf("app.guard.run"),
         _leaf("app.recovery.run", required_inputs=("subject_id",)),
     )
-    with pytest.raises(ValueError, match="duplicate manifest action-profile identity"):
+    with pytest.raises(OperatorSurfaceContractError, match="duplicate manifest action-profile identity"):
         resolve_manifest_action_profiles(
             profiles=(profile, profile),
             catalogue=catalogue,
             reconciliation=reconciliation,
         )
 
-    with pytest.raises(ValueError, match="ambiguous reconciled CLI path"):
+    with pytest.raises(OperatorSurfaceContractError, match="ambiguous reconciled CLI path"):
         resolve_manifest_action_profiles(
             profiles=(),
             catalogue=catalogue,
@@ -280,7 +281,7 @@ def test_action_resolution_rejects_internally_misaligned_schema_identity(
     input_schema_key: str | None,
     expected_surface: str,
 ) -> None:
-    with pytest.raises(ValueError, match=rf"reconciled {expected_surface} identity mismatch"):
+    with pytest.raises(OperatorSurfaceContractError, match=rf"reconciled {expected_surface} identity mismatch"):
         resolve_manifest_action_profiles(
             profiles=(),
             catalogue=ActionCatalogue(entries=(_catalogue_entry(),)),
