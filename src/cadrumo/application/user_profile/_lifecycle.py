@@ -11,7 +11,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from ...core import BucketPointer
 from ...domain.user_profile import ProfileCustodyLabelAuthorityProtocol, UserProfileRecord
-from ._aggregate import CommittedProfileView
+from ..profile_custody import verify_profile_custody_dek_against_sentinel
+from ._aggregate import CommittedProfileView, ProfileRestoreAuthority
 from ._capsule_record import (
     ProfileRecordCommandEvent,
     ProfileRecordIntegrityError,
@@ -98,17 +99,47 @@ class ProfileCapsuleLifecycle:
         data_files: Mapping[str, bytes],
         record_session: ProfileRecordSession,
         database_bytes: bytes,
+        authority: ProfileRestoreAuthority,
         recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None = None,
     ) -> CommittedProfileView:
+        """Publish one restored capsule under a named, proven restore authority.
+
+        ``authority`` records which door proved the key: the profile's own
+        password, or a portable recovery artifact. It is required and has no
+        default, because the two are not interchangeable and a restore that
+        does not say which one it used cannot be audited afterwards. Both
+        doors prove the DEK before reaching here; neither mints, rotates, or
+        replaces a key schedule, so a recovery-proved restore republishes the
+        SAME password envelope and does not hand back password access.
+
+        The material agreement below is checked at the primitive rather than
+        trusted from the door, and the reason is asymmetric cost. Publishing
+        a capsule whose password envelope unwraps a key the staged database
+        was not encrypted under produces a profile that authenticates and
+        then decrypts nothing -- and it does so silently, at the one moment
+        the operator believes their records were rescued. Proving the
+        session's key against the committed sentinel is cheap; the failure it
+        prevents is unrecoverable.
+        """
         identity = password_envelope.profile_id
         if sentinel.profile_id != identity:
             raise ValueError("profile lifecycle restore material must bind one UUID")
         if record_session.profile_id != identity:
             raise ValueError("profile lifecycle restore session must bind the capsule UUID")
+        if record_session.envelope_digest != password_envelope.self_digest:
+            raise ValueError("profile lifecycle restore session was not minted from this password envelope")
+        if record_session.dek_epoch != password_envelope.dek_epoch:
+            raise ValueError("profile lifecycle restore session DEK epoch differs from its password envelope")
         if data_files:
             raise ValueError("profile lifecycle restore refuses arbitrary capsule data files")
         if not database_bytes:
             raise ValueError("profile lifecycle restore requires its canonical profile database")
+        verify_profile_custody_dek_against_sentinel(
+            dek=record_session.encryption_key(),
+            profile_id=identity,
+            dek_epoch=password_envelope.dek_epoch,
+            sentinel=sentinel,
+        )
         self._transactions.create_capsule(
             profile_id=identity,
             password_envelope=password_envelope,

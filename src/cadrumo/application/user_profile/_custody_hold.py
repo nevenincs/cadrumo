@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Final, Literal
 from uuid import UUID
 
 from ...core import StorageCategory, storage_location
@@ -20,6 +20,16 @@ from ._custody_transactions import (
     ProfileCustodyTransactionRefusalError,
     canonical_model_bytes,
 )
+
+
+DERIVED_HOLD_EVIDENCE_DIRNAME: Final[str] = storage_location(
+    StorageCategory.PROFILE_CUSTODY_HOLD_DERIVED_EVIDENCE,
+).relative_path().name
+"""The derived join's directory name, read from its one taxonomy declaration.
+
+The storage path registry spells the same segment in this format's grammar, so
+the name is declared once and read in both places rather than typed in each.
+"""
 
 
 def _default_custody_adapters() -> Any:
@@ -45,7 +55,7 @@ class _ProfileCustodyHoldEvidenceOwner:
         self._root = (
             self._storage_root
             / storage_location(StorageCategory.PROFILE_CUSTODY_HOLD_EVIDENCE).relative_path()
-            / "derived-evidence"
+            / DERIVED_HOLD_EVIDENCE_DIRNAME
             / owner
         )
 
