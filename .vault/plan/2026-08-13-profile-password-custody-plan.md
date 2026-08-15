@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:74d5b92126ba72b74fa1165aa5fd56fb2cdb6dd527f693fd45e53fd5eb33bf8b'
+body_hash: 'sha256:2bef726c1643510898e6a3d13f721003605d528d561104bac26a754da1cde60e'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -157,6 +157,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S84` - Have Terra XHigh resolve the deterministic identity-anchoring refusal in the isolated storage-root reaping test, which reproduces alone in seconds and is therefore neither an ordering nor a parallelism artefact, the unconfirmed hypothesis being that it anchors on a storage root whose parent directory was never materialised where the passing sibling tests anchor on an already-existing path, and establish the mechanism by measurement rather than adopting that inference; `src/cadrumo/adapters/persistence/storage/tests/`.
 - [ ] `W04.P07.S85` - Have Terra XHigh delete the two session-lifetime manifest reads now that nothing writes the file they consult, since with no writer remaining they are permanently-fallback dead paths that already degrade to the settings defaults, and the removal ripples through the forwarding port into the login session so it wants its own commit rather than riding a key-derivation change; `src/cadrumo/adapters/persistence/storage/master_key/_master_key_bucket_dek.py and src/cadrumo/application/user_profile/_login_session.py`.
 - [ ] `W04.P07.S86` - Have Sol Medium rule on the two test modules that cannot be collected in ANY lane because they raise a registry validation error at import, several modelos declaring neither an export layout nor an authority grade, so those tests have not run for as long as that has been true while a collection error reads as infrastructure noise and gets scrolled past, and establish whether this is expected transient state of the registry buildout or a defect that needs its own owner; `src/cadrumo/application/calculations/tests/ and src/cadrumo/application/modelo/tests/`.
+- [ ] `W04.P07.S87` - Have Terra XHigh stop the configuration-reset retention decision failing OPEN when no assessment is supplied, since a missing assessment currently yields a decision that blocks nothing and reports zero retained records, advancing a destructive target to retention-approved with no floor consulted and nothing said to the operator, which reads absence of an assessment as nothing-to-retain rather than as cannot-assess, and which is latent only because the deletion assessor refuses earlier and harder, becoming live the moment the destructive command the code explicitly plans returns an assessment lacking retention for any reason; `src/cadrumo/application/config_reset.py`.
 
 ## Wave `W05` - end-to-end proof
 
