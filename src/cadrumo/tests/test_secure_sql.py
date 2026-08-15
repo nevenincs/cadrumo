@@ -23,6 +23,7 @@ from ..adapters.persistence.storage.sql.secure_objects import SecureObjectReposi
 from ..core import StorageCategory, storage_location
 from ..core.classification import SensitivityClass
 from ..core.config import load_settings, override_settings
+from .profile_capsule import _test_bucket_key, publish_test_profile_capsule
 from .secure_sql import (
     dev_test_database_password,
     isolated_cli_runtime_profile,
@@ -64,9 +65,11 @@ def test_read_db_at_rest_bytes_includes_the_wal_sidecar(tmp_path: Path) -> None:
     assert read_db_at_rest_bytes(plain_db) == b"ONLY_MAIN"
 
 
-_CONTROL_BUCKET_ID = "contamination-control"
-_CONTROL_KEK = b"c" * 32
-_CONTROL_DEK = b"p" * 32
+#: A bucket is a published profile capsule, so its identifier is a profile
+#: UUID and nothing else -- a free-form label names a bucket no production
+#: path could ever create, and capsule publication refuses it outright.
+_CONTROL_BUCKET_ID = "44444444-4444-4444-8444-444444444444"
+_CONTROL_NAMESPACE = "cadrumo-tests.contamination.control"
 
 
 def test_isolated_ephemeral_secure_sql_does_not_mutate_active_profile_database(tmp_path: Path) -> None:
@@ -77,10 +80,11 @@ def test_isolated_ephemeral_secure_sql_does_not_mutate_active_profile_database(t
 
     with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_active_profile=_CONTROL_BUCKET_ID):
         dispose_engine()
+        publish_test_profile_capsule(_CONTROL_BUCKET_ID, label="Contamination control", root=storage_root)
         try:
             with activate_session(_control_session()):
                 SecureObjectRepository().save(
-                    namespace="cadrumo-tests.contamination.control",
+                    namespace=_CONTROL_NAMESPACE,
                     object_key="active-profile-row",
                     classification=SensitivityClass.FINANCIAL,
                     schema_version=1,
@@ -104,7 +108,11 @@ def test_isolated_ephemeral_secure_sql_does_not_mutate_active_profile_database(t
         finally:
             dispose_engine()
 
-    assert control_rows_before == 1
+    # Anchored on the control namespace rather than a whole-table tally: the
+    # bucket also carries the rows capsule publication writes when it brings
+    # the bucket into existence, and a tally would encode that moment instead
+    # of the property under test.
+    assert _secure_object_namespaces(control_database).count(_CONTROL_NAMESPACE) == 1
     assert control_rows_after == control_rows_before
     assert _secure_object_row_count(isolated_database) == 1
 
@@ -130,6 +138,11 @@ def test_isolated_cli_runtime_profile_routes_workflow_and_modelo_repositories_to
     from ..application.workflow import WorkflowState, workflow_state_repository
 
     with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_CONTROL_BUCKET_ID) as profile:
+        # The fixture brings its bucket into existence by publishing a capsule,
+        # so the bucket is legitimately non-empty before this test writes
+        # anything. Baselining rather than pinning a literal set keeps the
+        # assertion about routing, not about what publication happens to write.
+        published = _secure_object_namespaces(profile.paths.database_file)
         workflow_repository = workflow_state_repository()
         workflow_repository.save(WorkflowState())
         work_units = WorkUnitCatalogueRepository()
@@ -147,6 +160,7 @@ def test_isolated_cli_runtime_profile_routes_workflow_and_modelo_repositories_to
     assert _secure_object_namespaces(database_path) == tuple(
         sorted(
             (
+                *published,
                 WORKFLOW_STATE_NAMESPACE.namespace,
                 MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
                 MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.namespace,
@@ -193,10 +207,17 @@ class TestHarnessReapsSessionKeys:
 
 
 def _control_session() -> BucketSession:
+    """Open the control bucket under the one test-owned key derivation.
+
+    Sharing :func:`~cadrumo.tests.profile_capsule._test_bucket_key` with the
+    published capsule is what makes this session able to read what publication
+    wrote; a pair of arbitrary key literals would open a session that agrees
+    with nothing else in the bucket.
+    """
     return BucketSession.open(
         bucket_id=_CONTROL_BUCKET_ID,
-        kek=_CONTROL_KEK,
-        dek=_CONTROL_DEK,
+        kek=_test_bucket_key(_CONTROL_BUCKET_ID, purpose="kek"),
+        dek=_test_bucket_key(_CONTROL_BUCKET_ID, purpose="dek"),
         idle_minutes=15,
         opened_at=datetime.now(UTC),
     )
