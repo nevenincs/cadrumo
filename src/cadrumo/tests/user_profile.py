@@ -208,7 +208,7 @@ def register_cli_profile(*, label: str, facts: Mapping[str, str] | None = None, 
     from uuid import UUID as _UUID
 
     from ..application.user_profile import login_profile, register_profile_with_credentials
-    from ..core.config import load_settings
+    from ..core.config import load_settings, override_settings
     from .profile_capsule import bound_test_profile_record
 
     merged: dict[str, str] = dict(_REQUIRED_PLACEHOLDERS)
@@ -216,11 +216,30 @@ def register_cli_profile(*, label: str, facts: Mapping[str, str] | None = None, 
     if facts:
         merged.update(facts)
     passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
-    outcome = register_profile_with_credentials(
-        label=label,
-        passphrase=passphrase,
-        facts=tuple(UserProfileFact(path=path, value=value) for path, value in merged.items() if value),
-    )
+    # Registration calibrates the profile KDF by MEASURING the parameter grid on
+    # this host: one supervised child per warmup and per sample, 16.1s of the
+    # 19.1s a registration costs here. `calibrate_profile_kdf` already documents
+    # that measuring is "the right price for an operator's one-off enrolment and
+    # the wrong one for a host that enrols constantly", which is exactly what a
+    # test suite is -- this door has 156 call sites across 62 modules.
+    #
+    # Declining to measure adopts the FIXED fallback point, which that function
+    # also returns whenever the grid cannot be measured before its deadline, and
+    # which is stronger than the measured band's floor. So the custody envelope
+    # every caller then opens is wrapped no more weakly than before; only the
+    # host measurement is skipped. `secure_sql` already takes this seam for the
+    # same reason.
+    #
+    # The calibration behaviour itself is proven by
+    # `custody/tests/test_kdf_supervision.py`, which drives
+    # `calibrate_profile_kdf` directly and never comes through this door, so
+    # nothing here can hide a calibration regression.
+    with override_settings(cadrumo_profile_kdf_measure_calibration=False):
+        outcome = register_profile_with_credentials(
+            label=label,
+            passphrase=passphrase,
+            facts=tuple(UserProfileFact(path=path, value=value) for path, value in merged.items() if value),
+        )
     login_profile(name=label, passphrase_callback=lambda: passphrase)
     if complete:
         identity = _UUID(outcome.profile_id)
