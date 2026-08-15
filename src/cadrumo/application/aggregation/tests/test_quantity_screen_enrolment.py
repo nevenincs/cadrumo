@@ -17,7 +17,7 @@ list of things to check cannot report the thing nobody added to it.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -28,6 +28,9 @@ import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.tests.runtime_profile_fixture import (
+    bucket_scoped_transaction_catalogue_fixture,
+)
 from ....core import Period
 from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
@@ -43,7 +46,6 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ....tests.secure_sql import isolated_runtime_profile
 from .._modelo_bindings import (
     LedgerIvaAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
@@ -207,10 +209,7 @@ _ENROLLED: tuple[_EnrolledFamily, ...] = (
 )
 
 
-@pytest.fixture
-def repository(tmp_path: Path) -> Iterator[TransactionCatalogueRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+repository = bucket_scoped_transaction_catalogue_fixture(_BUCKET_ID, name="repository")
 
 
 def test_every_declared_quantity_screen_is_enrolled_here() -> None:

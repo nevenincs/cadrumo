@@ -1,13 +1,7 @@
 """Canonical validated registry authority fixture for documentation tests."""
 
-import pytest
+from cadrumo.tests.registry_authority_fixture import bundled_registry_authority_fixture
 
-from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
-
-
-@pytest.fixture(scope="module")
-def authority() -> ValidatedRegistryAuthority:
-    return bundled_authority()
-
+authority = bundled_registry_authority_fixture(name="authority")
 
 __all__ = ["authority"]

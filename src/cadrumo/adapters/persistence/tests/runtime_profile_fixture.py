@@ -8,10 +8,12 @@ from pathlib import Path
 import pytest
 
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ..profile.transactions import TransactionCatalogueRepository
 
 __all__ = [
     "_runtime_profile",
     "bucket_scoped_runtime_profile_fixture",
+    "bucket_scoped_transaction_catalogue_fixture",
     "default_bucket_runtime_profile_fixture",
 ]
 
@@ -73,6 +75,43 @@ def default_bucket_runtime_profile_fixture(
             yield profile
 
     return _default_bucket_runtime_profile
+
+
+def bucket_scoped_transaction_catalogue_fixture(
+    bucket_id: str,
+    *,
+    name: str,
+) -> Callable[[Path], Iterator[TransactionCatalogueRepository]]:
+    """Build a fixture yielding a :class:`TransactionCatalogueRepository`.
+
+    The repository is opened on an isolated runtime profile pinned to
+    ``bucket_id``, which is the shape two suites had each written out for
+    themselves under names of their own.
+
+    ``bucket_id`` is a required argument rather than a default precisely
+    because the two callers pass different values, and that difference is
+    load-bearing: a distinct bucket per module keeps the bucket-scoped
+    master-key session from colliding with another module in the same run.
+    Two bodies that look identical because each closes over its own module
+    constant are NOT interchangeable, and folding them onto one shared bucket
+    would have unified two suites onto one key session while every test still
+    passed. ``name`` is likewise required -- the two callers request this
+    fixture under names of their own and neither is the obvious default.
+
+    Args:
+        bucket_id: The bucket this caller's repository and runtime are pinned to.
+        name: The fixture name pytest discovers, matching the caller's request sites.
+
+    Returns:
+        A fixture function to bind at module level under ``name``.
+    """
+
+    @pytest.fixture(name=name)
+    def _bucket_scoped_transaction_catalogue(tmp_path: Path) -> Iterator[TransactionCatalogueRepository]:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
+            yield TransactionCatalogueRepository(bucket_id=bucket_id, objects=profile.repository)
+
+    return _bucket_scoped_transaction_catalogue
 
 
 #: The default-bucket autouse runtime every persistence adapter suite installs.

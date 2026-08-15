@@ -37,7 +37,7 @@ from ....domain.calculations.registry import (
     load_registry_tree,
     xml_dictionary_entries,
 )
-from ....domain.calculations.registry import bundled_authority as load_bundled_authority
+from ....tests.registry_authority_fixture import bundled_registry_authority_fixture
 from .. import (
     RegistryApplicationInputError,
     RegistryConformanceProfile,
@@ -98,10 +98,8 @@ def tree_modelos() -> tuple[ModeloDefinition, ...]:
     return modelos
 
 
-@pytest.fixture(scope="module")
-def registry_authority() -> ValidatedRegistryAuthority:
-    """The real validated authority used for annual dictionary comparisons."""
-    return load_bundled_authority()
+#: The real validated authority used for annual dictionary comparisons.
+registry_authority = bundled_registry_authority_fixture(name="registry_authority")
 
 
 def _compose(
