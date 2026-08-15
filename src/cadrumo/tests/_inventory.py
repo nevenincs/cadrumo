@@ -129,8 +129,17 @@ def modules_declaring_class(class_name: str) -> tuple[Path, ...]:
     """
     found: list[Path] = []
     for path in package_python_files():
-        tree = ast_for_path(path)
-        if tree is None:
+        source = read_source(path)
+        # Screen on the bare identifier before parsing. A module declaring the
+        # class must contain its name, so this cannot hide a declaration, and it
+        # turns ~5k parses into ~5k substring checks plus a handful of parses.
+        # Parsing every module instead is not merely slower: it holds thousands
+        # of syntax trees live at once, which measured SLOWER than re-parsing.
+        if class_name not in source:
+            continue
+        try:
+            tree = ast.parse(source)
+        except SyntaxError:
             continue
         if any(isinstance(node, ast.ClassDef) and node.name == class_name for node in ast.walk(tree)):
             found.append(path.resolve())
