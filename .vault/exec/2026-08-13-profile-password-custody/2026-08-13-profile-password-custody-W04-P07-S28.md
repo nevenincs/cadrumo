@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:0f6fdaaab35302fa475f7e73533bad84ef670d8a161d94fc999a0d9f7090c1ab'
+body_hash: 'sha256:464a60841821ef627b3852fb1ea0434ac3c55a67d2b9c026b8234354680b6fda'
 step_id: 'S28'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -48,15 +48,17 @@ packages that must not import each other, and a duplicated two-line wrapper
 would have put one encoding decision in two places where only one would ever be
 fixed.
 
-Verified rather than assumed, in three independent ways. Tree-wide collection
-reports 30122 tests collected at exit 0, so nothing anywhere imports a moved
-symbol from its old home. A direct probe imports both packages and the promoted
-codec, resolves the wipe primitive and the receipt lifecycle through the custody
-facade, wipes a buffer and observes the refusal fire on an immutable one. The
-affected suites run 358 passed with one failure, and that failure is the
-Spanish-default-output test already attributed elsewhere and rowed separately --
-it asserts English operator text with no language override in its conftest chain
-and cannot pass on this tree in any state.
+Verified in three ways, and the verification was still incomplete. Tree-wide
+collection reports 30122 tests collected at exit 0. A direct probe imports both
+packages and the promoted codec, resolves the wipe primitive and the receipt
+lifecycle through the custody facade, wipes a buffer and observes the refusal
+fire on an immutable one. The affected suites run 358 passed with one failure,
+and that failure is the Spanish-default-output test already attributed elsewhere
+and rowed separately -- it asserts English operator text with no language
+override in its conftest chain and cannot pass on this tree in any state.
+
+What all three missed is recorded below, because the gap is the more useful
+finding.
 
 ## Notes
 
@@ -83,8 +85,45 @@ the sole difference. Taking either file wholesale would have committed work
 belonging to someone else; taking neither would have left the error registry
 pointing at a message key present in no catalogue.
 
-The dispatched agent's question about whether moving the wipe primitive unblocks
-the wipeable-key-material work is answered in the affirmative and by execution
-rather than by reading: custody now imports and calls the primitive directly
-through its own package, proven live, with the import cycle that previously
-blocked it gone.
+The relocation shipped incomplete and the follow-up commit is part of this step.
+One consumer reached eight of the moved names as ATTRIBUTES of the old module
+rather than importing them, and every one of those call sites raised at HEAD.
+
+That class is invisible to everything this step used to verify itself. An
+attribute reach resolves at CALL time, so there is no import statement for
+collection to fail on -- the tree-wide collect stayed green at exit 0 both
+before and after the break. A grep for imports of the moved names finds nothing
+either, because the consumer imports only the package. The suites that would
+have caught it were outside the scope run. So a clean collection does not clear
+a relocation, and the earlier claim that this move was verified three
+independent ways was true about three things and silent about the one that
+mattered.
+
+The reaches were recovered because the agent that authored the relocation named
+them explicitly in its report, having swept them itself before it was cut off;
+they were then confirmed against HEAD directly rather than accepted on the
+report. A sweep afterwards confirms no attribute or dynamic reach of any moved
+name remains anywhere in the tree.
+
+The standing question about whether moving the wipe primitive unblocks the
+wipeable-key-material work is answered in the affirmative, by execution rather
+than by reading, on three measurements. Custody's import sites reaching the
+shared-master package number zero, so the cycle that blocked it is gone and
+custody needs no import of that package at all. A custody-internal wipe runs
+end to end: thirty-two non-zero bytes in, thirty-two zero bytes out, through
+custody's own package. And a custody module already consumes the primitive as a
+sibling import, which is precisely the shape recovery and password unwrap need
+-- demonstrated live rather than predicted, so the next step inherits a proven
+capability instead of a hypothesis.
+
+The consumer suites afterwards run 321 passed with seven failures, none of them
+reachable from this change: every one is a registry validation error belonging
+to another campaign's in-flight legal-catalogue and export-layout work. The
+attribution that matters is the absence rather than the count -- zero
+`AttributeError` anywhere in the run, which is the signal that the repointed
+call sites resolve.
+
+One reference was deliberately left untouched. The preimage ledger under the
+quality tooling names the old error code, but it is extracted from an immutable
+source commit and validated against that history, so editing it would falsify a
+historical record rather than update a stale reference.
