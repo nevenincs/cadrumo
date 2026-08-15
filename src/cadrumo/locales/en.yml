@@ -47250,12 +47250,21 @@ modelo:
       revision:
         2017-y-siguientes:
           casilla:
+            x-cdnmsublctiisob2dtn6ubb1dpq6ior9e1gm8ro:
+              label: Regularisation for a non-separated spouse with a disability.
+                Advance payment amount
+            x-cdnmsublctiisp35chqm6or9dtn0:
+              label: Regularisation for a non-separated spouse with a disability.
+                Deduction amount
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Filing year to which the adjustment relates
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+            x-chin6or5dpi6ipbeehin6bjed5j0:
+              label: Regularisation for descendants with a disability. Descendant's
+                tax identification number
           construct:
             modelo-122-regularizacion:
               field:
@@ -65377,6 +65386,8 @@ modelo:
                 is a natural person and J if a legal person or entity.'
               label: Legal personality code of the non-resident payee
             x-e1in4opecpim6q315ln62or9dlkmarjkds:
+              help: Completed only where the payee type is code 5 and the legal personality
+                code is F.
               label: Date of birth of the non-resident payee
             x-e1in4opecpim6q315lo62prf:
               help: Date on which the prize obtained was paid or credited to the payee.
@@ -65386,6 +65397,9 @@ modelo:
                 that the bet determining the prize was placed on.
               label: Date the draw or bet was held
             x-e1in4opectin6t3fe8mm6rr2e9ng:
+              help: Marked with an X only where prizes previously distributed as shares
+                are presented for collection, so that whoever collects the prize is
+                not its ultimate beneficiary.
               label: Prize collection agent
             x-e1in4oped5mn0rriehiiqs3iclmmiro:
               help: The share of the gross cash prize, or of the value of the prize
@@ -65393,6 +65407,10 @@ modelo:
                 prizes were won in one draw, the sum of them all.
               label: Gross prize amount or individual value of the prize in kind
             x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
+              help: Only where the payee type is code 5 and the legal personality
+                code is F. Municipality and, where applicable, province, region or
+                department of the place of birth, followed by the country or territory
+                code from Annex II of Order EHA/3496/2011.
               label: Place of birth of the non-resident payee
             x-e1in4opedpkmc:
               help: Tax identification number of the prize recipient. Left blank only
@@ -65401,6 +65419,10 @@ modelo:
                 mandatory instead.
               label: Payee tax identification number
             x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
+              help: 'Only where the payee type is code 5 and there is no Spanish NIF:
+                the passport number or, failing that, the identity document valid
+                in the country of origin for a natural person, or the identifier assigned
+                by the tax authority of the country of origin for an entity.'
               label: Tax identification number in the country of tax residence
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               help: Tax identification number of the person or entity acting as the
@@ -65428,6 +65450,8 @@ modelo:
                 resident abroad and 99 where the payee type is code 5.
               label: Province code of the payee's address
             x-e1in4opee9in8pbecdkmurg:
+              help: Amount of the withholding or payment on account actually applied
+                by the entity paying the prize.
               label: Amount of withholding or payment on account
             x-e1in4opeehkn0rpde1in4or5e1q6usg:
               help: Code 1 natural person subject to personal income tax, 2 income-attribution
@@ -72885,10 +72909,6 @@ modelo:
                 title: null
           field:
             label: null
-        2021-y-siguientes:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              label: Filing year to which the self-assessment relates
         2024-y-siguientes:
           casilla:
             x-c5n6au3f5pn7arb5e9niqqjledq6ipj9cdgmst35:
