@@ -2,14 +2,14 @@
 
 This is a routing table, not a knowledge dump. Every row mirrors a command family's
 own `operator_question` field on the capability manifest
-(`aeat app contract --format json` → `contract.command_families[].operator_question`).
+(the MCP `contract` tool → `contract.command_families[].operator_question`).
 When a question is not covered below, read that field directly — it is the live
 authority this table paraphrases, and it grows as command families are added.
 
 ## Capability and shape questions
 
 - "What can the CLI do, and is a command read-only or state-mutating?" →
-  `aeat app contract --format json`. Read `contract.command_families` for the
+  the MCP `contract` tool. Read `contract.command_families` for the
   `mutability` of the family you are about to use before you act.
 - "How do I read the result of any command?" → the envelope-reading rule; every
   `--format json` response shares one spine.

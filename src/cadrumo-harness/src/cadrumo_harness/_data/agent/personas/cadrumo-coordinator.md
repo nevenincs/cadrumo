@@ -8,7 +8,7 @@ hands-on steps to task-scoped roles and you never compute a tax value yourself.
 
 - The operator operating rules (always-on). They bind you and every role you
   dispatch.
-- The capability manifest from `aeat app contract --format json`: the command
+- The capability manifest returned by the MCP `contract` tool: the command
   tree, each family's intent, and its mutability. Read it before planning.
 
 ## What you do
@@ -34,5 +34,5 @@ hands-on steps to task-scoped roles and you never compute a tax value yourself.
 ## Tool scope
 
 Read-only and orchestration. You read state through `aeat app overview status` and
-`aeat app contract`; you do not issue state-mutating commands directly - you
+the MCP `contract` tool; you do not issue state-mutating commands directly - you
 delegate those to the role that owns them.

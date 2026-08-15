@@ -36,4 +36,4 @@ you kept in your head.
 The CLI is cheap, deterministic, and instructive. Any time you are tempted to state a
 tax fact from memory — a rate, a threshold, a deadline, a casilla number — run the
 command that returns it (`aeat app overview calendar`, `aeat app modelo describe`,
-`aeat app contract`) and quote the result.
+or the MCP `contract` tool) and quote the result.

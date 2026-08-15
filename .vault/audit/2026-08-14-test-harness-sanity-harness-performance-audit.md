@@ -204,3 +204,92 @@ side, so it was reproduced against the uncached path before being dismissed.
 Recorded here because the change landed inside `c180fe8e6e`, a peer's broad
 commit that captured the working tree before this session could commit it under
 its own message. That is the third such sweep today.
+
+## Correction: the "66 to 2" migration count measured a narrower set than it named
+
+An earlier round of this campaign reported the direct bundled-root
+`load_registry_tree` call sites reduced from 66 to 2. That number is real but its
+SCOPE was mis-stated. The census behind it enumerated `test_*.py` modules only.
+The `_*_support.py` helper modules, the package `conftest.py` files and
+`cadrumo/tests/registry_observations.py` were never in the denominator, so they
+could not appear in the remainder either.
+
+The honest count at the time of the correction is 13 test-layer files, not 2. The
+failure is the familiar one of a measured claim about a set generalising into an
+unmeasured claim about everything of that kind: the instrument's reach silently
+became the claim's scope. What makes it detectable is that the report named a
+population ("call sites") broader than the glob that produced it.
+
+Re-measured with a call-form-agnostic multiline pattern over `src/**/*.py`, then
+classified rather than totalled, because the two classes have different
+dispositions.
+
+## The warm cost of a registry load is the walk BEFORE the cache lookup
+
+`load_registry_tree` is backed by `_load_registry_tree_cached`, an `lru_cache`
+keyed on `(root, fingerprints)`. That framing hides the real cost: the function
+resolves the root, validates the legal directory, discovers modelo sources and
+collects the whole tree's fingerprints BEFORE it can compute the key. All of
+that runs on a cache HIT.
+
+Measured in one warm process, six consecutive calls on the bundled root:
+
+    2.2439s  1.0072s  1.2641s  1.0552s  1.1671s  1.0648s
+
+So the steady-state price of a fully-cached load is ~1.05s. Against the shared
+accessor in the same shape:
+
+    2.866456s  0.000002s  0.000000s  0.000000s  0.000000s  0.000000s
+
+The comparison is what makes the lever visible. Reading the code alone suggests
+repeat calls are already free, and they are not; reading the first call alone
+suggests the load is simply expensive, which conceals that the recurring cost is
+avoidable. Both readings are wrong in the same direction.
+
+## Nineteen PRODUCTION call sites pay that walk, unmemoised
+
+The classification pass turned up something outside this campaign's remit and
+worth stating plainly: 19 non-test modules call
+`load_registry_tree(bundled_path("registry", "aeat"))` directly, and a sample of
+four (`_calculate_input.py`, `_binding_prefill.py`, `_projection.py`,
+`_observations_repository.py`) carries no memo of its own.
+
+The sharpest of these is
+`application/calculations/_observations_repository.py:437`,
+`_validate_observation_casilla_ids(observation)`. It takes a SINGLE observation
+and is invoked once per `save`, so persisting N observations pays N full tree
+walks at ~1.05s each. This is a live calculation path, not a test.
+
+NOT acted on, deliberately. The test-layer accessor lives in `cadrumo.tests` and
+production must not import it, so the remedy is a production-side memo, which
+intersects `aeat-registry-authority-flow` (these paths arguably should reach the
+authority rather than the raw loader at all). That is an owner's decision and a
+different lane. Recorded so it is not lost, and so the next reader does not have
+to rediscover the per-observation shape.
+
+## Migrating the helpers also closed a private-import violation
+
+Two of the twelve migrated helpers --
+`application/calculations/tests/_iva_compensation_history_support.py` and
+`_cross_period_clean_state_support.py` -- reached `load_registry_tree` through
+`....domain.calculations.registry._loader`, a cross-package PRIVATE submodule
+import that `aeat-architecture-boundaries` forbids. Routing them through the
+shared accessor removes the private reach as a side effect. Noted because it was
+not the goal, and an incidental fix that nobody records is one somebody later
+re-introduces.
+
+## The import surgery was driven from the AST, after three text-anchor failures
+
+Earlier rounds broke three ways on textual anchors: a relative-depth off-by-one
+(reaching `cadrumo` from `cadrumo.a.b.tests` needs FOUR dots, because one dot is
+the current package), an insertion landing inside a parenthesised
+`from x import (` block, and an insertion landing inside a module docstring whose
+prose line began "from a list maintained by hand".
+
+The migration script therefore takes every position from real AST nodes, derives
+the dot-depth from the file's own existing relative import rather than counting
+path segments, and drops an import name only when the AST reports zero remaining
+`Name` loads of it. It then re-parses and refuses to write unless the accessor is
+imported exactly once, is actually called, and no docstring contains the import
+text. A dry-run diff was read before applying.
+
