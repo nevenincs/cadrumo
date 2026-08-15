@@ -188,4 +188,100 @@ class BucketMaintenanceService:
         return DiskUsageBucketResult(bucket_id=command.bucket_id, total_bytes=total_bytes, subdirs=tuple(rows))
 
 
+def _observed_deletion_fingerprint(
+    *,
+    root: Path,
+    profile_id: UUID,
+    bucket_id: str,
+) -> BucketDeletionFingerprint:
+    """Fold the committed capsule's exact contents into the deletion fingerprint.
+
+    The three facts the contract carries are exactly what the custody inventory
+    observes, so this reads that one inventory rather than growing a second
+    content fold. The inventory spells its digest ``sha256:``-prefixed while the
+    contract's field is the bare hex-64 :data:`~core.identity.ContentDigest`;
+    the prefix is stripped rather than the field widened, because the reset
+    journal's deletion marker compares against the same bare shape.
+
+    A capsule that cannot be inventoried refuses. The fingerprint is what a
+    later resume compares to detect a target changing beneath it, so a
+    substituted or omitted value would make that detector silently blind.
+    """
+    try:
+        inventory = inventory_committed_profile_custody_capsule(profile_id, root=root)
+    except Exception as exc:  # noqa: BLE001 - any inventory failure must block, never soften
+        raise BucketDeleteRefusedError(
+            "current custody deletion cannot fingerprint this target: its committed capsule "
+            "could not be inventoried, so a later resume could not tell whether the target "
+            "changed beneath the operation.",
+            context={"bucket_id": bucket_id, "unassessable": "capsule_inventory"},
+        ) from exc
+    return BucketDeletionFingerprint(
+        digest=inventory.digest.removeprefix(CONTENT_DIGEST_PREFIX),
+        file_count=len(inventory.entries),
+        total_bytes=inventory.total_bytes,
+    )
+
+
+def _assessed_filing_retention(
+    *,
+    root: Path,
+    profile_id: UUID,
+    bucket_id: str,
+) -> RetentionFloorAssessment:
+    """Return the target's legal retention position, or refuse to guess it.
+
+    Three states reach here and only ONE of them is an answer.
+
+    A RECORDED snapshot listing no filings IS an answer: the filing owner was
+    asked, at profile creation, and said this profile has filed nothing. It
+    yields an assessment retaining no records, and the target proceeds on the
+    retention axis.
+
+    An ABSENT snapshot is not that answer, and conflating the two is the defect
+    this whole chain exists to close. Absence means nobody was asked -- the
+    snapshot writes are deliberately best-effort, so a swallowed write and a
+    never-created profile leave the same empty directory. Reading absence as
+    "nothing is retained" would convert every swallowed write into permission
+    to erase records Ley 58/2003 (LGT) arts. 66 and 70.2 require kept for four
+    years, which is a fail-open on the erasure of taxpayer data.
+
+    A snapshot that EXISTS but cannot be read, does not parse, or does not
+    authenticate against its own path and digest is the same non-answer with a
+    different cause, and refuses on the same grounds. Its cause is chained so
+    the distinction survives into the traceback.
+
+    Both refusals name what could not be assessed rather than reporting a
+    generic retention requirement, because the two states have different
+    remedies and an operator cannot act on "assessment required".
+    """
+    try:
+        return FilingRetentionAuthority(root=root).assess(profile_id, now=now())
+    except FileNotFoundError as exc:
+        raise BucketDeleteRefusedError(
+            "current custody deletion cannot assess the legal retention floor: the filing "
+            "owner has recorded no filing catalogue snapshot for this profile, so whether "
+            "its filed records are still inside the four-year floor is unknown rather than "
+            "known to be clear. The snapshot is written when a profile is created and "
+            "refreshed whenever a modelo is filed; a profile with none cannot be erased.",
+            context={
+                "bucket_id": bucket_id,
+                "unassessable": "filing_retention_floor",
+                "retention_snapshot": "absent",
+            },
+        ) from exc
+    except Exception as exc:  # noqa: BLE001 - an unreadable snapshot is a non-answer, never a clear one
+        raise BucketDeleteRefusedError(
+            "current custody deletion cannot assess the legal retention floor: this "
+            "profile's filing catalogue snapshot exists but could not be read and "
+            "authenticated, so its retention position is unknown rather than known to be "
+            "clear. Restore or re-record the snapshot before erasing this profile.",
+            context={
+                "bucket_id": bucket_id,
+                "unassessable": "filing_retention_floor",
+                "retention_snapshot": "unreadable",
+            },
+        ) from exc
+
+
 __all__ = ["BucketMaintenanceService"]

@@ -38,7 +38,18 @@ def _create_profile(
     label: str,
     tax_id: str,
 ) -> None:
+    """Seed one profile in the state the production registration door leaves.
+
+    The seeding door publishes a capsule directly; it is not the registration
+    door, and registration is where the empty filing catalogue snapshot is
+    recorded. Recording it here is not test scaffolding around a guard -- it
+    restores the one fact a real profile is born carrying, through the same
+    recorder registration calls. Without it every seeded profile looks like a
+    profile nobody ever asked about its filings, and the deletion preflight
+    refuses, correctly, for a reason that has nothing to do with these tests.
+    """
     from ...tests.user_profile import register_minimal_profile
+    from ..filing import try_record_filing_retention_snapshot
 
     with open_test_profile_session(profile_id):
         register_minimal_profile(
@@ -46,6 +57,11 @@ def _create_profile(
             display_name=label,
             overrides={"identity.tax_id": tax_id, "identity.name": label},
         )
+    assert try_record_filing_retention_snapshot(
+        bucket_id=profile_id,
+        records=(),
+        observed_at=datetime.now(UTC),
+    )
 
 
 def _delete_profile_through_custody(profile_id: str, *, root: Path) -> None:
@@ -111,6 +127,15 @@ def _persist_filing(
     filing_year: int,
     seed: str,
 ) -> None:
+    """Save one filing record and refresh the snapshot the filing path refreshes.
+
+    The catalogue is written directly rather than through ``persist_filed_revision``,
+    so the retention snapshot the filing path refreshes immediately after its
+    catalogue save has to be refreshed here too, through the same recorder. The
+    snapshot is the ONLY thing a deletion preflight can read: the filing records
+    themselves sit in the bucket's encrypted store, under a key a reset holding
+    locks on unopened targets does not have.
+    """
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...core import Period
     from ...domain.modelos import (
@@ -119,6 +144,7 @@ def _persist_filing(
         ModeloRecordCatalogue,
         derive_filing_record_id,
     )
+    from ..filing import try_record_filing_retention_snapshot
 
     work_unit_id = (seed * 64)[:64]
     revision_id = ((chr(ord(seed) + 1)) * 64)[:64]
@@ -141,11 +167,15 @@ def _persist_filing(
     with open_test_profile_session(bucket_id):
         repository = ModeloRecordCatalogueRepository(bucket_id=bucket_id)
         catalogue = repository.load()
-        repository.save(
-            ModeloRecordCatalogue(
-                records={**catalogue.records, record_id: record},
-            ),
+        saved = ModeloRecordCatalogue(
+            records={**catalogue.records, record_id: record},
         )
+        repository.save(saved)
+    assert try_record_filing_retention_snapshot(
+        bucket_id=bucket_id,
+        records=tuple(saved.records.values()),
+        observed_at=datetime.now(UTC),
+    )
 
 
 def _fingerprint(bucket_id: str) -> str:

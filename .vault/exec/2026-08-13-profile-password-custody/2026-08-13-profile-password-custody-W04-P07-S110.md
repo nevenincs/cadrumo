@@ -61,6 +61,34 @@ authenticated session for this committed capsule`. Those refusals are the
 lock registration deliberately installs, not evidence about key material. This
 is the second time that confusion produced a defect claim.
 
+**Which measurement shape this was, and whether the sequential-registration
+handover refusal appeared in it.** Recorded explicitly, because a live ambient
+defect on the login path could otherwise be mistaken for this Step's
+enrolment claim, and the two have different causes and different remedies.
+
+The measurement above creates exactly ONE profile per storage root and
+authenticates it. The handover refusal
+(`ActiveProfilePointerTransactionError: errors.integrity.integrity_storage_profile_custody_record`)
+appeared in **none** of it: zero occurrences across every probe run, every
+regression run and the 221-test session-substrate suite. The single place it
+was observed during this work is an unrelated command-line test module already
+red at HEAD, reported under Notes.
+
+The sequential-registration case was then measured deliberately rather than
+assumed away, and it does not reach this Step's conclusion by another route.
+Two registrations followed by two authentications, in one process on one
+storage root, succeed end to end: both buckets create, both authenticate,
+and both read with one readable row and zero unreadable. An ordering matrix
+localises the ambient defect precisely — it fires only when a registration is
+performed while a session is already authenticated, after which the NEXT login
+refuses whichever profile it targets, including the one already active.
+Registering first and authenticating afterwards is clean, and repeated
+authentication with no intervening registration is clean.
+
+That defect is therefore a LOGIN failure, never a READ failure. In every case
+where authentication succeeded, the records decrypted. It cannot produce a
+bucket the storage layer will not open, which is what this Step alleges.
+
 **The premise fails a second, independent way: its mechanism no longer
 exists.** The retired keystore route was deleted ahead of this Step landing.
 The module the Step names is gone, and so are the resolver, the mint helper and
@@ -91,8 +119,17 @@ this Step's ownership and are reported rather than fixed:
 and `tests/test_persisted_version_literal_inventory.py` and
 `application/bucket_maintenance/_manifest_digest.py` still name
 `BucketManifest`. The first module is red at HEAD — two of its five tests fail,
-though they fail earlier than the stale import, on
-`ActiveProfilePointerTransactionError: errors.integrity.integrity_storage_profile_custody_record`.
+though they fail earlier than the stale import, on the ambient handover
+refusal.
+
+The ambient handover defect is owned by its own row and was not touched here.
+The localisation measured while ruling it out of this Step's evidence is
+recorded because it narrows that row's search: the trigger is a registration
+performed while a session is already authenticated, and the failure surfaces
+on the NEXT authentication rather than on the registration itself, which is
+why the command-line helper that authenticates after each registration
+reproduces it while the raw application door does not. Passphrase reuse,
+initial facts and the setup-completion step were each excluded by measurement.
 
 The tree-wide import-hygiene and docstring-cross-link gates are broadly red at
 HEAD from concurrent sweeps. The work added here contributes nothing to them:
