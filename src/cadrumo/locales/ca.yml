@@ -65771,6 +65771,8 @@ modelo:
                 perceptor
             x-e1in4opee1p6utj9dphmio8:
               label: Codi de província del domicili del perceptor
+            x-e1in4opee9in8pbecdkmurg:
+              label: Import de la retenció o ingrés a compte
             x-e1in4opeehkn0rpde1in4or5e1q6usg:
               label: Tipus de perceptor
           construct:

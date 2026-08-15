@@ -65315,6 +65315,8 @@ modelo:
                 representative
             x-e1in4opee1p6utj9dphmio8:
               label: Province code of the payee's address
+            x-e1in4opee9in8pbecdkmurg:
+              label: Amount of withholding or payment on account
             x-e1in4opeehkn0rpde1in4or5e1q6usg:
               label: Payee type
           construct:

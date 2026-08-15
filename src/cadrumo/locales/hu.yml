@@ -65802,6 +65802,8 @@ modelo:
               label: A bevallott kedvezményezetti rekordok teljes száma
             x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
               label: A forrásadó vagy adóelőleg teljes összege
+            x-e1in4opec9gn6p9de9in8pbecdkmurg:
+              label: A forrásadó vagy adóelőleg alapja
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
               label: A külföldi illetőségű kedvezményezett jogi személyiségének kódja
             x-e1in4opecpim6q315lo62prf:
@@ -65822,6 +65824,8 @@ modelo:
                 vagy elnevezése
             x-e1in4opee1p6utj9dphmio8:
               label: A kedvezményezett lakcíme szerinti tartomány kódja
+            x-e1in4opee9in8pbecdkmurg:
+              label: A forrásadó vagy adóelőleg összege
             x-e1in4opeehkn0rpde1in4or5e1q6usg:
               label: A kedvezményezett típusa
           construct:

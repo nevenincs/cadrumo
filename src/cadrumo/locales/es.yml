@@ -68113,6 +68113,8 @@ modelo:
                 del perceptor
             x-e1in4opee1p6utj9dphmio8:
               label: Código de provincia del domicilio del perceptor
+            x-e1in4opee9in8pbecdkmurg:
+              label: Importe de la retención o ingreso a cuenta
             x-e1in4opeehkn0rpde1in4or5e1q6usg:
               label: Tipo de perceptor
           construct:
