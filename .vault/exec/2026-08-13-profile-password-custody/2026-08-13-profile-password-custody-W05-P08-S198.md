@@ -49,20 +49,67 @@ folds the write-ahead pages back into it. Excluding only the two sidecars would
 have looked correct, passed a shallow reading, and left the deletion still
 refusing. Every other capsule member was byte-identical on both sides.
 
+### Why the capsule DATABASE is excluded, argued rather than asserted
+
+This is the part of the change that weakens a guard on a destructive path, so
+it is argued here and not left to a commit subject.
+
+WHY. Excluding the main database file is forced, not a convenience, and that
+was settled by running the counterfactual rather than by reasoning about it.
+The narrower shape -- exclude only the two write-ahead sidecars and keep the
+database fully content-covered -- was applied through the out-of-tree plugin
+and the logged-in deletion was re-run under it. It refused, with the same
+conflict as the original defect: the prepared local deletion marker no longer
+matches source custody. The reason is that closing the connection CHECKPOINTS
+the sidecar's pages into the main file, measured growing from 12288 to 94208
+bytes with no logical write between the observations. Holding that file's
+bytes constant across a transaction whose own first act closes the connection
+is not strict, it is unsatisfiable: it is the identical self-invalidation this
+row exists to fix, one file over.
+
+The same instability exists on the create path, not only on delete. The
+restore flow writes a supplied database into the stage and then OPENS it to
+authenticate it before publication, so the staged capsule's inventory is
+subject to exactly the same checkpointing. The exclusion is therefore load
+bearing in both transactions rather than tolerated in one.
+
+WHAT STILL GUARDS IT. Two things, and the honest answer is that neither is
+content. First, the database is carried as a PRESENCE member: the digest covers
+its path though not its bytes, so a database that vanished or became a
+directory between preflight and execution moves the digest and refuses. That
+guard was added in response to this question -- the first shape of the fix
+dropped the database entirely, and the docstring's claim that presence was
+still checked was not true of the code. It is now, and a case proves it.
+Second, every other member remains byte-exact, so the identity of the capsule
+-- its commit record, its password envelope, its DEK sentinel, its label
+projection -- cannot change unnoticed.
+
+WHAT AN OPERATOR WOULD SEE. Nothing. If a concurrent process wrote rows into
+the capsule database between the operator confirming and the deletion
+executing, the deletion proceeds and destroys them without a refusal or a
+notice. Nothing else catches it either: this inventory has exactly one reader
+in that window, the deletion itself. That is the true cost of the exclusion and
+it is recorded as a limitation rather than described as a trade-off.
+
 ### The fix
 
-The inventory now separates two kinds of capsule member. The custody records --
-the password envelope, the DEK sentinel, the label projection, the commit record,
-the recovery envelope -- are write-once canonical JSON and are covered by the
-digest exactly as before. The three database paths, the database file and its
-two sidecars, are members whose bytes track whether a connection is open rather
-than what the capsule holds, and they are outside the digest.
+The inventory now separates three kinds of capsule member. The custody records
+-- the password envelope, the DEK sentinel, the label projection, the commit
+record, the recovery envelope, and anything not named below -- are write-once
+canonical JSON and are covered by path AND content, exactly as before. The
+capsule database is covered by path only. Its two write-ahead sidecars are not
+covered at all, because their very presence is a statement about whether a
+connection is open.
 
-The excluded set is derived from the storage taxonomy's bucket-database-file
+The presence member and the content members are projected into the digest with
+different shapes -- a path alone versus a path with size and hash -- so the two
+can never be confused for one another.
+
+Both collections are derived from the storage taxonomy's bucket-database-file
 member rather than restated as literals, because a capsule directory IS a bucket
-directory and the engine resolves the same member. Membership is three exact
-paths, never a directory prefix and never a suffix rule, so a foreign file
-dropped under the database directory stays fully covered.
+directory and the engine resolves the same member. Membership is exact paths,
+never a directory prefix and never a suffix rule, so a foreign file dropped
+under the database directory stays fully content-covered.
 
 The walk itself is unchanged: it still observes and reports every regular file,
 still refuses links, reparse points and non-regular entries, and still enforces
@@ -122,14 +169,31 @@ used to false-fire -- the source-marker verification that runs after the
 revocation -- the same journal now passes on the transaction's own checkpoint
 and still refuses when a durable record is altered underneath it.
 
+### The negative proofs are not vacuous, and that is measured too
+
+A "still refuses when custody content changed" proof means nothing if the file
+it mutates is one the digest deliberately stopped covering. Every negative case
+here perturbs the label projection or the password envelope, both content
+covered, and each application-level case now ASSERTS that the member it is
+about to mutate is content-covered before mutating it, so the property cannot
+rot into vacuity when the covered set next changes.
+
+That assertion was itself tested. A plugin mode demotes the label projection to
+presence-only, which is precisely the state that would make those proofs
+vacuous, and both application-level refusal cases red under it. No negative
+case touches the database or its sidecars.
+
 ### The gates were shown to bite
 
-An out-of-tree pytest plugin, loaded by path so no tracked file was mutated,
-reverted the digest narrowing and reran the suites: five cases reded, including
-the end-to-end logged-in deletion. A second mode widened the exclusion to the
-whole database directory, the lazy alternative, and reded the foreign-file case
-and the derived-set case. The two refusal cases correctly stayed green in both
-modes, since reverting the fix makes the guard stricter, not weaker.
+Five out-of-tree plugin modes, loaded by path so no tracked file was mutated.
+Reverting the narrowing entirely reds six cases including the end-to-end
+logged-in deletion. Excluding only the sidecars, keeping the database covered,
+reds the same deletion -- this is the counterfactual that settles why the
+database is excluded. Widening to the whole database directory reds the
+foreign-file case and the vanished-database case. Dropping the database instead
+of carrying it as a presence member reds the vanished-database case. Demoting a
+covered record to presence-only reds both refusal proofs. Every mode reds the
+derived-set case, since all of them change what the taxonomy pins.
 
 ### Verification
 
@@ -150,6 +214,39 @@ The formatter, linter and both type checkers pass on every changed file.
 
 ## Notes
 
+### This row composes with the displaced-session retirement, and does not touch it
+
+The create transaction now retires the DISPLACED profile's session
+acceleration immediately before publishing the pointer, through the same
+revocation primitive the delete transaction calls. That primitive is therefore
+invoked from two transactions rather than one, which is worth checking against
+a row whose whole subject is the delete's revocation step.
+
+Nothing here touches it. This row changed what the marker INVENTORIES, not what
+the revocation does or when it runs. The revocation module and the custody
+service are both unmodified by this row -- the service carries no commit of
+mine at all -- so the retirement's ordering constraint, that a crash may leave
+retirement done and the pointer unmoved but never the pointer moved and the
+receipt live, is untouched and the recoverability leak it closed cannot be
+reintroduced from here.
+
+The one place the two do meet is the create path's own inventory comparison,
+and there the exclusion is required for the same reason as on delete: the
+restore flow opens the staged database to authenticate it before publication,
+so the staged capsule checkpoints exactly as the committed one does. The create,
+restore, rollback and displacement suites were run to confirm it.
+
+### A correction to this record's own earlier claim
+
+An earlier draft of this record, and the docstring it described, stated that
+the database's presence was still checked while its content was not. That was
+not true of the code as first written: the database was dropped from the digest
+entirely, so a database that vanished between preflight and execution would
+have gone unnoticed. The presence member exists because that claim was
+challenged and checked. The claim is now true and a case proves it, but the
+gap between what was written and what was implemented is recorded rather than
+quietly closed.
+
 ### A narrowing that must be recorded, not buried
 
 The digest no longer covers rows written into the capsule DATABASE between
@@ -158,27 +255,48 @@ database's logical content is readable only through the DEK, which a deletion
 deliberately never holds, and its raw bytes are a function of connection state.
 Presence is still checked; content is not. The standing goal asks that a
 destructive local operation act only on what the operator confirmed, and this
-excludes the largest single artefact from that promise. A follow-up that could
-close it without re-preparing is a second, separate digest over the database
-family captured at the moment of revocation and required unchanged until removal
--- which would cover the highest-risk window, another process writing to a
-profile after its session was revoked. That is a persisted-journal shape change
-and is deliberately not made here. The narrowing is documented in the inventory
-type's own docstring so the next reader meets it where the decision lives.
+excludes the largest single artefact from that promise. What survives is the
+database's presence and every other member's bytes; what does not is its
+content, and no other check covers that window.
 
-### Peer sweep captured this work
+A follow-up that could close it without re-preparing is a second, separate
+digest over the database family captured at the moment of revocation and
+required unchanged until removal -- which would cover the highest-risk window,
+another process writing to a profile after its session was revoked. That is a
+persisted-journal shape change and is deliberately not made here. The narrowing
+is documented in the inventory type's own docstring, and pinned by a case that
+asserts the digest does NOT move on a database content change, so the gap is
+executable rather than merely written down and cannot be silently forgotten.
+
+### Peer sweep captured this work, under a subject that mis-describes it
 
 Between the fix landing in the working tree and verification completing, a peer
 session's broad sweep commits captured all four files under other step
-identifiers. The commit subject describing the change as excluding the
-write-ahead and shared-memory sidecars is an inaccurate account of it: the main
-database file is excluded too, which is the whole substance of the measurement.
-Nothing was reset or rewritten.
+identifiers: commit 8105b692c9, subject "fix(custody): exclude WAL/SHM sidecars
+from the deletion-preflight digest (W04.P07.S101)", and commit 570b236661 for
+the tests.
+
+That subject is recorded here because it is currently the only history-level
+description of a change to a safety guard on a destructive path, and it is
+wrong in the way that matters. The change does not exclude the write-ahead and
+shared-memory sidecars; it excludes those AND the capsule's own database file,
+which is the entire substance of the measurement and the only part that
+weakens anything. A reader trusting that subject would believe the profile's
+actual encrypted content is still covered by the deletion marker. It is not.
+The row identifier on the commit is also not this row. Nothing was reset or
+rewritten.
 
 ### Ambient red, none of it from this row
 
-A peer's in-flight uncommitted work in the custody service introduced a new error
-subclass without its error-code registry entry, which hard-blocked pytest
-collection tree-wide for a period and killed one suite run mid-flight. It settled
-on its own and was not touched here. That work is entirely in the capsule CREATE
-path and does not overlap the delete path changed here.
+A new error subclass landed in the custody service without its error-code
+registry entry and hard-blocked pytest collection tree-wide for a period,
+killing two suite runs mid-flight and causing two spurious failures in the
+displacement suite that pass cleanly on re-run. It was subsequently registered.
+It came from the displaced-session retirement row, not from this one and not
+from this row's scope; the custody service carries no commit from this row at
+all.
+
+Separately, a fixture-ownership collision in the shared profile-capsule test
+helpers was reported as being worked in parallel. It is test infrastructure
+rather than a production path here, and it is named so that any capsule
+destination collision seen in the reset suites is attributed there.
