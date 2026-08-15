@@ -24,10 +24,10 @@ from cadrumo.application.operator_surface import (
 )
 from cadrumo.core.errors import ErrorEnvelope
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION, SCHEMA_REGISTRY, Notice
+from cadrumo.entrypoints.cli import VerbInputSchema, build_mcp_action_input_schemas, is_exposable_command
+
 from ._annotations import McpAnnotations, annotations_for_command
-from cadrumo.entrypoints.cli import is_exposable_command
 from ._dispatch import tool_name_for_command
-from cadrumo.entrypoints.cli import VerbInputSchema, build_mcp_action_input_schemas
 from ._result_thinning import thin_output_schema
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")

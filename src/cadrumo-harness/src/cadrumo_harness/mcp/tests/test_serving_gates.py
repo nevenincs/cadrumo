@@ -26,6 +26,7 @@ import pytest
 from mcp.client.session import ElicitationFnT
 
 from cadrumo.tests import connected_server_and_client_session as connect
+
 from .._dispatch import tool_name_for_command
 from .._faithfulness import SessionGroundingWindow, arguments_faithfulness
 from .._persona_scope import AgentPersona

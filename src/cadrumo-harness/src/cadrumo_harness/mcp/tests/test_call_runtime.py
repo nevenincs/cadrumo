@@ -98,6 +98,7 @@ def test_a_child_spawning_process_is_killed_as_a_tree() -> None:
 
 def test_timeout_refusal_is_localized_and_names_the_tier() -> None:
     from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION, validate_registered_envelope_document
+
     from .._transport import _cli_resolution_refusal_envelope, _timeout_refusal_envelope
 
     envelope = _timeout_refusal_envelope(command_key="app.live.expedientes.pull", tier=CallTier.LIVE, timeout_s=420.0)
@@ -130,6 +131,7 @@ def test_timeout_refusal_is_localized_and_names_the_tier() -> None:
 
 def test_serving_limiter_is_a_settings_sized_singleton() -> None:
     from cadrumo.core.config import load_settings
+
     from .._call_runtime import serving_capacity_limiter
 
     limiter = serving_capacity_limiter()

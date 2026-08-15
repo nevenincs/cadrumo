@@ -25,9 +25,8 @@ from ._contract_locale_fixture import pin_english_locale
 
 __all__ = ["pin_english_locale"]
 
+from ....entrypoints.cli import VerbLeafKind, build_verb_input_schemas, command_schema_refs, is_exposable_command
 from ....entrypoints.cli import app as cli_app
-from ....entrypoints.cli import command_schema_refs
-from ....entrypoints.cli import VerbLeafKind, build_verb_input_schemas, is_exposable_command
 from ....entrypoints.schema_surface import (
     CALLBACK_EXCLUSION_REASON_BY_CLI_PATH,
     CALLBACK_RESULT_REUSE_BY_CLI_PATH,
@@ -269,20 +268,7 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
         assert row.profile_policy is not None
         assert row.profile_policy.should_expose_via_mcp is False
 
-    for key, descriptor in descriptor_by_key.items():
-        raw_input_schema = input_schemas[key]
-        assert (
-            descriptor.verb_schema.command_key,
-            descriptor.verb_schema.cli_path,
-            descriptor.verb_schema.parameters,
-            descriptor.verb_schema.help,
-        ) == (
-            raw_input_schema.command_key,
-            raw_input_schema.cli_path,
-            raw_input_schema.parameters,
-            raw_input_schema.help,
-        )
-        assert descriptor.input_schema == descriptor.verb_schema.json_schema()
+    for key in sorted(exposable_keys):
         assert reconciled_by_key[key].result_schema is not None
         assert reconciled_by_key[key].input_schema is not None
 

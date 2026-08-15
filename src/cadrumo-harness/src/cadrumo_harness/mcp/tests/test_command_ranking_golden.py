@@ -25,11 +25,11 @@ from collections.abc import Callable
 import pytest
 
 from cadrumo.application.command_search import CommandIndex
-from .._tools import McpToolDescriptor, build_tool_descriptors
 
 # The ranking helpers live on this package's own ``_meta_tools`` module (they wrap
 # the ``search`` meta-tool, not a public facade); the reach is intra-package.
 from .._meta_tools import build_command_search_index, search_commands
+from .._tools import McpToolDescriptor, build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

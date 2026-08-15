@@ -52,12 +52,12 @@ from typer.main import get_command as typer_get_command
 
 from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD
 from cadrumo.core.json_contract import SCHEMA_REGISTRY
-from cadrumo.tests import temporary_env
 from cadrumo.entrypoints.cli import app as cli_app
-from cadrumo.entrypoints.cli import command_schema_refs
+from cadrumo.entrypoints.cli import command_schema_refs, is_exposable_command
 from cadrumo.entrypoints.schema_surface import CLI_PATH_BY_SCHEMA_KEY
+from cadrumo.tests import temporary_env
+
 from .._call_runtime import tier_for, timeout_seconds
-from cadrumo.entrypoints.cli import is_exposable_command
 from .._inprocess import parse_cli_envelope, run_cli_in_process
 from .._result_thinning import thin_output_schema
 from .._tools import McpToolDescriptor, build_tool_descriptors

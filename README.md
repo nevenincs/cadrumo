@@ -143,9 +143,7 @@ This result demonstrates the workflow, not the correct tax treatment for your ci
 | Find task-specific commands | [How-to guides](docs/how-to/index.md) |
 | Configure read-only AEAT access | [Authenticate with AEAT](docs/how-to/authenticate-with-aeat.md) |
 | Inspect the command tree | [Command-line interface (CLI) reference](docs/cli/index.rst) |
-| Inspect MCP server internals | [Model Context Protocol (MCP) Python reference](docs/api/cadrumo.entrypoints.mcp.rst) |
 | Integrate Python code | [Application programming interface (API) entry point](docs/api/cadrumo.rst) |
-| Inspect assistant integration internals | [Agent Python reference](docs/api/cadrumo.agent.rst) |
 | Understand records, formulas, and provenance | [From records to figures](docs/explanation/from-records-to-figures.md) |
 | Determine which modelos apply and inspect support | [Choose a modelo](docs/how-to/choose-modelo.md) |
 | Understand architecture and boundaries | [Architecture](docs/architecture/index.md) |

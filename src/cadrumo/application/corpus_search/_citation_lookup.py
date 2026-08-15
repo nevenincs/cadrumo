@@ -19,7 +19,7 @@ See Also:
         Typed result carrying catalogue metadata and verbatim text.
     :func:`~application.corpus_search.search_corpus`
         Exact citation ids short-circuit through this lookup before ranking.
-    :func:`~entrypoints.mcp._resources._read_corpus_resource`
+    ``cadrumo_harness.mcp._resources._read_corpus_resource``
         ``cadrumo://corpus`` resource reader that accepts citation ids and
         retrieval ``corpus_ref`` values.
 """

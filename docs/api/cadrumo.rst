@@ -14,7 +14,6 @@ Subpackages
    :maxdepth: 4
 
    cadrumo.adapters
-   cadrumo.agent
    cadrumo.application
    cadrumo.core
    cadrumo.domain

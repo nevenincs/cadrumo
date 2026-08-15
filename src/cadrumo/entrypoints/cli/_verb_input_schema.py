@@ -87,9 +87,9 @@ class VerbParameter(BaseModel):
     """One CLI parameter projected into a JSON-schema property.
 
     ``name`` is the click parameter name (the JSON property key). For an
-    :attr:`~entrypoints.mcp._input_schema.VerbParamKind.OPTION` the
+    :attr:`~entrypoints.cli._verb_input_schema.VerbParamKind.OPTION` the
     ``cli_flag`` is the long option token (``--file``); for an
-    :attr:`~entrypoints.mcp._input_schema.VerbParamKind.ARGUMENT` it is empty
+    :attr:`~entrypoints.cli._verb_input_schema.VerbParamKind.ARGUMENT` it is empty
     and the value is a bare positional. ``multiple`` renders the property as a
     JSON array and repeats the token per element; ``is_flag`` is a bare boolean
     switch that emits its ``cli_flag`` when truthy and, for a ``--flag/--no-flag``

@@ -31,6 +31,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core.i18n import tr
+
 from ._hitl import ConfirmationPolicy, is_handoff_command
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")

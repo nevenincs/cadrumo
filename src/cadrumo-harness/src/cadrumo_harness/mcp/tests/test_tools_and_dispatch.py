@@ -2,17 +2,8 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Annotated
-
 import pytest
-import typer
-from typer._click.core import Command as ClickCommand
-from typer.main import get_command as _typer_get_command
 
-from .._annotations import annotation_coverage_gaps
-from cadrumo.entrypoints.cli import is_exposable_command
-from .._dispatch import command_key_for_tool, tool_name_for_command
 from cadrumo.entrypoints.cli import (
     JsonType,
     SchemaResolutionError,
@@ -23,7 +14,11 @@ from cadrumo.entrypoints.cli import (
     assert_schema_coverage,
     build_verb_input_schemas,
     cli_argv_for,
+    is_exposable_command,
 )
+
+from .._annotations import annotation_coverage_gaps
+from .._dispatch import command_key_for_tool, tool_name_for_command
 from .._tools import _cli_form, build_tool_descriptors
 from .._toolsets import Toolset, build_toolsets
 
@@ -76,6 +71,26 @@ def test_every_descriptor_carries_a_per_verb_schema_not_the_args_bag() -> None:
         # The rendered schema is exactly the structured verb schema's projection.
         assert descriptor.input_schema == descriptor.verb_schema.json_schema()
         assert descriptor.verb_schema.command_key == descriptor.command_key
+
+
+def test_every_descriptor_carries_the_freshly_derived_verb_schema() -> None:
+    """The descriptor's embedded schema equals an independent live derivation.
+
+    ``build_tool_descriptors`` derives its schemas through the action-capability
+    projection, so this proves that projection does not alter the resolved path,
+    parameters or help a plain ``build_verb_input_schemas`` walk produces - the
+    argv the server reconstructs is the argv the CLI declares.
+    """
+    descriptors = build_tool_descriptors()
+    raw = build_verb_input_schemas(tuple(sorted(d.command_key for d in descriptors)))
+    for descriptor in descriptors:
+        derived = raw[descriptor.command_key]
+        assert (
+            descriptor.verb_schema.command_key,
+            descriptor.verb_schema.cli_path,
+            descriptor.verb_schema.parameters,
+            descriptor.verb_schema.help,
+        ) == (derived.command_key, derived.cli_path, derived.parameters, derived.help)
 
 
 def test_description_cli_form_matches_the_resolved_cli_path_for_every_descriptor() -> None:
@@ -173,7 +188,6 @@ def test_retired_command_keys_are_neither_described_nor_dispatchable() -> None:
     build, or a round-trip that always returned ``None``, would satisfy the
     retirement checks while measuring nothing at all.
     """
-
     descriptors = build_tool_descriptors()
     keys = [descriptor.command_key for descriptor in descriptors]
     exposed = set(keys)
@@ -199,7 +213,6 @@ def test_exposability_is_a_filter_and_not_a_registration_guard() -> None:
     retirement to the exposability filter and believing that is the guard, and
     stops the opposite error of reading the permissive answer as a leak.
     """
-
     exposed = {descriptor.command_key for descriptor in build_tool_descriptors()}
     for retired in _RETIRED_COMMAND_KEYS:
         assert is_exposable_command(retired) is True

@@ -11,9 +11,10 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core import PRODUCT_IDENTITY
-from cadrumo.tests.declared_command_risk import declared_live_write
-from .._annotations import McpAnnotations
 from cadrumo.entrypoints.cli import VerbInputSchema, command_schema_refs
+from cadrumo.tests.declared_command_risk import declared_live_write
+
+from .._annotations import McpAnnotations
 from .._meta_tools import (
     MetaDescribeResult,
     ToolRunOutcome,

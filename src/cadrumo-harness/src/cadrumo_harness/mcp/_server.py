@@ -50,6 +50,7 @@ from typing import TYPE_CHECKING
 from cadrumo.adapters.persistence.storage import close_all_live_bucket_sessions
 from cadrumo.application.wizard import ensure_profile_keys_registered
 from cadrumo.core import PRODUCT_IDENTITY, FormerProductStateError
+
 from ._call_runtime import serving_capacity_limiter
 from ._completions import complete_prompt_argument
 from ._corpus_tools import (

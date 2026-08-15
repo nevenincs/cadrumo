@@ -21,6 +21,7 @@ import pytest
 
 from cadrumo.application.operator_surface import command_classification, declared_risk
 from cadrumo.application.storage_write_policy import PROFILE_BOUND_WRITE_VERB_PATHS
+
 from .._tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -55,7 +56,6 @@ def test_the_destructive_axis_separates_a_status_verb_from_its_destructive_sibli
     either direction - if status became destructive, or if start and resume
     stopped being.
     """
-
     status = command_classification("config.reset.status")
     start = command_classification("config.reset.start")
     resume = command_classification("config.reset.resume")

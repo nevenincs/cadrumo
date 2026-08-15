@@ -20,6 +20,7 @@ from cadrumo.application.corpus_search import (
     iter_corpus_chunks,
 )
 from cadrumo.core.config import override_settings
+
 from .._corpus_tools import (
     CORPUS_SEARCH_TOOL,
     CorpusCitationResult,

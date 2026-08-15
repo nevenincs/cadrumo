@@ -23,10 +23,11 @@ from collections.abc import Iterator
 from enum import StrEnum
 from importlib.resources.abc import Traversable
 
-from .. import iter_operator_rules, iter_personas, iter_skill_documents
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
+
+from .. import iter_operator_rules, iter_personas, iter_skill_documents
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 

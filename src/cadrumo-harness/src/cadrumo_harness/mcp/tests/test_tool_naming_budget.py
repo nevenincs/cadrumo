@@ -14,6 +14,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.entrypoints.cli import is_exposable_command
+
 from .._dispatch import (
     TOOL_NAME_BUDGET,
     command_key_for_tool,

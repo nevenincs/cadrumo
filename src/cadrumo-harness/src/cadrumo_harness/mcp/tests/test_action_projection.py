@@ -12,14 +12,15 @@ from cadrumo.application.operator_actions import (
     build_action_catalogue,
 )
 from cadrumo.core.json_contract import Notice
-from cadrumo.entrypoints.cli import command_schema_refs
-from cadrumo.entrypoints.cli import is_exposable_command
 from cadrumo.entrypoints.cli import (
     VerbInputSchema,
     build_mcp_action_input_schemas,
     build_verb_input_schemas,
+    command_schema_refs,
+    is_exposable_command,
     resolve_mcp_action_capabilities,
 )
+
 from .._server import build_sdk_tools
 from .._tools import build_tool_descriptors
 

@@ -8,7 +8,7 @@ profile, auth, apoderado, repair, diagnostics, and workflow semantics.
 
 A few keys here declare a schema for a verb the tree does not register. Those are
 not oversights: each is listed in
-:data:`~cadrumo.entrypoints.mcp._input_schema.DECLARED_UNIMPLEMENTED_SURFACES`
+:data:`~cadrumo.entrypoints.cli._verb_input_schema.DECLARED_UNIMPLEMENTED_SURFACES`
 with the reason it is held, because deleting the declaration would erase the only
 visible evidence that a capability lost its door. A declaration with no verb and
 no entry there is residue and should go.

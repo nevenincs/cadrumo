@@ -16,11 +16,12 @@ MCP SDK's prompt types, mirroring how ``build_sdk_tools`` adapts descriptors.
 
 from __future__ import annotations
 
-from .. import iter_skill_documents, operator_rules_text, parse_skill_metadata
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core import accepted_filing_period_patterns
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
+
+from .. import iter_skill_documents, operator_rules_text, parse_skill_metadata
 from ._resources import HarnessResourceKind, resource_uri
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")

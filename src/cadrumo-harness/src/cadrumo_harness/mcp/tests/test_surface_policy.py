@@ -19,6 +19,7 @@ import anyio
 import pytest
 
 from cadrumo.tests import connected_server_and_client_session as connect
+
 from .._harness_tools import HARNESS_LOAD_TOOL
 from .._surface import (
     SURFACE_ENV_VAR,

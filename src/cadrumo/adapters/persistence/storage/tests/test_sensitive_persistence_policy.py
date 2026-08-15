@@ -144,7 +144,7 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "tempfile.NamedTemporaryFile",
     ): "shared streaming atomic-write primitive; writes caller-supplied chunks only, no data of its own",
     (
-        "src/cadrumo/entrypoints/mcp/_telemetry.py",
+        "src/cadrumo-harness/src/cadrumo_harness/mcp/_telemetry.py",
         "record",
         "self.path.open",
     ): "payload-free local session telemetry; appends per-call trajectory metadata JSON lines, no sensitive/user data",

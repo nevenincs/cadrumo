@@ -24,6 +24,7 @@ import pytest
 from pydantic import Field
 
 from cadrumo.core.json_contract import SCHEMA_REGISTRY, OutputSchema
+
 from .._tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

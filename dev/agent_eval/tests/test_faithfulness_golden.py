@@ -35,6 +35,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from cadrumo_harness.mcp import faithfulness_check
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.application.user_profile import UserProfileLifecycleRepository
@@ -54,7 +55,6 @@ from cadrumo.domain.user_profile import (
     UserProfileRecord,
     load_user_profile_schema,
 )
-from cadrumo_harness.mcp import faithfulness_check
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.profile_capsule import open_test_profile_session

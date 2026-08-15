@@ -27,6 +27,7 @@ from typing import Protocol
 
 from cadrumo.application.operator_surface import command_classification
 from cadrumo.core.i18n import tr
+
 from ._harness_tools import HARNESS_LOAD_TOOL, WHOAMI_TOOL
 
 #: Verbs that change or clear WHICH taxpayer profile is active. Executing one

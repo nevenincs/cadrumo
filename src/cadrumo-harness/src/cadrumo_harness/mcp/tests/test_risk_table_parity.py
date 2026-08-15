@@ -22,6 +22,7 @@ from cadrumo.application.operator_surface import (
     command_classification,
     declared_risk,
 )
+
 from .._tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

@@ -5,8 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import NoRecoveryOutcome
-from ....entrypoints.cli import command_schema_refs
-from ....entrypoints.cli import build_verb_input_schemas
+from ....entrypoints.cli import build_verb_input_schemas, command_schema_refs
 from ...operator_actions import (
     OPERATOR_ACTION_CATALOGUE,
     ActionReference,

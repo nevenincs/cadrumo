@@ -21,6 +21,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 from cadrumo.tests import connected_server_and_client_session as connect
+
 from .._dispatch import tool_name_for_command
 from .._harness_tools import HARNESS_LOAD_TOOL
 from .._server import build_server

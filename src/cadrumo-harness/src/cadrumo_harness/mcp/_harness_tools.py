@@ -28,7 +28,6 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Final
 
-from .. import iter_personas, operator_rules_text
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.application.wizard import ensure_profile_keys_registered
@@ -36,6 +35,8 @@ from cadrumo.application.workflow import ProfileHealthStatus, assess_active_prof
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from cadrumo.core.i18n import tr
 from cadrumo.core.json_contract import ResolvedPreconditionAction
+
+from .. import iter_personas, operator_rules_text
 from ._persona_scope import AgentPersona
 
 if TYPE_CHECKING:

@@ -144,7 +144,7 @@ too, added deliberately -- not discovered by this gate reddening on it.
 HOMONYM_EXCEPTIONS: Final[frozenset[tuple[str, str]]] = frozenset(
     {
         ("application/operator_surface/_models.py", "live"),
-        ("entrypoints/mcp/_call_runtime.py", "live"),
+        ("cadrumo_harness/mcp/_call_runtime.py", "live"),
         # MountedCommandDomain.LIVE (StrEnum) -- which CLI verb GROUP a
         # command is mounted under (``aeat app live ...``). CallTier.LIVE
         # (StrEnum) -- the wall-clock timeout tier an MCP command runs under

@@ -24,7 +24,6 @@ from pathlib import Path
 from typing import TypedDict, Unpack
 
 import pytest
-
 from cadrumo_harness.mcp import build_tool_descriptors
 
 from .. import (

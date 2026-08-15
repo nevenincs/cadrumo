@@ -21,6 +21,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.application.workflow import ActiveProfileHealth, ProfileHealthStatus
+
 from .._harness_tools import HarnessFloorPayload, WhoamiIdentity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

@@ -229,7 +229,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.MCP_TELEMETRY,
         "telemetry",
-        consumer_module="entrypoints/mcp/_telemetry.py",
+        consumer_module="cadrumo_harness/mcp/_telemetry.py",
         settings_field="cadrumo_mcp_telemetry_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.LOGS,

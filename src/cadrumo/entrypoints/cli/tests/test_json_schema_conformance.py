@@ -20,7 +20,7 @@ single registry key, so this gate stays green through it. The
 CONTENT of those advertised constraints is pinned separately, across both
 the CLI envelope and the MCP ``output_schema`` built from the same
 registry, by
-``entrypoints.mcp.tests.test_identifier_schema_contract_pin``. Read the two
+``cadrumo_harness.mcp.tests.test_identifier_schema_contract_pin``. Read the two
 together: a loosening caught by neither would be a genuine gap in the
 published operator contract.
 """

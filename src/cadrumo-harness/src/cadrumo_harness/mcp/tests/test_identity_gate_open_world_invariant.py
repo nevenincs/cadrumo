@@ -29,6 +29,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.application.operator_surface import command_classification
+
 from .._identity_gate import identity_gate_refusal
 from .._tools import build_tool_descriptors
 

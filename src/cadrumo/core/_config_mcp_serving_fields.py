@@ -11,10 +11,10 @@ See Also:
         Central environment facade that inherits this mixin.
     :func:`~core.config.load_settings`
         Runtime entry point the MCP server uses to read these fields.
-    :mod:`~entrypoints.mcp._transport`
+    ``cadrumo_harness.mcp._transport``
         Warm/subprocess transport dispatch that consumes the capture-wait and
         wedge-threshold bounds.
-    :mod:`~entrypoints.mcp._stdio_lifetime`
+    ``cadrumo_harness.mcp._stdio_lifetime``
         Client-lifetime watchdog gated by the stdio-watchdog kill switch.
 """
 

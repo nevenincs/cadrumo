@@ -557,6 +557,10 @@ convention = "google"
 "src/cadrumo/**/tests/**/*.py" = ["T20", "D", "E501"]
 "src/cadrumo/tests/**/*.py" = ["T20", "D"]
 "src/cadrumo/**/conftest.py" = ["D"]
+# The sibling cadrumo-harness distribution colocates its tests the same way, so
+# the same audience-scoped exemption applies to them.
+"src/cadrumo-harness/**/tests/**/*.py" = ["T20", "D", "E501"]
+"src/cadrumo-harness/**/conftest.py" = ["D"]
 # dev/docs/ holds contributor-only documentation tools and tests.
 "dev/docs/**/*.py" = ["T20", "D", "E402"]
 # `dev/` holds contributor-only developer tooling (quality gates, audits,
@@ -724,7 +728,7 @@ convention = "google"
 "dev/packaging/tests/test_cadrumo_data_distribution.py" = ["S603", "S607"]
 # The stdio-lifetime watchdog can only be proven against real spawned processes
 # and real pipes; every argv is a fixed `sys.executable -c <literal>`.
-"src/cadrumo/entrypoints/mcp/tests/test_stdio_lifetime.py" = ["S603"]
+"src/cadrumo-harness/src/cadrumo_harness/mcp/tests/test_stdio_lifetime.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/tests/test_substrate_smoke.py" = ["S603"]
 "src/cadrumo/domain/calculations/registry/tests/test_cross_domain_snapshot_registration.py" = ["S603"]

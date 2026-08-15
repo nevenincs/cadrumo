@@ -21,14 +21,14 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
-from cadrumo.application.operator_surface import command_classification
 from cadrumo_harness.mcp import (
     IDENTITY_READ_CONSOLE_TOOLS,
     SessionIdentityState,
     identity_gate_refusal,
     tool_name_for_command,
 )
+
+from cadrumo.application.operator_surface import command_classification
 
 from .. import (
     LiveToolCallRecord,

@@ -26,10 +26,10 @@ from ....core.i18n import tr
 from ....core.json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus, ResolvedPreconditionAction
 from ....core.observability import RunContextMissingError
 from ....domain.portals import PortalIntegrityError
-from .._verb_input_schema import build_verb_input_schemas, cli_argv_for
 from ....tests.cli_envelope import require_error_document
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from .._verb_input_schema import build_verb_input_schemas, cli_argv_for
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

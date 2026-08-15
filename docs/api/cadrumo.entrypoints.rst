@@ -7,14 +7,6 @@ cadrumo.entrypoints package
    :ignore-module-all:
 
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   cadrumo.entrypoints.mcp
-
 Submodules
 ----------
 

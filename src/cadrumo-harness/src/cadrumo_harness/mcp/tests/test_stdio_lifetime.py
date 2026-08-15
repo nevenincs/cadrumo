@@ -36,6 +36,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cadrumo.core.config import reset_settings_cache
+
 from .._stdio_lifetime import (
     _GRACE_SECONDS,
     PARENT_PID_ENV,

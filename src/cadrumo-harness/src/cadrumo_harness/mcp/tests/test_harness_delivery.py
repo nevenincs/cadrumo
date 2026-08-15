@@ -23,7 +23,6 @@ from uuid import UUID
 
 import anyio
 import pytest
-from ... import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
 
 from cadrumo.adapters.persistence.storage.custody import (
     load_committed_profile_password_material,
@@ -37,6 +36,8 @@ from cadrumo.application.profile_custody import (
 from cadrumo.application.user_profile import register_profile_with_credentials
 from cadrumo.domain.user_profile import UserProfileFact
 from cadrumo.tests import connected_server_and_client_session as connect
+
+from ... import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
 from .._harness_tools import (
     HARNESS_LOAD_TOOL,
     WHOAMI_TOOL,
@@ -368,6 +369,7 @@ def test_whoami_is_always_advertised_and_never_persona_scoped_away() -> None:
 
 def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> None:
     from cadrumo.tests.secure_sql import isolated_profile_storage_root
+
     from .._server import build_server
 
     descriptors = build_tool_descriptors()
@@ -403,6 +405,7 @@ def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> Non
 
 def test_floor_response_carries_the_active_identity_block(tmp_path: Any) -> None:
     from cadrumo.tests.secure_sql import isolated_profile_storage_root
+
     from .._server import build_server
 
     descriptors = build_tool_descriptors()

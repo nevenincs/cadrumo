@@ -16,6 +16,7 @@ import pytest
 from jsonschema import Draft202012Validator
 
 from cadrumo.core.json_contract import SCHEMA_REGISTRY
+
 from .._resources import BUCKET_SCOPED_RESOURCE_KINDS, parse_resource_uri
 from .._result_thinning import (
     BULK_RESOLUTION,

@@ -37,6 +37,7 @@ from cadrumo.application.operator_surface import (
     declared_risk,
 )
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
+
 from ._hitl import ConfirmationPolicy, confirmation_for_tool
 from ._persona_scope import AgentPersona, handoff_denial_message, is_handoff_denied, is_tool_in_persona_scope
 from ._tools import McpToolDescriptor

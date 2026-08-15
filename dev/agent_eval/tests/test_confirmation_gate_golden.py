@@ -48,7 +48,6 @@ from pathlib import Path
 
 import mcp.types as mcp_types
 import pytest
-
 from cadrumo_harness.mcp import (
     ConfirmationPolicy,
     McpToolDescriptor,
@@ -56,6 +55,7 @@ from cadrumo_harness.mcp import (
     build_tool_descriptors,
     confirmation_for_tool,
 )
+
 from cadrumo.tests import connected_server_and_client_session as connect
 from cadrumo.tests.declared_command_risk import declared_live_write
 

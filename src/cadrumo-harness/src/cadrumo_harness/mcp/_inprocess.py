@@ -43,8 +43,9 @@ from pydantic import BaseModel, ConfigDict
 
 from cadrumo.core import PRODUCT_IDENTITY
 from cadrumo.core.json_contract import OutputSchemaError, validate_registered_envelope_document
-from ._call_runtime import CallTier
 from cadrumo.entrypoints.cli import VerbInputSchema, cli_argv_for
+
+from ._call_runtime import CallTier
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
