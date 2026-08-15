@@ -49870,6 +49870,31 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: Nombre total de percepcions
+            x-e1in4opecdm62tj5:
+              help: null
+              label: Clau de percepció
+            x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
+              help: null
+              label: Ingressos a compte efectuats sobre les percepcions en espècie
+            x-e1in4opedpkmc:
+              help: null
+              label: null
+            x-e1in4opedpnmqojick:
+              help: null
+              label: Cognoms i nom o denominació del perceptor
+            x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
+              help: null
+              label: Percepció íntegra dinerària no derivada d'incapacitat laboral
+            x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
+              help: null
+              label: Valoració de la percepció en espècie no derivada d'incapacitat
+                laboral
+            x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
+              help: null
+              label: Retencions practicades sobre les percepcions dineràries
+            x-e1in4opeedqm4orcc5r6a:
+              help: null
+              label: Subclau de percepció
           construct:
             modelo-190-annual-summary:
               field:
@@ -65679,6 +65704,18 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+            x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
+              label: Total import base de retenció o ingrés a compte
+            x-chim6r1eehnn8obc5lkmqs3fe9q6abbge9imqqbfec:
+              label: Total import o valoració dels premis
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              label: Nombre total de registres de perceptor declarats
+            x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
+              label: Total import de la retenció o ingrés a compte
+            x-e1in4opedpkmc:
+              label: Número d'identificació fiscal (NIF) del perceptor
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              label: NIF del representant legal del perceptor
           construct:
             modelo-270-informative:
               field:
@@ -70226,6 +70263,13 @@ modelo:
             datos-adicionales-claves-abc:
               help: null
               label: Dades addicionals per a les claus A, B i C
+            datos-identificativos-empleador:
+              help: null
+              label: Dades identificatives de l'ocupador promotor o prenedor del sistema
+                de previsió social
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaració complementària o substitutiva
             declarado-nif:
               help: null
               label: NIF del declarat
@@ -70265,6 +70309,12 @@ modelo:
             importe-total-aportaciones:
               help: null
               label: Import total de les aportacions
+            numero-identificativo-anterior:
+              help: null
+              label: Número identificatiu de la declaració anterior
+            numero-identificativo-declaracion:
+              help: null
+              label: Número identificatiu de la declaració
             pepp-cuenta-subcuenta:
               help: null
               label: Compte/subcompte
@@ -70274,6 +70324,9 @@ modelo:
             pepp-numero-inscripcion:
               help: null
               label: Número d'inscripció del PEPP
+            persona-relacion:
+              help: null
+              label: Persona amb qui relacionar-se
             pias-fecha-primera-prima:
               help: null
               label: Data de pagament de la primera prima
@@ -70286,6 +70339,9 @@ modelo:
             rendimientos-trabajo-superiores-60000:
               help: null
               label: Rendiments íntegres del treball superiors a 60000 euros
+            representante-legal-nif:
+              help: null
+              label: NIF del representant legal
             subclave:
               help: null
               label: Subclau
@@ -71255,6 +71311,37 @@ modelo:
           iva-deducible-resolucion-firme-tipos-no-vigentes-cuota:
             label: Quotes deduïbles en virtut de resolució administrativa o sentència
               fermes amb tipus no vigents - quota deduïble
+          iva-especificas-adquisiciones-interiores-exentas:
+            label: Operacions específiques - Adquisicions interiors exemptes [230]
+          iva-especificas-adquisiciones-intracomunitarias-exentas:
+            label: Operacions específiques - Adquisicions intracomunitàries exemptes
+              [109]
+          iva-especificas-base-iva-soportado-no-deducible:
+            label: Operacions específiques - Bases imposables de l'IVA suportat no
+              deduïble [232]
+          iva-especificas-criterio-caja-adquisiciones-base:
+            label: Operacions específiques - Adquisicions de béns en règim especial
+              del criteri de caixa - Base imposable [656]
+          iva-especificas-criterio-caja-adquisiciones-cuota:
+            label: Operacions específiques - Adquisicions de béns en règim especial
+              del criteri de caixa - Quota [657]
+          iva-especificas-criterio-caja-entregas-base:
+            label: Operacions específiques - Lliuraments de béns en règim especial
+              del criteri de caixa - Base imposable [654]
+          iva-especificas-criterio-caja-entregas-cuota:
+            label: Operacions específiques - Lliuraments de béns en règim especial
+              del criteri de caixa - Quota [655]
+          iva-especificas-entrega-interior-inversion-triangular:
+            label: Operacions específiques - Lliuraments interiors de béns meritats
+              per inversió del subjecte passiu en operacions triangulars [113]
+          iva-especificas-importaciones-exentas:
+            label: Operacions específiques - Importacions exemptes [231]
+          iva-especificas-operaciones-derecho-devolucion-mensual:
+            label: Operacions específiques - Operacions subjectes que originen el
+              dret a la devolució mensual [111]
+          iva-especificas-servicios-tai-inversion-sujeto-pasivo:
+            label: Operacions específiques - Serveis localitzats al territori d'aplicació
+              de l'impost per inversió del subjecte passiu [523]
           iva-isp-interior-base:
             help: null
             label: Base imposable de l'IVA autorepercutit en operacions interiors
@@ -72830,12 +72917,135 @@ modelo:
       revision:
         2007-y-siguientes:
           casilla:
+            x-cdmn8bj1clp6urj1epiiqobedsmmcob2e9km6ob3d5nms:
+              help: null
+              label: Aeronaus. Any de fabricació
+            x-cdmn8bj1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              help: null
+              label: Aeronaus. Fabricant
+            x-cdmn8bj1clp6urj1epiiqrbfchimoro:
+              help: null
+              label: Aeronaus. Model
+            x-cdmn8bj1clp6urj1epiiqs35edniqrb1f1kmqrpdchin6s35ctqma:
+              help: null
+              label: Aeronaus. Pes màxim a l'enlairament (kg)
+            x-cdmn8bj1clp6urj1epiiqsr5e9kma:
+              help: null
+              label: Aeronaus. Número de sèrie
+            x-cdmn8bj5dlh62sj3c5hmirre5lin6r3fe9gg:
+              help: null
+              label: Embarcacions. Eslora màxima (metres)
+            x-cdmn8bj5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              help: null
+              label: Embarcacions. Fabricant o importador
+            x-cdmn8bj5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              help: null
+              label: Embarcacions. Identificació (número de construcció)
+            x-cdmn8bj5dlh62sj3c5hmirre5lmmup35dhng:
+              help: null
+              label: Embarcacions. Model
+            x-cdmn8bj5dlh62sj3c5hmirre5lnm4sr5e9r62or9dtn6aso:
+              help: null
+              label: Embarcacions. Observacions
+            x-cdmn8bj6clhmgo9de1p6irb5e9giqrb1ehp6iorldhgm6qbfdo:
+              help: null
+              label: Data de primera matriculació, posada en servei o primera utilització
+            x-cdmn8bjbd5m6urb5ehp6uspdd1nn4obj5lqn6ro:
+              help: null
+              label: Quilòmetres recorreguts o nombre d'hores d'utilització
+            x-cdmn8bjceljm2shdc5i72tb9edkm6qbfdo:
+              help: null
+              label: Lloc d'adquisició del mitjà de transport
+            x-cdmn8bjeelincrpdelpm2p3f:
+              help: null
+              label: Mitjà de transport nou o usat
+            x-cdmn8bjmclk6iorldhniqoj1edq6ip3fe8:
+              help: null
+              label: Vehicles. Número d'identificació (bastidor)
+            x-cdmn8bjmclk6iorldhniqor1ehimerrid5giqor5:
+              help: null
+              label: Vehicles. Classificació segons la Directiva 70/156/CEE
+            x-cdmn8bjmclk6iorldhniqor9dhkmsp3ic5i62:
+              help: null
+              label: Vehicles. Cilindrada (c.c.)
+            x-cdmn8bjmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              help: null
+              label: Vehicles. Classificació per criteri de construcció i utilització
+                (RD 2822/1998)
+            x-cdmn8bjmclk6iorldhniqorfchkmerpdd5q7c:
+              help: null
+              label: Vehicles. Codi ITV
+            x-cdmn8bjmclk6iorldhniqpbdd5pmirreclpiqorf68:
+              help: null
+              label: Vehicles. Emissions de CO2 (grams/km)
+            x-cdmn8bjmclk6iorldhniqpbgd5jn4ob6ck:
+              help: null
+              label: Vehicles. Epígraf
+            x-cdmn8bjmclk6iorldhniqqbkeomn6pbid5ig:
+              help: null
+              label: Vehicles. Número de sèrie de la targeta ITV
+            x-cdmn8bjmclk6iorldhniqqbkeomn8qbgdsmn8obid9in8o8:
+              help: null
+              label: Vehicles. Tipus de targeta ITV
+            x-cdmn8bjmclk6iorldhniqrb1e9hm2:
+              help: null
+              label: Vehicles. Marca
+            x-cdmn8bjmclk6iorldhniqrbfchimorpdehkn0ro:
+              help: null
+              label: Vehicles. Model-tipus
+            x-cdmn8bjmclk6iorldhniqrbfehnn4:
+              help: null
+              label: Vehicles. Tipus de motor (gasolina, dièsel o altres)
+            x-cdmn8bjmclk6iorldhniqrr2edin4tj1cdkmurj5ec:
+              help: null
+              label: Vehicles. Observacions
+            x-chim6r1ecdgnasr15lk6aor8dsmmirbgdtn6iojcck:
+              help: null
+              label: Causa del fet imposable
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici a què es refereix l'autoliquidació
+            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              help: null
+              label: Declaració complementària. Número de justificant de la declaració
+                anterior
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus d'autoliquidació (originària / substitutiva / complementària)
+            x-chim6r1eehkn0rpdehp62rjje1nn4t35:
+              help: null
+              label: 'Tipus de mitjà de transport (V: vehicles, E: embarcacions, A:
+                aeronaus)'
+            x-d5n78sjfchqm6t3fe8n6sqb6:
+              help: null
+              label: NIF de la persona que ha introduït el vehicle a Espanya
+            x-d5n78sjfchqm6t3fe8n6srrdc9p6a:
+              help: null
+              label: Cognoms i nom o raó social de qui ha introduït el vehicle a Espanya
+            x-dhkn2bj15li6ap3lcdkn4:
+              help: null
+              label: Liquidació. A deduir
+            x-dhkn2bj2c5pmabb9dlo6urj9c9m6a:
+              help: null
+              label: Liquidació. Base imposable
+            x-dhkn2bj2c5pmabb9dlo6urj9c9m6abbicli7aor9chgg:
+              help: null
+              label: Liquidació. Base imposable reduïda
+            x-dhkn2bj3elnn8o8:
+              help: null
+              label: Liquidació. Quota
+            x-dhkn2bj3elnn8o9dc4mmirj7e9in6obi:
+              help: null
+              label: Liquidació. Quota a ingressar
+            x-dhkn2bj4cli7aor3d5nmsbbcd5n6aobc:
+              help: null
+              label: Liquidació. Deducció lineal
+            x-dhkn2bjiclpnar3kc5i6u:
+              help: null
+              label: Liquidació. Resultat de la liquidació
+            x-dhkn2bjkd5o6u:
+              help: null
+              label: Liquidació. Tipus impositiu (%)
           construct:
             modelo-576-autoliquidacion:
               field:

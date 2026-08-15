@@ -49113,6 +49113,30 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: Total number of payments made
+            x-e1in4opecdm62tj5:
+              help: null
+              label: Income key
+            x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
+              help: null
+              label: Payments on account made on in-kind income
+            x-e1in4opedpkmc:
+              help: null
+              label: Recipient's tax ID (NIF)
+            x-e1in4opedpnmqojick:
+              help: null
+              label: Recipient's surnames and given name, or legal name
+            x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
+              help: null
+              label: Gross cash income not arising from work incapacity
+            x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
+              help: null
+              label: Valuation of in-kind income not arising from work incapacity
+            x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
+              help: null
+              label: Withholdings applied to cash income
+            x-e1in4opeedqm4orcc5r6a:
+              help: null
+              label: Income subkey
           construct:
             modelo-190-annual-summary:
               field:
@@ -65223,6 +65247,18 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+            x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
+              label: Total base amount for withholding or payment on account
+            x-chim6r1eehnn8obc5lkmqs3fe9q6abbge9imqqbfec:
+              label: Total amount or valuation of the prizes
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              label: Total number of declared payee records
+            x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
+              label: Total amount of withholding or payment on account
+            x-e1in4opedpkmc:
+              label: Payee tax identification number
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              label: Tax identification number of the payee's legal representative
           construct:
             modelo-270-informative:
               field:
@@ -69741,6 +69777,13 @@ modelo:
             datos-adicionales-claves-abc:
               help: null
               label: null
+            datos-identificativos-empleador:
+              help: null
+              label: Identifying details of the employer promoting or holding the
+                social welfare scheme
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Supplementary or replacement return
             declarado-nif:
               help: null
               label: null
@@ -69780,6 +69823,12 @@ modelo:
             importe-total-aportaciones:
               help: null
               label: null
+            numero-identificativo-anterior:
+              help: null
+              label: Identifying number of the previous return
+            numero-identificativo-declaracion:
+              help: null
+              label: Declaration identifying number
             pepp-cuenta-subcuenta:
               help: null
               label: null
@@ -69789,6 +69838,9 @@ modelo:
             pepp-numero-inscripcion:
               help: null
               label: null
+            persona-relacion:
+              help: null
+              label: Contact person
             pias-fecha-primera-prima:
               help: null
               label: null
@@ -69801,6 +69853,9 @@ modelo:
             rendimientos-trabajo-superiores-60000:
               help: null
               label: null
+            representante-legal-nif:
+              help: null
+              label: Tax ID of the legal representative
             subclave:
               help: null
               label: null
@@ -70770,6 +70825,36 @@ modelo:
           iva-deducible-resolucion-firme-tipos-no-vigentes-cuota:
             label: Deductible VAT under a final administrative decision or court judgment
               at rates no longer in force - deductible VAT amount
+          iva-especificas-adquisiciones-interiores-exentas:
+            label: Specific operations - Exempt domestic acquisitions [230]
+          iva-especificas-adquisiciones-intracomunitarias-exentas:
+            label: Specific operations - Exempt intra-Community acquisitions [109]
+          iva-especificas-base-iva-soportado-no-deducible:
+            label: Specific operations - Taxable base of non-deductible input VAT
+              [232]
+          iva-especificas-criterio-caja-adquisiciones-base:
+            label: Specific operations - Acquisitions of goods under the cash accounting
+              scheme - Taxable base [656]
+          iva-especificas-criterio-caja-adquisiciones-cuota:
+            label: Specific operations - Acquisitions of goods under the cash accounting
+              scheme - VAT amount [657]
+          iva-especificas-criterio-caja-entregas-base:
+            label: Specific operations - Supplies of goods under the cash accounting
+              scheme - Taxable base [654]
+          iva-especificas-criterio-caja-entregas-cuota:
+            label: Specific operations - Supplies of goods under the cash accounting
+              scheme - VAT amount [655]
+          iva-especificas-entrega-interior-inversion-triangular:
+            label: Specific operations - Domestic supplies of goods charged under
+              the reverse charge in triangular transactions [113]
+          iva-especificas-importaciones-exentas:
+            label: Specific operations - Exempt imports [231]
+          iva-especificas-operaciones-derecho-devolucion-mensual:
+            label: Specific operations - Taxed operations giving rise to the monthly
+              refund entitlement [111]
+          iva-especificas-servicios-tai-inversion-sujeto-pasivo:
+            label: Specific operations - Services located in the Spanish VAT territory
+              under the reverse charge [523]
           iva-isp-interior-base:
             help: null
             label: Taxable base of accrued reverse-charge VAT on domestic transactions
@@ -72355,12 +72440,134 @@ modelo:
       revision:
         2007-y-siguientes:
           casilla:
+            x-cdmn8bj1clp6urj1epiiqobedsmmcob2e9km6ob3d5nms:
+              help: null
+              label: Aircraft. Year of manufacture
+            x-cdmn8bj1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              help: null
+              label: Aircraft. Manufacturer
+            x-cdmn8bj1clp6urj1epiiqrbfchimoro:
+              help: null
+              label: Aircraft. Model
+            x-cdmn8bj1clp6urj1epiiqs35edniqrb1f1kmqrpdchin6s35ctqma:
+              help: null
+              label: Aircraft. Maximum take-off weight (kg)
+            x-cdmn8bj1clp6urj1epiiqsr5e9kma:
+              help: null
+              label: Aircraft. Serial number
+            x-cdmn8bj5dlh62sj3c5hmirre5lin6r3fe9gg:
+              help: null
+              label: Vessels. Maximum length overall (metres)
+            x-cdmn8bj5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              help: null
+              label: Vessels. Manufacturer or importer
+            x-cdmn8bj5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              help: null
+              label: Vessels. Identification (build number)
+            x-cdmn8bj5dlh62sj3c5hmirre5lmmup35dhng:
+              help: null
+              label: Vessels. Model
+            x-cdmn8bj5dlh62sj3c5hmirre5lnm4sr5e9r62or9dtn6aso:
+              help: null
+              label: Vessels. Remarks
+            x-cdmn8bj6clhmgo9de1p6irb5e9giqrb1ehp6iorldhgm6qbfdo:
+              help: null
+              label: Date of first registration, entry into service or first use
+            x-cdmn8bjbd5m6urb5ehp6uspdd1nn4obj5lqn6ro:
+              help: null
+              label: Kilometres travelled or number of hours of use
+            x-cdmn8bjceljm2shdc5i72tb9edkm6qbfdo:
+              help: null
+              label: Place of acquisition of the means of transport
+            x-cdmn8bjeelincrpdelpm2p3f:
+              help: null
+              label: New or used means of transport
+            x-cdmn8bjmclk6iorldhniqoj1edq6ip3fe8:
+              help: null
+              label: Vehicles. Identification number (chassis)
+            x-cdmn8bjmclk6iorldhniqor1ehimerrid5giqor5:
+              help: null
+              label: Vehicles. Classification under Directive 70/156/EEC
+            x-cdmn8bjmclk6iorldhniqor9dhkmsp3ic5i62:
+              help: null
+              label: Vehicles. Engine displacement (cc)
+            x-cdmn8bjmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              help: null
+              label: Vehicles. Classification by construction and use criteria (RD
+                2822/1998)
+            x-cdmn8bjmclk6iorldhniqorfchkmerpdd5q7c:
+              help: null
+              label: Vehicles. Roadworthiness (ITV) code
+            x-cdmn8bjmclk6iorldhniqpbdd5pmirreclpiqorf68:
+              help: null
+              label: Vehicles. CO2 emissions (grams/km)
+            x-cdmn8bjmclk6iorldhniqpbgd5jn4ob6ck:
+              help: null
+              label: Vehicles. Tariff heading
+            x-cdmn8bjmclk6iorldhniqqbkeomn6pbid5ig:
+              help: null
+              label: Vehicles. Serial number of the roadworthiness (ITV) card
+            x-cdmn8bjmclk6iorldhniqqbkeomn8qbgdsmn8obid9in8o8:
+              help: null
+              label: Vehicles. Roadworthiness (ITV) card type
+            x-cdmn8bjmclk6iorldhniqrb1e9hm2:
+              help: null
+              label: Vehicles. Make
+            x-cdmn8bjmclk6iorldhniqrbfchimorpdehkn0ro:
+              help: null
+              label: Vehicles. Model-type
+            x-cdmn8bjmclk6iorldhniqrbfehnn4:
+              help: null
+              label: Vehicles. Engine type (petrol, diesel or other)
+            x-cdmn8bjmclk6iorldhniqrr2edin4tj1cdkmurj5ec:
+              help: null
+              label: Vehicles. Remarks
+            x-chim6r1ecdgnasr15lk6aor8dsmmirbgdtn6iojcck:
+              help: null
+              label: Cause of the taxable event
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Filing year to which the self-assessment relates
+            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              help: null
+              label: Supplementary return. Receipt number of the previous return
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Self-assessment type (original / substitute / supplementary)
+            x-chim6r1eehkn0rpdehp62rjje1nn4t35:
+              help: null
+              label: 'Type of means of transport (V: vehicles, E: vessels, A: aircraft)'
+            x-d5n78sjfchqm6t3fe8n6sqb6:
+              help: null
+              label: Tax ID (NIF) of the person who brought the vehicle into Spain
+            x-d5n78sjfchqm6t3fe8n6srrdc9p6a:
+              help: null
+              label: Surnames and first name or company name of the person who brought
+                the vehicle into Spain
+            x-dhkn2bj15li6ap3lcdkn4:
+              help: null
+              label: Assessment. Amount to deduct
+            x-dhkn2bj2c5pmabb9dlo6urj9c9m6a:
+              help: null
+              label: Assessment. Taxable base
+            x-dhkn2bj2c5pmabb9dlo6urj9c9m6abbicli7aor9chgg:
+              help: null
+              label: Assessment. Reduced taxable base
+            x-dhkn2bj3elnn8o8:
+              help: null
+              label: Assessment. Tax due
+            x-dhkn2bj3elnn8o9dc4mmirj7e9in6obi:
+              help: null
+              label: Assessment. Tax payable
+            x-dhkn2bj4cli7aor3d5nmsbbcd5n6aobc:
+              help: null
+              label: Assessment. Flat-rate deduction
+            x-dhkn2bjiclpnar3kc5i6u:
+              help: null
+              label: Assessment. Assessment result
+            x-dhkn2bjkd5o6u:
+              help: null
+              label: Assessment. Tax rate (%)
           construct:
             modelo-576-autoliquidacion:
               field:
