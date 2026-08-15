@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:0eab071bbe6201acd7ae66bf59f08a31b7dbbe16f174e178a910dcbc01fc986c'
+body_hash: 'sha256:fa719bb87925bcf56e47bb353bb51b11fdab209b9ef8d3475bec5ce87867aba9'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -616,3 +616,66 @@ standing failure and a tree-state matter, not a performance one.
 
 Its scan is already `@cache`d at module level; the 34.30s is simply the first
 caller paying the shared cost. Nothing to collapse.
+
+## Round: the C scanner reaches the locale MANAGER
+
+The catalogue-parser win recorded above was applied inside one test module. The
+same lever was then found one layer down, in `dev/locales/manager.py`, where
+`StrictUniqueKeyLoader` -- the parser every locale reader and the whole
+`dev.locales` CLI goes through -- subclassed PyYAML's PYTHON `SafeLoader`.
+
+    pure Python base : 9.016s
+    libyaml C base   : 0.865s
+
+10.4x, on a parse that every catalogue read pays.
+
+### Why the duplicate-key gate survives the swap
+
+The obvious objection is that `StrictUniqueKeyLoader` exists to REFUSE duplicate
+keys, and swapping its base for a C parser could quietly drop that. It does not,
+for a structural reason worth writing down: libyaml accelerates only scanning
+and parsing. `construct_mapping` is Python in both bases and still runs for
+every mapping node, which is exactly where the duplicate check lives.
+
+That reasoning was still not accepted on its own. Before the swap, both bases
+were run against the largest shipped catalogue (equal documents) AND against a
+planted duplicate key, where both raised `LocaleError` with the identical
+message and the identical line number. A faster parser that stopped refusing
+duplicates would have traded this module's entire purpose for speed, and the
+locale rules depend on that refusal.
+
+The base is selected with `getattr(yaml, "CSafeLoader", yaml.SafeLoader)`, so a
+PyYAML built without libyaml still works -- the same shape `core.i18n` already
+uses. No caller anywhere depends on the loader's base class; that was checked
+rather than assumed.
+
+    dev/locales/tests : 281.59s before, 136.96s / 148.00s after
+
+with IDENTICAL failure sets by name (5 failed, 54 passed both sides).
+
+### A knock-on nobody had to ask for
+
+`src/cadrumo/tests/test_parity.py` reads catalogues through this manager. Its
+`test_codebase_to_locale_parity` setup fell from 53.64s to 24.36s with no change
+to that module at all. Fixing a shared primitive beat fixing its callers one at
+a time -- the opposite conclusion to the earlier rounds, where the sharing had
+to be built per module because no shared primitive existed.
+
+### Measured, assessed, NOT taken: memoising `get_codebase_keys`
+
+`LocaleManager.get_codebase_keys()` measured 15.00s then 9.06s and 9.08s -- so
+something inside is cached and the bulk is not -- returning 41,926 keys. It is
+called by `scaffold()`, by `audit()` and by several parity tests, so a
+process-level memo keyed on `src_dir` looks like an easy multi-call win.
+
+Not taken, deliberately. Fourteen sites construct a `LocaleManager`, and roughly
+twelve of them build one over a `tmp_path` src_dir into which the test has
+PLANTED source files. Across tests that is safe, because pytest hands each test
+a unique `tmp_path`; within one test it is not, if the test plants, scans,
+plants again and re-scans expecting the new key.
+
+Establishing which of those twelve do that is a real audit, and the failure mode
+of getting it wrong is the worst kind this campaign has catalogued: a cached
+scan makes a locale gate pass over stale keys, silently. Recorded with the
+measurement so the next pass starts from the number and the hazard rather than
+rediscovering both.
