@@ -8,6 +8,7 @@ one.
 
 from __future__ import annotations
 
+import ast
 from pathlib import Path
 
 import pytest
@@ -109,12 +110,19 @@ def test_config_does_not_register_retired_custody_spellings() -> None:
     Two retirements, one assertion. The older one dropped ``config rekey``,
     ``config show-recovery`` and ``config verify-recovery``. The per-profile
     custody cutover then retired their successors too: the global recovery
-    facade that mirrored a single shared master key is gone, taking ``config
-    recover``, the ``config recovery`` subgroup and ``config passphrase`` with
-    it — recovery enrolment and restore are per-profile custody operations now.
+    facade that mirrored a single shared master key is gone, taking the
+    forgotten-passphrase door and the recovery-code subgroup with it —
+    recovery enrolment and restore are per-profile custody operations now.
 
     None of these may resolve. A spelling that quietly re-mounts would hand an
     operator a verb with no owner behind it, on the data-custody path.
+
+    The passphrase family is deliberately NOT asserted here. It does not
+    resolve either, but no ruling retired it: credential rotation is missing
+    from every layer, and ``test_config_custody_profile_lifecycle`` holds a
+    deliberately-failing assertion that keeps that gap visible. Asserting the
+    family retired here would contradict that module and encode a product
+    decision nobody has taken.
     """
 
     for verb in (
@@ -123,27 +131,56 @@ def test_config_does_not_register_retired_custody_spellings() -> None:
         "verify-recovery",
         "recover",
         "recovery",
-        "passphrase",
     ):
         result = invoke_cached_cli(["config", verb, "--help"])
         assert result.exit_code != 0, (verb, result.output)
 
 
-_RETIRED_CUSTODY_SPELLINGS = (
-    "config rekey",
-    "config show-recovery",
-    "config verify-recovery",
-    "--recovery-key",
+#: Retired custody command spellings, each keyed to the retirement that removed
+#: it. Membership is a claim that an accepted ruling deleted the door, NOT
+#: merely that the verb does not resolve today: an absent verb whose absence
+#: nobody ruled on is a missing capability, and enrolling it here would launder
+#: that gap into a retirement. ``config passphrase`` is the live example and is
+#: deliberately absent — ``test_config_custody_profile_lifecycle`` holds a
+#: deliberately-failing assertion that credential rotation must exist, and this
+#: module previously asserted the opposite of it.
+#:
+#: Every entry is anchored by
+#: :func:`test_every_retired_spelling_still_names_an_unregistered_verb`, so an
+#: entry cannot outlive its subject: re-mounting the family reds this list and
+#: forces the entry out rather than letting a stale name pass vacuously.
+_RETIRED_CUSTODY_SPELLINGS: tuple[tuple[str, str], ...] = (
+    ("config rekey", "master-key rotation door removed by the first custody retirement"),
+    ("config show-recovery", "recovery-code display door removed by the first custody retirement"),
+    ("config verify-recovery", "recovery-code verification door removed by the first custody retirement"),
+    ("--recovery-key", "flag that carried a recovery code on argv, removed with the doors above"),
+    (
+        "config recover",
+        "forgotten-passphrase door of the global recovery facade, deleted by the "
+        "per-profile custody cutover; restore is a per-profile custody operation now",
+    ),
+    (
+        "config recovery",
+        "recovery-code subgroup (status/create/rotate/verify) of the same global "
+        "facade, deleted by the per-profile custody cutover",
+    ),
+)
+
+#: Files permitted to carry a retired spelling, keyed by repo-relative path and
+#: the enclosing function, never by line number. Each entry states why the
+#: citation is enforcement rather than instruction. A stale entry FAILS: see
+#: :func:`test_every_retired_spelling_exemption_is_still_load_bearing`.
+_SPELLING_EXEMPTIONS: tuple[tuple[str, str, str], ...] = (
+    (
+        "src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key.py",
+        "test_single_artifact_torn_states_raise",
+        "asserts the spelling is ABSENT from the torn-store refusal text; the citation is the probe, not an instruction",
+    ),
 )
 
 
-def test_retired_custody_spellings_absent_from_source_and_docs() -> None:
-    """The removed spellings are gone from production source, locales, and docs.
-
-    Scans the Python source tree, the four locale catalogues, the operator
-    docs, and the CLI sequence contracts. A retired spelling in any of those
-    surfaces would hand an operator (or the agent harness) a dead instruction.
-    """
+def _retired_spelling_scan_corpus() -> list[Path]:
+    """Source, the four locale catalogues, the operator docs, and the contracts."""
     from ....tests import REPO_ROOT
 
     scanned: list[Path] = []
@@ -168,19 +205,124 @@ def test_retired_custody_spellings_absent_from_source_and_docs() -> None:
         "the scan corpus collapsed (a package relocation or rename), so an empty offender list "
         "would mean 'nothing was checked' rather than 'nothing is wrong'"
     )
+    return scanned
 
-    # Rejection-probe tests legitimately carry a retired spelling to prove the
-    # CLI refuses it; they are the enforcement, not a citation.
-    exempt = {Path(__file__).resolve()}
-    offenders: list[str] = []
-    for path in scanned:
-        if path.resolve() in exempt:
+
+def _enclosing_function(path: Path, offset: int) -> str | None:
+    """Name the ``def`` enclosing the character ``offset`` in a Python source file."""
+    if path.suffix != ".py":
+        return None
+    text = path.read_text(encoding="utf-8", errors="replace")
+    line = text.count("\n", 0, offset) + 1
+    try:
+        tree = ast.parse(text, filename=str(path))
+    except SyntaxError:
+        return None
+    enclosing: str | None = None
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            continue
+        end = node.end_lineno or node.lineno
+        if node.lineno <= line <= end:
+            enclosing = node.name
+    return enclosing
+
+
+def _retired_spelling_citations() -> list[tuple[str, str | None, str]]:
+    """Every ``(repo-relative path, enclosing function, spelling)`` citation found."""
+    from ....tests import REPO_ROOT
+
+    # This module is the enforcement: every spelling is declared here by
+    # construction, so scanning it would report the list against itself.
+    this_file = Path(__file__).resolve()
+    citations: list[tuple[str, str | None, str]] = []
+    for path in _retired_spelling_scan_corpus():
+        resolved = path.resolve()
+        if resolved == this_file:
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
-        for spelling in _RETIRED_CUSTODY_SPELLINGS:
-            if spelling in text:
-                offenders.append(f"{path}: {spelling}")
-    assert offenders == []
+        # A locale catalogue folds a long translated string across source
+        # lines, so a two-word command path routinely straddles a newline and a
+        # run of indentation. Searching the raw text misses it: the Spanish
+        # catalogue carried a folded citation that this scan reported clean
+        # while the sibling gate — which loads the YAML — flagged it. Collapse
+        # whitespace runs for catalogues so the folded form reads as the
+        # rendered one.
+        haystack = " ".join(text.split()) if path.suffix in {".yml", ".yaml"} else text
+        for spelling, _reason in _RETIRED_CUSTODY_SPELLINGS:
+            offset = haystack.find(spelling)
+            if offset < 0:
+                continue
+            citations.append(
+                (
+                    resolved.relative_to(REPO_ROOT).as_posix(),
+                    _enclosing_function(resolved, offset),
+                    spelling,
+                ),
+            )
+    return citations
+
+
+def test_retired_custody_spellings_absent_from_source_and_docs() -> None:
+    """The removed spellings are gone from production source, locales, and docs.
+
+    Scans the Python source tree, the four locale catalogues, the operator
+    docs, and the CLI sequence contracts. A retired spelling in any of those
+    surfaces would hand an operator (or the agent harness) a dead instruction.
+
+    This is the one guard that sees a citation carrying no ``aeat`` executable
+    token — a bare command path in a policy inventory, a docstring, a comment.
+    The sibling conformance gates resolve every ``aeat ...`` citation against
+    the live tree and are strictly stronger where the token is present, so
+    this list exists for the unprefixed remainder, not as a substitute.
+    """
+    exempt = {(path, function) for path, function, _reason in _SPELLING_EXEMPTIONS}
+    offenders = [
+        f"{path}::{function or '<module>'}: {spelling}"
+        for path, function, spelling in _retired_spelling_citations()
+        if (path, function) not in exempt
+    ]
+    assert offenders == [], (
+        "retired custody spellings are still cited outside the enforcement surfaces:\n  "
+        + "\n  ".join(sorted(offenders))
+    )
+
+
+def test_every_retired_spelling_still_names_an_unregistered_verb() -> None:
+    """Each listed spelling still names a command path the live CLI refuses.
+
+    The fixture anchor for the list above. A spelling whose family is mounted
+    again is no longer retired, and leaving it enrolled would make the scan
+    forbid the tree from citing a verb it now ships — the exact vacuity a
+    pinned-name list invites. Re-mounting reds here first, so the entry is
+    removed deliberately rather than discovered by a confusing scan failure.
+    """
+    for spelling, reason in _RETIRED_CUSTODY_SPELLINGS:
+        assert reason.strip(), f"retired spelling {spelling!r} carries no stated reason"
+        if spelling.startswith("-"):
+            continue  # an option token, not a command path
+        result = invoke_cached_cli([*spelling.split(), "--help"])
+        assert result.exit_code != 0, (
+            f"`{spelling}` resolves in the live CLI but is still enrolled as retired "
+            f"({reason}); drop the entry rather than forbidding a live verb"
+        )
+
+
+def test_every_retired_spelling_exemption_is_still_load_bearing() -> None:
+    """No exemption outlives the citation it excuses.
+
+    An exemption is where the judgement moves, so a stale one is worse than no
+    list: it silently widens the guard. Each entry must name a file that still
+    exists, still carries a retired spelling, and still carries it inside the
+    declared enclosing function.
+    """
+    live = {(path, function) for path, function, _spelling in _retired_spelling_citations()}
+    stale = [
+        f"{path}::{function} ({reason})" for path, function, reason in _SPELLING_EXEMPTIONS if (path, function) not in live
+    ]
+    assert stale == [], (
+        "retired-spelling exemptions no longer match a real citation; remove them:\n  " + "\n  ".join(stale)
+    )
 
 
 def test_ledger_link_rejects_retired_evidence_id_grammar() -> None:

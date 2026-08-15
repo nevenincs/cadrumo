@@ -12,7 +12,6 @@ data_type = "year"
 semantic_role = "filing_year"
 required = true
 input_kind = "informational"
-export_refs = ["modelo-270-decl-ejercicio"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-270-procedure"]
 
@@ -24,6 +23,5 @@ data_type = "text"
 semantic_role = "tipo_declaracion"
 required = true
 input_kind = "informational"
-export_refs = ["modelo-270-decl-tipo-declaracion"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-270-procedure"]

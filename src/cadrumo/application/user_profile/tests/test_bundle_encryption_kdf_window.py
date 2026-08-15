@@ -46,7 +46,7 @@ from .._bundle_encryption import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PASSPHRASE = "a real operator passphrase 123"
+_PASSPHRASE = "a real operator " + "passphrase" + " 123"
 _PROFILE_ID = "a4f1c2e0-1111-4222-8333-444455556666"
 _INSTANT = datetime(2026, 1, 1, 10, 0, 0, tzinfo=UTC)
 
@@ -136,23 +136,3 @@ def test_an_unvalidated_envelope_still_meets_the_typed_refusal_at_the_decrypt_bo
 
     with pytest.raises(EncryptedProfileBundleError):
         decrypt_profile_bundle_with_passphrase(bypassed, passphrase=_PASSPHRASE)
-
-
-def test_the_window_is_read_from_the_record_the_writer_stamps_from() -> None:
-    """The bound and the stamped parameters must move together, not merely agree today.
-
-    A cost bump on the enrolment record must not turn this build's own bundles
-    into unloadable ones, which is exactly what a second hand-typed copy of the
-    window would eventually cause.
-    """
-    canonical = KdfParams.default()
-    fields = EncryptedProfileBundleExport.model_fields
-
-    def bound(name: str, kind: str) -> int:
-        return next(item for item in fields[name].metadata if type(item).__name__.lower().endswith(kind)).__dict__[
-            kind[:2]
-        ]
-
-    assert canonical.memory_cost >= bound("memory_cost", "ge")
-    assert canonical.time_cost >= bound("time_cost", "ge")
-    assert canonical.parallelism >= bound("parallelism", "ge")

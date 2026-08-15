@@ -97,15 +97,58 @@ _NAMESPACE_PAYLOAD_FORMATS: Final[Mapping[str, str]] = {
     "aeat_clave_permanente_session_metadata": "aeat_browser_sessions",
 }
 
+#: Inventory key -> (the storage category it lives under, why the path registry
+#: does not define it).
+#:
+#: The fourth discovery source, and the second hand-listed one. Each of these is
+#: a real file written to the operator's disk, parsed back through its own
+#: grammar, and carrying its own version -- but its LOCATION is derived at the
+#: call site rather than declared as a ``FILE`` path definition, so the
+#: enumerating half of discovery cannot see it and a correct declaration would
+#: read as a stale one.
+#:
+#: That the storage taxonomy does not name a file is a fact about the taxonomy,
+#: not evidence that the bytes are not a format. The same reasoning already
+#: applies one source up: capsule records and authority-session metadata were
+#: enrolled while discovery could see none of them, and the answer was to teach
+#: discovery about them rather than to de-enrol them.
+#:
+#: Honest limit, identical to the namespace half: this is hand-listed, so only
+#: the category reference is checked against production. A new file format
+#: derived at its call site CAN still be missed. Closing it needs the file's
+#: location declared in the path registry, which for a sidecar whose name is
+#: derived from a neighbouring file would put that name in two places -- the
+#: duplication the version inventory exists to prevent -- so it is a real design
+#: question rather than an omission to patch here.
+_UNREGISTERED_FILE_FORMATS: Final[Mapping[str, tuple[StorageCategory, str]]] = {
+    "profile_session_retirement_journal": (
+        StorageCategory.KEYSTORE_PROFILE_SESSION,
+        "A crash-window journal whose path is derived from the session receipt's own path, so it "
+        "has no path definition of its own while living in that file's directory.",
+    ),
+    "profile_legal_hold_snapshot": (
+        StorageCategory.PROFILE_CUSTODY_HOLD_EVIDENCE,
+        "A per-profile owner snapshot under an owner subdirectory of the hold-evidence root; the "
+        "registry declares the root, and the owner leaf is joined by the owning authority.",
+    ),
+    "profile_filing_retention_snapshot": (
+        StorageCategory.PROFILE_CUSTODY_HOLD_EVIDENCE,
+        "The filing-owner sibling of the legal-hold snapshot, under its own owner subdirectory of "
+        "the same registry-declared hold-evidence root.",
+    ),
+}
+
 
 def _discovered_format_keys() -> frozenset[str]:
     """Return every persisted format the storage registry declares.
 
-    Three sources. The on-disk half comes from the path registry's ``FILE``
+    Four sources. The on-disk half comes from the path registry's ``FILE``
     definitions — the inventory a new keystore, capsule or state-root file must
     join. The non-file half is the three tier formats that have no single path.
     The third is the independently versioned secure-object payloads, which are
-    formats by grammar rather than by file.
+    formats by grammar rather than by file. The fourth is the files whose
+    location is derived at their call site rather than declared as a path
+    definition, which the enumerating half cannot see.
 
     Discovery never reads :data:`PERSISTED_FORMATS`, so the sets are
     independent and a format present in one and absent from the other is a real
@@ -114,7 +157,12 @@ def _discovered_format_keys() -> frozenset[str]:
     file_keys = frozenset(
         definition.key for definition in STORAGE_NAMESPACE_REGISTRY.paths if definition.kind is StoragePathKind.FILE
     )
-    return file_keys | _NON_FILE_FORMAT_KEYS | frozenset(_NAMESPACE_PAYLOAD_FORMATS)
+    return (
+        file_keys
+        | _NON_FILE_FORMAT_KEYS
+        | frozenset(_NAMESPACE_PAYLOAD_FORMATS)
+        | frozenset(_UNREGISTERED_FILE_FORMATS)
+    )
 
 
 def test_every_persisted_format_declares_a_durability_class() -> None:
@@ -200,6 +248,29 @@ def test_every_namespace_payload_format_names_a_live_namespace() -> None:
         "Strike the entry with the namespace it described, or the inventory discovers a format "
         "whose home no longer exists"
     )
+
+
+def test_every_unregistered_file_format_names_a_live_storage_category() -> None:
+    """The second hand-listed half is checked against production too.
+
+    Same discipline as the namespace map, and for the same reason: an entry here
+    cannot be invented to silence a key, because the storage category it claims
+    to live under must resolve to a real location in the taxonomy. It does NOT
+    close the omission direction, which the map's own comment states.
+    """
+    unresolved = tuple(
+        sorted(key for key, (category, _reason) in _UNREGISTERED_FILE_FORMATS.items() if not storage_location(category))
+    )
+    assert unresolved == (), (
+        f"unregistered file format(s) {unresolved} name a storage category that resolves to no "
+        "location; strike the entry with the category it described"
+    )
+
+
+def test_every_unregistered_file_format_states_why_it_is_unregistered() -> None:
+    """A blank reason turns the weaker half into a free-text allowlist."""
+    for key, (_category, reason) in _UNREGISTERED_FILE_FORMATS.items():
+        assert len(reason.split()) >= 12, f"{key} carries a reason too thin to inform a reader: {reason!r}"
 
 
 def test_one_namespace_backs_several_independently_versioned_payloads() -> None:

@@ -169,10 +169,9 @@ def _provision_profile(tmp_path: Path, passphrase: str) -> None:
         (["app", "ledger", "--help"], "import"),
         (["app", "modelo", "--help"], "work"),
         # Custody surfaces: browsing the session and repair help must never
-        # open the encrypted session or demand any secret. These rows covered
-        # `config recovery`, `config recovery create`, `config recovery
-        # verify`, `config recover` and `config passphrase` until the custody
-        # cutover left all five unregistered, at which point they asserted
+        # open the encrypted session or demand any secret. Five rows here
+        # addressed the recovery and passphrase families until the custody
+        # cutover left all of them unregistered, at which point they asserted
         # nothing about secret handling and only reported the absent verbs.
         # The property is re-founded on the custody verbs that do resolve.
         (["config", "login", "--help"], "login"),
