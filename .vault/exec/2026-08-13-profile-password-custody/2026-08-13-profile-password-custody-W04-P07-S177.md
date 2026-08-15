@@ -51,4 +51,3 @@ related:
 - **The first suite run crashed a worker under parallel pytest and printed a stack trace with no failure.** Re-running sequentially revealed the actual cause immediately: the new test module was missing the required architectural marker, so it had been collected and rejected rather than crashing. The local-execution rule's guidance to re-run sequentially before triaging held exactly.
 - **The repository's own marker warning earned its keep.** An unmarked run of the new module printed a green result having executed zero tests, and the emitted warning line said so in as many words. Every run recorded here passed an explicit marker selection.
 - The whole-catalogue audit count moved from 36 to 542 missing during this Step as the registry sweep landed further batches. It was never used as a signal; every claim here rests on a specific replayed commit or a specific temporary repository.
-
