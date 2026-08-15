@@ -52,9 +52,9 @@ which is a far weaker claim than "no route into the shared-master package
 remains", and it loses its teeth the moment the surface is renamed or re-wrapped.
 The forwarding layer in ``profile_custody`` is the worked example: it forwards
 ``current_active_bucket_session``, ``BucketSession.open``,
-``get_master_key``, ``mint_profile_session``, ``resume_profile_session``
-and ``zeroise``, none of which a provider-family name list contains, so a
-name-only gate passes it at any scan width.
+``session_serves_bucket``, ``bind_active_bucket_session`` and
+``evaluate_login_throttle``, none of which a provider-family name list
+contains, so a name-only gate passes it at any scan width.
 
 The NAME net catches what the module net structurally cannot see: a reach that
 imports the provider from the ``storage`` package facade, where no module path
@@ -155,6 +155,20 @@ _MASTER_KEY_SEGMENTS = (*_SUBSTRATE_SEGMENTS, "master_key")
 
 _DYNAMIC_IMPORT_CALLS = frozenset({"import_module", "__import__", "find_spec", "find_loader", "module_from_spec"})
 
+# The symbol the module-net proof reaches through the shared-master package, and
+# the facade that has to still export it.  It is pinned rather than written into
+# each fixture string because the proof's whole claim is that this symbol is one
+# the NAME net does not hold: borrow a name the retired list contains and the
+# two nets stop being independently provable, while the failure reads as a
+# detector bug rather than as a fixture that lost its property.  That is exactly
+# how the proof broke -- a sweep deleting ``load_or_mint_bucket_dek`` from the
+# tree rewrote its every textual occurrence, including inside this fixture's
+# source string, to ``get_master_key``, which the retired list does hold.
+# The anchor below asserts both halves of the property, so the next such sweep
+# fails naming the symbol instead of naming a set difference.
+_MASTER_KEY_FACADE = _STORAGE_ROOT / "master_key" / "__init__.py"
+_SURVIVING_SUBSTRATE_SYMBOL = "current_active_bucket_session"
+
 
 @dataclass(frozen=True)
 class _OpenViolation:
@@ -203,13 +217,12 @@ _DECLARED_OPEN_VIOLATIONS: dict[str, _OpenViolation] = {
     "profile_custody/__init__.py": _OpenViolation(
         reason=(
             "The delegate wrappers forward the surviving master-key substrate: "
-            "bucket session open, resume, activation and binding, the persisted "
-            "session receipt with its idle deadline, the login throttle, and -- "
-            "key material rather than session bookkeeping -- bucket DEK "
-            "load-or-mint and buffer zeroise.  That substrate follows the "
-            "per-profile capsule as it takes over composition.  The provider "
-            "family and the dynamic string reach are both gone; what remains is "
-            "one static import of the master-key module."
+            "bucket session open, resume, activation and binding, the "
+            "session-serves-bucket predicate, the unsecured-bucket refusal and "
+            "the login throttle.  That substrate follows the per-profile capsule "
+            "as it takes over composition.  The provider family and the dynamic "
+            "string reach are both gone; what remains is one static import of "
+            "the master-key module."
         ),
         reaches=frozenset({_MASTER_KEY_PACKAGE}),
     ),
@@ -345,6 +358,23 @@ def _retired_references(source: str) -> set[str]:
     return found
 
 
+def _facade_exports(path: Path) -> frozenset[str]:
+    """Return the ``__all__`` a package facade declares, read from source.
+
+    Read rather than imported: every other assertion in this module works on
+    text, and importing the persistence substrate from an application-layer
+    unit test would pull a live storage package in to answer a question about a
+    name.
+    """
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets
+        ):
+            return frozenset(ast.literal_eval(node.value))
+    return frozenset()
+
+
 def _offenders() -> dict[str, set[str]]:
     modules = _production_modules(_SCAN_ROOT)
     assert modules, "the production application tree must not be empty"
@@ -389,6 +419,41 @@ def test_detector_sees_a_retired_name_reached_through_a_dynamic_import() -> None
     assert _retired_references(laundered) == {"get_master_key_provider", _MASTER_KEY_PACKAGE_ABSOLUTE}
 
 
+def test_the_package_net_fixture_symbol_names_nothing_the_name_net_holds() -> None:
+    """The anchor that keeps the two nets independently provable.
+
+    The proof below claims the module net alone catches a reach whose SYMBOL is
+    invisible to a provider-family name list.  That claim rests entirely on the
+    fixture's chosen symbol being live substrate rather than a retired name, and
+    nothing in a set-equality assertion states that requirement -- so when a
+    tree-wide sweep rewrote the symbol into the retired list, the proof asserted
+    strictly less than its name claims and reported it as a detector mismatch.
+
+    Both halves are asserted here: the symbol is one the shared-master package
+    still exports, so the fixture describes a reach that can really exist, and
+    it is one the name net does not hold, so the module net is the only thing
+    that can see it.
+    """
+    assert _MASTER_KEY_FACADE.is_file(), (
+        f"the shared-master facade is missing at {_MASTER_KEY_FACADE}; the fixture "
+        "symbol below can no longer be anchored to a real exported surface"
+    )
+    exports = _facade_exports(_MASTER_KEY_FACADE)
+    assert exports, "the shared-master facade declares no __all__ to anchor the fixture symbol against"
+    assert _SURVIVING_SUBSTRATE_SYMBOL in exports, (
+        f"{_SURVIVING_SUBSTRATE_SYMBOL} is no longer exported by the shared-master package, so the "
+        "module-net proof reaches a symbol that cannot exist; pick a surviving substrate export"
+    )
+    assert _SURVIVING_SUBSTRATE_SYMBOL not in _RETIRED_CUSTODY_NAMES, (
+        f"{_SURVIVING_SUBSTRATE_SYMBOL} is a retired custody name, so the module-net proof would also "
+        "trip the name net and the two nets would no longer be independently provable"
+    )
+    reach = f"from ...adapters.persistence.storage.master_key import {_SURVIVING_SUBSTRATE_SYMBOL}\n"
+    assert _retired_references(reach) & _RETIRED_CUSTODY_NAMES == set(), (
+        "the module-net fixture trips the name net; the two nets are no longer isolated"
+    )
+
+
 def test_detector_flags_a_master_key_reach_that_names_no_retired_symbol() -> None:
     """The net the name list cannot supply, on every import form.
 
@@ -396,17 +461,20 @@ def test_detector_flags_a_master_key_reach_that_names_no_retired_symbol() -> Non
     provider-family name list reports every one of them clean.  This is the
     shape the forwarding layer is made of, and the reason the module net is
     primary rather than supplementary.
+
+    Every form reaches the one symbol the anchor above holds to that property,
+    so a rename cannot separate the fixtures from the requirement they rest on.
     """
-    session_only = "from ...adapters.persistence.storage.master_key import current_active_bucket_session\n"
+    session_only = f"from ...adapters.persistence.storage.master_key import {_SURVIVING_SUBSTRATE_SYMBOL}\n"
     assert _retired_references(session_only) == {_MASTER_KEY_PACKAGE}
 
-    dek_only = (
+    attribute_reach = (
         "from importlib import import_module\n"
-        "def dek() -> bytes:\n"
+        "def serves() -> object:\n"
         '    module = import_module("cadrumo.adapters.persistence.storage.master_key")\n'
-        "    return module.get_master_key()\n"
+        f"    return module.{_SURVIVING_SUBSTRATE_SYMBOL}()\n"
     )
-    assert _retired_references(dek_only) == {_MASTER_KEY_PACKAGE_ABSOLUTE}
+    assert _retired_references(attribute_reach) == {_MASTER_KEY_PACKAGE_ABSOLUTE}
 
     plain = "import cadrumo.adapters.persistence.storage.master_key as _mk\n"
     assert _retired_references(plain) == {_MASTER_KEY_PACKAGE_ABSOLUTE}

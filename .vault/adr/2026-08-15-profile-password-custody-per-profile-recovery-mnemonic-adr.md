@@ -8,6 +8,7 @@ body_schema: 'body-v1'
 body_hash: 'sha256:8f0503ff7ec25f3899f9178836afb8178edbab2d35e7fa477576071879a6b34b'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
+  - '[[2026-08-15-profile-password-custody-deletion-without-consumer-sweep-detectability-audit]]'
 ---
 
 # `profile-password-custody` adr: `per profile recovery mnemonic` | (**status:** `accepted`)
