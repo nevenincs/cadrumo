@@ -1,5 +1,7 @@
 [revisions."2019-y-siguientes"]
-authority_grade = "filing"
+# Applicability grade: the collective-investment declaration is filed by the managing
+# company or depositary, never by the participant.
+authority_grade = "applicability"
 valid_from = 2019-01-01
 period_selector = { year_from = 2019, periods = ["0A"] }
 orden_aplicabilidad = ["orden-eha-3377-2011:art-1"]

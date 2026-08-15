@@ -1,5 +1,8 @@
 [revisions."2019-y-siguientes"]
-authority_grade = "filing"
+# Applicability grade: the retencion e ingreso a cuenta on transmision or reembolso of
+# collective-investment shares is filed by the managing entity or intermediary, never by
+# the participant, so this application would never emit it.
+authority_grade = "applicability"
 valid_from = 2019-01-01
 period_selector = { year_from = 2019, periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-eha-3435-2007:anexo-i"]

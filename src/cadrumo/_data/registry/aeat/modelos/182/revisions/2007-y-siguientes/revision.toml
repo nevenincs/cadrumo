@@ -1,5 +1,8 @@
 [revisions."2007-y-siguientes"]
-authority_grade = "filing"
+# Applicability grade: the donativos declaration is filed by the entity RECEIVING the
+# donation, not by the donor claiming the deduction, so this application's taxpayer is
+# the subject of the declaration rather than its filer.
+authority_grade = "applicability"
 # valid_from is canonicalised to the ejercicio-start convention (January 1 of
 # period_selector.year_from), not the orden's own effective date -- that fact
 # already has its home on orden-eha-3021-2007:art-1's legal.effective_from.

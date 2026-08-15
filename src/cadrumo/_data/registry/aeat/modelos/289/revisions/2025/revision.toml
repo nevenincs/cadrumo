@@ -1,5 +1,7 @@
 [revisions."2025"]
-authority_grade = "filing"
+# Applicability grade: the CRS financial-account declaration is filed by financial
+# institutions under the automatic exchange of information, never by the account holder.
+authority_grade = "applicability"
 valid_from = 2025-01-01
 period_selector = { years = [2025], periods = ["0A"] }
 orden_aplicabilidad = [

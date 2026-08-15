@@ -1,5 +1,8 @@
 [revisions."2019-y-siguientes"]
-authority_grade = "filing"
+# Applicability grade: retenciones on capital mobiliario arising from transmision,
+# amortizacion or reembolso of financial assets are filed by the financial intermediary,
+# never by the asset holder.
+authority_grade = "applicability"
 valid_from = 2019-01-01
 period_selector = { year_from = 2019, periods = ["0A"] }
 orden_aplicabilidad = ["orden-eha-3377-2011:art-1"]
