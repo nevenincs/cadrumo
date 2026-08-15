@@ -27,6 +27,7 @@ semantic_role = "irnr_retencion_numero_rentas_dividendos"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-05"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -38,6 +39,7 @@ semantic_role = "irnr_retencion_numero_rentas_resto"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-06"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -50,6 +52,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-216-numero-rentas-sometidas-total"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-07"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -61,6 +64,7 @@ semantic_role = "irnr_no_retencion_numero_rentas_dividendos"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-14"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -72,6 +76,7 @@ semantic_role = "irnr_no_retencion_numero_rentas_resto"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-15"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -84,6 +89,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-216-numero-rentas-no-sometidas-total"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-16"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -95,6 +101,7 @@ semantic_role = "irnr_no_retencion_base_dividendos"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-17"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -106,6 +113,7 @@ semantic_role = "irnr_no_retencion_base_resto"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-18"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -118,4 +126,5 @@ required = false
 input_kind = "computed"
 formula = "modelo-216-base-no-sometidas-total"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
+export_refs = ["modelo-216-page-01-casilla-19"]
 source_refs = ["boe-modelo-216-form-layout", "aeat-dr-216-2024"]

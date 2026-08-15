@@ -1,0 +1,19 @@
+# Modelo 216 fichero BOE, transcribed position-by-position from the bundled
+# diseño de registro `aeat-dr-216-2024`
+# (sha256 ebee21da4709d6cd63e42cbd82d8c0592252ce2157c93ac1df9833f1ea42cbf0,
+# applies_from 2024-01-01, the exact span this revision declares).
+#
+# The design carries two record sheets and a closing constant:
+#   Pág. 0  the <AUX> file envelope, 13 positions to 328
+#   Pág. 1  the declaration record, 32 positions, 600 total
+#   row 15  the 18-byte envelope closing constant "</T2160AAAAPP0000>", whose
+#           position the design gives as "***" (it follows the variable-length
+#           file content) rather than as a fixed offset
+#
+# Every position of both sheets is written. Offsets and lengths were read out
+# of the design binary rather than transcribed by hand.
+
+[[revisions."2024-y-siguientes".export_layouts]]
+id = "modelo-216-2024-fichero-boe"
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]

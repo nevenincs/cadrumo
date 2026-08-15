@@ -1,0 +1,465 @@
+[[revisions."2024-y-siguientes".export_layouts]]
+id = "modelo-216-2024-fichero-boe"
+
+[[revisions."2024-y-siguientes".export_layouts.records]]
+id = "modelo-216-page-01"
+record_type = "page_01"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "216"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-page"
+offset = 6
+length = 5
+kind = "literal"
+literal = "01000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-end"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-complementaria-page-indicator"
+offset = 12
+length = 1
+kind = "filler"
+# The design states its content as "En blanco" -- this is the page-level
+# complementaria indicator of the multi-page grammar, not the declaration's
+# own complementaria mark, which AEAT places at position 432 and this layout
+# writes from amendment evidence there.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-tipo-autoliquidacion"
+offset = 13
+length = 1
+kind = "header"
+# Nota1: "I (ingreso) N (negativa) G (ingreso a anotar en CCT) U
+# (domiciliacion del ingreso en CCC)" -- the ResultDisposition code vocabulary.
+producer_key = "filing.result_disposition"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-nif"
+offset = 14
+length = 9
+kind = "header"
+producer_key = "taxpayer.tax_id"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-apellidos-nombre-razon-social"
+offset = 23
+length = 80
+kind = "header"
+# AEAT gives ONE slot for "Apellidos y nombre o razon social", so it must
+# read the fact populated for both populations: surnames/given_name are blank
+# for an entity and legal_name is blank for a natural person, while full_name
+# carries either.
+producer_key = "taxpayer.full_name"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-devengo-ejercicio"
+offset = 103
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "integer"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-devengo-periodo"
+offset = 107
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-05"
+offset = 109
+length = 17
+kind = "casilla"
+casilla_id = "05"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-06"
+offset = 126
+length = 17
+kind = "casilla"
+casilla_id = "06"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-07"
+offset = 143
+length = 17
+kind = "casilla"
+casilla_id = "07"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-08"
+offset = 160
+length = 17
+kind = "casilla"
+casilla_id = "08"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-09"
+offset = 177
+length = 17
+kind = "casilla"
+casilla_id = "09"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-10"
+offset = 194
+length = 17
+kind = "casilla"
+casilla_id = "10"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-11"
+offset = 211
+length = 17
+kind = "casilla"
+casilla_id = "11"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-12"
+offset = 228
+length = 17
+kind = "casilla"
+casilla_id = "12"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-13"
+offset = 245
+length = 17
+kind = "casilla"
+casilla_id = "13"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-14"
+offset = 262
+length = 17
+kind = "casilla"
+casilla_id = "14"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-15"
+offset = 279
+length = 17
+kind = "casilla"
+casilla_id = "15"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-16"
+offset = 296
+length = 17
+kind = "casilla"
+casilla_id = "16"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-17"
+offset = 313
+length = 17
+kind = "casilla"
+casilla_id = "17"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-18"
+offset = 330
+length = 17
+kind = "casilla"
+casilla_id = "18"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-19"
+offset = 347
+length = 17
+kind = "casilla"
+casilla_id = "19"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-20"
+offset = 364
+length = 17
+kind = "casilla"
+casilla_id = "20"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-casilla-21"
+offset = 381
+length = 17
+kind = "casilla"
+casilla_id = "21"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-iban"
+offset = 398
+length = 34
+kind = "header"
+producer_key = "selected_account.iban"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-complementaria"
+offset = 432
+length = 1
+kind = "header"
+producer_key = "amendment_evidence.is_complementaria"
+data_type = "boolean"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-complementaria-justificante"
+offset = 433
+length = 13
+kind = "header"
+producer_key = "amendment_evidence.original_aeat_receipt"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-reserved-aeat"
+offset = 446
+length = 143
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-page-01-close"
+offset = 589
+length = 12
+kind = "literal"
+literal = "</T21601000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]

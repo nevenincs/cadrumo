@@ -1,0 +1,34 @@
+# Design row 15 of Pág. 0: the constant that closes the <T…> file envelope,
+# 18 positions, "</T2160AAAAPP0000>" — modelo, discriminante, ejercicio de
+# devengo, periodo and tipo, in that order. Its position is given as "***"
+# because it follows the variable-length file content, so it is authored as its
+# own terminator record rather than at a fixed offset inside Pág. 0.
+#
+# It is `computed` rather than `literal` because two of its eighteen bytes are
+# the ejercicio and two more the periodo: the renderer's envelope_closing_tag
+# builds exactly "</T{modelo}0{year}{period}0000>" from the draft, which is the
+# same 18-byte grammar this design states.
+
+[[revisions."2024-y-siguientes".export_layouts]]
+id = "modelo-216-2024-fichero-boe"
+
+[[revisions."2024-y-siguientes".export_layouts.records]]
+id = "modelo-216-envelope-footer"
+record_type = "envelope_footer"
+order = 2
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+id = "modelo-216-envelope-close"
+offset = 1
+length = 18
+kind = "computed"
+computed_key = "envelope_closing_tag"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2024"]
