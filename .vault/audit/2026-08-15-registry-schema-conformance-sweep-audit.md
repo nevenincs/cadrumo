@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:19cf0d3b422919849ef86992acb07a8dd2d9852d155574e01b129b480990d1e1'
+body_hash: 'sha256:2a8cc4b7012daab38d79dbfadb747648dea55dbbf725965a538d9a05374c6c3a'
 related:
   - "[[2026-08-14-registry-campaign-sequencing-operator-attestation-ledger-audit]]"
 ---
@@ -894,6 +894,93 @@ different owner, and do not belong on an acquisition worklist. This
 registry-wide measurement confirms that reading holds for the full
 population, not just the 23 sampled from the corpus side.
 
+### derivation-coverage-of-the-31-modelled-modelos | high | Modelo 200's 3250 casillas are 99.6% manual, explicitly declared rather than defaulted, and the split by derived-versus-manual proportion is far wider than the casilla count alone suggests
+
+**Where:** `CasillaDefinition.input_kind` (`_schema_input_kind.py`) -- the
+registry's OWN declared classification of how each casilla's value is
+supplied (`manual` / `bound` / `computed` / `informational` /
+`projection_only`), read via the loaded schema (`load_registry_tree`) for
+every casilla across every revision of the 31 MODELLED BUT NOT EXPORTABLE
+modelos from the prior finding -- not directory listings, per the project
+rule that coverage is assessed from the compiled snapshot.
+
+**Method.** Tallied `input_kind` per modelo, computing `derived% =
+(computed + bound) / total` and `manual% = manual / total`. `MANUAL` is a
+real, legitimate category by registry design (retenciones, prior payments,
+taxpayer-declared adjustments) -- a high manual share is not itself a
+defect, per the explicit caution against treating a low formula count as
+one on its own.
+
+**Result, full table (modelo: total casillas, derived%, manual%):**
+200 (3250, 0%, 100%), 303 (1154, 29%, 43%), 202 (136, 29%, 71%), 232 (56,
+0%, 0% -- all 56 `informational`, a third legitimate category, not manual
+and not derived), 210 (34, 24%, 76%), 036 (31, 3%, 94%), 111 (30, 37%,
+63%), 345 (29, 0%, 100%), 136 (24, 12%, 88%), 123 (22, 32%, 68%), 130 (20,
+75%, 25%), 379 (18, 0%, 100%), 714 (18, 44%, 44%), 289 (17, 0%, 100%), 151
+(14, 50%, 21%), 369 (14, 57%, 0%), 353 (13, 85%, 0%), 126 (12, 17%, 83%),
+280 (12, 0%, 100%), 117 (11, 18%, 82%), 322 (10, 80%, 0%), 216 (8, 38%,
+62%), 128 (7, 14%, 86%), 115 (5, 80%, 20%), 309 (5, 60%, 0%), 187/188/194/296
+(3 each, 33%, 67%), 190/193 (3 each, 100%, 0%).
+
+**The split the operator asked for.** At the small-count end (187-296, 3
+casillas each) the ratio is not diagnostic either way -- too few boxes for
+a percentage to mean anything, and these stay "genuinely modelled, small
+scope" by default. At the larger-count end, two real clusters emerge:
+**genuinely computation-heavy** (Modelo 130 at 75%, Modelo 353 at 85%,
+Modelo 322 at 80%, Modelo 115 at 80%, Modelo 303 at 29% derived but with a
+huge 305-casilla `projection_only` tier on top, Modelo 202 at 29%) --
+blocked ONLY on the export mechanism, exactly the operator's "genuinely
+modelled" category -- versus **near-zero derived at real scale** (Modelo
+200: 0% of 3250; Modelo 345: 0% of 29; Modelo 280: 0% of 12; Modelo 289:
+0% of 17; Modelo 379: 0% of 18; Modelo 036: 3% of 31).
+
+**Modelo 200, checked directly rather than left as a ratio.** Two
+corroborating signals, neither individually dispositive, checked because
+the ratio alone (3237/3250 manual) could mean either "genuinely
+manual-heavy form" or "bulk-scaffolded placeholder never wired":
+
+- **Every one of the 3237 manual casillas explicitly declares
+  `input_kind = "manual"` in its own TOML fragment -- zero rely on the
+  schema's default value.** Grepped the raw source directly (`input_kind =
+  "manual"` count: 3237, matching the loaded tally exactly). This rules
+  out the specific failure mode of "the field was never touched and
+  silently defaulted" -- every declaration is deliberate authorship, not
+  an unset field masquerading as one.
+- **Every one of the 3237 carries its own individual, specific
+  `legal_refs`** (e.g. `ley-27-2014:art-41`, `art-29`), and they span
+  **214 distinct top-level `section` groupings** -- narrow, named special
+  Impuesto de Sociedades regimes (`entidad_parcialmente_exenta`,
+  `arrendamiento_financiero_regimen_especial_art_106`,
+  `asimetrias_hibridas_art_15_bis_lis`, `sociedad_de_inversion_de_capital_variable_o_fondo`).
+  This is the shape of a genuinely complex, taxpayer-declared corporate
+  tax return covering dozens of special regimes, each contributing a
+  handful of manual adjustment boxes -- not the shape of one bulk import
+  stamping a placeholder value across an undifferentiated mass.
+
+**Honest limit, stated rather than resolved by inference.** Both signals
+corroborate "deliberately declared, not scaffolding inertia" but neither
+proves the CONTENT judgement is correct -- that a specific casilla
+genuinely cannot be derived requires checking it against AEAT's own
+instructions box by box, not attempted here. **The evidence favours
+Modelo 200 being legitimately manual-heavy rather than declared-but-inert,
+but this is not certain**, and per instruction that uncertainty is stated
+rather than resolved either way.
+
+**M345, M280, M289, M379 (0% derived, 12-29 casillas each) and M036 (3%,
+31 casillas): checked for the same authorship signal, same result.**
+Every casilla in every one of these five explicitly declares its
+`input_kind` (grepped the raw source: occurrence counts match the loaded
+totals exactly in every case) -- no silent defaulting found anywhere in
+the sample. Their small scale makes the genuinely-manual reading more
+plausible on its face than Modelo 200's (a handful of adjustment boxes on
+a short informative modelo is unremarkable), but the same content-level
+uncertainty applies -- not verified box by box.
+
+**Modelo 232 is a distinct third shape, not manual and not derived:** all
+56 casillas are `informational`, a legitimate registry category this
+finding had not yet separated out. Worth naming for completeness, not a
+gap of either kind.
+
 ## Recommendations
 
 **`SourceReference.review_status`:** remove the field and its 321
@@ -1001,3 +1088,20 @@ corpus-acquisition list** -- a modelo that declares no export mechanism
 cannot be missing one; that list stays scoped to modelos with a declared
 mechanism and a genuinely absent artefact (M210, M347, and whichever of
 the 49 PLAUSIBLE eventually resolve to genuine gaps).
+
+**Derivation coverage of the 31:** treat as two work items, not one.
+Modelo 130, 353, 322, 115, 303 and 202 are genuinely computation-heavy and
+blocked ONLY on an export mechanism -- the operator's "genuinely modelled"
+category, ready to move once export authoring resumes. Modelo 200, 345,
+280, 289, 379 and 036 are near-zero derived at real scale; every one was
+checked for silent-default authorship and found explicit throughout, and
+Modelo 200 additionally shows 214 distinct narrow special-regime sections
+each individually legally grounded -- evidence favouring "genuinely
+manual-heavy," not certain. **Do not fold these into the export-mechanism
+backlog as if resolving the export gap would also resolve them** -- an
+export layout for Modelo 200 would faithfully emit 3237 blank manual
+boxes; whether that is correct requires a box-by-box legal-content
+verification this pass did not attempt, and that is a materially larger
+and different piece of work than authoring an export layout. Modelo 232's
+all-`informational` shape is a third category, correctly excluded from
+both.

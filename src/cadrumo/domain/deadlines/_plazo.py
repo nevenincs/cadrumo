@@ -72,6 +72,19 @@ def resolve_filing_window(modelo: str, filing_year: int, period: Period) -> Dead
     ``"1T"``, ``"0A"``, ``"01"``). No following-year or future-year window is
     ever borrowed when an exact match is absent.
 
+    ``None`` means one thing only: the registry loaded, and declares no window
+    matching this combination. A registry that cannot be read or validated is
+    NOT an absence of deadline and is not reported as one -- the
+    :class:`~cadrumo.domain.calculations.registry.RegistryError` propagates.
+
+    Reading ``deadline_windows`` costs full modelo validation, because the
+    authority validates the modelo before projecting its windows. Catching that
+    failure here and returning ``None`` turned any registry-wide validation
+    fault into the claim that AEAT declares no filing deadline for this modelo
+    and period -- a failure laundered into a confident answer about when a
+    taxpayer must file. The sibling deadline engine wraps the same call and
+    raises with the failing stage named; this now agrees with it.
+
     Args:
         modelo: Agencia Estatal de Administración Tributaria (AEAT) modelo code
             (e.g. ``"130"``, ``"303"``).
@@ -82,16 +95,16 @@ def resolve_filing_window(modelo: str, filing_year: int, period: Period) -> Dead
         The matching
         :class:`~cadrumo.domain.calculations.registry.DeadlineWindowDefinition`,
         or ``None`` when the registry declares no window for the combination.
+
+    Raises:
+        RegistryError: The registry could not be read or validated. The caller
+            is told the deadline is unknown rather than absent.
     """
     from ...core.resources import resources
-    from ..calculations.registry import RegistryError
 
     authority = resources().modelos.authority
 
-    try:
-        windows = authority.deadline_windows(filing_year)
-    except RegistryError:
-        return None
+    windows = authority.deadline_windows(filing_year)
     for window_modelo, _revision, window in windows:
         if window_modelo != modelo:
             continue

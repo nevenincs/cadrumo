@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:c75e83c860e09e6e7934b9d5d881db965d4409d63ca83fc000195b253790acb3'
+body_hash: 'sha256:9beeb26b4c302e579db52559bc32d70f61e3d664f966f71b25786cee852088da'
 related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S01]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S02]]'
@@ -34,6 +34,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-research]]'
   - '[[2026-08-15-registry-temporal-coverage-acquisition-worklist-research]]'
   - '[[2026-08-15-registry-temporal-coverage-audit]]'
+  - '[[2026-08-15-registry-temporal-coverage-legal-grounding-consolidation-audit]]'
 ---
 
 # `registry-temporal-coverage` feature index
@@ -53,6 +54,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-14-registry-temporal-coverage-drift-census-audit` - `registry-temporal-coverage` audit: `drift census`
 - `2026-08-14-registry-temporal-coverage-load-closure-census-audit` - `registry-temporal-coverage` audit: `load closure census`
 - `2026-08-15-registry-temporal-coverage-audit` - `registry-temporal-coverage` audit: `coverage instrument close-out and operator summary`
+- `2026-08-15-registry-temporal-coverage-legal-grounding-consolidation-audit` - `registry-temporal-coverage` audit: `legal grounding vein: consolidated operator record`
 
 ### exec
 

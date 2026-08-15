@@ -1,0 +1,247 @@
+"""Every bundled record design must produce a classified outcome, never silence.
+
+The corpus ships official AEAT record designs and the parser reads them. Until
+this module existed, nothing enforced that it reads them ALL: a design could sit
+in the corpus unparsed and unreported indefinitely, and the only reason anyone
+knew how many did was that somebody counted by hand. A count taken by hand is not
+a gate -- it is correct on the day it is taken and silent every day after.
+
+THE PROPERTY. Every bundled design must resolve to exactly one of three outcomes:
+it parses completely, it parses partially with every skipped sheet named and
+reasoned, or it refuses with a stated cause. A design producing none of those --
+or never reached by the parser at all -- fails here. The third case is the one
+that matters most and is the reason the enumeration below is deliberately naive.
+
+WHY THE ENUMERATION IS INDEPENDENT, and it is the lesson this module is built on.
+The sibling guard in ``test_revision_span_matches_published_designs`` exists to
+catch its own inventory dropping a design file, and it derived its "what is on
+disk" set with the SAME ``files/*`` glob shape the inventory used. Two derivations
+of one fact, which is the right instinct -- but both inherited one directory-shape
+assumption, so a design stored outside ``files/`` was invisible to the inventory
+AND to the guard watching the inventory. A check that shares its subject's blind
+spot cannot see it. This module therefore walks the corpus root recursively for
+anything with a parseable suffix, asks the parser nothing about what exists, and
+would fail loudly if the parser's own enumeration ever narrowed.
+
+WHY THE REFUSALS ARE A WORKLIST RATHER THAN A COUNT. A design that cannot be
+parsed is either a parser gap or a corpus defect, and either way it is work. It is
+listed with its modelo, its filename and its cause, and the causes are grouped, so
+the reader sees a small number of fixable CLASSES rather than a pile of individual
+problems. Nothing is exempted: an allowlist here would recreate the honour-system
+list this campaign has spent its time removing, and an exemption is
+indistinguishable from a fix in every downstream count.
+
+NO COUNT IS PINNED. The number of designs, the number in each bucket and the size
+of each cause class all move as the corpus grows and as the parser improves --
+landing a header-spelling fix moved ten designs between buckets on the day this
+was written. Gating on any of those tallies would encode that moment, train the
+next author to bump a constant, and then detect nothing.
+"""
+
+from __future__ import annotations
+
+from collections import defaultdict
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Literal
+
+import pytest
+
+from .....core.resources import bundled_path
+from .. import extract_record_design
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_DESIGN_ROOT_PARTS = ("corpus", "aeat_official", "disenos_registro")
+#: Suffixes the shipped parser dispatches on. Declared here rather than imported
+#: from the parser so a suffix quietly dropped there shows up as a design this
+#: module enumerates and the parser refuses, instead of vanishing from both.
+_PARSEABLE_SUFFIXES = frozenset({".pdf", ".xls", ".xlsx", ".xlsm"})
+
+#: Refusal causes seen in the corpus, mapped to the class a fix would address.
+#: A cause matching none of these is reported as UNCLASSIFIED rather than dropped
+#: into a bucket that happens to exist -- an unrecognised failure mode is a new
+#: finding, and silently folding it into "other" is how a class stops being
+#: noticed the moment it stops being new.
+_CAUSE_CLASSES: tuple[tuple[str, str], ...] = (
+    ("incomplete or ambiguous relative closing", "variable-envelope closing not recognised"),
+    ("incomplete variable-envelope composition", "variable-envelope composition incomplete"),
+    ("mixes fixed", "fixed and variable geometry mixed in one sheet"),
+    ("has a gap", "field geometry leaves a gap"),
+    ("has an overlap", "field geometry overlaps"),
+    ("declares duplicate", "duplicate declaration in one sheet"),
+    ("total positions", "declared total disagrees with parsed extent"),
+    ("no record-design sheets found", "no sheet carried a recognisable header"),
+    ("did not contain parseable field rows", "no field rows parsed from the document"),
+    ("missing type", "a field row declares no type"),
+    ("missing description", "a field row declares no description"),
+    ("misordered", "envelope composition markers out of order"),
+)
+
+
+@dataclass(frozen=True)
+class _Outcome:
+    """One design's classified parse result."""
+
+    modelo: str
+    design: str
+    kind: Literal["complete", "partial", "refused"]
+    detail: str
+
+
+def _bundled_designs() -> tuple[Path, ...]:
+    """Every parseable design file under the corpus, enumerated independently.
+
+    Recursive and suffix-only on purpose: it asks nothing of the parser, the
+    registry or any inventory, so it cannot inherit a narrowing any of them
+    acquires.
+    """
+    root = bundled_path(*_DESIGN_ROOT_PARTS)
+    return tuple(
+        sorted(path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in _PARSEABLE_SUFFIXES)
+    )
+
+
+def _cause_class(message: str) -> str:
+    for needle, label in _CAUSE_CLASSES:
+        if needle in message:
+            return label
+    return "UNCLASSIFIED -- a refusal shape this gate has not seen before"
+
+
+def _classify(path: Path) -> _Outcome:
+    root = bundled_path(*_DESIGN_ROOT_PARTS)
+    modelo = path.relative_to(root).parts[0].removeprefix("modelo_")
+    try:
+        extraction = extract_record_design(path)
+    except Exception as exc:
+        # Catching broadly is the point rather than a shortcut: this gate classifies
+        # EVERY refusal shape, including ones nobody has described. Narrowing to the
+        # exception types currently known would let a new one escape as an error
+        # rather than appear on the worklist, which is the silence being removed.
+        return _Outcome(modelo=modelo, design=path.name, kind="refused", detail=_cause_class(str(exc)))
+    if extraction.is_complete:
+        return _Outcome(modelo=modelo, design=path.name, kind="complete", detail="")
+    return _Outcome(
+        modelo=modelo,
+        design=path.name,
+        kind="partial",
+        detail=", ".join(f"{item.name!r} ({item.reason})" for item in extraction.skipped),
+    )
+
+
+def _outcomes() -> tuple[_Outcome, ...]:
+    return tuple(_classify(path) for path in _bundled_designs())
+
+
+def test_the_corpus_enumeration_reaches_designs_across_many_modelos() -> None:
+    """Anti-vacuity: a gate over an empty or one-modelo corpus proves nothing.
+
+    Gated on the property that the walk reaches a broad corpus, not on how many
+    designs it holds. If the corpus path moves or the suffix set stops matching
+    what AEAT publishes, every assertion below would pass over nothing, and that
+    silence is exactly the failure mode this module exists to remove.
+    """
+    designs = _bundled_designs()
+    assert designs, "no bundled design was enumerated at all; the corpus path or suffix set has moved"
+    modelos = {path.relative_to(bundled_path(*_DESIGN_ROOT_PARTS)).parts[0] for path in designs}
+    assert len(modelos) > 10, f"only {len(modelos)} modelo director(ies) reached; the walk has narrowed"
+
+
+def test_every_bundled_design_produces_a_classified_outcome() -> None:
+    """No design may be silent: each is complete, partial, or refused with a cause.
+
+    This is the "never silence" property and it PASSES -- it asserts the parser
+    reaches every design and says something about each, not that it succeeds. The
+    worklist below is what says how many succeed.
+    """
+    outcomes = _outcomes()
+    assert len(outcomes) == len(_bundled_designs())
+
+    unclassified = [
+        f"modelo {outcome.modelo} design {outcome.design!r}: {outcome.detail}"
+        for outcome in outcomes
+        if outcome.kind == "refused" and outcome.detail.startswith("UNCLASSIFIED")
+    ]
+    assert not unclassified, (
+        "these designs refuse with a shape this gate does not recognise. That is a NEW failure "
+        "class, not an 'other' bucket -- name it in the cause table so it can be grouped and "
+        "fixed rather than absorbed:\n  " + "\n  ".join(unclassified)
+    )
+
+    silent = [
+        f"modelo {outcome.modelo} design {outcome.design!r}"
+        for outcome in outcomes
+        if outcome.kind == "partial" and not outcome.detail
+    ]
+    assert not silent, (
+        "these designs report a partial read without naming what was skipped, so the completeness "
+        "notion is present but empty:\n  " + "\n  ".join(silent)
+    )
+
+
+def test_a_design_that_parses_completely_is_never_reported_as_failing() -> None:
+    """The bite direction people skip, and the more expensive one to get wrong.
+
+    The overwhelming majority of the corpus reads cleanly. A gate wrong in the
+    STRICT direction would condemn all of them at once, which is a louder failure
+    than the one this module exists to catch and a much easier one to ship by
+    accident while chasing the interesting direction.
+    """
+    outcomes = _outcomes()
+    complete = [outcome for outcome in outcomes if outcome.kind == "complete"]
+
+    assert complete, (
+        "not one bundled design parses completely. Either the parser has regressed across the "
+        "whole corpus or this gate's classification is inverted; both are worse than the gap it "
+        "was built to report."
+    )
+    assert all(not outcome.detail for outcome in complete), (
+        "a design classified complete carries skipped-sheet detail, so 'complete' and 'partial' "
+        "are not disjoint and the classification cannot be trusted in either direction"
+    )
+    assert len(complete) > len(outcomes) // 2, (
+        f"only {len(complete)} of {len(outcomes)} designs parse completely. This gate does not pin "
+        "a count, but a corpus where most designs fail means the parser regressed rather than the "
+        "corpus grew, and the worklist below would be reporting the wrong thing entirely."
+    )
+
+
+def test_no_bundled_design_is_unreadable_or_only_partly_read() -> None:
+    """THE WORKLIST. Landed red deliberately; the failures are the finding.
+
+    Every design the parser cannot fully read, grouped by the class of defect a
+    fix would address, so the reader sees a handful of fixable classes rather than
+    a pile of unrelated files. Each entry names its modelo, its design and its
+    cause.
+
+    A partial read is listed alongside a refusal because both are work. Modelo
+    232's skipped ``TABLAS`` tab is very likely a legitimate lookup table rather
+    than a lost record -- but the extractor cannot tell a lookup tab from a
+    dropped record body, and neither can this gate, so it reports the fact and
+    declines to adjudicate. Deciding that one is benign is a judgement someone
+    makes with the design open, and recording that judgement is a registry act,
+    not an allowlist entry here.
+
+    This test goes green when the parser reads every bundled design, which is the
+    stated goal rather than an aspiration -- so do not weaken it, exempt from it,
+    or narrow its enumeration to shorten the list.
+    """
+    outcomes = _outcomes()
+    grouped: dict[str, list[str]] = defaultdict(list)
+    for outcome in outcomes:
+        if outcome.kind == "complete":
+            continue
+        label = outcome.detail if outcome.kind == "refused" else "partial read: sheets skipped"
+        grouped[f"{outcome.kind.upper()} -- {label}"].append(f"modelo {outcome.modelo} {outcome.design!r}")
+
+    report = "\n".join(
+        f"  [{len(entries)}] {label}\n" + "\n".join(f"      {entry}" for entry in sorted(entries))
+        for label, entries in sorted(grouped.items())
+    )
+    readable = sum(1 for outcome in outcomes if outcome.kind == "complete")
+    assert not grouped, (
+        f"{len(outcomes) - readable} of {len(outcomes)} bundled designs are not fully read. Each is "
+        "a parser gap or a corpus defect and either way it is work; the grouping is by the class a "
+        "fix would address:\n" + report
+    )
