@@ -6,11 +6,13 @@ in the corpus unparsed and unreported indefinitely, and the only reason anyone
 knew how many did was that somebody counted by hand. A count taken by hand is not
 a gate -- it is correct on the day it is taken and silent every day after.
 
-THE PROPERTY. Every bundled design must resolve to exactly one of three outcomes:
-it parses completely, it parses partially with every skipped sheet named and
-reasoned, or it refuses with a stated cause. A design producing none of those --
-or never reached by the parser at all -- fails here. The third case is the one
-that matters most and is the reason the enumeration below is deliberately naive.
+THE PROPERTY. Every bundled design must resolve to exactly one of four outcomes:
+it parses completely, it parses completely only because a declared and sourced
+correction fixed a blank AEAT's own publication left, it parses partially with
+every skipped sheet named and reasoned, or it refuses with a stated cause. A
+design producing none of those -- or never reached by the parser at all --
+fails here. The refusal case is the one that matters most and is the reason the
+enumeration below is deliberately naive.
 
 WHY THE ENUMERATION IS INDEPENDENT, and it is the lesson this module is built on.
 The sibling guard in ``test_revision_span_matches_published_designs`` exists to

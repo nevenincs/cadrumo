@@ -168,7 +168,7 @@ class TestBundledManualCorpus:
         """Every committed manual manifest rejects synthetic placeholders and rehashes cleanly."""
         manuals_root = bundled_path("corpus", "manuals")
         manifest_paths = sorted(
-            scan_directory(manuals_root, pattern='manifest.json', recursive=True),
+            scan_directory(manuals_root, pattern="manifest.json", recursive=True),
             key=lambda path: path.relative_to(manuals_root).as_posix(),
         )
         checked: list[str] = []

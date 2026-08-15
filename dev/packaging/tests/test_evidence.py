@@ -12,6 +12,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core import iter_directory
+
 from .._command import run_command
 from .._hashing import sha256_path
 from .._proof_ledger import record_proof, reset_proof_ledger
@@ -141,7 +143,7 @@ def test_distribution_evidence_rejects_different_or_mutated_cohort(tmp_path: Pat
     """Evidence cannot be presented with cohort bytes other than those it records."""
     evidence = _passing_evidence(tmp_path)
     destination = write_distribution_evidence(tmp_path / "evidence", evidence)
-    artifact = next((tmp_path / "cohort" / "artifacts").iterdir())
+    artifact = next(iter_directory(tmp_path / "cohort" / "artifacts"))
     artifact.write_bytes(b"x" * artifact.stat().st_size)
 
     with pytest.raises(SystemExit, match="digest mismatch"):

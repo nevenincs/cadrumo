@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
+
 from .. import RegistryRevisionInspection, bundled_revision_inspection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -47,7 +49,7 @@ _LEGACY_STATIC_SYMBOLS = frozenset(
 
 
 def _python_sources(roots: Iterable[Path]) -> tuple[Path, ...]:
-    return tuple(path for root in roots for path in root.rglob("*.py"))
+    return tuple(path for root in roots for path in scan_directory(root, pattern="*.py", recursive=True))
 
 
 def _attribute_path(node: ast.expr) -> str | None:

@@ -19,6 +19,7 @@ from typing import Any, Final
 
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 from ..marketplace_publish import (
@@ -230,7 +231,7 @@ def test_a_multi_plugin_cohort_that_refuses_partway_mutates_nothing(tmp_path: Pa
     _write_plugin(marketplace, "cadrumo", body="published cadrumo")
     before = {
         path.relative_to(marketplace).as_posix(): path.read_bytes()
-        for path in sorted(marketplace.rglob("*"))
+        for path in scan_directory(marketplace, recursive=True)
         if path.is_file()
     }
 
@@ -246,7 +247,7 @@ def test_a_multi_plugin_cohort_that_refuses_partway_mutates_nothing(tmp_path: Pa
 
     after = {
         path.relative_to(marketplace).as_posix(): path.read_bytes()
-        for path in sorted(marketplace.rglob("*"))
+        for path in scan_directory(marketplace, recursive=True)
         if path.is_file()
     }
     assert after == before, "a refused publish mutated the marketplace tree"

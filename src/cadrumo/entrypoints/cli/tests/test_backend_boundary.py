@@ -195,7 +195,8 @@ def test_manual_ledger_import_and_review_boundaries_stay_backend_owned() -> None
     # ledger backend package so the backend-owned tokens are found wherever the
     # decomposition relocated them.
     ledger_backend = "\n".join(
-        path.read_text(encoding="utf-8") for path in scan_directory(REPO_ROOT / "src/cadrumo/application/ledger", pattern="*.py")
+        path.read_text(encoding="utf-8")
+        for path in scan_directory(REPO_ROOT / "src/cadrumo/application/ledger", pattern="*.py")
     )
     forbidden_cli_tokens = (
         "CsvProvider",
@@ -409,7 +410,12 @@ def test_profile_backend_schema_deleted_package_has_no_surviving_imports() -> No
         REPO_ROOT / "src" / "cadrumo" / "application",
         REPO_ROOT / "src" / "cadrumo" / "entrypoints",
     )
-    scanned_files = [path for root in search_roots for path in scan_directory(root, pattern="*.py", recursive=True) if path != Path(__file__)]
+    scanned_files = [
+        path
+        for root in search_roots
+        for path in scan_directory(root, pattern="*.py", recursive=True)
+        if path != Path(__file__)
+    ]
     assert len(scanned_files) > 500, (
         f"scanned only {len(scanned_files)} modules under application/ and entrypoints/; the "
         "scan corpus collapsed (a package relocation or rename), so an empty offender list "

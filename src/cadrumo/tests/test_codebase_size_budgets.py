@@ -223,7 +223,8 @@ def test_callable_ratchet_reports_growth_past_its_limit(tmp_path: Path) -> None:
     _write_callable_module(tmp_path, "held.py", "held", CALLABLE_POLICY.default_limit - 1)
 
     items = tuple(
-        (candidate, ast.parse(candidate.read_text(encoding="utf-8"))) for candidate in scan_directory(tmp_path, pattern="*.py", recursive=True)
+        (candidate, ast.parse(candidate.read_text(encoding="utf-8")))
+        for candidate in scan_directory(tmp_path, pattern="*.py", recursive=True)
     )
     actuals = scan_callable_lines(items=items, root=tmp_path)
     measured = len(path.read_text(encoding="utf-8").splitlines())

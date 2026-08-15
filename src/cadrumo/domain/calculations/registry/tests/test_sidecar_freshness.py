@@ -20,6 +20,8 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
+
 from .._validate_evidence import _read_manual_pdf_sidecar, _validated_sidecar_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -47,7 +49,7 @@ def test_manual_pdf_corpus_text_sidecar_mismatch_returns_none() -> None:
     resolution broke (``None`` from a lookup failure satisfies the ``None``
     assertion).
     """
-    sidecars = sorted(_MANUAL_CORPUS_TEXT_ROOT.rglob(f"*{_CORPUS_TEXT_SUFFIX}"))
+    sidecars = scan_directory(_MANUAL_CORPUS_TEXT_ROOT, pattern=f"*{_CORPUS_TEXT_SUFFIX}", recursive=True)
     assert sidecars, "no manual corpus text sidecars found — the corpus text extraction must run first"
 
     first_sidecar = sidecars[0]
@@ -87,7 +89,7 @@ def test_manual_pdf_corpus_text_sidecar_mismatch_returns_none() -> None:
 
 def _first_shipped_sidecar() -> tuple[str, dict[str, object]]:
     """Return the corpus path and decoded payload of one shipped sidecar."""
-    sidecars = sorted(_MANUAL_CORPUS_TEXT_ROOT.rglob(f"*{_CORPUS_TEXT_SUFFIX}"))
+    sidecars = scan_directory(_MANUAL_CORPUS_TEXT_ROOT, pattern=f"*{_CORPUS_TEXT_SUFFIX}", recursive=True)
     assert sidecars, "no manual corpus text sidecars found"
     payload: dict[str, object] = json.loads(sidecars[0].read_text(encoding="utf-8"))
     corpus_path = payload["corpus_path"]

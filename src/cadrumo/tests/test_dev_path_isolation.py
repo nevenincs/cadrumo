@@ -133,7 +133,9 @@ def _planted_module(root: Path, rel: str, body: str) -> Path:
 def _live_tree_scan_inputs() -> tuple[list[Path], list[Path], tuple[str, ...]]:
     """Return ``(all_py_files, shipped_subset, exclude_globs)`` for the real tree."""
     globs = wheel_exclude_globs()
-    py_files = sorted(p for p in scan_directory(_PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts)
+    py_files = sorted(
+        p for p in scan_directory(_PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
+    )
     shipped = [p for p in py_files if is_shipped_module(p, src_root=_SRC_ROOT, exclude_globs=globs)]
     return py_files, shipped, globs
 

@@ -227,7 +227,11 @@ def _cli_source_modules(cli_root: Path) -> list[Path]:
     identically to a clean tree, so the floor here guarantees every consumer's
     walk actually reached the CLI surface.
     """
-    modules = [py_file for py_file in scan_directory(cli_root, pattern="*.py", recursive=True) if not py_file.name.startswith("test_")]
+    modules = [
+        py_file
+        for py_file in scan_directory(cli_root, pattern="*.py", recursive=True)
+        if not py_file.name.startswith("test_")
+    ]
     assert len(modules) > 100, (
         f"scanned only {len(modules)} CLI modules under {cli_root}; the scan corpus collapsed (a "
         "package relocation or rename), so an empty offender map would mean 'nothing was checked' "

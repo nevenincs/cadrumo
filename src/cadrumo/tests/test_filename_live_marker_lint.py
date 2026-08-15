@@ -118,7 +118,11 @@ def _live_prefixed_test_modules() -> list[Path]:
     ``git status --short -- <file>``: an untracked path is a peer's work in
     progress, not a regression.
     """
-    return sorted(path for path in scan_directory(SRC_CADRUMO, pattern='test_live_*.py', recursive=True) if path.name != "__init__.py")
+    return sorted(
+        path
+        for path in scan_directory(SRC_CADRUMO, pattern="test_live_*.py", recursive=True)
+        if path.name != "__init__.py"
+    )
 
 
 _LIVE_MODULES = _live_prefixed_test_modules()

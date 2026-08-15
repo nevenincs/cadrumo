@@ -14,6 +14,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import iter_directory
+
 from .._proof_ledger import (
     ProofContractError,
     record_proof,
@@ -84,7 +86,7 @@ def _support_claims() -> set[str]:
     return claims
 
 
-@pytest.mark.parametrize("module", sorted(path.name for path in _PACKAGING.glob("smoke_*.py")))
+@pytest.mark.parametrize("module", sorted(path.name for path in iter_directory(_PACKAGING, pattern="smoke_*.py")))
 def test_every_declared_claim_has_an_assertion_that_records_it(module: str) -> None:
     """A form may not promise a proof no assertion anywhere can record.
 

@@ -25,7 +25,7 @@ from ....adapters.persistence.storage import (
     StorageCustodyDisposition,
     StorageNamespaceScope,
 )
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, scan_directory
 from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.classification import SensitivityClass
 from ....core.errors import CoreError, get_registered_error_code
@@ -443,7 +443,9 @@ class UnexpectedFailureExecutor:
 
 def _assert_sensitive_detail_absent_from_operation_bytes(storage_root: Path) -> None:
     forbidden = _SENSITIVE_EXCEPTION_DETAIL.encode("utf-8")
-    persisted = b"".join(path.read_bytes() for path in storage_root.rglob("*") if path.is_file())
+    persisted = b"".join(
+        path.read_bytes() for path in scan_directory(storage_root, recursive=True) if path.is_file()
+    )
     assert forbidden not in persisted
 
 

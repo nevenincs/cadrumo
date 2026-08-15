@@ -9,6 +9,7 @@ from typing import Final
 
 import pytest
 
+from cadrumo.core import iter_directory
 from dev._paths import UTF_8
 
 from ..proof_cache import (
@@ -127,7 +128,7 @@ def test_store_is_bounded_with_oldest_first_eviction(scoped_repo: Path, tmp_path
         # tie on st_mtime and make the oldest-first order platform-dependent.
         os.utime(path, (1_000_000 + index, 1_000_000 + index))
         paths.append(path)
-    survivors = sorted(p.name for p in cache.glob("*.json"))
+    survivors = sorted(p.name for p in iter_directory(cache, pattern="*.json"))
     assert len(survivors) == 3
     assert paths[-1].name in survivors
     assert paths[0].name not in survivors and paths[1].name not in survivors

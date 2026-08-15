@@ -16,6 +16,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
+
 from .._command import CommandResult, run_command
 from ._release_cohort_support import release_cohort
 from ..cohort_manifest import LoadedReleaseCohort
@@ -186,7 +188,7 @@ def test_emit_writes_a_flat_record_both_gates_can_read(tmp_path: Path) -> None:
     assert path.parent == evidence_dir.resolve()
     assert path.name.startswith("python-linux-x86-64-")
     # The flat glob both gates use finds exactly this record.
-    flat = sorted(evidence_dir.glob("*.json"))
+    flat = scan_directory(evidence_dir, pattern="*.json")
     assert flat == [path]
     # It re-validates through the tamper-evident schema, PASSED, correct row.
     reloaded = DistributionEvidence.model_validate_json(path.read_text(encoding="utf-8"))
@@ -235,7 +237,7 @@ def test_cli_emits_from_oracle_json_a_lane_already_produced(tmp_path: Path) -> N
     )
 
     assert exit_code == 0
-    records = sorted(evidence_dir.glob("scoop-windows-x86-64-*.json"))
+    records = scan_directory(evidence_dir, pattern="scoop-windows-x86-64-*.json")
     assert len(records) == 1
     reloaded = DistributionEvidence.model_validate_json(records[0].read_text(encoding="utf-8"))
     assert reloaded.row_id == "scoop-windows-x86-64"
@@ -516,7 +518,7 @@ def test_cli_refuses_a_version_mismatched_capture_against_the_cohort(tmp_path: P
                 str(evidence_dir),
             ],
         )
-    assert not list(evidence_dir.glob("*.json")) if evidence_dir.exists() else True
+    assert not scan_directory(evidence_dir, pattern="*.json") if evidence_dir.exists() else True
 
 
 def test_destination_version_mismatch_is_refused(tmp_path: Path) -> None:

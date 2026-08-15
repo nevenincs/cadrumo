@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
 from ....core.i18n import extract_placeholders, lookup_translation_entry
 from ....entrypoints.cli import command_schema_refs
 from ....entrypoints.mcp import build_verb_input_schemas
@@ -607,7 +608,7 @@ def test_retired_verification_groups_have_no_parallel_action_or_localization_aut
 
 
 def test_modelo_application_production_has_no_presentation_localization() -> None:
-    for path in (_ROOT / _MODELO_PATH_PREFIX).glob("*.py"):
+    for path in scan_directory(_ROOT / _MODELO_PATH_PREFIX, pattern="*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "tr":
@@ -692,7 +693,7 @@ def test_typed_record_builders_do_not_embed_presentation_or_infer_from_finding_t
 
 def test_every_production_verification_finding_constructor_is_locale_neutral() -> None:
     observed_modules: set[str] = set()
-    for path in (_ROOT / "src/cadrumo").rglob("*.py"):
+    for path in scan_directory(_ROOT / "src/cadrumo", pattern="*.py", recursive=True):
         if "tests" in path.parts:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -754,7 +755,7 @@ def test_every_production_verification_finding_constructor_is_locale_neutral() -
 def test_intentional_record_level_finding_owners_are_reasoned_and_stale_failing() -> None:
     """Protect record-level attribution decisions without freezing a constructor tally."""
     constructors_by_owner: dict[tuple[str, str], list[ast.Call]] = {}
-    for path in (_ROOT / _MODELO_PATH_PREFIX).glob("*.py"):
+    for path in scan_directory(_ROOT / _MODELO_PATH_PREFIX, pattern="*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         parents = {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
         relative = path.relative_to(_ROOT).as_posix()

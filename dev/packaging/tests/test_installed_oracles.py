@@ -25,6 +25,7 @@ from typing import IO, Any, cast
 import pytest
 
 from cadrumo.agent import materialise_marketplace
+from cadrumo.core import iter_directory, scan_directory
 from dev._paths import REPO_ROOT
 
 from .._hashing import sha256_path
@@ -175,14 +176,14 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
             )
         artifacts = {
             "cadrumo": root_wheel.name,
-            "cadrumo-sdist": next(cohort_dir.glob("cadrumo-*.tar.gz")).name,
+            "cadrumo-sdist": next(iter_directory(cohort_dir, pattern="cadrumo-*.tar.gz")).name,
             "cadrumo-data-manuals": data_wheels[0].name,
             "cadrumo-data-manuals-sdist": next(
-                cohort_dir.glob("cadrumo_data_manuals-*.tar.gz"),
+                iter_directory(cohort_dir, pattern="cadrumo_data_manuals-*.tar.gz"),
             ).name,
             "cadrumo-data-official": data_wheels[1].name,
             "cadrumo-data-official-sdist": next(
-                cohort_dir.glob("cadrumo_data_official-*.tar.gz"),
+                iter_directory(cohort_dir, pattern="cadrumo_data_official-*.tar.gz"),
             ).name,
         }
         project_metadata = tomllib.loads(
@@ -582,7 +583,7 @@ def test_real_client_emission_cli_mints_a_sanctioned_record(
     )
 
     assert exit_code == 0
-    records = sorted(evidence_dir.glob("claude-desktop-mcpb-*.json"))
+    records = scan_directory(evidence_dir, pattern="claude-desktop-mcpb-*.json")
     assert len(records) == 1
     record = DistributionEvidence.model_validate_json(records[0].read_text(encoding="utf-8"))
     assert record.row_id == "claude-desktop-mcpb"

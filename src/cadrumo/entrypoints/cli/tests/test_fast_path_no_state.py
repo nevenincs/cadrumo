@@ -100,7 +100,7 @@ def test_version_does_not_provision_storage(_sessionless_root: Path) -> None:
     assert result.exit_code == 0, result.output
     assert not (_sessionless_root / storage_location(StorageCategory.BUCKETS).relative_path()).exists()
     assert not pointer_path(_sessionless_root).exists()
-    assert not any(iter_directory(_sessionless_root, pattern='*.db', recursive=True))
+    assert not any(iter_directory(_sessionless_root, pattern="*.db", recursive=True))
 
 
 def test_help_does_not_provision_storage(_sessionless_root: Path) -> None:
@@ -111,4 +111,4 @@ def test_help_does_not_provision_storage(_sessionless_root: Path) -> None:
     assert result.exit_code == 0, result.output
     assert not (_sessionless_root / storage_location(StorageCategory.BUCKETS).relative_path()).exists()
     assert not pointer_path(_sessionless_root).exists()
-    assert not any(iter_directory(_sessionless_root, pattern='*.db', recursive=True))
+    assert not any(iter_directory(_sessionless_root, pattern="*.db", recursive=True))

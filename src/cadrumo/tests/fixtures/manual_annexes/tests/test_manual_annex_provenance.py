@@ -65,7 +65,11 @@ def _annex_pdfs() -> list[Path]:
     absolute path already contains a ``tests`` segment (``src/cadrumo/tests/``),
     so filtering on the absolute parts would discard the whole corpus.
     """
-    return sorted(p for p in scan_directory(_ANNEX_ROOT, pattern="*.pdf", recursive=True) if "tests" not in p.relative_to(_ANNEX_ROOT).parts)
+    return sorted(
+        p
+        for p in scan_directory(_ANNEX_ROOT, pattern="*.pdf", recursive=True)
+        if "tests" not in p.relative_to(_ANNEX_ROOT).parts
+    )
 
 
 _PDFS = _annex_pdfs()
