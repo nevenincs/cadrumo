@@ -116,8 +116,13 @@ from .._export_field_kind import CasillaFieldKind
 from ._errors import RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
 from ._record_design import extract_record_design
-from ._record_design_schema import RecordDesignField, RecordDesignSheet
-from ._schema import ExportLayoutDefinition, ExportRecordDefinition, ModeloRevision, SourceReference
+from ._schema import (
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+    M303FilingEnvelopeDefinition,
+    ModeloRevision,
+    SourceReference,
+)
 
 #: AEAT's own obligatoriness marking, read from the column its designs head
 #: ``Oblig.`` (which the parser lands in ``RecordDesignField.validation``).
@@ -375,14 +380,27 @@ def _read_design_sheets(source: SourceReference) -> tuple[RecordDesignSheet, ...
         )
 
 
+def _envelope_written_positions(envelope: M303FilingEnvelopeDefinition) -> set[tuple[int, int]]:
+    written: set[tuple[int, int]] = set()
+    offset = 1
+    for field in envelope.prefix_fields:
+        written.add((offset, field.length))
+        offset += field.length
+    return written
+
+
 def _missing_report(
     sheets: Sequence[RecordDesignSheet],
     records: Sequence[ExportRecordDefinition],
+    *,
+    envelope: M303FilingEnvelopeDefinition | None = None,
 ) -> tuple[int, int, list[str]]:
     """Return ``(required, missing, per-sheet lines)`` for one design against one layout."""
     layout_written: set[tuple[int, int]] = set()
     for record in records:
         layout_written |= _record_written_positions(record)
+    if envelope is not None:
+        layout_written |= _envelope_written_positions(envelope)
     required_total = 0
     missing_total = 0
     lines: list[str] = []
@@ -390,13 +408,20 @@ def _missing_report(
         required = _required_positions(sheet)
         required_total += len(required)
         joined = _join_record(sheet, records)
-        written = _record_written_positions(joined) if joined is not None else layout_written
+        if joined is not None:
+            written = _record_written_positions(joined)
+        elif envelope is not None and sheet.name == envelope.record_identity:
+            written = _envelope_written_positions(envelope)
+        else:
+            written = layout_written
         missing = [position for position in required if (position.offset, position.length) not in written]
         missing_total += len(missing)
         if not missing:
             continue
         if joined is not None:
             scope = f"authored record {joined.id!r} (record_type {joined.record_type!r})"
+        elif envelope is not None and sheet.name == envelope.record_identity:
+            scope = f"filing envelope {envelope.record_identity!r}"
         else:
             scope = (
                 "NO authored record could be identified for this design record, so the check fell "
@@ -438,7 +463,7 @@ def _layout_failure(
         if isinstance(read, str):
             return f"{prefix}: fixed-width export layout {layout.id!r} cannot be checked because {read}"
         sheets.extend(read)
-    required, missing, lines = _missing_report(sheets, layout.records)
+    required, missing, lines = _missing_report(sheets, layout.records, envelope=layout.m303_filing_envelope)
     if not missing:
         return None
     coverage = 100.0 * (required - missing) / required if required else 0.0
