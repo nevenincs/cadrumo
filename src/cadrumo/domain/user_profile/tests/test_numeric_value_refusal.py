@@ -139,7 +139,9 @@ def test_an_unbounded_numeric_field_still_refuses_a_non_number() -> None:
     """
     unbounded = _field(key="base_imponible_assigned", field_type=ProfileFieldType.MONEY, minimum=None, maximum=None)
 
-    assert numeric_value_refusal(unbounded, "abc") is not None
+    refusal = numeric_value_refusal(unbounded, "abc")
+    assert refusal is not None
+    assert "base_imponible_assigned" in refusal
     assert numeric_value_refusal(unbounded, Decimal("-999999")) is None
 
 

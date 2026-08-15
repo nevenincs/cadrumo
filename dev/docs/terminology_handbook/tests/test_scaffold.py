@@ -27,6 +27,7 @@ from .. import (
     scaffold_handbook,
     serialise_concept,
 )
+from ._support import write_concept_fragment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -136,13 +137,6 @@ term_status = "preferred"
 """
 
 
-def _write(tmp_path: Path, name: str, content: str) -> Path:
-    concepts = tmp_path / "concepts"
-    concepts.mkdir(exist_ok=True)
-    (concepts / name).write_text(content, encoding="utf-8")
-    return concepts
-
-
 def _candidate(concept_id: str, domain: ConceptDomain, ref: str) -> EnrolmentCandidate:
     return EnrolmentCandidate(concept_id=concept_id, domain=domain, domain_refs=(ref,))
 
@@ -209,7 +203,7 @@ def test_scaffold_empty_seeds_one_preferred_term_from_source_label(tmp_path: Pat
 # PRESERVE: the anti-clobber proof (the whole point)
 # --------------------------------------------------------------------------
 def test_preserve_keeps_curated_prose_verbatim(tmp_path: Path) -> None:
-    concepts = _write(tmp_path, "modelo-303.toml", _CURATED)
+    concepts = write_concept_fragment(tmp_path, "modelo-303.toml", _CURATED)
     before = load_terminology_handbook(concepts).concept("modelo-303")
 
     candidates = {"modelo-303": _candidate("modelo-303", ConceptDomain.MODELO, "modelo:303")}
@@ -234,7 +228,7 @@ def test_preserve_keeps_curated_prose_verbatim(tmp_path: Path) -> None:
 
 
 def test_preserve_refreshes_only_machine_domain_refs_additively(tmp_path: Path) -> None:
-    concepts = _write(tmp_path, "modelo-303.toml", _CURATED)
+    concepts = write_concept_fragment(tmp_path, "modelo-303.toml", _CURATED)
     # The source now carries an extra domain_ref the curated fragment lacks.
     candidate = EnrolmentCandidate(
         concept_id="modelo-303",
@@ -261,8 +255,8 @@ def test_retire_tombstones_vanished_source_with_successor(tmp_path: Path) -> Non
         'lifecycle = "approved"',
         'lifecycle = "deprecated"',
     ).replace('related = ["prorrata"]', 'related = ["prorrata"]\nreplaced_by = "prorrata"')
-    concepts = _write(tmp_path, "modelo-303.toml", curated_with_successor)
-    _write(tmp_path, "prorrata.toml", _PRORRATA)
+    concepts = write_concept_fragment(tmp_path, "modelo-303.toml", curated_with_successor)
+    write_concept_fragment(tmp_path, "prorrata.toml", _PRORRATA)
 
     candidates = {"prorrata": _candidate("prorrata", ConceptDomain.CONCEPTO, "topic:x")}
     plan = scaffold_handbook(concepts, candidates, today=_TODAY, apply=True)
@@ -281,7 +275,7 @@ def test_retire_without_successor_flags_operator_and_never_deletes(tmp_path: Pat
     # A scaffold-managed concept (modelo-303 prefix) whose source vanished and
     # which has no replaced_by to infer.
     managed = _CURATED.replace('related = ["prorrata"]', "")
-    concepts = _write(tmp_path, "modelo-303.toml", managed)
+    concepts = write_concept_fragment(tmp_path, "modelo-303.toml", managed)
     plan = scaffold_handbook(concepts, {}, today=_TODAY, apply=True)
 
     retire_entries = plan.by_action(ScaffoldAction.RETIRE)
@@ -298,7 +292,7 @@ def test_retire_without_successor_flags_operator_and_never_deletes(tmp_path: Pat
 def test_hand_authored_concept_is_never_retired_by_scaffold(tmp_path: Path) -> None:
     # prorrata has no scaffold-source prefix: an empty candidate set must
     # leave it UNCHANGED, never retire it (it is human-managed vocabulary).
-    concepts = _write(tmp_path, "prorrata.toml", _PRORRATA)
+    concepts = write_concept_fragment(tmp_path, "prorrata.toml", _PRORRATA)
     plan = scaffold_handbook(concepts, {}, today=_TODAY, apply=True)
 
     assert plan.counts[ScaffoldAction.RETIRE] == 0
@@ -311,7 +305,7 @@ def test_hand_authored_concept_is_never_retired_by_scaffold(tmp_path: Path) -> N
 # Idempotence
 # --------------------------------------------------------------------------
 def test_second_scaffold_run_is_a_noop(tmp_path: Path) -> None:
-    concepts = _write(tmp_path, "modelo-303.toml", _CURATED)
+    concepts = write_concept_fragment(tmp_path, "modelo-303.toml", _CURATED)
     candidates = {"modelo-303": _candidate("modelo-303", ConceptDomain.MODELO, "modelo:303")}
 
     scaffold_handbook(concepts, candidates, today=_TODAY, apply=True)
@@ -337,7 +331,7 @@ def test_check_mode_does_not_write(tmp_path: Path) -> None:
 # Serializer round-trip
 # --------------------------------------------------------------------------
 def test_serialise_round_trips_a_curated_concept(tmp_path: Path) -> None:
-    concepts = _write(tmp_path, "modelo-303.toml", _CURATED)
+    concepts = write_concept_fragment(tmp_path, "modelo-303.toml", _CURATED)
     original = load_terminology_handbook(concepts).concept("modelo-303")
 
     rendered = serialise_concept(original)
@@ -356,7 +350,7 @@ def test_serialise_round_trips_seed_provenance_gender_and_replaced_by(tmp_path: 
     three with non-default values (per the anti-default roundtrip discipline)
     so such a regression surfaces as strict inequality.
     """
-    concepts = _write(tmp_path, "recargo-equivalencia.toml", _DEPRECATED_FULLY_POPULATED)
+    concepts = write_concept_fragment(tmp_path, "recargo-equivalencia.toml", _DEPRECATED_FULLY_POPULATED)
     original = load_terminology_handbook(concepts).concept("recargo-equivalencia")
 
     # Guard the fixture is not vacuous: the three fields are actually present.
@@ -380,7 +374,7 @@ def test_serialise_round_trip_equality_is_not_tautological(tmp_path: Path) -> No
     ``[concept]`` table makes the loader raise rather than silently re-default
     (per the anti-tautology clause of the roundtrip discipline).
     """
-    concepts = _write(tmp_path, "recargo-equivalencia.toml", _DEPRECATED_FULLY_POPULATED)
+    concepts = write_concept_fragment(tmp_path, "recargo-equivalencia.toml", _DEPRECATED_FULLY_POPULATED)
     original = load_terminology_handbook(concepts).concept("recargo-equivalencia")
     rendered = serialise_concept(original)
     toml_path = concepts / "recargo-equivalencia.toml"

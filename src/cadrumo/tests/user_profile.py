@@ -142,16 +142,21 @@ def register_cli_profile(*, label: str, facts: Mapping[str, str] | None = None) 
     the profile it just created.  Seeding a record writes no such envelope, which
     is why the two doors are not interchangeable and why this one exists.
 
-    The profile is born incomplete, exactly as the production credential door
-    leaves it; pass ``facts`` for the fields the test's assertions depend on.
+    The required placeholders are applied first and the caller's ``facts`` win
+    over them, which is what the retired scripted-creation flag did: a test that
+    only cares about a tax id should not have to restate the territorial and IVA
+    regime a readiness check will demand.
     """
     from ..application.user_profile import register_profile_with_credentials
     from ..core.config import load_settings
 
+    merged: dict[str, str] = dict(_REQUIRED_PLACEHOLDERS)
+    if facts:
+        merged.update(facts)
     outcome = register_profile_with_credentials(
         label=label,
         passphrase=load_settings().cadrumo_dev_test_database_password.get_secret_value(),
-        facts=tuple(UserProfileFact(path=path, value=value) for path, value in (facts or {}).items() if value),
+        facts=tuple(UserProfileFact(path=path, value=value) for path, value in merged.items() if value),
     )
     return outcome.profile_id
 

@@ -84,7 +84,7 @@ term_status = "preferred"
 """
 
 
-def _write(tmp_path: Path, name: str, content: str) -> Path:
+def write_concept_fragment(tmp_path: Path, name: str, content: str) -> Path:
     concepts = tmp_path / "concepts"
     concepts.mkdir(exist_ok=True)
     (concepts / name).write_text(content, encoding="utf-8")
@@ -94,7 +94,7 @@ def _write(tmp_path: Path, name: str, content: str) -> Path:
 def _handbook(tmp_path: Path, fragments: dict[str, str]) -> TerminologyHandbook:
     concepts: Path | None = None
     for name, content in fragments.items():
-        concepts = _write(tmp_path, name, content)
+        concepts = write_concept_fragment(tmp_path, name, content)
     assert concepts is not None
     return load_terminology_handbook(concepts)
 
@@ -308,14 +308,14 @@ def test_approved_completeness_fails_without_es_source(tmp_path: Path) -> None:
 # Full inventory + bundled exemplars
 # --------------------------------------------------------------------------
 def test_default_inventory_runs_through_the_loader_seam(tmp_path: Path) -> None:
-    concepts = _write(tmp_path, "prorrata.toml", _APPROVED)
+    concepts = write_concept_fragment(tmp_path, "prorrata.toml", _APPROVED)
     handbook = load_terminology_handbook(concepts, validators=default_handbook_validators(_SYNTHETIC_LEGAL))
     assert handbook.concept("prorrata").lifecycle.value == "approved"
 
 
 def test_default_inventory_trips_on_a_bad_handbook(tmp_path: Path) -> None:
     bad = _APPROVED.replace('lifecycle = "approved"', 'lifecycle = "approved"\nbroader = ["ghost"]')
-    concepts = _write(tmp_path, "prorrata.toml", bad)
+    concepts = write_concept_fragment(tmp_path, "prorrata.toml", bad)
     with pytest.raises(TerminologyValidationError, match="ghost"):
         load_terminology_handbook(concepts, validators=default_handbook_validators(_SYNTHETIC_LEGAL))
 

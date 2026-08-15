@@ -22,6 +22,20 @@ from ....tests._bucket_id_fixture import bucket_id  # noqa: F401
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from ...aggregation import CalculationSourceDiagnostic
+
+
+def operator_text(diagnostic: CalculationSourceDiagnostic) -> str:
+    """The text an OPERATOR sees, not the message field alone.
+
+    A diagnostic states the problem in ``message`` and the fix in ``remedy``,
+    which the calculate CLI projects onto the notice's ``suggestion`` and renders
+    as one line. Asserting against ``message`` alone would let a remedy fall off
+    the operator-facing surface without any test noticing.
+    """
+    remedy = getattr(diagnostic, "remedy", None)
+    message = diagnostic.message
+    return message if remedy is None else f"{message} {remedy}"
 
 
 @pytest.fixture(autouse=True)

@@ -87,7 +87,11 @@ class RecordDesignIntermediateField(_StrictModel):
     record_identity: str = Field(min_length=1)
     source_row: int = Field(gt=0)
     source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
-    ordinal: int = Field(gt=0)
+    #: The ordinal AEAT printed, verbatim -- a str because it is a printed LABEL
+    #: (``14bis``), never an arithmetic value. Mirrors
+    #: :attr:`domain.calculations.registry.RecordDesignField.ordinal`, which this
+    #: field is a straight 1:1 projection of.
+    ordinal: str | None = None
     offset: int = Field(gt=0)
     length: int = Field(gt=0)
     aeat_type: str = Field(min_length=1)
@@ -132,7 +136,7 @@ class RecordDesignIntermediateAuxiliaryEnvelopeHeader(_StrictModel):
         if tuple(field.source_cell for field in source_fields) != tuple(f"A{row}" for row in range(6, 19)):
             msg = "Modelo 390 auxiliary header source cells must retain official anchors"
             raise ValueError(msg)
-        if tuple(field.ordinal for field in source_fields) != tuple(range(1, 14)):
+        if tuple(field.ordinal for field in source_fields) != tuple(str(i) for i in range(1, 14)):
             msg = "Modelo 390 auxiliary header ordinals must retain official anchors"
             raise ValueError(msg)
         expected_contents = (

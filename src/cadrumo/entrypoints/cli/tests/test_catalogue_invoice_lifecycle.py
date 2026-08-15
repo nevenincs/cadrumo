@@ -22,20 +22,13 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....tests.cli_runner import invoke_cached_cli
+from ._cli_text_output_support import _line_value
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["active_profile_isolated_backend"]
 
 _RECEIVED_COUNTERPARTY_CIF = "A58818501"
-
-
-def _line_value(output: str, key: str) -> str:
-    for line in output.splitlines():
-        head, sep, tail = line.partition("\t")
-        if sep and head.strip() == key:
-            return tail.strip()
-    raise AssertionError(f"no {key!r} line in CLI output:\n{output}")
 
 
 def _create_catalogue_invoice(*, invoice_number: str = "2026-0142") -> str:

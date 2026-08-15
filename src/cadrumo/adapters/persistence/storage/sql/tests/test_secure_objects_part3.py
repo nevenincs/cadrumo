@@ -2,13 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from contextlib import contextmanager
-from typing import Any
-
 import pytest
 
-from ......tests.master_key import EphemeralMasterKeyProvider
 from ._secure_objects_support import (
     STORAGE_NAMESPACE_REGISTRY,
     UTC,
@@ -26,6 +21,7 @@ from ._secure_objects_support import (
     SensitivityClass,
     Settings,
     StorageValidationError,
+    _ephemeral_secure_repo,
     create_engine_from_settings,
     datetime,
     event,
@@ -34,21 +30,6 @@ from ._secure_objects_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-@contextmanager
-def _ephemeral_secure_repo(
-    tmp_path: Path,
-    database_name: str,
-) -> Iterator[tuple[Path, Any, SecureObjectRepository]]:
-    with EphemeralMasterKeyProvider():
-        db_path = tmp_path / database_name
-        engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
-        try:
-            yield db_path, engine, SecureObjectRepository(engine=engine)
-        finally:
-            engine.dispose()
 
 
 def test_secure_object_save_many_revision_conflict_rolls_back_batch(tmp_path: Path) -> None:
