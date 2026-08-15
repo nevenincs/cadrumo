@@ -195,6 +195,7 @@ def test_every_durable_format_carries_a_frozen_floor() -> None:
                 "profile_capsule_commit",
                 "profile_capsule_password_envelope",
                 "profile_capsule_recovery_envelope",
+                "profile_record",
                 "secret_index",
             ),
         ),
@@ -207,6 +208,7 @@ def test_every_durable_format_carries_a_frozen_floor() -> None:
                 "profile_capsule_commit",
                 "profile_capsule_password_envelope",
                 "profile_capsule_recovery_envelope",
+                "profile_record",
             ),
         ),
         # Freezing only the substrate leaves every other durable format bare.
@@ -220,6 +222,7 @@ def test_every_durable_format_carries_a_frozen_floor() -> None:
                 "profile_capsule_commit",
                 "profile_capsule_password_envelope",
                 "profile_capsule_recovery_envelope",
+                "profile_record",
                 "secret_index",
             ),
         ),

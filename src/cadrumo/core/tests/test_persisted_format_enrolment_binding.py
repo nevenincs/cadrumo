@@ -59,6 +59,8 @@ VERSIONED_FORMAT_IMPLEMENTATIONS: Final[Mapping[str, str]] = {
     "secret_index": "SECRET_INDEX_SCHEMA_VERSION",
     "login_throttle": "LOGIN_THROTTLE_SCHEMA_VERSION",
     "config_reset_journal": "CONFIG_RESET_SCHEMA_VERSION",
+    "profile_record": "PROFILE_RECORD_SCHEMA_VERSION",
+    "participation_index": "PARTICIPATION_INDEX_SCHEMA_VERSION",
 }
 """Inventory key -> the module-level version constant that declares its format.
 
@@ -102,10 +104,6 @@ CONSTANTS_OUTSIDE_THE_INVENTORY: Final[Mapping[str, str]] = {
     "SIDECAR_SCHEMA_VERSION": "Bundled registry source sidecar; ships with the code, same grounds as the corpus.",
     "ENVELOPE_SCHEMA_VERSION": "The CLI JSON wire envelope. A transport contract, never written to disk as a record.",
     "SCHEMA_VERSION": "Telemetry wire schema; its rows persist under their own enrolled keys, the wire shape does not.",
-    "ASSETS_SCHEMA_VERSION": "Domain record shape, persisted inside a secure object rather than as its own file.",
-    "BIENES_INVERSION_SCHEMA_VERSION": "Domain record shape, persisted inside a secure object rather than as its own file.",
-    "INVENTORY_SCHEMA_VERSION": "Domain record shape, persisted inside a secure object rather than as its own file.",
-    "PRORRATA_REGISTER_SCHEMA_VERSION": "Domain record shape, persisted inside a secure object rather than as its own file.",
     "CACHE_SCHEMA_VERSION": "Locale catalogue cache, rebuilt from the shipped catalogues on any mismatch.",
     "COMPILED_CACHE_SCHEMA_VERSION": "Compiled registry cache, rebuilt from the bundled registry tree on any mismatch.",
     "REGISTRY_TREE_CACHE_SCHEMA_VERSION": "Registry tree cache, rebuilt from the bundled registry tree on any mismatch.",
@@ -125,14 +123,6 @@ container, or a token naming an enrolled format's version.
 """
 
 CONSTANTS_AWAITING_CLASSIFICATION: Final[Mapping[str, str]] = {
-    "PROFILE_RECORD_SCHEMA_VERSION": (
-        "The encrypted profile record -- taxpayer facts, and already bumped once, so this axis has "
-        "moved unobserved on the product's most sensitive persisted data."
-    ),
-    "PARTICIPATION_INDEX_SCHEMA_VERSION": (
-        "Transaction-to-revision index. A real REGENERABLE candidate rather than a default: its own "
-        "rule declares it a derived cache rebuildable from the revision catalogue."
-    ),
     "CUSTODY_TRANSACTION_SCHEMA_VERSION": "Profile-deletion transaction journal; carries lifecycle facts after real effects.",
     "CUSTODY_RECEIPT_SCHEMA_VERSION": "Per-owner deletion receipts; the durable evidence that each owner step ran.",
     "SECRET_RECORD_SCHEMA_VERSION": "Secret-store record shape; sits beneath the enrolled secret index.",
@@ -150,6 +140,15 @@ CONSTANTS_AWAITING_CLASSIFICATION: Final[Mapping[str, str]] = {
         "supplies knowledge the application does not hold, and REGENERABLE means the application "
         "rebuilds it."
     ),
+    "ASSETS_SCHEMA_VERSION": (
+        "Taxpayer asset register. Moved here from the exclusions: it was excused as a shape living "
+        "inside a secure object, and being inside an enrolled container does not put a record's own "
+        "grammar under that container's floor. It carries a strict version validator on persisted "
+        "taxpayer data and needs a class of its own."
+    ),
+    "BIENES_INVERSION_SCHEMA_VERSION": "Investment-goods register; same correction as the asset register above.",
+    "INVENTORY_SCHEMA_VERSION": "Taxpayer inventory register; same correction as the asset register above.",
+    "PRORRATA_REGISTER_SCHEMA_VERSION": "Prorrata register; same correction as the asset register above.",
     "PROFILE_SESSION_RETIREMENT_SCHEMA_VERSION": (
         "Private crash-window sidecar for an interrupted session-key swap; unrecognised by the "
         "storage taxonomy, so a key would assert a boundary nothing else acknowledges."
@@ -303,9 +302,9 @@ def test_the_unclassified_gap_is_a_number_a_reader_can_see() -> None:
     Raise it only when a genuinely new format arrives unclassified; lower it as
     each one is argued. Never adjust it to make a run pass.
     """
-    assert len(CONSTANTS_AWAITING_CLASSIFICATION) == 16, (
+    assert len(CONSTANTS_AWAITING_CLASSIFICATION) == 18, (
         f"{len(CONSTANTS_AWAITING_CLASSIFICATION)} persisted formats await a durability class, not "
-        "the 16 recorded here. If one has been argued, remove it from "
+        "the 18 recorded here. If one has been argued, remove it from "
         "CONSTANTS_AWAITING_CLASSIFICATION and lower this number in the same change; if a new "
         "format arrived unclassified, raise it deliberately rather than to restore green."
     )

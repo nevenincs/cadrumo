@@ -140,6 +140,15 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     # into total loss. Optional to CREATE is not the same as discardable once
     # created.
     "profile_capsule_recovery_envelope": PersistedFormatClass.DURABLE,
+    # The encrypted profile record: the taxpayer's own facts. Its version is a
+    # SEPARATE durability axis from the secure object that carries it -- the
+    # envelope governs how the bytes decrypt, this governs whether the record
+    # inside them can still be read and its lineage authenticated. A frozen
+    # floor on the container does not cover the grammar within it, so an
+    # unreadable record is unreadable however sound the envelope is. It has
+    # already been bumped once, so that axis has been moving unobserved on the
+    # most sensitive data the product holds.
+    "profile_record": PersistedFormatClass.DURABLE,
     # The per-bucket SQLite file holding the encrypted secure_objects table --
     # every filing, ledger entry, and evidence record a taxpayer has. The rows
     # inside are already DURABLE under "secure_object"; the file that carries
@@ -185,6 +194,14 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     "auth_acquisition_lock": PersistedFormatClass.REGENERABLE,
     "validation_verdict_cache_entry": PersistedFormatClass.REGENERABLE,
     "llm_cache_entry": PersistedFormatClass.REGENERABLE,
+    # REGENERABLE on the strength of its own contract rather than by default:
+    # the transaction-to-revision index is a derived read-side cache, rebuilt
+    # from the finalized revision catalogue, and the ledger rule requires
+    # lifecycle correctness to rely on that live scan rather than on this
+    # index's freshness. Delete-and-rebuild is therefore the CORRECT response
+    # to a version mismatch, which is exactly what the class means -- and it is
+    # the one format here whose class is a finding rather than a formality.
+    "participation_index": PersistedFormatClass.REGENERABLE,
 }
 
 
