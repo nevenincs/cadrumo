@@ -15,6 +15,7 @@ import pytest
 from PIL import Image
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.config import override_settings
 from ....domain.transactions import (
     RawProvenance,
@@ -34,6 +35,11 @@ from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._evidence import PurchaseInvoiceEvidenceService
 
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
+
+
+def _json_object(value: object) -> dict[str, object]:
+    """Narrow one decoded JSON value to a string-keyed object for typed subscripting."""
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(value)
 
 
 def _json_array(value: object) -> list[object]:

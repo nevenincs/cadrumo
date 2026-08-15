@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:43e7ea10f69f75fedc35e2cd2dd98775356cb35490d25915b644ff412e462518'
+body_hash: 'sha256:f35617b405dc8b451f9c723654f89658c804fd0106bb09e3f5882f7a3aa53d7a'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
   - "[[2026-08-14-test-harness-sanity-successor-adr]]"
@@ -389,3 +389,23 @@ Every checked step S111-S144 was classified by an independent read-only pass as 
 **Do NOT delete the normaliser on the strength of this verdict, and this is the load-bearing caveat.** `ProfileRecordRepository.apply_fact_changes` does **not** self-enforce validation — the refusal gate is *caller discipline*, and the determination rests on all in-tree callers currently honouring it (two direct production callers found: `_cotejo_apply.py` and `wizard/_persistence.py`, both gated, plus registration's separate validated create-path). The normaliser is therefore the last backstop behind a discipline convention, not behind a structural guarantee. **The correct follow-up is to make `apply_fact_changes` enforce the enum itself, at which point the normaliser becomes genuinely removable.** Deleting the backstop first would convert a convention into a silent data-integrity risk — and `iva.regime` selects the IVA regime a filing is computed under.
 
 **EVIDENCE GAPS, carried forward:** no empirical check of on-disk records written before the enum gate existed (the no-legacy posture argues none should exist, but that was not verified against real storage), and no check for out-of-tree tooling calling `apply_fact_changes` directly. The determination is a static code reading, which is what the step asked for, and it did not require the test suite — so the torn tree did not affect it.
+
+
+### two half-landed relocations | live-defect FIXED | both were committed broken on main, not in-flight edits
+
+Found while testing whether the tree had quiesced enough to satisfy `S138`. Tree-wide collection was failing, and the first instinct — "peers are mid-edit, wait" — was **wrong on inspection**: `git status` showed both owning files committed and clean, and their mtimes were 100 minutes and 3 hours old. Nobody was editing them. They were abandoned broken. **A torn tree is not self-evidently someone's live work; check before deferring to it.**
+
+Both are the same defect class — a relocation that moved a symbol and updated some consumers but not all, against the standing requirement that a relocation lands in ONE commit with every consumer.
+
+**1. Telemetry loopback plumbing.** `run_loopback_server` / `stop_loopback_server` had correctly moved to their canonical home `src/cadrumo/tests/loopback_recording_server.py`, and `core/telemetry/tests/test_http_sink.py` plus `application/tests/test_diagnostics_telemetry.py` were migrated. `core/telemetry/tests/test_producers.py` was left importing the OLD private names from `test_http_sink` — a test module reaching into a sibling test module's privates, which is what made the breakage possible at all.
+
+Fixed by pointing `test_producers.py` at the canonical home. That exposed the real coupling: it called `_run_loopback_server()` with no argument, because the old private wrapper defaulted to `test_http_sink`'s own handler class, while the canonical takes the handler explicitly. **The handler could not simply be imported across, because that would reinstate the exact test-module-to-test-module import that broke.** Checked whether the shipped design allows a shared handler: `loopback_recording_server.py`'s docstring deliberately declines to own handler classes because "the recorded event shape genuinely differs between suites" — and that claim is **true**, verified by reading all four: the two diagnostics suites record `{path, body}`, while both suites in the telemetry package assert on `content_type` and record `{path, content_type, body}`.
+
+So the two suites that share a shape got one definition, in a package-local home: **`src/cadrumo/core/telemetry/tests/_telemetry_endpoint_support.py::RecordingTelemetryEndpoint`**, imported by both. No fourth copy of the handler, no cross-suite private import, and the shipped module's per-suite-handler rationale left intact because it is correct for the suites it describes. Verified: `ruff` clean, `core/telemetry/tests` 42 passed.
+
+**2. `_json_object` in the LLM-vision evidence support.** `src/cadrumo/application/ledger/tests/_llm_vision_evidence_support.py` had `_json_object` deleted while keeping its sibling `_json_array`, breaking `llm/tests/test_llm_vision_classifier.py` and `llm/tests/test_evidence_draft_vision.py`, which both import it. **Confirmed committed, not in-flight:** `git status` clean on all three, and HEAD's consumer already imports a name HEAD's support module already does not define — so the broken pair is what landed.
+
+Restored beside `_json_array`, implemented to match the canonical `entrypoints/cli/tests/_cli_json_support.py::_json_object` exactly — `STR_KEYED_MAPPING_ADAPTER.validate_python(value)`, the core type-narrowing primitive — rather than the looser `assert isinstance` shape `_json_array` uses, so the two `_json_object` definitions in the tree cannot diverge in behaviour. **Deliberately NOT consolidated onto the canonical:** `cadrumo.llm.tests` importing `cadrumo.entrypoints.cli.tests._cli_json_support` would be a cross-package private reach, which the architecture boundary forbids. The pre-existing cross-package import from `llm/tests` into `application/ledger/tests` is left as found — not this change's to fix, and noted here so it is not mistaken for something this change introduced.
+
+**`S138` remains blocked, and the reason is now measured rather than asserted.** Collection errors across four runs this session: 67 → 4 → 3 → (after these two fixes) 7. The rise at the end is not a regression from these fixes — both symbols cleared the error list — but a peer landing an in-flight relocation of `cadrumo.entrypoints.mcp`, which took out seven suites across `command_search`, `modelo`, `operator_surface` and `cli`. The tree has not been collectable once this session. **`S138` asks for a failure-set diff from a quiesced tree, and there has been no quiesced tree to take one from.**
+

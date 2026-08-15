@@ -9,6 +9,7 @@ from typing import cast
 
 import pytest
 
+from ....tests.loopback_recording_server import run_loopback_server, stop_loopback_server
 from ...config import Settings
 from .. import (
     HttpTelemetrySink,
@@ -17,7 +18,7 @@ from .. import (
     emit_error_frequency_telemetry,
     emit_llm_run_telemetry,
 )
-from .test_http_sink import _run_loopback_server, _stop_loopback_server
+from ._telemetry_endpoint_support import RecordingTelemetryEndpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -27,11 +28,11 @@ _CAPTURED_AT = "2026-07-04T00:00:00+00:00"
 
 @contextmanager
 def _opened_http_sink() -> Iterator[tuple[HttpTelemetrySink, Queue[dict[str, object]]]]:
-    server, thread, events = _run_loopback_server()
+    server, thread, events = run_loopback_server(RecordingTelemetryEndpoint)
     try:
         yield HttpTelemetrySink(endpoint=f"http://127.0.0.1:{server.server_port}/collect"), events
     finally:
-        _stop_loopback_server(server, thread)
+        stop_loopback_server(server, thread)
 
 
 def _permitted_settings() -> Settings:
