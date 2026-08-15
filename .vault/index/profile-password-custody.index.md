@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:5e0c6647b8a1e473790571e4c3793b5df5e5e195a46643d0b7544382df30d738'
+body_hash: 'sha256:6e77350b25ecec9578e50490b575f0f71983d365c825b37d65bf59b2e3c4390a'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -33,6 +33,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W02-P04-S90]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S95]]'
   - '[[2026-08-13-profile-password-custody-W03-P05-S13]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S108]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S42]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S88]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S107]]'
@@ -154,6 +155,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W02-P04-S89` - Have Terra XHigh make the operator status projection report a verdict for an unregistered pointer
 - `2026-08-13-profile-password-custody-W02-P04-S90` - Have Terra XHigh make the cold-pointer logout refusal name what it could not do and re-author the nine tests
 - `2026-08-13-profile-password-custody-W02-P04-S95` - Have Terra XHigh make the receipt deletion honour the clear outcome it already computes, since the discard helper returns whether the compare-and-clear succeeded and the resume path branches on it, while the revocation entry point calls the same helper bare and returns nothing, so a refused clear is silent and a login can report the prior profile as closed while its acceleration receipt survives on disk, the reachability being narrow because the bytes must change under a held per-profile lock but the reporting value already existing
+- `2026-08-13-profile-password-custody-W03-P06-S108` - Have Terra XHigh re-found the label ambiguity refusal test on the custody label authority rather than retire it, since the refusal itself was restored as real operator-facing work and is live, while only the test's mechanism is stale in manufacturing two casefold-equal labels by rewriting the retired plaintext bucket manifest, and the restored refusal already ships five tests that manufacture the same collision correctly
 - `2026-08-13-profile-password-custody-W03-P06-S88` - Have Terra XHigh resolve the command-line lifecycle module that asserts custody verbs are mounted
 - `2026-08-13-profile-password-custody-W04-P07-S107` - Have Terra XHigh rule whether the master key and derived key encryption key should become wipeable like the two data encryption key unwraps now are, since six provider implementations and the derivation helper all return immutable material, or record why the master key is deliberately out of scope given each provider carries its own lifetime and a mutable buffer changes what every consumer holds
 - `2026-08-13-profile-password-custody-W04-P07-S19` - Have Terra XHigh dissolve the forwarding port package in five ordered parts

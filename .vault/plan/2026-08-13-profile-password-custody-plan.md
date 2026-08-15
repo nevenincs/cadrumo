@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:0a0c1aa02ba7a97325cf8881cf7910ef793540b4a26b06e14d6a3a2767429911'
+body_hash: 'sha256:4af9db63cfe816010c4320811b682594527076f1e0fae4b0f7d4661911a58d59'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -111,7 +111,7 @@ Expose canonical profile verbs and secret channels through typed action envelope
 - [ ] `W03.P06.S99` - Have Terra XHigh converge the twenty-seven per-module profile-creation helpers onto the canonical registration helpers that one hundred and five other modules already use, treating any helper that genuinely cannot convert as a finding to state rather than a conversion to force, and searching by meaning first because a name-stem sweep structurally cannot find the duplicate that carries a different name; `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/tests/`.
 - [ ] `W03.P06.S103` - Have Sol Medium rule on the remaining sixty-odd test profile-seeding helpers spread across fourteen further names beyond the one already being converted, classifying each as drives-a-retired-path, already-canonical, or a genuinely different need that writes a domain record without a bucket or session, since the last class is not substitutable against the canonical registration door which publishes a capsule and must be documented as legitimate rather than collapsed; `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/domain/modelos/tests/`.
 - [ ] `W03.P06.S104` - Have Sol Medium rule per family whether the capabilities the capsule cutover removed should be restored, the sandbox and archive families being wiring rather than building because their application layer survived, the four single profile verbs being unassessed, and the subject-access-request surface being recoverable from history rather than greenfield since its test module still asserts a working implementation and the cutover commit is what deleted it; `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/entrypoints/cli/_config/`.
-- [ ] `W03.P06.S108` - Have Terra XHigh re-found the label ambiguity refusal test on the custody label authority rather than retire it, since the refusal itself was restored as real operator-facing work and is live, while only the test's mechanism is stale in manufacturing two casefold-equal labels by rewriting the retired plaintext bucket manifest, and the restored refusal already ships five tests that manufacture the same collision correctly; `src/cadrumo/entrypoints/cli/_config/tests/test_profile_label_ambiguity_refusal.py`.
+- [x] `W03.P06.S108` - Have Terra XHigh re-found the label ambiguity refusal test on the custody label authority rather than retire it, since the refusal itself was restored as real operator-facing work and is live, while only the test's mechanism is stale in manufacturing two casefold-equal labels by rewriting the retired plaintext bucket manifest, and the restored refusal already ships five tests that manufacture the same collision correctly; `src/cadrumo/entrypoints/cli/_config/tests/test_profile_label_ambiguity_refusal.py`.
 
 ## Wave `W04` - retire superseded custody
 
