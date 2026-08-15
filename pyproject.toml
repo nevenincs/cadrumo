@@ -327,7 +327,17 @@ torch = [
 # distributions from the configured package index.
 cadrumo-data-manuals = { path = "packaging/cadrumo_data_manuals" }
 cadrumo-data-official = { path = "packaging/cadrumo_data_official" }
-cadrumo-harness = { path = "src/cadrumo-harness" }
+cadrumo-harness = { workspace = true }
+
+# `cadrumo-harness` is a formal uv workspace member (not merely a path source, like
+# the two data companions above) so it is locked together with `cadrumo` in this
+# single `uv.lock` and can be addressed independently via `uv export --package
+# cadrumo-harness` (`dev/packaging/uv_constraints.py` needs this to pin the MCP
+# server's own third-party closure for the Scoop/MCPB bundles). Membership does NOT
+# create a dependency: `cadrumo` still declares no reliance on `cadrumo-harness`
+# anywhere in `[project.dependencies]` — only the `dev` group does, for local tooling.
+[tool.uv.workspace]
+members = ["src/cadrumo-harness"]
 
 [tool.vaultspec-rag]
 managed-torch-direct-dependency = true
@@ -931,7 +941,7 @@ reportUnnecessaryTypeIgnoreComment = "error"
 
 # ── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
-testpaths = ["src/cadrumo", "dev/packaging/tests/test_installed_oracles.py"]
+testpaths = ["src/cadrumo", "src/cadrumo-harness", "dev/packaging/tests/test_installed_oracles.py"]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
 addopts = "-n auto --dist=loadfile --tb=short -m 'unit and not external_tool and not os_keychain' --strict-markers"

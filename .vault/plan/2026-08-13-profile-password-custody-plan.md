@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:3e065b825315f2548a5455fb8e050c601a866c207314f8605e5e1cb11a932471'
+body_hash: 'sha256:95e1249379be0fdebb0a85d959cecb80d8f85a79ddfc65b15b44031176f82eb5'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -123,6 +123,7 @@ Expose canonical profile verbs and secret channels through typed action envelope
 - [ ] `W03.P06.S139` - Have Terra XHigh re-found the four modules whose subject IS the creation surface rather than converting them, since the retired verb is what they exist to test so a fixture conversion would destroy the coverage, while most of their call sites currently expect success and therefore assert a capability the product no longer offers; `src/cadrumo/entrypoints/cli/_config/tests/`.
 - [x] `W03.P06.S140` - Have Terra XHigh resolve the three creation flags that have no mapped fact path by reading the profile schema rather than inferring one, since each currently blocks a conversion and guessing a path would write a fixture that quietly declares something false about a filer, the flags being the employee indicator the new-entity profit-period exclusion and the marital status; `src/cadrumo/domain/user_profile/ and src/cadrumo/entrypoints/cli/_config/`.
 - [ ] `W03.P06.S146` - Have Terra XHigh read the thirty-six creation call sites that assert no exit code and decide each individually, since they assert on output or on later state rather than on success and therefore cannot be swept, this being a reading job whose size should be stated honestly before it starts rather than a mechanical conversion; `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/entrypoints/cli/_config/tests/`.
+- [ ] `W03.P06.S151` - Have Terra XHigh render the next-action guidance on the surviving registration surfaces, since the projection mapping a non-resident IRNR taxpayer to the modelo describe route is live and reached only from the edit path while the creation path refuses before it, so a newly registered IRNR taxpayer is steered nowhere until they happen to run edit and the registration screens render no next action at all; `src/cadrumo/entrypoints/cli/_config/_registration_screen.py and src/cadrumo/entrypoints/cli/_config/_manager_frontend.py`.
 
 ## Wave `W04` - retire superseded custody
 

@@ -48480,8 +48480,18 @@ modelo:
           casilla:
             impatriado:
               anexo-transmision-iic:
+                ganancia-patrimonial:
+                  label: Capital gain
+                nif-entidad:
+                  label: Tax ID of the company or investment fund
+                retencion:
+                  label: Withholding or payment on account
                 tipo-renta:
                   label: Income type
+                total-ganancias:
+                  label: Total capital gains
+                total-retenciones:
+                  label: Total withholdings and payments on account
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Tax year the return refers to

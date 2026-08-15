@@ -23,12 +23,17 @@ claims to.
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .._schema_references import SourceReference
 from .._validate_layout_authority_content import (
+    _ANNEX_BLOCK,
+    _ANNEX_HEADING,
+    _LAYOUT_VOCABULARY,
     _carries_layout_content,
     validate_layout_authority_content,
 )
@@ -45,8 +50,10 @@ _ANCHOR_SOURCE_ID = "enrolled-modelo-233-layout"
 _HONEST_SOURCE_ID = "boe-modelo-714-layout"
 
 _BOE_BOILERPLATE = "<html><body><p>I. DISPOSICIONES GENERALES MINISTERIO DE HACIENDA</p></body></html>"
-_ANNEX_HEADING = "<html><body><h5 class='anexo'>ANEXO I</h5><p>Contenido.</p></body></html>"
-_ANNEX_CROSS_REFERENCE = "<html><body><p>Se aprueba el modelo, que figura en el anexo de esta orden.</p></body></html>"
+_ANNEX_HEADING_DOC = "<html><body><h5 class='anexo'>ANEXO I</h5><p>Contenido.</p></body></html>"
+_ANNEX_CROSS_REFERENCE_DOC = (
+    "<html><body><p>Se aprueba el modelo, que figura en el anexo de esta orden.</p></body></html>"
+)
 
 
 def _bundled_sources() -> dict[str, SourceReference]:
@@ -117,6 +124,44 @@ def test_an_honest_layout_authority_is_not_reported() -> None:
     assert validate_layout_authority_content({_HONEST_SOURCE_ID: source}, source_root=bundled_path()) == []
 
 
+def test_every_acceptance_is_driven_by_content_the_file_actually_carries() -> None:
+    """Strip the evidence from each ACCEPTED file and every one flips to refused.
+
+    The refusals are easy to trust: each names a file and says what is missing.
+    The acceptances are the larger claim and the harder one -- most of this
+    population passes, and a predicate that silently could not say no, or a read
+    that failed and was skipped, would look exactly like a clean bill of health.
+
+    So each accepted file is re-asked with its annex headings, standalone ANEXO
+    blocks and layout vocabulary removed in memory. An acceptance surviving that
+    was never reading the file. Nothing on disk is touched.
+    """
+    claims = _norm_text_layout_claims()
+    accepted, survived, unreadable = 0, [], []
+    for source_id, source in sorted(claims.items()):
+        path = bundled_path() / source.corpus_path
+        if not path.is_file():
+            unreadable.append(source_id)
+            continue
+        raw = path.read_text(encoding="utf-8", errors="replace")
+        if not _carries_layout_content(raw):
+            continue
+        accepted += 1
+        stripped = _ANNEX_HEADING.sub("<h9>", raw)
+        stripped = _ANNEX_BLOCK.sub(" ", stripped)
+        stripped = re.sub(r"anexos?", "SECCION", stripped, flags=re.IGNORECASE)
+        stripped = _LAYOUT_VOCABULARY.sub("XXX", stripped)
+        if _carries_layout_content(stripped):
+            survived.append(source_id)
+
+    assert not unreadable, f"claims whose file could not be read, so neither accepted nor refused: {unreadable}"
+    assert accepted, "no layout-authority claim was accepted, so this proof would hold vacuously"
+    assert not survived, (
+        f"these acceptances survive having their layout evidence stripped, so they are not "
+        f"reading the file they claim to verify: {survived}"
+    )
+
+
 def test_boe_boilerplate_alone_does_not_satisfy_the_claim() -> None:
     """ "DISPOSICIONES GENERALES" heads every BOE document and proves nothing.
 
@@ -128,8 +173,8 @@ def test_boe_boilerplate_alone_does_not_satisfy_the_claim() -> None:
 
 def test_an_annex_heading_satisfies_the_claim_and_a_reference_to_one_does_not() -> None:
     """Containing the annex is the claim; pointing at it is the defect."""
-    assert _carries_layout_content(_ANNEX_HEADING) is True
-    assert _carries_layout_content(_ANNEX_CROSS_REFERENCE) is False
+    assert _carries_layout_content(_ANNEX_HEADING_DOC) is True
+    assert _carries_layout_content(_ANNEX_CROSS_REFERENCE_DOC) is False
 
 
 def test_the_gate_yields_nothing_without_a_source_root() -> None:

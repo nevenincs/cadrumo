@@ -33,7 +33,7 @@ from dev.packaging.installed_tax_oracle import EXPECTED_LEGAL_REF
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
-_REPO_ROOT = Path(__file__).resolve().parents[5]
+_REPO_ROOT = Path(__file__).resolve().parents[6]
 
 
 def _installed_script(venv: Path, name: str) -> Path:

@@ -130,7 +130,6 @@ def test_create_persists_canonical_bucket_identities(
                 exists_at_snapshot=True,
                 fingerprint=BucketDeletionFingerprint(
                     digest="b" * 64,
-                    manifest_digest="c" * 64,
                     file_count=1,
                     total_bytes=1,
                 ),

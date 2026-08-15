@@ -55,21 +55,56 @@ _NON_FILE_FORMAT_KEYS: Final[frozenset[str]] = frozenset(
     {"secure_object", "bundle", "archive"},
 )
 
+#: Inventory key -> the secure-object namespace whose rows carry it.
+#:
+#: A namespace is not a format; an independently versioned payload grammar is.
+#: The great majority of namespaces are exactly what the pin below says they
+#: are — rows sharing the secure-object envelope's one version ceiling — and
+#: those need no entry here. The few listed carry their OWN version constant
+#: inside the row, on a separate axis from the envelope that decrypts it: the
+#: envelope governs whether the bytes open, the payload version governs
+#: whether the record inside them can still be read. A frozen floor on the
+#: container does not cover a grammar that versions itself.
+#:
+#: The three AEAT entries share one namespace, which is the clearest statement
+#: of the distinction: if a namespace were a format, three formats could not
+#: live in one. They ride a single session store and each declares its own
+#: metadata version.
+#:
+#: Honest limit, stated because the file half does not share it: the on-disk
+#: half of discovery ENUMERATES from the path registry, so a new file format
+#: cannot be omitted. This half is hand-listed, and only its namespace
+#: reference is checked against production. Closing that gap needs the
+#: namespace definition to declare its payload's version constant, which is a
+#: production change deliberately not made here — so a new independently
+#: versioned payload CAN still be missed, and that is a known gap rather than
+#: a covered case.
+_NAMESPACE_PAYLOAD_FORMATS: Final[Mapping[str, str]] = {
+    "profile_record": "user_profile_value",
+    "participation_index": "transaction_participation_index",
+    "aeat_certificate_session_metadata": "aeat_browser_sessions",
+    "aeat_clave_movil_session_metadata": "aeat_browser_sessions",
+    "aeat_clave_permanente_session_metadata": "aeat_browser_sessions",
+}
+
 
 def _discovered_format_keys() -> frozenset[str]:
     """Return every persisted format the storage registry declares.
 
-    The on-disk half comes from the path registry's ``FILE`` definitions — the
-    inventory a new keystore or state-root file must join — and the non-file
-    half from the three tier formats that have no single path. Discovery never
-    reads :data:`PERSISTED_FORMATS`, so the two sets are independent and a
-    format present in one and absent from the other is a real finding rather
-    than a tautology.
+    Three sources. The on-disk half comes from the path registry's ``FILE``
+    definitions — the inventory a new keystore, capsule or state-root file must
+    join. The non-file half is the three tier formats that have no single path.
+    The third is the independently versioned secure-object payloads, which are
+    formats by grammar rather than by file.
+
+    Discovery never reads :data:`PERSISTED_FORMATS`, so the sets are
+    independent and a format present in one and absent from the other is a real
+    finding rather than a tautology.
     """
     file_keys = frozenset(
         definition.key for definition in STORAGE_NAMESPACE_REGISTRY.paths if definition.kind is StoragePathKind.FILE
     )
-    return file_keys | _NON_FILE_FORMAT_KEYS
+    return file_keys | _NON_FILE_FORMAT_KEYS | frozenset(_NAMESPACE_PAYLOAD_FORMATS)
 
 
 def test_every_persisted_format_declares_a_durability_class() -> None:

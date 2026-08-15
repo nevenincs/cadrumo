@@ -42,7 +42,6 @@ def _target(*, blocks_erase: bool, override_approved: bool, retained: int) -> Co
         exists_at_snapshot=True,
         fingerprint=BucketDeletionFingerprint(
             digest="a" * 64,
-            manifest_digest="b" * 64,
             file_count=3,
             total_bytes=4096,
         ),

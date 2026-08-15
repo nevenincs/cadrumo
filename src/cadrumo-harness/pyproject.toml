@@ -36,6 +36,13 @@ dependencies = [
 [project.scripts]
 cadrumo-mcp = "cadrumo_harness.mcp:main"
 
+[tool.uv.sources]
+# Both packages are members of the same repo-root uv workspace: this resolves
+# `cadrumo` to the in-repo editable checkout (not a published wheel) so a local
+# change to `cadrumo` is immediately visible when testing `cadrumo-harness`, and
+# both share the one repo-root `uv.lock`.
+cadrumo = { workspace = true }
+
 [project.urls]
 Homepage = "https://github.com/nevenincs/cadrumo"
 Issues = "https://github.com/nevenincs/cadrumo/issues"
