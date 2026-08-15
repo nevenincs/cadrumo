@@ -29,6 +29,7 @@ from ....tests.cli_envelope import unwrap_cli_result as _json
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -58,20 +59,17 @@ def _invoke(args: list[str]):
 
 
 def _create(name: str, tax_id: str = "12345678Z") -> None:
-    result = _invoke(
-        [
-            "--format", "json",
-            "config", "profile", "create", name,
-            "--quiet",
-            "--tax-id", tax_id,
-            "--entity-type", "natural_person",
-            "--name", name.capitalize(),
-            "--surnames", "Example",
-            "--activity", "design",
-            "--iva-regime", "GENERAL",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    register_cli_profile(
+        label=name,
+        facts={
+            "identity.tax_id": tax_id,
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": name.capitalize(),
+            "identity.surnames": 'Example',
+            "activities.description": 'design',
+            "iva.regime": 'GENERAL',
+        },
+    )
 
 
 def test_atomic_create_roundtrip_identity_is_consistent_across_verbs(_cli_storage: Path) -> None:
