@@ -1,93 +1,42 @@
-"""Application-layer bucket-maintenance lifecycle facade.
+"""Application-layer bucket-maintenance read-only projection facade.
 
-This package exposes :class:`BucketMaintenanceService`
-and its Pydantic command/result contracts for profile-scoped storage
-maintenance. The service composes the existing single-writer primitives
-that own bucket lifecycle operations: label rename, soft tombstone plus
-hard removal, sealed portable-bundle export/import, and namespace-level
-browse. It contributes bucket-maintenance audit events through
-:class:`adapters.persistence.profile.buckets.BucketEventHistoryRepository` while the
-inner profile primitives keep emitting their lifecycle events.
+This package exposes :class:`BucketMaintenanceService` and its Pydantic
+command/result contracts for profile-scoped storage maintenance. The
+service is currently a **read-only** surface over the current-capsule
+primitives: target locking (``deletion_target_locks``), a deletion
+pre-assessment (``assess_deletion``), namespace-level inventory
+(``browse``), and on-disk footprint measurement (``disk_usage``).
 
-The service does not re-implement a cross-store write; it
-delegates to the existing top-level user-profile re-exports:
-:func:`application.user_profile.serialize_profile_bundle` and
-:func:`application.user_profile.deserialize_profile_bundle`.
-
-Three further delegates named here previously -- the rename and the two
-deletion primitives -- no longer exist. They were removed with the destructive
-surface being rebuilt, and the deletion path this package assesses for has no
-producer at present; see :meth:`BucketMaintenanceService.assess_deletion`,
-which refuses rather than pretending to one.
-
-Export/import composition is deliberately typed at the facade boundary:
-commands such as
-:class:`ExportBucketCommand` and
-:class:`ImportBucketCommand` produce
-sealed archives with
-:class:`adapters.persistence.storage.bucket.ExportArchiveHeader`,
-payloads based on
-:class:`domain.user_profile.UserProfilePortableExport`.
-Sealed exports use
-:class:`adapters.persistence.storage.StorageCustodyProfile.FULL`:
-the portable payload carries the typed profile/work/ledger/calculation/filing
-categories plus the registry-derived carried secure-object namespaces. Carried
-rows are addressed by their natural object keys, not the stored HMAC lookup
-digests, so import re-saves them through the recipient bucket's
-:class:`adapters.persistence.storage.SecureObjectRepository` and
-re-encrypts under that bucket's DEK.
-This package exposes the lifecycle composition verbs ``archive``,
-``browse``, ``delete``, ``disk_usage``, ``export``, ``import``, ``inspect``,
-``rename``, and ``restore``. The ``search`` verb is deferred; it must route
-through domain repositories instead of decrypting secure-object storage
-directly.
-
-:class:`AssessBucketDeletionCommand`,
-:class:`BucketDeletionAssessment`, and
-:class:`BucketDeletionFingerprint` expose target-scoped, read-only foundation
-contracts for composing deletion safely. They do not implement reset
-orchestration.
+Bucket rename, bucket delete, bucket archive (reversible dormancy),
+bucket restore, sealed-archive export/import/inspect, and the earlier
+sandbox lifecycle (``create_sandbox`` / ``discard_sandbox`` /
+``archive_sandbox`` / ``restore_sandbox`` / ``merge_sandbox``) were
+removed from this package when profile identity moved onto the
+encrypted custody capsule; see
+:mod:`application.user_profile` (``ProfileCapsuleLifecycle``) for the
+surviving create/restore/select/delete primitives. Bucket rename lives
+on as ``ProfileCapsuleLifecycle.rename_label``; bucket delete lives on
+as ``ProfileCapsuleLifecycle.prepare_delete`` /
+``confirm_delete`` / ``delete``, consumed today only by the durable
+all-profile ``application.config_reset`` flow. Neither has a
+single-target operator route; bucket archive, bucket restore, and
+sealed-archive export/import/inspect have no successor primitive at
+all. :meth:`BucketMaintenanceService.assess_deletion` is the retention
+pre-assessment for a destructive delete; it does not implement reset
+orchestration itself.
 
 :meth:`BucketMaintenanceService.disk_usage` measures a bucket's on-disk
 footprint by summing regular-file byte sizes under its fixed directory
-layout (:func:`adapters.persistence.storage.bucket.bucket_paths`); it reads
-only filesystem metadata, never decrypted content, so it can measure a
-non-active (even archived) bucket without opening a storage session.
-
-:func:`create_sandbox` and :func:`discard_sandbox` expose a discardable
-experiment-workspace lifecycle over the same primitives: a sandbox is an
-ordinary bucket labelled with the reserved :data:`SANDBOX_LABEL_PREFIX`,
-created (optionally forked from a live profile's facts) through the
-canonical atomic-create span and discarded through this package's
-:meth:`BucketMaintenanceService.delete`. :func:`preview_discard_sandbox`
-reports what a discard would remove without removing it, and
-:func:`list_sandboxes` enumerates every live sandbox for bulk operations
-such as ``sandbox prune``. :func:`archive_sandbox` and
-:func:`restore_sandbox` expose a reversible-dormancy alternative to
-discard: :meth:`BucketMaintenanceService.archive` soft-tombstones the
-sandbox without removing its directory, and
-:meth:`BucketMaintenanceService.restore` reactivates it. :func:`merge_sandbox`
-promotes a :class:`SandboxMergeScope` (``ledger``, ``modelo``, or ``all``)
-from a sandbox into a target profile bucket by composing the same typed
-catalogue repositories and domain upsert primitives (``upsert_work_unit``,
-``upsert_calculation_revision``, ``upsert_filing_record``) the
-portable-bundle import path already uses for those categories, so a
-repeated merge of unchanged sandbox content is an idempotent no-op write.
+layout; it reads only filesystem metadata, never decrypted content, so
+it can measure a non-active bucket without opening a storage session.
 
 See Also:
     :mod:`application.user_profile`
-        Lifecycle and portable-bundle single-writer primitives composed by this
-        facade.
-    :mod:`domain.buckets`
-        Bucket-event records and
-        :class:`adapters.persistence.profile.buckets.BucketEventHistoryRepository` used for the
-        maintenance audit trail.
-    :mod:`adapters.persistence.storage.bucket`
-        Bucket manifest, sealed-archive header, and archive reader/writer
-        contracts used by export and import.
-    :class:`BucketMaintenanceService`
-        Stateless service that implements the ``browse``, ``delete``,
-        ``export``, ``import``, ``inspect``, and ``rename`` verbs.
+        ``ProfileCapsuleLifecycle``, the custody transaction owner for
+        create, restore, select, rename and delete.
+    :mod:`application.config_reset`
+        The durable all-profile reset flow, the sole current caller of
+        ``ProfileCapsuleLifecycle.delete``.
 """
 
 from __future__ import annotations

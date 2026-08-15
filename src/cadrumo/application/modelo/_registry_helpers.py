@@ -59,6 +59,9 @@ from ._registry_resources import (
     reject_unknown_revision,
 )
 
+# Casilla data types the engine represents on the numeric Decimal channel. This
+# is the one canonical declaration in this package; ``_local_observation_actions.py``
+# imports it rather than re-declaring its own copy.
 _NUMERIC_CASILLA_DATA_TYPES: frozenset[str] = frozenset({"decimal", "money", "integer", "ratio"})
 
 # A boolean casilla answers on this same Decimal channel, encoded 0 / 1. That is

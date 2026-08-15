@@ -1,0 +1,110 @@
+[[revisions."2013-y-siguientes".export_layouts]]
+id = "modelo-270-fichero-boe"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records]]
+id = "modelo-270-declarante"
+record_type = "declarante"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "none"
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-record-type"
+offset = 1
+length = 1
+kind = "literal"
+literal = "1"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "270"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-ejercicio"
+offset = 5
+length = 4
+kind = "casilla"
+casilla_id = "decl.ejercicio"
+data_type = "integer"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-nif"
+offset = 9
+length = 9
+kind = "header"
+producer_key = "presenter.tax_id"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-tipo-soporte"
+offset = 58
+length = 1
+kind = "literal"
+literal = "T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+# "T": transmisión telemática -- the design's sole documented value; this
+# application files exclusively through the telematic channel.
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-tipo-declaracion"
+offset = 121
+length = 2
+kind = "casilla"
+casilla_id = "decl.tipo-declaracion"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-blancos"
+offset = 198
+length = 303
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]

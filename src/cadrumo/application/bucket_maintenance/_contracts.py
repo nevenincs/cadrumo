@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, Hex64Str
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId, ContentDigest
 from ...core.time import UtcInstant
 from ...domain.retention import RetentionFloorAssessment
@@ -102,9 +102,7 @@ class DiskUsageBucketCommand(BaseModel):
     ``<cadrumo_local_storage_root>/buckets/<bucket_id>/``; it never opens the
     encrypted SQLite database or decrypts a secure-object payload, so no
     master key or active-bucket session is required. This makes the
-    measurement safe to run against a non-active, even archived, bucket —
-    the same non-active-safe posture :func:`~._sandbox.preview_discard_sandbox`
-    already relies on for its namespace preview.
+    measurement safe to run against a non-active bucket.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -143,104 +141,3 @@ class DiskUsageBucketResult(BaseModel):
     bucket_id: BucketId
     total_bytes: int = Field(ge=0)
     subdirs: tuple[BucketDiskUsageSubdirRow, ...]
-
-
-class ExportBucketCommand(BaseModel):
-    """Operator request to export a bucket as a sealed archive.
-
-    The ``output_path`` is operator-specified; the service refuses to
-    overwrite an existing target. The archive is sealed under the
-    profile's own custody and carries committed profile data only; a
-    profile's recovery record is an exclusive separate artifact with its
-    own export grammar and is never folded into this transport.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    bucket_id: BucketId
-    output_path: Path
-
-
-class ExportBucketResult(BaseModel):
-    """Outcome of a successful bucket export.
-
-    Carries the written archive path plus the manifest digest recorded
-    in the sealed archive header. The digest is bound into the payload's
-    AEAD associated data, so import refuses a tampered header at
-    decryption; operator emitters render the path so the operator can
-    locate the file for backup or transfer.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    bucket_id: BucketId
-    output_path: Path
-    manifest_digest: ContentDigest
-    occurred_at: UtcInstant
-
-
-class ImportBucketCommand(BaseModel):
-    """Operator request to import a sealed bucket archive.
-
-    The ``source_path`` is operator-specified. The service refuses
-    when the archive's ``bucket_id`` collides with an existing live
-    profile unless ``force_replace`` is ``True``. Import is authorised
-    by the profile's own password; it never discovers, requires, or
-    falls back to recovery material.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    source_path: Path
-    force_replace: bool = False
-
-
-class ImportBucketResult(BaseModel):
-    """Outcome of a successful bucket import.
-
-    Carries the imported :class:`BucketId` and the manifest digest the
-    archive header declared. The digest is evidence of the sealed
-    archive header that authenticated the payload; it is not recomputed
-    against the freshly provisioned host manifest because import-host
-    lifecycle timestamps legitimately differ.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    bucket_id: BucketId
-    manifest_digest: ContentDigest
-    archive_schema_version: int = Field(ge=1)
-    occurred_at: UtcInstant
-
-
-class InspectBucketArchiveCommand(BaseModel):
-    """Operator request to inspect a sealed bucket archive without restoring it.
-
-    Read-only: the source archive is neither decrypted nor written to. This
-    lets an operator confirm which bucket a backup file holds and when it was
-    written, without needing the sealing key.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    source_path: Path
-
-
-class InspectBucketArchiveResult(BaseModel):
-    """Outcome of a successful sealed-archive inspection.
-
-    Every field is read from the archive's plaintext header plus the
-    on-disk file size; the AEAD-encrypted payload itself is never opened,
-    so this result cannot report per-store row counts. ``manifest_digest``
-    is the header's integrity anchor (unverified here — verification only
-    happens during a real ``import``, where it is authenticated as AEAD
-    associated data at decryption).
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    bucket_id: BucketId
-    manifest_digest: ContentDigest
-    archive_schema_version: int = Field(ge=1)
-    created_at: UtcInstant
-    size_bytes: int = Field(ge=0)

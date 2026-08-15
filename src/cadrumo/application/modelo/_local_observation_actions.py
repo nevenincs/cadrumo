@@ -50,11 +50,10 @@ from ...domain.calculations.registry import (
 )
 from ..calculations import CalculationObservationRepository, ObservationSourceKind, observation_key
 from ._action_errors import ModeloLocalObservationError
+from ._registry_helpers import _NUMERIC_CASILLA_DATA_TYPES
 
 OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND: Final = ObservationSourceKind.OPERATOR_MANUAL
 """Non-official source kind for operator-supplied local observations."""
-
-_NUMERIC_CASILLA_DATA_TYPES: Final = frozenset({"decimal", "money", "integer", "ratio"})
 
 
 class ModeloLocalObservationResult(BaseModel):

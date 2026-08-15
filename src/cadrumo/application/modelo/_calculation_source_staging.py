@@ -442,7 +442,9 @@ def expected_but_missing_binding_ids(
     this advisory to M202-level strictness, and do not narrow M202's gate to
     this advisory's exclusions — the divergence is intentional.
     """
-    non_silent_sources = frozenset({"previous_filing", "relation_prefill", "manual_input"})
+    non_silent_sources = frozenset(
+        {BindingSourceKind.PREVIOUS_FILING, BindingSourceKind.RELATION_PREFILL, BindingSourceKind.MANUAL_INPUT},
+    )
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
     missing: list[tuple[BindingId, CasillaId, BindingSourceKind]] = []
     for casilla in revision.casillas:
@@ -452,7 +454,7 @@ def expected_but_missing_binding_ids(
         if binding is None:
             continue
         source = binding.source
-        if str(source) in non_silent_sources or source not in owned_sources or binding.id in resolved_binding_values:
+        if source in non_silent_sources or source not in owned_sources or binding.id in resolved_binding_values:
             continue
         missing.append((binding.id, casilla.id, source))
     return tuple(missing)

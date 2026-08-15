@@ -95,7 +95,6 @@ if TYPE_CHECKING:
         redact_for_log,
         redact_structured,
     )
-    from ._kdf_bounds import ARGON2_VERSION
     from ._namespace_registry import (
         AEAT_BROWSER_SESSION_NAMESPACE,
         AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
@@ -299,6 +298,7 @@ if TYPE_CHECKING:
         UnsecuredModeRefusedError,
     )
     from .master_key import (
+        ARGON2_VERSION,
         FileFallbackMasterKeyProvider,
         KeyringMasterKeyProvider,
         MasterKeyProvider,
@@ -382,7 +382,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE": "._namespace_registry",
     "APPLICATION_EVIDENCE_BUNDLE_NAMESPACE": "._namespace_registry",
     "APPLICATION_FILING_HISTORY_NAMESPACE": "._namespace_registry",
-    "ARGON2_VERSION": "._kdf_bounds",
+    "ARGON2_VERSION": ".master_key",
     "ATTACHMENT_BLOB_NAMESPACE": "._namespace_registry",
     "ATTACHMENT_MANIFEST_NAMESPACE": "._namespace_registry",
     "AUTH_APODERADO_CONFIGURATION_NAMESPACE": "._namespace_registry",

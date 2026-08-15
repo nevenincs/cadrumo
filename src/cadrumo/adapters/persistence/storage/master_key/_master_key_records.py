@@ -10,12 +10,12 @@ from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .._kdf_salt import decode_kdf_salt, require_kdf_salt_length
 from ..errors import StorageValidationError
 from ._kdf_params import (
-    _MAX_MEMORY_COST_KIB,
-    _MAX_PARALLELISM,
-    _MAX_TIME_COST,
-    _MIN_MEMORY_COST_KIB,
-    _MIN_PARALLELISM,
-    _MIN_TIME_COST,
+    MAX_MEMORY_COST_KIB,
+    MAX_PARALLELISM,
+    MAX_TIME_COST,
+    MIN_MEMORY_COST_KIB,
+    MIN_PARALLELISM,
+    MIN_TIME_COST,
 )
 
 
@@ -48,7 +48,8 @@ class _KdfParameters(BaseModel):
     """On-disk record of the Argon2id parameters used to derive the KEK.
 
     The Argon2 cost fields carry the same OWASP-baseline validation window as the
-    bucket-manifest :class:`KdfParams`, so a tampered or buggy ``master.kdf`` that
+    enrolment record :class:`~._kdf_params.KdfParams` beside it -- read from that
+    module rather than restated -- so a tampered or buggy ``master.kdf`` that
     declares a below-floor cost is refused on read instead of silently deriving a
     weakened KEK.
 
@@ -75,9 +76,9 @@ class _KdfParameters(BaseModel):
 
     version: int
     algorithm: Literal["argon2id"] = Field(default="argon2id")
-    memory_cost: int = Field(ge=_MIN_MEMORY_COST_KIB, le=_MAX_MEMORY_COST_KIB)
-    time_cost: int = Field(ge=_MIN_TIME_COST, le=_MAX_TIME_COST)
-    parallelism: int = Field(ge=_MIN_PARALLELISM, le=_MAX_PARALLELISM)
+    memory_cost: int = Field(ge=MIN_MEMORY_COST_KIB, le=MAX_MEMORY_COST_KIB)
+    time_cost: int = Field(ge=MIN_TIME_COST, le=MAX_TIME_COST)
+    parallelism: int = Field(ge=MIN_PARALLELISM, le=MAX_PARALLELISM)
     salt_b64: str
 
     @field_validator("salt_b64")
@@ -124,5 +125,3 @@ class _KdfVersionEnvelope(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     version: int | str
-
-

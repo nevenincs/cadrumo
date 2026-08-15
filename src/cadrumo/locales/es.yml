@@ -720,19 +720,6 @@ application:
           test` antes de leer datos AEAT.
         verify_failed: No se ha podido verificar la sesión AEAT; ejecuta `aeat config
           auth test` antes de leer datos AEAT.
-  bucket_maintenance:
-    errors:
-      delete_not_confirmed: Esta operación es destructiva. Vuelve a ejecutar con --yes
-        para confirmar.
-      import_bucket_collision: Ya existe un bucket con el id {bucket_id}; usa --force-replace
-        para sobrescribirlo.
-      import_missing_filing_baseline: 'El perfil del archivo de bucket no tiene campos
-        de identidad para presentar: %{missing_flags}. Repara el perfil de origen
-        y vuelve a exportarlo.'
-      import_payload_invalid: El contenido del archivo de perfil no es válido o está
-        dañado.
-      restore_not_archived: El bucket no está archivado (dado de baja); no hay nada
-        que recuperar.
   calculations:
     binding_prefill:
       errors:
@@ -1979,12 +1966,6 @@ application:
             de hoja de cálculo.
   user_profile:
     errors:
-      aggregate_label_mismatch: 'El almacenamiento del perfil no es coherente: la
-        etiqueta del manifiesto no coincide con el registro seguro.'
-      aggregate_profile_id_mismatch: 'El almacenamiento del perfil no es coherente:
-        la identidad del manifiesto no coincide con el registro seguro.'
-      aggregate_status_mismatch: 'El almacenamiento del perfil no es coherente: el
-        estado de ciclo de vida del manifiesto no coincide con el registro seguro.'
       censal_read_identity_absent: La lectura censal no incluye ningún NIF, por lo
         que no puede confirmarse que corresponda a este perfil.
       censal_read_identity_cleared: El NIF de este perfil se ha vaciado, por lo que
@@ -2002,30 +1983,11 @@ application:
         perfil todavía no tiene ninguno, por lo que la consulta no puede confirmar
         que el registro que devuelve la AEAT sea suyo. Ejecute aeat config profile
         edit para añadirlo.'
-      duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
-        debe tener un solo perfil.
-      lifecycle_profile_already_exists: Ya existe un perfil en el bucket activo.
-      lifecycle_profile_not_tombstoned: El perfil no está dado de baja; la reactivación
-        rechaza un perfil activo.
-      lifecycle_profile_tombstoned_rename: No se puede renombrar un perfil eliminado.
       lifecycle_schema_validation_failed: Los datos del perfil no coinciden con el
         esquema de perfil de usuario.
       no_active_profile_selected: No hay un perfil activo seleccionado.
       profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
         login NAME para activarlo o aeat config profile delete NAME primero.
-      profile_bucket_directory_removal_failed: No se pudo eliminar el directorio del
-        perfil.
-      profile_create_route_mismatch: La ruta de creación de perfil '%{route}' no coincide
-        con el id de perfil '%{profile}'.
-      profile_integrity_identity_mismatch: 'El almacenamiento del perfil no es coherente:
-        los almacenes físicos no coinciden en la identidad del perfil.'
-      profile_integrity_label_mismatch: 'El almacenamiento del perfil no es coherente:
-        la etiqueta del manifiesto no coincide con el registro seguro.'
-      profile_integrity_status_mismatch: 'El almacenamiento del perfil no es coherente:
-        el estado de ciclo de vida del manifiesto no coincide con el registro seguro.'
-      profile_label_blank: La etiqueta del perfil no puede estar vacía.
-      profile_manifest_already_registered: El perfil '%{profile}' ya tiene un manifiesto
-        de bucket registrado en %{bucket_dir}.
       profile_manifest_missing: El perfil '%{profile}' no tiene manifiesto de bucket
         registrado en %{bucket_dir}.
       profile_not_registered: El perfil '%{profile}' no existe; ejecuta `aeat config
