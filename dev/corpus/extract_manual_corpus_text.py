@@ -92,8 +92,12 @@ def _is_current(pdf_path: Path, sha256: str) -> bool:
     return sidecar.source_sha256 == sha256
 
 
-def _extract_raw_text(path: Path) -> str:
+def extract_raw_text(path: Path) -> str:
     """Extract raw page text from a PDF via pypdfium2.
+
+    Public because the corpus sidecar-freshness gate re-runs this exact
+    extraction to prove the committed sidecars still equal current output;
+    a private name would force that gate to reach into module internals.
 
     This is the same extraction logic as
     :func:`cadrumo.domain.calculations.registry._validate_evidence._extract_pdf_text_impl`
@@ -175,7 +179,7 @@ def extract_all(*, check: bool = False) -> int:
         else:
             rel = pdf_path.relative_to(_REPO_ROOT).as_posix()
             print(f"Extracting {rel} ...")
-            raw_text = _extract_raw_text(pdf_path)
+            raw_text = extract_raw_text(pdf_path)
             normalised = normalise_corpus_text(raw_text)
             sidecar_path = _write_sidecar(pdf_path, sha256, normalised)
             print(f"  -> {sidecar_path.relative_to(_REPO_ROOT).as_posix()}")

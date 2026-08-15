@@ -4,7 +4,7 @@ The second delivery channel above the tools-only floor: MCP resource
 templates ``cadrumo://skill/{name}``, ``cadrumo://rule/{name}`` and
 ``cadrumo://persona/{name}`` let a resources-capable client enumerate and pull the
 shipped operating layer verbatim as ``text/markdown``. The concrete resource set
-and the read resolution are both DERIVED from the shipped ``aeat/_data/agent/``
+and the read resolution are both DERIVED from the shipped ``cadrumo/_data/agent/``
 tree through the ``cadrumo.agent`` package facade (``iter_skill_documents``,
 ``iter_operator_rules``, ``iter_personas``), never hand-listed, so a new skill,
 rule, or persona ships as a new resource with zero registration and the surface

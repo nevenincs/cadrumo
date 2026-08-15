@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from dev.corpus.extract_manual_corpus_text import _extract_raw_text
+from dev.corpus.extract_manual_corpus_text import extract_raw_text
 from dev.docs.preprocess import (
     EXTRACTED_JSON_SUFFIX,
     EXTRACTED_TEXT_SUFFIX,
@@ -272,7 +272,7 @@ def test_pdf_corpus_text_sidecars_equal_current_production_extraction() -> None:
             # differences); it is enforced on the generation platform only.
             continue
 
-        expected = normalise_corpus_text(_extract_raw_text(source_path))
+        expected = normalise_corpus_text(extract_raw_text(source_path))
         if normalised_text != expected:
             failures.append(rel_sidecar)
 
