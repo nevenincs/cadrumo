@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:22307f5499b5c29ae3745a6ba09aaa1d62565cb057e2f300f2b8442451da080c'
+body_hash: 'sha256:e0eaedb99ba0de17ba7ffdada9f136ef33620bb8def1d6c5d77bbda0111a5a6c'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -821,3 +821,47 @@ oracle whose duplication IS the measurement. Further wins in this campaign have
 to come from elsewhere: the nineteen production `load_registry_tree` sites
 recorded above, which need an owner's decision, or a slice this campaign has not
 yet profiled.
+
+## Ruled out: making the session AST prime lazy, and grouping its consumers
+
+Two levers on the 67.9s / 1216 MB session prime were considered and both
+declined. Recording the arithmetic and the blocking constraint so neither is
+re-derived.
+
+### Lazy priming -- blocked by a gate that exists to prevent exactly this
+
+The prime eagerly parses all 4906 package modules, while
+`_parsed_ast_for_path` ALREADY memoises on demand. So the fixture could return
+an empty mapping and let `ast_for_path` fill the process cache lazily, and a
+worker running only narrow gates would parse only what it touches rather than
+the whole tree.
+
+It cannot be done, and the reason is a credit to whoever wrote the gate.
+`src/cadrumo/tests/test_shared_source_corpus_floor.py:66` asserts
+`len(source_tree_ast) > _COLLAPSE_FLOOR` -- a dedicated tripwire against the
+shared corpus silently collapsing to nothing. Lazy priming empties that mapping
+at fixture time and trips it. Two further gates
+(`test_system_built_prose_elides.py:149`,
+`test_advisory_message_constructibility.py:186`) iterate
+`source_tree_ast.items()` directly and would simply scan nothing.
+
+The tempting repair -- keep the mapping lazy but report a full `__len__` -- is
+the worst option available: it makes the floor gate pass while measuring
+nothing, converting a working tripwire into decoration. The eager prime is a
+CONTRACT, not an implementation detail, and three gates depend on it.
+
+### Grouping the 47 consumers onto one worker -- worse on the axis that binds
+
+47 test files request the fixture. Under `--dist=loadfile` at the 6-worker
+default they spread across all six, so six workers each pay 67.9s and hold
+1216 MB: ~407s of CPU and ~7.3 GB in aggregate. Forcing them onto one worker
+with an xdist group would cut that to one prime and 1.2 GB.
+
+It would also serialise 47 structural gates onto a single worker while the other
+five drain early, making that worker the long pole. The trade is CPU and memory
+against wall clock, and memory is not the binding constraint on this machine
+(24 cores, 137 GB, ~50 GB free even under peer load). At six workers the prime
+amortises over roughly eight gate files each, which is already a good ratio.
+
+Both stay declined unless the worker cap rises materially -- at which point the
+memory arithmetic changes and this entry is the place to start.
