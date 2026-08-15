@@ -21,7 +21,6 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.core.resources import bundled_path
 from dev._paths import UTF_8
 
 from ._sweep import SweepResult
@@ -123,9 +122,14 @@ class MissRateEvaluation(BaseModel):
 
 
 def relevance_mapping_path() -> Path:
-    """Return the bundled path for the committed relevance mapping."""
+    """Return the dev-local path for the committed relevance mapping.
 
-    return bundled_path("terminology", "relevance", "relevance.json")
+    A laundered build-time measurement artifact read by this harness and the
+    Pagefind injector, and by no runtime consumer - so it lives beside the
+    harness under ``dev/`` rather than in the shipped ``_data`` tree.
+    """
+
+    return Path(__file__).resolve().parent / "relevance" / "relevance.json"
 
 
 def held_out_query_set_path() -> Path:

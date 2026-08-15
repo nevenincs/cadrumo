@@ -83,7 +83,7 @@ def test_bundled_authority_is_versioned_and_contains_independently_ratified_alia
     assert (
         query_alias_authority_path()
         .as_posix()
-        .endswith("src/cadrumo/_data/terminology/query-aliases/query-alias-authority.json")
+        .endswith("dev/docs/terminology/query-aliases/query-alias-authority.json")
     )
 
 
@@ -91,7 +91,7 @@ def test_authority_provenance_attests_raw_bytes_and_repository_path() -> None:
     authority = load_query_alias_authority()
     provenance = build_query_alias_authority_provenance(authority=authority)
 
-    assert provenance.source_relpath == "src/cadrumo/_data/terminology/query-aliases/query-alias-authority.json"
+    assert provenance.source_relpath == "dev/docs/terminology/query-aliases/query-alias-authority.json"
     assert provenance.schema_version == authority.schema_version
     assert provenance.authority_version == authority.authority_version
     assert len(provenance.source_sha256) == 64

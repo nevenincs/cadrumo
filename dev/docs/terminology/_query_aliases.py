@@ -26,7 +26,6 @@ from pydantic import BaseModel, ConfigDict, Field, PositiveInt, StringConstraint
 
 from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.resources import bundled_path
 from dev._paths import REPO_ROOT, UTF_8
 
 from ..terminology_handbook import TerminologyHandbook
@@ -47,9 +46,8 @@ __all__ = [
 
 QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION: Final = "cadrumo.docs-search.query-aliases.v1"
 QUERY_ALIAS_AUTHORITY_RELPATH: Final[Path] = Path(
-    "src",
-    "cadrumo",
-    "_data",
+    "dev",
+    "docs",
     "terminology",
     "query-aliases",
     "query-alias-authority.json",
@@ -144,8 +142,13 @@ class QueryAliasAuthorityProvenance(BaseModel):
 
 
 def query_alias_authority_path() -> Path:
-    """Return the bundled query/alias authority path."""
-    return bundled_path(*QUERY_ALIAS_AUTHORITY_RELPATH.parts[3:])
+    """Return the dev-local query/alias authority path.
+
+    A reviewed build-time alias vocabulary read by this harness and by no
+    runtime consumer - so it lives beside the harness under ``dev/`` rather
+    than in the shipped ``_data`` tree.
+    """
+    return _REPO_ROOT / QUERY_ALIAS_AUTHORITY_RELPATH
 
 
 def load_query_alias_authority(path: Path | None = None) -> QueryAliasAuthority:

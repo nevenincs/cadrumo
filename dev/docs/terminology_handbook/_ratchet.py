@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
-from cadrumo.core.resources import bundled_path
 
 from ._curation import AuditReport, audit_handbook
 from ._errors import TerminologyLoadError
@@ -78,8 +77,13 @@ class CurationBacklogRatchetResult:
 
 
 def terminology_ratchet_baseline_path() -> Path:
-    """Return the bundled curation-ratchet baseline path."""
-    return bundled_path("terminology", "curation-ratchet.json")
+    """Return the dev-local curation-ratchet baseline path.
+
+    A curation-backlog gate baseline read by this harness and by no runtime
+    consumer - so it lives beside the harness under ``dev/`` rather than in
+    the shipped ``_data`` tree.
+    """
+    return Path(__file__).resolve().parent / "curation-ratchet.json"
 
 
 def load_curation_backlog_ratchet_baseline(
