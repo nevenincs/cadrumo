@@ -8,9 +8,10 @@ from contextlib import ExitStack
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
+from typing import Final
 from uuid import UUID
 
-from .....core import iter_directory
+from .....core import StorageCategory, iter_directory, storage_location
 from .....core.hashing import CONTENT_DIGEST_PREFIX, canonical_json_bytes, prefixed_digest
 from ._errors import ProfileCustodyRecordError
 from ._filesystem import (
@@ -26,6 +27,40 @@ PROFILE_CUSTODY_INVENTORY_MAX_TOTAL_BYTES = 512 * 1024 * 1024
 PROFILE_CUSTODY_DATA_MAX_ENTRIES = 1024
 PROFILE_CUSTODY_DATA_FILE_MAX_BYTES = 64 * 1024 * 1024
 
+_BUCKET_DATABASE_RELATIVE_PATH: Final[str] = storage_location(StorageCategory.BUCKET_DATABASE_FILE).subpath
+"""The capsule-relative path of the profile's own encrypted SQLite database.
+
+Read off the storage taxonomy rather than restated, because a capsule IS a
+bucket directory: the same ``db/<product>.db`` member the engine opens sits
+inside the tree this module inventories.
+"""
+
+DATABASE_REPRESENTATION_RELATIVE_PATHS: Final[frozenset[str]] = frozenset(
+    {
+        _BUCKET_DATABASE_RELATIVE_PATH,
+        f"{_BUCKET_DATABASE_RELATIVE_PATH}-wal",
+        f"{_BUCKET_DATABASE_RELATIVE_PATH}-shm",
+    }
+)
+"""The three capsule members whose BYTES track a connection, not custody content.
+
+The engine opens the capsule database in ``journal_mode=WAL``, so an open
+connection parks committed pages in a ``-wal`` sidecar with a ``-shm`` index
+beside it, and closing that connection checkpoints those pages back into the
+main file. All three paths therefore change -- two vanish and the third grows
+-- for a reason that is a change of REPRESENTATION, not a change of what the
+capsule holds.
+
+Naming the main database file alongside its sidecars is the part that is easy
+to get wrong. Excluding only ``-wal`` and ``-shm`` looks sufficient and is not:
+a checkpoint folds the sidecar's pages into ``db/<product>.db`` itself, which
+was measured growing from 12288 to 94208 bytes across one ordinary session
+close with no logical write between the two observations.
+
+Membership is exact, never a suffix rule. A foreign file dropped anywhere under
+``db/`` is not one of these three and stays fully digest-covered.
+"""
+
 
 @dataclass(frozen=True, slots=True)
 class ProfileCustodyInventoryEntry:
@@ -38,10 +73,35 @@ class ProfileCustodyInventoryEntry:
 
 @dataclass(frozen=True, slots=True)
 class ProfileCustodyInventory:
-    """Bounded, no-follow exact inventory used by local custody transactions."""
+    """Bounded, no-follow exact inventory used by local custody transactions.
+
+    :attr:`entries` is the honest observation: every regular file the walk saw.
+    :attr:`digest_entries` is the subset the :attr:`digest` covers, which omits
+    :data:`DATABASE_REPRESENTATION_RELATIVE_PATHS`.
+
+    The two differ because a local deletion has to compare an inventory taken
+    at preflight against the same capsule at execution, and its own first
+    destructive act -- revoking the live profile secret -- closes the capsule's
+    database connection. That close checkpoints and removes the write-ahead
+    sidecars, so a digest over raw bytes could never match itself and a profile
+    the operator was signed into could not be deleted at all.
+
+    What the digest still guarantees is unchanged: every byte-stable custody
+    record (the password envelope, the DEK sentinel, the label projection, the
+    commit record, the recovery envelope) is covered exactly, and any file
+    appearing or vanishing anywhere else in the capsule moves it.
+
+    What it no longer guarantees is worth stating plainly rather than leaving
+    to be discovered: rows written into the capsule DATABASE between preflight
+    and execution no longer move the digest. That coverage is not recoverable
+    at this layer -- the database's logical content is only readable through
+    the DEK, which a deletion deliberately never holds, and its raw bytes are a
+    function of connection state. Presence is still checked; content is not.
+    """
 
     profile_id: UUID
     entries: tuple[ProfileCustodyInventoryEntry, ...]
+    digest_entries: tuple[ProfileCustodyInventoryEntry, ...]
     total_bytes: int
     digest: str
 
@@ -76,10 +136,16 @@ def _build_profile_custody_inventory(
     total_bytes = sum(entry.size_bytes for entry in ordered)
     if total_bytes > PROFILE_CUSTODY_INVENTORY_MAX_TOTAL_BYTES:
         raise ProfileCustodyRecordError("profile custody inventory exceeds its total byte limit")
-    canonical = canonical_json_bytes([[entry.relative_path, entry.size_bytes, entry.sha256] for entry in ordered])
+    covered = tuple(
+        entry for entry in ordered if entry.relative_path not in DATABASE_REPRESENTATION_RELATIVE_PATHS
+    )
+    if not covered:
+        raise ProfileCustodyRecordError("profile custody inventory covers no durable custody record")
+    canonical = canonical_json_bytes([[entry.relative_path, entry.size_bytes, entry.sha256] for entry in covered])
     return ProfileCustodyInventory(
         profile_id=profile_id,
         entries=ordered,
+        digest_entries=covered,
         total_bytes=total_bytes,
         digest=prefixed_digest(canonical),
     )
@@ -226,6 +292,7 @@ def _inventory_windows_entry(
 
 
 __all__ = [
+    "DATABASE_REPRESENTATION_RELATIVE_PATHS",
     "PROFILE_CUSTODY_DATA_FILE_MAX_BYTES",
     "PROFILE_CUSTODY_DATA_MAX_ENTRIES",
     "PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES",
