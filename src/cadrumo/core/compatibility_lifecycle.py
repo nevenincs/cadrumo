@@ -204,6 +204,20 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     "secret_index": PersistedFormatClass.DURABLE,
     # Regenerable — operational state, discarded and rebuilt on mismatch.
     "profile_session": PersistedFormatClass.REGENERABLE,
+    # The crash-window journal for one interrupted session-key swap, and the
+    # entry most exposed to being classed by its neighbours: every capsule format
+    # beside it is DURABLE, and it is not. Its private constant name is a Python
+    # visibility fact, not a fact about the bytes -- it is written to the
+    # operator's disk under the keystore sidecar, survives process exit, is
+    # parsed back through its own strict grammar on the recovery path, and
+    # refuses a foreign version. What it uniquely records is the INTENT of a swap
+    # the process died in the middle of, so an unreadable one strands one OS
+    # keychain secret and blocks the recovery that would have revoked it. That is
+    # a hygiene cost, not lost taxpayer bytes. Acting on a half-understood one is
+    # the real hazard: the journal names which of two session keys to revoke, and
+    # a doubtful reading could revoke the LIVE one. Delete-and-refuse is the
+    # correct response, which is what this class means.
+    "profile_session_retirement_journal": PersistedFormatClass.REGENERABLE,
     "login_throttle": PersistedFormatClass.REGENERABLE,
     "config_reset_journal": PersistedFormatClass.REGENERABLE,
     "bucket_lock": PersistedFormatClass.REGENERABLE,
@@ -275,6 +289,22 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     # Nothing here is unreconstructable -- identity, landing URL and deadline
     # are all observed again on the next login.
     "aeat_clave_permanente_session_metadata": PersistedFormatClass.REGENERABLE,
+    # The two plaintext hold-owner snapshots the deletion preflight reads without
+    # the bucket key, and the derived evidence recomputed from them. All three
+    # gate a DESTRUCTIVE operation, and that is what decides the class rather
+    # than how hard each is to re-record: absence and unreadability both produce
+    # the same refusal, so discarding a doubtful one blocks an erase, while
+    # tolerating one that half-parses can report zero open cases or zero retained
+    # filings and permit the erase the record exists to prevent.
+    #
+    # Filing retention is additionally a projection of the encrypted modelo
+    # catalogue, itself DURABLE under "secure_object" -- the participation-index
+    # shape, rebuilt by profile creation and filing persistence.
+    "profile_filing_retention_snapshot": PersistedFormatClass.REGENERABLE,
+    # Legal hold is NOT a cache: nothing in the tree derives the open case
+    # identifiers, which arrive from a legal matter outside the application. It
+    # is classed here on the refusal argument alone, not on rebuildability.
+    "profile_legal_hold_snapshot": PersistedFormatClass.REGENERABLE,
 }
 
 

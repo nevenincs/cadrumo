@@ -25,6 +25,14 @@ importing ``dev.*`` is not itself a violation, because a test module is
 wheel-excluded and a scanner's own imports have no bearing on the shipped
 surface it measures.
 
+Families 8 and 9 are the two ends of one broken edge, and they live together
+for the same reason. A deletion that lands without its consumer sweep leaves
+either a consumer pointing at something gone (family 8) or a module nothing
+points at any more (family 9); a check that sees only one end reports the split
+as clean half the time. Both are whole-tree questions by construction -- no
+per-commit or per-file gate can answer either -- so both are computed over the
+complete first-party census rather than a changed-file subset.
+
 Re-run with:
 
     python -m dev.quality.import_hygiene_scan [--json OUT.json] [--top N]

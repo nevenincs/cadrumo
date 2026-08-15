@@ -548,22 +548,23 @@ def _reconcile_mcp_exposure(
     profile_policy: object | None,
     mcp_exposure: McpExposureInventoryRow | None,
     exclusions: dict[tuple[str, ReconciliationSurface], ExplicitExclusionInventoryRow],
+    diagnostics: list[str],
 ) -> McpExposureInventoryRow | None:
     """Require attributable MCP absence and enforce the profile exposure policy."""
     mcp_exclusion = exclusions.get((subject_leaf_key, ReconciliationSurface.MCP_EXPOSURE))
     if mcp_exposure is None:
         if mcp_exclusion is None:
-            raise ValueError(f"missing mcp_exposure accounting for {subject_leaf_key}; explicit exclusion required")
+            diagnostics.append(f"missing mcp_exposure accounting for {subject_leaf_key}; explicit exclusion required")
     elif mcp_exposure.exposed:
         if mcp_exclusion is not None:
-            raise ValueError(f"mcp_exposure is both exposed and excluded for {subject_leaf_key}")
+            diagnostics.append(f"mcp_exposure is both exposed and excluded for {subject_leaf_key}")
     elif mcp_exclusion is None:
-        raise ValueError(f"silent MCP exclusion for {subject_leaf_key}; reason and authority required")
+        diagnostics.append(f"silent MCP exclusion for {subject_leaf_key}; reason and authority required")
 
     if isinstance(profile_policy, ProfilePolicyInventoryRow):
         observed_exposure = mcp_exposure.exposed if mcp_exposure is not None else False
         if profile_policy.should_expose_via_mcp != observed_exposure:
-            raise ValueError(
+            diagnostics.append(
                 f"MCP exposure contradicts profile policy for {subject_leaf_key}: "
                 f"expected {profile_policy.should_expose_via_mcp}, observed {observed_exposure}"
             )
@@ -593,6 +594,7 @@ def _reconcile_live_leaf(
     policy_by_subject: dict[str, ProfilePolicyInventoryRow],
     mcp_by_subject: dict[str, McpExposureInventoryRow],
     exclusions: dict[tuple[str, ReconciliationSurface], ExplicitExclusionInventoryRow],
+    diagnostics: list[str],
 ) -> ReconciledOperatorLeaf:
     """Account for every required projection of one live command leaf."""
     result_schema = _require_accounting(
@@ -600,18 +602,21 @@ def _reconcile_live_leaf(
         surface=ReconciliationSurface.RESULT_SCHEMA,
         row=result_by_subject.get(subject_leaf_key),
         exclusions=exclusions,
+        diagnostics=diagnostics,
     )
     input_schema = _require_accounting(
         subject_leaf_key=subject_leaf_key,
         surface=ReconciliationSurface.INPUT_SCHEMA,
         row=input_by_subject.get(subject_leaf_key),
         exclusions=exclusions,
+        diagnostics=diagnostics,
     )
     profile_policy = _require_accounting(
         subject_leaf_key=subject_leaf_key,
         surface=ReconciliationSurface.PROFILE_POLICY,
         row=policy_by_subject.get(subject_leaf_key),
         exclusions=exclusions,
+        diagnostics=diagnostics,
     )
     canonical_path = live_leaf.canonical_cli_path
     family_identity = (canonical_path[0], canonical_path[1]) if len(canonical_path) > 1 else None
@@ -620,12 +625,14 @@ def _reconcile_live_leaf(
         surface=ReconciliationSurface.MOUNTED_FAMILY,
         row=family_by_identity.get(family_identity) if family_identity is not None else None,
         exclusions=exclusions,
+        diagnostics=diagnostics,
     )
     mcp_exposure = _reconcile_mcp_exposure(
         subject_leaf_key=subject_leaf_key,
         profile_policy=profile_policy,
         mcp_exposure=mcp_by_subject.get(subject_leaf_key),
         exclusions=exclusions,
+        diagnostics=diagnostics,
     )
     return ReconciledOperatorLeaf(
         live_leaf=live_leaf,

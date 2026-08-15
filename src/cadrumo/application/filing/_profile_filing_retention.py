@@ -11,6 +11,7 @@ import os
 from collections.abc import Iterable
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Final
 from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
@@ -32,6 +33,9 @@ from ..profile_custody import (
 )
 
 _MAX_BYTES = 32 * 1024
+
+FILING_RETENTION_SNAPSHOT_SCHEMA_VERSION: Final[int] = 1
+"""Current on-disk schema version of :class:`FilingRetentionSnapshot` documents."""
 
 
 class FilingRetentionFact(BaseModel):
@@ -55,7 +59,7 @@ class FilingRetentionSnapshot(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: int = Field(default=1, frozen=True)
+    schema_version: int = Field(default=FILING_RETENTION_SNAPSHOT_SCHEMA_VERSION, frozen=True)
     profile_id: UUID
     filing_records: tuple[FilingRetentionFact, ...]
     observed_at: datetime
@@ -118,7 +122,7 @@ class FilingRetentionSnapshot(BaseModel):
             )
         )
         unsigned = cls.model_construct(
-            schema_version=1,
+            schema_version=FILING_RETENTION_SNAPSHOT_SCHEMA_VERSION,
             profile_id=profile_id,
             filing_records=facts,
             observed_at=observed_at,
@@ -281,6 +285,7 @@ def try_record_filing_retention_snapshot(
 
 
 __all__ = [
+    "FILING_RETENTION_SNAPSHOT_SCHEMA_VERSION",
     "FilingRetentionAuthority",
     "FilingRetentionSnapshot",
     "try_record_filing_retention_snapshot",
