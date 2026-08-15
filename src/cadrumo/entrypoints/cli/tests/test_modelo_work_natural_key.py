@@ -12,6 +12,7 @@ from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from ....tests.user_profile import register_cli_profile
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from ._modelo_work_ux_support import _seed_m111_retencion_observation
 
@@ -30,19 +31,18 @@ def _envelope_status(output: str) -> str:
 
 
 def _create_profile() -> None:
-    result = _invoke(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--surnames", "Natural Key",
-            "--activity", "design",
-            "--tax-residence-jurisdiction-scope", "common_regime",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Natural Key',
+            "activities.description": 'design',
+            "tax_residence.jurisdiction_scope": 'common_regime',
+        },
+    )
 
 
 def _create_first_year_activity_profile() -> None:

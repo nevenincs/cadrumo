@@ -152,6 +152,11 @@ def register_cli_profile(*, label: str, facts: Mapping[str, str] | None = None, 
     credential door leaves a profile incomplete on purpose and a readiness gate
     refuses an incomplete profile before any modelo work.
 
+    A distinct valid tax id is derived from the label, as the sibling seeding
+    door derives one from the profile id: a profile with no tax id fails schema
+    validation, so a door that omitted it would hand every caller an invalid
+    profile unless they happened to supply one.
+
     Pass ``complete=False`` for a test whose subject is the incomplete state.
     """
     from uuid import UUID as _UUID
@@ -161,6 +166,7 @@ def register_cli_profile(*, label: str, facts: Mapping[str, str] | None = None, 
     from .profile_capsule import bound_test_profile_record
 
     merged: dict[str, str] = dict(_REQUIRED_PLACEHOLDERS)
+    merged["identity.tax_id"] = _distinct_valid_nif(label)
     if facts:
         merged.update(facts)
     passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()

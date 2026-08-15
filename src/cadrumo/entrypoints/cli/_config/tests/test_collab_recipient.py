@@ -40,35 +40,25 @@ from pydantic import ValidationError
 from .....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .....tests.cli_runner import invoke_typer_app
 from .....tests.secure_sql import isolated_profile_storage_root
+from .....tests.user_profile import register_cli_profile
 from ... import app as root_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _create_profile(name: str = "collabco") -> None:
-    create = invoke_typer_app(
-        root_app,
-        [
-            "config",
-            "profile",
-            "create",
-            name,
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Collab",
-            "--surnames",
-            "Operator",
-            "--activity",
-            "design",
-            "--iva-regime",
-            "GENERAL",
-        ],
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label=name,
+        facts={
+            "identity.tax_id": '12345678Z',
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": 'Collab',
+            "identity.surnames": 'Operator',
+            "activities.description": 'design',
+            "iva.regime": 'GENERAL',
+        },
     )
-    assert create.exit_code == 0, f"profile create failed: {create.output}"
 
 
 def _dispose() -> None:

@@ -28,6 +28,7 @@ from ....core.resources import resources
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from ....tests.user_profile import register_cli_profile
 from ._modelo_work_ux_support import (
     _create_calculable_work_unit as _create_111_work_unit,
 )
@@ -37,19 +38,18 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _create_profile() -> None:
-    result = invoke_cached_cli(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--surnames", "Operator",
-            "--activity", "design",
-            "--irpf-income-categories", "actividad_economica",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Operator',
+            "activities.description": 'design',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+        },
+    )
 
 
 def _create_legal_entity_profile() -> None:
