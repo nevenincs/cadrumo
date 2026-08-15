@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#test-harness-sanity'
-date: '2026-08-14'
-modified: '2026-08-14'
+date: '2026-08-15'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:f9e86d76e5fa9fb1a2042f993c024ce66ee8c223080e425d458a9445c397414c'
 related:

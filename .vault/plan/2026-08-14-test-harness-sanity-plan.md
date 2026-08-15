@@ -3,12 +3,11 @@ tags:
   - '#plan'
   - '#test-harness-sanity'
 date: '2026-08-14'
-modified: '2026-08-14'
-body_hash: 'sha256:58d8b2870bf4d23f69e2d62e74ec488621a17c6d2c1cfd21467970d403c59028'
+modified: '2026-08-15'
+body_hash: 'sha256:7b5e3d4deb3d2e7924a707d9d66a814d057f10fa797650d5c247502b5e6f9245'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
-  - '[[2026-04-17-pytest-only-testing-adr]]'
   - '[[2026-06-05-test-topology-refactor-adr]]'
   - '[[2026-07-25-test-harness-honesty-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-adr]]'
@@ -164,7 +163,7 @@ Run exact focused and lane-level gates for each migrated surface and enforcement
 - [ ] `W08.P26.S88` - Run the fixture census and require zero unclassified or substitutable duplicates; `dev/quality/fixture_ownership.toml`.
 - [x] `W08.P26.S89` - Run marker banned-import topology ownership and no-monkeypatch gates; `src/cadrumo/tests`.
 - [x] `W08.P26.S90` - Run the dedicated harness lane and verify non-vacuity and independent verdict; `justfile, .github/workflows/ci.yml`.
-- [ ] `W08.P26.S91` - Run unit and integration recipes and compare measured runtime to baseline; `justfile`.
+- [x] `W08.P26.S91` - Run unit and integration recipes and compare measured runtime to baseline; `justfile`.
 
 ### Phase `W08.P27` - perform independent architecture and code review
 
