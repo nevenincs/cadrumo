@@ -40,6 +40,7 @@ from ._manager_dispatch import register_lazy_wizard_leaf as _register_lazy_wizar
 # preflight verb, but this package remains its import site: a consumer already
 # reaches it through here, and the extraction was meant to be facade-preserving.
 # Keeping the re-export is what makes that true rather than merely claimed.
+from ._profile_delete import register_profile_delete_command as _register_profile_delete_command
 from ._profile_inspect import _resolve_preflight_revision_id as _resolve_preflight_revision_id
 from ._profile_inspect import register_profile_inspect_commands as _register_profile_inspect_commands
 from ._profile_readiness import _read_profile_record
@@ -444,6 +445,7 @@ register_repair_profile_command(
 )
 register_repair_maintenance_commands(repair_app)
 register_bucket_history_commands(profile_app)
+_register_profile_delete_command(profile_app, resolve_profile_by_label=_resolve_profile_by_label)
 register_custody_commands(app)
 register_descendiente_commands(
     profile_app,

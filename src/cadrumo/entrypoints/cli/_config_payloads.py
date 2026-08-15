@@ -31,6 +31,7 @@ from ...application.auth import (
     AuthTestResult,
     ProviderProbeResult,
 )
+from ...application.bucket_maintenance import BucketDeletionFingerprint
 from ...application.config_reset import (
     ConfigResetOperationStatus,
     ConfigResetPauseReason,
@@ -944,18 +945,38 @@ class ConfigProfileExportReconcileFailurePayload(OutputSchema):
 class ConfigProfileDeleteResult(OutputSchema):
     """JSON envelope for ``aeat config profile delete``.
 
-    Reports the tombstoned profile id and display label plus whether the active
-    profile pointer had to be cleared. Bounded and typed at the same widths
-    :class:`~cadrumo.application.user_profile.ProfileLifecycleResult` carries
-    (the mutated :class:`~cadrumo.domain.user_profile.UserProfileRecord`), so
-    an empty identity/label or an unknown lifecycle status is refused rather
-    than reported as a valid tombstoning.
+    One schema serves both postures of the verb, discriminated by ``deleted``:
+    the default preflight reports what WOULD be destroyed and leaves the bytes
+    in place, and the confirmed run reports the same observation plus the
+    instant the capsule was destroyed. Reporting them through one shape is
+    deliberate — a caller comparing a preflight against the run that followed it
+    compares field for field, and cannot mistake one envelope for the other
+    because ``completed_at`` is populated on exactly one of them.
+
+    ``fingerprint`` nests the canonical
+    :class:`~cadrumo.application.bucket_maintenance.BucketDeletionFingerprint`
+    rather than restating its three facts as loose fields, so the envelope's
+    contract is the observation's contract by construction.
+
+    The retention pair is carried on the SUCCESS envelope and not only on the
+    refusal: a preflight that reports zero retained records is the operator's
+    evidence that the destruction is lawful, and an envelope that reported
+    retention only when it blocked would make its absence ambiguous between
+    "nothing retained" and "not assessed".
+
+    ``setup_state`` is deliberately absent. It lives inside the encrypted
+    profile record, the deletion assessment runs against a profile it has NOT
+    unlocked, and a schema declaring a field no production path can populate
+    invites a fixture to fill it.
     """
 
     profile_id: BucketId
     display_name: str = Field(min_length=1, max_length=160)
-    setup_state: ProfileSetupState
-    active_profile_cleared: bool
+    deleted: bool
+    fingerprint: BucketDeletionFingerprint | None = None
+    retained_record_count: int = Field(ge=0)
+    earliest_safe_erase_date: str | None = None
+    completed_at: str | None = None
 
 
 @register_schema("config.profile.rename")
