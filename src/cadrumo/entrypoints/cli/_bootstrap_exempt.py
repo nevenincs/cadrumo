@@ -18,15 +18,30 @@ Membership criteria:
 - The verb must not perform any column-level encrypt or decrypt
   operation as a side effect of its own work.
 - The verb is either the operator's first-run on-ramp
-  (``profile create``, ``profile import``), a state-free diagnostic
-  (``--version``, ``--help``, ``config repair`` family), or a verb
-  that explicitly operates on plaintext fingerprints rather than
-  decrypted payloads.
+  (``profile create``), a state-free diagnostic (``--version``,
+  ``--help``, ``config repair`` family), or a verb that explicitly
+  operates on plaintext fingerprints rather than decrypted payloads.
 
 The registry is referenced from the CLI root callback at active-gate
 time. The matching is full-path-prefix: a request to
 ``aeat config profile create alice`` matches the exempt entry
 ``config profile create``.
+
+**Each entry's comment states the CRITERION it satisfies, not the mechanism by
+which it satisfies it.** Two of these comments were found false in one day while
+their entries were still correct: one justified an exemption by citing a test
+that was never written, and one asserted that profile listing "reads the
+plaintext per-bucket ``manifest.toml`` files" long after listing had become a
+projection over custody capsules. Both were true when written and neither failed
+anything when it stopped being true, because nothing here is executable.
+
+A mechanism claim rots silently and is then inherited rather than re-derived,
+which is worse than no comment at all: a reader who would have checked accepts a
+stated reason. A criterion claim -- "needs no session", "decrypts nothing",
+"gating it would deadlock the operator" -- stays true across refactors of how the
+verb achieves it, and is falsifiable against the membership rules above. Prefer
+it, and where the mechanism genuinely matters, name it as evidence for the
+criterion rather than in place of one.
 """
 
 from __future__ import annotations
@@ -34,11 +49,10 @@ from __future__ import annotations
 # Bootstrap-exempt verb paths (Tuple[str, ...] — the leading 'cadrumo' is implicit).
 # Each entry is a space-separated path; matching is prefix-based.
 BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
-    # First-run on-ramp: the operator has no profile yet and must
-    # be able to create one. The wizard itself opens a transient
-    # session against the new bucket as part of its atomic
-    # provisioner; the root callback must not open a session that
-    # would block this path.
+    # First-run on-ramp: the operator has no profile yet and must be able to
+    # create one, so demanding an active profile first is a deadlock. The verb
+    # establishes whatever session it needs against the bucket it creates; the
+    # root callback must not open one ahead of it.
     "config profile create",
     # The profile-session doors. ``login`` IS the authentication gate: it
     # must run with no session at all, and it is the one verb allowed to
@@ -59,10 +73,11 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # Profile discovery: enumerating which profiles exist is how an operator
     # learns the label ``config login`` needs, so gating it behind that login
     # is a deadlock — the answer is only reachable once you already know it.
-    # ``list_profile_buckets`` reads the plaintext per-bucket ``manifest.toml``
-    # files and never unlocks a bucket, so the verb decrypts nothing and needs
-    # no session; the same plaintext-only grounds as ``profile archive
-    # inspect`` above. Locked profiles still list — status is a manifest field.
+    # The listing decrypts nothing and needs no session: it projects the
+    # committed custody capsules and reads each one's operator-facing label,
+    # so a locked profile still lists. It reported facts from a plaintext
+    # manifest once; that is no longer how it answers, and the criterion is
+    # unchanged by the difference.
     "config profile list",
     # The storage tree is the container every profile sits inside, so the whole
     # family answers questions that exist before any profile does: ``init``
@@ -113,8 +128,11 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     "app modelo review-package verify",
     "app modelo review-package verify-signature",
     "app modelo review-package verify-receipt",
-    # Telemetry STATUS reads Settings fields only. Its sibling ``flush`` does
-    # decrypt, hence the leaf entry rather than the ``telemetry`` prefix.
+    # Telemetry STATUS answers from configuration and needs no session. The
+    # entry is a LEAF rather than the ``telemetry`` prefix on purpose, so its
+    # sibling ``flush`` stays gated; exempting the prefix would carry that
+    # sibling with it silently, which is the failure mode prefix matching
+    # invites.
     "app diagnostics telemetry status",
     # Engineer surface: lives under a separate module entrypoint
     # and is not bound by the session-gate either, but the
