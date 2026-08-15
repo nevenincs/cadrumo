@@ -50271,6 +50271,12 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+            x-chin6or5dpi6ipbeehin6bj1c9nmsrpdc5n78qb3d5o62p3f:
+              label: Regularización descendientes con discapacidad. Importe del abono
+                anticipado
+            x-chin6or5dpi6ipbeehin6bj4cli7aor3d5nms:
+              label: Regularización descendientes con discapacidad. Importe de la
+                deducción
             x-chin6or5dpi6ipbeehin6bjed5j0:
               label: Regularización descendientes con discapacidad. NIF del descendiente
             x-chin6or5dpi6ipbeehin6bjedtmm4sj5:

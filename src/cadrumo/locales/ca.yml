@@ -48011,8 +48011,16 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+            x-chin6or5dpi6ipbeehin6bj1c9nmsrpdc5n78qb3d5o62p3f:
+              label: Regularització descendents amb discapacitat. Import de l'abonament
+                anticipat
+            x-chin6or5dpi6ipbeehin6bj4cli7aor3d5nms:
+              label: Regularització descendents amb discapacitat. Import de la deducció
             x-chin6or5dpi6ipbeehin6bjed5j0:
               label: Regularització descendents amb discapacitat. NIF del descendent
+            x-chin6or5dpi6ipbeehin6bjedtmm4sj5:
+              label: Regularització descendents amb discapacitat. Cognoms i nom del
+                descendent
           construct:
             modelo-122-regularizacion:
               field:

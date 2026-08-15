@@ -47927,9 +47927,18 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+            x-chin6or5dpi6ipbeehin6bj1c9nmsrpdc5n78qb3d5o62p3f:
+              label: Fogyatékossággal élő leszármazottak utáni korrekció. Az előlegfizetés
+                összege
+            x-chin6or5dpi6ipbeehin6bj4cli7aor3d5nms:
+              label: Fogyatékossággal élő leszármazottak utáni korrekció. A levonás
+                összege
             x-chin6or5dpi6ipbeehin6bjed5j0:
               label: Fogyatékossággal élő leszármazottak utáni korrekció. A leszármazott
                 adóazonosító száma
+            x-chin6or5dpi6ipbeehin6bjedtmm4sj5:
+              label: Fogyatékossággal élő leszármazottak utáni korrekció. A leszármazott
+                vezeték- és utóneve
           construct:
             modelo-122-regularizacion:
               field:

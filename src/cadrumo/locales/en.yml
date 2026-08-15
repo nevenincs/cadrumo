@@ -47262,9 +47262,17 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+            x-chin6or5dpi6ipbeehin6bj1c9nmsrpdc5n78qb3d5o62p3f:
+              label: Regularisation for descendants with a disability. Advance payment
+                amount
+            x-chin6or5dpi6ipbeehin6bj4cli7aor3d5nms:
+              label: Regularisation for descendants with a disability. Deduction amount
             x-chin6or5dpi6ipbeehin6bjed5j0:
               label: Regularisation for descendants with a disability. Descendant's
                 tax identification number
+            x-chin6or5dpi6ipbeehin6bjedtmm4sj5:
+              label: Regularisation for descendants with a disability. Descendant's
+                surnames and given name
           construct:
             modelo-122-regularizacion:
               field:
