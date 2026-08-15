@@ -54,8 +54,6 @@ platform-specific import.
 See Also:
     :class:`~adapters.persistence.storage.master_key.BucketSession`
         The in-process materialisation this persisted record re-opens.
-    :mod:`adapters.persistence.storage.master_key._dek_wrap`
-        The sibling KEK-wrap of the same DEK (enrollment custody).
 """
 
 from __future__ import annotations
@@ -256,11 +254,10 @@ def _associated_data(
     return f"{_AAD_PREFIX}:".encode(_UTF_8_ENCODING) + payload
 
 
-# ALT-DEK-WRAP-RATIONALE-SESSION: wraps the SAME bucket DEK as
-# adapters.persistence.storage.master_key._dek_wrap.wrap_dek, but under an
-# ephemeral OS-keychain session key for login-resumption custody rather than
-# the passphrase-derived KEK used at bucket-unlock enrollment -- two key
-# sources for two lifecycle events, not a fork of one custody path.
+# Wraps the bucket DEK under an ephemeral OS-keychain session key, for
+# login-resumption custody. This is now the only wrap of the bucket DEK
+# outside the profile's own password envelope: the sibling KEK-wrap that
+# once carried it into a keystore sidecar was retired with that route.
 def wrap_profile_session_dek(
     *,
     session_key: bytes,
@@ -318,15 +315,12 @@ def wrap_profile_session_dek(
         idle_deadline=idle_deadline,
         absolute_deadline=absolute_deadline,
     )
-    # Routes through the canonical AEAD primitives (the same construction
-    # ._dek_wrap.wrap_dek uses for the sibling KEK-wrap), rather than calling
-    # AESGCM directly. The on-wire shape is unchanged: encrypt_record mints
-    # its own fresh nonce internally (same secrets.token_bytes(12) this
-    # module generated inline before), and EncryptedBlob.ciphertext (the
-    # cryptography library's ciphertext-with-tag) is split into
-    # PersistedProfileSession.ciphertext/.tag at the same 32-byte boundary
-    # _dek_wrap does, so every previously-wrapped session record remains
-    # readable and the persisted PersistedProfileSession/_AccelerationReceiptDocument
+    # Routes through the canonical AEAD primitives rather than calling
+    # AESGCM directly. encrypt_record mints its own fresh nonce internally,
+    # and EncryptedBlob.ciphertext (the cryptography library's
+    # ciphertext-with-tag) is split into
+    # PersistedProfileSession.ciphertext/.tag at the 32-byte boundary, so
+    # the persisted PersistedProfileSession/_AccelerationReceiptDocument
     # shapes do not change.
     try:
         blob = encrypt_record(dek, key=session_key, associated_data=aad)
@@ -336,7 +330,7 @@ def wrap_profile_session_dek(
         # new EncryptionError -- a caller inspecting __cause__ sees the real
         # underlying failure either way. Unreachable in practice: the
         # session_key/dek length checks above already refuse before this
-        # call, but this mirrors _dek_wrap.wrap_dek's defence in depth.
+        # call, but it is kept as defence in depth.
         exc.translated_message = _STORAGE_ENCRYPTION_MESSAGE_KEY
         raise
     return PersistedProfileSession(
