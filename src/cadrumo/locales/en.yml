@@ -5307,7 +5307,7 @@ cli:
           review, registry, and authenticated AEAT reads.
         paragraph_config_root: The config root manages profiles, encrypted local data,
           recovery keys, profile sessions, AEAT authentication, and repair.
-        paragraph_local_first: CADRUMO keeps taxpayer data local and exposes exactly
+        paragraph_local_first: Cadrumo keeps taxpayer data local and exposes exactly
           two command roots.
         paragraph_privacy: Profile labels stay visible. Tax identities, credentials,
           storage identifiers, object keys, and sensitive web-address content stay
@@ -6717,6 +6717,8 @@ errors:
       close the active session before re-entering.'
     internal_observability_run_context_missing: 'Internal error: a telemetry event
       was recorded outside an active run context.'
+    internal_operation_declaration_breach: 'Internal error: an operation executor
+      claimed a phase, effect, resource, or interaction its definition does not declare.'
     internal_output_rendering: 'Internal error: the command output could not be rendered
       safely.'
     internal_profile_keys_registration: 'Internal error: profile keys could not be
@@ -70413,6 +70415,8 @@ modelo:
           iva-base-imponible-soportada-interiores:
             help: null
             label: Taxable base of deductible input VAT on domestic current transactions
+          iva-compensacion-cuotas-ejercicio-anterior:
+            label: Carry-forward of VAT credits from the previous year
           iva-cuota-autorepercutida-intracomunitaria:
             help: null
             label: Reverse-charge VAT amount on intra-Community acquisitions
@@ -70480,12 +70484,403 @@ modelo:
           iva-cuota-soportada-interiores:
             help: null
             label: Deductible input VAT on domestic current transactions
+          iva-deducible-aic-corrientes-tipo-10-base:
+            label: Deductible input VAT on intra-Community acquisitions of current
+              goods at the 10% rate - taxable base
+          iva-deducible-aic-corrientes-tipo-10-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of current
+              goods at the 10% rate - deductible VAT amount
+          iva-deducible-aic-corrientes-tipo-21-base:
+            label: Deductible input VAT on intra-Community acquisitions of current
+              goods at the 21% rate - taxable base
+          iva-deducible-aic-corrientes-tipo-21-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of current
+              goods at the 21% rate - deductible VAT amount
+          iva-deducible-aic-corrientes-tipo-4-base:
+            label: Deductible input VAT on intra-Community acquisitions of current
+              goods at the 4% rate - taxable base
+          iva-deducible-aic-corrientes-tipo-4-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of current
+              goods at the 4% rate - deductible VAT amount
+          iva-deducible-aic-corrientes-tipo-5-base:
+            label: Deductible input VAT on intra-Community acquisitions of current
+              goods at the 5% rate - taxable base
+          iva-deducible-aic-corrientes-tipo-5-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of current
+              goods at the 5% rate - deductible VAT amount
+          iva-deducible-aic-corrientes-total-base:
+            label: 'Total: Deductible input VAT on intra-Community acquisitions of
+              current goods - taxable base'
+          iva-deducible-aic-corrientes-total-cuota:
+            label: 'Total: Deductible input VAT on intra-Community acquisitions of
+              current goods - deductible VAT amount'
+          iva-deducible-aic-inversion-tipo-10-base:
+            label: Deductible input VAT on intra-Community acquisitions of capital
+              goods at the 10% rate - taxable base
+          iva-deducible-aic-inversion-tipo-10-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of capital
+              goods at the 10% rate - deductible VAT amount
+          iva-deducible-aic-inversion-tipo-21-base:
+            label: Deductible input VAT on intra-Community acquisitions of capital
+              goods at the 21% rate - taxable base
+          iva-deducible-aic-inversion-tipo-21-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of capital
+              goods at the 21% rate - deductible VAT amount
+          iva-deducible-aic-inversion-tipo-4-base:
+            label: Deductible input VAT on intra-Community acquisitions of capital
+              goods at the 4% rate - taxable base
+          iva-deducible-aic-inversion-tipo-4-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of capital
+              goods at the 4% rate - deductible VAT amount
+          iva-deducible-aic-inversion-tipo-5-base:
+            label: Deductible input VAT on intra-Community acquisitions of capital
+              goods at the 5% rate - taxable base
+          iva-deducible-aic-inversion-tipo-5-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of capital
+              goods at the 5% rate - deductible VAT amount
+          iva-deducible-aic-inversion-total-base:
+            label: 'Total: Deductible input VAT on intra-Community acquisitions of
+              capital goods - taxable base'
+          iva-deducible-aic-inversion-total-cuota:
+            label: 'Total: Deductible input VAT on intra-Community acquisitions of
+              capital goods - deductible VAT amount'
+          iva-deducible-aic-servicios-tipo-10-base:
+            label: Deductible input VAT on intra-Community acquisitions of services
+              at the 10% rate - taxable base
+          iva-deducible-aic-servicios-tipo-10-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of services
+              at the 10% rate - deductible VAT amount
+          iva-deducible-aic-servicios-tipo-21-base:
+            label: Deductible input VAT on intra-Community acquisitions of services
+              at the 21% rate - taxable base
+          iva-deducible-aic-servicios-tipo-21-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of services
+              at the 21% rate - deductible VAT amount
+          iva-deducible-aic-servicios-tipo-4-base:
+            label: Deductible input VAT on intra-Community acquisitions of services
+              at the 4% rate - taxable base
+          iva-deducible-aic-servicios-tipo-4-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of services
+              at the 4% rate - deductible VAT amount
+          iva-deducible-aic-servicios-tipo-5-base:
+            label: Deductible input VAT on intra-Community acquisitions of services
+              at the 5% rate - taxable base
+          iva-deducible-aic-servicios-tipo-5-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of services
+              at the 5% rate - deductible VAT amount
+          iva-deducible-aic-servicios-total-base:
+            label: 'Total: Deductible input VAT on intra-Community acquisitions of
+              services - taxable base'
+          iva-deducible-aic-servicios-total-cuota:
+            label: 'Total: Deductible input VAT on intra-Community acquisitions of
+              services - deductible VAT amount'
+          iva-deducible-compensaciones-reagp-base:
+            label: Flat-rate compensation under the agriculture, livestock and fisheries
+              special scheme - taxable base
+          iva-deducible-compensaciones-reagp-cuota:
+            label: Flat-rate compensation under the agriculture, livestock and fisheries
+              special scheme - deductible VAT amount
+          iva-deducible-importaciones-corrientes-tipo-10-base:
+            label: Deductible input VAT on imports of current goods at the 10% rate
+              - taxable base
+          iva-deducible-importaciones-corrientes-tipo-10-cuota:
+            label: Deductible input VAT on imports of current goods at the 10% rate
+              - deductible VAT amount
+          iva-deducible-importaciones-corrientes-tipo-21-base:
+            label: Deductible input VAT on imports of current goods at the 21% rate
+              - taxable base
+          iva-deducible-importaciones-corrientes-tipo-21-cuota:
+            label: Deductible input VAT on imports of current goods at the 21% rate
+              - deductible VAT amount
+          iva-deducible-importaciones-corrientes-tipo-4-base:
+            label: Deductible input VAT on imports of current goods at the 4% rate
+              - taxable base
+          iva-deducible-importaciones-corrientes-tipo-4-cuota:
+            label: Deductible input VAT on imports of current goods at the 4% rate
+              - deductible VAT amount
+          iva-deducible-importaciones-corrientes-tipo-5-base:
+            label: Deductible input VAT on imports of current goods at the 5% rate
+              - taxable base
+          iva-deducible-importaciones-corrientes-tipo-5-cuota:
+            label: Deductible input VAT on imports of current goods at the 5% rate
+              - deductible VAT amount
+          iva-deducible-importaciones-corrientes-total-base:
+            label: 'Total: Deductible input VAT on imports of current goods - taxable
+              base'
+          iva-deducible-importaciones-inversion-tipo-10-base:
+            label: Deductible input VAT on imports of capital goods at the 10% rate
+              - taxable base
+          iva-deducible-importaciones-inversion-tipo-10-cuota:
+            label: Deductible input VAT on imports of capital goods at the 10% rate
+              - deductible VAT amount
+          iva-deducible-importaciones-inversion-tipo-21-base:
+            label: Deductible input VAT on imports of capital goods at the 21% rate
+              - taxable base
+          iva-deducible-importaciones-inversion-tipo-21-cuota:
+            label: Deductible input VAT on imports of capital goods at the 21% rate
+              - deductible VAT amount
+          iva-deducible-importaciones-inversion-tipo-4-base:
+            label: Deductible input VAT on imports of capital goods at the 4% rate
+              - taxable base
+          iva-deducible-importaciones-inversion-tipo-4-cuota:
+            label: Deductible input VAT on imports of capital goods at the 4% rate
+              - deductible VAT amount
+          iva-deducible-importaciones-inversion-tipo-5-base:
+            label: Deductible input VAT on imports of capital goods at the 5% rate
+              - taxable base
+          iva-deducible-importaciones-inversion-tipo-5-cuota:
+            label: Deductible input VAT on imports of capital goods at the 5% rate
+              - deductible VAT amount
+          iva-deducible-importaciones-inversion-total-base:
+            label: 'Total: Deductible input VAT on imports of capital goods - taxable
+              base'
+          iva-deducible-importaciones-inversion-total-cuota:
+            label: 'Total: Deductible input VAT on imports of capital goods - deductible
+              VAT amount'
+          iva-deducible-interiores-corrientes-tipo-10-base:
+            label: Deductible input VAT on current domestic transactions at the 10%
+              rate - taxable base
+          iva-deducible-interiores-corrientes-tipo-10-cuota:
+            label: Deductible input VAT on current domestic transactions at the 10%
+              rate - deductible VAT amount
+          iva-deducible-interiores-corrientes-tipo-21-base:
+            label: Deductible input VAT on current domestic transactions at the 21%
+              rate - taxable base
+          iva-deducible-interiores-corrientes-tipo-21-cuota:
+            label: Deductible input VAT on current domestic transactions at the 21%
+              rate - deductible VAT amount
+          iva-deducible-interiores-corrientes-tipo-4-base:
+            label: Deductible input VAT on current domestic transactions at the 4%
+              rate - taxable base
+          iva-deducible-interiores-corrientes-tipo-4-cuota:
+            label: Deductible input VAT on current domestic transactions at the 4%
+              rate - deductible VAT amount
+          iva-deducible-interiores-corrientes-tipo-5-base:
+            label: Deductible input VAT on current domestic transactions at the 5%
+              rate - taxable base
+          iva-deducible-interiores-corrientes-tipo-5-cuota:
+            label: Deductible input VAT on current domestic transactions at the 5%
+              rate - deductible VAT amount
+          iva-deducible-interiores-inversion-tipo-10-base:
+            label: Deductible input VAT on domestic transactions in capital goods
+              at the 10% rate - taxable base
+          iva-deducible-interiores-inversion-tipo-10-cuota:
+            label: Deductible input VAT on domestic transactions in capital goods
+              at the 10% rate - deductible VAT amount
+          iva-deducible-interiores-inversion-tipo-21-base:
+            label: Deductible input VAT on domestic transactions in capital goods
+              at the 21% rate - taxable base
+          iva-deducible-interiores-inversion-tipo-21-cuota:
+            label: Deductible input VAT on domestic transactions in capital goods
+              at the 21% rate - deductible VAT amount
+          iva-deducible-interiores-inversion-tipo-4-base:
+            label: Deductible input VAT on domestic transactions in capital goods
+              at the 4% rate - taxable base
+          iva-deducible-interiores-inversion-tipo-4-cuota:
+            label: Deductible input VAT on domestic transactions in capital goods
+              at the 4% rate - deductible VAT amount
+          iva-deducible-interiores-inversion-tipo-5-base:
+            label: Deductible input VAT on domestic transactions in capital goods
+              at the 5% rate - taxable base
+          iva-deducible-interiores-inversion-tipo-5-cuota:
+            label: Deductible input VAT on domestic transactions in capital goods
+              at the 5% rate - deductible VAT amount
+          iva-deducible-interiores-inversion-total-base:
+            label: 'Total: Deductible input VAT on domestic transactions in capital
+              goods - taxable base'
+          iva-deducible-interiores-inversion-total-cuota:
+            label: 'Total: Deductible input VAT on domestic transactions in capital
+              goods - deductible VAT amount'
+          iva-deducible-intragrupo-corrientes-tipo-10-base:
+            label: Deductible input VAT on current intra-group transactions at the
+              10% rate - taxable base
+          iva-deducible-intragrupo-corrientes-tipo-10-cuota:
+            label: Deductible input VAT on current intra-group transactions at the
+              10% rate - deductible VAT amount
+          iva-deducible-intragrupo-corrientes-tipo-21-base:
+            label: Deductible input VAT on current intra-group transactions at the
+              21% rate - taxable base
+          iva-deducible-intragrupo-corrientes-tipo-21-cuota:
+            label: Deductible input VAT on current intra-group transactions at the
+              21% rate - deductible VAT amount
+          iva-deducible-intragrupo-corrientes-tipo-4-base:
+            label: Deductible input VAT on current intra-group transactions at the
+              4% rate - taxable base
+          iva-deducible-intragrupo-corrientes-tipo-4-cuota:
+            label: Deductible input VAT on current intra-group transactions at the
+              4% rate - deductible VAT amount
+          iva-deducible-intragrupo-corrientes-tipo-5-base:
+            label: Deductible input VAT on current intra-group transactions at the
+              5% rate - taxable base
+          iva-deducible-intragrupo-corrientes-tipo-5-cuota:
+            label: Deductible input VAT on current intra-group transactions at the
+              5% rate - deductible VAT amount
+          iva-deducible-intragrupo-corrientes-total-base:
+            label: 'Total: Deductible input VAT on current intra-group transactions
+              - taxable base'
+          iva-deducible-intragrupo-corrientes-total-cuota:
+            label: 'Total: Deductible input VAT on current intra-group transactions
+              - deductible VAT amount'
+          iva-deducible-intragrupo-inversion-tipo-10-base:
+            label: Deductible input VAT on intra-group transactions in capital goods
+              at the 10% rate - taxable base
+          iva-deducible-intragrupo-inversion-tipo-10-cuota:
+            label: Deductible input VAT on intra-group transactions in capital goods
+              at the 10% rate - deductible VAT amount
+          iva-deducible-intragrupo-inversion-tipo-21-base:
+            label: Deductible input VAT on intra-group transactions in capital goods
+              at the 21% rate - taxable base
+          iva-deducible-intragrupo-inversion-tipo-21-cuota:
+            label: Deductible input VAT on intra-group transactions in capital goods
+              at the 21% rate - deductible VAT amount
+          iva-deducible-intragrupo-inversion-tipo-4-base:
+            label: Deductible input VAT on intra-group transactions in capital goods
+              at the 4% rate - taxable base
+          iva-deducible-intragrupo-inversion-tipo-4-cuota:
+            label: Deductible input VAT on intra-group transactions in capital goods
+              at the 4% rate - deductible VAT amount
+          iva-deducible-intragrupo-inversion-tipo-5-base:
+            label: Deductible input VAT on intra-group transactions in capital goods
+              at the 5% rate - taxable base
+          iva-deducible-intragrupo-inversion-tipo-5-cuota:
+            label: Deductible input VAT on intra-group transactions in capital goods
+              at the 5% rate - deductible VAT amount
+          iva-deducible-intragrupo-inversion-total-base:
+            label: 'Total: Deductible input VAT on intra-group transactions in capital
+              goods - taxable base'
+          iva-deducible-intragrupo-inversion-total-cuota:
+            label: 'Total: Deductible input VAT on intra-group transactions in capital
+              goods - deductible VAT amount'
+          iva-deducible-rectificacion-base:
+            label: Adjustment of deductions - taxable base
+          iva-deducible-rectificacion-cuota:
+            label: Adjustment of deductions - deductible VAT amount
+          iva-deducible-rectificacion-intragrupo-base:
+            label: Adjustment of deductions on intra-group transactions - taxable
+              base
+          iva-deducible-rectificacion-intragrupo-cuota:
+            label: Adjustment of deductions on intra-group transactions - deductible
+              VAT amount
+          iva-deducible-resolucion-firme-tipos-no-vigentes-base:
+            label: Deductible VAT under a final administrative decision or court judgment
+              at rates no longer in force - taxable base
+          iva-deducible-resolucion-firme-tipos-no-vigentes-cuota:
+            label: Deductible VAT under a final administrative decision or court judgment
+              at rates no longer in force - deductible VAT amount
           iva-isp-interior-base:
             help: null
             label: Taxable base of accrued reverse-charge VAT on domestic transactions
           iva-isp-interior-cuota:
             help: null
             label: Accrued reverse-charge VAT on domestic transactions
+          iva-liquidaciones-total-a-ingresar:
+            label: Total amounts payable from the year's VAT self-assessments
+          iva-liquidaciones-total-devoluciones-elementos-transporte:
+            label: Total refunds of input VAT on acquisitions of means of transport
+          iva-liquidaciones-total-devoluciones-mensuales:
+            label: Total monthly VAT refunds for taxpayers on the monthly refund register
+          iva-liquidaciones-total-resultados-negativos-m322:
+            label: Total negative results for the year (form 322)
+          iva-liquidaciones-total-resultados-positivos-m322:
+            label: Total positive results for the year (form 322)
+          iva-liquidaciones-ultimo-periodo-a-devolver:
+            label: Result of the final period return - refundable
+          iva-modificacion-bases-cuotas-base:
+            label: Adjustment of taxable bases and VAT amounts - taxable base
+          iva-modificacion-bases-cuotas-cuota:
+            label: Adjustment of taxable bases and VAT amounts - VAT amount
+          iva-modificacion-bases-cuotas-intragrupo-base:
+            label: Adjustment of taxable bases and VAT amounts on intra-group transactions
+              - taxable base
+          iva-modificacion-bases-cuotas-intragrupo-cuota:
+            label: Adjustment of taxable bases and VAT amounts on intra-group transactions
+              - VAT amount
+          iva-modificacion-concurso-acreedores-base:
+            label: Adjustment of taxable bases and VAT amounts due to insolvency proceedings
+              - taxable base
+          iva-modificacion-concurso-acreedores-cuota:
+            label: Adjustment of taxable bases and VAT amounts due to insolvency proceedings
+              - VAT amount
+          iva-modificacion-recargo-base:
+            label: Adjustment of equivalence surcharge taxable bases and amounts -
+              taxable base
+          iva-modificacion-recargo-concurso-base:
+            label: Adjustment of equivalence surcharge taxable bases and amounts due
+              to insolvency proceedings - taxable base
+          iva-modificacion-recargo-concurso-cuota:
+            label: Adjustment of equivalence surcharge taxable bases and amounts due
+              to insolvency proceedings - surcharge amount
+          iva-modificacion-recargo-cuota:
+            label: Adjustment of equivalence surcharge taxable bases and amounts -
+              surcharge amount
+          iva-regularizacion-cuotas-art-80-cinco-5:
+            label: Adjustment of VAT amounts under LIVA art. 80.Five.5
+          iva-repercutido-agencias-viajes-tipo-21-base:
+            label: Output VAT under the travel agencies special scheme at the 21%
+              rate - taxable base
+          iva-repercutido-agencias-viajes-tipo-21-cuota:
+            label: Output VAT under the travel agencies special scheme at the 21%
+              rate - VAT amount
+          iva-repercutido-bienes-usados-tipo-0-base:
+            label: Output VAT under the second-hand goods special scheme at the 0%
+              rate - taxable base
+          iva-repercutido-bienes-usados-tipo-0-cuota:
+            label: Output VAT under the second-hand goods special scheme at the 0%
+              rate - VAT amount
+          iva-repercutido-bienes-usados-tipo-10-base:
+            label: Output VAT under the second-hand goods special scheme at the 10%
+              rate - taxable base
+          iva-repercutido-bienes-usados-tipo-10-cuota:
+            label: Output VAT under the second-hand goods special scheme at the 10%
+              rate - VAT amount
+          iva-repercutido-bienes-usados-tipo-21-base:
+            label: Output VAT under the second-hand goods special scheme at the 21%
+              rate - taxable base
+          iva-repercutido-bienes-usados-tipo-21-cuota:
+            label: Output VAT under the second-hand goods special scheme at the 21%
+              rate - VAT amount
+          iva-repercutido-bienes-usados-tipo-4-base:
+            label: Output VAT under the second-hand goods special scheme at the 4%
+              rate - taxable base
+          iva-repercutido-bienes-usados-tipo-4-cuota:
+            label: Output VAT under the second-hand goods special scheme at the 4%
+              rate - VAT amount
+          iva-repercutido-bienes-usados-tipo-5-base:
+            label: Output VAT under the second-hand goods special scheme at the 5%
+              rate - taxable base
+          iva-repercutido-bienes-usados-tipo-5-cuota:
+            label: Output VAT under the second-hand goods special scheme at the 5%
+              rate - VAT amount
+          iva-repercutido-criterio-caja-tipo-0-base:
+            label: Output VAT under the cash accounting special scheme at the 0% rate
+              - taxable base
+          iva-repercutido-criterio-caja-tipo-0-cuota:
+            label: Output VAT under the cash accounting special scheme at the 0% rate
+              - VAT amount
+          iva-repercutido-criterio-caja-tipo-10-base:
+            label: Output VAT under the cash accounting special scheme at the 10%
+              rate - taxable base
+          iva-repercutido-criterio-caja-tipo-10-cuota:
+            label: Output VAT under the cash accounting special scheme at the 10%
+              rate - VAT amount
+          iva-repercutido-criterio-caja-tipo-21-base:
+            label: Output VAT under the cash accounting special scheme at the 21%
+              rate - taxable base
+          iva-repercutido-criterio-caja-tipo-21-cuota:
+            label: Output VAT under the cash accounting special scheme at the 21%
+              rate - VAT amount
+          iva-repercutido-criterio-caja-tipo-4-base:
+            label: Output VAT under the cash accounting special scheme at the 4% rate
+              - taxable base
+          iva-repercutido-criterio-caja-tipo-4-cuota:
+            label: Output VAT under the cash accounting special scheme at the 4% rate
+              - VAT amount
+          iva-repercutido-criterio-caja-tipo-5-base:
+            label: Output VAT under the cash accounting special scheme at the 5% rate
+              - taxable base
+          iva-repercutido-criterio-caja-tipo-5-cuota:
+            label: Output VAT under the cash accounting special scheme at the 5% rate
+              - VAT amount
           iva-repercutido-intragrupo-tipo-0-base:
             label: Output VAT on intra-group transactions at the 0% rate - taxable
               base
@@ -70511,12 +70906,64 @@ modelo:
               base
           iva-repercutido-intragrupo-tipo-5-cuota:
             label: Output VAT on intra-group transactions at the 5% rate - VAT amount
+          iva-repercutido-recargo-tipo-0-5-base:
+            label: Equivalence surcharge at the 0.5% rate - taxable base
+          iva-repercutido-recargo-tipo-1-4-base:
+            label: Equivalence surcharge at the 1.4% rate - taxable base
+          iva-repercutido-recargo-tipo-1-75-base:
+            label: Equivalence surcharge at the 1.75% rate - taxable base
+          iva-repercutido-recargo-tipo-1-75-cuota:
+            label: Equivalence surcharge at the 1.75% rate - surcharge amount
+          iva-repercutido-recargo-tipo-5-2-base:
+            label: Equivalence surcharge at the 5.2% rate - taxable base
+          iva-resultado-liquidacion:
+            label: Result of the assessment
+          iva-suma-resultados:
+            label: Sum of results
+          iva-total-bases-iva:
+            label: Total taxable bases of output VAT
+          iva-volumen-agencias-viajes:
+            label: Turnover under the travel agencies special scheme
+          iva-volumen-bienes-de-inversion:
+            label: Supplies of capital goods
+          iva-volumen-bienes-usados:
+            label: Turnover under the special scheme for second-hand goods, works
+              of art, collectors' items and antiques
+          iva-volumen-criterio-caja:
+            label: Turnover under the cash accounting special scheme
+          iva-volumen-exentas-sin-derecho-deduccion:
+            label: Exempt transactions without right of deduction
+          iva-volumen-inmuebles-financieras-no-habituales:
+            label: Supplies of immovable property and non-recurring financial transactions
+          iva-volumen-intragrupo-arts-78-79:
+            label: Intra-group transactions valued under LIVA arts. 78 and 79
+          iva-volumen-inversion-sujeto-pasivo:
+            label: Taxable transactions under the reverse charge
+          iva-volumen-no-sujetas-reglas-localizacion:
+            label: Transactions outside the scope under the place-of-supply rules
+              (other than those in box 126)
           iva-volumen-operaciones-entregas-intracomunitarias:
             help: null
             label: Intra-Community supplies of goods and services
           iva-volumen-operaciones-exportaciones-exentas:
             help: null
             label: Exports and assimilated transactions
+          iva-volumen-oss-no-sujetas-localizacion:
+            label: 'OSS: transactions outside the scope under the place-of-supply
+              rules covered by the one-stop shop'
+          iva-volumen-oss-sujetas:
+            label: 'OSS: taxable transactions covered by the one-stop shop'
+          iva-volumen-reagp:
+            label: Turnover under the agriculture, livestock and fisheries special
+              scheme
+          iva-volumen-recargo-equivalencia:
+            label: Turnover under the equivalence surcharge special scheme
+          iva-volumen-regimen-general:
+            label: Turnover under the general scheme
+          iva-volumen-regimen-simplificado:
+            label: Turnover under the simplified scheme
+          iva-volumen-total:
+            label: Total turnover
           tipo-declaracion:
             help: null
             label: Return type
@@ -71955,6 +72402,20 @@ modelo:
               help: null
               label: Assets and rights - A2. Urban immovable property - Other properties
                 - Total
+            declaracion-a:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Taxes actually
+                paid abroad
+            declaracion-b:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Part of the
+                taxable base taxed abroad
+            declaracion-i:
+              help: null
+              label: Payment - Payment amount
+            declaracion-negativa:
+              help: null
+              label: Nil return
             identificacion-1:
               help: null
               label: Special taxation arrangements - Habitual residence was outside
@@ -72054,6 +72515,58 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Period (annual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Taxpayer - Habitual residence - Province code
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Supplementary return - Amounts payable from previous self-assessments
+                or administrative assessments
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Taxpayer - Disability - Type of disability
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Taxpayer - Disability - Disability percentage
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Taxpayer - Marital status
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Date of the return - Year
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Date of the return - Day
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Date of the return - Town
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Date of the return - Month
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Taxpayer - Date of birth
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Taxpayer - Nationality
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Marital property regime
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representative - Tax identification number
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representative - Surnames and given name, or company name
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Taxpayer - Sex
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Return type
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Payment - Payment method
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Assessment - Gross tax liability limit - Portion of the personal
@@ -72274,6 +72787,20 @@ modelo:
               help: null
               label: Assets and rights - A2. Urban immovable property - Other properties
                 - Total
+            declaracion-a:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Taxes actually
+                paid abroad
+            declaracion-b:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Part of the
+                taxable base taxed abroad
+            declaracion-i:
+              help: null
+              label: Payment - Payment amount
+            declaracion-negativa:
+              help: null
+              label: Nil return
             identificacion-1:
               help: null
               label: Special taxation arrangements - Habitual residence was outside
@@ -72373,6 +72900,58 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Period (annual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Taxpayer - Habitual residence - Province code
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Supplementary return - Amounts payable from previous self-assessments
+                or administrative assessments
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Taxpayer - Disability - Type of disability
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Taxpayer - Disability - Disability percentage
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Taxpayer - Marital status
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Date of the return - Year
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Date of the return - Day
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Date of the return - Town
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Date of the return - Month
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Taxpayer - Date of birth
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Taxpayer - Nationality
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Marital property regime
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representative - Tax identification number
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representative - Surnames and given name, or company name
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Taxpayer - Sex
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Return type
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Payment - Payment method
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Assessment - Gross tax liability limit - Portion of the personal
@@ -72593,6 +73172,20 @@ modelo:
               help: null
               label: Assets and rights - A2. Urban immovable property - Other properties
                 - Total
+            declaracion-a:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Taxes actually
+                paid abroad
+            declaracion-b:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Part of the
+                taxable base taxed abroad
+            declaracion-i:
+              help: null
+              label: Payment - Payment amount
+            declaracion-negativa:
+              help: null
+              label: Nil return
             identificacion-1:
               help: null
               label: Special taxation arrangements - Habitual residence was outside
@@ -72692,6 +73285,58 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Period (annual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Taxpayer - Habitual residence - Province code
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Supplementary return - Amounts payable from previous self-assessments
+                or administrative assessments
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Taxpayer - Disability - Type of disability
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Taxpayer - Disability - Disability percentage
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Taxpayer - Marital status
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Date of the return - Year
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Date of the return - Day
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Date of the return - Town
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Date of the return - Month
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Taxpayer - Date of birth
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Taxpayer - Nationality
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Marital property regime
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representative - Tax identification number
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representative - Surnames and given name, or company name
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Taxpayer - Sex
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Return type
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Payment - Payment method
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Assessment - Gross tax liability limit - Portion of the personal
@@ -72912,6 +73557,20 @@ modelo:
               help: null
               label: Assets and rights - A2. Urban immovable property - Other properties
                 - Total
+            declaracion-a:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Taxes actually
+                paid abroad
+            declaracion-b:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Part of the
+                taxable base taxed abroad
+            declaracion-i:
+              help: null
+              label: Payment - Payment amount
+            declaracion-negativa:
+              help: null
+              label: Nil return
             identificacion-1:
               help: null
               label: Special taxation arrangements - Habitual residence was outside
@@ -73011,6 +73670,58 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Period (annual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Taxpayer - Habitual residence - Province code
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Supplementary return - Amounts payable from previous self-assessments
+                or administrative assessments
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Taxpayer - Disability - Type of disability
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Taxpayer - Disability - Disability percentage
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Taxpayer - Marital status
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Date of the return - Year
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Date of the return - Day
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Date of the return - Town
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Date of the return - Month
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Taxpayer - Date of birth
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Taxpayer - Nationality
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Marital property regime
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representative - Tax identification number
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representative - Surnames and given name, or company name
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Taxpayer - Sex
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Return type
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Payment - Payment method
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Assessment - Gross tax liability limit - Portion of the personal
@@ -73231,6 +73942,20 @@ modelo:
               help: null
               label: Assets and rights - A2. Urban immovable property - Other properties
                 - Total
+            declaracion-a:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Taxes actually
+                paid abroad
+            declaracion-b:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Part of the
+                taxable base taxed abroad
+            declaracion-i:
+              help: null
+              label: Payment - Payment amount
+            declaracion-negativa:
+              help: null
+              label: Nil return
             identificacion-1:
               help: null
               label: Special taxation arrangements - Habitual residence was outside
@@ -73330,6 +74055,58 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Period (annual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Taxpayer - Habitual residence - Province code
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Supplementary return - Amounts payable from previous self-assessments
+                or administrative assessments
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Taxpayer - Disability - Type of disability
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Taxpayer - Disability - Disability percentage
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Taxpayer - Marital status
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Date of the return - Year
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Date of the return - Day
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Date of the return - Town
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Date of the return - Month
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Taxpayer - Date of birth
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Taxpayer - Nationality
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Marital property regime
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representative - Tax identification number
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representative - Surnames and given name, or company name
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Taxpayer - Sex
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Return type
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Payment - Payment method
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Assessment - Gross tax liability limit - Portion of the personal

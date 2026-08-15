@@ -1,0 +1,37 @@
+# Modelo 345 fichero -- transcribed from the bundled AEAT Diseno de Registro
+# (source aeat-dr-345-2025, corpus/aeat_official/disenos_registro/modelo_345/
+# files/01-345-ejercicio-2025.pdf, sha256
+# fb0faaf68f8b0de29316bdc65eaeb3ba0dcb8a441eea4d5415d0cb4517c287fd).
+#
+# The design declares exactly two records of 500 bytes each: registro de tipo 1
+# (declarante) with 13 top-level positions and registro de tipo 2 (declarados)
+# with 21. Every position of both records is declared, each record's field
+# lengths summing to exactly 500 contiguously from position 1.
+#
+# Global rules the design states once, applied throughout:
+#   "Todos los importes seran positivos."
+#   "Los campos numericos que no tengan contenido se rellenaran a ceros."
+#   "Los campos alfanumericos/alfabeticos que no tengan contenido se rellenaran
+#    a blancos."
+#   "Todos los campos numericos ajustados a la derecha y rellenos de ceros por la
+#    izquierda."
+#   "Todos los campos alfanumericos/alfabeticos ajustados a la izquierda y
+#    rellenos de blancos por la derecha."
+
+[[revisions."2025".export_layouts]]
+id = "modelo-345-fichero-2025"
+legal_refs = [
+    "orden-hfp-823-2022:art-1",
+    "orden-hfp-528-2023:art-unico",
+    "orden-hfp-1397-2023:art-sexto",
+    "orden-hac-1504-2024:art-octavo",
+    "orden-hac-1430-2025:art-septimo",
+]
+source_refs = [
+    "aeat-dr-345-2025",
+    "boe-modelo-345-base-order",
+    "boe-modelo-345-2023-amendment-hfp-528",
+    "boe-modelo-345-2023-amendment-hfp-1397",
+    "boe-modelo-345-2024-amendment-hac-1504",
+    "boe-modelo-345-2025-amendment-hac-1430",
+]

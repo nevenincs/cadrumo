@@ -44,7 +44,7 @@ from ...core.paths import effective_storage_root
 
 if TYPE_CHECKING:
     from ...domain.buckets import BucketEventHistoryCatalogue
-    from ..user_profile._custody_ports import (
+    from ..user_profile import (
         ProfileBucketSessionPort,
         ProfileCustodyEnvelopePort,
         ProfileCustodyPasswordMaterialPort,

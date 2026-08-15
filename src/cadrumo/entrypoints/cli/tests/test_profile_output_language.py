@@ -1,4 +1,24 @@
-"""CLI behavior tests for profile-owned output language."""
+"""CLI behavior tests for profile-owned output language.
+
+Profiles are seeded through the credential registration door: the wizard
+``create`` arm refuses unconditionally, so a profile can no longer be minted
+from the command line. What each test is about -- where the preference is
+stored, that ``edit`` patches instead of rewriting, that ``--language``
+overrides for one invocation, that ``config repair`` speaks the profile's
+language -- is unchanged by that, so the seed moved and the subjects stayed.
+
+Two tests were retired rather than moved, because their subject was a code
+path the retirement made unreachable rather than merely unseedable:
+
+- create_error_renders_in_command_line_output_language: it drove the
+  missing-required-flags refusal, which no live surface can reach --
+  ``create`` refuses above it, and a non-interactive ``edit`` is a patch that
+  never checks required flags.
+- env_output_language_honored_when_creating_profile_with_accept_defaults:
+  the environment seeding it asserted runs only on the full-flow path, which
+  ``create`` no longer reaches and a non-interactive ``edit`` bypasses,
+  writing only explicitly-supplied flags.
+"""
 
 from __future__ import annotations
 
@@ -11,6 +31,7 @@ from click.testing import Result
 
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage
+from ....tests.user_profile import register_cli_profile
 
 __all__ = ["isolated_profile_storage"]
 
@@ -21,48 +42,15 @@ def _invoke(args: Sequence[str], *, env: Mapping[str, str | None] | None = None)
     return invoke_cached_cli(args, env=env)
 
 
-def _create_profile(name: str, *options: str, env: Mapping[str, str | None] | None = None) -> Result:
-    return _invoke(
-        (
-            "config",
-            "profile",
-            "create",
-            name,
-            "--quiet",
-            *_filing_identity_defaults(name, options),
-            *options,
-        ),
-        env=env,
-    )
-
-
-def _filing_identity_defaults(name: str, options: tuple[str, ...]) -> tuple[str, ...]:
-    option_set = set(options)
-    defaults: list[str] = []
-    if "--entity-type" not in option_set:
-        defaults.extend(["--entity-type", "natural_person"])
-    entity_type = _option_value(options, "--entity-type") or "natural_person"
-    if entity_type == "legal_entity":
-        if "--legal-name" not in option_set:
-            defaults.extend(["--legal-name", f"{name} SL"])
-        return tuple(defaults)
-    if "--name" not in option_set:
-        defaults.extend(["--name", name])
-    if entity_type == "natural_person" and "--surnames" not in option_set:
-        defaults.extend(["--surnames", "Test"])
-    return tuple(defaults)
-
-
-def _option_value(options: tuple[str, ...], flag: str) -> str | None:
-    try:
-        index = options.index(flag)
-    except ValueError:
-        return None
-    value_index = index + 1
-    if value_index >= len(options):
-        return None
-    value = options[value_index]
-    return None if value.startswith("--") else value
+def _seed_profile(name: str, **facts: str) -> str:
+    """Seed one profile through the credential registration door."""
+    merged = {
+        "taxpayer_type.entity_type": "natural_person",
+        "identity.name": name,
+        "identity.surnames": "Test",
+        **facts,
+    }
+    return register_cli_profile(label=name, facts=merged)
 
 
 def _json_output(result: Result) -> str:
@@ -77,92 +65,68 @@ def _profile_facts(profile_name: str) -> dict[str, str]:
     return {row["path"]: row["value"] for row in payload["result"]["facts"]}
 
 
-def test_config_profile_create_writes_profile_output_language() -> None:
-    from ....adapters.persistence.storage.master_key import (
-        activate_master_key_provider,
-        get_master_key_provider,
-    )
+def test_registration_writes_profile_output_language() -> None:
+    """The output-language preference declared at registration is stored and read back.
+
+    Both surfaces are asserted, because they read through different paths:
+    the ``profile show`` projection and the encrypted profile record the
+    workflow state resolves.
+
+    The wizard-create bucket-event assertions this test also carried
+    (``profile.created`` plus a ``keys:``-scoped ``profile.values.updated``)
+    were dropped rather than moved: the registration door emits no
+    workflow-state bucket events at all, so there was nothing to re-point
+    them at and asserting the wizard's events here would assert a path the
+    product no longer runs.
+    """
+    from ....application.user_profile import fact_value
     from ....application.workflow import workflow_state_repository
-    from ....core import resolve_active_bucket_id
-    from ....core.config import override_settings
+    from ....tests.profile_capsule import open_test_profile_session
 
-    init_result = _create_profile(
+    profile_id = _seed_profile(
         "default",
-        "--tax-id",
-        "00000000T",
-        "--activity",
-        "Servicios",
-        "--output-language",
-        "en",
+        **{
+            "identity.tax_id": "00000000T",
+            "activities.description": "Servicios",
+            "preferences.output_language": "en",
+        },
     )
 
-    assert init_result.exit_code == 0, init_result.output
     facts = _profile_facts("default")
     assert facts["preferences.output_language"] == "en"
-    bucket_id = resolve_active_bucket_id()
-    assert bucket_id is not None
-    with (
-        override_settings(cadrumo_active_profile=bucket_id),
-        activate_master_key_provider(get_master_key_provider()),
-    ):
-        state = workflow_state_repository().load()
-        record = state.active_profile_record()
+    with open_test_profile_session(profile_id):
+        record = workflow_state_repository().load().active_profile_record()
         assert record is not None
-        from ....application.user_profile import fact_value
-
         assert fact_value(record, "preferences.output_language") == "en"
-        profile_id = record.profile_id
-        assert ("profile.created", profile_id, profile_id) in [
-            (event.action, event.bucket_id, event.object_id) for event in state.bucket_events
-        ]
-        assert any(
-            event.action == "profile.values.updated"
-            and event.bucket_id == profile_id
-            and event.object_id is not None
-            and event.object_id.startswith("keys:")
-            for event in state.bucket_events
-        )
 
 
-def test_config_profile_create_validates_profile_output_language() -> None:
-    from ....adapters.persistence.storage.master_key import (
-        activate_master_key_provider,
-        get_master_key_provider,
-    )
+def test_config_profile_edit_quiet_validates_profile_output_language() -> None:
+    """An unknown output-language token is refused, and the stored value survives.
+
+    The refusal is the subject; the profile is seeded through the
+    registration door and then patched, because ``edit`` is the surviving
+    surface that takes an ``--output-language`` flag.
+    """
+    from ....application.user_profile import fact_value
     from ....application.workflow import workflow_state_repository
+    from ....tests.profile_capsule import open_test_profile_session
 
-    valid_result = _create_profile(
+    profile_id = _seed_profile(
         "default",
-        "--tax-id",
-        "00000000T",
-        "--activity",
-        "Servicios",
-        "--output-language",
-        "ca",
-    )
-    invalid_result = _create_profile(
-        "invalid",
-        "--tax-id",
-        "00000000T",
-        "--activity",
-        "Servicios",
-        "--output-language",
-        "zz",
+        **{"identity.tax_id": "00000000T", "activities.description": "Servicios"},
     )
 
+    valid_result = _invoke(("config", "profile", "edit", "default", "--quiet", "--output-language", "ca"))
     assert valid_result.exit_code == 0, valid_result.output
-    facts = _profile_facts("default")
-    assert facts["preferences.output_language"] == "ca"
-    with activate_master_key_provider(get_master_key_provider()):
-        state = workflow_state_repository().load()
-        record = state.active_profile_record()
-        assert record is not None
-        from ....application.user_profile import fact_value
+    assert _profile_facts("default")["preferences.output_language"] == "ca"
 
-        assert fact_value(record, "preferences.output_language") == "ca"
-        assert invalid_result.exit_code != 0
-        assert "zz" in invalid_result.output
-        assert "Traceback" not in invalid_result.output
+    invalid_result = _invoke(("config", "profile", "edit", "default", "--quiet", "--output-language", "zz"))
+    assert invalid_result.exit_code != 0
+    assert "zz" in invalid_result.output
+    assert "Traceback" not in invalid_result.output
+
+    # The refused patch left the previously-stored value untouched.
+    with open_test_profile_session(profile_id):
         reloaded = workflow_state_repository().load().active_profile_record()
         assert reloaded is not None
         assert fact_value(reloaded, "preferences.output_language") == "ca"
@@ -179,33 +143,22 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
     left exactly as stored.
     """
 
-    from ....adapters.persistence.storage.master_key import (
-        activate_master_key_provider,
-        get_master_key_provider,
-    )
     from ....application.user_profile import fact_value
     from ....application.workflow import workflow_state_repository
+    from ....tests.profile_capsule import open_test_profile_session
 
-    create_result = _create_profile(
+    profile_id = _seed_profile(
         "default",
-        "--entity-type",
-        "natural_person",
-        "--tax-id",
-        "00000000T",
-        "--name",
-        "Output",
-        "--surnames",
-        "Language",
-        "--activity",
-        "Servicios",
-        "--output-language",
-        "en",
-        "--address-postcode",
-        "08001",
-        "--iva-regime",
-        "EXENTO",
+        **{
+            "identity.tax_id": "00000000T",
+            "identity.name": "Output",
+            "identity.surnames": "Language",
+            "activities.description": "Servicios",
+            "preferences.output_language": "en",
+            "contact.postcode": "08001",
+            "iva.regime": "EXENTO",
+        },
     )
-    assert create_result.exit_code == 0, create_result.output
 
     # Edit ONE unrelated field; the operator supplies nothing else.
     edit_result = _invoke(
@@ -221,7 +174,7 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
     )
     assert edit_result.exit_code == 0, edit_result.output
 
-    with activate_master_key_provider(get_master_key_provider()):
+    with open_test_profile_session(profile_id):
         record = workflow_state_repository().load().active_profile_record()
         assert record is not None
         # The supplied field is patched.
@@ -235,17 +188,15 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
 
 
 def test_global_language_flag_overrides_profile_for_invocation() -> None:
-    # Seed a profile with output-language "ca" via the canonical CLI path.
-    create_result = _create_profile(
+    # Seed a profile with output-language "ca" through the registration door.
+    _seed_profile(
         "default",
-        "--tax-id",
-        "00000000T",
-        "--activity",
-        "Servicios",
-        "--output-language",
-        "ca",
+        **{
+            "identity.tax_id": "00000000T",
+            "activities.description": "Servicios",
+            "preferences.output_language": "ca",
+        },
     )
-    assert create_result.exit_code == 0, create_result.output
 
     result = _invoke(("--language", "en", "--format", "json"))
 
@@ -261,97 +212,6 @@ def test_global_language_flag_overrides_profile_for_invocation() -> None:
     assert facts["preferences.output_language"] == "ca"
 
 
-def test_create_error_renders_in_command_line_output_language() -> None:
-    """A creation-time error renders in the ``--output-language`` given on create.
-
-    Before fix: a refusal raised during ``profile create`` (e.g. a
-    missing required flag under ``--quiet``) rendered in the default
-    language even when ``--output-language en`` was supplied.
-    After fix: the create flag drives the error language too — it is
-    available at parse time, before the profile exists.
-
-    ``--tax-id`` is the one unconditionally-required flag, so omitting
-    it under ``--quiet`` raises the missing-required-flags refusal that
-    must localise to the supplied ``--output-language``.
-    """
-
-    english = _create_profile(
-        "needslang",
-        "--output-language",
-        "en",
-    )
-    spanish = _create_profile(
-        "needslang2",
-        "--output-language",
-        "es",
-    )
-
-    assert english.exit_code != 0, english.output
-    assert spanish.exit_code != 0, spanish.output
-    # The English run names the missing flag in English prose; the
-    # Spanish run does not carry the English wording.
-    assert "is missing required details" in english.output
-    assert "is missing required details" not in spanish.output
-
-
-def test_env_output_language_honored_when_creating_profile_with_accept_defaults() -> None:
-    """``CADRUMO_OUTPUT_LANGUAGE=en`` is written to the profile when no ``--output-language`` flag is given.
-
-    Before the fix: ``profile create --quiet --accept-defaults`` seeded the
-    catalogue default (``"es"``) for every question that the operator did
-    not supply on the command line, including ``output-language``.  The
-    ``CADRUMO_OUTPUT_LANGUAGE`` env var was completely ignored for the stored
-    preference.
-
-    After the fix: the wizard reads ``load_settings().cadrumo_output_language``
-    (which honours the env var) and injects that value into the canonical
-    dict before the catalogue-default seeding runs, so the env var wins.
-    """
-
-    from ....adapters.persistence.storage.master_key import (
-        activate_master_key_provider,
-        get_master_key_provider,
-    )
-    from ....application.user_profile import fact_value
-    from ....application.workflow import workflow_state_repository
-
-    result = _create_profile(
-        "autonoma",
-        "--accept-defaults",
-        "--entity-type",
-        "natural_person",
-        "--irpf-income-categories",
-        "actividad_economica",
-        "--tax-id",
-        "12345678Z",
-        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
-    )
-    assert result.exit_code == 0, result.output
-
-    facts = _profile_facts("autonoma")
-    assert facts.get("preferences.output_language") == "en", (
-        f"Expected output_language 'en' but got {facts.get('preferences.output_language')!r}. "
-        "CADRUMO_OUTPUT_LANGUAGE=en env var was not honoured by profile create."
-    )
-
-    # Verify via the repository as well (not just the CLI show surface).
-    from ....core import resolve_active_bucket_id
-    from ....core.config import override_settings
-
-    bucket_id = resolve_active_bucket_id()
-    assert bucket_id is not None
-    with (
-        override_settings(cadrumo_active_profile=bucket_id),
-        activate_master_key_provider(get_master_key_provider()),
-    ):
-        record = workflow_state_repository().load().active_profile_record()
-        assert record is not None
-        assert fact_value(record, "preferences.output_language") == "en", (
-            "Repository fact 'preferences.output_language' must be 'en' when "
-            "CADRUMO_OUTPUT_LANGUAGE=en is set at profile create time."
-        )
-
-
 def test_config_repair_labels_render_in_profile_output_language() -> None:
     """``config repair`` renders its labels in the active profile's language.
 
@@ -363,17 +223,15 @@ def test_config_repair_labels_render_in_profile_output_language() -> None:
     language through the active-profile resolver.
     """
 
-    # Seed a profile with output-language "en" via the canonical CLI path.
-    create_result = _create_profile(
+    # Seed a profile with output-language "en" through the registration door.
+    _seed_profile(
         "default",
-        "--tax-id",
-        "00000000T",
-        "--activity",
-        "Servicios",
-        "--output-language",
-        "en",
+        **{
+            "identity.tax_id": "00000000T",
+            "activities.description": "Servicios",
+            "preferences.output_language": "en",
+        },
     )
-    assert create_result.exit_code == 0, create_result.output
 
     result = _invoke(("config", "repair"))
 

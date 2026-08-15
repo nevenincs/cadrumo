@@ -5,7 +5,7 @@
   "source_pages": [
     "https://www.boe.es/buscar/act.php?id=BOE-A-2003-5304"
   ],
-  "artefact_count": 2,
+  "artefact_count": 1,
   "artefacts": [
     {
       "modelo": "186",
@@ -18,19 +18,6 @@
       "bytes": 183396,
       "sha256": "662639891a323cd1139fac3c4220a61e87ae1be25b062006ac840f71488273c6",
       "retrieved_at": "2026-08-15"
-    },
-    {
-      "modelo": "186",
-      "title": "186 - Anexo I (Nacimientos), Tipo de Registro 1 y 2 -- losslessly wrapped as single-page PDF so the registry's record-design tooling (.pdf/.xls/.xlsx/.xlsm only) can address it; content is the unmodified image above",
-      "source_page": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-5304",
-      "url": "https://www.boe.es/datos/imagenes/disp/2003/63/05304_8169760_image1.png",
-      "stored_path": "files/01-186-anexo-i-tipo1-nacimientos.pdf",
-      "original_filename": "01-186-anexo-i-tipo1-nacimientos.pdf",
-      "content_type": "application/pdf",
-      "bytes": 482074,
-      "sha256": "a46bfe8f3eaa094ebef3a628781ace04b23d6ee4ab6a2d30f33706264325253b",
-      "retrieved_at": "2026-08-15",
-      "derived_from": "files/01-186-anexo-i-tipo1-nacimientos.png"
     }
   ]
 }

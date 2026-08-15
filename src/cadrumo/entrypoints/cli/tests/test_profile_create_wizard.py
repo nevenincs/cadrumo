@@ -1,12 +1,29 @@
-"""Terminal-boundary coverage for an interactive ``aeat config profile create``.
+"""Terminal-boundary coverage for ``aeat config profile create``.
 
 ``config profile create`` is the operator's first contact with Cadrumo. A
 capable terminal is diverted to the profile manager before this command
 runs; a host without a usable console (this test process included) reaches
-the command and is refused instructively, naming the flag form, rather than
-being half-prompted. This module covers that CLI boundary: the
-machine-caller contract of a refused run, and the pinned question
-inventory the flags are derived from.
+the command and is refused, rather than being half-prompted. This module
+covers that CLI boundary: the machine-caller contract of a refused run, and
+the pinned question inventory the flags are derived from.
+
+The refusal is now unconditional. Credential registration is the only
+creation door, so every ``create`` invocation is refused whether or not a
+console exists and whether or not flags were supplied. What survives here is
+the boundary contract of a refused run -- no traceback, no half-prompt, a
+parseable stream under ``--format json`` -- which holds under either cause.
+Two tests were retired because they asserted that a scripted create
+SUCCEEDS:
+
+- create_does_not_require_an_existing_active_session: its subject was a
+  second scripted create in an existing root. No successor today; two
+  in-process registrations in one process are blocked by a separate open
+  handover defect, so re-founding it would need a construction production
+  cannot produce.
+- bare_create_bypasses_a_locked_existing_profile: its subject -- that a bare
+  create is not pre-empted by the storage runtime's no-active-session
+  refusal -- survives, and is asserted below against a profile seeded
+  through the registration door and then locked.
 """
 
 from __future__ import annotations
@@ -19,6 +36,7 @@ from ....adapters.persistence.storage.master_key import close_active_bucket_sess
 from ....application.wizard import WIZARD_FLOWS
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
+from ....tests.user_profile import register_cli_profile
 from .. import _prefer_complete_verb_path
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -51,86 +69,23 @@ def test_create_without_a_name_reaches_runtime_dispatch() -> None:
     assert "Traceback" not in result.output
 
 
-def test_create_does_not_require_an_existing_active_session() -> None:
-    """A second profile can start while the selected profile is locked.
+def test_bare_create_is_not_pre_empted_by_a_locked_existing_profile() -> None:
+    """The create refusal must be reachable before any old bucket is unlocked.
 
-    The first create leaves its pointer selected but the process has no live
-    bucket session. The next create is still a bootstrap path: its own create
-    span provisions and opens the new bucket before writing it. A root callback
-    that accidentally active-gates ``create`` turns this into the misleading
-    "run config login" storage refusal.
+    The important boundary is that the command reaches its own refusal rather
+    than failing earlier with the storage runtime's no-active-session refusal,
+    which would tell a first-timer to log in to a profile they do not have.
     """
-    first = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            "existing",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Existing",
-            "--surnames",
-            "Profile",
-            "--activity",
-            "design",
-        ],
+    register_cli_profile(
+        label="existing",
+        facts={
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Existing",
+            "identity.surnames": "Profile",
+            "activities.description": "design",
+        },
     )
-    assert first.exit_code == 0, first.output
-    close_active_bucket_session()
-
-    second = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            "new",
-            "--quiet",
-            "--tax-id",
-            "87654321X",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "New",
-            "--surnames",
-            "Profile",
-            "--activity",
-            "design",
-        ],
-    )
-    assert second.exit_code == 0, second.output
-
-
-def test_bare_create_bypasses_a_locked_existing_profile() -> None:
-    """The TUI route must be reachable before any old bucket is unlocked.
-
-    The test host cannot draw the manager, so the command reaches its
-    documented non-console refusal. The important boundary is that it does
-    not fail earlier with the storage runtime's no-active-session refusal.
-    """
-    created = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            "existing",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Existing",
-            "--surnames",
-            "Profile",
-            "--activity",
-            "design",
-        ],
-    )
-    assert created.exit_code == 0, created.output
     close_active_bucket_session()
 
     result = invoke_cached_cli(["config", "profile", "create"])
@@ -218,14 +173,18 @@ _EXPECTED_SETUP_QUESTION_IDS = frozenset(
         "irpf-income-categories",
         "irpf-special-regime",
         "irpf-special-regime-start-date",
+        "iva-cash-accounting-regime-enrolled",
         "iva-group-dominant-entity-enrolled",
         "iva-group-member-enrolled",
+        "iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
         "iva-intracommunity-operations-exceed-50000-eur",
+        "iva-m303-regime-composition",
         "iva-oss-enrolled",
         "iva-redeme-enrolled",
         "iva-regime",
         "iva-roi-enrolled",
         "iva-sii-enrolled",
+        "iva-voluntary-sii-enrolled",
         "legal-entity-form",
         "legal-name",
         "ley-49-2002-option-date",
@@ -265,6 +224,7 @@ _EXPECTED_SETUP_QUESTION_IDS = frozenset(
         "surnames",
         "tax-id",
         "tax-residence-ccaa",
+        "tax-residence-jurisdiction-scope",
         "taxation-type",
         "taxpayer-birth-date",
         "taxpayer-death-date",

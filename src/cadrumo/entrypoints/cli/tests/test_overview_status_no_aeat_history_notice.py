@@ -22,23 +22,36 @@ from ....tests.secure_sql import isolated_profile_storage
 
 __all__ = ["isolated_profile_storage"]
 from ....tests.cli_envelope import unwrap_envelope_notices
-from ._profile_cli_support import create_quiet_profile as _create_profile
+from ._profile_cli_support import seed_profile as _seed_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _NOTICE_CODE = "overview.no_aeat_history"
-_COMMON_TERRITORY_ARGS = (
-    "--tax-residence-jurisdiction-scope",
-    "common_regime",
-)
-_M303_IVA_FACT_ARGS = (
-    "--iva-m303-regime-composition",
-    "general",
-    "--no-iva-redeme-enrolled",
-    "--no-iva-cash-accounting-regime-enrolled",
-    "--no-iva-voluntary-sii-enrolled",
-    "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
-)
+# The profile facts a filer needs to be readiness-complete for M303 work.
+# The wizard ``create`` arm refuses unconditionally -- credential
+# registration is the only creation door -- so these are seeded as facts
+# rather than passed as create flags. The notice, not the seeding, is the
+# subject of every test below.
+_M303_READY_FACTS = {
+    "tax_residence.jurisdiction_scope": "common_regime",
+    "iva.regime": "GENERAL",
+    "iva.m303_regime_composition": "general",
+    "iva.redeme_enrolled": "false",
+    "iva.cash_accounting_regime_enrolled": "false",
+    "iva.voluntary_sii_enrolled": "false",
+    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+    "activities.description": "consultoria informatica",
+}
+_LEGAL_ENTITY_FACTS = {
+    "taxpayer_type.entity_type": "legal_entity",
+    "taxpayer_type.legal_entity_form": "sl",
+    "identity.tax_id": "B66012345",
+    "identity.legal_name": "Webco SL",
+    "identity.name": "",
+    "identity.surnames": "",
+    "taxpayer_type.irpf_income_categories": "",
+    "irpf.estimation_regime": "",
+}
 
 
 def _status_notices() -> list[dict[str, object]]:
@@ -55,20 +68,11 @@ def _history_notice(notices: list[dict[str, object]]) -> dict[str, object]:
 
 def test_a_fresh_natural_person_profile_gets_the_history_notice_with_the_sweep_action() -> None:
     """The measured defect: the envelope now carries the notice at all."""
-    result = _create_profile(
+    _seed_profile(
         "freelancer",
-        "--entity-type",
-        "natural_person",
-        "--tax-id",
-        "12345678Z",
-        "--activity",
-        "consultoria informatica",
-        *_COMMON_TERRITORY_ARGS,
-        "--iva-regime",
-        "GENERAL",
-        *_M303_IVA_FACT_ARGS,
+        **_M303_READY_FACTS,
+        **{"taxpayer_type.entity_type": "natural_person", "identity.tax_id": "12345678Z"},
     )
-    assert result.exit_code == 0, result.output
 
     notice = _history_notice(_status_notices())
     assert notice["severity"] == "info"
@@ -84,22 +88,7 @@ def test_a_fresh_sociedades_profile_gets_the_history_notice_with_no_action() -> 
     taxpayer and zero calculation observations: the notice fires (the gap is
     real) but carries no action (the whole-history sweep is not a fix for it).
     """
-    result = _create_profile(
-        "webco",
-        "--entity-type",
-        "legal_entity",
-        "--legal-entity-form",
-        "sl",
-        "--tax-id",
-        "B66012345",
-        "--activity",
-        "consultoria informatica",
-        *_COMMON_TERRITORY_ARGS,
-        "--iva-regime",
-        "GENERAL",
-        *_M303_IVA_FACT_ARGS,
-    )
-    assert result.exit_code == 0, result.output
+    _seed_profile("webco", **_M303_READY_FACTS, **_LEGAL_ENTITY_FACTS)
 
     notice = _history_notice(_status_notices())
     assert notice["severity"] == "info"
@@ -112,22 +101,7 @@ def test_one_pulled_observation_from_any_modelo_silences_the_sociedades_notice_t
     from ....application.workflow import read_profile_bucket
     from ....domain.calculations.registry import RegistryModeloObservation
 
-    result = _create_profile(
-        "webco-with-history",
-        "--entity-type",
-        "legal_entity",
-        "--legal-entity-form",
-        "sl",
-        "--tax-id",
-        "B66012345",
-        "--activity",
-        "consultoria informatica",
-        *_COMMON_TERRITORY_ARGS,
-        "--iva-regime",
-        "GENERAL",
-        *_M303_IVA_FACT_ARGS,
-    )
-    assert result.exit_code == 0, result.output
+    _seed_profile("webco-with-history", **_M303_READY_FACTS, **_LEGAL_ENTITY_FACTS)
 
     pointer = read_profile_bucket("webco-with-history")
     assert pointer is not None

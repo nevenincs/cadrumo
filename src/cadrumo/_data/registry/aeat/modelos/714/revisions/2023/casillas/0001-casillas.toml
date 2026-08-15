@@ -1379,3 +1379,39 @@ input_kind = "manual"
 export_refs = ["modelo-714-identificacion-complementaria-cuotas-anteriores"]
 legal_refs = ["orden-hac-265-2024:art-4"]
 source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "decl.idioma"
+number = "idioma"
+segmento = "714-00"
+section = ["declarante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-decl-idioma"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "bienes.c1-total"
+number = "a"
+segmento = "714-03"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-bienes-c1-total"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]
+
+[[revisions."2023".casillas]]
+id = "bienes.c2-total"
+number = "b"
+segmento = "714-03"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-714-bienes-c2-total"]
+legal_refs = ["orden-hac-265-2024:art-4"]
+source_refs = ["aeat-dr-714-2023"]

@@ -52,6 +52,23 @@ def _default_custody_adapters() -> Any:
     return import_module("cadrumo.adapters.persistence.storage.custody")
 
 
+class ProfileCustodyDisplacedSessionRetirementError(ProfileCustodyTransactionConflictError):
+    """The create transaction could not void the session of the profile it displaces.
+
+    Distinct from the generic transaction conflict for one reason that is
+    operator-facing rather than structural: creation refuses on this and on a
+    label or UUID collision alike, and the collision message -- the profile
+    already exists -- is a false account of this one.  The operator's own
+    credentials and label are fine; a prior profile's session artefact could not
+    be removed, so the creation door needs a refusal that says that.
+
+    It subclasses the conflict deliberately.  Every existing handler treats a
+    create conflict as a refusal that leaves the pointer where it was, and that
+    is exactly the disposition wanted here; narrowing the message must not
+    narrow which handlers catch it.
+    """
+
+
 class _ProfileCustodyTransactionCapability:
     """Internal physical-custody capability owned by ``ProfileCapsuleLifecycle``.
 
@@ -524,7 +541,7 @@ class _ProfileCustodyTransactionCapability:
                 bucket_id=displaced,
             )
         except Exception as exc:
-            raise ProfileCustodyTransactionConflictError(
+            raise ProfileCustodyDisplacedSessionRetirementError(
                 "displaced profile session acceleration could not be retired before pointer publication"
             ) from exc
 
@@ -996,4 +1013,4 @@ class _ProfileCustodyTransactionCapability:
             raise ProfileCustodyTransactionRefusalError("delete confirmation is not bound to the prepared local target")
 
 
-__all__ = ["_ProfileCustodyTransactionCapability"]
+__all__ = ["ProfileCustodyDisplacedSessionRetirementError", "_ProfileCustodyTransactionCapability"]

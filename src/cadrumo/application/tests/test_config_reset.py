@@ -44,8 +44,17 @@ def _create_profile(
     by the shared seeding door itself, through the same recorder registration
     calls, so every suite that seeds a profile gets the fact rather than only
     the ones that remembered to restore it.
+
+    The empty LEGAL case snapshot is still recorded here, and deliberately not
+    at that door, because no production door records it either: the deletion
+    preflight demands both hold owners' facts and only the filing owner has a
+    creation-time writer. Recording it at the seeding door would make every
+    seeded profile carry a fact a real one does not, hiding that gap behind
+    green suites. It is scaffolding for a production gap this suite does not
+    own, which is why it stays visible here.
     """
     from ...tests.user_profile import register_minimal_profile
+    from ..evidence import LegalHoldCaseAuthority
 
     with open_test_profile_session(profile_id):
         register_minimal_profile(
@@ -53,6 +62,11 @@ def _create_profile(
             display_name=label,
             overrides={"identity.tax_id": tax_id, "identity.name": label},
         )
+    LegalHoldCaseAuthority().record_open_case_snapshot(
+        profile_id=UUID(profile_id),
+        open_case_ids=(),
+        observed_at=datetime.now(UTC),
+    )
 
 
 def _delete_profile_through_custody(profile_id: str, *, root: Path) -> None:
@@ -317,39 +331,57 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
         assert ConfigResetJournalRepository().load(operation.operation_id) == operation
 
 
-def test_an_unlocked_target_has_its_out_of_bucket_secret_removed_and_says_so(
+def test_a_locked_dangling_target_has_its_key_free_lock_cleared_and_says_what_it_could_not_do(
     tmp_path: Path,
 ) -> None:
-    """The unlocked path still revokes everything, and records that it did.
+    """The auth phase's whole contract, on a target with no capsule to erase.
 
-    Paired deliberately with the locked case above: a clearance rule that
-    reported the degraded mode for every target would be exactly as wrong as
-    one that claimed a full revocation for every target.
+    Deliberately built on a dangling pointer target: it isolates the auth phase
+    from the capsule-deletion path, so what is asserted here is the ruling and
+    nothing downstream of it. The acquisition lock is a plaintext file outside
+    any capsule, so the reset can and must clear it without a key, while the
+    revocation the reset cannot reach is recorded as unreached rather than
+    reported as done.
     """
+    from ...core import AuthProviderKind
     from ...core.config import load_settings
-    from .._config_reset_models import ConfigResetAuthClearanceMode, ConfigResetOperationStatus
-    from ..auth import register_operator_certificate_source, set_operator_certificate_source_secret
+    from .._config_reset_models import (
+        ConfigResetAuthClearanceMode,
+        ConfigResetOperationStatus,
+        ConfigResetTargetPhase,
+    )
+    from ..auth import acquire_auth_acquisition_lock, auth_acquisition_lock_path
     from ..config_reset import start_config_reset
 
     with _isolated_reset_root(tmp_path) as root:
-        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        certificate_path = tmp_path / "operator.p12"
-        certificate_path.write_bytes(b"test certificate")
-        _write_active_pointer(root, _PROFILE_A_ID)
-        secret_blob_root = load_settings().cadrumo_blob_store_dir
-
-        with open_test_profile_session(_PROFILE_A_ID):
-            register_operator_certificate_source(name="personal", certificate_path=certificate_path)
-            set_operator_certificate_source_secret(name="personal", secret=SecretStr("test-passphrase"))
-            assert any(path.is_file() for path in scan_directory(secret_blob_root, recursive=True))
+        root.mkdir(parents=True, exist_ok=True)
+        _write_active_pointer(root, _DANGLING_ID)
+        settings = load_settings()
+        lock_path = auth_acquisition_lock_path(
+            settings,
+            AuthProviderKind.CLAVE_PERMANENTE,
+            bucket_id=_DANGLING_ID,
+        )
+        with acquire_auth_acquisition_lock(
+            settings,
+            AuthProviderKind.CLAVE_PERMANENTE,
+            ttl_seconds=60,
+            operation="test-dangling-target-auth-phase",
+        ):
+            assert lock_path.is_file()
             operation = start_config_reset(confirmed=True)
 
         assert operation.status is ConfigResetOperationStatus.COMPLETE
-        clearance = operation.targets[0].auth_clearance
+        target = operation.targets[0]
+        assert target.bucket_id == _DANGLING_ID
+        assert target.exists_at_snapshot is False
+        assert target.phase is ConfigResetTargetPhase.DELETED
+        clearance = target.auth_clearance
         assert clearance is not None
-        assert clearance.mode is ConfigResetAuthClearanceMode.UNLOCKED_REVOCATION
-        assert clearance.removed_out_of_bucket_secret_records == 1
-        assert tuple(path for path in scan_directory(secret_blob_root, recursive=True) if path.is_file()) == ()
+        assert clearance.mode is ConfigResetAuthClearanceMode.CAPSULE_DESTRUCTION
+        assert clearance.removed_out_of_bucket_secret_records is None
+        assert clearance.cleared_lock_provider_ids == (AuthProviderKind.CLAVE_PERMANENTE.value,)
+        assert lock_path.exists() is False
 
 
 def test_a_profile_from_the_seeding_door_alone_is_deletion_assessable(

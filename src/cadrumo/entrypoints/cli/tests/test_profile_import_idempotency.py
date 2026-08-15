@@ -49,27 +49,23 @@ def _create_profile(
     tax_id: str,
     activity: str,
     output_language: str | None = None,
-) -> Result:
-    args = [
-        "config",
-        "profile",
-        "create",
-        name,
-        "--quiet",
-        "--tax-id",
-        tax_id,
-        "--entity-type",
-        "natural_person",
-        "--name",
-        "Import",
-        "--surnames",
-        "Idempotency",
-        "--activity",
-        activity,
-    ]
+) -> str:
+    """Seed one profile through the credential registration door.
+
+    The subject here is import idempotency, never how the profile was
+    created; registration is the only creation door, so the seed uses it
+    and hands back the new profile id.
+    """
+    facts = {
+        "identity.tax_id": tax_id,
+        "taxpayer_type.entity_type": "natural_person",
+        "identity.name": "Import",
+        "identity.surnames": "Idempotency",
+        "activities.description": activity,
+    }
     if output_language is not None:
-        args.extend(("--output-language", output_language))
-    return _invoke(args)
+        facts["preferences.output_language"] = output_language
+    return register_cli_profile(label=name, facts=facts)
 
 
 def _export_profile(name: str, bundle_path: Path) -> Result:
@@ -114,13 +110,12 @@ def _create_minimal_profile_and_export(bundle_path: Path) -> str:
     Returns the exported ``profile_id`` (UUID).
     """
 
-    r = _create_profile(
+    _create_profile(
         "idempotency-test",
         tax_id="12345678Z",
         activity="design",
         output_language="en",
     )
-    assert r.exit_code == 0, r.output
 
     r_export = _export_profile("idempotency-test", bundle_path)
     assert r_export.exit_code == 0, r_export.output
@@ -147,14 +142,14 @@ def _assert_label_collision_message(output: str, label: str) -> None:
 
 def _create_legal_entity_profile_and_export(bundle_path: Path) -> str:
     register_cli_profile(
-        label='legal-import-source',
+        label="legal-import-source",
         facts={
-            "taxpayer_type.entity_type": 'legal_entity',
-            "taxpayer_type.legal_entity_form": 'sl',
-            "identity.tax_id": 'B66012345',
-            "identity.legal_name": 'Legal Import Source SL',
-            "activities.description": 'asesoria',
-            "preferences.output_language": 'en',
+            "taxpayer_type.entity_type": "legal_entity",
+            "taxpayer_type.legal_entity_form": "sl",
+            "identity.tax_id": "B66012345",
+            "identity.legal_name": "Legal Import Source SL",
+            "activities.description": "asesoria",
+            "preferences.output_language": "en",
         },
     )
 
@@ -170,13 +165,13 @@ def _create_legal_entity_profile_and_export(bundle_path: Path) -> str:
 
 def _create_attribution_entity_profile_and_export(bundle_path: Path) -> str:
     register_cli_profile(
-        label='attribution-import-source',
+        label="attribution-import-source",
         facts={
-            "taxpayer_type.entity_type": 'attribution_entity',
-            "identity.tax_id": 'E12345674',
-            "identity.name": 'Attribution Import Source',
-            "activities.description": 'arrendamiento',
-            "preferences.output_language": 'en',
+            "taxpayer_type.entity_type": "attribution_entity",
+            "identity.tax_id": "E12345674",
+            "identity.name": "Attribution Import Source",
+            "activities.description": "arrendamiento",
+            "preferences.output_language": "en",
         },
     )
 
@@ -266,12 +261,11 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
     with isolated_profile_storage_root(tmp_path=dest_root):
         # Occupy the label "idempotency-test" with a locally-minted profile
         # carrying a different UUID.
-        r_local = _create_profile(
+        _create_profile(
             "idempotency-test",
             tax_id="87654321X",
             activity="consulting",
         )
-        assert r_local.exit_code == 0, r_local.output
 
         # Import the bundle without --label: display_name is "idempotency-test",
         # which is already taken by the locally-minted profile → refused.

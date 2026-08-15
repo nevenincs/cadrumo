@@ -1,0 +1,33 @@
+[[revisions."2022".export_layouts]]
+id = "modelo-390-2022-fichero-boe"
+
+# Envelope footer. Relocated out of 0002 so that it is DECLARED after every page
+# record: the export parity check requires the declared record sequence to equal
+# the sequence sorted by `order`, and pagina 8 (order 8) is authored in a later
+# fragment than 0002. The footer therefore takes order 9 and declares last.
+#
+# It joins no design sheet: it declares no literal constant of its own (its only
+# field is the computed closing tag), so the coverage gate's constant-based join
+# has nothing to match it on. That is correct -- Pag. 0 of the Diseno de
+# Registros describes the <AUX> wrapper, not a separate footer record.
+
+[[revisions."2022".export_layouts.records]]
+id = "modelo-390-envelope-footer"
+record_type = "envelope_footer"
+order = 9
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2022".export_layouts.records.fields]]
+id = "modelo-390-envelope-close"
+offset = 1
+length = 18
+kind = "computed"
+computed_key = "envelope_closing_tag"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2022"]

@@ -204,7 +204,7 @@ def advance_to_revision_two(
     ProfileRecordStore(session=session, root=root).replace(
         replacement=replacement,
         event=ProfileRecordCommandEvent(
-            event_type=BucketEventType.PROFILE_VALUES_UPDATED.value,
+            event_type=BucketEventType.PROFILE_VALUES_UPDATED,
             occurred_at=REPLACED_AT.isoformat(),
             payload=event_payload or {},
         ),

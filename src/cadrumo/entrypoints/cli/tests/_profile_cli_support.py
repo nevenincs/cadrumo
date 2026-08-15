@@ -5,6 +5,18 @@ from __future__ import annotations
 from click.testing import Result
 
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.user_profile import register_cli_profile
+
+
+def seed_profile(name: str, **facts: str) -> str:
+    """Seed one profile through the credential registration door, and return its id.
+
+    Use this wherever a test needs a profile to EXIST. ``create_quiet_profile``
+    below still drives the CLI ``create`` verb, which refuses unconditionally;
+    it survives only for the handful of tests whose subject is a refusal that
+    fires ahead of that check.
+    """
+    return register_cli_profile(label=name, facts=facts)
 
 
 def create_quiet_profile(name: str, *options: str) -> Result:

@@ -184,7 +184,15 @@ class CustodyDigestModel(BaseModel):
 
 
 class ProfileCustodyInventoryWitness(BaseModel):
-    """Non-secret exact-inventory witness bound into a destructive journal."""
+    """Non-secret exact-inventory witness bound into a destructive journal.
+
+    All three fields describe the SAME set of capsule members: the ones the
+    inventory's digest covers. Counting or measuring the wider observed set
+    instead would make the witness self-inconsistent, and the local delete
+    compares whole witnesses for equality between preflight and execution --
+    so a file the digest deliberately ignores would still refuse the deletion
+    through the count, which is the defect the narrowed digest exists to fix.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -199,7 +207,11 @@ class ProfileCustodyInventoryWitness(BaseModel):
 
     @classmethod
     def from_inventory(cls, inventory: ProfileCustodyInventory) -> ProfileCustodyInventoryWitness:
-        return cls(digest=inventory.digest, file_count=len(inventory.entries), total_bytes=inventory.total_bytes)
+        return cls(
+            digest=inventory.digest,
+            file_count=len(inventory.digest_entries),
+            total_bytes=sum(entry.size_bytes for entry in inventory.digest_entries),
+        )
 
 
 class ProfileCustodyDeleteConfirmation(BaseModel):
