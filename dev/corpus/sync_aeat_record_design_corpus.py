@@ -29,7 +29,7 @@ from ..packaging._hashing import sha256_path  # noqa: E402
 
 _CORPUS = _ROOT / "src/cadrumo/_data/corpus/aeat_official/disenos_registro"
 _HISTORICAL_EXCLUSIONS_PATH = _CORPUS / "historical_exclusions.json"
-_RETRIEVED_AT = "2026-07-21"
+_RETRIEVED_AT = "2026-08-15"
 _STATIC = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro"
 _INDEX = "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro"
 _PAGES = {
@@ -228,6 +228,27 @@ _REQUIRED = (
     _RequiredArtifact("714", "714 - Ejercicio 2022", "DR_Resto_Mod/archivos/DR714_2022.xls", "hresto"),
     _RequiredArtifact("714", "714 - Ejercicio 2023", "DR_Resto_Mod/archivos/DR714_2023.xls", "hresto"),
     _RequiredArtifact("714", "714 - Ejercicio 2024", "DR_Resto_Mod/DR714_2024.xls", "hresto"),
+    _RequiredArtifact(
+        "490",
+        "490 - Orden HAC/590/2021 (Ejercicio 2021 y 2022 hasta periodo 1T)",
+        "DR_Resto_Mod/archivos/dr490e21.xlsx",
+        "hresto",
+    ),
+    _RequiredArtifact(
+        "490",
+        "490 - Orden HAC/590/2021 (Ejercicio 2022 periodo 2T-4T)",
+        "DR_Resto_Mod/archivos/dr490e22.xlsx",
+        "hresto",
+    ),
+    _RequiredArtifact(
+        "763",
+        "763 - Orden EHA/1881/2011 (Ejercicios 2T/3T 2012, 2013 y 2014)",
+        "ant_resto_mod/archivos/dr763e2011v11.pdf",
+        "hresto",
+    ),
+    _RequiredArtifact(
+        "763", "763 - Ejercicios 2015 a 2018 hasta 3T", "ant_resto_mod/archivos/dr763e2015v11.xlsx", "hresto"
+    ),
 )
 
 

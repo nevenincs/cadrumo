@@ -1,11 +1,12 @@
 {
   "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
   "modelo": "763",
-  "retrieved_at": "2026-07-21",
+  "retrieved_at": "2026-08-15",
   "source_pages": [
-    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html"
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "artefact_count": 1,
+  "artefact_count": 3,
   "artefacts": [
     {
       "modelo": "763",
@@ -18,6 +19,30 @@
       "bytes": 100952,
       "sha256": "590db67f074251ad1ddfcbebfffbf8d58f6157848b62661fadc334bc5e7af5d4",
       "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "763",
+      "title": "763 - Orden EHA/1881/2011 (Ejercicios 2T/3T 2012, 2013 y 2014)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_resto_mod/archivos/dr763e2011v11.pdf",
+      "stored_path": "files/02-763-orden-eha-1881-2011-ejercicios-2t-3t-2012-2013-y-2014.pdf",
+      "original_filename": "dr763e2011v11.pdf",
+      "content_type": "application/pdf",
+      "bytes": 45482,
+      "sha256": "b9da58969e0a5cbea00c2f0780c3cbdc8fba3c5b9fc26d17042f8f277278d2fd",
+      "retrieved_at": "2026-08-15"
+    },
+    {
+      "modelo": "763",
+      "title": "763 - Ejercicios 2015 a 2018 hasta 3T",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_resto_mod/archivos/dr763e2015v11.xlsx",
+      "stored_path": "files/03-763-ejercicios-2015-a-2018-hasta-3t.xlsx",
+      "original_filename": "dr763e2015v11.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 101269,
+      "sha256": "124c40d7cdadced45e21a2b6b01bb9d76d30e78551ae7316508c14ceaec4f62e",
+      "retrieved_at": "2026-08-15"
     }
   ]
 }
