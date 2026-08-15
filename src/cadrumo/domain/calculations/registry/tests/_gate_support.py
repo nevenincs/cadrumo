@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .....core import scan_directory
 from .._schema import RegistryCatalogues
 
 _M130_LEGAL_REF_IDS = frozenset(
@@ -46,7 +47,9 @@ def fragment_declaring(directory: Path, anchor: str) -> Path:
     Returns:
         The single fragment containing *anchor*.
     """
-    matches = sorted(path for path in directory.glob("*.toml") if anchor in path.read_text(encoding="utf-8"))
+    matches = [
+        path for path in scan_directory(directory, pattern="*.toml") if anchor in path.read_text(encoding="utf-8")
+    ]
     if not matches:
         msg = (
             f"no fragment under {directory.name} declares {anchor!r} -- the gate is stale, diagnose before re-anchoring"

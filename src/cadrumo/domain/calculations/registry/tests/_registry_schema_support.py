@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
+from .....core import CasillaId, RegistryAuthorityGrade, scan_directory, validated_casilla_id
 from .....core.resources import bundled_path
 from .. import (
     CasillaContinuidadEvolutionDefinition,
@@ -165,11 +165,9 @@ def _copy_committed_modelo(path: Path) -> None:
     revision_dir = _MODELO_130_DIR / "revisions" / "2019-y-siguientes"
     fragments = [revision_dir / "revision.toml"]
     fragments.extend(
-        sorted(
-            item
-            for item in revision_dir.rglob("*.toml")
-            if item.name != "revision.toml" and not any(part == "locales" for part in item.parts)
-        ),
+        item
+        for item in scan_directory(revision_dir, pattern="*.toml", recursive=True, prune_directories=("locales",))
+        if item.name != "revision.toml"
     )
     text = _MODELO_130_DIR.joinpath("manifest.toml").read_text(encoding="utf-8")
     text += "".join(fragment.read_text(encoding="utf-8") for fragment in fragments)

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import OperatorActionAxis
+from ....core import OperatorActionAxis, scan_directory
 from .. import (
     OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND,
     ModeloVerificationFinding,
@@ -68,7 +68,7 @@ def _constructor_finding_kinds(source: str, *, filename: str) -> set[str]:
 def _production_finding_constructor_kinds() -> set[str]:
     """Return kinds passed only to production finding constructors."""
     consumed: set[str] = set()
-    for path in sorted(_SRC_CADRUMO.rglob("*.py")):
+    for path in scan_directory(_SRC_CADRUMO, pattern="*.py", recursive=True):
         relative = path.relative_to(_SRC_CADRUMO).as_posix()
         if "/tests/" in f"/{relative}" or relative == "domain/modelos/_verification_report.py":
             continue

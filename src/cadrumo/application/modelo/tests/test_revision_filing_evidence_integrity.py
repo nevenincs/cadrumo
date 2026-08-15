@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period, validated_casilla_id
+from ....core import Period, scan_directory, validated_casilla_id
 from ....domain.modelos import CalculationRevision, CalculationRevisionState, derive_calculation_revision_id
 from ....tests.filing_evidence import general_m303_filing_evidence
 from .. import StoredCalculationDriftError
@@ -76,7 +76,7 @@ def test_all_revision_id_calls_explicitly_select_filing_evidence() -> None:
     """Omission syntax is forbidden across production and test identity callers."""
     source_root = Path(__file__).parents[3]
     omissions: list[str] = []
-    for path in source_root.rglob("*.py"):
+    for path in scan_directory(source_root, pattern="*.py", recursive=True):
         if path.name == "_calculation_revision.py":
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))

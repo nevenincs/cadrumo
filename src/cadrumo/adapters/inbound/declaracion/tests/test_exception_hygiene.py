@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .....tests import ast_for_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -24,7 +25,7 @@ def _production_modules() -> tuple[Path, ...]:
         sorted(
             path
             for package in packages
-            for path in package.glob("*.py")
+            for path in scan_directory(package, pattern="*.py")
             if not path.name.startswith("test_") and path.name != "conftest.py"
         ),
     )

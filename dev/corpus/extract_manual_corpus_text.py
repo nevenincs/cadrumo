@@ -42,6 +42,7 @@ from cadrumo.core import (
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
     ManualCorpusTextSidecar,
     normalise_corpus_text,
+    scan_directory,
 )
 from cadrumo.core.hashing import sha256_file
 from dev._paths import REPO_ROOT, UTF_8
@@ -163,7 +164,7 @@ def extract_all(*, check: bool = False) -> int:
     Returns:
         0 on success; the number of stale/missing sidecars in check mode.
     """
-    pdf_paths = sorted(_CORPUS_ROOT.rglob("*.pdf"))
+    pdf_paths = scan_directory(_CORPUS_ROOT, pattern="*.pdf", recursive=True)
     if not pdf_paths:
         print("No PDF files found under", _CORPUS_ROOT, file=sys.stderr)
         return 1

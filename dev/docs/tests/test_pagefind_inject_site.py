@@ -15,8 +15,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
+from ._http_serve_support import serve_directory
+from ._pagefind_inject_support import concept_records
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import (
     InjectionStats,
@@ -24,7 +27,6 @@ from ..pagefind_inject import (
     _materialise_records,
 )
 from ..terminology._concept_cards import project_concept_cards
-from ._pagefind_inject_support import concept_records
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -38,7 +40,7 @@ def _fixture_site(tmp_path: Path, *, pages: int = 3) -> Path:
     """Copy a small real built-HTML subset + the pagefind.yml into tmp."""
     site = tmp_path / "site"
     site.mkdir()
-    html = sorted(_BUILT_HTML.rglob("*.html"))[:pages]
+    html = scan_directory(_BUILT_HTML, pattern="*.html", recursive=True)[:pages]
     for source in html:
         dest = site / source.relative_to(_BUILT_HTML)
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -76,7 +78,7 @@ def test_injection_lands_one_record_per_concept_in_primary_language(
     assert stats.languages == ("en",)
 
     pf = site / "pagefind"
-    languages = {p.name.split("_")[0] for p in pf.rglob("*.pf_index")}
+    languages = {p.name.split("_")[0] for p in scan_directory(pf, pattern="*.pf_index", recursive=True)}
     assert "en" in languages
 
 
@@ -94,11 +96,6 @@ def test_sorted_by_weight_returns_only_injected_cards(tmp_path: Path) -> None:
     a built index whose pages match the query, so it proves the cards win even
     against competing page hits.
     """
-    import http.server
-    import socketserver
-    import threading
-    from functools import partial
-
     site = _fixture_site(tmp_path, pages=3)
     materialised = concept_records()
 
@@ -107,14 +104,10 @@ def test_sorted_by_weight_returns_only_injected_cards(tmp_path: Path) -> None:
 
     build_search_index(site, inject=inject)
 
-    handler = partial(http.server.SimpleHTTPRequestHandler, directory=str(site))
-    httpd = socketserver.TCPServer(("127.0.0.1", 0), handler)
-    port = httpd.server_address[1]
-    threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    try:
+    with serve_directory(site) as (_httpd, port):
         from playwright.sync_api import sync_playwright
 
-        page_name = sorted(p.name for p in site.glob("*.html"))[0]
+        page_name = sorted(p.name for p in scan_directory(site, pattern="*.html"))[0]
         with sync_playwright() as pw:
             browser = pw.chromium.launch()
             page = browser.new_page()
@@ -133,8 +126,6 @@ def test_sorted_by_weight_returns_only_injected_cards(tmp_path: Path) -> None:
                 }"""
             )
             browser.close()
-    finally:
-        httpd.shutdown()
 
     # Every weight-sorted result is an injected concept card (no page noise).
     assert result, "weight-sorted search returned nothing"

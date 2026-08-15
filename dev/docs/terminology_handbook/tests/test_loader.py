@@ -31,6 +31,7 @@ from .. import (
     load_bundled_terminology_handbook,
     load_terminology_handbook,
 )
+from ._support import write_concept_fragment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -105,16 +106,9 @@ part_of_speech = "abbreviation"
 """
 
 
-def _write(tmp_path: Path, name: str, content: str) -> Path:
-    concepts = tmp_path / "concepts"
-    concepts.mkdir(exist_ok=True)
-    (concepts / name).write_text(content, encoding="utf-8")
-    return concepts
-
-
 def test_full_fragment_round_trips_with_every_field_preserved(tmp_path: Path) -> None:
-    concepts = _write(tmp_path, "recargo-equivalencia.toml", _FULL_FRAGMENT)
-    _write(tmp_path, "iva.toml", _BROADER_PARENT)
+    concepts = write_concept_fragment(tmp_path, "recargo-equivalencia.toml", _FULL_FRAGMENT)
+    write_concept_fragment(tmp_path, "iva.toml", _BROADER_PARENT)
 
     handbook = load_terminology_handbook(concepts)
     record = handbook.concept("recargo-equivalencia")
@@ -155,7 +149,7 @@ def test_full_fragment_round_trips_with_every_field_preserved(tmp_path: Path) ->
 
 
 def test_record_is_frozen(tmp_path: Path) -> None:
-    concepts = _write(tmp_path, "iva.toml", _BROADER_PARENT)
+    concepts = write_concept_fragment(tmp_path, "iva.toml", _BROADER_PARENT)
     handbook = load_terminology_handbook(concepts)
     record = handbook.concept("iva")
     with pytest.raises((TypeError, ValueError)):
@@ -170,15 +164,15 @@ def test_scalar_casilla_domain_ref_is_rejected(tmp_path: Path) -> None:
         'domain = "concepto"',
         f'domain = "concepto"\ndomain_refs = ["{legacy_ref}"]',
     )
-    concepts = _write(tmp_path, "iva.toml", fragment)
+    concepts = write_concept_fragment(tmp_path, "iva.toml", fragment)
 
     with pytest.raises(TerminologyValidationError, match="scalar casilla references"):
         load_terminology_handbook(concepts)
 
 
 def test_narrower_is_derived_from_broader_inverse(tmp_path: Path) -> None:
-    concepts = _write(tmp_path, "recargo-equivalencia.toml", _FULL_FRAGMENT)
-    _write(tmp_path, "iva.toml", _BROADER_PARENT)
+    concepts = write_concept_fragment(tmp_path, "recargo-equivalencia.toml", _FULL_FRAGMENT)
+    write_concept_fragment(tmp_path, "iva.toml", _BROADER_PARENT)
 
     handbook = load_terminology_handbook(concepts)
 
@@ -198,14 +192,14 @@ def test_authored_narrower_is_rejected(tmp_path: Path) -> None:
         'lifecycle = "approved"',
         'lifecycle = "approved"\nnarrower = ["recargo-equivalencia"]',
     )
-    concepts = _write(tmp_path, "iva.toml", fragment)
+    concepts = write_concept_fragment(tmp_path, "iva.toml", fragment)
     with pytest.raises(TerminologyValidationError, match="narrower"):
         load_terminology_handbook(concepts)
 
 
 def test_retired_without_replaced_by_raises(tmp_path: Path) -> None:
     fragment = _BROADER_PARENT.replace('lifecycle = "approved"', 'lifecycle = "retired"')
-    concepts = _write(tmp_path, "iva.toml", fragment)
+    concepts = write_concept_fragment(tmp_path, "iva.toml", fragment)
     with pytest.raises(TerminologyValidationError, match="replaced_by"):
         load_terminology_handbook(concepts)
 
@@ -219,7 +213,7 @@ label = "impuesto sobre el valor anadido"
 term_status = "preferred"
 """
     )
-    concepts = _write(tmp_path, "iva.toml", fragment)
+    concepts = write_concept_fragment(tmp_path, "iva.toml", fragment)
     with pytest.raises(TerminologyValidationError, match="preferred"):
         load_terminology_handbook(concepts)
 
@@ -228,7 +222,7 @@ def test_duplicate_concept_id_across_fragments_raises(tmp_path: Path) -> None:
     # Two fragments declaring the same concept_id necessarily differ in filename,
     # so the filename-matches-concept_id guard catches the collision first (a
     # duplicate can only exist via a filename mismatch). Either refusal is correct.
-    concepts = _write(tmp_path, "iva.toml", _BROADER_PARENT)
+    concepts = write_concept_fragment(tmp_path, "iva.toml", _BROADER_PARENT)
     (concepts / "iva-copy.toml").write_text(_BROADER_PARENT, encoding="utf-8")
     with pytest.raises(TerminologyValidationError, match=r"named|duplicate"):
         load_terminology_handbook(concepts)
@@ -238,14 +232,14 @@ def test_filename_not_matching_concept_id_raises(tmp_path: Path) -> None:
     # A fragment whose filename differs from its concept_id would fork into a
     # duplicate file on the next curation write (the write path resolves by
     # concept_id), so the loader refuses the mismatch up front.
-    concepts = _write(tmp_path, "wrong-name.toml", _BROADER_PARENT)  # concept_id is "iva"
+    concepts = write_concept_fragment(tmp_path, "wrong-name.toml", _BROADER_PARENT)  # concept_id is "iva"
     with pytest.raises(TerminologyValidationError, match="must be named"):
         load_terminology_handbook(concepts)
 
 
 def test_missing_short_description_raises(tmp_path: Path) -> None:
     fragment = "\n".join(line for line in _BROADER_PARENT.splitlines() if not line.startswith("short_description"))
-    concepts = _write(tmp_path, "iva.toml", fragment)
+    concepts = write_concept_fragment(tmp_path, "iva.toml", fragment)
     with pytest.raises(TerminologyValidationError):
         load_terminology_handbook(concepts)
 
@@ -259,13 +253,13 @@ lifecycle = "draft"
 created_at = 2026-06-10
 updated_at = 2026-06-10
 """
-    concepts = _write(tmp_path, "huerfano.toml", fragment)
+    concepts = write_concept_fragment(tmp_path, "huerfano.toml", fragment)
     with pytest.raises(TerminologyValidationError, match="language"):
         load_terminology_handbook(concepts)
 
 
 def test_invalid_toml_raises_load_error(tmp_path: Path) -> None:
-    concepts = _write(tmp_path, "broken.toml", "this is = not [valid toml")
+    concepts = write_concept_fragment(tmp_path, "broken.toml", "this is = not [valid toml")
     with pytest.raises(TerminologyLoadError):
         load_terminology_handbook(concepts)
 
@@ -278,7 +272,7 @@ def test_empty_concepts_dir_raises(tmp_path: Path) -> None:
 
 
 def test_validation_hook_seam_runs_supplied_validators(tmp_path: Path) -> None:
-    concepts = _write(tmp_path, "iva.toml", _BROADER_PARENT)
+    concepts = write_concept_fragment(tmp_path, "iva.toml", _BROADER_PARENT)
     seen: list[str] = []
 
     def _record_ids(handbook: TerminologyHandbook) -> None:

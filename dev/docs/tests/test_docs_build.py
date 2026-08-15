@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 #: A real nitpicky whole-tree Sphinx build is minutes of work, not seconds, so
@@ -54,13 +55,13 @@ def _docs_build_entries() -> set[str]:
     """Return entry names currently present directly under ``docs/_build``."""
     if not _DOCS_BUILD.exists():
         return set()
-    return {path.name for path in _DOCS_BUILD.iterdir()}
+    return {path.name for path in scan_directory(_DOCS_BUILD)}
 
 
 def _docs_source_paths() -> set[tuple[str, str]]:
     """Return the live docs source path set, excluding build output."""
     paths: set[tuple[str, str]] = set()
-    for path in _DOCS.rglob("*"):
+    for path in scan_directory(_DOCS, recursive=True):
         relative = path.relative_to(_DOCS)
         if relative.parts and relative.parts[0] == "_build":
             continue
@@ -76,7 +77,7 @@ def _generated_docs_snapshot() -> set[tuple[str, str, int, int]]:
         root = _DOCS / root_name
         if not root.exists():
             continue
-        for path in root.rglob("*"):
+        for path in scan_directory(root, recursive=True):
             relative = path.relative_to(_DOCS)
             stat = path.stat()
             kind = "dir" if path.is_dir() else "file"
@@ -111,7 +112,7 @@ def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None
 
     remove_noncanonical_build_entries(docs_root)
 
-    assert sorted(path.name for path in build_root.iterdir()) == [_CANONICAL_BUILD_ROOT]
+    assert sorted(path.name for path in scan_directory(build_root)) == [_CANONICAL_BUILD_ROOT]
     assert html_root.is_dir()
 
 
@@ -661,6 +662,7 @@ def test_sequence_widget_carries_shell_switcher_and_copy() -> None:
 from ._sequence_storage_fixtures import _isolated_sequence_storage
 
 __all__ = ["_isolated_sequence_storage"]
+
 
 def test_sequence_page_ships_widget_and_degrades_without_js(
     tmp_path: Path,

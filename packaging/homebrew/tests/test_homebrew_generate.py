@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import re
 import shutil
 import sys
@@ -11,6 +10,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 import pytest
+from dev.packaging._hashing import sha256_path
 from dev.packaging._smoke_common import build_sdist, commit_defined_build_root, run_checked
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
@@ -36,13 +36,6 @@ class BuiltCohort:
     version: str
     release_base: str
 
-
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 @pytest.fixture(scope="module")
@@ -118,7 +111,7 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     assert formula.startswith("class Cadrumo < Formula\n")
     assert "include Language::Python::Virtualenv" in formula
     assert f'url "{built_cohort.release_base}/{built_cohort.root.name}"' in formula
-    assert f'sha256 "{_sha256(built_cohort.root)}"' in formula
+    assert f'sha256 "{sha256_path(built_cohort.root)}"' in formula
     assert 'depends_on "python@3.13"' in formula
     assert 'depends_on "cmake" => :build' in formula
     assert 'depends_on "jpeg-turbo"' in formula
@@ -158,11 +151,11 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     resources = {name: (url, digest) for name, url, digest in _RESOURCE.findall(formula)}
     assert resources["cadrumo-data-manuals"] == (
         f"{built_cohort.release_base}/{built_cohort.manuals.name}",
-        _sha256(built_cohort.manuals),
+        sha256_path(built_cohort.manuals),
     )
     assert resources["cadrumo-data-official"] == (
         f"{built_cohort.release_base}/{built_cohort.official.name}",
-        _sha256(built_cohort.official),
+        sha256_path(built_cohort.official),
     )
     assert "mcp" in resources
     assert "tzdata" not in resources

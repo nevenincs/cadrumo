@@ -3,11 +3,11 @@
 The ``"buckets"`` and ``"keystore"`` literals below are not arbitrary
 injected values: the subprocess CLI harness sets no bucket-root or
 keystore-dir override, so ``tmp_path / "buckets"`` and
-``tmp_path / "keystore" / bucket_id`` check production's real
-DEFAULT-derived locations -- the on-disk shape the CLI must actually
-produce for the profile lifecycle to be filing-grade. Re-deriving either
-side from the taxonomy accessor would make the assertion agree
-unconditionally with the code path it exists to independently confirm.
+``tmp_path / "keystore"`` check production's real DEFAULT-derived
+locations -- the on-disk shape the CLI must actually produce for the
+profile lifecycle to be filing-grade. Re-deriving either side from the
+taxonomy accessor would make the assertion agree unconditionally with
+the code path it exists to independently confirm.
 """
 
 from __future__ import annotations
@@ -20,7 +20,8 @@ from typing import Final
 
 import pytest
 
-from ....adapters.persistence.storage import BUCKET_DEK_FILENAME, BUCKET_MANIFEST_FILENAME
+from ....adapters.persistence.storage import BUCKET_MANIFEST_FILENAME
+from ....core import DirectoryEntryKind, scan_directory
 from ....core.config import load_settings
 from ....tests import REPO_ROOT
 from ....tests.subprocess_cli import run_cadrumo_subprocess
@@ -94,12 +95,10 @@ def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: 
     # The per-store salt lives inside master.kdf (salt_b64); no standalone
     # salt artefact is written.
     assert not (secret_dir / "salt").is_file()
-    bucket_dirs = list((tmp_path / "buckets").iterdir())
+    bucket_dirs = list(scan_directory(tmp_path / "buckets"))
     assert len(bucket_dirs) == 1
-    bucket_id = bucket_dirs[0].name
     manifest = tomllib.loads((bucket_dirs[0] / BUCKET_MANIFEST_FILENAME).read_text(encoding="utf-8"))
     assert manifest["key_schedule"] == "bucket-dek-v1"
-    assert (tmp_path / "keystore" / bucket_id / BUCKET_DEK_FILENAME).is_file()
 
     logged_out = _run_cadrumo(tmp_path, ("config", "logout"))
     assert logged_out.returncode == 0, _combined_output(logged_out)
@@ -353,7 +352,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     )
     assert second.returncode == 0, _combined_output(second)
 
-    bucket_dirs = sorted(path for path in (tmp_path / "buckets").iterdir() if path.is_dir())
+    bucket_dirs = scan_directory(tmp_path / "buckets", select=DirectoryEntryKind.DIRECTORIES)
     labels_by_id: dict[str, str] = {}
     for bucket_dir in bucket_dirs:
         manifest = tomllib.loads((bucket_dir / BUCKET_MANIFEST_FILENAME).read_text(encoding="utf-8"))

@@ -4,45 +4,29 @@ from __future__ import annotations
 
 import csv
 import json
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core.config import override_settings
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = "55555555-5555-4555-8555-555555555555"
 _EXPORT_FORMATS = ("csv", "jsonl")
 
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_PROFILE_ID),
-    ):
-        register_minimal_profile(
-            profile_id=_PROFILE_ID,
-            overrides={
-                "taxpayer_type.fiscal_residency": "non_resident_irnr",
-                "taxpayer_type.country_of_fiscal_residence": "GB",
-                "taxpayer_type.representante_fiscal_nif": "12345678Z",
-                "taxpayer_type.representante_fiscal_nombre": "Test Representative",
-            },
-        )
-        try:
-            yield
-        finally:
-            dispose_engine()
+_isolated_backend = active_profile_isolated_backend_fixture(
+    bucket_id=_PROFILE_ID,
+    dispose_engine_around=True,
+    settings_overrides={"cadrumo_output_language": "en"},
+    profile_overrides={
+        "taxpayer_type.fiscal_residency": "non_resident_irnr",
+        "taxpayer_type.country_of_fiscal_residence": "GB",
+        "taxpayer_type.representante_fiscal_nif": "12345678Z",
+        "taxpayer_type.representante_fiscal_nombre": "Test Representative",
+    },
+)
 
 
 def _add_manual_row(*, date: str, description: str, source_jurisdiction: str) -> str:

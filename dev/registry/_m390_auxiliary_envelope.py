@@ -294,7 +294,7 @@ def _require_header_geometry_and_literals(header: RecordDesignIntermediateAuxili
         raise RegistryValidationError("Modelo 390 auxiliary header source rows must retain their exact anchors")
     if tuple(field.source_cell for field in fields) != tuple(f"A{row}" for row in range(6, 19)):
         raise RegistryValidationError("Modelo 390 auxiliary header source cells must retain their exact anchors")
-    if tuple(field.ordinal for field in fields) != tuple(range(1, 14)):
+    if tuple(field.ordinal for field in fields) != tuple(str(i) for i in range(1, 14)):
         raise RegistryValidationError("Modelo 390 auxiliary header ordinals must retain their exact anchors")
     expected_contents = (
         'Constante "<T"',

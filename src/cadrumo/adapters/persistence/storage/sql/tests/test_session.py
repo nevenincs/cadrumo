@@ -15,10 +15,9 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from ......core.config import Settings
 from ...errors import StorageValidationError
-from .. import create_engine_from_settings, session_scope
-from .._orm import Base
+from ...tests.engine_bootstrap import bootstrap_sqlite_engine
+from .. import session_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _SESSION_LOGGER_NAME = "cadrumo.adapters.persistence.storage.sql.session"
@@ -26,9 +25,7 @@ _SESSION_LOGGER_NAME = "cadrumo.adapters.persistence.storage.sql.session"
 
 @contextmanager
 def _engine(tmp_path: Path) -> Iterator[Engine]:
-    settings = Settings(cadrumo_database_url=f"sqlite:///{(tmp_path / 'session.db').as_posix()}")
-    engine = create_engine_from_settings(settings)
-    Base.metadata.create_all(engine)
+    engine = bootstrap_sqlite_engine(tmp_path / "session.db")
     try:
         yield engine
     finally:

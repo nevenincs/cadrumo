@@ -16,9 +16,9 @@ from pathlib import Path
 import pytest
 from sqlalchemy.engine import Engine
 
-from ......core.config import Settings
 from ......tests.aeat_literal_fixtures import PDF_MODELO_130_2024_PATH_FIXTURE, aeat_url, sede_pdf_url
 from ...errors import RepositoryError
+from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from .. import (
     CorpusArtifactRecord,
     CorpusArtifactRepository,
@@ -27,19 +27,15 @@ from .. import (
     PortalAuthMethod,
     PortalRecord,
     PortalRepository,
-    create_engine_from_settings,
     session_scope,
 )
-from .._orm import Base
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 @contextmanager
 def _engine(tmp_path: Path) -> Iterator[Engine]:
-    settings = Settings(cadrumo_database_url=f"sqlite:///{(tmp_path / 'repo.db').as_posix()}")
-    engine = create_engine_from_settings(settings)
-    Base.metadata.create_all(engine)
+    engine = bootstrap_sqlite_engine(tmp_path / "repo.db")
     try:
         yield engine
     finally:

@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
+
 from ..advisory import (
     AdvisoryDimension,
     _overall,
@@ -206,5 +208,5 @@ def test_persist_writes_nothing_extra_when_no_dimension_carries_a_raw_payload(tm
 
     persist(run_dir, dimensions, Status.GREEN)
 
-    written = {p.name for p in run_dir.iterdir()}
+    written = {p.name for p in scan_directory(run_dir)}
     assert written == {"summary.json", "summary.md"}

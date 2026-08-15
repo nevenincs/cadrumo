@@ -22,10 +22,8 @@ from .._loader import load_modelo_directory, load_registry_tree
 from .._schema import REVISION_GOVERNANCE_FIELDS, ModeloRevision
 from .._schema_base import GOVERNANCE_STAMP, governance_stamp_fields
 from .._schema_governance import REVISION_REVIEW_DATE_CEILING, REVISION_REVIEW_DATE_FLOOR
-from ._loader_directory_mode_support import (
-    _standard_manifest_text,
-    _standard_revision_preamble_text,
-)
+from ._loader_directory_mode_support import _load_revision as _shared_load_revision
+from ._loader_directory_mode_support import _write_modelo as _shared_write_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,28 +51,17 @@ def _write_modelo(
     manifest_extra: str = "",
     fragment_extra: str = "",
 ) -> Path:
-    """Materialise a minimal fragmented modelo and return its directory.
-
-    ``manifest_extra`` is appended to the revision's ``revision.toml`` scalar
-    manifest; ``fragment_extra`` is appended to its one section fragment.
-    """
-    modelo_dir = root / "999"
-    revision_dir = modelo_dir / "revisions" / _REVISION_ID
-    (revision_dir / "casillas").mkdir(parents=True)
-    (modelo_dir / "manifest.toml").write_text(_standard_manifest_text("Governance"), encoding="utf-8")
-    (revision_dir / "revision.toml").write_text(
-        _standard_revision_preamble_text() + manifest_extra,
-        encoding="utf-8",
+    return _shared_write_modelo(
+        root,
+        casilla_fragment=_CASILLA_FRAGMENT,
+        revision_id=_REVISION_ID,
+        manifest_extra=manifest_extra,
+        fragment_extra=fragment_extra,
     )
-    (revision_dir / "casillas" / "0001-casillas.toml").write_text(
-        _CASILLA_FRAGMENT + fragment_extra,
-        encoding="utf-8",
-    )
-    return modelo_dir
 
 
 def _load_revision(modelo_dir: Path) -> ModeloRevision:
-    return load_modelo_directory(modelo_dir).revisions[_REVISION_ID]
+    return _shared_load_revision(modelo_dir, revision_id=_REVISION_ID)
 
 
 def _revision_manifest(modelo_dir: Path) -> Path:

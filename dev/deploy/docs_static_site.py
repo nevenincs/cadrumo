@@ -21,6 +21,7 @@ from urllib.parse import urlsplit
 
 from defusedxml import ElementTree
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 from ..docs.i18n import DEFAULT_SITE_LANGUAGE, DEFAULT_SOURCE_LANGUAGE, SITE_ROOT_LANGUAGES
@@ -296,7 +297,9 @@ def _require_search_index(site_root: Path, *, root_label: str) -> None:
     from ..docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS, injected_record_kinds_in_index
 
     index_chunks = [
-        chunk for chunk in (site_root / "pagefind" / "index").rglob("*.pf_index") if chunk.stat().st_size > 0
+        chunk
+        for chunk in scan_directory(site_root / "pagefind" / "index", pattern="*.pf_index", recursive=True)
+        if chunk.stat().st_size > 0
     ]
     if not index_chunks:
         raise SystemExit(f"{root_label} Pagefind index has no substantive generated index data.")

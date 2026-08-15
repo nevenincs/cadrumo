@@ -40,8 +40,7 @@ from pydantic import SecretStr, ValidationError
 
 from ....adapters.persistence.storage import EncryptedBlobStore, SecretStore
 from ....tests.master_key import EphemeralMasterKeyProvider
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ... import auth as _auth_facade
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
@@ -77,17 +76,11 @@ def _register_operator_profile() -> None:
     )
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    """Open an isolated storage root plus an active bucket session for the whole test.
+_isolated_backend = bucket_session_storage_fixture(_BUCKET_ID)
+"""Open an isolated storage root plus an active bucket session for the whole test.
 
-    Mirrors the sibling ``test_certificate_sources_check.py`` fixture.
-    """
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_BUCKET_ID),
-    ):
-        yield
+Mirrors the sibling ``test_certificate_sources_check.py`` fixture.
+"""
 
 
 # ---------------------------------------------------------------------------

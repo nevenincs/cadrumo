@@ -52,6 +52,7 @@ from pathlib import Path
 
 import pytest
 
+from ..core import scan_directory
 from ._inventory import (
     REPO_ROOT,
     aeat_relative,
@@ -251,7 +252,7 @@ def _all_dev_files() -> list[Path]:
         return []
     return sorted(
         p
-        for p in _DEV_ROOT.rglob("*.py")
+        for p in scan_directory(_DEV_ROOT, pattern="*.py", recursive=True)
         if not p.name.startswith("test_") and p.name != "__init__.py" and "tests" not in p.parts
     )
 

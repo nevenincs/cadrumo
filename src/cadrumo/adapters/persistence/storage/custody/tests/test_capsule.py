@@ -12,7 +12,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ......core import StorageCategory
+from ......core import StorageCategory, scan_directory
 from ......core.config import Settings
 from .. import (
     ProfileCustodyCapsuleLabel,
@@ -474,7 +474,7 @@ def test_publication_refuses_epoch_mismatch_traversal_and_leaves_no_staging_caps
     capsules_root = profile_custody_path(
         _PROFILE_ID, StorageCategory.PROFILE_CAPSULE_COMMIT, settings=settings
     ).parent.parent
-    assert not tuple(capsules_root.glob(f".{_PROFILE_ID}.staging-*"))
+    assert not scan_directory(capsules_root, pattern=f".{_PROFILE_ID}.staging-*")
     assert not os.path.lexists(capsules_root / str(_PROFILE_ID))
 
 

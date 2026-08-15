@@ -41,6 +41,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .....core.resources import bundled_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -103,7 +104,7 @@ def _naming_violations(root: Path) -> tuple[list[str], int, int]:
         if not directory.is_dir():
             continue
         directories += 1
-        files = sorted(directory.rglob("*.toml"))
+        files = scan_directory(directory, pattern="*.toml", recursive=True)
         # The ordinal used to make every stem unique for free. A content-derived
         # stem does not, so collision is now a first-class violation: two
         # fragments deriving one name would make the pair unaddressable.

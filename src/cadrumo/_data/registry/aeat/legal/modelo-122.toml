@@ -61,3 +61,21 @@ published_at = 2017-02-10
 applies_from = 2017-02-11
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-1334"
 review_status = "reviewed"
+
+# Modelo 122 diseño de registro, the AEAT-published binary record-design
+# artefact backing the órden-hfp-105-2017 layout established above. Acquired,
+# manifested and on disk since 2026-07-21 but previously unregistered, so this
+# modelo had zero registered record_design sources at all. Re-fetched from the
+# live AEAT URL on 2026-08-15 and confirmed byte-identical (sha256 match)
+# before registering.
+[sources."aeat-dr-122-2016"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_122/files/01-122-ejercicio-2016-y-siguientes.xlsx"
+sha256 = "2b7c2bb3472cde1faba997f777aa88290e707a3773a3dc88348f74caeee0a4c7"
+bytes = 79199
+retrieved_at = 2026-07-21
+applies_from = 2016-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_18/dr122e18v13.xlsx"
+review_status = "reviewed"

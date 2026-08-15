@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import NoRecoveryOutcome
+from ....core import NoRecoveryOutcome, scan_directory
 from .. import (
     Borrador100SnapshotRepository,
     LiveApplicationError,
@@ -71,7 +71,7 @@ _AUTHORED_MESSAGE_EXEMPT: frozenset[str] = frozenset({"LiveIvaSurfaceTimeoutErro
 
 
 def _live_modules() -> tuple[Path, ...]:
-    return tuple(sorted(path for path in _LIVE_PACKAGE.glob("*.py")))
+    return scan_directory(_LIVE_PACKAGE, pattern="*.py")
 
 
 def _authored_message_sites(path: Path) -> list[tuple[str, int]]:

@@ -125,7 +125,6 @@ Submodules
    cadrumo.domain.calculations.registry._temporal
    cadrumo.domain.calculations.registry._toml_helpers
    cadrumo.domain.calculations.registry._validate
-   cadrumo.domain.calculations.registry._validate_algorithms
    cadrumo.domain.calculations.registry._validate_applicability_section
    cadrumo.domain.calculations.registry._validate_application_links
    cadrumo.domain.calculations.registry._validate_authority_grade
@@ -168,6 +167,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_semantic_roles
    cadrumo.domain.calculations.registry._validate_source_casilla_ids
    cadrumo.domain.calculations.registry._validate_surfaces
+   cadrumo.domain.calculations.registry._validate_valid_from_ejercicio_convention
    cadrumo.domain.calculations.registry._validate_verdict
    cadrumo.domain.calculations.registry._validate_verification_predicates
    cadrumo.domain.calculations.registry._verification_tolerance

@@ -59,6 +59,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ...tests import SRC_CADRUMO, non_test_package_python_files, repo_relative
+from .. import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -578,7 +579,7 @@ def test_every_stamp_producing_reader_is_declared_in_one_of_the_two_sets() -> No
 
     package = SRC_CADRUMO / "llm"
     discovered: set[str] = set()
-    for path in sorted(package.glob("*.py")):
+    for path in scan_directory(package, pattern="*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if not isinstance(node, ast.ClassDef):

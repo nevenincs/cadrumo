@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from ...core import iter_directory, scan_directory
 from ...tests.profile_capsule import open_test_profile_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -161,7 +162,7 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
 
         settings = load_settings()
         secret_blob_root = settings.cadrumo_blob_store_dir
-        assert any(path.is_file() for path in secret_blob_root.rglob("*"))
+        assert any(path.is_file() for path in iter_directory(secret_blob_root, recursive=True))
         _write_active_pointer(root, _PROFILE_B_ID)
         lock_path = auth_acquisition_lock_path(
             settings,
@@ -209,7 +210,7 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
         assert bucket_paths(root, _PROFILE_B_ID).bucket_dir.exists() is False
         assert bucket_paths(root, _DANGLING_ID).bucket_dir.exists() is False
         assert cold_default_database.read_bytes() == cold_default_bytes
-        assert tuple(path for path in secret_blob_root.rglob("*") if path.is_file()) == ()
+        assert tuple(path for path in scan_directory(secret_blob_root, recursive=True) if path.is_file()) == ()
         assert ConfigResetJournalRepository().load(operation.operation_id) == operation
 
 

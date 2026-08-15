@@ -11,12 +11,11 @@ from pydantic import BaseModel, Field
 
 from .....core.classification import SensitivityClass
 from .....core.hashing import sha256_hex
+from .....tests.secure_namespace_registration import registered_objects as _registered_objects
 from .....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ...storage import (
     SecureObjectNamespaceDefinition,
-    SecureObjectRepository,
     StorageCustodyDisposition,
-    StorageHierarchyRegistry,
     StorageNamespaceScope,
 )
 from ...storage.errors import RepositoryError
@@ -46,23 +45,12 @@ class _OtherOperand(BaseModel):
     label: str = Field(min_length=1)
 
 
-def _registered_objects(profile_objects: SecureObjectRepository) -> SecureObjectRepository:
-    """Bind the real profile engine to a registry containing this test namespace."""
-    registry = profile_objects.namespace_registry
-    assert registry is not None
-    registered_namespace = StorageHierarchyRegistry(
-        namespaces=(*registry.namespaces, _NAMESPACE),
-        paths=registry.paths,
-    )
-    return SecureObjectRepository(engine=profile_objects.engine, namespace_registry=registered_namespace)
-
-
 def test_secure_reference_round_trip_is_content_addressed_and_encrypted(tmp_path: Path) -> None:
     """Typed operands deduplicate by exact JSON bytes and never reach disk plaintext."""
     operand = _Operand(subject="taxpayer-private", amount=73)
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         store = OperationSecureReferenceRepository(
-            objects=_registered_objects(profile.repository), namespace=_NAMESPACE
+            objects=_registered_objects(profile.repository, _NAMESPACE), namespace=_NAMESPACE
         )
         reference = asyncio.run(store.put(operand, written_at=_WRITTEN_AT))
         repeated = asyncio.run(store.put(operand, written_at=_WRITTEN_AT))
@@ -78,7 +66,7 @@ def test_secure_reference_refuses_absent_wrong_type_and_digest_corruption(tmp_pa
     """An addressed object must exist, match its bytes, and hydrate the requested type."""
     operand = _Operand(subject="integrity-subject", amount=12)
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        objects = _registered_objects(profile.repository)
+        objects = _registered_objects(profile.repository, _NAMESPACE)
         store = OperationSecureReferenceRepository(objects=objects, namespace=_NAMESPACE)
         with pytest.raises(RepositoryError, match="absent"):
             asyncio.run(store.resolve("a" * 64, _Operand))

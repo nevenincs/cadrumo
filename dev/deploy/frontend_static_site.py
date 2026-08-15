@@ -10,6 +10,7 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core import iter_directory
 from dev._paths import UTF_8
 
 from .docs_static_site import (
@@ -84,7 +85,7 @@ def _validate_site_artifacts(dist_root: Path) -> None:
     if missing:
         raise SystemExit("Landing page build is missing required artifacts: " + ", ".join(missing))
     assets = dist_root / "assets"
-    if not any(assets.glob("*.js")) or not any(assets.glob("*.css")):
+    if not any(iter_directory(assets, pattern="*.js")) or not any(iter_directory(assets, pattern="*.css")):
         raise SystemExit(
             f"Landing page build is missing bundled assets under {_DEPLOYMENT_BUILD_OUTPUT}/assets/.",
         )

@@ -22,7 +22,13 @@ from ....application.operations import (
     OperationRevision,
     operation_conflict_scope_reference,
 )
-from ....core import STRICT_FROZEN_CONFIG, StorageCategory, exclusive_file_lock, storage_location
+from ....core import (
+    STRICT_FROZEN_CONFIG,
+    StorageCategory,
+    exclusive_file_lock,
+    scan_directory,
+    storage_location,
+)
 from ..storage import RepositoryError
 from ._journal_validation import OperationJournalRecord, validate_advance
 from ._lease import OperationLeaseStorage
@@ -67,7 +73,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
     def _resolve_idempotency_unlocked(self, claim: OperationIdempotencyClaim) -> str | None:
         """Find one exact claim while the canonical journal lock is already held."""
         matched_operation_id: str | None = None
-        for path in self.root.glob("*.json"):
+        for path in scan_directory(self.root, pattern="*.json"):
             operation_id = path.stem
             if len(operation_id) != 64 or any(character not in "0123456789abcdef" for character in operation_id):
                 continue

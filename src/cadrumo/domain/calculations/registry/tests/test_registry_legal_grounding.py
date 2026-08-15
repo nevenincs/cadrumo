@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .....core.resources import bundled_path, resources
 from .. import RegistryValidator, verify_legal_catalogue
 from .._corpus_catalogue import verify_source_catalogue
@@ -70,7 +71,7 @@ def raw_registry_refs(
         "legal_refs": {},
         "source_refs": {},
     }
-    for path in registry_root.rglob("*.toml"):
+    for path in scan_directory(registry_root, pattern="*.toml", recursive=True):
         data = tomllib.loads(path.read_text(encoding="utf-8"))
         relative_path = path.relative_to(registry_root).as_posix()
         for key_name, refs_by_file in refs_by_key.items():
@@ -164,9 +165,7 @@ def _production_legal_ref_literals(*, pending: bool = False) -> dict[str, tuple[
     grounding, which must not.
     """
     refs: dict[str, list[str]] = {}
-    for path in _PRODUCTION_PACKAGE_ROOT.rglob("*.py"):
-        if "tests" in path.relative_to(_PRODUCTION_PACKAGE_ROOT).parts:
-            continue
+    for path in scan_directory(_PRODUCTION_PACKAGE_ROOT, pattern="*.py", recursive=True, prune_directories=("tests",)):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         doc_lines = _docstring_line_numbers(tree)
         pending_lines = _pending_ref_line_numbers(tree)
@@ -203,9 +202,7 @@ def _direct_string_literals(node: ast.AST) -> tuple[tuple[str, int], ...]:
 
 def _production_source_ref_literals() -> dict[str, tuple[str, ...]]:
     refs: dict[str, list[str]] = {}
-    for path in _PRODUCTION_PACKAGE_ROOT.rglob("*.py"):
-        if "tests" in path.relative_to(_PRODUCTION_PACKAGE_ROOT).parts:
-            continue
+    for path in scan_directory(_PRODUCTION_PACKAGE_ROOT, pattern="*.py", recursive=True, prune_directories=("tests",)):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             value_node: ast.AST | None = None

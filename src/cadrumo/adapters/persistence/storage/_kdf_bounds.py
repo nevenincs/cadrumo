@@ -2,10 +2,10 @@
 
 Two records describe the same Argon2id parameter set from different sides: the
 canonical enrollment record
-(:class:`~.master_key._kdf_params.KdfParams`) and the bucket-manifest wire
-record (:class:`~.bucket.ManifestKdfParams`). They were free to disagree, and
-did -- the enrollment record pinned the OWASP window while the manifest record
-declared only ``ge=1`` lower bounds, so a manifest could carry an 8 KiB,
+(:class:`~.master_key._kdf_params.KdfParams`) and the retired bucket-manifest
+wire record. They were free to disagree, and did -- the enrollment record
+pinned the OWASP window while the manifest record declared only ``ge=1`` lower
+bounds, so a manifest could carry an 8 KiB,
 single-iteration parameter set that enrollment would have refused outright.
 
 The constants live here, in the package both sides already reach for

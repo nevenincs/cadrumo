@@ -43,6 +43,7 @@ from ....application.ledger import (
     ledger_transaction_payload,
     ledger_transaction_review_status,
 )
+from ....core import scan_directory
 from ....core.json_contract import SCHEMA_REGISTRY, Notice, NoticeSeverity, emit_json_success
 from ....core.observability import (
     canonicalise,
@@ -89,7 +90,7 @@ def _committed_db_fingerprint(profile: TestRuntimeProfile, snapshot_dir: Path) -
     connection is open.
     """
     snapshot_dir.mkdir(parents=True, exist_ok=True)
-    for source in sorted(profile.paths.db_dir.iterdir()):
+    for source in scan_directory(profile.paths.db_dir):
         if source.is_file() and not source.name.endswith("-shm"):
             shutil.copy2(source, snapshot_dir / source.name)
     return compute_db_sha256(snapshot_dir)

@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.core import scan_directory
 from cadrumo.domain.user_profile import ProfileSetupState
 
 from .._ast_scanner import scan_namespace_markers, scan_source_tree
@@ -422,7 +423,7 @@ def test_language_override_sites_match_the_sanctioned_inventory() -> None:
 
     found: set[tuple[str, str]] = set()
     ctx_wrapped: set[tuple[str, str]] = set()
-    for module in _SRC_ROOT.rglob("*.py"):
+    for module in scan_directory(_SRC_ROOT, pattern="*.py", recursive=True):
         rel = module.relative_to(_SRC_ROOT).as_posix()
         if "/tests/" in f"/{rel}" or module.name.startswith("test_"):
             continue

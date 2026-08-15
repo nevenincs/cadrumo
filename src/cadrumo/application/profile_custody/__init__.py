@@ -638,21 +638,6 @@ def profile_close_bucket_session() -> None:
     master_key.close_active_bucket_session()
 
 
-def profile_load_or_mint_bucket_dek(
-    *,
-    kek: bytes,
-    storage_root: Path,
-    bucket_id: str,
-) -> bytes:
-    """Load the existing wrapped bucket DEK without permitting bootstrap minting."""
-    return master_key.load_or_mint_bucket_dek(
-        kek=kek,
-        storage_root=storage_root,
-        bucket_id=bucket_id,
-        allow_bootstrap_mint=False,
-    )
-
-
 def profile_refuse_unsecured_bucket_with_real_profile(session: ProfileBucketSessionPort) -> None:
     """Apply the real-profile refusal to an unsecured session."""
     master_key.refuse_unsecured_bucket_with_real_profile(
@@ -701,28 +686,6 @@ def profile_record_login_failure(*, storage_root: Path, bucket_id: str, now: dat
 def profile_reset_login_throttle(*, storage_root: Path, bucket_id: str) -> None:
     """Clear the failed-login backoff after successful authentication."""
     master_key.reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
-
-
-def profile_session_idle_minutes(*, storage_root: Path, bucket_id: str, default_minutes: int) -> int:
-    """Resolve the current profile's sliding idle window."""
-    return int(
-        master_key.idle_minutes_for_bucket(
-            storage_root=storage_root,
-            bucket_id=bucket_id,
-            default_minutes=default_minutes,
-        )
-    )
-
-
-def profile_session_absolute_minutes(*, storage_root: Path, bucket_id: str, default_minutes: int) -> int:
-    """Resolve the current profile's immutable session cap."""
-    return int(
-        master_key.session_absolute_minutes_for_bucket(
-            storage_root=storage_root,
-            bucket_id=bucket_id,
-            default_minutes=default_minutes,
-        )
-    )
 
 
 def profile_session_path(*, storage_root: Path, profile_id: UUID) -> Path:
@@ -951,14 +914,11 @@ __all__ = [
     "profile_is_keyring_unavailable",
     "profile_is_password_authentication_failure",
     "profile_is_persisted_session",
-    "profile_load_or_mint_bucket_dek",
     "profile_mint_session",
     "profile_record_login_failure",
     "profile_refuse_unsecured_bucket_with_real_profile",
     "profile_reset_login_throttle",
     "profile_resume_session",
-    "profile_session_absolute_minutes",
-    "profile_session_idle_minutes",
     "profile_session_path",
     "profile_session_serves_bucket",
     "profile_zeroise",

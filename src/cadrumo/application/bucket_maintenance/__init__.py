@@ -24,9 +24,7 @@ commands such as
 sealed archives with
 :class:`adapters.persistence.storage.bucket.ExportArchiveHeader`,
 payloads based on
-:class:`domain.user_profile.UserProfilePortableExport`, and a
-manifest digest from
-:func:`compute_manifest_digest`.
+:class:`domain.user_profile.UserProfilePortableExport`.
 Sealed exports use
 :class:`adapters.persistence.storage.StorageCustodyProfile.FULL`:
 the portable payload carries the typed profile/work/ledger/calculation/filing
@@ -87,12 +85,6 @@ See Also:
     :class:`BucketMaintenanceService`
         Stateless service that implements the ``browse``, ``delete``,
         ``export``, ``import``, ``inspect``, and ``rename`` verbs.
-    :func:`compute_manifest_digest`
-        Archive-header integrity anchor bound into the sealed payload's AEAD
-        associated data.
-    :func:`compute_bucket_deletion_fingerprint`
-        Structured observation of deletion-relevant target contents; callers
-        remain responsible for keeping the target stable while it is computed.
 """
 
 from __future__ import annotations
@@ -108,7 +100,6 @@ from ._contracts import (
     DiskUsageBucketCommand,
     DiskUsageBucketResult,
 )
-from ._manifest_digest import compute_bucket_deletion_fingerprint, compute_manifest_digest
 from ._service import BucketMaintenanceService
 
 __all__ = [
@@ -122,6 +113,4 @@ __all__ = [
     "BucketNamespaceInventoryRow",
     "DiskUsageBucketCommand",
     "DiskUsageBucketResult",
-    "compute_bucket_deletion_fingerprint",
-    "compute_manifest_digest",
 ]

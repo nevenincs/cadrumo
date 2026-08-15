@@ -28,6 +28,8 @@ import time
 from pathlib import Path
 from tempfile import gettempdir
 
+from ..core import scan_directory
+
 _STEM = "cadrumo-pytest-"
 
 SETTINGS_STEM = "cadrumo-settings-"
@@ -238,7 +240,7 @@ def sweep_stale_roots(parent: Path, *, now: float | None = None, exclude: Path |
     removed = 0
     for stem in _SWEPT_STEMS:
         try:
-            siblings = list(parent.glob(f"{stem}*"))
+            siblings = list(scan_directory(parent, pattern=f"{stem}*"))
         except OSError:
             continue
         for sibling in siblings:
@@ -386,7 +388,7 @@ def reap_abandoned_numbered_dirs(root: Path, *, now: float | None = None) -> tup
     spared = 0
     for stem in _NUMBERED_STEMS:
         try:
-            candidates = list(root.glob(f"{stem}*"))
+            candidates = list(scan_directory(root, pattern=f"{stem}*"))
         except OSError:
             continue
         for candidate in candidates:

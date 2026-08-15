@@ -114,7 +114,7 @@ class TestRequiredAuditClosure:
     corresponding catalogue entry."""
 
     def test_invoice_noun_group_is_represented(self) -> None:
-        assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger invoice") is not None
+        assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger invoice") is INVOICE
         assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger payable-invoice") is None
         assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger collectible-invoice") is None
 

@@ -19,6 +19,7 @@ from typing import Any, TypedDict
 
 import pytest
 
+from .....core import iter_directory, scan_directory
 from .....core.atomic_write import atomic_write_text
 from .....core.errors import ERROR_REGISTRY, build_error_envelope, resolve_error_message
 from .....core.i18n import tr
@@ -128,7 +129,7 @@ def test_put_sidecar_write_is_atomic_and_preserves_prior_content_on_failure(
         atomic_write_text(sidecar, invalid_text, encoding="utf-8")
 
     assert sidecar.read_bytes() == original_sidecar_bytes
-    assert list(sidecar.parent.glob("*.tmp")) == []
+    assert scan_directory(sidecar.parent, pattern="*.tmp") == ()
 
 
 def test_put_writes_payload_with_hardened_mode_and_no_tmp_leftover(provider: LocalFileSystemProvider) -> None:
@@ -144,7 +145,7 @@ def test_put_writes_payload_with_hardened_mode_and_no_tmp_leftover(provider: Loc
     target = Path(metadata.provider_object_id)
     if os.name != "nt":
         assert stat.S_IMODE(target.stat().st_mode) == 0o600
-    assert list(target.parent.glob("*.tmp")) == []
+    assert scan_directory(target.parent, pattern="*.tmp") == ()
 
 
 def test_put_writes_sidecar_with_canonical_fields(provider: LocalFileSystemProvider) -> None:
@@ -292,7 +293,7 @@ def test_probe_full_round_trip_writes_and_cleans_up_sentinel(provider: LocalFile
     # directory may persist but it must be empty of .bin files.
     probe_dir = provider.root / "_probe"
     if probe_dir.is_dir():
-        assert not any(entry.suffix == ".bin" for entry in probe_dir.iterdir())
+        assert not any(entry.suffix == ".bin" for entry in iter_directory(probe_dir))
 
 
 def test_put_with_relabel_replaces_existing_file(provider: LocalFileSystemProvider) -> None:

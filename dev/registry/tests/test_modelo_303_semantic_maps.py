@@ -26,6 +26,7 @@ from typing import Final, Literal
 
 import pytest
 
+from cadrumo.core import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry import (
     ExportComputedKey,
     ExportEncoding,
@@ -411,7 +412,7 @@ class _EpochAuthorities:
 
 def _discovered_design_epochs() -> tuple[str, ...]:
     """Return every authored mapping epoch, in stable lexical order."""
-    return tuple(sorted(path.name for path in _MAPPING_ROOT.iterdir() if path.is_dir()))
+    return tuple(sorted(path.name for path in scan_directory(_MAPPING_ROOT, select=DirectoryEntryKind.DIRECTORIES)))
 
 
 _DESIGN_EPOCHS: Final[tuple[str, ...]] = _discovered_design_epochs()

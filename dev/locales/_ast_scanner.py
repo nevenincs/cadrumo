@@ -43,6 +43,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core import iter_directory
 from cadrumo.core.logging import get_logger
 from dev._paths import UTF_8
 
@@ -424,7 +425,7 @@ def _concat_prefix_marker(argument: ast.expr) -> str | None:
 
 def _iter_parseable_python_modules(root: Path) -> Iterator[tuple[Path, ast.Module]]:
     """Yield ``(path, tree)`` pairs of parseable Python ASTs under ``root``."""
-    for module in root.rglob("*.py"):
+    for module in iter_directory(root, pattern="*.py", recursive=True):
         if module.name in {"test_parity.py", "manager.py", "_ast_scanner.py"}:
             continue
         if module.name.startswith("test_") or module.name.startswith("_test_") or "/tests/" in module.as_posix():

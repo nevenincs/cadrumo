@@ -144,9 +144,13 @@ def test_the_two_directions_disagree_on_the_same_method_name() -> None:
     wrong for each, so asserting them together is what proves the receiver and
     the arity are actually consulted.
     """
-    assert write_target(_call("workbook.save(path)")) is not None
+    workbook_save = write_target(_call("workbook.save(path)"))
+    assert workbook_save is not None
+    assert workbook_save[0] == "save"
     assert write_target(_call("repository.save(record)")) is None
-    assert write_target(_call("target.replace(destination)")) is not None
+    path_replace = write_target(_call("target.replace(destination)"))
+    assert path_replace is not None
+    assert path_replace[0] == "replace"
     assert write_target(_call("text.replace('a', 'b')")) is None
 
 

@@ -23,6 +23,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 from ...docs.pagefind_index import build_search_index
@@ -47,7 +48,7 @@ _PAGES = 2
 
 def _built_root(tmp_path: Path, name: str, *, with_records: bool) -> Path:
     """Build a real Pagefind index, with or without injected records."""
-    pages = sorted(_BUILT_HTML.glob("*.html"))[:_PAGES] if _BUILT_HTML.is_dir() else []
+    pages = list(scan_directory(_BUILT_HTML, pattern="*.html")[:_PAGES]) if _BUILT_HTML.is_dir() else []
     if len(pages) < _PAGES:
         pytest.fail(
             f"need {_PAGES} built pages under {_BUILT_HTML}; this gate compares real indexes, "

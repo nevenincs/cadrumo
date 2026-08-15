@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import platform
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -12,14 +11,6 @@ from pathlib import Path
 import pytest
 
 from ...packaging._hashing import sha256_path
-from ...packaging.cohort_manifest import (
-    REQUIRED_ARTIFACT_KINDS,
-    BuildIdentity,
-    SourceIdentity,
-    create_manifest,
-    load_release_cohort,
-    write_manifest,
-)
 from ...packaging.evidence import (
     AcquisitionIdentity,
     ClientIdentity,
@@ -34,6 +25,7 @@ from ...packaging.evidence import (
     current_runtime_identity,
     write_distribution_evidence,
 )
+from ...packaging.tests._release_cohort_support import release_cohort
 from ..readiness import check_distribution_evidence_set
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -72,31 +64,7 @@ def _git_repo(root: Path) -> str:
 
 
 def _cohort(directory: Path, *, commit: str, payload_suffix: str = ""):
-    directory.mkdir(parents=True)
-    artifacts = []
-    for index, (name, kind) in enumerate(sorted(REQUIRED_ARTIFACT_KINDS.items())):
-        artifact = directory / "artifacts" / f"{name}.bin"
-        artifact.parent.mkdir(exist_ok=True)
-        artifact.write_bytes(f"{index}:{name}:{payload_suffix}\n".encode())
-        artifacts.append((name, kind, artifact))
-    manifest = create_manifest(
-        root=directory,
-        version="0.2.0",
-        source=SourceIdentity(commit=commit, tag="v0.2.0"),
-        created_at=datetime.now(UTC),
-        builder=BuildIdentity(
-            implementation="dev.packaging.release_cohort",
-            format_version=1,
-            python=platform.python_version(),
-            uv="0.11.29",
-            platform=platform.system(),
-            architecture=platform.machine(),
-            build_constraints_sha256="c" * 64,
-        ),
-        artifacts=artifacts,
-    )
-    write_manifest(directory, manifest)
-    return load_release_cohort(directory)
+    return release_cohort(directory, commit=commit, payload_suffix=payload_suffix)
 
 
 def _transcript(root: Path) -> CommandTranscript:

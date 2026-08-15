@@ -16,15 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from ..cohort_manifest import (
-    REQUIRED_ARTIFACT_KINDS,
-    BuildIdentity,
-    LoadedReleaseCohort,
-    SourceIdentity,
-    create_manifest,
-    load_release_cohort,
-    write_manifest,
-)
+from ._release_cohort_support import release_cohort
+from ..cohort_manifest import LoadedReleaseCohort
 from ..evidence import (
     AcquisitionIdentity,
     CommandTranscript,
@@ -59,31 +52,7 @@ _HOME = f"C:\\Users\\{_USERNAME}"
 
 def _release_cohort(root: Path) -> LoadedReleaseCohort:
     """Materialise a genuine release cohort with every required artifact kind."""
-    root.mkdir()
-    artifacts = []
-    for index, (name, kind) in enumerate(sorted(REQUIRED_ARTIFACT_KINDS.items())):
-        path = root / "artifacts" / f"{name}.bin"
-        path.parent.mkdir(exist_ok=True)
-        path.write_bytes(f"{index}:{name}\n".encode())
-        artifacts.append((name, kind, path))
-    manifest = create_manifest(
-        root=root,
-        version="0.2.1",
-        source=SourceIdentity(commit="c" * 40, tag="v0.2.1"),
-        created_at=datetime(2026, 1, 1, tzinfo=UTC),
-        builder=BuildIdentity(
-            implementation="dev.packaging.release_cohort",
-            format_version=1,
-            python=platform.python_version(),
-            uv="0.11.29",
-            platform=platform.system(),
-            architecture=platform.machine(),
-            build_constraints_sha256="d" * 64,
-        ),
-        artifacts=artifacts,
-    )
-    write_manifest(root, manifest)
-    return load_release_cohort(root)
+    return release_cohort(root)
 
 
 def _leaking_evidence(

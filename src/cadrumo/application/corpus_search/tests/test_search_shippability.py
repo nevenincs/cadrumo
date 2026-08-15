@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import DirectoryEntryKind, iter_directory, scan_directory
 from ....core.resources import bundled_path
 from .._lexical_index import build_lexical_index, iter_corpus_chunks
 from ._corpus_fixture import build_sample_corpus
@@ -52,9 +53,12 @@ _FORBIDDEN_DIR_NAMES = frozenset({"onnxruntime", "model2vec", ".cache", "__pycac
 
 
 def _iter_files(root: Path):
-    for path in root.rglob("*"):
-        if path.is_file() and "__pycache__" not in path.parts:
-            yield path
+    yield from iter_directory(
+        root,
+        recursive=True,
+        select=DirectoryEntryKind.FILES,
+        prune_directories=("__pycache__",),
+    )
 
 
 def test_retrieval_surface_imports_on_a_bare_core_install() -> None:
@@ -77,8 +81,8 @@ def _production_search_modules() -> list[Path]:
     modules = [
         path
         for root in (_PACKAGE_ROOT, command_search_root)
-        for path in root.rglob("*.py")
-        if "tests" not in path.relative_to(root).parts and "__pycache__" not in path.parts
+        for path in scan_directory(root, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
+        if "tests" not in path.relative_to(root).parts
     ]
     # Anti-vacuity floor: an empty or collapsed walk would pass the import gate
     # below while checking nothing.
@@ -122,8 +126,8 @@ def test_corpus_search_package_ships_no_model_artifacts() -> None:
 def test_corpus_search_package_has_no_model_or_cache_dirs() -> None:
     offenders = [
         path.relative_to(_PACKAGE_ROOT).as_posix()
-        for path in _PACKAGE_ROOT.rglob("*")
-        if path.is_dir() and path.name in (_FORBIDDEN_DIR_NAMES - {"__pycache__"})
+        for path in scan_directory(_PACKAGE_ROOT, recursive=True, select=DirectoryEntryKind.DIRECTORIES)
+        if path.name in (_FORBIDDEN_DIR_NAMES - {"__pycache__"})
     ]
     assert not offenders, f"corpus_search package must ship no model/cache dirs, found: {offenders}"
 
@@ -145,7 +149,7 @@ def test_bundled_corpus_ships_extracted_triples() -> None:
     # The shippable LIGHT data the index builds from must be present.
     from .._lexical_index import bundled_corpus_html_root
 
-    extracted = list(bundled_corpus_html_root().glob("*.html.extracted.json"))
+    extracted = scan_directory(bundled_corpus_html_root(), pattern="*.html.extracted.json")
     assert len(extracted) > 100, f"expected the shipped extracted corpus triples, found {len(extracted)}"
 
 

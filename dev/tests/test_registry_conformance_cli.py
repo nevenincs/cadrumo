@@ -51,7 +51,7 @@ from cadrumo.application.registry import (
     audit_bundled_registry_conformance,
     compare_annual_casilla_population,
 )
-from cadrumo.core import ExternalOracleCorpus, RevisionReviewStatus
+from cadrumo.core import ExternalOracleCorpus, RevisionReviewStatus, scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
@@ -1870,7 +1870,7 @@ def test_stamp_roundtrips_through_the_real_registry_loader(registry_copy: Path) 
 def test_stamp_touches_only_the_revision_manifest(registry_copy: Path) -> None:
     """The stamp cannot hide in a fragment, which is where it once silently won."""
     revision_dir = _manifest_of(registry_copy).parent
-    before = {path: path.read_bytes() for path in sorted(revision_dir.rglob("*")) if path.is_file()}
+    before = {path: path.read_bytes() for path in scan_directory(revision_dir, recursive=True) if path.is_file()}
 
     stamp_revision(
         _STAMPED_MODELO,
@@ -1879,7 +1879,7 @@ def test_stamp_touches_only_the_revision_manifest(registry_copy: Path) -> None:
         registry_root=registry_copy,
     )
 
-    after = {path: path.read_bytes() for path in sorted(revision_dir.rglob("*")) if path.is_file()}
+    after = {path: path.read_bytes() for path in scan_directory(revision_dir, recursive=True) if path.is_file()}
     assert set(after) == set(before), "the stamp must create and delete nothing"
     changed = [path for path, content in after.items() if before[path] != content]
     assert changed == [_manifest_of(registry_copy)]

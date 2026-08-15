@@ -11,6 +11,7 @@ import pytest
 from click.testing import Result
 
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.pdf_fixtures import text_pdf_bytes
 from ._ledger_validation_support import open_bucket_session
 
 _N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
@@ -67,6 +68,21 @@ def _open_ledger_ux_session(tmp_path: Path) -> Iterator[None]:
 def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
     with _open_ledger_ux_session(tmp_path):
         yield
+
+
+def _add_evidence(tmp_path: Path, lines: tuple[str, ...], *, filename: str) -> str:
+    """Write a synthetic text-bearing PDF and add it as ledger evidence, through the CLI."""
+    pdf = tmp_path / filename
+    pdf.write_bytes(text_pdf_bytes(lines))
+    added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", str(pdf), "--supplier", "Acme SL"])
+    assert added.exit_code == 0, added.output
+    payload = json.loads(added.output)
+    assert isinstance(payload, dict), added.output
+    body = payload.get("result")
+    assert isinstance(body, dict), added.output
+    evidence_id = body.get("evidence_id")
+    assert isinstance(evidence_id, str), added.output
+    return evidence_id
 
 
 def _imported_transaction_id(tmp_path: Path) -> str:

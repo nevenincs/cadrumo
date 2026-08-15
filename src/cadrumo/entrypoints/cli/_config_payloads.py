@@ -4,8 +4,14 @@ Every registered class is a strict :class:`OutputSchema` transport shape for a
 config command result. Field sets match the production emit sites in
 :mod:`_config` and its submodules; sequence fields use ``list`` so JSON-mode
 pydantic dumps stay arrays. Application services remain authoritative for
-profile, auth, apoderado, repair, diagnostics, and workflow semantics. Sandbox
-payloads live in the cohesive sibling :mod:`_config_sandbox_payloads`.
+profile, auth, apoderado, repair, diagnostics, and workflow semantics.
+
+A few keys here declare a schema for a verb the tree does not register. Those are
+not oversights: each is listed in
+:data:`~cadrumo.entrypoints.mcp._input_schema.DECLARED_UNIMPLEMENTED_SURFACES`
+with the reason it is held, because deleting the declaration would erase the only
+visible evidence that a capability lost its door. A declaration with no verb and
+no entry there is residue and should go.
 """
 
 from __future__ import annotations
@@ -38,7 +44,7 @@ from ...application.user_profile import (
 from ...application.workflow import ProfileHealthStatus, ProfileSource
 from ...core import HEX_PATTERN_64, Period
 from ...core.errors import BaseSeverity
-from ...core.identity import BucketId, ContentDigest, ProfileId
+from ...core.identity import BucketId, ProfileId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 from ...core.time import validate_utc_aware
 from ...domain.calculations.registry import RevisionId
@@ -932,6 +938,37 @@ class ConfigProfileExportReconcileFailurePayload(OutputSchema):
     journal_id: str = Field(min_length=1)
     destination: str | None = None
     reason: str = Field(min_length=1)
+
+
+@register_schema("config.profile.delete")
+class ConfigProfileDeleteResult(OutputSchema):
+    """JSON envelope for ``aeat config profile delete``.
+
+    Reports the tombstoned profile id and display label plus whether the active
+    profile pointer had to be cleared. Bounded and typed at the same widths
+    :class:`~cadrumo.application.user_profile.ProfileLifecycleResult` carries
+    (the mutated :class:`~cadrumo.domain.user_profile.UserProfileRecord`), so
+    an empty identity/label or an unknown lifecycle status is refused rather
+    than reported as a valid tombstoning.
+    """
+
+    profile_id: BucketId
+    display_name: str = Field(min_length=1, max_length=160)
+    setup_state: ProfileSetupState
+    active_profile_cleared: bool
+
+
+@register_schema("config.profile.rename")
+class ConfigProfileRenameResult(OutputSchema):
+    """JSON envelope for ``aeat config profile rename``.
+
+    Reports the immutable profile id plus the previous and new display labels;
+    profile identity and bucket storage remain unchanged.
+    """
+
+    profile_id: BucketId
+    previous_display_name: str = Field(min_length=1, max_length=160)
+    display_name: str = Field(min_length=1, max_length=160)
 
 
 @register_schema("config.profile.export")

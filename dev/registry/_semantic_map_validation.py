@@ -53,7 +53,7 @@ class SemanticMapAnomalyException(_StrictModel):
     reason: str = Field(min_length=1)
 
 
-_AnchorKey = tuple[str, int, str | None, int, str]
+_AnchorKey = tuple[str, int, str | None, str | None, str]
 type _RecordKey = tuple[str, str]
 
 

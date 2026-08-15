@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
+from ....core import scan_directory
 from ....core.resources import bundled_path
 from .. import CCAA, RENTA_MODELO100_CCAA_CODIGOS, modelo100_ccaa_codigo
 
@@ -60,9 +61,9 @@ class _CommunityWithoutCodigo(StrEnum):
     CEUTA = "ceuta"
 
 
-def _bundled_xsds() -> list[Path]:
+def _bundled_xsds() -> tuple[Path, ...]:
     """Return every bundled Modelo 100 record-design XSD."""
-    return sorted(_M100_FILES.glob("*esquema-xsd*.xsd"))
+    return scan_directory(_M100_FILES, pattern="*esquema-xsd*.xsd")
 
 
 def _tipo_ccaa(xsd: Path) -> tuple[frozenset[str], dict[str, str]]:

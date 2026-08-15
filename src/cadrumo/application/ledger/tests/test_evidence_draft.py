@@ -37,11 +37,13 @@ from pydantic import ValidationError
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import scan_directory
 from ....core.config import Settings
 from ....domain.attachments import load_attachment
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.profile_capsule import seed_test_profile_record
 from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
 from .._evidence_draft import (
@@ -136,20 +138,6 @@ def _loopback_reader() -> Iterator[None]:
         yield
 
 
-def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfgen import canvas
-
-    buf = BytesIO()
-    page = canvas.Canvas(buf, pagesize=A4)
-    y = 760
-    for line in lines:
-        page.drawString(72, y, line)
-        y -= 20
-    page.save()
-    return buf.getvalue()
-
-
 def _evidence_input(data: bytes, mime_type: str) -> EvidenceInput:
     return EvidenceInput(
         mime_type=mime_type,
@@ -189,7 +177,7 @@ class TestExtractInvoiceDraftFromEvidence:
         tmp_path: Path,
     ) -> None:
         pdf_path = tmp_path / "factura.pdf"
-        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
 
@@ -215,7 +203,7 @@ class TestExtractInvoiceDraftFromEvidence:
         tmp_path: Path,
     ) -> None:
         pdf_path = tmp_path / "factura.pdf"
-        pdf_path.write_bytes(_text_pdf_bytes(_PARTIAL_INVOICE_LINES))
+        pdf_path.write_bytes(text_pdf_bytes(_PARTIAL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         assert record.attachment_id is not None
@@ -262,7 +250,7 @@ class TestExtractInvoiceDraftFromEvidence:
     ) -> None:
         """The stored bytes are read into memory only; nothing lands on disk."""
         pdf_path = tmp_path / "factura.pdf"
-        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
 
@@ -273,7 +261,7 @@ class TestExtractInvoiceDraftFromEvidence:
             settings=isolated_settings,
         )
 
-        assert list(empty_dir.iterdir()) == []
+        assert scan_directory(empty_dir) == ()
 
 
 def _scan_only_pdf_bytes() -> bytes:
@@ -394,7 +382,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
             )
 
         _run_against_loopback_ollama(self._extraction_json(), _call)
-        assert list(empty_dir.iterdir()) == []
+        assert scan_directory(empty_dir) == ()
 
     def test_llm_vision_disabled_refuses_instructively_not_silently(
         self,
@@ -456,7 +444,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         tmp_path: Path,
     ) -> None:
         pdf_path = tmp_path / "factura.pdf"
-        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         repo = self._repo(secure_objects)
@@ -498,7 +486,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         genuinely there.
         """
         pdf_path = tmp_path / "factura.pdf"
-        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         confirmation = confirm_invoice_draft_from_evidence(
@@ -529,7 +517,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         tmp_path: Path,
     ) -> None:
         pdf_path = tmp_path / "factura.pdf"
-        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         repo = self._repo(secure_objects)
@@ -567,7 +555,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         tmp_path: Path,
     ) -> None:
         pdf_path = tmp_path / "factura.pdf"
-        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         repo = self._repo(secure_objects)
@@ -606,7 +594,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         step must never produce.
         """
         pdf_path = tmp_path / "factura.pdf"
-        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         repo = self._repo(secure_objects)
@@ -635,7 +623,7 @@ class TestConfirmInvoiceDraftFromEvidence:
     ) -> None:
         """A field absent from extraction with no override refuses loudly."""
         pdf_path = tmp_path / "factura.pdf"
-        pdf_path.write_bytes(_text_pdf_bytes(_PARTIAL_INVOICE_LINES))
+        pdf_path.write_bytes(text_pdf_bytes(_PARTIAL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         repo = self._repo(secure_objects)
@@ -662,7 +650,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         tmp_path: Path,
     ) -> None:
         pdf_path = tmp_path / "factura.pdf"
-        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         repo = self._repo(secure_objects)
@@ -704,7 +692,7 @@ class TestConfirmInvoiceDraftFromEvidence:
     ) -> None:
         """The evidence bytes are re-read into memory only; nothing lands on disk."""
         pdf_path = tmp_path / "factura.pdf"
-        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         repo = self._repo(secure_objects)
@@ -720,7 +708,7 @@ class TestConfirmInvoiceDraftFromEvidence:
             invoice_repository=repo,
         )
 
-        assert list(empty_dir.iterdir()) == []
+        assert scan_directory(empty_dir) == ()
 
     def test_confirm_by_evidence_id_auto_links_the_source_attachment_to_the_invoice(
         self,
@@ -735,7 +723,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         so the link is genuinely persisted, not merely returned in-process.
         """
         pdf_path = tmp_path / "factura.pdf"
-        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         assert record.attachment_id is not None
@@ -763,7 +751,7 @@ class TestConfirmInvoiceDraftFromEvidence:
     ) -> None:
         """The same auto-link happens on the ``attachment_id`` reference path."""
         pdf_path = tmp_path / "factura.pdf"
-        pdf_path.write_bytes(_text_pdf_bytes(_PARTIAL_INVOICE_LINES))
+        pdf_path.write_bytes(text_pdf_bytes(_PARTIAL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         assert record.attachment_id is not None
@@ -794,7 +782,7 @@ class TestConfirmInvoiceDraftFromEvidence:
     ) -> None:
         """A guarded idempotent re-confirm re-asserts the same link, never duplicating it."""
         pdf_path = tmp_path / "factura.pdf"
-        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         assert record.attachment_id is not None

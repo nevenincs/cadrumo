@@ -5,15 +5,17 @@ from __future__ import annotations
 import hashlib as hashlib
 import logging as logging
 import sqlite3 as sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError as ValidationError
 from sqlalchemy import event as event
 
 from ......core.classification import SensitivityClass
-from ......core.config import Settings
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ... import (
     STORAGE_NAMESPACE_REGISTRY as STORAGE_NAMESPACE_REGISTRY,
@@ -41,8 +43,7 @@ from ... import (
 )
 from ...errors import ClassificationError as ClassificationError
 from ...errors import StorageValidationError as StorageValidationError
-from .._orm import Base
-from ..engine import create_engine_from_settings
+from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from ..secure_objects import (
     EnvelopeVersionError as EnvelopeVersionError,
 )
@@ -65,6 +66,35 @@ from ..secure_objects import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
+@contextmanager
+def _ephemeral_secure_repo(
+    tmp_path: Path,
+    database_name: str,
+) -> Iterator[tuple[Path, Any, SecureObjectRepository]]:
+    """Open a real repository under a fresh ephemeral master key and schema.
+
+    Yields ``(db_path, engine, repo)`` so callers can inspect the raw engine
+    or reopen the same on-disk database under the same key.
+    """
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / database_name
+        engine = bootstrap_sqlite_engine(db_path)
+        try:
+            yield db_path, engine, SecureObjectRepository(engine=engine)
+        finally:
+            engine.dispose()
+
+
+@contextmanager
+def _repo_at(db_path: Path) -> Iterator[SecureObjectRepository]:
+    """Open a real :class:`SecureObjectRepository` against a fresh schema at ``db_path``."""
+    engine = bootstrap_sqlite_engine(db_path)
+    try:
+        yield SecureObjectRepository(engine=engine)
+    finally:
+        engine.dispose()
+
+
 def _seed_under_key(
     *,
     db_path: Path,
@@ -75,8 +105,7 @@ def _seed_under_key(
 ) -> None:
     """Seed one secure-object row through the public repository under ``provider``."""
     with provider:
-        engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
+        engine = bootstrap_sqlite_engine(db_path)
         try:
             SecureObjectRepository(engine=engine).save(
                 namespace=namespace,

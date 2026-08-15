@@ -41,22 +41,20 @@ bounded, and the row count is not the property under test.
 from __future__ import annotations
 
 import gzip
-import http.server
 import json
 import re
 import shutil
-import socketserver
-import threading
 from collections.abc import Mapping
 from dataclasses import dataclass
-from functools import partial
 from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
+from ._http_serve_support import serve_directory
 from ...deploy.docs_static_site import (
     CANONICAL_DOCS_BASE_URL,
     DEFAULT_SOURCE_LANGUAGE,
@@ -100,7 +98,7 @@ def _fixture_site(tmp_path: Path, *, pages: int = 3) -> Path:
         )
     site = tmp_path / "site"
     site.mkdir()
-    html = sorted(_BUILT_HTML.rglob("*.html"))[:pages]
+    html = scan_directory(_BUILT_HTML, pattern="*.html", recursive=True)[:pages]
     if not html:
         pytest.fail(f"built documentation HTML at {_BUILT_HTML} contains no pages.")
     for source in html:
@@ -118,14 +116,10 @@ def _kinds_in_built_index(site: Path) -> dict[str, int]:
     the record kinds a reader's palette can actually narrow by, taken from the
     written artefact rather than from the injection's own report.
     """
-    handler = partial(http.server.SimpleHTTPRequestHandler, directory=str(site))
-    httpd = socketserver.TCPServer(("127.0.0.1", 0), handler)
-    port = httpd.server_address[1]
-    threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    try:
+    with serve_directory(site) as (_httpd, port):
         from playwright.sync_api import sync_playwright
 
-        page_name = sorted(p.name for p in site.glob("*.html"))[0]
+        page_name = sorted(p.name for p in scan_directory(site, pattern="*.html"))[0]
         with sync_playwright() as pw:
             browser = pw.chromium.launch()
             page = browser.new_page()
@@ -139,8 +133,6 @@ def _kinds_in_built_index(site: Path) -> dict[str, int]:
                 }"""
             )
             browser.close()
-    finally:
-        httpd.shutdown()
     return dict(filters.get("kind") or {})
 
 
@@ -278,7 +270,7 @@ def test_the_gate_reads_the_artefact_not_the_configuration(tmp_path: Path) -> No
     site = _fixture_site(tmp_path)
     _build_deployed_index(site)
 
-    fragments = sorted((site / "pagefind" / "fragment").rglob("*.pf_fragment"))
+    fragments = scan_directory(site / "pagefind" / "fragment", pattern="*.pf_fragment", recursive=True)
     assert fragments, "the built index wrote no fragments"
 
     on_disk: set[str] = set()
@@ -357,12 +349,14 @@ def _root_page_corpus(root: Path, language: str) -> Path:
     site = root / f"site-{language}"
     site.mkdir(parents=True)
     localized_root = _BUILT_HTML / language
-    sources = sorted(localized_root.rglob("*.html")) if language != OutputLanguage.EN.value else []
+    sources = (
+        scan_directory(localized_root, pattern="*.html", recursive=True) if language != OutputLanguage.EN.value else ()
+    )
     if len(sources) >= _PAGES_PER_ROOT:
         for source in sources[:_PAGES_PER_ROOT]:
             (site / source.name).write_bytes(source.read_bytes())
     else:
-        english = sorted(_BUILT_HTML.glob("*.html"))[:_PAGES_PER_ROOT]
+        english = scan_directory(_BUILT_HTML, pattern="*.html")[:_PAGES_PER_ROOT]
         if len(english) < _PAGES_PER_ROOT:
             pytest.fail(
                 f"need {_PAGES_PER_ROOT} built pages under {_BUILT_HTML} to assemble a root corpus; "
@@ -494,14 +488,10 @@ def _search_urls(site: Path, queries: tuple[str, ...]) -> dict[str, list[str]]:
     One browser session, one Pagefind init, every query — the same search call
     the reader's palette makes, against the root's own loaded index.
     """
-    handler = partial(http.server.SimpleHTTPRequestHandler, directory=str(site))
-    httpd = socketserver.TCPServer(("127.0.0.1", 0), handler)
-    port = httpd.server_address[1]
-    threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    try:
+    with serve_directory(site) as (_httpd, port):
         from playwright.sync_api import sync_playwright
 
-        page_name = sorted(p.name for p in site.glob("*.html"))[0]
+        page_name = sorted(p.name for p in scan_directory(site, pattern="*.html"))[0]
         with sync_playwright() as pw:
             browser = pw.chromium.launch()
             page = browser.new_page()
@@ -524,8 +514,6 @@ def _search_urls(site: Path, queries: tuple[str, ...]) -> dict[str, list[str]]:
                 list(queries),
             )
             browser.close()
-    finally:
-        httpd.shutdown()
     return {query: list(hits) for query, hits in found.items()}
 
 

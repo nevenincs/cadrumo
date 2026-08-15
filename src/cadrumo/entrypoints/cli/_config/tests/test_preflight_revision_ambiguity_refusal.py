@@ -15,27 +15,15 @@ real resolver seam and observing what the surface does with it.
 
 from __future__ import annotations
 
-from contextlib import contextmanager
-
 import pytest
 
 from .....core import Period
 from .....domain.calculations.registry import AmbiguousRevisionSelectionError
+from .....tests.attribute_scope import scoped_attribute
 from .. import _profile_inspect
 from .._profile_inspect import _resolve_preflight_revision_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-
-@contextmanager
-def _replacing(target: object, name: str, value: object):
-    """Replace ``target.name`` for the scope, restoring the original on exit."""
-    original = getattr(target, name)
-    setattr(target, name, value)
-    try:
-        yield
-    finally:
-        setattr(target, name, original)
 
 
 def test_an_ambiguous_filing_year_refuses_and_names_both_candidate_revisions() -> None:
@@ -57,7 +45,7 @@ def test_an_ambiguous_filing_year_refuses_and_names_both_candidate_revisions() -
         )
 
     with (
-        _replacing(_modelo_module, "resolve_registry_revision_for_work_target", _ambiguous),
+        scoped_attribute(_modelo_module, "resolve_registry_revision_for_work_target", _ambiguous),
         pytest.raises(_profile_inspect._CliRefusedBoundaryError) as raised,
     ):
         _resolve_preflight_revision_id(modelo="303", period=Period.from_year_and_code(2024, "3T"), revision_id=None)
@@ -92,7 +80,7 @@ def test_the_ambiguity_refusal_is_distinguishable_from_the_no_revision_refusal()
         raise NoRevisionForPeriodError(modelo_id="303", filing_year=1999, period="3T", revision_id=None)
 
     with (
-        _replacing(_modelo_module, "resolve_registry_revision_for_work_target", _unresolved),
+        scoped_attribute(_modelo_module, "resolve_registry_revision_for_work_target", _unresolved),
         pytest.raises(_profile_inspect._CliRefusedBoundaryError) as raised,
     ):
         _resolve_preflight_revision_id(modelo="303", period=Period.from_year_and_code(1999, "3T"), revision_id=None)

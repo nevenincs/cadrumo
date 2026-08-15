@@ -10,7 +10,7 @@ import pytest
 import rtoml
 from pydantic import ValidationError
 
-from cadrumo.core import FilingProducerKey
+from cadrumo.core import FilingProducerKey, scan_directory
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     CasillaFieldKind,
@@ -61,7 +61,7 @@ def _anchor(row: int) -> RenderProfileAnchor:
         sheet="DP200001",
         source_row=row,
         source_cell=f"A{row}",
-        ordinal=row - 9,
+        ordinal=str(row - 9),
         record_identity="DP200001",
     )
 
@@ -114,7 +114,7 @@ def _field(
         "record_identity": "DP200001",
         "source_row": row,
         "source_cell": f"A{row}",
-        "ordinal": row - 9,
+        "ordinal": str(row - 9),
         "offset": offset,
         "length": length,
         "aeat_type": aeat_type,
@@ -318,7 +318,7 @@ def test_render_profile_digest_is_order_independent_and_evidence_sensitive() -> 
 
 
 def test_wire_authority_profiles_have_one_unambiguous_class_home() -> None:
-    production_paths = tuple((Path(__file__).parents[1]).glob("*.py"))
+    production_paths = scan_directory(Path(__file__).parents[1], pattern="*.py")
     class_homes: dict[str, list[str]] = {"RenderProfile": [], "ExportTreeTransportProfile": []}
     for path in production_paths:
         tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -716,7 +716,7 @@ def test_profile_refuses_unknown_anchor_without_tolerating_partial_coverage() ->
         sheet="DP200001",
         source_row=99,
         source_cell="A99",
-        ordinal=99,
+        ordinal="99",
         record_identity="DP200001",
     )
     unknown_rule = _singleton(unknown).model_copy(
@@ -1033,7 +1033,7 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
 def test_real_profile_fragments_stay_below_the_reviewability_line_cap() -> None:
     """Deterministic partitioning keeps every authored fragment reviewable."""
     profile_directory = Path(__file__).parents[1] / "render_profiles" / "modelo_200" / "2025"
-    paths = tuple(profile_directory.glob("*.toml"))
+    paths = scan_directory(profile_directory, pattern="*.toml")
     assert paths
     assert all(len(path.read_text(encoding="utf-8").splitlines()) <= 500 for path in paths)
 
@@ -1049,21 +1049,21 @@ def test_source_reserved_slots_are_never_eligible_while_blank_numerics_remain_el
         record_identity="DP30302",
         source_row=97,
         source_cell="A97",
-        ordinal=92,
+        ordinal="92",
         offset=1000,
         length=3,
         aeat_type="Num",
         normalized_description="Reservado para la AEAT",
     )
     reserved_upper_case = reserved_num.model_copy(
-        update={"ordinal": 93, "source_row": 98, "source_cell": "A98", "offset": 1003},
+        update={"ordinal": "93", "source_row": 98, "source_cell": "A98", "offset": 1003},
     ).model_copy(update={"normalized_description": "RESERVADO PARA LA A.E.A.T. (Dejar en blanco)"})
     live_blank_numeric = RecordDesignIntermediateField(
         sheet="DP30301",
         record_identity="DP30301",
         source_row=14,
         source_cell="A14",
-        ordinal=9,
+        ordinal="9",
         offset=20,
         length=4,
         aeat_type="Num",

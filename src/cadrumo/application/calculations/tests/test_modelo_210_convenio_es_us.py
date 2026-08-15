@@ -16,56 +16,22 @@ The 5%/0% dividend tiers and the art 11.2 interest exceptions are not modelled.
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from ....core import validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    BindingId,
-    calculate_registry_snapshot,
-    resolve_available_bound_inputs_by_casilla_id,
-)
 from ....tests.secure_sql import isolated_runtime_profile
+from ._convenio_rate_support import resolve_convenio_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_MODELO = "210"
-_YEAR = 2025
-_COUNTRY_BINDING = "m210-2025-profile-country-of-fiscal-residence"
-_TIPO_GRAVAMEN = validated_casilla_id("tipo_gravamen", surface="es_us_test")
-_CUOTA_INTEGRA = validated_casilla_id("cuota_integra", surface="es_us_test")
-
-
-def _resolve_rate(*, tipo_renta: str, country_code: str, base: str) -> tuple[Decimal, Decimal]:
-    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR, period="EVENT-1")
-    binding_values: dict[BindingId, Decimal] = {}
-    enum_binding_values: dict[BindingId, str] = {_COUNTRY_BINDING: country_code}
-    text_inputs = {validated_casilla_id("tipo_renta", surface="es_us_test"): tipo_renta}
-    casilla_inputs = {
-        validated_casilla_id("rendimientos_integros", surface="es_us_test"): Decimal(base),
-        validated_casilla_id("gastos_deducibles", surface="es_us_test"): Decimal("0"),
-        validated_casilla_id("retencion_practicada", surface="es_us_test"): Decimal("0"),
-    }
-    bound = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs={**bound, **casilla_inputs},
-        binding_values=binding_values,
-        enum_binding_values=enum_binding_values,
-        text_inputs=text_inputs,
-        date_context={"filing_period": date(_YEAR, 12, 31)},
-    )
-    return result.values[_TIPO_GRAVAMEN], result.values[_CUOTA_INTEGRA]
 
 
 def test_us_dividend_resolves_treaty_ceiling_of_15_percent(tmp_path: Path) -> None:
     """US-resident dividend: min(domestic 0.19, treaty 0.15) = 0.15 (art 10.2.b)."""
     with isolated_runtime_profile(tmp_path=tmp_path):
-        tipo, cuota = _resolve_rate(tipo_renta="dividend", country_code="US", base="1000.00")
+        tipo, cuota = resolve_convenio_rate(tipo_renta="dividend", country_code="US", base="1000.00")
 
     assert tipo == Decimal("0.15")
     assert cuota == Decimal("150.00")
@@ -74,7 +40,7 @@ def test_us_dividend_resolves_treaty_ceiling_of_15_percent(tmp_path: Path) -> No
 def test_us_interest_is_source_state_exempt(tmp_path: Path) -> None:
     """US-resident interest: source-state exemption (art 11.1) → 0."""
     with isolated_runtime_profile(tmp_path=tmp_path):
-        tipo, cuota = _resolve_rate(tipo_renta="interest", country_code="US", base="1000.00")
+        tipo, cuota = resolve_convenio_rate(tipo_renta="interest", country_code="US", base="1000.00")
 
     assert tipo == Decimal("0")
     assert cuota == Decimal("0.00")

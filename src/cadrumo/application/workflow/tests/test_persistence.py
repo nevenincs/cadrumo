@@ -15,6 +15,7 @@ import pytest
 
 from ....adapters.persistence.storage.bucket import bucket_paths
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from ....core import scan_directory
 from .. import (
     WorkflowResult,
     WorkflowStage,
@@ -114,7 +115,7 @@ class TestPersistenceRoundTrip:
         runs_dir.mkdir()
         result = _result("c" * 16, datetime(2026, 4, 13, tzinfo=UTC))
         save_run(result, runs_dir=runs_dir)
-        assert list(runs_dir.iterdir()) == []
+        assert scan_directory(runs_dir) == ()
 
 
 class _EmitError(RuntimeError):

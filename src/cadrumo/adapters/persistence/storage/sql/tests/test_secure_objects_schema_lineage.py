@@ -11,11 +11,8 @@ version stamp, revision lineage) is left untouched.
 from __future__ import annotations
 
 import sqlite3
-from collections.abc import Iterator
-from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 import pytest
 
@@ -24,31 +21,12 @@ from ..._schema_lineage import (
     register_secure_object_schema_upgrader,
 )
 from ._secure_objects_support import (
-    Base,
     EnvelopeVersionError,
-    EphemeralMasterKeyProvider,
-    SecureObjectRepository,
     SensitivityClass,
-    Settings,
-    create_engine_from_settings,
+    _ephemeral_secure_repo,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-@contextmanager
-def _ephemeral_secure_repo(
-    tmp_path: Path,
-    database_name: str,
-) -> Iterator[tuple[Path, Any, SecureObjectRepository]]:
-    with EphemeralMasterKeyProvider():
-        db_path = tmp_path / database_name
-        engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
-        try:
-            yield db_path, engine, SecureObjectRepository(engine=engine)
-        finally:
-            engine.dispose()
 
 
 def test_older_row_upgrades_through_registered_chain_on_read(tmp_path: Path) -> None:

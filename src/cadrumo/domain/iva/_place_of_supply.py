@@ -53,7 +53,7 @@ from typing import TypeGuard
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, read_toml
+from ...core import STRICT_FROZEN_CONFIG, read_toml, scan_directory
 from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import IvaCatalogueError
@@ -150,7 +150,7 @@ def load_place_of_supply_rules(root: Path | None = None) -> dict[int, dict[str, 
     """
     target = root if root is not None else bundled_path("registry", "aeat", "iva", "place_of_supply")
     resolved = target.resolve()
-    paths = tuple(sorted(resolved.glob("*.toml")))
+    paths = scan_directory(resolved, pattern="*.toml")
     fingerprint = tuple(file_stat_fingerprint(path) for path in paths)
     return _load_cached(str(resolved), fingerprint)
 

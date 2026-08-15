@@ -8,7 +8,6 @@ import pytest
 
 from .._errors import RegistryLoadError
 from .._loader import (
-    _require_revision_section_fragments,
     _revision_section_fragment_paths,
     load_modelo_directory,
     load_modelo_file,
@@ -567,21 +566,19 @@ source_refs = ["aeat-manual"]
         load_modelo_directory(target)
 
 
-def test_require_and_collect_section_fragments_agree_on_depth(tmp_path: Path) -> None:
-    """The emptiness guard and the fragment collector must see the SAME files.
+def test_a_section_holding_only_a_nested_fragment_is_refused_as_empty(tmp_path: Path) -> None:
+    """ "Is this section populated" is answered by the files it actually contributes.
 
-    ``_require_revision_section_fragments`` and ``_revision_section_fragment_paths``
-    are two independent mechanisms answering "is this section populated" and
-    "which files does it contain" -- they must agree, or a section a guard
-    calls "populated" can be one the collector actually reads nothing from.
-    This exercises both directly (bypassing ``_validate_section_fragment_names``'s
+    The emptiness refusal and the fragment collection are one listing in
+    ``_revision_section_fragment_paths``, so a section cannot be called
+    "populated" by one and read as empty by the other. This exercises the
+    collector directly, bypassing ``_validate_section_fragment_names``'s
     categorical refusal of ANY nested section subdirectory in
-    ``_loader_cache.py``, which makes this exact scenario unreachable through
-    the full ``load_modelo_directory`` pipeline) to prove the reconciliation
-    holds standalone too: a section directory holding ONLY a nested fragment
-    is refused as empty by the guard -- exactly what the collector would also
-    see (zero files) -- rather than the guard seeing it as populated
-    (recursively) while the collector silently reads nothing from it.
+    ``_loader_cache.py`` (which makes this scenario unreachable through the
+    full ``load_modelo_directory`` pipeline), to prove the one-level reading
+    holds standalone: a section directory holding ONLY a nested fragment
+    contributes nothing and is refused, rather than passing as populated on
+    a file the merge would never read.
     """
     section_dir = tmp_path / "casillas"
     section_dir.mkdir()
@@ -590,8 +587,7 @@ def test_require_and_collect_section_fragments_agree_on_depth(tmp_path: Path) ->
     (nested / "extra.toml").write_text('[[revisions."2025".casillas]]\nid = "0001"\n', encoding="utf-8")
 
     with pytest.raises(RegistryLoadError, match="contains no TOML fragments"):
-        _require_revision_section_fragments((section_dir,))
-    assert _revision_section_fragment_paths((section_dir,)) == ()
+        _revision_section_fragment_paths((section_dir,))
 
 
 def test_directory_mode_rejects_fragment_revision_id_mismatch(tmp_path: Path) -> None:

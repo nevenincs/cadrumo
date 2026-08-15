@@ -63,6 +63,7 @@ import subprocess
 
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -199,7 +200,7 @@ def test_every_rule_citation_outside_how_resolves_against_the_tree() -> None:
         # assert. See the module docstring on why this is not a skip.
         return
 
-    rules = sorted(_RULES_DIR.glob("*.md"))
+    rules = scan_directory(_RULES_DIR, pattern="*.md")
     assert rules, (
         f"{_RULES_DIR} exists but holds no rule files; a corpus that is present and empty "
         "would make this gate pass vacuously, which is the failure it must not have"

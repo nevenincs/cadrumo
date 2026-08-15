@@ -24,6 +24,7 @@ from typing import Final
 import httpx
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 from ..corpus.fetch_boe_normative import (
@@ -313,7 +314,7 @@ def test_every_bundled_normative_is_already_canonical() -> None:
     """The corpus the registry pins hashes identically on Windows and Unix."""
     noncanonical = [
         path.name
-        for path in sorted(_CORPUS.glob("*.html"))
+        for path in scan_directory(_CORPUS, pattern="*.html")
         if canonical_lf_bytes(payload := path.read_bytes()) != payload
     ]
 

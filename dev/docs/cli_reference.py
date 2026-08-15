@@ -61,6 +61,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
+from cadrumo.core import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 from cadrumo.entrypoints.schema_surface import (
     GROUP_CALLBACK_SCHEMA_KEYS,
@@ -1184,7 +1185,7 @@ def generate_cli_reference_in_subprocess(docs_root: Path) -> dict[str, str]:
     # (``cli/app/ledger.rst``), not only flat under ``cli/``.
     output_dir = docs_root / "cli"
     rendered: dict[str, str] = {}
-    for rst_file in sorted(output_dir.rglob("*.rst")):
+    for rst_file in scan_directory(output_dir, pattern="*.rst", recursive=True):
         rel = f"cli/{rst_file.relative_to(output_dir).as_posix()}"
         rendered[rel] = rst_file.read_text(encoding=UTF_8_ENCODING)
     return rendered

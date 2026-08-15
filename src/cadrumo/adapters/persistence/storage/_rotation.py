@@ -34,7 +34,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from ....core import STRICT_FROZEN_CONFIG, StorageCategory, storage_location
+from ....core import STRICT_FROZEN_CONFIG, StorageCategory, scan_directory, storage_location
 from ....core.atomic_write import atomic_write_text
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
@@ -220,7 +220,7 @@ def _iter_envelope_files(
             if target.is_file():
                 yield target, entry
             continue
-        for path in sorted(entry.store_dir.iterdir()):
+        for path in scan_directory(entry.store_dir):
             if not path.is_file():
                 continue
             if not path.name.endswith(entry.envelope_suffix):

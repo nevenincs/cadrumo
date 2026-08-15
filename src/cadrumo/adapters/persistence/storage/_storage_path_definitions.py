@@ -49,7 +49,6 @@ BUCKET_MANIFEST_FILENAME = storage_location(StorageCategory.BUCKET_MANIFEST).sub
 BUCKET_LOCK_FILENAME = storage_location(StorageCategory.BUCKET_LOCK).subpath
 BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME = storage_location(StorageCategory.BUCKET_OUTPUT_LANGUAGE_HINT).subpath
 KEYSTORE_DIRNAME = storage_location(StorageCategory.BUCKET_KEYSTORE).subpath
-BUCKET_DEK_FILENAME = storage_location(StorageCategory.KEYSTORE_BUCKET_DEK).subpath
 PROFILE_SESSION_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SESSION).subpath
 LOGIN_THROTTLE_FILENAME = storage_location(StorageCategory.KEYSTORE_LOGIN_THROTTLE).subpath
 PROFILE_CUSTODY_DIRNAME = storage_location(StorageCategory.PROFILE_CAPSULE_CUSTODY).subpath
@@ -229,14 +228,6 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         owner="cadrumo.adapters.persistence.storage.master_key",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=KEYSTORE_DIRNAME,
-    ),
-    StoragePathDefinition(
-        key="bucket_dek",
-        kind=StoragePathKind.FILE,
-        grammar=f"<root>/{KEYSTORE_DIRNAME}/<bucket_id>/{BUCKET_DEK_FILENAME}",
-        owner="cadrumo.adapters.persistence.storage.master_key",
-        anchor=StoragePathAnchor.STORAGE_ROOT,
-        segment=BUCKET_DEK_FILENAME,
     ),
     StoragePathDefinition(
         key="profile_session",

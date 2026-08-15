@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -21,8 +20,7 @@ from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import RegistrySnapshotRef
 from ....domain.filing import ModeloDraft, compute_modelo_draft_id, registry_schema_version
 from ....domain.submission import ModeloDraftStatus
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ..._state_projection_auth import ProjectionAuthReadiness
 from ...workflow import workflow_state_repository
@@ -156,13 +154,7 @@ def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
     assert result.active_profile_registered is True
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_BUCKET_ID),
-    ):
-        yield
+_isolated_backend = bucket_session_storage_fixture(_BUCKET_ID)
 
 
 def test_configure_operator_auth_emits_auth_provider_configured_event() -> None:

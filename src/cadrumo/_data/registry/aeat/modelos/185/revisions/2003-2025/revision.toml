@@ -1,0 +1,28 @@
+[revisions."2003-2025"]
+authority_grade = "filing"
+# Predecessor revision, split out of the prior single "2025-y-siguientes"
+# revision, which wrongly cited orden-hac-1197-2025 for 2025 (that orden
+# governs only 2026-onward, confirmed from its own fetched text: "entrará en
+# vigor el 1 de enero de 2026"). The real instrument for this span is
+# orden-hac-96-2003, confirmed by BOE search, its own derogatoria clause, and
+# AEAT's design corpus carrying zero files for 2003-2025.
+#
+# Deliberately carries ONLY what is grounded: the orden citation and the 12
+# deadline windows that demonstrably belong to it (every one carries
+# filing_year=2025, a year the 2026 orden cannot govern). It does NOT carry
+# casillas, constructs or workbook_parity_refs copied from the 2026 revision
+# -- doing so would assert this era's form had the same box structure for
+# twenty-two years, a claim no bundled design backs. This revision correctly
+# refuses on those absent families; that refusal states the true state of the
+# evidence rather than a copied, unverifiable claim.
+valid_from = 2003-01-01
+valid_to = 2025-12-31
+period_selector = { year_from = 2003, year_to = 2025, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
+orden_aplicabilidad = ["orden-hac-96-2003:art-1"]
+legal_refs = [
+    "orden-hac-96-2003:art-1",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-185-procedure-2003",
+]

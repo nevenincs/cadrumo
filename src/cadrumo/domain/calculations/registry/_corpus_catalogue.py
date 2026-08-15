@@ -19,11 +19,31 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
+from typing import Final
 
 from ....core.hashing import hash_file
 from ....core.resources import resolve_companion_binary
 from ._errors import RegistryValidationError
+from ._legal import _PROVISION_SUFFIXED_FILENAME
 from ._schema import SourceReference
+
+#: The one corpus tree carrying the excerpt/full-text duality
+#: ``SourceReference.corpus_tier`` describes -- the same BOE/AEAT norm-text
+#: tree ``LegalReference.corpus_ref`` resolves into. A ``form_spec`` or
+#: ``instructions`` source pointing here can legitimately cite the exact file
+#: a ``LegalReference`` entry also cites. A design workbook, manual PDF, XSD
+#: or data dictionary under ``corpus/aeat_official/`` has no such duality.
+_NORMATIVES_TREE_PREFIX: Final = "corpus/normatives/"
+
+#: Calibrated against THIS model's own observed population (measured
+#: 2026-08-15, not reused from ``_legal.py``'s ``_FULL_CONSOLIDATED_SIZE_FLOOR``):
+#: every non-provision-suffixed ``SourceReference`` under ``corpus/normatives/``
+#: is either a landing-page/annex stub topping out at 2308 bytes, or a genuine
+#: full consolidated orden/ley/RD text starting at 32119 bytes -- a clean,
+#: order-of-magnitude gap with nothing observed in between. 10000 sits in that
+#: gap: comfortably above every observed stub, comfortably below every
+#: observed full text.
+_SOURCE_FULL_CONSOLIDATED_SIZE_FLOOR: Final = 10000
 
 
 @dataclass(frozen=True)
@@ -61,7 +81,54 @@ def verify_source_file(root: Path, source: SourceReference) -> Path:
         raise RegistryValidationError(f"source {source.id!r} byte count mismatch")
     if actual_sha256 != source.sha256:
         raise RegistryValidationError(f"source {source.id!r} sha256 mismatch")
+    _validate_source_corpus_tier_declaration(source, present_path)
     return present_path
+
+
+def _validate_source_corpus_tier_declaration(source: SourceReference, path: Path) -> None:
+    """Verify a DECLARED ``corpus_tier`` against the bundled file, when present.
+
+    Purely additive: nothing in the committed catalogue declares
+    ``corpus_tier`` on a :class:`SourceReference` today, so this can never
+    fire against the existing tree. It exists so a FUTURE declaration is
+    checked rather than trusted -- verified against the file, never merely
+    typed. Mirrors ``_legal.py``'s ``_validate_corpus_tier_declaration`` in
+    shape; the size floor and the corpus-tree gate are this model's own,
+    per the field's docstring in ``_schema_references.py``.
+    """
+    if source.corpus_tier is None:
+        return
+    if not source.corpus_path.startswith(_NORMATIVES_TREE_PREFIX):
+        raise RegistryValidationError(
+            f"source {source.id!r} declares corpus_tier={source.corpus_tier!r} but corpus_path "
+            f"{source.corpus_path!r} is not under {_NORMATIVES_TREE_PREFIX!r} -- the "
+            "full_consolidated/provision_excerpt duality only applies to the BOE/AEAT norm-text "
+            "tree; a design workbook, manual PDF, XSD or data dictionary has no such duality, so "
+            "declaring a tier for one is a claim this check cannot verify and must not accept",
+        )
+    filename = path.name
+    size = path.stat().st_size
+    is_provision_suffixed = bool(_PROVISION_SUFFIXED_FILENAME.search(filename))
+
+    if source.corpus_tier == "full_consolidated":
+        if is_provision_suffixed or size < _SOURCE_FULL_CONSOLIDATED_SIZE_FLOOR:
+            raise RegistryValidationError(
+                f"source {source.id!r} declares corpus_tier='full_consolidated' but {filename!r} "
+                f"({size} bytes) does not match the observed full-text shape (a bare, "
+                f"non-provision-suffixed filename of at least {_SOURCE_FULL_CONSOLIDATED_SIZE_FLOOR} "
+                "bytes) -- reclassify as 'provision_excerpt', or confirm this really is the full "
+                "consolidated instrument and not a thin stub",
+            )
+    elif source.corpus_tier == "provision_excerpt":
+        if is_provision_suffixed:
+            return
+        raise RegistryValidationError(
+            f"source {source.id!r} declares corpus_tier='provision_excerpt' but {filename!r} carries "
+            "no provision-suffixed filename of the corpus's own excerpt convention (-art/-apartado/"
+            "-anexo/-da/-dt/-df/-se/-pr/-ar/-redacciones) -- this model has no anchored dispositive-"
+            "content reader ('SourceReference.corpus_path' carries no '#anchor'), so filename "
+            "convention is the only signal it can verify; rename to the convention or remove the claim",
+        )
 
 
 def resolve_record_design_binary(

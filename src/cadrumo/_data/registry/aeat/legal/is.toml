@@ -829,6 +829,24 @@ applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR222e25.xlsx"
 review_status = "reviewed"
 
+# Historical Modelo 222 design, pre-2025, outside the current declared span.
+# Already acquired and manifested (2026-07-21) but previously unregistered --
+# registration, not acquisition. Records historical inventory; asserts no
+# coverage claim. Re-fetched from the live AEAT URL on 2026-08-15 and
+# confirmed byte-identical (sha256 match) before registering.
+[sources."aeat-dr-222-2023-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_222/files/02-222-ejercicios-2023-y-2024.xlsx"
+sha256 = "1c7482aba6d81d56d0e6106674690eaf4718dae8c9a8f97d799a034bc4fc8505"
+bytes = 137820
+retrieved_at = 2026-07-21
+applies_from = 2023-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR222e23.xlsx"
+review_status = "reviewed"
+
 [sources."aeat-dr-202-2023"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -1304,6 +1322,31 @@ applies_from = 2025-01-01
 applies_to = 2025-12-31
 record_design_epoch = "2025"
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR220e25.xlsx"
+review_status = "reviewed"
+
+# Historical Modelo 220 design, 2022 edition. Already acquired and manifested
+# (2026-07-21) but previously unregistered -- registration, not acquisition.
+# Records historical inventory; asserts no coverage claim. Re-fetched from the
+# live AEAT URL on 2026-08-15 and confirmed byte-identical (sha256 match)
+# before registering. Registration is independent of parseability: this
+# artefact's own T22014A00 sheet omits a type declaration for three fields
+# (ordinals 98/99/100) and the strict parser currently refuses on it -- a
+# genuine AEAT-side omission, confirmed (not our copy being damaged) by
+# hash-matching the live server, and grounded (2023/2024/2025 editions
+# declare "Num" at the same offsets, 3-for-3). A correction mechanism is
+# proposed and queued for purge, not built here; registering the source now
+# does not wait on that fix.
+[sources."aeat-dr-220-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm"
+sha256 = "251fffc3cf06ef8a16c14a5143b87e44abb5a97f23d0c949d468fe76ddfc02ee"
+bytes = 1282290
+retrieved_at = 2026-07-21
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_22/DR220e22.xlsm"
 review_status = "reviewed"
 
 [sources."aeat-modelo-200-manual-2024"]

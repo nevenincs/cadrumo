@@ -505,6 +505,41 @@ applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/390_2025.xlsx"
 review_status = "reviewed"
 
+# Historical Modelo 390 designs, pre-2022, predating the split into the
+# current disjoint 2022/2023/2024/2025 revisions. Already acquired and
+# manifested (2026-05-03) but previously unregistered -- registration, not
+# acquisition. Records historical inventory covering years 2010-2021, which
+# M390's own split proved refuse until exact authority is enrolled; asserts
+# no coverage claim. Batch sample of two (2015, 2016) from the six-file
+# outside-span population per instruction, not the full set. Re-fetched both
+# from their live AEAT URLs on 2026-08-15 and confirmed byte-identical
+# (sha256 match) before registering.
+[sources."aeat-dr-390-2015"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_390/files/08-390-ejercicio-2015-103-kb-pdf.pdf"
+sha256 = "49aa7389ea31d2a166b7ecc050a8f5066fdf052e84dff72f45e71063f3e57a60"
+bytes = 106206
+retrieved_at = 2026-05-03
+applies_from = 2015-01-01
+applies_to = 2015-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/390v01e2015_v1.00.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-390-2016"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_390/files/09-390-ejercicio-2016-22-12-2016-505-kb-xlsx.xlsx"
+sha256 = "28c2bda5aa2d891f2f91a3275b40a790d656748c0a9fb3e5329ef54aef23dd50"
+bytes = 517513
+retrieved_at = 2026-05-03
+applies_from = 2016-01-01
+applies_to = 2016-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/390v01e2016_v1.00.xlsx"
+review_status = "reviewed"
+
 [sources."aeat-dr-390-2023"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -652,6 +687,142 @@ bytes = 386926
 retrieved_at = 2026-05-06
 applies_from = 2026-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR303e26v101.xlsx"
+review_status = "reviewed"
+
+# Pre-2022 Modelo 303 record designs, acquired and manifested since 2026-05-03
+# to 2026-07-21 but previously unregistered -- registration, not acquisition.
+# `record_design_epoch` is deliberately OMITTED on all eight: it names one of
+# the five explicit revision epochs (2022/2023/2024-early/2024-late/2025/2026)
+# the S67-S71 map rows own, and none of these eight designs belongs to that
+# set -- they predate it, covering years the modelo's current declared spans
+# reach only through the disputed 2009-y-siguientes revision. Inventing an
+# epoch label these designs were never assigned would be a claim this
+# registration does not make. Re-fetched all eight from their live AEAT URLs
+# on 2026-08-15 and confirmed byte-identical (sha256 match) before
+# registering.
+[sources."aeat-dr-303-2014"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/09-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2014-246-kb-xlsx.xlsx"
+sha256 = "6ada04f1843318c987c53dbfab88ac19b760c49793bcc30e751c5485a36cdaec"
+bytes = 252607
+retrieved_at = 2026-05-03
+applies_from = 2014-01-01
+applies_to = 2014-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e14v22.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-303-2015-2016"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/10-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2015-y-2016-247-kb-xlsx.xlsx"
+sha256 = "5bffa57f1630f4ade6a19b21010fd7e6aff0b440e632f17f1be53a61ecdaa15f"
+bytes = 252338
+retrieved_at = 2026-05-03
+applies_from = 2015-01-01
+applies_to = 2016-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e15v34.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-303-2017"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/11-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2017-292-kb-xlsx.xlsx"
+sha256 = "85775f8df5f7ba17f60b565eae41e710ec423285164867b0de83799fc6f07795"
+bytes = 299463
+retrieved_at = 2026-05-03
+applies_from = 2017-01-01
+applies_to = 2017-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e17v20_04.xlsx"
+review_status = "reviewed"
+
+# Two distinct 2018 designs, differentiated by which PERIODS within 2018 they
+# cover rather than by date range -- SourceReference has no period-selector
+# field, only applies_from/applies_to dates, so both carry the same nominal
+# 2018 date window. The period-level distinction ("todo el ejercicio" versus
+# "salvo el ultimo periodo, 12M/4T") is observable in each file's own title
+# but not expressible here without inventing a date split neither file states;
+# left unresolved rather than guessed, not a schema change made unilaterally.
+#
+# RESOLVED: SourceReference now carries period_selector, reusing the same
+# PeriodSelector/RegistrySelectorPeriodCode grammar the revision-level
+# period_selector above already uses. Both designs share one 2018 date
+# window; the period axis is what a resolve_record_design_binary caller
+# would need to choose between them -- grounded directly in each file's own
+# stated title ("todo el ejercicio" vs "salvo el ultimo periodo, 12M/4T"),
+# quarterly-only per this catalogue's own convention for a quarterly modelo
+# (see modelo 131/136 revision.toml). Pairs with the analogous 2021
+# hasta/desde-periodo-07 pair below.
+[sources."aeat-dr-303-2018"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/12-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2018-292-kb-xlsx.xlsx"
+sha256 = "4683a167c73019f935e6e78a6c2ef1d76f71a1c78207fdf8bc0098703892db25"
+bytes = 298223
+retrieved_at = 2026-05-03
+applies_from = 2018-01-01
+applies_to = 2018-12-31
+period_selector = { years = [2018], periods = ["1T", "2T", "3T", "4T"] }
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e18v10_40.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-303-2018-salvo-ultimo-periodo"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/13-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2018-salvo-ultimo-periodo-12m-4t-de-2018.xlsx"
+sha256 = "3fbad46fdad001a6faab1a68cd7e13958901e208cc7ab888786fc7ba44065098"
+bytes = 298775
+retrieved_at = 2026-05-03
+applies_from = 2018-01-01
+applies_to = 2018-12-31
+period_selector = { years = [2018], periods = ["1T", "2T", "3T"] }
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e18v10_10.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-303-2019-2020"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/14-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2019-y-2020-290-kb-xlsx.xlsx"
+sha256 = "bd570be2599aa7aba4740282fc06dd573e8d0d03dd0717ae3c1d26e0fae0446d"
+bytes = 297738
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+applies_to = 2020-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR303e20v10_20.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-303-2021-hasta-periodo-06"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/15-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2021-hasta-periodo-06-actualizado-27-04.xlsx"
+sha256 = "cb0226f444e4412336b155655d5b2afda0b60e7e87d6dcda6eafd6497e5f4ee7"
+bytes = 343400
+retrieved_at = 2026-07-21
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+period_selector = { years = [2021], periods = ["1T", "2T"] }
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_21/DR303e21v103.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-303-2021-desde-periodo-07"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/08-303-orden-hac-646-2021-ejercicio-2021-desde-periodo-07-actualizado-22-12-2021-334-kb-xlsx.xlsx"
+sha256 = "185b8612c9cf4a22b4ed919db0ba45d21b03b7168da957fca3b5758f567ce249"
+bytes = 341383
+retrieved_at = 2026-07-21
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+period_selector = { years = [2021], periods = ["3T", "4T"] }
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_21/DR303e21v200.xlsx"
 review_status = "reviewed"
 
 [sources."aeat-modelo-303-procedure"]

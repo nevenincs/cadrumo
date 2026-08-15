@@ -21,7 +21,7 @@ from functools import cache
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, scan_directory, validated_casilla_id
 from .....tests import REPO_ROOT
 from .._runtime_graph import expression_binding_refs, expression_parameter_refs, expression_relation_refs
 from ._registry_schema_support import _committed_modelo
@@ -497,7 +497,7 @@ def _read_parameter_refs_for_modelo(modelo_id: str) -> frozenset[str]:
     """
     refs: set[str] = set()
     domain_root = REPO_ROOT / "src" / "cadrumo" / "domain"
-    for path in domain_root.rglob("*.py"):
+    for path in scan_directory(domain_root, pattern="*.py", recursive=True):
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         except (SyntaxError, OSError):

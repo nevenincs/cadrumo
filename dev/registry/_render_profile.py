@@ -14,9 +14,9 @@ from pathlib import Path
 from typing import Annotated, Final, Literal
 
 import rtoml
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 
-from cadrumo.core import is_link_like
+from cadrumo.core import is_link_like, scan_directory
 from cadrumo.core.hashing import content_hash_hex, sha256_file
 from cadrumo.domain.calculations.registry import (
     ExportValuePolicy,
@@ -72,13 +72,33 @@ class RenderProfileDesignIdentity(_StrictModel):
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
+def _coerce_ordinal(value: object) -> object:
+    """Accept a legacy authored int literal alongside the parser's printed str label.
+
+    Committed render-profile authoring data predates the parser's widened
+    ``str | None`` ordinal and still writes bare integers (``ordinal = 14``).
+    Coercing here lets that authored data hydrate unchanged.
+    """
+    if value is None or isinstance(value, str):
+        return value
+    if isinstance(value, int) and not isinstance(value, bool):
+        return str(value)
+    raise ValueError("ordinal must be a printed str label, a legacy int literal, or None")
+
+
+type _AnchorOrdinal = Annotated[str | None, BeforeValidator(_coerce_ordinal)]
+
+
 class RenderProfileAnchor(_StrictModel):
     """Complete parser-owned field identity; no selector or wildcard exists."""
 
     sheet: str = Field(min_length=1)
     source_row: int = Field(gt=0)
     source_cell: str | None = Field(pattern=r"^[A-Z]+[1-9][0-9]*$")
-    ordinal: int = Field(gt=0)
+    #: The ordinal AEAT printed, verbatim -- a str because it is a printed LABEL,
+    #: never an arithmetic value. Mirrors
+    #: :attr:`domain.calculations.registry.RecordDesignField.ordinal`.
+    ordinal: _AnchorOrdinal = Field(min_length=1)
     record_identity: str = Field(min_length=1)
 
 
@@ -322,7 +342,7 @@ def load_render_profile(profile_directory: Path) -> RenderProfile:
     if not profile_directory.is_dir() or profile_directory.is_symlink() or profile_directory.is_junction():
         raise RegistryValidationError(f"render profile path must be a real directory: {profile_directory}")
     try:
-        paths = tuple(sorted(profile_directory.iterdir(), key=lambda path: path.name))
+        paths = tuple(sorted(scan_directory(profile_directory, require_root=True), key=lambda path: path.name))
     except OSError as exc:
         raise RegistryValidationError(f"cannot inspect render profile directory: {profile_directory}") from exc
     if not paths:
@@ -683,11 +703,17 @@ def _duplicates[T](values: Iterable[T]) -> tuple[T, ...]:
     return tuple(sorted(duplicates, key=repr))
 
 
-def _anchor_key(anchor: RenderProfileAnchor) -> tuple[str, int, int, str, str]:
+def _anchor_key(anchor: RenderProfileAnchor) -> tuple[str, int, str, str, str]:
+    """Return a deterministic, total sort key -- presentation order, not AEAT order.
+
+    Plain string ordering on ``ordinal`` is fine here: every use is a stable,
+    reproducible listing (an error message, a persisted artefact), never an
+    AEAT-numeric position a downstream index depends on.
+    """
     return (
         anchor.sheet,
         anchor.source_row,
-        anchor.ordinal,
+        anchor.ordinal or "",
         anchor.source_cell or "",
         anchor.record_identity,
     )

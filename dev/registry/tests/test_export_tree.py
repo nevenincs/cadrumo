@@ -11,7 +11,12 @@ from typing import TypedDict
 
 import pytest
 
-from cadrumo.core import FilingProducerKey, M303ProrrataActivityProjectionField, M303ProrrataActivityProjectionRef
+from cadrumo.core import (
+    FilingProducerKey,
+    M303ProrrataActivityProjectionField,
+    M303ProrrataActivityProjectionRef,
+    scan_directory,
+)
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     CasillaFieldKind,
@@ -779,10 +784,10 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
     assert first.layout == second.layout
     assert {
         path.relative_to(revision_dir / "export").as_posix(): path.read_bytes()
-        for path in sorted((revision_dir / "export").iterdir())
+        for path in scan_directory(revision_dir / "export")
     } == {
         path.relative_to(duplicate_revision_dir / "export").as_posix(): path.read_bytes()
-        for path in sorted((duplicate_revision_dir / "export").iterdir())
+        for path in scan_directory(duplicate_revision_dir / "export")
     }
 
     loaded = load_modelo_directory(tmp_path / "modelos" / "200")
@@ -1031,7 +1036,7 @@ def test_manifest_writer_refuses_a_target_that_already_exists(tmp_path) -> None:
         _write_canonical_manifest_atomically(target, b'{"second": true}')
 
     assert target.read_bytes() == b'{"first": true}', "the refused write must not have replaced the target"
-    assert tuple(tmp_path.iterdir()) == (target,), "the refused write must not leave its staging tempfile behind"
+    assert scan_directory(tmp_path) == (target,), "the refused write must not leave its staging tempfile behind"
 
 
 def test_renderer_refuses_mismatched_map_without_emitting_a_manifest(m200_inspection_snapshot, tmp_path) -> None:
@@ -1373,8 +1378,8 @@ def test_renderer_partitions_oversized_record_deterministically_and_loader_merge
     assert [path.split("-", 1)[0] for path in first.output_files] == sorted(
         path.split("-", 1)[0] for path in first.output_files
     )
-    assert {path.name: path.read_bytes() for path in sorted((first_revision / "export").iterdir())} == {
-        path.name: path.read_bytes() for path in sorted((second_revision / "export").iterdir())
+    assert {path.name: path.read_bytes() for path in scan_directory(first_revision / "export")} == {
+        path.name: path.read_bytes() for path in scan_directory(second_revision / "export")
     }
     for relative_path in first.output_files:
         lines = (first_revision / "export" / relative_path).read_text(encoding="utf-8").splitlines()

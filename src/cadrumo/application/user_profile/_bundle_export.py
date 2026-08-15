@@ -34,7 +34,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...core import fsync_parent_dir
+from ...core import fsync_parent_dir, scan_directory
 from ...core.atomic_write import atomic_write_hardened_bytes
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
@@ -586,7 +586,7 @@ def _orphan_staged_paths(operation: ProfileBundleExportOperation) -> tuple[Path,
         inner_prefix = f"{staged.name}."
         candidates.extend(
             entry
-            for entry in parent.iterdir()
+            for entry in scan_directory(parent)
             if entry.name.startswith(inner_prefix) and entry.name.endswith(_HARDENED_INNER_TEMP_SUFFIX)
         )
     return tuple(path for path in candidates if not path.is_symlink())

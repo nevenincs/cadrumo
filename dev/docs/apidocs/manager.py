@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from cadrumo.core import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
 
 
@@ -148,7 +149,7 @@ class ApiStubManager:
         """
         results: list[tuple[str, bool]] = []
 
-        for py_file in sorted(self.src_cadrumo.rglob("*.py")):
+        for py_file in scan_directory(self.src_cadrumo, pattern="*.py", recursive=True):
             if self._is_excluded(py_file):
                 continue
 
@@ -371,7 +372,7 @@ class ApiStubManager:
             written += 1
 
         removed_names: list[str] = []
-        for existing in sorted(self.docs_api.glob("*.rst")):
+        for existing in scan_directory(self.docs_api, pattern="*.rst"):
             if existing.name not in expected:
                 existing.unlink()
                 removed_names.append(existing.name)
@@ -394,7 +395,7 @@ class ApiStubManager:
         expected_stems: set[str] = {Path(filename).stem for filename in expected_contents}
 
         actual_stubs: set[str] = set()
-        for rst_file in self.docs_api.glob("*.rst"):
+        for rst_file in scan_directory(self.docs_api, pattern="*.rst"):
             if rst_file.name == "modules.rst":
                 continue
             stem = rst_file.stem
@@ -419,7 +420,7 @@ class ApiStubManager:
         drift = self.check()
 
         total_modules = len(all_modules)
-        total_stubs = sum(1 for _ in self.docs_api.glob("*.rst")) - (
+        total_stubs = len(scan_directory(self.docs_api, pattern="*.rst")) - (
             1 if (self.docs_api / "modules.rst").exists() else 0
         )
 

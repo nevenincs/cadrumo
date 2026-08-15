@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import date
+from functools import cache
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select
@@ -40,6 +41,7 @@ from ....application.live import (
 from ....core.config import load_settings
 from ....core.hashing import sha256_hex
 from ....domain.attachments import AttachmentStoreProtocol
+from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.secure_sql import TestRuntimeProfile
 
 if TYPE_CHECKING:
@@ -64,42 +66,25 @@ SANCION_TEXT_LINES = (
 )
 
 
+@cache
 def sancion_pdf_bytes(lines: tuple[str, ...] = SANCION_TEXT_LINES) -> bytes:
     """Render ``lines`` into a real single-page PDF with an extractable text layer.
 
-    Built through the same pdfium the production extractor reads with, so the
-    text a test asserts on is text a real extractor genuinely recovers, not a
-    string the test handed to itself.
+    Delegates to the canonical reportlab-based builder, then self-verifies
+    through pypdfium2 that the produced bytes really carry the text layer
+    before any test relies on it, so what a test asserts on is text a real
+    extractor genuinely recovers, not a string the test handed to itself.
+
+    Cached by ``lines``: reportlab stamps a creation timestamp, so two
+    independent builds of the same content are NOT byte-identical, and the
+    custody/service suites re-store the same served document to prove a
+    matching re-store is a byte-identical no-op. The hand-rolled builder this
+    replaced had no clock and was deterministic by construction; caching
+    restores that property without reintroducing it.
     """
     import pypdfium2 as pdfium
 
-    content = "BT /F1 10 Tf 40 780 Td 12 TL\n"
-    for line in lines:
-        escaped = line.replace("\\", r"\\").replace("(", r"\(").replace(")", r"\)")
-        content += f"({escaped}) Tj T*\n"
-    content += "ET"
-    stream = content.encode("latin-1")
-
-    objects = [
-        b"<< /Type /Catalog /Pages 2 0 R >>",
-        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] "
-        b"/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
-        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
-        b"<< /Length " + str(len(stream)).encode("ascii") + b" >>\nstream\n" + stream + b"\nendstream",
-    ]
-    out = bytearray(b"%PDF-1.4\n")
-    offsets = []
-    for index, body in enumerate(objects, start=1):
-        offsets.append(len(out))
-        out += f"{index} 0 obj\n".encode("ascii") + body + b"\nendobj\n"
-    xref_at = len(out)
-    out += f"xref\n0 {len(objects) + 1}\n".encode("ascii") + b"0000000000 65535 f \n"
-    for offset in offsets:
-        out += f"{offset:010d} 00000 n \n".encode("ascii")
-    out += f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref_at}\n".encode("ascii") + b"%%EOF\n"
-    data = bytes(out)
-    # Prove the bytes really carry the text layer before any test relies on it.
+    data = text_pdf_bytes(lines)
     document = pdfium.PdfDocument(data)
     try:
         recovered = "\n".join(document[0].get_textpage().get_text_range().splitlines())

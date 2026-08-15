@@ -37,6 +37,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 from pydantic import ValidationError
 
+from ....core import scan_directory
 from ....core.resources import bundled_path
 from .. import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
@@ -89,7 +90,7 @@ def _bundled_legal_ref_ids() -> frozenset[str]:
     """
     legal_root = bundled_path("registry", "aeat", "legal")
     ids: set[str] = set()
-    for path in sorted(legal_root.glob("*.toml")):
+    for path in scan_directory(legal_root, pattern="*.toml"):
         with path.open("rb") as handle:
             payload = tomllib.load(handle)
         legal_table = payload.get("legal")

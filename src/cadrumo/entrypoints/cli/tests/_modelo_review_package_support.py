@@ -1,14 +1,22 @@
 """Shared real persistence support for modelo review-package CLI tests.
 
 Scenario modules retain their own casilla maps and operator assertions. This
-module owns only the repeated setup of a real work unit and verified-complete
-calculation revision suitable for export and review-package operations.
+module owns the repeated setup of a real work unit and verified-complete
+calculation revision suitable for export and review-package operations, and
+the repeated plumbing of building a review package through the live
+``review-package build`` CLI verb (seed a revision, invoke the verb, assert
+success) -- three scenario modules each drove that exact sequence, differing
+only in which profile facts, casilla inputs and cached-CLI invoker they
+supply.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
+from pathlib import Path
+
+from click.testing import Result
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -89,3 +97,34 @@ def seed_exportable_modelo_revision(
     revisions = CalculationRevisionCatalogueRepository()
     revisions.save(upsert_calculation_revision(revisions.load(), revision))
     return work_unit_id, calculation_revision_id
+
+
+def build_review_package_via_cli(
+    tmp_path: Path,
+    *,
+    invoke: Callable[[Sequence[str]], Result],
+    input_values_by_casilla_id: Mapping[CasillaId, str],
+    name: str = "review-package.zip",
+) -> tuple[Path, str, str]:
+    """Seed an exportable revision, build its package through the live CLI verb, and return it.
+
+    Args:
+        tmp_path: The test's isolated temp directory; the package is written
+            to ``name`` inside it.
+        invoke: The caller's own cached-CLI invoker.
+        input_values_by_casilla_id: The caller's own casilla-input fixture.
+        name: The output filename.
+
+    Returns:
+        The written package path, the seeded work unit id, and the seeded
+        calculation revision id.
+    """
+    work_unit_id, calculation_revision_id = seed_exportable_modelo_revision(
+        input_values_by_casilla_id=input_values_by_casilla_id,
+    )
+    package_path = tmp_path / name
+    build_result = invoke(
+        ["app", "modelo", "review-package", "build", work_unit_id, "--output", str(package_path)],
+    )
+    assert build_result.exit_code == 0, build_result.output
+    return package_path, work_unit_id, calculation_revision_id

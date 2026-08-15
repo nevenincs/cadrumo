@@ -25,6 +25,7 @@ from typing import cast
 
 import pytest
 
+from cadrumo.core import iter_directory, scan_directory
 from dev._paths import REPO_ROOT
 
 from ..hook import (
@@ -48,7 +49,7 @@ _TERMINOLOGY = _REPO_ROOT / "src" / "cadrumo" / "_data" / "terminology" / "conce
 
 def _smallest(pattern: str) -> Path:
     """Return the smallest committed corpus file matching ``pattern``."""
-    candidates = sorted(_CORPUS.rglob(pattern), key=lambda p: p.stat().st_size)
+    candidates = sorted(scan_directory(_CORPUS, pattern=pattern, recursive=True), key=lambda p: p.stat().st_size)
     assert candidates, f"no committed corpus file matches {pattern!r}"
     return candidates[0]
 
@@ -110,7 +111,7 @@ def test_every_rule_pattern_matches_committed_sources() -> None:
     """A rule over zero files is dead configuration; each must match today."""
     for pattern in ("*.html", "*.pdf", "*.xlsm", "*.xlsx"):
         assert _smallest(pattern).is_file()
-    assert sorted(_TERMINOLOGY.glob("*.toml")), "no Handbook concept TOML matches the terminology rule"
+    assert any(iter_directory(_TERMINOLOGY, pattern="*.toml")), "no Handbook concept TOML matches the terminology rule"
 
 
 def test_terminology_concept_rule_emits_the_source_path_and_kind() -> None:
@@ -169,7 +170,7 @@ def test_hook_units_are_parity_with_committed_sidecars(pattern: str) -> None:
         text = unit["text"]
         assert isinstance(text, str)
         hook_texts.append(text)
-    sidecar_files = sorted(source.parent.glob(f"{source.name}*.extracted.json"))
+    sidecar_files = scan_directory(source.parent, pattern=f"{source.name}*.extracted.json")
     assert sidecar_files, f"no committed sidecar next to {source}"
     sidecar_texts: list[str] = []
     for candidate in sidecar_files:

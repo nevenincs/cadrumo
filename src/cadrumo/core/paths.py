@@ -42,6 +42,7 @@ from ._config_state_root import (
     live_state_root_inputs,
     platform_user_data_root,
 )
+from ._directory_scan import DirectoryEntryKind, iter_directory
 from .errors import CoreValidationError
 
 if TYPE_CHECKING:
@@ -487,7 +488,7 @@ def directory_byte_total(
     Args:
         directory: The directory to sum. Only used to short-circuit on
             absence when ``entries`` is not supplied; the actual walk reads
-            ``entries`` (or a fresh recursive glob of ``directory``).
+            ``entries`` (or a fresh recursive scan of ``directory``).
         tolerate_errors: When ``False`` (the default), an ``OSError`` raised
             while statting a candidate (or while advancing the recursive
             walk itself, e.g. a permission error on a subdirectory)
@@ -496,7 +497,7 @@ def directory_byte_total(
             what was successfully stat'd, so a blob write racing this read
             never crashes the caller.
         entries: Pre-enumerated candidates to sum instead of a fresh
-            ``directory.rglob("*")``. Injectable so a caller that already
+            recursive scan of ``directory``. Injectable so a caller that already
             holds an enumeration can reuse it, and so a test can reproduce a
             file vanishing mid-walk deterministically (list the candidate,
             delete it on disk, then call this function with that stale
@@ -509,7 +510,11 @@ def directory_byte_total(
     """
     if entries is None and not directory.is_dir():
         return 0, 0
-    candidates = iter(entries) if entries is not None else directory.rglob("*")
+    candidates = (
+        iter(entries)
+        if entries is not None
+        else iter_directory(directory, recursive=True, select=DirectoryEntryKind.FILES)
+    )
     total_bytes = 0
     file_count = 0
     while True:

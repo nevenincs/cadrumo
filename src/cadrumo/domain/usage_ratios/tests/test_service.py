@@ -18,7 +18,7 @@ from pydantic import TypeAdapter, ValidationError
 from ....adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from ....adapters.persistence.storage import Envelope, SensitivityClass
 from ....adapters.persistence.storage.errors import StorageValidationError
-from ....core import StorageCategory, storage_path
+from ....core import StorageCategory, scan_directory, storage_path
 from ....core.identity import BucketId
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...categories import SpendingCategory
@@ -137,7 +137,7 @@ def test_save_replaces_previous_payload(tmp_path: Path) -> None:
     save_usage_ratios(first, bucket_id=_BUCKET_A_ID)
     save_usage_ratios(second, bucket_id=_BUCKET_A_ID)
     assert load_usage_ratios(bucket_id=_BUCKET_A_ID) == second
-    assert list(tmp_path.glob("*.tmp")) == []
+    assert list(scan_directory(tmp_path, pattern="*.tmp")) == []
 
 
 def test_save_writes_encrypted_database_object(_runtime_profile: TestRuntimeProfile) -> None:
@@ -234,7 +234,7 @@ def test_save_target_directory_is_ignored_by_secure_backend(tmp_path: Path) -> N
     profile = UsageRatioProfile()
     save_usage_ratios(profile, bucket_id=_BUCKET_A_ID)
     assert load_usage_ratios(bucket_id=_BUCKET_A_ID) == profile
-    assert list(tmp_path.glob("*.tmp")) == []
+    assert list(scan_directory(tmp_path, pattern="*.tmp")) == []
 
 
 def test_blank_bucket_id_rejected() -> None:

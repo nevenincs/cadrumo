@@ -27,6 +27,7 @@ from pathlib import Path
 import pytest
 from _pytest.pathlib import LOCK_TIMEOUT, ensure_deletable, make_numbered_dir_with_cleanup
 
+from ..core import scan_directory
 from ._collection_storage_root import (
     _ABANDONED_AFTER_SECONDS,
     _LOCK_NAME,
@@ -331,7 +332,7 @@ def test_the_reap_is_safe_to_run_concurrently(tmp_path: Path) -> None:
         worker.join(timeout=_SUBPROCESS_TIMEOUT_SECONDS)
 
     assert not failures, f"concurrent reaps raised: {failures}"
-    assert {path.name for path in root.glob("pytest-*")} == {live.name}
+    assert {path.name for path in scan_directory(root, pattern="pytest-*")} == {live.name}
     assert (live / "payload-0").read_text(encoding="utf-8") == "x" * 512
 
 

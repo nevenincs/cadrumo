@@ -25,7 +25,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import BindingSourceKind
+from ....core import BindingSourceKind, scan_directory
 from .._retencion_rate_advisory import (
     ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND,
     administrador_retencion_rate_advisory_observations,
@@ -157,7 +157,7 @@ def test_every_cited_provision_exists_in_the_legal_catalogue() -> None:
     # Through the shipped resolver rather than a hand-counted relative path,
     # which is off by one the moment this file moves.
     legal_root = bundled_path("registry", "aeat") / "legal"
-    declared = "".join(path.read_text(encoding="utf-8") for path in legal_root.glob("*.toml"))
+    declared = "".join(path.read_text(encoding="utf-8") for path in scan_directory(legal_root, pattern="*.toml"))
 
     for reference in (*_art95_refs(), *_administrador_refs()):
         assert f'[legal."{reference}"]' in declared, (

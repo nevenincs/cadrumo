@@ -522,23 +522,84 @@ class Finding:
         return f"{self.path}:{self.line_number}: {self.pattern_name}: {self.snippet}"
 
 
+_PER_LINE_KEYWORD = "period"
+"""Literal every line-anchored pattern must require, and the per-file screen uses."""
+
+
+def _is_whole_text_safe(pattern: Pattern[str]) -> bool:
+    """Whether scanning *pattern* over a whole file equals scanning line by line.
+
+    True only when the expression can neither anchor to a line boundary nor span
+    one: no ``^``/``$`` (which mean string edges without ``re.MULTILINE``, not
+    line edges) and nothing that can consume a newline. Anything else keeps the
+    per-line path, so a pattern added later is treated as unsafe until its author
+    proves otherwise rather than silently taking the faster route.
+    """
+    source = pattern.pattern
+    return not any(token in source for token in ("^", "$", r"\s", r"\S", ".", r"\n"))
+
+
 def test_repo_has_no_unallowlisted_combined_period_strings() -> None:
+    whole_text = tuple((name, pat) for name, pat in COMBINED_PERIOD_PATTERNS if _is_whole_text_safe(pat))
+    per_line = tuple((name, pat) for name, pat in COMBINED_PERIOD_PATTERNS if not _is_whole_text_safe(pat))
+    assert whole_text, "no pattern qualified for the whole-file scan; the classifier is inert"
+    # The per-file screen below only skips a file when it lacks this literal, so
+    # every line-anchored pattern must actually require it. A pattern added
+    # without it would be silently skipped in most files; this refuses instead.
+    assert all(_PER_LINE_KEYWORD in pattern.pattern for _name, pattern in per_line), (
+        f"a line-anchored pattern does not require {_PER_LINE_KEYWORD!r}, so the per-file "
+        "screen would skip files it must inspect; widen the screen or make the pattern whole-text safe"
+    )
+
     findings: list[Finding] = []
     for path in _tracked_text_files():
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            # A peer can delete a tracked file between the listing and the read.
+            continue
         relative_path = path.relative_to(REPOSITORY_ROOT).as_posix()
-        for line_number, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), start=1):
-            for pattern_name, pattern in COMBINED_PERIOD_PATTERNS:
-                for _match in pattern.finditer(line):
-                    if _is_allowlisted(relative_path, pattern_name, line):
-                        continue
-                    findings.append(
-                        Finding(
-                            path=relative_path,
-                            line_number=line_number,
-                            pattern_name=pattern_name,
-                            snippet=line.strip(),
-                        )
+        lines: list[str] | None = None
+
+        for pattern_name, pattern in whole_text:
+            for match in pattern.finditer(text):
+                if lines is None:
+                    lines = text.splitlines()
+                line_number = text.count("\n", 0, match.start()) + 1
+                line = lines[line_number - 1]
+                if _is_allowlisted(relative_path, pattern_name, line):
+                    continue
+                findings.append(
+                    Finding(
+                        path=relative_path,
+                        line_number=line_number,
+                        pattern_name=pattern_name,
+                        snippet=line.strip(),
                     )
+                )
+
+        # The line-anchored patterns still need a line at a time, but only for
+        # files that mention the keyword at all, and then only for lines that do.
+        # The per-line loop over every line of every tracked file was 38s of pure
+        # interpreter overhead across 13 million regex calls.
+        if per_line and _PER_LINE_KEYWORD in text:
+            if lines is None:
+                lines = text.splitlines()
+            for line_number, line in enumerate(lines, start=1):
+                if _PER_LINE_KEYWORD not in line:
+                    continue
+                for pattern_name, pattern in per_line:
+                    for _match in pattern.finditer(line):
+                        if _is_allowlisted(relative_path, pattern_name, line):
+                            continue
+                        findings.append(
+                            Finding(
+                                path=relative_path,
+                                line_number=line_number,
+                                pattern_name=pattern_name,
+                                snippet=line.strip(),
+                            )
+                        )
 
     assert not findings, "Unallowlisted combined period strings:\n" + "\n".join(
         finding.format() for finding in findings

@@ -104,6 +104,40 @@ applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DLogicos_Registros_347.pdf"
 review_status = "reviewed"
 
+# Modelo 347 diseño de registro for ejercicios 2008 and 2009, the original
+# layout under the base orden-eha-3012-2008. Acquired, manifested and on disk
+# since 2026-05-03 but previously unregistered, so no record_design source
+# covered the 2008-2009-order-era layout. Re-fetched from the live AEAT URL
+# on 2026-08-15 and confirmed byte-identical (sha256 match) before registering.
+[sources."aeat-dr-347-2008"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_347/files/02-347-ejercicio-2008-y-2009-30-kb-pdf.pdf"
+sha256 = "f670c1ac4b4c4d094a9657da278332f2f4f419447c60f95672f857778eaf69cb"
+bytes = 30997
+retrieved_at = 2026-05-03
+applies_from = 2008-01-01
+applies_to = 2009-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/347-2008-TIPOS.pdf"
+review_status = "reviewed"
+
+# Modelo 347 diseño de registro for ejercicio 2010, updated per orden EHA
+# 3062/2010. Same acquisition and re-verification history as aeat-dr-347-2008
+# above.
+[sources."aeat-dr-347-2010"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_347/files/03-347-orden-eha-3062-2010-ejercicio-2010-181-kb-pdf.pdf"
+sha256 = "4f9d5f9e3f7376a96408ea87b128bbb7316cd4650fbe4b9053a91e3dc5d30188"
+bytes = 185637
+retrieved_at = 2026-05-03
+applies_from = 2010-01-01
+applies_to = 2010-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/347_2010_TIPOSV1.0.pdf"
+review_status = "reviewed"
+
 [sources."aeat-modelo-347-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"

@@ -36,7 +36,7 @@ from typing import Protocol
 from pydantic import BaseModel, ConfigDict, Field
 
 from .. import __version__
-from ..core import PRODUCT_IDENTITY
+from ..core import PRODUCT_IDENTITY, iter_directory
 from ..core.external_constants import UTF_8_ENCODING as _UTF_8
 from ..core.hashing import sha256_hex
 from . import harness_root, iter_operator_rules, iter_personas
@@ -469,7 +469,7 @@ def _materialise_plugin_python_cohort(
     if artifact_dir.exists():
         shutil.rmtree(artifact_dir)
     if cohort is None:
-        if artifact_dir.parent.exists() and not any(artifact_dir.parent.iterdir()):
+        if artifact_dir.parent.exists() and not any(iter_directory(artifact_dir.parent)):
             artifact_dir.parent.rmdir()
         return
     resolved = artifact_dir.resolve()

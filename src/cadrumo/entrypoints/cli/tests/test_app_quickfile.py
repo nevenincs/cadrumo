@@ -63,6 +63,7 @@ from ....tests.cli_runner import invoke_cached_cli
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -98,29 +99,28 @@ def _invoke(args: Sequence[str], *, attempts: int = 8) -> Result:
 
 
 def _create_profile(*, activity_start_date: str = "2026-01-01") -> None:
-    result = _invoke(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--surnames", "Quickfile",
-            "--activity", "design",
-            "--activity-start-date", activity_start_date,
-            "--irpf-income-categories", "actividad_economica",
-            "--irpf-estimation-regime", "directa_normal",
-            "--tax-residence-ccaa", "madrid",
-            "--tax-residence-jurisdiction-scope", "common_regime",
-            "--iva-regime", "GENERAL",
-            "--iva-m303-regime-composition", "general",
-            "--no-iva-redeme-enrolled",
-            "--no-iva-cash-accounting-regime-enrolled",
-            "--no-iva-voluntary-sii-enrolled",
-            "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Quickfile',
+            "activities.description": 'design',
+            "censo.activity_start_date": activity_start_date,
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "irpf.estimation_regime": 'directa_normal',
+            "tax_residence.ccaa": 'madrid',
+            "tax_residence.jurisdiction_scope": 'common_regime',
+            "iva.regime": 'GENERAL',
+            "iva.m303_regime_composition": 'general',
+            "iva.redeme_enrolled": 'false',
+            "iva.cash_accounting_regime_enrolled": 'false',
+            "iva.voluntary_sii_enrolled": 'false',
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": 'false',
+        },
+    )
 
 
 def _seed_m115_retencion_observation() -> None:

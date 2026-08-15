@@ -20,7 +20,6 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from http import HTTPStatus
-from io import BytesIO
 from pathlib import Path
 from typing import ClassVar, override
 
@@ -39,6 +38,7 @@ from ....tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
+from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
@@ -160,20 +160,6 @@ def reader_url() -> Iterator[str]:
         yield chat_url
 
 
-def _text_pdf(lines: tuple[str, ...]) -> bytes:
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfgen import canvas
-
-    buffer = BytesIO()
-    page = canvas.Canvas(buffer, pagesize=A4)
-    y = 760
-    for line in lines:
-        page.drawString(72, y, line)
-        y -= 20
-    page.save()
-    return buffer.getvalue()
-
-
 class _LiveDocument:
     """A real evidence record in a real bucket, read through the real entry point."""
 
@@ -227,7 +213,7 @@ def live_document(tmp_path: Path, reader_url: str):
         def _add(lines: tuple[str, ...], read: dict[str, str]) -> _LiveDocument:
             _ReaderEndpoint.reply = json.dumps({**_COMMON_READ, **read})
             document = tmp_path / f"factura-{len(lines)}-{len(read)}.pdf"
-            document.write_bytes(_text_pdf(lines))
+            document.write_bytes(text_pdf_bytes(lines))
             added = invoke_cached_cli(
                 ["--format", "json", "app", "ledger", "evidence", "add", str(document), "--supplier", "Acme SL"],
             )

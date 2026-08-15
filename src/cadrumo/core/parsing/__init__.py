@@ -15,6 +15,8 @@ Public surface
   uppercase ISO 4217 code.
 * :func:`normalise_iso_3166_alpha2_jurisdiction` — validate a source
   jurisdiction as an ISO 3166-1 alpha-2 code.
+* :func:`enum_value` — coerce an enum member (or any value) to its wire
+  string, mapping ``None`` to ``""``.
 
 The implementation modules still own underscore-prefixed helpers for
 package-local tests and tightly scoped internal consumers. This package
@@ -37,7 +39,7 @@ from ._dates import (
 from ._dates import (
     _parse_iso8601_date as _parse_iso8601_date_impl,
 )
-from ._utils import parse_bool
+from ._utils import enum_value, parse_bool
 
 
 def parse_iso8601_date(raw: str | None) -> date | None:
@@ -52,6 +54,7 @@ def parse_ddmmyyyy_date(raw: str | None) -> date | None:
 
 __all__ = [
     "IsoDateString",
+    "enum_value",
     "normalise_iso_3166_alpha2_jurisdiction",
     "normalise_iso_4217_currency",
     "parse_bool",

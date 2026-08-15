@@ -45,6 +45,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from ... import scan_directory
 from .. import extract_placeholders
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -107,7 +108,7 @@ def _collect_tr_call_sites(src_root: Path) -> dict[str, list[frozenset[str]]]:
     kwarg set; they are not interpolation placeholders.
     """
     calls: dict[str, list[frozenset[str]]] = defaultdict(list)
-    for module_path in src_root.rglob("*.py"):
+    for module_path in scan_directory(src_root, pattern="*.py", recursive=True):
         if module_path.stem.startswith("test_"):
             continue
         try:

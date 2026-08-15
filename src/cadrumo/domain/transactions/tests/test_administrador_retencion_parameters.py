@@ -29,6 +29,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import scan_directory
 from ....core.resources import bundled_path
 from .._retencion_parameters import (
     AdministradorRetencionRates,
@@ -117,7 +118,7 @@ def test_both_cited_provisions_resolve_in_the_bundled_legal_catalogue() -> None:
     """Both cited ids must exist as legal entries with a corpus_ref."""
     legal_root = bundled_path("registry", "aeat", "legal")
     entries: dict[str, object] = {}
-    for path in sorted(legal_root.glob("*.toml")):
+    for path in scan_directory(legal_root, pattern="*.toml"):
         with path.open("rb") as handle:
             payload = tomllib.load(handle)
         legal_table = payload.get("legal")
@@ -182,7 +183,7 @@ def test_no_feature_module_redeclares_the_administrador_rates_as_literals() -> N
     )
     package_root = bundled_path().parent
     offenders: list[str] = []
-    for path in package_root.rglob("*.py"):
+    for path in scan_directory(package_root, pattern="*.py", recursive=True):
         text = path.read_text(encoding="utf-8")
         offenders.extend(str(path.relative_to(package_root)) for pattern in retired_patterns if pattern.search(text))
     assert offenders == [], f"retired administrador retención-rate literal reintroduced in: {offenders}"

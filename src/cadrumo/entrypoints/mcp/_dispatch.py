@@ -78,8 +78,18 @@ _SEGMENT_ABBREVIATIONS: tuple[tuple[str, str], ...] = (
 
 
 def is_exposable_command(command_key: str) -> bool:
-    """Return True when a registry command key should surface as an MCP tool."""
-    return command_key not in _NON_TOOL_KEYS
+    """Return True when a registry command key should surface as an MCP tool.
+
+    A key declared in
+    :data:`~entrypoints.mcp._input_schema.DECLARED_UNIMPLEMENTED_SURFACES` is
+    never exposable: the declaration records that no verb backs it, and
+    advertising a tool whose verb does not exist hands the operator agent an
+    instruction it cannot recover from. The declaration keeps the gap visible in
+    source; it must not put a dead tool on the wire.
+    """
+    from ._input_schema import DECLARED_UNIMPLEMENTED_SURFACES
+
+    return command_key not in _NON_TOOL_KEYS and command_key not in DECLARED_UNIMPLEMENTED_SURFACES
 
 
 def tool_name_for_command(command_key: str) -> str:

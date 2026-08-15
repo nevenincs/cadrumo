@@ -70,6 +70,7 @@ from typing import Final
 
 import grimp
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 SOURCE_ROOT: Final[Path] = REPO_ROOT / "src"
@@ -160,7 +161,7 @@ def registry_package_modules() -> frozenset[str]:
         Dotted module names, ``conftest`` excluded.
     """
     modules: set[str] = set()
-    for path in sorted(REGISTRY_DIR.glob("*.py")):
+    for path in scan_directory(REGISTRY_DIR, pattern="*.py"):
         stem = path.stem
         if stem == "conftest":
             continue
@@ -249,7 +250,7 @@ def _module_name_for(path: Path) -> str | None:
 
 def _iter_source_files() -> Iterable[Path]:
     for root in REFERENCE_SCAN_ROOTS:
-        yield from sorted(root.rglob("*.py"))
+        yield from scan_directory(root, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
 
 
 def _parse(path: Path) -> ast.Module | None:

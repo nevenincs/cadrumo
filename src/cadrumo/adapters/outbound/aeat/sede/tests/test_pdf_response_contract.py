@@ -24,6 +24,7 @@ from typing import TypedDict
 
 import pytest
 
+from ......core import scan_directory
 from ......core.external_constants import PDF_MIME_TYPE
 from .. import _declarations, _declarations_fetch, _walker
 from .._adapter_utils import assert_pdf_response, response_media_type
@@ -243,7 +244,7 @@ class TestEveryCapturePathRoutesThroughTheContract:
         """
         sede_root = Path(_walker.__file__).resolve().parent
         offenders: list[str] = []
-        for source_path in sorted(sede_root.glob("*.py")):
+        for source_path in scan_directory(sede_root, pattern="*.py"):
             tree = ast.parse(source_path.read_text(encoding="utf-8"))
             for node in ast.walk(tree):
                 if not isinstance(node, ast.Compare):

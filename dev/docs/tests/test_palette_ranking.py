@@ -26,11 +26,7 @@ and drives one browser -- seconds, ``integration`` marked.
 
 from __future__ import annotations
 
-import http.server
 import io
-import socketserver
-import threading
-from functools import partial
 from pathlib import Path
 
 import pytest
@@ -38,6 +34,7 @@ import pytest
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
+from ._http_serve_support import serve_directory
 from ..glossary_reference import generate_glossary_reference
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records, _Materialised
@@ -154,14 +151,6 @@ def _build_glossary_site(out: Path) -> Path:
     return build
 
 
-def _serve(directory: Path) -> tuple[socketserver.TCPServer, int]:
-    handler = partial(http.server.SimpleHTTPRequestHandler, directory=str(directory))
-    httpd = socketserver.TCPServer(("127.0.0.1", 0), handler)
-    port = httpd.server_address[1]
-    threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    return httpd, port
-
-
 def test_palette_ranks_exact_term_concept_first(tmp_path: Path) -> None:
     """Ctrl-K + "iva" -> the IVA concept is the first row, ahead of VIES."""
     out = tmp_path / "site"
@@ -182,9 +171,8 @@ def test_palette_ranks_exact_term_concept_first(tmp_path: Path) -> None:
 
     build_search_index(build, inject=inject)
 
-    httpd, port = _serve(build)
-    base = f"http://127.0.0.1:{port}"
-    try:
+    with serve_directory(build) as (_httpd, port):
+        base = f"http://127.0.0.1:{port}"
         from playwright.sync_api import sync_playwright
 
         with sync_playwright() as pw:
@@ -210,8 +198,6 @@ def test_palette_ranks_exact_term_concept_first(tmp_path: Path) -> None:
                 "els => els.length ? els[0].textContent.trim() : ''",
             )
             browser.close()
-    finally:
-        httpd.shutdown()
 
     assert titles, "no concept rows rendered for 'iva'"
     # The exact-term concept leads its tier (regression: VIES once led).
@@ -249,9 +235,8 @@ def test_palette_casilla_outranks_cli_and_renders_class_icon(tmp_path: Path) -> 
 
     build_search_index(build, inject=inject)
 
-    httpd, port = _serve(build)
-    base = f"http://127.0.0.1:{port}"
-    try:
+    with serve_directory(build) as (_httpd, port):
+        base = f"http://127.0.0.1:{port}"
         from playwright.sync_api import sync_playwright
 
         with sync_playwright() as pw:
@@ -285,8 +270,6 @@ def test_palette_casilla_outranks_cli_and_renders_class_icon(tmp_path: Path) -> 
                 "els => els.length ? els[0].textContent.trim() : ''",
             )
             browser.close()
-    finally:
-        httpd.shutdown()
 
     casilla_index = next(
         (i for i, cls in enumerate(row_kinds) if "cadrumo-palette-item--casilla" in cls),

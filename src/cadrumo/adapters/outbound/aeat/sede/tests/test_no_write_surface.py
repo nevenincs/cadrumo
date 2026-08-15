@@ -12,6 +12,8 @@ from pathlib import Path
 
 import pytest
 
+from ......core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
@@ -27,7 +29,7 @@ def _load_forbidden_verbs() -> tuple[str, ...]:
 
 def _iter_sede_sources() -> tuple[Path, ...]:
     """Every .py file under cadrumo.adapters.outbound.aeat.sede (includes this test module)."""
-    return tuple(p for p in _SEDE_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
+    return tuple(p for p in scan_directory(_SEDE_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts)
 
 
 def _iter_sede_production_sources() -> tuple[Path, ...]:

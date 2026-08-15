@@ -22,6 +22,8 @@ from typing import Final
 import pytest
 from dev.ci.lane_reachability import tracked_test_files
 
+from ..core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REPO_ROOT: Final = Path(__file__).resolve().parents[3]
@@ -100,7 +102,7 @@ def _nested_untracked_test_directories(targets: tuple[Path, ...]) -> tuple[str, 
     for target in targets:
         if not target.is_dir():
             continue
-        for on_disk in target.rglob("test_*.py"):
+        for on_disk in scan_directory(target, pattern="test_*.py", recursive=True):
             if on_disk.parent == target:
                 continue
             if on_disk.relative_to(_REPO_ROOT) not in tracked:

@@ -1,0 +1,40 @@
+{
+  "corrections": [
+    {
+      "sheet": "T22014A00",
+      "source_row": 104,
+      "corrected_type": "Num",
+      "reason": "AEAT's 2022 publication leaves the 'Tipo' cell blank for this row and the two immediately following it (rows 105-106), the sole three-row gap among this sheet's 185 field rows (rows 7-191, ordinals 1-185; row 192 is the sheet's own 'Total:' row and carries no type by design). Every one of the other 182 field rows in this same 2022 file is typed -- 176 'Num', 6 'An' -- so the gap is an isolated omission, not a different or ambiguous shape. The type is 'Num' by internal consistency alone, and independently confirmed: the identical row position (offset 1529, length 17, within the same repeating 'Deducciones del grupo' grid) is declared 'Num' in every later AEAT edition of this modelo (2023, 2024, 2025), where the structurally equivalent row carries a later ejercicio's deduction figures under the same rolling-window table shape.",
+      "editions_read": [
+        "02-220-ejercicio-2022.xlsm (this file; sheet T22014A00 rows 7-191 read directly, confirming every field row is typed -- 176 'Num', 6 'An' -- apart from rows 104-106)",
+        "03-220-ejercicio-2023.xlsm (sheet T22014A00, offset 1529, declares 'Num')",
+        "04-220-ejercicio-2024.xlsx (sheet T22014A00, offset 1529, declares 'Num')",
+        "01-220-ejercicio-2025.xlsx (sheet T22014A00, offset 1529, declares 'Num')"
+      ]
+    },
+    {
+      "sheet": "T22014A00",
+      "source_row": 105,
+      "corrected_type": "Num",
+      "reason": "Same three-row blank-type gap as source_row 104 (see that entry for the full grounding); this is the second of the three consecutive rows, offset 1546, length 17.",
+      "editions_read": [
+        "02-220-ejercicio-2022.xlsm (this file; sheet T22014A00 rows 7-191 read directly, confirming every field row is typed -- 176 'Num', 6 'An' -- apart from rows 104-106)",
+        "03-220-ejercicio-2023.xlsm (sheet T22014A00, offset 1546, declares 'Num')",
+        "04-220-ejercicio-2024.xlsx (sheet T22014A00, offset 1546, declares 'Num')",
+        "01-220-ejercicio-2025.xlsx (sheet T22014A00, offset 1546, declares 'Num')"
+      ]
+    },
+    {
+      "sheet": "T22014A00",
+      "source_row": 106,
+      "corrected_type": "Num",
+      "reason": "Same three-row blank-type gap as source_row 104 (see that entry for the full grounding); this is the third of the three consecutive rows, offset 1563, length 17.",
+      "editions_read": [
+        "02-220-ejercicio-2022.xlsm (this file; sheet T22014A00 rows 7-191 read directly, confirming every field row is typed -- 176 'Num', 6 'An' -- apart from rows 104-106)",
+        "03-220-ejercicio-2023.xlsm (sheet T22014A00, offset 1563, declares 'Num')",
+        "04-220-ejercicio-2024.xlsx (sheet T22014A00, offset 1563, declares 'Num')",
+        "01-220-ejercicio-2025.xlsx (sheet T22014A00, offset 1563, declares 'Num')"
+      ]
+    }
+  ]
+}

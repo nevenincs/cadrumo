@@ -23,6 +23,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
 from .._values import declared_field_paths, section_field_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -34,7 +35,7 @@ def _source_root() -> Path:
 
 def _shipped_python_files() -> tuple[Path, ...]:
     root = _source_root()
-    return tuple(path for path in sorted(root.rglob("*.py")) if "tests" not in path.parts)
+    return tuple(path for path in scan_directory(root, pattern="*.py", recursive=True) if "tests" not in path.parts)
 
 
 def _literal_fact_paths(tree: ast.Module) -> list[tuple[int, str]]:

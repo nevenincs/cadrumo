@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import iter_directory, scan_directory
 from dev._paths import REPO_ROOT
 
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
@@ -119,8 +120,8 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
         [uv, "build", "--sdist", "--out-dir", str(companion_sdists_dir)],
         cwd=build_root / "packaging" / "cadrumo_data_official",
     )
-    manuals_sdist = next(companion_sdists_dir.glob("cadrumo_data_manuals-*.tar.gz"))
-    official_sdist = next(companion_sdists_dir.glob("cadrumo_data_official-*.tar.gz"))
+    manuals_sdist = next(iter_directory(companion_sdists_dir, pattern="cadrumo_data_manuals-*.tar.gz"))
+    official_sdist = next(iter_directory(companion_sdists_dir, pattern="cadrumo_data_official-*.tar.gz"))
     artifacts = {
         "cadrumo": wheel,
         "cadrumo-sdist": sdist,
@@ -186,7 +187,9 @@ def test_commit_defined_build_root_excludes_uncommitted_working_tree_state(tmp_p
     build_root = commit_defined_build_root(origin, tmp_path / "dirty-work")
 
     assert build_root != origin
-    extracted = {path.relative_to(build_root).as_posix() for path in build_root.rglob("*") if path.is_file()}
+    extracted = {
+        path.relative_to(build_root).as_posix() for path in scan_directory(build_root, recursive=True) if path.is_file()
+    }
     assert extracted == {"committed.txt", "packaging/kept.txt"}, sorted(extracted)
     assert (build_root / "committed.txt").read_text(encoding="utf-8") == "committed content\n"
     assert not (build_root / ".git").exists()

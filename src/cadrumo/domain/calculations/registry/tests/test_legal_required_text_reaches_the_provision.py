@@ -34,6 +34,7 @@ from typing import Final
 
 import pytest
 
+from .....core import scan_directory
 from .....core.corpus_text import normalise_corpus_text, resolve_anchored_extracted_unit
 from .....core.resources import bundled_path
 
@@ -157,7 +158,7 @@ tail-read per entry.
 def _legal_entries() -> list[tuple[str, dict[str, object]]]:
     root = bundled_path("registry/aeat/legal")
     entries: list[tuple[str, dict[str, object]]] = []
-    for toml_file in sorted(Path(root).glob("*.toml")):
+    for toml_file in scan_directory(Path(root), pattern="*.toml"):
         data = tomllib.loads(toml_file.read_text(encoding="utf-8"))
         for key, entry in (data.get("legal") or {}).items():
             if isinstance(entry, dict):

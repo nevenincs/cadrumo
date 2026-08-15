@@ -31,6 +31,7 @@ import hashlib
 
 import pytest
 
+from cadrumo.core import scan_directory
 from cadrumo.tests import FIXTURES_DIR
 
 from ..fixtures import SANITIZED_SHAS
@@ -44,7 +45,7 @@ def _committed_fixture_digests() -> dict[str, str]:
     """Return ``sha256 -> relative path`` for every committed justificante PDF."""
     return {
         hashlib.sha256(path.read_bytes()).hexdigest(): path.relative_to(_JUSTIFICANTES).as_posix()
-        for path in sorted(_JUSTIFICANTES.rglob("*.pdf"))
+        for path in scan_directory(_JUSTIFICANTES, pattern="*.pdf", recursive=True)
     }
 
 

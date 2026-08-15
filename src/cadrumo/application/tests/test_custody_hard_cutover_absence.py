@@ -52,7 +52,7 @@ which is a far weaker claim than "no route into the shared-master package
 remains", and it loses its teeth the moment the surface is renamed or re-wrapped.
 The forwarding layer in ``profile_custody`` is the worked example: it forwards
 ``current_active_bucket_session``, ``BucketSession.open``,
-``load_or_mint_bucket_dek``, ``mint_profile_session``, ``resume_profile_session``
+``get_master_key``, ``mint_profile_session``, ``resume_profile_session``
 and ``zeroise``, none of which a provider-family name list contains, so a
 name-only gate passes it at any scan width.
 
@@ -115,6 +115,8 @@ from dataclasses import dataclass, fields
 from pathlib import Path
 
 import pytest
+
+from ...core import DirectoryEntryKind, scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -232,13 +234,11 @@ _DECLARED_OPEN_VIOLATIONS: dict[str, _OpenViolation] = {
 
 
 def _production_modules(root: Path) -> list[Path]:
-    return sorted(
+    return [
         path
-        for path in root.rglob("*.py")
-        if "tests" not in path.relative_to(root).parts
-        and "__pycache__" not in path.parts
-        and path.name != "conftest.py"
-    )
+        for path in scan_directory(root, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
+        if "tests" not in path.relative_to(root).parts and path.name != "conftest.py"
+    ]
 
 
 def _tail_after(dotted: str, prefix: tuple[str, ...]) -> list[str] | None:
@@ -404,7 +404,7 @@ def test_detector_flags_a_master_key_reach_that_names_no_retired_symbol() -> Non
         "from importlib import import_module\n"
         "def dek() -> bytes:\n"
         '    module = import_module("cadrumo.adapters.persistence.storage.master_key")\n'
-        "    return module.load_or_mint_bucket_dek()\n"
+        "    return module.get_master_key()\n"
     )
     assert _retired_references(dek_only) == {_MASTER_KEY_PACKAGE_ABSOLUTE}
 
@@ -460,11 +460,13 @@ def test_scan_root_covers_every_sibling_package_of_the_layer() -> None:
     # top-level census still reads complete.
     packages = [
         directory
-        for directory in _APPLICATION_LAYER.rglob("*")
-        if directory.is_dir()
-        and (directory / "__init__.py").exists()
-        and "tests" not in directory.relative_to(_APPLICATION_LAYER).parts
-        and "__pycache__" not in directory.parts
+        for directory in scan_directory(
+            _APPLICATION_LAYER,
+            recursive=True,
+            select=DirectoryEntryKind.DIRECTORIES,
+            prune_directories=("__pycache__",),
+        )
+        if (directory / "__init__.py").exists() and "tests" not in directory.relative_to(_APPLICATION_LAYER).parts
     ]
     assert len(packages) > 1, "the application layer must expose sibling packages"
     uncovered = sorted(
@@ -476,7 +478,7 @@ def test_scan_root_covers_every_sibling_package_of_the_layer() -> None:
 
     top_level = {
         child.resolve()
-        for child in _APPLICATION_LAYER.iterdir()
+        for child in scan_directory(_APPLICATION_LAYER)
         if child.suffix == ".py" and child.name != "conftest.py"
     }
     missing = sorted(path.name for path in top_level - scanned)
@@ -502,7 +504,7 @@ def test_scan_root_reaches_a_tracked_fixture_in_a_sibling_package() -> None:
         f"the scope fixture is missing at {_SCOPE_FIXTURE}; without it nothing here "
         "proves the scan root reaches a sibling package"
     )
-    reached = {path.resolve() for path in _SCAN_ROOT.rglob("*.py")}
+    reached = {path.resolve() for path in scan_directory(_SCAN_ROOT, pattern="*.py", recursive=True)}
     assert _SCOPE_FIXTURE.resolve() in reached, (
         "the scan root does not reach the sibling-package fixture, so it is narrower "
         "than the application layer it claims to cover"
@@ -604,8 +606,10 @@ def test_retired_names_that_still_exist_belong_to_the_retired_package() -> None:
     names are gone entirely: the absence gate still bites on reintroduction.
     """
     misplaced: dict[str, list[str]] = {}
-    for path in _STORAGE_ROOT.parent.parent.rglob("*.py"):
-        if "__pycache__" in path.parts or "tests" in path.parts:
+    for path in scan_directory(
+        _STORAGE_ROOT.parent.parent, pattern="*.py", recursive=True, prune_directories=("__pycache__",)
+    ):
+        if "tests" in path.parts:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"))
         defined = {

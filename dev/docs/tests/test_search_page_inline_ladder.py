@@ -29,17 +29,14 @@ drives one browser -- seconds, ``integration`` marked.
 
 from __future__ import annotations
 
-import http.server
 import io
-import socketserver
-import threading
-from functools import partial
 from pathlib import Path
 
 import pytest
 
 from dev._paths import REPO_ROOT
 
+from ._http_serve_support import serve_directory
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records
 from .test_palette_ranking import _approved_concept_records
@@ -105,14 +102,6 @@ def _build_search_site(out: Path) -> Path:
     return build
 
 
-def _serve(directory: Path) -> tuple[socketserver.TCPServer, int]:
-    handler = partial(http.server.SimpleHTTPRequestHandler, directory=str(directory))
-    httpd = socketserver.TCPServer(("127.0.0.1", 0), handler)
-    port = httpd.server_address[1]
-    threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    return httpd, port
-
-
 def test_search_page_renders_the_tier_ladder(tmp_path: Path) -> None:
     """``search.html?q=iva`` -> the IVA concept card leads the rendered results."""
     out = tmp_path / "site"
@@ -127,9 +116,8 @@ def test_search_page_renders_the_tier_ladder(tmp_path: Path) -> None:
 
     build_search_index(build, inject=inject)
 
-    httpd, port = _serve(build)
-    base = f"http://127.0.0.1:{port}"
-    try:
+    with serve_directory(build) as (_httpd, port):
+        base = f"http://127.0.0.1:{port}"
         from playwright.sync_api import sync_playwright
 
         with sync_playwright() as pw:
@@ -163,8 +151,6 @@ def test_search_page_renders_the_tier_ladder(tmp_path: Path) -> None:
                 "els => els.length",
             )
             browser.close()
-    finally:
-        httpd.shutdown()
 
     assert seeded == "iva", f"input not seeded from ?q=, got {seeded!r}"
     assert concept_titles, "no concept cards rendered on the search page"

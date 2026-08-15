@@ -15,6 +15,7 @@ from typing import Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
+from cadrumo.core import scan_directory
 from cadrumo.core.atomic_write import atomic_write_publish_once_bytes
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex, hash_file
 from cadrumo.domain.calculations.registry import (
@@ -429,7 +430,7 @@ def collect_export_fragment_output_digests(export_root: Path) -> tuple[ExportFra
         raise FileNotFoundError(export_root)
     resolved_root = export_root.resolve()
     entries: list[ExportFragmentOutputDigest] = []
-    for candidate in sorted(export_root.rglob("*"), key=lambda path: path.as_posix()):
+    for candidate in sorted(scan_directory(export_root, recursive=True), key=lambda path: path.as_posix()):
         if candidate.is_symlink() or candidate.is_junction():
             raise RegistryValidationError(f"export provenance refuses linked output path: {candidate}")
         if not candidate.is_file():
@@ -935,14 +936,15 @@ def _normalise_m303_variable_envelope(payload: Mapping[str, object]) -> dict[str
     }
 
 
-def _semantic_entry_sort_key(payload: Mapping[str, object]) -> tuple[str, int, str, int, str, str]:
+def _semantic_entry_sort_key(payload: Mapping[str, object]) -> tuple[str, int, str, str, str, str]:
     anchor = _as_object(payload["anchor"], subject="normalised semantic-map anchor")
     source_cell = anchor["source_cell"]
+    ordinal = anchor["ordinal"]
     return (
         _as_string(anchor["sheet"], subject="semantic-map anchor sheet"),
         _as_int(anchor["source_row"], subject="semantic-map anchor source_row"),
         "" if source_cell is None else _as_string(source_cell, subject="semantic-map anchor source_cell"),
-        _as_int(anchor["ordinal"], subject="semantic-map anchor ordinal"),
+        "" if ordinal is None else _as_string(ordinal, subject="semantic-map anchor ordinal"),
         _as_string(anchor["record_identity"], subject="semantic-map anchor record_identity"),
         _as_string(payload["export_field_id"], subject="semantic-map export_field_id"),
     )

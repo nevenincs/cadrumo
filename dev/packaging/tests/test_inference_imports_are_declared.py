@@ -38,6 +38,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -102,7 +103,7 @@ def _third_party_imports_under(root: Path) -> dict[str, list[str]]:
     """Map each third-party import name to the repo-relative files importing it."""
     stdlib_and_local = _NOT_THIRD_PARTY | _stdlib_names()
     found: dict[str, list[str]] = {}
-    for path in sorted(root.rglob("*.py")):
+    for path in scan_directory(root, pattern="*.py", recursive=True):
         for name in _top_level_imports(path):
             if name in stdlib_and_local:
                 continue

@@ -81,7 +81,9 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.core import scan_directory
 from cadrumo.tests import SRC_CADRUMO
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .. import (
     CHECKSUM_VERIFIED_KINDS,
@@ -165,7 +167,7 @@ def _real_corpus_fixtures() -> list[tuple[Path, Path]]:
     """
     pairs: list[tuple[Path, Path]] = []
     seen: set[Path] = set()
-    for sidecar_path in sorted(SRC_CADRUMO.rglob("*.json")):
+    for sidecar_path in scan_directory(SRC_CADRUMO, pattern="*.json", recursive=True):
         if "__pycache__" in sidecar_path.parts:
             continue
         name = sidecar_path.name
@@ -458,15 +460,4 @@ def _pre_sanitisation_token_map() -> TokenMap:
 
 def _pdf_bytes_containing(text: str) -> bytes:
     """Build a one-page PDF whose content stream carries ``text``."""
-    import io
-
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfgen import canvas
-
-    buffer = io.BytesIO()
-    pdf_canvas = canvas.Canvas(buffer, pagesize=A4)
-    pdf_canvas.setFont("Helvetica", 10)
-    pdf_canvas.drawString(50, 700, text)
-    pdf_canvas.showPage()
-    pdf_canvas.save()
-    return buffer.getvalue()
+    return text_pdf_bytes((text,))

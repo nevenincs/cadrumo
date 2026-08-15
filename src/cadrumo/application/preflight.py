@@ -40,6 +40,7 @@ from ..core import (
     ActionEvidenceProvenance,
     AuthProviderKind,
     NoRecoveryOutcome,
+    iter_directory,
 )
 from ..core.config import Settings, load_settings
 from ..core.errors import CadrumoError
@@ -355,7 +356,7 @@ def _probe_storage_root(settings: Settings) -> PreflightCheck:
 def _probe_corpus(check_id: str, root: Path, label: str) -> PreflightCheck:
     """Report whether a bundled corpus directory is present and non-empty."""
     try:
-        present = root.is_dir() and any(root.iterdir())
+        present = root.is_dir() and any(iter_directory(root, require_root=True))
     except OSError as exc:
         facts = {"corpus_root": str(root), "error_type": type(exc).__name__, "corpus_present": False}
         return _failed_check(

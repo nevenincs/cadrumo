@@ -37,13 +37,13 @@ import html
 import json
 import pathlib
 import re
-from contextlib import contextmanager
 from typing import Final
 
 import pytest
 
 from ...core import FieldOrigin
 from ...domain.iva import REGIME_LEGENDS, IvaCategory, RegimeLegend, regime_legend_phrases
+from ...tests.attribute_scope import scoped_attribute
 from .. import _invoice_extraction_prompt
 from .._invoice_extraction_prompt import (
     INVOICE_EXTRACTION_PROMPT_ID,
@@ -62,17 +62,6 @@ from .._invoice_field_grounding import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@contextmanager
-def _replacing(target: object, name: str, value: object):
-    """Replace ``target.name`` for the scope, restoring the original on exit."""
-    original = getattr(target, name)
-    setattr(target, name, value)
-    try:
-        yield
-    finally:
-        setattr(target, name, original)
 
 
 #: The bundled consolidated text of the invoicing regulation's art. 6.
@@ -195,7 +184,7 @@ class TestTheProseScanCatchesARestatedVocabulary:
         poisoned = definition.model_copy(update={"template": f"{definition.template}\n- {phrase}"})
         mutated = type(registry)()
         mutated.register(poisoned)
-        with _replacing(_invoice_extraction_prompt, "invoice_extraction_prompt_registry", lambda: mutated):
+        with scoped_attribute(_invoice_extraction_prompt, "invoice_extraction_prompt_registry", lambda: mutated):
             assert template_unsourced_legend_phrases() == (phrase,)
 
     def test_the_scan_is_case_folded_rather_than_variant_listed(self) -> None:

@@ -10,7 +10,7 @@ from typing import Any, cast, override
 import pytest
 
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
-from ....core import BindingSourceKind, Period
+from ....core import BindingSourceKind, Period, scan_directory
 from ....core.resources import resources
 from ....domain.bienes_inversion import (
     BienesInversionIvaRegister,
@@ -291,7 +291,7 @@ def test_bienes_inversion_observation_repository_caller_ast_census_has_only_expl
                 omitted.add((self._source_path.relative_to(source_root).as_posix(), self._current_function))
             self.generic_visit(node)
 
-    for source_path in source_root.rglob("*.py"):
+    for source_path in scan_directory(source_root, pattern="*.py", recursive=True):
         source = source_path.read_text(encoding="utf-8")
         if "BienesInversionRegularizacionSourceResolver" not in source:
             continue

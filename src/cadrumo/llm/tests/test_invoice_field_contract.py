@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import json
 import re
-from contextlib import contextmanager
 from decimal import Decimal
 
 import pytest
@@ -38,6 +37,7 @@ from ...domain.iva import (
     load_iva_rate_table,
 )
 from ...domain.transactions import statutory_activity_retencion_rates
+from ...tests.attribute_scope import scoped_attribute
 from .. import _invoice_extraction_prompt
 from .._invoice_extraction_prompt import (
     INVOICE_EXTRACTION_PROMPT_ID,
@@ -64,17 +64,6 @@ from .._invoice_field_grounding import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@contextmanager
-def _replacing(target: object, name: str, value: object):
-    """Replace ``target.name`` for the scope, restoring the original on exit."""
-    original = getattr(target, name)
-    setattr(target, name, value)
-    try:
-        yield
-    finally:
-        setattr(target, name, original)
 
 
 _ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
@@ -204,7 +193,7 @@ class TestTheAntiDriftGateBitesInBothDirections:
             },
         )
         mutated = dict(real_table) | {EUMemberState.ES: (*spain, extra)}
-        with _replacing(_iva_module, "load_iva_rate_table", lambda: mutated):
+        with scoped_attribute(_iva_module, "load_iva_rate_table", lambda: mutated):
             after = build_invoice_extraction_prompt(period=_ANNUAL_2026)
 
             assert planted in after.iva_rate_pcts
@@ -229,7 +218,7 @@ class TestTheAntiDriftGateBitesInBothDirections:
         poisoned = definition.model_copy(update={"template": definition.template + "\n- the IVA rate is 21."})
         mutated_registry = type(registry)()
         mutated_registry.register(poisoned)
-        with _replacing(_invoice_extraction_prompt, "invoice_extraction_prompt_registry", lambda: mutated_registry):
+        with scoped_attribute(_invoice_extraction_prompt, "invoice_extraction_prompt_registry", lambda: mutated_registry):
             assert template_numeric_literals() == ("21",)
 
     def test_neither_mutation_is_visible_to_the_other_direction(self) -> None:

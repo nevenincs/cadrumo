@@ -21,9 +21,6 @@ read it performs is what must refuse, and that guard lives with the read.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from pathlib import Path
-
 import pytest
 from pydantic import SecretStr
 
@@ -32,11 +29,10 @@ from ....core.config import override_settings
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import (
     bound_test_profile_record,
-    open_test_profile_session,
     replace_test_profile_record,
     seed_test_profile_record,
 )
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from .._sessions import AuthProfileIdentityMismatchError, _prepare_clave_auth
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -147,11 +143,4 @@ def test_a_recorded_identity_is_unaffected() -> None:
     assert expected_identity == _TAX_ID
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_BUCKET_ID),
-        override_settings(cadrumo_active_profile=_BUCKET_ID),
-    ):
-        yield
+_isolated_backend = bucket_session_storage_fixture(_BUCKET_ID)

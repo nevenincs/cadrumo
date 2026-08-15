@@ -195,6 +195,7 @@ def test_verdict_parser_negative_marker_wins_over_positive_token() -> None:
 # AEAT changes the response phrasing, this suite breaks loudly.
 # ---------------------------------------------------------------------------
 
+from ......core import scan_directory
 from ......core.resources import bundled_path
 
 _GROI_RESPONSE_SAMPLES_DIR = bundled_path("corpus", "aeat_official", "groi_response_samples")
@@ -206,7 +207,7 @@ def _discover_groi_response_samples() -> list[tuple[str, str]]:
     samples: list[tuple[str, str]] = []
     if not _GROI_RESPONSE_SAMPLES_DIR.is_dir():
         return samples
-    for path in sorted(_GROI_RESPONSE_SAMPLES_DIR.glob("*.txt")):
+    for path in scan_directory(_GROI_RESPONSE_SAMPLES_DIR, pattern="*.txt"):
         prefix = path.stem.split("_", 1)[0]
         if prefix not in {"valid", "invalid", "unknown"}:
             continue

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from ....core import iter_directory
 from ._schema import ExtractionProfileDefinition, ExtractionTargetDefinition
 
 
@@ -64,7 +65,7 @@ def validate_declaracion_pdf_specimen_gate(
     if profile.provisional_pending_specimen:
         return []
     fixture_dir = corpus_root / modelo_id
-    if fixture_dir.is_dir() and any(fixture_dir.glob("*.pdf")):
+    if any(iter_directory(fixture_dir, pattern="*.pdf")):
         return []
     return [
         f"{scope}: extraction profile {profile.id!r} is surface='declaracion_pdf' but no corpus "
@@ -111,7 +112,7 @@ def validate_declaracion_pdf_round_trip_gate(
             ]
         return []
     fixture_dir = corpus_root / modelo_id
-    if not (fixture_dir.is_dir() and any(fixture_dir.glob("*.pdf"))):
+    if not any(iter_directory(fixture_dir, pattern="*.pdf")):
         return []
     return [
         f"{scope}: extraction profile {profile.id!r} has corpus fixture at '{fixture_dir}' "

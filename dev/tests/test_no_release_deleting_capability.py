@@ -26,6 +26,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _DEV_ROOT = Path(__file__).resolve().parents[1]
@@ -85,7 +87,11 @@ def _harness_modules() -> list[Path]:
     to cover a second file and cannot be inherited by a rename.
     """
     here = Path(__file__).resolve()
-    return sorted(p for p in _DEV_ROOT.rglob("*.py") if "__pycache__" not in p.parts and p.resolve() != here)
+    return [
+        p
+        for p in scan_directory(_DEV_ROOT, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
+        if p.resolve() != here
+    ]
 
 
 def test_the_scan_reads_a_real_non_empty_corpus_of_gh_call_sites() -> None:

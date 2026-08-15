@@ -242,9 +242,12 @@ def test_read_state_tolerates_corrupt_file(tmp_path: Path) -> None:
 def test_clear_state_only_pid_guard(tmp_path: Path) -> None:
     """clear_state(only_pid=...) leaves a file another invocation now owns."""
     path = tmp_path / "state.json"
-    write_state(path, ServeState(pid=999, host="0.0.0.0", port=8765))  # noqa: S104 - state fixture, not a bind
+    original = ServeState(pid=999, host="0.0.0.0", port=8765)  # noqa: S104 - state fixture, not a bind
+    write_state(path, original)
     clear_state(path, only_pid=111)  # not ours — must not delete
-    assert read_state(path) is not None
+    # Not just "a" state survived — the SAME state another invocation owns,
+    # untouched by the mismatched guard.
+    assert read_state(path) == original
     clear_state(path, only_pid=999)  # ours — deletes
     assert read_state(path) is None
 

@@ -20,6 +20,7 @@ from typing import Any, Final
 import pytest
 import yaml
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -93,7 +94,7 @@ def test_packaging_payloads_ride_artifacts(workflow: str) -> None:
 def test_only_the_publication_gate_creates_a_release() -> None:
     """Exactly one job in the repository creates a release: the armed publish gate."""
     creators: list[tuple[str, str]] = []
-    for path in sorted(_WORKFLOWS_DIR.glob("*.yml")):
+    for path in scan_directory(_WORKFLOWS_DIR, pattern="*.yml"):
         document = yaml.safe_load(path.read_text(encoding="utf-8"))
         for job_name, job in (document.get("jobs") or {}).items():
             surface = "\n".join(str(step.get("run", "")) for step in (job.get("steps") or []))
@@ -108,7 +109,7 @@ def test_only_the_publication_gate_creates_a_release() -> None:
 
 def test_no_workflow_creates_a_draft_release() -> None:
     """The reserved evidence-* draft namespace is retired, not merely emptied."""
-    for path in sorted(_WORKFLOWS_DIR.glob("*.yml")):
+    for path in scan_directory(_WORKFLOWS_DIR, pattern="*.yml"):
         surface = path.read_text(encoding="utf-8")
         assert "--draft" not in surface, f"{path.name} still creates a draft release"
         assert "evidence-smoke-" not in surface, f"{path.name} still names an evidence draft tag"

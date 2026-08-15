@@ -11,7 +11,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from ....core import CasillaId, M210GrossIncomeSourceMode, Period, validated_casilla_id
+from ....core import CasillaId, M210GrossIncomeSourceMode, Period, scan_directory, validated_casilla_id
 from ....core.resources import resources
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...calculations.registry import RelationId, resolve_m303_regimen_simplificado_snapshot
@@ -347,7 +347,7 @@ def test_exonerado_evidence_requires_every_explicit_s56_field(missing_field: str
 def test_every_calculation_revision_constructor_declares_filing_evidence_explicitly() -> None:
     source_root = Path(__file__).parents[4]
     omissions: list[str] = []
-    for path in source_root.rglob("*.py"):
+    for path in scan_directory(source_root, pattern="*.py", recursive=True):
         if path.relative_to(source_root).as_posix() == "cadrumo/core/tests/test_period.py":
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -372,7 +372,7 @@ def test_production_revision_id_derivations_name_the_single_annual_summary_input
     """
     source_root = Path(__file__).parents[4]
     direct_derivations: dict[str, list[ast.Call]] = {}
-    for path in source_root.rglob("*.py"):
+    for path in scan_directory(source_root, pattern="*.py", recursive=True):
         relative = path.relative_to(source_root).as_posix()
         if "/tests/" in relative:
             continue

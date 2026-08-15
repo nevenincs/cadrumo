@@ -37,6 +37,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .....core.resources import bundled_path
 from .....tests.fixtures import (
     FIXTURE_PROVENANCE_SYNTHETIC,
@@ -58,11 +59,9 @@ _GATED_CORPORA: tuple[tuple[str, Path], ...] = (
 )
 
 
-def _corpus_pdfs(corpus_dir: Path) -> list[Path]:
+def _corpus_pdfs(corpus_dir: Path) -> tuple[Path, ...]:
     """Return every committed PDF under ``corpus_dir``, sorted."""
-    if not corpus_dir.is_dir():
-        return []
-    return sorted(corpus_dir.glob("*.pdf"))
+    return scan_directory(corpus_dir, pattern="*.pdf")
 
 
 _CASES: list[tuple[str, Path]] = [

@@ -14,35 +14,14 @@ predicate explicitly guarded against.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from .._formula_runtime import _evaluate_expression
-from .._schema import CasillaId, FormulaExpression
+from .._schema import FormulaExpression
+from ._formula_runtime_support import _evaluate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-def _evaluate(expression: FormulaExpression, values: Mapping[CasillaId, Decimal]) -> Decimal:
-    operand_refs: list[str] = []
-    operand_casilla_refs: list[CasillaId] = []
-    operand_values: list[Decimal] = []
-    return _evaluate_expression(
-        expression,
-        values=values,
-        binding_values={},
-        parameters={},
-        date_context={"filing_period": date(2025, 12, 31)},
-        relation_values={},
-        operand_refs=operand_refs,
-        operand_casilla_refs=operand_casilla_refs,
-        operand_values=operand_values,
-        unresolved_relation_ids=frozenset(),
-        unresolved_casilla_ids=set(),
-    )
 
 
 def test_if_then_else_evaluates_only_the_true_branch_when_predicate_truthy() -> None:

@@ -61,6 +61,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
 
+from cadrumo.core import scan_directory
 from dev._paths import UTF_8
 
 from .complexity_allowlist import load_allowlist
@@ -180,9 +181,13 @@ def collect_cog(root: Path, is_test_run: bool, threshold: int) -> list[CogHit]:
         return not (name.startswith("test_") or name.startswith("_test_") or "_test_" in name)
 
     if is_test_run:
-        files = sorted(root.glob("test_*.py"))
+        files = scan_directory(root, pattern="test_*.py")
     else:
-        files = sorted(path for path in root.rglob("*.py") if is_production(path))
+        files = tuple(
+            path
+            for path in scan_directory(root, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
+            if is_production(path)
+        )
 
     hits: list[CogHit] = []
     for path in files:

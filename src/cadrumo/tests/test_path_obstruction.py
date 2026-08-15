@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from ..core import iter_directory
 from ..core.atomic_write import atomic_write_bytes, atomic_write_text
 from ..core.external_constants import UTF_8_ENCODING
 from .path_obstruction import PathObstructionError, obstructed_path, replace_would_refuse
@@ -167,6 +168,6 @@ class TestVacuityGuards:
         target = tmp_path / "target.json"
 
         with obstructed_path(target):
-            assert any(target.iterdir())
+            assert any(iter_directory(target))
             with pytest.raises(OSError):
                 os.rmdir(target)

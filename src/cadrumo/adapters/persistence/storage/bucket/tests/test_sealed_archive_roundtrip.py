@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+from ......core import scan_directory
 from .._export_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 from .._sealed_archive_errors import (
     SealedArchiveHeaderError,
@@ -288,7 +289,7 @@ def test_failed_write_leaves_no_file_at_the_operator_target(tmp_path: Path) -> N
     # Nothing at the operator's path, and no staging residue anywhere.
     assert not target.exists()
     assert not missing_parent.exists()
-    assert sorted(path.name for path in tmp_path.iterdir()) == []
+    assert [path.name for path in scan_directory(tmp_path)] == []
 
 
 def test_failed_write_preserves_an_unrelated_pre_existing_target(tmp_path: Path) -> None:
@@ -308,7 +309,7 @@ def test_failed_write_preserves_an_unrelated_pre_existing_target(tmp_path: Path)
         )
 
     assert archive_path.read_bytes() == b"pre-existing-bytes"
-    assert sorted(path.name for path in tmp_path.iterdir()) == ["export.cadrumo-bucket.tar.gz"]
+    assert [path.name for path in scan_directory(tmp_path)] == ["export.cadrumo-bucket.tar.gz"]
 
 
 def test_successful_write_leaves_only_the_finished_archive(tmp_path: Path) -> None:
@@ -325,7 +326,7 @@ def test_successful_write_leaves_only_the_finished_archive(tmp_path: Path) -> No
         payload_envelope_bytes=b"payload-envelope-bytes",
     )
 
-    assert sorted(path.name for path in tmp_path.iterdir()) == ["export.cadrumo-bucket.tar.gz"]
+    assert [path.name for path in scan_directory(tmp_path)] == ["export.cadrumo-bucket.tar.gz"]
     recovered = read_sealed_archive(archive_path)
     assert recovered.payload_envelope_bytes == b"payload-envelope-bytes"
 

@@ -35,6 +35,7 @@ import pytest
 from ....application.invoices import BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
 from ....tests.cli_envelope import require_schema_envelope as _json_result
 from ....tests.cli_runner import invoke_cached_cli
+from ._cli_text_output_support import _line_value
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -45,14 +46,6 @@ _RECEIVED_COUNTERPARTY_CIF = "A58818501"
 _ISSUED_COUNTERPARTY_NIF = "B12345674"
 
 _CSV_HEADER = "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
-
-
-def _line_value(output: str, key: str) -> str:
-    for line in output.splitlines():
-        head, sep, tail = line.partition("\t")
-        if sep and head.strip() == key:
-            return tail.strip()
-    raise AssertionError(f"no {key!r} line in CLI output:\n{output}")
 
 
 def _get_list_value(payload: dict[str, object], key: str) -> list[object]:

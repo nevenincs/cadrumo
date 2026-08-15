@@ -33,7 +33,14 @@ from ....adapters.persistence.storage.custody import (
     resume_profile_session,
 )
 from ....application.profile_custody import profile_current_bucket_session, profile_session_path
-from ....core import BucketPointer, ProfileSessionRefusalReason, capture_pointer, read_pointer, write_pointer
+from ....core import (
+    BucketPointer,
+    ProfileSessionRefusalReason,
+    capture_pointer,
+    iter_directory,
+    read_pointer,
+    write_pointer,
+)
 from ....core import config as config_module
 from ....core.config import Settings
 from ....core.time import now as _now
@@ -150,7 +157,7 @@ def _replace_journal_after_cas_stage_appears(
     ready.set()
     deadline = time.monotonic() + 30
     while time.monotonic() < deadline:
-        if any(entry.name.startswith(stage_prefix) for entry in path.parent.iterdir()):
+        if any(entry.name.startswith(stage_prefix) for entry in iter_directory(path.parent)):
             replacement = path.with_name(f".{path.name}.interleaving-replacement")
             replacement.write_bytes(payload)
             os.replace(replacement, path)

@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import DirectoryEntryKind, scan_directory
 from dev._paths import REPO_ROOT
 
 from ..pagefind_index import SearchIndexResult, build_search_index
@@ -81,7 +82,7 @@ def test_index_pass_indexes_built_html(tmp_path: Path) -> None:
     assert result.page_count == 2
     pf = tmp_path / "pagefind"
     assert pf.is_dir()
-    files = {p.name for p in pf.rglob("*") if p.is_file()}
+    files = {p.name for p in scan_directory(pf, recursive=True, select=DirectoryEntryKind.FILES)}
     # The UI bundle the search.html template references must be emitted.
     assert "pagefind-ui.js" in files
     assert "pagefind-ui.css" in files
@@ -118,5 +119,5 @@ def test_custom_record_injection_seam_and_language_splits(tmp_path: Path) -> Non
     assert result.page_count == 2
 
     pf = tmp_path / "pagefind"
-    languages = {p.name.split("_")[0] for p in pf.rglob("*.pf_index")}
+    languages = {p.name.split("_")[0] for p in scan_directory(pf, pattern="*.pf_index", recursive=True)}
     assert {"es", "ca", "en"} <= languages, languages

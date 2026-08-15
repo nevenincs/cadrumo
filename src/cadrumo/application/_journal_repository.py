@@ -27,7 +27,14 @@ from typing import Protocol
 
 from pydantic import ValidationError
 
-from ..core import HEX_PATTERN_64, StorageCategory, exclusive_file_lock, is_link_like, storage_location
+from ..core import (
+    HEX_PATTERN_64,
+    StorageCategory,
+    exclusive_file_lock,
+    is_link_like,
+    scan_directory,
+    storage_location,
+)
 from ..core.atomic_write import atomic_write_hardened_text
 from ..core.errors import CadrumoError
 from ..core.external_constants import UTF_8_ENCODING
@@ -145,7 +152,7 @@ class JournalRepositoryBase[T: JournalOperation]:
         """Return every journal file path, empty when no journal root exists."""
         if not self._validate_existing_root():
             return ()
-        return tuple(self._root.glob("*.json"))
+        return scan_directory(self._root, pattern="*.json")
 
     def list(self) -> tuple[T, ...]:
         """Load JSON journals ordered by start time then operation identifier.

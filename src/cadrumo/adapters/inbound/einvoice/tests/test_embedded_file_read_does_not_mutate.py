@@ -33,6 +33,7 @@ from io import BytesIO
 
 import pytest
 
+from .....core import scan_directory
 from .._shape import iter_pdf_embedded_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -100,11 +101,11 @@ def test_reading_the_payload_writes_nothing_to_disk(tmp_path) -> None:
     worth a gate even though the payload assertions would never notice.
     """
     with contextlib.chdir(tmp_path):
-        before = set(tmp_path.rglob("*"))
+        before = set(scan_directory(tmp_path, pattern="*", recursive=True))
 
         iter_pdf_embedded_files(_pdf_with_embedded_xml())
 
-    assert set(tmp_path.rglob("*")) == before, (
+    assert set(scan_directory(tmp_path, pattern="*", recursive=True)) == before, (
         "reading an embedded payload left a file behind; evidence bytes must never reach disk outside encrypted storage"
     )
 

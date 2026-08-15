@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from .....core import Period, is_aeat_csv
+from .....core import Period, is_aeat_csv, scan_directory
 from .....domain.justificante import (
     Justificante,
     JustificanteCsvNotFoundError,
@@ -35,6 +35,7 @@ from .....tests.aeat_literal_fixtures import (
     aeat_host,
     aeat_url,
 )
+from .....tests.pdf_fixtures import text_pdf_bytes
 from ...pdf import source_pdf_reference_path
 from .. import parse_justificante, parse_justificante_bytes
 from .._parsers import _TEXT_CACHE, extract_text
@@ -174,8 +175,8 @@ def _real_corpus_pdfs() -> list[Path]:
     ``{ejercicio}-{period}.pdf`` per the per-modelo subdirectory.
     """
     pdfs: list[Path] = []
-    for modelo_dir in sorted(p for p in FIXTURES_DIR.iterdir() if p.is_dir()):
-        for pdf in sorted(modelo_dir.glob("*.pdf")):
+    for modelo_dir in sorted(p for p in scan_directory(FIXTURES_DIR) if p.is_dir()):
+        for pdf in scan_directory(modelo_dir, pattern="*.pdf"):
             pdfs.append(pdf)
     return pdfs
 
@@ -294,30 +295,22 @@ class TestJustificanteErrorRehome:
 def non_justificante_pdf_bytes() -> bytes:
     """Synthesize once-per-module the trivial PDF that lacks a CSV label.
 
-    The Canvas build pays a ReportLab Canvas-construction cost (~30-80ms
-    on a process where font registration is already cached, ~200ms on
-    cold start). Hoisting the build to module scope keeps the cost
-    one-shot for this test module even if more tests are added later
-    that need the same payload.
+    Hoisting the build to module scope keeps the reportlab construction cost
+    one-shot for this test module even if more tests are added later that
+    need the same payload.
     """
-    from io import BytesIO
-
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfgen import canvas
-
-    buffer = BytesIO()
-    c = canvas.Canvas(buffer, pagesize=A4)
-    c.drawString(100, 700, "AGENCIA TRIBUTARIA")
-    c.drawString(100, 680, "Modelo: 130")
-    c.drawString(100, 660, "Ejercicio: 2026")
-    c.drawString(100, 640, "Periodo: 1T")
-    c.drawString(100, 620, "NIF: 00000000T")
-    c.drawString(100, 600, "Numero de justificante: 1302026")
-    c.drawString(100, 580, "Fecha y hora de presentacion: 2026-04-10 11:00:00")
-    c.drawString(100, 560, aeat_url("sede", JUSTIFICANTE_AYUDA_PATH_FIXTURE))
-    c.showPage()
-    c.save()
-    return buffer.getvalue()
+    return text_pdf_bytes(
+        (
+            "AGENCIA TRIBUTARIA",
+            "Modelo: 130",
+            "Ejercicio: 2026",
+            "Periodo: 1T",
+            "NIF: 00000000T",
+            "Numero de justificante: 1302026",
+            "Fecha y hora de presentacion: 2026-04-10 11:00:00",
+            aeat_url("sede", JUSTIFICANTE_AYUDA_PATH_FIXTURE),
+        )
+    )
 
 
 class TestCsvDetection:

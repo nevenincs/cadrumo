@@ -45,6 +45,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .....core.config import override_settings
 from .....core.resources import bundled_path
 from .....tests.env_scope import scoped_env_var
@@ -235,7 +236,7 @@ def _bundled_registry_disk_cache_files(cache_dir: Path) -> set[Path]:
     than the call under test. Keeping the parameter required removes that
     default rather than leaving it for the next caller to fall into.
     """
-    return set(cache_dir.glob("cadrumo_registry_*.pkl"))
+    return set(scan_directory(cache_dir, pattern="cadrumo_registry_*.pkl"))
 
 
 def test_bundled_root_disk_cache_is_shared_across_processes(

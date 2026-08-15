@@ -96,8 +96,20 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     "secure_object": PersistedFormatClass.DURABLE,
     "bundle": PersistedFormatClass.DURABLE,
     "archive": PersistedFormatClass.DURABLE,
-    "bucket_dek": PersistedFormatClass.DURABLE,
-    "bucket_manifest": PersistedFormatClass.DURABLE,
+    # ``bucket_dek`` and ``bucket_manifest`` were de-enrolled here as a
+    # deliberate durability decision, not as bookkeeping: neither format has any
+    # remaining implementation in the tree. The plaintext per-bucket manifest is
+    # retired -- nothing reads or writes one, and profile discovery, labels and
+    # key material all belong to the custody capsule. The separately wrapped
+    # bucket data key is retired with it; the capsule's own password-wrapped DEK
+    # is a different format under different custody, not this one renamed.
+    #
+    # Removing an entry is the same class of decision as adding one, so it is
+    # recorded rather than left to inference. Note that this inventory is
+    # enumerated only by the FLOOR gate, which validates released floors against
+    # these keys and never validates these keys against the tree -- so an entry
+    # outliving its implementation is invisible here, which is how the data-key
+    # entry outlived its own deletion.
     # The per-bucket SQLite file holding the encrypted secure_objects table --
     # every filing, ledger entry, and evidence record a taxpayer has. The rows
     # inside are already DURABLE under "secure_object"; the file that carries

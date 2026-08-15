@@ -20,6 +20,7 @@ from ....adapters.persistence.storage import (
     BUCKETS_DIRNAME,
     KEYSTORE_DIRNAME,
 )
+from ....core import scan_directory
 from ....core.i18n import tr
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
@@ -82,7 +83,9 @@ def _bucket_directories_without_manifest(storage_root: Path) -> tuple[Path, ...]
     if not buckets_root.is_dir():
         return ()
     return tuple(
-        entry for entry in buckets_root.iterdir() if entry.is_dir() and not (entry / BUCKET_MANIFEST_FILENAME).is_file()
+        entry
+        for entry in scan_directory(buckets_root)
+        if entry.is_dir() and not (entry / BUCKET_MANIFEST_FILENAME).is_file()
     )
 
 
@@ -858,7 +861,7 @@ def test_config_profile_create_invalid_nif_does_not_leave_orphan_bucket(_isolate
     assert "NIF" in result.output or "nif" in result.output or "tax" in result.output.lower()
     assert _bucket_directories_without_manifest(_isolated_backend) == ()
     keystore_root = _isolated_backend / KEYSTORE_DIRNAME
-    assert not keystore_root.is_dir() or tuple(keystore_root.iterdir()) == ()
+    assert not keystore_root.is_dir() or tuple(scan_directory(keystore_root)) == ()
 
     valid = _invoke_profile(
         (

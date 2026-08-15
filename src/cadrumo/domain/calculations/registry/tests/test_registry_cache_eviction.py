@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .....core.config import override_settings
 from .._compiled_cache import _evict_stale_registry_pickles
 from .._loader_cache import registry_disk_cache_max_entries
@@ -42,7 +43,7 @@ def test_eviction_keeps_newest_and_prunes_oldest(tmp_path: Path) -> None:
     with override_settings(cadrumo_registry_disk_cache_max_entries=3):
         _evict_stale_registry_pickles(tmp_path, logger=_LOGGER)
 
-    surviving = set(tmp_path.glob("cadrumo_registry_*.pkl"))
+    surviving = set(scan_directory(tmp_path, pattern="cadrumo_registry_*.pkl"))
     # The three newest (largest mtime) survive; the two oldest are pruned.
     assert surviving == set(kept_newest[2:])
     assert not kept_newest[0].exists()

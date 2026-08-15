@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import iter_directory, scan_directory
+
 from ..frontend_static_site import (
     _PROTECTED_PREFIX_EXCLUDES,
     _REQUIRED_ARTIFACTS,
@@ -69,7 +71,7 @@ def test_validate_refuses_a_page_referencing_a_bundle_that_was_never_written(tmp
     assert "index-NEVER-WRITTEN.js" in message
     # The old check still passes on this build, which is why it could not catch it.
     assets = tmp_path / "assets"
-    assert any(assets.glob("*.js")) and any(assets.glob("*.css"))
+    assert any(iter_directory(assets, pattern="*.js")) and any(iter_directory(assets, pattern="*.css"))
 
 
 @pytest.mark.parametrize("missing", sorted(_REQUIRED_ARTIFACTS))
@@ -87,7 +89,7 @@ def test_validate_refuses_a_build_missing_a_required_artifact(
 def test_validate_refuses_a_build_without_bundled_assets(tmp_path: Path) -> None:
     """An empty assets directory refuses the publish."""
     _complete_build(tmp_path)
-    for bundle in (tmp_path / "assets").iterdir():
+    for bundle in scan_directory(tmp_path / "assets"):
         bundle.unlink()
     with pytest.raises(SystemExit, match="bundled assets"):
         _validate_site_artifacts(tmp_path)

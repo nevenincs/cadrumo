@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from ..core import DirectoryEntryKind, scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _PACKAGE_ROOT = Path(__file__).resolve().parents[1]
@@ -63,12 +65,19 @@ _EXTERNAL_SOURCE_PREFIXES = ("http://", "https://", "/Sede/")
 
 
 def _source_files() -> tuple[Path, ...]:
-    return tuple(sorted(path for path in _PACKAGE_ROOT.rglob("*.py") if path != Path(__file__)))
+    return tuple(
+        sorted(path for path in scan_directory(_PACKAGE_ROOT, pattern="*.py", recursive=True) if path != Path(__file__))
+    )
 
 
 def _package_files() -> tuple[Path, ...]:
     return tuple(
-        sorted(path for path in _PACKAGE_ROOT.rglob("*") if path.is_file() and "__pycache__" not in path.parts)
+        scan_directory(
+            _PACKAGE_ROOT,
+            recursive=True,
+            select=DirectoryEntryKind.FILES,
+            prune_directories=("__pycache__",),
+        )
     )
 
 
@@ -195,7 +204,7 @@ def test_authored_repository_prose_uses_iva_without_a_mixed_alias() -> None:
         "src/cadrumo",
     ):
         root = _REPOSITORY_ROOT / root_name
-        for path in sorted(root.rglob("*")):
+        for path in scan_directory(root, pattern="*", recursive=True):
             if (
                 not path.is_file()
                 or "_data" in path.parts

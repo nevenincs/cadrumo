@@ -28,6 +28,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 from ...docs.pagefind_index import (
@@ -59,7 +60,7 @@ def _page_corpus(tmp_path: Path, name: str) -> Path:
             f"no built documentation HTML at {_BUILT_HTML}; this preflight reads a real "
             "artefact, so it needs a real build to read. Run the docs build first.",
         )
-    pages = sorted(_BUILT_HTML.glob("*.html"))[:_PAGES]
+    pages = scan_directory(_BUILT_HTML, pattern="*.html")[:_PAGES]
     if len(pages) < _PAGES:
         pytest.fail(f"need {_PAGES} built pages under {_BUILT_HTML} to assemble a site corpus.")
     site = tmp_path / name
@@ -131,7 +132,11 @@ def test_the_pages_only_index_is_the_shape_the_old_check_waved_through(pages_onl
     nothing about the defect. The old check's exact predicate is re-run here to
     show it is still satisfied by the artefact the new check rejects.
     """
-    chunks = [c for c in (pages_only_site / "pagefind" / "index").rglob("*.pf_index") if c.stat().st_size > 0]
+    chunks = [
+        c
+        for c in scan_directory(pages_only_site / "pagefind" / "index", pattern="*.pf_index", recursive=True)
+        if c.stat().st_size > 0
+    ]
     assert chunks, "the pages-only build wrote no index chunks; it is broken, not merely record-free"
     assert injected_record_kinds_in_index(pages_only_site) == frozenset()
 

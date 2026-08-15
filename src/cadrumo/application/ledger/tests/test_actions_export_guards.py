@@ -6,6 +6,7 @@ import os
 
 import pytest
 
+from ....core import scan_directory
 from ._action_test_support import (
     _BUCKET_ID,
     _OTHER_BUCKET_ID,
@@ -141,7 +142,7 @@ def test_export_ledger_transactions_writes_output_before_export_event(
     assert [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
     ]
-    assert sorted(tmp_path.glob("*.tmp")) == []
+    assert scan_directory(tmp_path, pattern="*.tmp") == ()
 
 
 def test_export_ledger_transactions_replaces_prior_export_atomically(
@@ -187,7 +188,7 @@ def test_export_ledger_transactions_replaces_prior_export_atomically(
     assert output_path.read_bytes() == result.payload
     assert witness.read_bytes() == _STALE_EXPORT_BYTES
     assert output_path.stat().st_ino != witness.stat().st_ino
-    assert sorted(tmp_path.glob("*.tmp")) == []
+    assert scan_directory(tmp_path, pattern="*.tmp") == ()
     assert event_repository.load().for_bucket(_BUCKET_ID)[-1].event_type is (
         BucketEventType.LEDGER_TRANSACTION_EXPORTED
     )

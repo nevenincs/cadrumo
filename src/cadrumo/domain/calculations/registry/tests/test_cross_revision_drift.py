@@ -12,7 +12,6 @@ year-to-year drift can be treated as a load-time error.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import warnings
 from datetime import date
@@ -40,21 +39,12 @@ from .._validate_cross_revision import (
 )
 from .._validate_registry_scope import validate_registry_scope
 from ._registry_schema_support import _committed_registry_tree
-from ._synthetic_locale_fixtures import _synthetic_locale_scope, synthetic_locale_state
+from ._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label, synthetic_locale_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 __all__ = ["_synthetic_locale_scope"]
-
-
-def _write_test_label(label: str) -> str:
-    """Enroll one synthetic Spanish value in the test-only catalogue."""
-    key = f"test.schema.casilla.{hashlib.sha256(label.encode('utf-8')).hexdigest()}.label"
-    if synthetic_locale_state.root is not None:
-        with (synthetic_locale_state.root / "es.yml").open("a", encoding="utf-8") as handle:
-            handle.write(f"{json.dumps(key)}: {json.dumps(label, ensure_ascii=False)}\n")
-    return key
 
 
 def _casilla(

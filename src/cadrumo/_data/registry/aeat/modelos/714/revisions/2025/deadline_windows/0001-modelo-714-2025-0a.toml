@@ -1,0 +1,9 @@
+[[revisions."2025".deadline_windows]]
+id = "modelo-714-2025-0a"
+filing_year = 2025
+period = "2025 0A"
+period_kind = "annual"
+opens_on = 2026-04-08
+closes_on = 2026-06-30
+legal_refs = ["orden-hac-277-2026:art-7"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]

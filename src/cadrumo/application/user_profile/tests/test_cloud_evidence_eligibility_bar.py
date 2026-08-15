@@ -42,7 +42,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import ServiceCapability
+from ....core import ServiceCapability, scan_directory
 from ....core.config import Settings, load_settings
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....llm import EvidenceConsentToken, LLMConsentError, cloud_evidence_read_permitted, mint_evidence_consent_token
@@ -166,7 +166,7 @@ def _production_modules() -> list[Path]:
     """
     return [
         path
-        for path in _PRODUCTION_ROOT.rglob("*.py")
+        for path in scan_directory(_PRODUCTION_ROOT, pattern="*.py", recursive=True)
         if "/tests/" not in f"/{path.relative_to(_PRODUCTION_ROOT).as_posix()}"
     ]
 

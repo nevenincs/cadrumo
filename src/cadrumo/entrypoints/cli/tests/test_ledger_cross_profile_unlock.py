@@ -14,17 +14,14 @@ commands.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.profile_storage_root_fixture import isolated_profile_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -36,17 +33,11 @@ _AUTONOMA_PROFILE_ID = "2c2c2c2c-2c2c-4c2c-8c2c-2c2c2c2c2c2c"
 _RETAILER_PROFILE_ID = "3d3d3d3d-3d3d-4d3d-8d3d-3d3d3d3d3d3d"
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-    ):
-        try:
-            yield
-        finally:
-            dispose_engine()
+_isolated_backend = isolated_profile_storage_fixture(
+    name="_isolated_backend",
+    dispose_engine_around=True,
+    settings_overrides={"cadrumo_output_language": "en"},
+)
 
 
 def _register(*, profile_id: str, label: str) -> None:

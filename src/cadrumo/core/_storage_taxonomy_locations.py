@@ -707,16 +707,6 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         override_policy=StorageOverridePolicy.FIXED,
     ),
     _location(
-        StorageCategory.KEYSTORE_BUCKET_DEK,
-        "bucket.dek.json",
-        consumer_module="adapters/persistence/storage/_storage_path_definitions.py",
-        node_kind=StorageNodeKind.FILE,
-        scope=StorageScope.KEYSTORE_RELATIVE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
         StorageCategory.KEYSTORE_PROFILE_SESSION,
         "session.v2.json",
         consumer_module="adapters/persistence/storage/_storage_path_definitions.py",

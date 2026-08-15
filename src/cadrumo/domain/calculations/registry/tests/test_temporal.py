@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core import RegistryAuthorityGrade, scan_directory
 from .._errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
@@ -297,8 +297,8 @@ def _law_determined_violations(
 def _production_select_revision_calls() -> list[tuple[str, int, frozenset[str]]]:
     """AST-collect every production ``select_revision(...)`` call site (tests excluded)."""
     calls: list[tuple[str, int, frozenset[str]]] = []
-    for path in _CADRUMO_ROOT.rglob("*.py"):
-        if "tests" in path.parts or path.name == "conftest.py":
+    for path in scan_directory(_CADRUMO_ROOT, pattern="*.py", recursive=True, prune_directories=("tests",)):
+        if path.name == "conftest.py":
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         calls.extend(_select_revision_calls_in_tree(tree, path.relative_to(_CADRUMO_ROOT).as_posix()))

@@ -29,13 +29,6 @@ from uuid import UUID
 import pytest
 from pydantic import SecretStr
 
-from ...adapters.persistence.storage.bucket import (
-    BUCKET_MANIFEST_SCHEMA_VERSION,
-    BucketKeySchedule,
-    BucketManifest,
-    ManifestKdfParams,
-    write_manifest,
-)
 from ...adapters.persistence.storage.custody import load_committed_profile_password_material, unlock_profile_custody
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core import Period
@@ -69,7 +62,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False
 _ACTIVE_PROFILE_ID: str | None = None
-_STAGED_MANIFEST_CREATED_AT = datetime(2026, 5, 28, 15, 30, tzinfo=UTC)
 _OPERATOR_PASSPHRASE = "state projection test passphrase 123"  # noqa: S105 - test-only credential
 
 
@@ -157,38 +149,14 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
     return bucket_id
 
 
-def _stage_profile_manifest(root: Path, bucket_id: str) -> None:
-    """Stage a readable manifest for ``bucket_id`` under ``root``.
+def _stage_profile_bucket(root: Path, bucket_id: str) -> None:
+    """Materialise a bucket directory with no profile record.
 
-    ``schema_version`` tracks :data:`BUCKET_MANIFEST_SCHEMA_VERSION` rather
-    than a literal: a manifest below the read path's durability floor is
-    refused before the profile record is ever consulted, so a stale literal
-    silently reroutes every health assertion here to ``manifest_unreadable``
-    instead of the state under test.
+    Staged a plaintext manifest alongside it until that format was retired.
+    The state under test is the absent record, which the manifest never
+    carried.
     """
-    paths = provision_bucket_directory(root, bucket_id)
-    write_manifest(
-        paths,
-        BucketManifest(
-            bucket_id=bucket_id,
-            # Derived, never the bare id: ProfileLabel refuses a UUID-shaped
-            # label so an operator label can never be read as a machine id.
-            label=f"profile-{bucket_id}",
-            created_at=_STAGED_MANIFEST_CREATED_AT,
-            last_unlocked_at=None,
-            kdf_params=ManifestKdfParams(
-                algorithm="argon2id",
-                version=0x13,
-                memory_cost=19_456,
-                time_cost=2,
-                parallelism=1,
-                salt=b"0123456789abcdef",
-                output_length=32,
-            ),
-            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-        ),
-    )
+    provision_bucket_directory(root, bucket_id)
 
 
 def test_overview_status_reports_modelo_work_units(tmp_path: Path) -> None:
@@ -598,7 +566,7 @@ def test_projection_without_active_profile_is_empty() -> None:
 
 
 def test_projection_profile_read_refuses_explicit_database_route(tmp_path: Path) -> None:
-    _stage_profile_manifest(tmp_path, "operator")
+    _stage_profile_bucket(tmp_path, "operator")
 
     with override_settings(
         cadrumo_local_storage_root=tmp_path,

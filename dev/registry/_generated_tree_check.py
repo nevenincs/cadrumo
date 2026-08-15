@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from cadrumo.core import scan_directory
 from cadrumo.domain.calculations.registry import (
     ExportLayoutDefinition,
     RegistryError,
@@ -244,7 +245,7 @@ def _read_regular_tree_bytes(root: Path, *, subject: str) -> dict[str, bytes]:
     members: dict[str, bytes] = {}
 
     def visit(directory: Path) -> None:
-        for child in sorted(directory.iterdir(), key=lambda path: path.name):
+        for child in sorted(scan_directory(directory), key=lambda path: path.name):
             if child.is_symlink() or child.is_junction():
                 raise RegistryValidationError(f"{subject} contains a linked member: {child}")
             relative = child.relative_to(root).as_posix()

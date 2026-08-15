@@ -9,10 +9,8 @@ orchestrator + reconcile_capture tests, not here.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -31,11 +29,10 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....tests import FIXTURES_DIR
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
+from ....tests.profile_capsule import set_active_test_profile_facts
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -51,17 +48,9 @@ _FIXTURE_PROFILE_TAX_ID = "00000000T"
 _WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 15, 40, tzinfo=UTC)
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session("11111111-1111-4111-8111-111111111111"),
-    ):
-        register_minimal_profile(
-            profile_id="11111111-1111-4111-8111-111111111111",
-            overrides={"identity.tax_id": _FIXTURE_PROFILE_TAX_ID},
-        )
-        yield
+_isolated_backend = active_profile_isolated_backend_fixture(
+    profile_overrides={"identity.tax_id": _FIXTURE_PROFILE_TAX_ID},
+)
 
 
 def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:

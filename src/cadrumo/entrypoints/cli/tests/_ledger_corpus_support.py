@@ -31,14 +31,22 @@ def _invoke(args: Sequence[str]) -> Result:
 _REVISION_CASILLA: CasillaId = validated_casilla_id("01")
 
 
-def _oracle_rules() -> list[dict[str, Any]]:
+def _oracle_rules() -> list[dict[str, object]]:
     manifest = json.loads((_CORPUS / "ground-truth.manifest.json").read_text(encoding="utf-8"))
-    return manifest["rules"]
+    assert isinstance(manifest, dict)
+    raw_rules = manifest.get("rules")
+    assert isinstance(raw_rules, list)
+    rules: list[dict[str, object]] = []
+    for raw_rule in raw_rules:
+        assert isinstance(raw_rule, dict)
+        rules.append({str(key): value for key, value in raw_rule.items()})
+    return rules
 
 
-def _match(description: str, rules: list[dict[str, Any]]) -> dict[str, Any] | None:
+def _match(description: str, rules: list[dict[str, object]]) -> dict[str, object] | None:
     for rule in rules:
-        if rule["match"] in description:
+        match_val = rule.get("match")
+        if isinstance(match_val, str) and match_val in description:
             return rule
     return None
 

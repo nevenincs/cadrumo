@@ -32,7 +32,13 @@ from pathlib import Path
 
 import pytest
 
-from ....core import STR_KEYED_MAPPING_ADAPTER, DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
+from ....core import (
+    STR_KEYED_MAPPING_ADAPTER,
+    DraftDiscrepancyKind,
+    FieldGroundingOutcome,
+    FieldOrigin,
+    scan_directory,
+)
 from .._closure_findings import closure_findings
 from .._evidence_draft import InvoiceDraft
 from .._evidence_input import EvidenceInput
@@ -67,7 +73,7 @@ def _control_fixtures() -> dict[str, Path]:
     rename fails loudly here instead of quietly reducing the set under test.
     """
     found: dict[str, Path] = {}
-    for sidecar in _CORPUS.glob("*.provenance.json"):
+    for sidecar in scan_directory(_CORPUS, pattern="*.provenance.json"):
         declared = STR_KEYED_MAPPING_ADAPTER.validate_json(sidecar.read_text(encoding="utf-8"))
         doc_id = declared.get("corpus_doc_id")
         if not isinstance(doc_id, str):

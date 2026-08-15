@@ -34,6 +34,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 from ...ci.lane_reachability import resolve_just_executable
@@ -236,7 +237,7 @@ def test_only_the_delivery_workflow_runs_a_publisher() -> None:
     Swept across every workflow rather than the two that were known to matter,
     so a newly added verification lane cannot acquire a publish step unobserved.
     """
-    workflows = sorted(_WORKFLOWS.glob("*.yml"))
+    workflows = scan_directory(_WORKFLOWS, pattern="*.yml")
     assert workflows, "no workflows found; the sweep is looking at the wrong directory"
 
     publishing: dict[str, list[str]] = {}
@@ -269,7 +270,7 @@ def test_the_landing_publisher_has_no_automated_caller_anywhere() -> None:
     none, and it is that consequence -- not the guard's wording -- that would
     change first if the two were ever quietly merged into one authority.
     """
-    text = "\n".join(path.read_text(encoding="utf-8") for path in sorted(_WORKFLOWS.glob("*.yml")))
+    text = "\n".join(path.read_text(encoding="utf-8") for path in scan_directory(_WORKFLOWS, pattern="*.yml"))
     invoked = {
         module
         for module in ("docs_static_site", "frontend_static_site")

@@ -50,6 +50,7 @@ from typing import Final, NamedTuple, TypeGuard
 
 from pydantic import BaseModel
 
+from ....core import iter_directory, scan_directory
 from ....core.aggregation import BindingSourceKind
 from ....core.atomic_write import atomic_write_best_effort_bytes
 from ....core.hashing import sha256_hex
@@ -256,10 +257,11 @@ def _compute_loader_code_fingerprint(roots: Iterable[type[BaseModel]] | None = N
     """
     hasher = hashlib.sha256()
     try:
-        source_files = sorted(
-            path
-            for path in _REGISTRY_PACKAGE_DIR.rglob("*.py")
-            if "tests" not in path.relative_to(_REGISTRY_PACKAGE_DIR).parts
+        source_files = scan_directory(
+            _REGISTRY_PACKAGE_DIR,
+            pattern="*.py",
+            recursive=True,
+            prune_directories=("tests",),
         )
         for path in source_files:
             hasher.update(path.relative_to(_REGISTRY_PACKAGE_DIR).as_posix().encode("utf-8"))
@@ -356,7 +358,11 @@ def _evict_stale_registry_pickles(cache_dir: Path, *, logger: logging.Logger) ->
     keep = registry_disk_cache_max_entries()
     entries: list[tuple[Path, int]] = []
     try:
-        for cache_path in cache_dir.glob(f"{_CACHE_FILENAME_PREFIX}*{_CACHE_FILENAME_SUFFIX}"):
+        for cache_path in iter_directory(
+            cache_dir,
+            pattern=f"{_CACHE_FILENAME_PREFIX}*{_CACHE_FILENAME_SUFFIX}",
+            require_root=True,
+        ):
             try:
                 entries.append((cache_path, cache_path.stat().st_mtime_ns))
             except OSError:

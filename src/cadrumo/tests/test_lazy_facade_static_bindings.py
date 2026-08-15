@@ -31,6 +31,8 @@ from pathlib import Path
 
 import pytest
 
+from ..core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SRC = Path("src/cadrumo")
@@ -80,7 +82,7 @@ def _static_bindings(tree: ast.Module) -> set[str]:
 def _lazy_facades() -> list[tuple[Path, dict[str, str], set[str]]]:
     """Return every package facade that dispatches through ``__getattr__``."""
     facades: list[tuple[Path, dict[str, str], set[str]]] = []
-    for path in sorted(_SRC.rglob("__init__.py")):
+    for path in scan_directory(_SRC, pattern="__init__.py", recursive=True):
         source = path.read_text(encoding="utf-8")
         if "__getattr__" not in source:
             continue

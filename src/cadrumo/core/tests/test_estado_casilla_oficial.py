@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import ast
 from pathlib import Path
 
 import pytest
 
 from ... import core
-from .. import EstadoCasillaOficial
+from ...tests._inventory import modules_declaring_class
+from .. import DirectoryEntryKind, EstadoCasillaOficial, scan_directory
 from .. import _estado_casilla_oficial as owner
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -77,8 +77,8 @@ def _retired_family_occurrences(*roots: Path) -> set[tuple[str, str]]:
     candidates = {
         path
         for root in roots
-        for path in root.rglob("*")
-        if path.is_file() and path.suffix.lower() in _TEXT_BEARING_SUFFIXES
+        for path in scan_directory(root, recursive=True, select=DirectoryEntryKind.FILES)
+        if path.suffix.lower() in _TEXT_BEARING_SUFFIXES
     }
     retired = _retired_family()
     occurrences: set[tuple[str, str]] = set()
@@ -109,15 +109,7 @@ def test_estado_casilla_oficial_is_the_single_public_core_identity() -> None:
         "undefined",
     )
 
-    source_root = Path(__file__).parents[2]
-    declarations = [
-        path.resolve()
-        for path in source_root.rglob("*.py")
-        if any(
-            isinstance(node, ast.ClassDef) and node.name == "EstadoCasillaOficial"
-            for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
-        )
-    ]
+    declarations = list(modules_declaring_class("EstadoCasillaOficial"))
     assert declarations == [Path(owner.__file__).resolve()]
 
 

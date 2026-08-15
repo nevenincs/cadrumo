@@ -77,6 +77,7 @@ from ....core import (
     ElidedProse,
     ExternalOracleCorpus,
     RegistrySelectorPeriodCode,
+    scan_directory,
 )
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import bundled_path
@@ -551,7 +552,7 @@ def load_bundled_external_oracle_inventory() -> ExternalOracleInventory:
     unattributed: list[UnattributedOraclePayload] = []
     for corpus, parts in _ORACLE_CORPUS_DIRECTORIES.items():
         directory = Path(bundled_path(*parts))
-        for payload_path in sorted(directory.glob("modelo-*.json")):
+        for payload_path in scan_directory(directory, pattern="modelo-*.json"):
             record = _read_oracle_payload(corpus, payload_path)
             if isinstance(record, UnattributedOraclePayload):
                 unattributed.append(record)

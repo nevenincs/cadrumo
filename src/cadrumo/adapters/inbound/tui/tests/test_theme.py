@@ -25,6 +25,7 @@ import pytest
 from textual.containers import Vertical
 from textual.theme import Theme
 
+from .....core import scan_directory
 from .....core.config import TuiAppearance
 from .. import (
     CADRUMO_DARK,
@@ -258,7 +259,7 @@ def test_no_surface_pins_or_caps_its_content_width() -> None:
 
     tui_dir = Path(__file__).resolve().parent.parent
     offenders: list[str] = []
-    for module in sorted(tui_dir.glob("*.py")):
+    for module in scan_directory(tui_dir, pattern="*.py"):
         for match in re.finditer(r"(max-)?width:\s*(\d+)\s*;", module.read_text(encoding="utf-8")):
             offenders.append(f"{module.name}: {match.group(0)}")
         for match in re.finditer(r"(max-)?width:\s*(\d+)%\s*;", module.read_text(encoding="utf-8")):

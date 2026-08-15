@@ -30,6 +30,7 @@ from pathlib import Path
 
 import pytest
 
+from .. import DirectoryEntryKind, scan_directory
 from ..redaction import redact_for_cli_output, redact_for_log
 from .test_redaction_population_coverage import (
     _DIGEST_RE,
@@ -67,9 +68,7 @@ _MINIMUM_EXPECTED_REDACTIONS = 5
 def _recorded_lines() -> Iterator[str]:
     """Yield each distinct line of recorded output, pre-filtered to candidates."""
     seen: set[str] = set()
-    for path in sorted(RECORDED_SEQUENCES.rglob("*")):
-        if not path.is_file():
-            continue
+    for path in scan_directory(RECORDED_SEQUENCES, recursive=True, select=DirectoryEntryKind.FILES):
         try:
             text = path.read_text(encoding="utf-8")
         except (UnicodeDecodeError, OSError):
@@ -90,7 +89,7 @@ def test_the_recorded_corpus_is_present_and_large_enough_to_measure() -> None:
     """
     assert RECORDED_SEQUENCES.is_dir(), f"recorded sequence corpus is missing at {RECORDED_SEQUENCES}"
 
-    files = sum(1 for path in RECORDED_SEQUENCES.rglob("*") if path.is_file())
+    files = len(scan_directory(RECORDED_SEQUENCES, recursive=True, select=DirectoryEntryKind.FILES))
 
     assert files >= _MINIMUM_EXPECTED_FILES, f"only {files} recorded files found; the corpus moved or shrank"
 

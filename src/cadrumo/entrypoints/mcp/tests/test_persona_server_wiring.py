@@ -111,14 +111,22 @@ def test_coordinator_cannot_call_a_mutating_ledger_or_modelo_tool() -> None:
     # The coordinator's declared ceiling is READ_ONLY over {overview, contract}
     # only - it must be refused for every mutating family, proving the gate
     # enforces both the family AND the mutability-ceiling axis end to end.
-    assert persona_scope_refusal(persona=AgentPersona.COORDINATOR, command_key="ledger.add") is not None
-    assert persona_scope_refusal(persona=AgentPersona.COORDINATOR, command_key="modelo.work.calculate") is not None
-    assert persona_scope_refusal(persona=AgentPersona.COORDINATOR, command_key="modelo.export") is not None
+    # Each refusal is pinned to its OWN command_key, not just truthiness --
+    # a generic or copy-pasted refusal shared across the three calls would
+    # still pass under bare ``is not None``.
+    ledger_add = persona_scope_refusal(persona=AgentPersona.COORDINATOR, command_key="ledger.add")
+    assert ledger_add is not None and "ledger.add" in ledger_add and "cadrumo-coordinator" in ledger_add
+    modelo_calculate = persona_scope_refusal(persona=AgentPersona.COORDINATOR, command_key="modelo.work.calculate")
+    assert modelo_calculate is not None and "modelo.work.calculate" in modelo_calculate
+    modelo_export = persona_scope_refusal(persona=AgentPersona.COORDINATOR, command_key="modelo.export")
+    assert modelo_export is not None and "modelo.export" in modelo_export
 
 
 def test_ledger_groomer_cannot_call_a_modelo_tool() -> None:
-    assert persona_scope_refusal(persona=AgentPersona.LEDGER_GROOMER, command_key="modelo.work.calculate") is not None
-    assert persona_scope_refusal(persona=AgentPersona.LEDGER_GROOMER, command_key="modelo.export") is not None
+    modelo_calculate = persona_scope_refusal(persona=AgentPersona.LEDGER_GROOMER, command_key="modelo.work.calculate")
+    assert modelo_calculate is not None and "modelo.work.calculate" in modelo_calculate
+    modelo_export = persona_scope_refusal(persona=AgentPersona.LEDGER_GROOMER, command_key="modelo.export")
+    assert modelo_export is not None and "modelo.export" in modelo_export
 
 
 # --- documented family-granularity limitation ---------------------------------

@@ -32,6 +32,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     ModeloRevision,
@@ -395,7 +396,7 @@ def test_no_parallel_oss_ioss_aggregator_exists() -> None:
     canonical = source_root / "application" / "aggregation" / "_oss_ioss.py"
     forbidden_pattern = "resolve_ledger_oss_aggregation_binding_values"
     offenders: list[Path] = []
-    for py_file in source_root.rglob("*.py"):
+    for py_file in scan_directory(source_root, pattern="*.py", recursive=True):
         if py_file.name.startswith("test_"):
             continue
         if py_file == canonical:
@@ -433,7 +434,7 @@ def test_no_cli_root_oss_or_ioss_verb_is_registered() -> None:
         'name="ioss"',
     )
     offenders: dict[Path, list[str]] = {}
-    for py_file in cli_root.rglob("*.py"):
+    for py_file in scan_directory(cli_root, pattern="*.py", recursive=True):
         if py_file.name.startswith("test_"):
             continue
         text = py_file.read_text(encoding="utf-8")

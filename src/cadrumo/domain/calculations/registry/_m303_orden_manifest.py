@@ -7,7 +7,7 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ....core import Modelo
+from ....core import Modelo, scan_directory
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._ids import LegalRefId, SourceRefId
 from ._loader_cache import toml_file_fingerprint
@@ -167,7 +167,7 @@ def _check_manifest_with_censuses(
 ) -> tuple[M303AnnualOrdenGeneratedManifest, dict[SourceRefId, M303AnnualOrdenSourceCensus]]:
     """Run the staleness refusal and hand back the censuses it already extracted."""
     try:
-        directory_entries = tuple(manifest_path.parent.iterdir())
+        directory_entries = scan_directory(manifest_path.parent, require_root=True)
     except OSError as exc:
         raise RegistryLoadError(f"annual Orden generated directory cannot be read: {manifest_path.parent}") from exc
     unexpected_entries = tuple(entry for entry in directory_entries if entry.name != manifest_path.name)
@@ -330,9 +330,7 @@ def _merge_annual_orden_legal_refs(
 def collect_m303_annual_orden_fingerprints(root: Path) -> tuple[tuple[str, int, int, str], ...]:
     """Fingerprint the generated manifest and no hand-authored annual rows."""
     directory = root.resolve() / "m303_orden_anual"
-    if not directory.is_dir():
-        return ()
-    return tuple(toml_file_fingerprint(path.resolve()) for path in sorted(directory.glob("*.toml")))
+    return tuple(toml_file_fingerprint(path.resolve()) for path in scan_directory(directory, pattern="*.toml"))
 
 
 def _single_annual_orden_source_for_year(

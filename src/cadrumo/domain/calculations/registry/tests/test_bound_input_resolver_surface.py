@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from ... import registry
 from .. import __all__ as registry_public_names
 from .. import resolve_available_bound_inputs_by_casilla_id
@@ -19,7 +20,7 @@ _RETIRED_RESOLVER = "resolve_bound_inputs_by_casilla_id"
 
 def _production_python_paths() -> tuple[Path, ...]:
     package_root = Path(registry.__file__).resolve().parents[3]
-    return tuple(path for path in package_root.rglob("*.py") if "tests" not in path.parts)
+    return scan_directory(package_root, pattern="*.py", recursive=True, prune_directories=("tests",))
 
 
 def _resolver_definitions(paths: tuple[Path, ...]) -> tuple[tuple[str, str], ...]:

@@ -36,7 +36,6 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from decimal import Decimal
-from io import BytesIO
 from pathlib import Path
 
 import pytest
@@ -45,6 +44,7 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....domain.iva import InvoiceKind
+from ....tests.pdf_fixtures import text_pdf_bytes
 from .._evidence import PurchaseInvoiceEvidenceInputError
 from .._evidence_draft import confirm_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
@@ -132,20 +132,6 @@ def _loopback_reader() -> Iterator[None]:
         yield
 
 
-def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfgen import canvas
-
-    buf = BytesIO()
-    page = canvas.Canvas(buf, pagesize=A4)
-    y = 760
-    for line in lines:
-        page.drawString(72, y, line)
-        y -= 20
-    page.save()
-    return buf.getvalue()
-
-
 def _stored_evidence(
     lines: tuple[str, ...],
     *,
@@ -155,7 +141,7 @@ def _stored_evidence(
     name: str,
 ) -> str:
     pdf_path = tmp_path / name
-    pdf_path.write_bytes(_text_pdf_bytes(lines))
+    pdf_path.write_bytes(text_pdf_bytes(lines))
     record = _make_svc(settings, objects).add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
     return record.evidence_id
 

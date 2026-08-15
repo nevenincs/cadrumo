@@ -22,6 +22,7 @@ import time
 from functools import lru_cache
 from pathlib import Path
 
+from ....core import DirectoryEntryKind, scan_directory
 from ._loader_cache import BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS
 
 SourceEvidenceFingerprint = tuple[tuple[str, int, int], ...]
@@ -84,7 +85,7 @@ def collect_source_evidence_fingerprints(
 def _walk_source_evidence(roots: tuple[Path, ...]) -> SourceEvidenceFingerprint:
     fingerprints: list[tuple[str, int, int]] = []
     for root in roots:
-        for path in sorted(item for item in root.rglob("*") if item.is_file()):
+        for path in scan_directory(root, recursive=True, select=DirectoryEntryKind.FILES):
             stat = path.stat()
             fingerprints.append((str(path), stat.st_size, stat.st_mtime_ns))
     return tuple(fingerprints)

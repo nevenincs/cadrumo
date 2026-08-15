@@ -17,6 +17,8 @@ from pathlib import Path
 
 import pytest
 
+from ... import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
@@ -62,7 +64,7 @@ def test_cli_sites_output_language_typed_or_exempt() -> None:
     cli_dir = Path(__file__).resolve().parents[3] / "entrypoints" / "cli"
     assert cli_dir.exists(), f"{cli_dir} must exist"
 
-    for py_file in cli_dir.glob("*.py"):
+    for py_file in scan_directory(cli_dir, pattern="*.py"):
         if py_file.name.startswith("test_"):
             continue
         src = _read_file(py_file)
@@ -85,8 +87,8 @@ def test_no_new_bare_str_language_fields() -> None:
     src_root = Path(__file__).resolve().parents[3]
     violations = []
 
-    for py_file in src_root.glob("**/*.py"):
-        if "test_" in py_file.name or "__pycache__" in str(py_file):
+    for py_file in scan_directory(src_root, pattern="*.py", recursive=True, prune_directories={"__pycache__"}):
+        if "test_" in py_file.name:
             continue
         try:
             src = _read_file(py_file)

@@ -126,6 +126,7 @@ def test_update_auth_authenticated_false_clears_authenticated_at() -> None:
     initial = WorkflowState()
     seeded = update_auth(initial, authenticated=True)
     assert seeded.auth.authenticated_at is not None
+    assert seeded.auth.authenticated_at.tzinfo is not None, "stamp must be tz-aware"
 
     updated = update_auth(seeded, authenticated=False)
 

@@ -7,6 +7,7 @@ from pathlib import Path
 from ....application import wizard as _wizard  # noqa: F401 -- side effect: registers PROFILE_KEYS
 from ....core.config import override_settings
 from ....tests.cli_envelope import unwrap_cli_result as _json  # noqa: F401 -- imported by surface suites
+from ....tests.user_profile import register_cli_profile
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 
@@ -32,37 +33,24 @@ def _invoke(args: list[str]):
 
 
 def create_cli_surface_profile(label: str = "operator") -> None:
-    result = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            label,
-            "--quiet",
-            "--accept-defaults",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Operator",
-            "--surnames",
-            "Example",
-            "--activity",
-            "Test",
-            "--tax-residence-jurisdiction-scope",
-            "common_regime",
-            "--iva-regime",
-            "GENERAL",
-            "--iva-m303-regime-composition",
-            "general",
-            "--no-iva-redeme-enrolled",
-            "--no-iva-cash-accounting-regime-enrolled",
-            "--no-iva-voluntary-sii-enrolled",
-            "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
-        ],
+    """Register the surface profile through the shared CLI registration door."""
+    register_cli_profile(
+        label=label,
+        facts={
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Operator",
+            "identity.surnames": "Example",
+            "activities.description": "Test",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.regime": "GENERAL",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+        },
     )
-    assert result.exit_code == 0, result.output
 
 
 def _active_bucket_id() -> str:

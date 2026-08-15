@@ -27,11 +27,10 @@ See Also:
 from __future__ import annotations
 
 import json
-import threading
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from queue import Empty, Queue
 from typing import Any, ClassVar, cast, override
@@ -41,6 +40,7 @@ import pytest
 from ...adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
 from ...core.config import Settings
 from ...core.telemetry import TelemetryTier
+from ...tests.loopback_recording_server import run_loopback_server, stop_loopback_server
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..diagnostics_telemetry import (
     build_telemetry_flush_preview,
@@ -79,21 +79,6 @@ class _RecordingTelemetryEndpoint(BaseHTTPRequestHandler):
     @override
     def log_message(self, format: str, *args: object) -> None:
         """Silence stdlib request logging during tests."""
-
-
-def _run_loopback_server() -> tuple[ThreadingHTTPServer, threading.Thread, Queue[dict[str, object]]]:
-    events: Queue[dict[str, object]] = Queue()
-    _RecordingTelemetryEndpoint.events = events
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _RecordingTelemetryEndpoint)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    return server, thread, events
-
-
-def _stop_loopback_server(server: ThreadingHTTPServer, thread: threading.Thread) -> None:
-    server.shutdown()
-    server.server_close()
-    thread.join(timeout=3)
 
 
 def test_status_report_defaults_to_the_fully_inert_posture(profile: TestRuntimeProfile) -> None:
@@ -173,13 +158,13 @@ def test_flush_preview_aggregates_real_recorded_llm_runs_without_any_network_cal
 
 def test_flush_telemetry_never_sends_when_consent_gate_refuses(profile: TestRuntimeProfile) -> None:
     """A fully-configured endpoint with the default-off posture never receives a POST."""
-    server, thread, events = _run_loopback_server()
+    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         settings = Settings(cadrumo_telemetry_endpoint=endpoint)  # opt_in stays False
         preview = flush_telemetry(settings=settings, acknowledged=True)
     finally:
-        _stop_loopback_server(server, thread)
+        stop_loopback_server(server, thread)
 
     assert preview.gate_permits is False
     assert preview.would_send is False
@@ -213,7 +198,7 @@ def test_flush_telemetry_sends_the_exact_previewed_payload_when_fully_permitted(
         ),
     )
 
-    server, thread, events = _run_loopback_server()
+    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         settings = Settings(
@@ -229,7 +214,7 @@ def test_flush_telemetry_sends_the_exact_previewed_payload_when_fully_permitted(
         sent_preview = flush_telemetry(settings=settings, acknowledged=True)
         observed = events.get_nowait()
     finally:
-        _stop_loopback_server(server, thread)
+        stop_loopback_server(server, thread)
 
     assert sent_preview.would_send is True
     assert dry_run_preview.would_send is True
@@ -246,7 +231,7 @@ def test_flush_telemetry_sends_the_exact_previewed_payload_when_fully_permitted(
 
 def test_flush_telemetry_requires_per_invocation_acknowledgement(profile: TestRuntimeProfile) -> None:
     """Opt-in, tier, and endpoint alone are not enough without ``acknowledged=True``."""
-    server, thread, events = _run_loopback_server()
+    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         settings = Settings(
@@ -256,7 +241,7 @@ def test_flush_telemetry_requires_per_invocation_acknowledgement(profile: TestRu
         )
         preview = flush_telemetry(settings=settings, acknowledged=False)
     finally:
-        _stop_loopback_server(server, thread)
+        stop_loopback_server(server, thread)
 
     assert preview.gate_permits is False
     with pytest.raises(Empty):

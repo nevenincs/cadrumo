@@ -8,27 +8,16 @@ no file written. No mocks.
 from __future__ import annotations
 
 import hashlib
-from io import BytesIO
 
 import pytest
 
+from ....tests.pdf_fixtures import text_pdf_bytes
 from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import extract_evidence_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _INVOICE_LINE = "Factura Acme SL base imponible 100,00 IVA 21,00 total 121,00"
-
-
-def _text_pdf_bytes(line: str) -> bytes:
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfgen import canvas
-
-    buf = BytesIO()
-    page = canvas.Canvas(buf, pagesize=A4)
-    page.drawString(72, 720, line)
-    page.save()
-    return buf.getvalue()
 
 
 def _evidence_input(data: bytes, mime_type: str) -> EvidenceInput:
@@ -41,7 +30,7 @@ def _evidence_input(data: bytes, mime_type: str) -> EvidenceInput:
 
 
 def test_extracts_text_layer_from_pdf_bytes_on_host() -> None:
-    pdf = _text_pdf_bytes(_INVOICE_LINE)
+    pdf = text_pdf_bytes((_INVOICE_LINE,))
     ev = _evidence_input(pdf, "application/pdf")
     text = extract_evidence_text(ev)
     assert "Factura Acme SL" in text

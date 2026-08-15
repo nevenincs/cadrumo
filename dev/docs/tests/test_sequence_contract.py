@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
+
 from ..sequences import (
     default_docs_root,
     discover_sequences,
@@ -225,7 +227,7 @@ def test_user_markdown_contains_no_sequence_development_metadata() -> None:
     docs_root = default_docs_root()
     scanned: list[Path] = [
         path
-        for path in sorted(docs_root.rglob("*.md"))
+        for path in scan_directory(docs_root, pattern="*.md", recursive=True)
         if not (path.relative_to(docs_root).parts and path.relative_to(docs_root).parts[0] in {"_build", "_sequences"})
     ]
     assert len(scanned) > 20, f"expected the reader-facing docs corpus, scanned only {len(scanned)} page(s)"
@@ -246,7 +248,9 @@ def test_every_sequence_has_exactly_one_keyed_private_contract() -> None:
     assert not problems, "sequence discovery reported problems:\n  " + "\n  ".join(problems)
     expected = {Path(item.page) / f"{item.sequence_id}.seq" for item in discovered}
     contracts_root = docs_root / "_sequences" / "contracts"
-    actual = {path.relative_to(contracts_root) for path in contracts_root.rglob("*.seq")}
+    actual = {
+        path.relative_to(contracts_root) for path in scan_directory(contracts_root, pattern="*.seq", recursive=True)
+    }
     assert actual == expected, (
         f"private sequence contracts differ from public directives; "
         f"missing={sorted(str(path) for path in expected - actual)}, "

@@ -1,4 +1,5 @@
 [revisions."2019-y-siguientes"]
+authority_grade = "filing"
 valid_from = 2019-01-01
 period_selector = { year_from = 2019, periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-eha-3435-2007:anexo-iv"]

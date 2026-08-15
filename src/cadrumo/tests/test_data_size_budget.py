@@ -21,6 +21,7 @@ from pathlib import Path
 
 import pytest
 
+from ..core import DirectoryEntryKind, scan_directory
 from ._inventory import SRC_CADRUMO
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -58,9 +59,7 @@ def _is_corpus_source_binary(relative_posix: str, suffix: str) -> bool:
 def _iter_budget_data_files() -> Iterator[Path]:
     """Yield shipped-data files, excluding every test-only subtree."""
 
-    for path in _DATA_ROOT.rglob("*"):
-        if not path.is_file():
-            continue
+    for path in scan_directory(_DATA_ROOT, recursive=True, select=DirectoryEntryKind.FILES):
         if "tests" in path.relative_to(_DATA_ROOT).parts:
             continue
         yield path

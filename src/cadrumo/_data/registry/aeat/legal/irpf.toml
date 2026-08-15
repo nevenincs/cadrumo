@@ -4970,6 +4970,162 @@ applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/renta-ayuda-tecnica/renta-web-open.html"
 review_status = "reviewed"
 
+# Pre-2020 Modelo 100 fixed-width record designs -- legacy artefacts from
+# before AEAT's own 2020 cutover to the XML/dictionary+xsd mechanism (see the
+# xml_dictionary entries below and the registry-schema-conformance-sweep
+# audit's M100 correction). Acquired and manifested since 2026-05-03 but
+# previously unregistered -- registration, not acquisition. None fall inside
+# M100's declared 2020-2025 span; they record historical inventory the
+# registry does not currently claim to compute, per the record/coverage
+# distinction. Re-fetched all eleven from their live AEAT URLs on 2026-08-15
+# and confirmed byte-identical (sha256 match) before registering. Five
+# companion `.xlsx` files sit alongside the 2015-2019 `.xls` originals in the
+# corpus, unmanifested and byte-different (format conversions, not separate
+# AEAT publications) -- not registered separately, matching the M111/M115
+# same-design-different-format convention established earlier this sweep.
+[sources."aeat-dr-100-2009"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/14-100-ejercicio-2009-205-kb-pdf.pdf"
+sha256 = "9227f5bfb0f0cd1fb239ae5f3544c13c3c61d2236d4b869e0bc0fab326c80450"
+bytes = 210410
+retrieved_at = 2026-05-03
+applies_from = 2009-01-01
+applies_to = 2009-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr100_2009.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2010"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/15-100-ejercicio-2010-357-kb-pdf.pdf"
+sha256 = "08ffea11058f3c0e468bbcb4811ce52baad71ed8c010412149cdd5d9343859b6"
+bytes = 365856
+retrieved_at = 2026-05-03
+applies_from = 2010-01-01
+applies_to = 2010-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr100_2010.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2011"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/16-100-ejercicio-2011-359-kb-pdf.pdf"
+sha256 = "08edad52fafe9c4cbee6e8dca52ea0e9050f5ab71841821fe5a745f24fb662b9"
+bytes = 367856
+retrieved_at = 2026-05-03
+applies_from = 2011-01-01
+applies_to = 2011-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR100_2011.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2012"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/17-100-ejercicio-2012-379-kb-pdf.pdf"
+sha256 = "d6783fb3076fa925597d7d0e7ff72513162aa74ae1b18cd8d5c3c9895b7c4d7b"
+bytes = 388293
+retrieved_at = 2026-05-03
+applies_from = 2012-01-01
+applies_to = 2012-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR100_2012.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2013"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/18-100-ejercicio-2013-376-kb-pdf.pdf"
+sha256 = "2f189ced753945bf8caf22e543bdd03f99d340c1be73fe0f3cff2edf13506f51"
+bytes = 385983
+retrieved_at = 2026-05-03
+applies_from = 2013-01-01
+applies_to = 2013-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR100_2013.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2014"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/19-100-ejercicio-2014-417-kb-pdf.pdf"
+sha256 = "5872a2aa1152f9015bbbb444aa2c18614e58abd252504a2d2edc7ff7b0ae529c"
+bytes = 427155
+retrieved_at = 2026-05-03
+applies_from = 2014-01-01
+applies_to = 2014-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR100_2014.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2015"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/20-100-ejercicio-2015-1-75-mb-xls.xls"
+sha256 = "26fd66faaa3babd44bdf30b8bc8fb61b56ba0978d3d7b0168e0159514dcda9ea"
+bytes = 1836544
+retrieved_at = 2026-05-03
+applies_from = 2015-01-01
+applies_to = 2015-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR100_2015.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2016"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/21-100-ejercicio-2016-1-90-mb-xls.xls"
+sha256 = "8a835f9e52bb549947724cb2ae666e9ebab625b174c63b3344ead0a74dddc44c"
+bytes = 1984512
+retrieved_at = 2026-05-03
+applies_from = 2016-01-01
+applies_to = 2016-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR100_2016.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2017"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/22-100-ejercicio-2017-actualizacion-04-04-2018-6-98-mb-xls.xls"
+sha256 = "dac048cf31245b9434d8dd7394dfac87666de19acad0459cd7cc8d848e783884"
+bytes = 1933824
+retrieved_at = 2026-05-03
+applies_from = 2017-01-01
+applies_to = 2017-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR100_2017.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2018"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/23-100-ejercicio-2018-actualizacion-17-09-2019-1-80-mb-xls.xls"
+sha256 = "141a164008b4950be8ceb4ab35e6a3dbf8b3f0ceb1e9687595ade98dad35ef16"
+bytes = 1895424
+retrieved_at = 2026-05-03
+applies_from = 2018-01-01
+applies_to = 2018-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR100_2018.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-100-2019"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/24-100-ejercicio-2019-actualizacion-01-07-2020-1-77-mb-xls.xls"
+sha256 = "94c24b7b7716eb77ddd2888128f727aee099516de98c941ff568ef937dc952b5"
+bytes = 1859072
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+applies_to = 2019-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_19/DR100_2019.xls"
+review_status = "reviewed"
+
 [sources."aeat-dr-100-2020-dictionary"]
 evidence_tier = "layout_authority"
 authority = "aeat"

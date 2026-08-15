@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
 from ...modelo import ModeloExportCommand
 from ...modelo import _export as modelo_export
 from ...modelo import _m303_filing_evidence as m303_filing_evidence
@@ -46,7 +47,9 @@ def test_m303_export_applicability_is_internal_to_revision_backed_filing_facts()
 
 
 def _production_python_sources(source_root: Path) -> tuple[Path, ...]:
-    return tuple(path for path in source_root.rglob("*.py") if "tests" not in path.parts)
+    return tuple(
+        path for path in scan_directory(source_root, pattern="*.py", recursive=True) if "tests" not in path.parts
+    )
 
 
 def _s56_owner_definitions(path: Path) -> frozenset[str]:

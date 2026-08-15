@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Final, cast
 from urllib.parse import urlsplit
 
+from cadrumo.core import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import UTF_8
 
@@ -506,7 +507,7 @@ def load_legal_provisions(repo_root: Path) -> tuple[LegalProvisionRecord, ...]:
 
     records: list[LegalProvisionRecord] = []
     seen_ids: dict[str, Path] = {}
-    for fragment in sorted(catalogue.glob("*.toml")):
+    for fragment in scan_directory(catalogue, pattern="*.toml"):
         try:
             data = cast(dict[str, object], tomllib.loads(fragment.read_text(encoding=_UTF_8)))
         except (OSError, tomllib.TOMLDecodeError) as exc:
@@ -987,7 +988,7 @@ def _remove_generated_rst(out_dir: Path, keep: frozenset[Path]) -> None:
     every build, so Sphinx re-read and re-wrote the whole legal tree even when
     the catalogue had not moved.
     """
-    for path in out_dir.iterdir():
+    for path in scan_directory(out_dir, require_root=True):
         if path.suffix != ".rst":
             continue
         if path.is_symlink() or not path.is_file() or path.parent != out_dir:

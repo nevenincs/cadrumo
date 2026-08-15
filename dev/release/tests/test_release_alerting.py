@@ -18,6 +18,7 @@ from typing import Any, Final
 import pytest
 import yaml
 
+from cadrumo.core import iter_directory, scan_directory
 from dev._paths import REPO_ROOT
 
 from .. import alerting
@@ -233,7 +234,7 @@ def _needs_own_alert(workflow_dir: Path, *, module_root: Path | None = None) -> 
         name for name in ("release-orchestrator.yml", "release-soak-promoter.yml") if (workflow_dir / name).is_file()
     ]
     needs: set[str] = set(roots)
-    candidates = [candidate.name for candidate in workflow_dir.glob("*.yml")]
+    candidates = [candidate.name for candidate in scan_directory(workflow_dir, pattern="*.yml")]
 
     for name in roots:
         document = yaml.safe_load((workflow_dir / name).read_text(encoding="utf-8"))
@@ -470,7 +471,7 @@ def test_a_waited_on_acquisition_lane_is_deliberately_excluded() -> None:
     needs = _needs_own_alert(_WORKFLOW_DIR, module_root=_REPO_ROOT)
 
     for waited in ("packaging-scoop.yml", "packaging-homebrew.yml", "packaging-claude.yml", "packaging-smoke.yml"):
-        present = {path.name for path in _WORKFLOW_DIR.glob("*.yml")}
+        present = {path.name for path in iter_directory(_WORKFLOW_DIR, pattern="*.yml")}
         assert waited in present, f"{waited} should exist to be excluded"
         assert waited not in needs, f"{waited} is waited on by its dispatcher and must not alert separately"
 

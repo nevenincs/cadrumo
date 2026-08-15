@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from ....tests.storage_scope import storage_overrides
-from ... import StorageCategory
+from ... import StorageCategory, scan_directory
 from ...config import Settings, override_settings
 from .. import (
     AeatCorpusDriftError,
@@ -347,7 +347,7 @@ class TestReplayActiveEnvVarCanonicity:
         literal = "CADRUMO_REPLAY" + "_ACTIVE"
 
         hits: list[tuple[Path, int, str]] = []
-        for py_file in sorted(pkg_root.glob("*.py")):
+        for py_file in scan_directory(pkg_root, pattern="*.py"):
             if py_file.name.startswith("test_"):
                 continue
             for lineno, line in enumerate(py_file.read_text(encoding="utf-8").splitlines(), start=1):

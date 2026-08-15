@@ -31,7 +31,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ValidationError
 
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core import freeze_toml, read_toml, to_str_keyed_dict
+from cadrumo.core import freeze_toml, read_toml, scan_directory, to_str_keyed_dict
 from cadrumo.core.resources import bundled_path
 
 from ._errors import TerminologyLoadError, TerminologyValidationError
@@ -136,7 +136,7 @@ def _compile_records(concepts_dir: str) -> tuple[ConceptRecord, ...]:
     source = Path(concepts_dir)
     if not source.is_dir():
         raise TerminologyLoadError(f"{source}: terminology concepts directory not found")
-    fragments = sorted(source.glob("*.toml"))
+    fragments = scan_directory(source, pattern="*.toml")
     if not fragments:
         raise TerminologyLoadError(f"{source}: no concept fragments found")
     records: list[ConceptRecord] = []
@@ -233,7 +233,7 @@ def load_bundled_terminology_handbook() -> TerminologyHandbook:
 
 def _concepts_tree_fingerprint(concepts_dir: Path) -> str:
     parts: list[str] = []
-    for fragment in sorted(concepts_dir.glob("*.toml")):
+    for fragment in scan_directory(concepts_dir, pattern="*.toml"):
         stat = fragment.stat()
         parts.append(f"{fragment.name}:{stat.st_size}:{stat.st_mtime_ns}")
     return "|".join(parts)

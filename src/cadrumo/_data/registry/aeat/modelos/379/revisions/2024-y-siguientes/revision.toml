@@ -1,4 +1,5 @@
 [revisions."2024-y-siguientes"]
+authority_grade = "filing"
 valid_from = 2024-01-01
 period_selector = { year_from = 2024, periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-hfp-1415-2023:art-1"]
@@ -8,6 +9,17 @@ legal_refs = [
     "orden-hfp-1415-2023:art-3",
     "orden-hfp-1415-2023:art-4",
     "orden-hfp-1415-2023:art-5",
+]
+source_refs = [
+    "aeat-modelo-379-procedure",
+    "boe-modelo-379-form",
+]
+
+
+[revisions."2024-y-siguientes".family_dispositions.formulas]
+reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
+legal_refs = [
+    "orden-hfp-1415-2023:art-1",
 ]
 source_refs = [
     "aeat-modelo-379-procedure",

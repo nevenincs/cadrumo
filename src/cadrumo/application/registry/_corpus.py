@@ -31,6 +31,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import scan_directory
 from ...core.config import Settings, coerce_output_language_setting, load_settings
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ...core.logging import get_logger
@@ -1071,13 +1072,13 @@ def _discover_manual_parts(
     if not root.exists():
         return ()
     discovered: list[tuple[RegistryManualId, int, ManualPart, Path]] = []
-    for manual_dir in sorted(path for path in root.iterdir() if path.is_dir()):
+    for manual_dir in (path for path in scan_directory(root) if path.is_dir()):
         try:
             manual_id = registry_manual_id(manual_dir.name)
         except RegistryApplicationInputError:
             _LOGGER.debug("manual discovery: skipping unknown manual id %s", manual_dir.name)
             continue
-        for year_dir in sorted(path for path in manual_dir.iterdir() if path.is_dir() and path.name.isdigit()):
+        for year_dir in (path for path in scan_directory(manual_dir) if path.is_dir() and path.name.isdigit()):
             year = int(year_dir.name)
             for part_dir in _manual_part_dirs(year_dir):
                 part = _manual_part_from_dir(year_dir=year_dir, part_dir=part_dir)
@@ -1091,7 +1092,7 @@ def _discover_manual_parts(
 def _manual_part_dirs(year_dir: Path) -> tuple[Path, ...]:
     if (year_dir / "manifest.json").exists() or (year_dir / "structure" / "manual.json").exists():
         return (year_dir,)
-    return tuple(path for path in sorted(year_dir.iterdir()) if path.is_dir())
+    return tuple(path for path in scan_directory(year_dir) if path.is_dir())
 
 
 def _manual_part_from_dir(*, year_dir: Path, part_dir: Path) -> ManualPart | None:

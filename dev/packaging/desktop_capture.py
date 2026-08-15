@@ -45,6 +45,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Final
 
+from cadrumo.core import scan_directory
 from dev._paths import UTF_8
 
 _UTF_8: Final[str] = UTF_8
@@ -517,7 +518,7 @@ def scan_for_secret_leak(logs_dir: Path, secrets: Iterable[str]) -> None:
     needles = tuple(secret for secret in secrets if secret)
     if not needles:
         return
-    for path in sorted(logs_dir.rglob("*")):
+    for path in scan_directory(logs_dir, recursive=True):
         if not path.is_file():
             continue
         text = path.read_text(encoding=_UTF_8, errors="replace")

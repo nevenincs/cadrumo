@@ -30,6 +30,7 @@ from typing import NamedTuple
 
 import pytest
 
+from ..core import scan_directory
 from ._inventory import PROJECT_TEST_ROOTS, ast_for_path, project_test_modules, repo_relative
 from ._marker_metadata_patterns import CAMPAIGN_METADATA_CASES as _CAMPAIGN_METADATA_CASES
 from ._marker_metadata_patterns import CAMPAIGN_METADATA_PATTERNS as _CAMPAIGN_METADATA_PATTERNS
@@ -277,7 +278,7 @@ def _discover_test_modules() -> list[Path]:
     """
     collected: set[Path] = set()
     for root in _TEST_MODULE_ROOTS:
-        for path in root.glob("**/test_*.py"):
+        for path in scan_directory(root, pattern="test_*.py", recursive=True):
             if path.name == "__init__.py":
                 continue
             if _module_defines_test_functions(path):
@@ -708,9 +709,7 @@ def _is_fixture_reexport(node: ast.stmt) -> bool:
     A fixture imported solely for pytest to discover it is re-exported so the
     unused-import lint stays honest.
     """
-    return isinstance(node, ast.Assign) and all(
-        isinstance(t, ast.Name) and t.id == "__all__" for t in node.targets
-    )
+    return isinstance(node, ast.Assign) and all(isinstance(t, ast.Name) and t.id == "__all__" for t in node.targets)
 
 
 def _is_type_checking_import_guard(node: ast.stmt) -> bool:
@@ -722,7 +721,10 @@ def _is_type_checking_import_guard(node: ast.stmt) -> bool:
     if not isinstance(node, ast.If) or node.orelse:
         return False
     test = node.test
-    if not ((isinstance(test, ast.Name) and test.id == "TYPE_CHECKING") or (isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING")):
+    if not (
+        (isinstance(test, ast.Name) and test.id == "TYPE_CHECKING")
+        or (isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING")
+    ):
         return False
     return all(isinstance(stmt, ast.Import | ast.ImportFrom) for stmt in node.body)
 
@@ -857,7 +859,7 @@ def _production_live_test_opt_in_violations() -> list[str]:
     violations: list[str] = []
     scanned = 0
     for root in _LIVE_TEST_OPT_IN_SCAN_ROOTS:
-        for path in root.rglob("*.py"):
+        for path in scan_directory(root, pattern="*.py", recursive=True):
             relative = path.relative_to(_REPO_ROOT)
             if relative in _LIVE_TEST_OPT_IN_AUTHORITY_FILES or _is_test_infrastructure_path(path):
                 continue
@@ -891,7 +893,11 @@ def _discover_production_modules() -> list[Path]:
     frequently the authoring pipeline; the "Code Stands Alone" mandate is about
     what ships.
     """
-    return sorted(path for path in _SRC_CADRUMO.rglob("*.py") if not _is_test_infrastructure_path(path))
+    return sorted(
+        path
+        for path in scan_directory(_SRC_CADRUMO, pattern="*.py", recursive=True)
+        if not _is_test_infrastructure_path(path)
+    )
 
 
 def _production_campaign_metadata_violations() -> list[str]:
@@ -1279,19 +1285,25 @@ def test_live_test_opt_in_token_is_not_used_by_production_aeat_live_paths() -> N
 
 def test_test_modules_live_under_tests_directories_and_use_test_prefix() -> None:
     """Every test module must live below a ``tests`` directory and use ``test_``."""
-    scanned = [path for root in _TEST_TOPOLOGY_ROOTS for path in root.rglob("test_*.py")]
+    scanned = [
+        path for root in _TEST_TOPOLOGY_ROOTS for path in scan_directory(root, pattern="test_*.py", recursive=True)
+    ]
     assert scanned, "the topology walk found no test modules; misplacement cannot be detected in an empty scan"
     misplaced = [
         str(path.relative_to(_REPO_ROOT))
         for root in _TEST_TOPOLOGY_ROOTS
-        for path in root.rglob("test_*.py")
+        for path in scan_directory(root, pattern="test_*.py", recursive=True)
         if "tests" not in path.relative_to(_REPO_ROOT).parts
     ]
     underscore_prefixed = [
-        str(path.relative_to(_REPO_ROOT)) for root in _TEST_TOPOLOGY_ROOTS for path in root.rglob("_test_*.py")
+        str(path.relative_to(_REPO_ROOT))
+        for root in _TEST_TOPOLOGY_ROOTS
+        for path in scan_directory(root, pattern="_test_*.py", recursive=True)
     ]
     suffix_style = [
-        str(path.relative_to(_REPO_ROOT)) for root in _TEST_TOPOLOGY_ROOTS for path in root.rglob("*_test.py")
+        str(path.relative_to(_REPO_ROOT))
+        for root in _TEST_TOPOLOGY_ROOTS
+        for path in scan_directory(root, pattern="*_test.py", recursive=True)
     ]
     assert not misplaced, "test-prefixed files outside tests directories:\n" + "\n".join(misplaced)
     assert not underscore_prefixed, "underscore-prefixed test files are forbidden:\n" + "\n".join(underscore_prefixed)

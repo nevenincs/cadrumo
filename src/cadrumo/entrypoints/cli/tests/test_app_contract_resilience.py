@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
 from ....core.json_contract import SCHEMA_REGISTRY, NoticeSeverity
 from ...schema_surface import RESULT_SCHEMA_MODULES
 from .. import _app_contract
@@ -17,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 def _register_schema_owner_modules() -> tuple[str, ...]:
     cadrumo_root = Path(__file__).resolve().parents[3]
     owners: set[str] = set()
-    for path in cadrumo_root.rglob("*.py"):
+    for path in scan_directory(cadrumo_root, pattern="*.py", recursive=True):
         if "tests" in path.parts:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))

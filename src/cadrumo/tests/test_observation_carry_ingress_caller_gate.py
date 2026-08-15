@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from ..core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PRODUCTION_ROOT = Path(__file__).resolve().parents[1]
@@ -51,7 +53,7 @@ def _enclosing_function(node: ast.AST, parents: dict[ast.AST, ast.AST]) -> str:
 
 def _production_callers() -> dict[_Caller, ast.Call]:
     callers: dict[_Caller, ast.Call] = {}
-    for path in _PRODUCTION_ROOT.rglob("*.py"):
+    for path in scan_directory(_PRODUCTION_ROOT, pattern="*.py", recursive=True):
         if "tests" in path.parts:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))

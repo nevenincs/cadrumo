@@ -24,6 +24,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
 from ....tests import REPO_ROOT
 from ....tests.cli_runner import invoke_cached_cli
 
@@ -46,7 +47,7 @@ _FENCE_RE = re.compile(r"```[^\n]*\n(.*?)```", re.DOTALL)
 def _edu_docs() -> list[Path]:
     docs: list[Path] = []
     for d in _EDU_DIRS:
-        docs.extend(sorted((REPO_ROOT / d).rglob("*.md")))
+        docs.extend(scan_directory(REPO_ROOT / d, pattern="*.md", recursive=True))
     return docs
 
 

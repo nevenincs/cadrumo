@@ -54,6 +54,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .....core.resources import bundled_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -108,7 +109,7 @@ def _stamping(root: Path) -> tuple[dict[str, dict[str, dict[str, bool]]], int, i
             continue
         directories += 1
         modelo_id = directory.parents[2].name
-        for path in sorted(directory.rglob("*.toml")):
+        for path in scan_directory(directory, pattern="*.toml", recursive=True):
             fragments += 1
             document = tomllib.loads(path.read_text(encoding="utf-8"))
             revisions = document.get("revisions")

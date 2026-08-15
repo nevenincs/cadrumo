@@ -9,30 +9,20 @@ so needs no kind gate.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
-from pathlib import Path
+from collections.abc import Sequence
 
 import pytest
 from click.testing import Result
 
-from ....core.config import override_settings
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(cadrumo_invoices_dir=tmp_path / "invoices"),
-        open_test_profile_session("00000000-0000-4000-8000-000000000000"),
-    ):
-        register_minimal_profile(profile_id="00000000-0000-4000-8000-000000000000")
-        yield
+_isolated_backend = active_profile_isolated_backend_fixture(
+    bucket_id="00000000-0000-4000-8000-000000000000",
+    settings_overrides=lambda tmp_path: {"cadrumo_invoices_dir": tmp_path / "invoices"},
+)
 
 
 def _invoke_invoice(args: Sequence[str]) -> Result:

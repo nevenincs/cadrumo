@@ -26,10 +26,8 @@ from __future__ import annotations
 
 import json
 import textwrap
-from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -46,9 +44,7 @@ from ....core.resources import resources
 from ....domain.buckets import BucketEventType
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
 from ....tests import FIXTURES_DIR
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ...workflow import workflow_state_repository
 from .._reconcile import (
     ModeloReconciliationCommand,
@@ -75,21 +71,14 @@ _WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 13, 30, 0, tzinfo=UTC)
 _RECONCILED_AT = datetime(2026, 6, 1, 9, 15, 30, tzinfo=UTC)
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_PROFILE_ID),
-    ):
-        # Seeded through a detached WorkflowState, never a repository read:
-        # the capsule publishes by an atomic no-replace rename onto
-        # ``buckets/<profile-id>``, which a workflow-state repository
-        # construction would otherwise materialise first and collide with.
-        register_minimal_profile(
-            profile_id=_PROFILE_ID,
-            overrides={"identity.tax_id": "00000000T"},
-        )
-        yield
+# Seeded through a detached WorkflowState, never a repository read: the
+# capsule publishes by an atomic no-replace rename onto ``buckets/<profile-id>``,
+# which a workflow-state repository construction would otherwise materialise
+# first and collide with.
+_isolated_backend = active_profile_isolated_backend_fixture(
+    bucket_id=_PROFILE_ID,
+    profile_overrides={"identity.tax_id": "00000000T"},
+)
 
 
 def _active_bucket_id() -> str:

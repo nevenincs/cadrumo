@@ -30,6 +30,7 @@ from ...core import (
 from ...core.config import Settings
 from ...core.errors import BaseSeverity, SiteHealthError
 from ...core.logging import get_logger
+from ...core.parsing import enum_value as _enum_value
 from ...core.time import now as _utcnow
 from ...core.time import today_madrid
 from ...domain.deadlines import (
@@ -53,9 +54,6 @@ from ._engine_helpers import (
 )
 from ._engine_helpers import (
     classify_cert_expiry as _classify_cert_expiry,
-)
-from ._engine_helpers import (
-    enum_value as _enum_value,
 )
 from ._engine_helpers import (
     registry_filing_year as _registry_filing_year,

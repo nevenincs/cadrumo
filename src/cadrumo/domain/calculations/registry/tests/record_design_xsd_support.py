@@ -55,6 +55,7 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, cast
 
+from .....core import scan_directory
 from .....core.resources import bundled_path
 
 if TYPE_CHECKING:
@@ -88,7 +89,7 @@ class SchemaCompilationError(RuntimeError):
 
 def bundled_modelo_100_xsds() -> tuple[Path, ...]:
     """Return every bundled Modelo 100 record-design XSD, oldest filename first."""
-    return tuple(sorted(MODELO_100_XSD_ROOT.glob("*esquema-xsd*.xsd")))
+    return scan_directory(MODELO_100_XSD_ROOT, pattern="*esquema-xsd*.xsd")
 
 
 def _repair_pattern_value(value: str) -> str:

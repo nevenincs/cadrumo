@@ -99,7 +99,7 @@ from typing import Final
 import pytest
 from dev.identity.identifier_noun_census import annotation_text, is_bare_str
 
-from .. import identity
+from .. import identity, scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -616,7 +616,7 @@ def _model_class_names(trees: dict[str, ast.Module]) -> frozenset[str]:
 def _production_sources() -> tuple[tuple[str, str], ...]:
     """Read current non-test, non-generated production Python sources once."""
     entries: list[tuple[str, str]] = []
-    for path in sorted(_SOURCE_ROOT.rglob("*.py")):
+    for path in scan_directory(_SOURCE_ROOT, pattern="*.py", recursive=True):
         relative = path.relative_to(_REPOSITORY_ROOT).as_posix()
         if "tests" in path.relative_to(_SOURCE_ROOT).parts or "generated" in path.relative_to(_SOURCE_ROOT).parts:
             continue

@@ -41,7 +41,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import ExternalOracleCorpus
+from .....core import ExternalOracleCorpus, scan_directory
 from .....core.resources import bundled_path
 from .._external_grounding import (
     audit_bundled_external_grounding,
@@ -120,7 +120,7 @@ def test_every_bundled_oracle_payload_is_accounted_for() -> None:
     on_disk = {
         payload_path.name
         for parts in _CORPUS_DIRECTORIES.values()
-        for payload_path in Path(bundled_path(*parts)).glob("modelo-*.json")
+        for payload_path in scan_directory(Path(bundled_path(*parts)), pattern="modelo-*.json")
     }
     assert on_disk, "no bundled oracle payloads were discovered on disk"
 

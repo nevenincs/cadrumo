@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, scan_directory, validated_casilla_id
 from .....core.aggregation import BindingTypedEnumKind
 from .....core.resources import bundled_path, resources
 from ..._export_field_kind import CasillaFieldKind
@@ -194,11 +194,9 @@ def _renta_replay_captured_targets(replay_dir: Path) -> set[CasillaId]:
     capture set stays aligned with the registry's canonical ids.
     """
     captured: set[CasillaId] = set()
-    if not replay_dir.exists():
-        return captured
     import json as _json
 
-    for payload_path in replay_dir.glob("*.json"):
+    for payload_path in scan_directory(replay_dir, pattern="*.json"):
         try:
             document = _json.loads(payload_path.read_text(encoding="utf-8"))
         except (OSError, ValueError):

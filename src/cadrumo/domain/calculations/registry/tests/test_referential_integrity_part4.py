@@ -11,7 +11,6 @@ from ..._export_field_kind import CasillaFieldKind
 from .._schema import (
     FormulaDefinition,
     FormulaExpression,
-    ModeloDefinition,
     ModeloScheduleDefinition,
 )
 from .._schema_input_kind import InputKind
@@ -40,6 +39,7 @@ from ._referential_integrity_support import (
     minimal_modelo,
     minimal_revision,
     minimal_source_ref,
+    modelo_validation_failures,
     snapshot_for_revision,
 )
 
@@ -50,14 +50,6 @@ _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CA
 _MISSING_LEGAL_ID = "ley-35-2006:art-9999"
 _LAYOUT_SOURCE_ID = "aeat-layout-source-test"
 _PARITY_SOURCE_ID = "aeat-open-parity-source"
-
-
-def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
-    try:
-        RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
-    except RegistryValidationError as exc:
-        return str(exc).splitlines()
-    return []
 
 
 def _catalogues_with_layout_source() -> RegistryCatalogues:
@@ -288,7 +280,7 @@ def test_export_record_row_field_casilla_refs_must_resolve_in_registry_validatio
     )
     revision = minimal_revision(export_layouts=(layout,))
 
-    failures = _modelo_validation_failures(minimal_modelo(revision))
+    failures = modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
         "export record 'rec.test' row_field_casilla_ids.importe references unknown casilla 'nonexistent-casilla'"

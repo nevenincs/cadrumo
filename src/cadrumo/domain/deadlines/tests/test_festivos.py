@@ -26,6 +26,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
+from ....core import scan_directory
 from .. import (
     MODELOS_WITHOUT_SHIFT,
     CalendarCCAA,
@@ -360,7 +361,7 @@ def test_no_parallel_festivos_implementation_exists() -> None:
         "shift_deadline",
     )
 
-    for py_file in source_root.rglob("*.py"):
+    for py_file in scan_directory(source_root, pattern="*.py", recursive=True):
         if py_file == canonical_module:
             continue
         text = py_file.read_text(encoding="utf-8", errors="ignore")
@@ -389,7 +390,7 @@ def test_no_hardcoded_festivos_table_in_cli() -> None:
         "Día de la Constitución",
     )
 
-    for py_file in cli_root.rglob("*.py"):
+    for py_file in scan_directory(cli_root, pattern="*.py", recursive=True):
         if py_file.name.startswith("test_"):
             continue
         text = py_file.read_text(encoding="utf-8", errors="ignore")

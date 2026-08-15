@@ -120,6 +120,7 @@ from dev.quality.import_hygiene_scan import (
 )
 from pydantic import TypeAdapter
 
+from ..core import scan_directory
 from ._inventory import REPO_ROOT, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -240,7 +241,9 @@ def _baseline_sites(baseline: _BaselineDocument) -> tuple[_BaselineSite, ...]:
 
 def _current_production_family1_sites() -> tuple[_BaselineSite, ...]:
     """Re-run the real scanner against the live ``src/cadrumo`` tree."""
-    py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
+    py_files = sorted(
+        p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
+    )
     all_sites = [site for path in py_files for site in walk_module_imports(path)]
     violations = find_private_import_violations(all_sites)
     non_test = [v for v in violations if not v.is_test]
@@ -361,7 +364,9 @@ def _current_test_only_underscore_sites() -> tuple[_BaselineSite, ...]:
     Every entry here is individually reasoned in
     ``dev/quality/import_hygiene_test_debt.json``; this is not a bulk ceiling.
     """
-    py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
+    py_files = sorted(
+        p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
+    )
     all_sites = [site for path in py_files for site in walk_module_imports(path)]
     violations = find_private_import_violations(all_sites)
     test_only = [v for v in violations if v.is_test]
@@ -518,7 +523,9 @@ def test_family2_shim_modules_are_exactly_the_dynamic_baseline() -> None:
     baseline = _load_baseline()
     baseline_paths = frozenset(baseline["family2_shim_modules"]["paths"])
 
-    py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
+    py_files = sorted(
+        p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
+    )
     facades = discover_facades()
     shims = find_shim_modules(py_files, facades)
     current_paths = frozenset(shim.path for shim in shims if not shim.is_test)
@@ -557,7 +564,9 @@ def test_family2_test_tree_shims_are_reported_not_silent() -> None:
         stem = p.stem
         return stem == "conftest" or stem.startswith("test_")
 
-    py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
+    py_files = sorted(
+        p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
+    )
     facades = discover_facades()
     shims = find_shim_modules(py_files, facades)
 
@@ -579,7 +588,9 @@ def test_family2_test_tree_shims_are_reported_not_silent() -> None:
 
 def _current_production_delegate_wrappers() -> tuple[tuple[str, str], ...]:
     """Re-run the real scanner and return each production wrapper's ``(path, function)``."""
-    py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
+    py_files = sorted(
+        p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
+    )
     return tuple(
         (wrapper.path, wrapper.function) for wrapper in find_delegate_wrapper_shims(py_files) if not wrapper.is_test
     )
@@ -687,7 +698,9 @@ def test_family3_genuine_duplicate_symbols_are_exactly_the_pinned_set() -> None:
     tolerated_entries = baseline["family3_pinned_duplicate_symbols"]["tolerated_multi_sourced_symbols"]
     tolerated = {entry["symbol"]: entry["confidence"] for entry in tolerated_entries}
 
-    py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
+    py_files = sorted(
+        p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
+    )
     facades = discover_facades()
     all_sites = [site for path in py_files for site in walk_module_imports(path)]
     multi_sourced = find_multi_sourced_symbols(facades, all_sites)
@@ -758,7 +771,9 @@ def test_no_production_import_of_a_demoted_registry_loader_symbol() -> None:
     reason (the pattern already used for the seven siblings that stayed
     exported), never by adding an allowlist entry to this gate.
     """
-    py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
+    py_files = sorted(
+        p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
+    )
     assert py_files, f"no shipped modules found under {PKG_ROOT}; a hard-zero gate over an empty scan is not a zero"
     all_sites = [site for path in py_files for site in walk_module_imports(path)]
     violations = find_registry_loader_import_violations(all_sites)
@@ -881,7 +896,9 @@ def test_no_shipped_module_imports_the_unshipped_dev_tooling() -> None:
     moving what the shipped side needs under ``src/cadrumo``, never by
     recording a tolerated exception.
     """
-    py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
+    py_files = sorted(
+        p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
+    )
     assert py_files, f"no shipped modules found under {PKG_ROOT}; a hard-zero gate over an empty scan is not a zero"
     violations = find_dev_tooling_import_violations(py_files)
 
@@ -1011,8 +1028,10 @@ def _scan_planted_tui_boundary(tmp_path: Path, dotted_rel: str, body: str):
 
 def test_tui_boundary_is_clean_against_the_accepted_legacy_census() -> None:
     generate_tui_migration_manifest()
-    source_files = sorted(PKG_ROOT.rglob("*.py"))
-    dev_files = sorted(path for path in (REPO_ROOT / "dev").rglob("*.py") if "tests" not in path.parts)
+    source_files = scan_directory(PKG_ROOT, pattern="*.py", recursive=True)
+    dev_files = sorted(
+        path for path in scan_directory(REPO_ROOT / "dev", pattern="*.py", recursive=True) if "tests" not in path.parts
+    )
     accepted_edges = tui_textual_edges(source_files, src_root=REPO_ROOT / "src") | tui_textual_edges(
         dev_files, src_root=REPO_ROOT
     )

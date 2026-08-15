@@ -27,7 +27,6 @@ per-client check.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import shutil
@@ -37,6 +36,7 @@ from pathlib import Path
 from typing import Any, Final
 
 import pytest
+from dev.packaging._hashing import sha256_path
 from dev.packaging._smoke_common import (
     build_companion_wheels,
     build_sdist,
@@ -66,14 +66,6 @@ _EXPECTED_FORMULA_ID: Final[str] = "modelo-200-cuota-integra"
 _EXPECTED_PYTHON_RUNTIME: Final[str] = ">=3.13,<3.14"
 
 
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def _write_cohort_manifest(
     cohort_dir: Path,
     *,
@@ -88,7 +80,7 @@ def _write_cohort_manifest(
         if retained.resolve() != artifact.resolve():
             shutil.copy2(artifact, retained)
         names[label] = retained.name
-        digests[label] = _sha256(retained)
+        digests[label] = sha256_path(retained)
     git = shutil.which("git")
     assert git is not None, "git is required to bind the client-install cohort to a source commit"
     source_commit = subprocess.run(  # noqa: S603 - resolved Git with a fixed repository argv

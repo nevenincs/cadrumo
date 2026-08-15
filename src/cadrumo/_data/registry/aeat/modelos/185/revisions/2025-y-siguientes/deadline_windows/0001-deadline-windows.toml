@@ -1,124 +1,128 @@
-# Modelo 185 monthly deadline windows, grounded in orden-hac-1197-2025 art 4: la presentación tiene carácter mensual y se realiza en
-# el plazo de los diez días naturales siguientes a la finalización del mes al
-# que se refiere la declaración. Each window opens the 1st and closes the
-# 10th of the month following the reference month.
+# Modelo 185 monthly deadline windows for ejercicio 2026 onward, grounded in the
+# real full orden-hac-1197-2025.html (43910 bytes) art 4: la presentación tiene
+# carácter mensual y se realiza en el plazo de los diez días naturales
+# siguientes a la finalización del mes al que se refiere la declaración. Each
+# window opens the 1st and closes the 10th of the month following the
+# reference month. Replaces the 12 filing_year=2025 windows that moved to the
+# 2003-2025 predecessor revision (those windows genuinely belong to the era
+# orden-hac-96-2003 governs, not this orden, which enters force 2026-01-01).
 
 [[revisions."2025-y-siguientes".deadline_windows]]
-id = "modelo-185-2025-01"
-filing_year = 2025
-period = "2025 01"
+id = "modelo-185-2026-01"
+filing_year = 2026
+period = "2026 01"
 period_kind = "monthly"
-opens_on = 2025-02-01
-closes_on = 2025-02-10
+opens_on = 2026-02-01
+closes_on = 2026-02-10
 legal_refs = ["orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure"]
 
 [[revisions."2025-y-siguientes".deadline_windows]]
-id = "modelo-185-2025-02"
-filing_year = 2025
-period = "2025 02"
+id = "modelo-185-2026-02"
+filing_year = 2026
+period = "2026 02"
 period_kind = "monthly"
-opens_on = 2025-03-01
-closes_on = 2025-03-10
+opens_on = 2026-03-01
+closes_on = 2026-03-10
 legal_refs = ["orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure"]
 
 [[revisions."2025-y-siguientes".deadline_windows]]
-id = "modelo-185-2025-03"
-filing_year = 2025
-period = "2025 03"
+id = "modelo-185-2026-03"
+filing_year = 2026
+period = "2026 03"
 period_kind = "monthly"
-opens_on = 2025-04-01
-closes_on = 2025-04-10
+opens_on = 2026-04-01
+closes_on = 2026-04-10
 legal_refs = ["orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure"]
 
 [[revisions."2025-y-siguientes".deadline_windows]]
-id = "modelo-185-2025-04"
-filing_year = 2025
-period = "2025 04"
+id = "modelo-185-2026-04"
+filing_year = 2026
+period = "2026 04"
 period_kind = "monthly"
-opens_on = 2025-05-01
-closes_on = 2025-05-10
+opens_on = 2026-05-01
+closes_on = 2026-05-10
 legal_refs = ["orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure"]
 
 [[revisions."2025-y-siguientes".deadline_windows]]
-id = "modelo-185-2025-05"
-filing_year = 2025
-period = "2025 05"
+id = "modelo-185-2026-05"
+filing_year = 2026
+period = "2026 05"
 period_kind = "monthly"
-opens_on = 2025-06-01
-closes_on = 2025-06-10
+opens_on = 2026-06-01
+closes_on = 2026-06-10
 legal_refs = ["orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure"]
 
 [[revisions."2025-y-siguientes".deadline_windows]]
-id = "modelo-185-2025-06"
-filing_year = 2025
-period = "2025 06"
+id = "modelo-185-2026-06"
+filing_year = 2026
+period = "2026 06"
 period_kind = "monthly"
-opens_on = 2025-07-01
-closes_on = 2025-07-10
+opens_on = 2026-07-01
+closes_on = 2026-07-10
 legal_refs = ["orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure"]
 
 [[revisions."2025-y-siguientes".deadline_windows]]
-id = "modelo-185-2025-07"
-filing_year = 2025
-period = "2025 07"
+id = "modelo-185-2026-07"
+filing_year = 2026
+period = "2026 07"
 period_kind = "monthly"
-opens_on = 2025-08-01
-closes_on = 2025-08-10
+opens_on = 2026-08-01
+closes_on = 2026-08-10
 legal_refs = ["orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure"]
 
 [[revisions."2025-y-siguientes".deadline_windows]]
-id = "modelo-185-2025-08"
-filing_year = 2025
-period = "2025 08"
+id = "modelo-185-2026-08"
+filing_year = 2026
+period = "2026 08"
 period_kind = "monthly"
-opens_on = 2025-09-01
-closes_on = 2025-09-10
+opens_on = 2026-09-01
+closes_on = 2026-09-10
 legal_refs = ["orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure"]
 
 [[revisions."2025-y-siguientes".deadline_windows]]
-id = "modelo-185-2025-09"
-filing_year = 2025
-period = "2025 09"
+id = "modelo-185-2026-09"
+filing_year = 2026
+period = "2026 09"
 period_kind = "monthly"
-opens_on = 2025-10-01
-closes_on = 2025-10-10
+opens_on = 2026-10-01
+closes_on = 2026-10-10
 legal_refs = ["orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure"]
 
 [[revisions."2025-y-siguientes".deadline_windows]]
-id = "modelo-185-2025-10"
-filing_year = 2025
-period = "2025 10"
+id = "modelo-185-2026-10"
+filing_year = 2026
+period = "2026 10"
 period_kind = "monthly"
-opens_on = 2025-11-01
-closes_on = 2025-11-10
+opens_on = 2026-11-01
+closes_on = 2026-11-10
 legal_refs = ["orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure"]
 
 [[revisions."2025-y-siguientes".deadline_windows]]
-id = "modelo-185-2025-11"
-filing_year = 2025
-period = "2025 11"
+id = "modelo-185-2026-11"
+filing_year = 2026
+period = "2026 11"
 period_kind = "monthly"
-opens_on = 2025-12-01
-closes_on = 2025-12-10
+opens_on = 2026-12-01
+closes_on = 2026-12-10
 legal_refs = ["orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure"]
 
 [[revisions."2025-y-siguientes".deadline_windows]]
-id = "modelo-185-2025-12"
-filing_year = 2025
-period = "2025 12"
+id = "modelo-185-2026-12"
+filing_year = 2026
+period = "2026 12"
 period_kind = "monthly"
-opens_on = 2026-01-01
-closes_on = 2026-01-10
+opens_on = 2027-01-01
+closes_on = 2027-01-10
 legal_refs = ["orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure"]

@@ -29,7 +29,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import NoRecoveryOutcome
+from ....core import NoRecoveryOutcome, scan_directory
 from .._errors import (
     BindingPrefillTypeError,
     CalculationRefusalPrecondition,
@@ -74,7 +74,7 @@ _DEVELOPER_GATE_ERRORS: frozenset[str] = frozenset({"EnrollmentEvidenceError"})
 
 
 def _calculation_modules() -> tuple[Path, ...]:
-    return tuple(sorted(path for path in _CALCULATIONS_PACKAGE.glob("*.py")))
+    return scan_directory(_CALCULATIONS_PACKAGE, pattern="*.py")
 
 
 def _authored_message_sites(path: Path) -> list[tuple[str, int]]:

@@ -69,6 +69,7 @@ from pathlib import Path
 
 import pytest
 
+from .. import scan_directory
 from .._storage_taxonomy import STORAGE_TAXONOMY, StorageLocation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -329,7 +330,7 @@ def _production_trees() -> tuple[tuple[str, ast.AST], ...]:
     which is precisely the shape a test-inclusive sweep would have missed.
     """
     trees: list[tuple[str, ast.AST]] = []
-    for path in sorted(SRC_CADRUMO.rglob("*.py")):
+    for path in scan_directory(SRC_CADRUMO, pattern="*.py", recursive=True):
         relative = path.relative_to(SRC_CADRUMO).as_posix()
         if "/tests/" in f"/{relative}" or relative.startswith("tests/") or relative == "core/_storage_taxonomy.py":
             continue

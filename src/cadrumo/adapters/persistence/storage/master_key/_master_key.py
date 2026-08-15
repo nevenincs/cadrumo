@@ -82,11 +82,6 @@ from ..errors import (
     SecretStoreError,
     UnsecuredModeRefusedError,
 )
-from ._master_key_bucket_dek import (
-    idle_minutes_for_bucket,
-    load_or_mint_bucket_dek,
-    session_absolute_minutes_for_bucket,
-)
 from ._master_key_derivation import (
     ARGON2_MEMORY_COST_KIB,
     ARGON2_PARALLELISM,
@@ -850,7 +845,6 @@ def _provider_enter(
     provider: MasterKeyProvider,
     *,
     fallback_bucket_id: str | None = None,
-    allow_bucket_dek_enrollment: bool = False,
 ) -> BucketSession:
     """Open and activate a :class:`BucketSession` for ``provider``.
 
@@ -888,25 +882,19 @@ def _provider_enter(
 
     settings = load_settings()
     key_bytes = provider.get_master_key()
-    if isinstance(provider, UnsecuredMasterKeyProvider):
-        dek_bytes = key_bytes
-    else:
-        dek_bytes = load_or_mint_bucket_dek(
-            kek=key_bytes,
-            storage_root=settings.cadrumo_local_storage_root,
-            bucket_id=bucket_id,
-            allow_bootstrap_mint=allow_bucket_dek_enrollment,
+    if not isinstance(provider, UnsecuredMasterKeyProvider):
+        # A secured provider yields a key-encryption key, never the bucket's
+        # data key. The bucket DEK lives in the profile's own password custody
+        # and is unwrapped by `aeat config login`, which then binds the session
+        # this function would otherwise be opening blind.
+        raise MasterKeyMaterialMissingError(
+            f"bucket {bucket_id!r} cannot be opened from a master-key provider; "
+            "run `aeat config login NAME` to unlock the profile's own custody "
+            "before invoking commands that decrypt or persist stored records.",
         )
-    idle_minutes = idle_minutes_for_bucket(
-        storage_root=settings.cadrumo_local_storage_root,
-        bucket_id=bucket_id,
-        default_minutes=settings.cadrumo_bucket_default_idle_lock_minutes,
-    )
-    absolute_minutes = session_absolute_minutes_for_bucket(
-        storage_root=settings.cadrumo_local_storage_root,
-        bucket_id=bucket_id,
-        default_minutes=settings.cadrumo_bucket_default_session_absolute_minutes,
-    )
+    dek_bytes = key_bytes
+    idle_minutes = settings.cadrumo_bucket_default_idle_lock_minutes
+    absolute_minutes = settings.cadrumo_bucket_default_session_absolute_minutes
     session = BucketSession.open(
         bucket_id=bucket_id,
         kek=key_bytes,
@@ -935,7 +923,6 @@ def activate_master_key_provider(
     provider: MasterKeyProvider,
     *,
     fallback_bucket_id: str | None = None,
-    allow_bucket_dek_enrollment: bool = False,
 ) -> Iterator[object]:
     """Activate ``provider`` for encrypted storage within the current block.
 
@@ -948,14 +935,8 @@ def activate_master_key_provider(
         provider: The :class:`MasterKeyProvider` to activate.
         fallback_bucket_id: Optional bucket identifier used when no active
             profile pointer is present (bootstrap flows only).
-        allow_bucket_dek_enrollment: When ``True``, a missing per-bucket DEK
-            file is minted on first activation rather than raising.
     """
-    _provider_enter(
-        provider,
-        fallback_bucket_id=fallback_bucket_id,
-        allow_bucket_dek_enrollment=allow_bucket_dek_enrollment,
-    )
+    _provider_enter(provider, fallback_bucket_id=fallback_bucket_id)
     try:
         yield provider
     finally:

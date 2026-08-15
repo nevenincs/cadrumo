@@ -29,8 +29,6 @@ real AEAD, real raw-SQL tampering of stored columns. Nothing is mocked.
 from __future__ import annotations
 
 import inspect
-from collections.abc import Iterator
-from contextlib import contextmanager
 from typing import TypedDict
 
 import pytest
@@ -39,13 +37,10 @@ from ......tests.master_key import EphemeralMasterKeyProvider
 from .._secure_object_crypto import derive_revision_id
 from ._secure_objects_support import (
     UTC,
-    Base,
     Path,
-    SecureObjectRepository,
     SecureObjectUnreadableError,
     SensitivityClass,
-    Settings,
-    create_engine_from_settings,
+    _repo_at,
     datetime,
     sqlite3,
 )
@@ -83,16 +78,6 @@ _UNCOVERED_TAMPERS = {
     "source_event_id": "forged-event-id",
     "conflict_policy": "forged-policy",
 }
-
-
-@contextmanager
-def _repo_at(db_path: Path) -> Iterator[SecureObjectRepository]:
-    engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"))
-    Base.metadata.create_all(engine)
-    try:
-        yield SecureObjectRepository(engine=engine)
-    finally:
-        engine.dispose()
 
 
 def _seed(db_path: Path) -> None:

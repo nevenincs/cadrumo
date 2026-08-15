@@ -21,6 +21,7 @@ from collections.abc import Iterator, Mapping
 from datetime import datetime
 from pathlib import Path
 
+from ....core import iter_directory, scan_directory
 from ....core.atomic_write import DurableWriteBatch, atomic_write_hardened_bytes, atomic_write_text
 from ....core.errors import CoreValidationError
 from ....core.external_constants import UTF_8_ENCODING
@@ -197,7 +198,7 @@ class LocalFileSystemProvider:
             return None
         prefix = provider_object_hmac_prefix(object_key_hmac)
         resolved_path: Path | None = None
-        for entry in namespace_dir.iterdir():
+        for entry in scan_directory(namespace_dir):
             if not (entry.is_file() and entry.name.startswith(f"{prefix}--") and entry.suffix == _FILE_EXTENSION):
                 continue
             sidecar_path = entry.with_name(entry.stem + _SIDECAR_EXTENSION)
@@ -594,11 +595,11 @@ class LocalFileSystemProvider:
         exist on disk.
 
         Yields:
-            Directory names in filesystem-returned order.
+            Directory names in case-normalised name order.
         """
         if not self._root.is_dir():
             return
-        for entry in self._root.iterdir():
+        for entry in iter_directory(self._root):
             if entry.is_dir():
                 yield entry.name
 
@@ -634,7 +635,7 @@ class LocalFileSystemProvider:
                 context={"namespace": namespace_clean},
                 translated_message="adapters.outbound.storage.local.errors.namespace_not_found",
             )
-        for entry in sorted(namespace_dir.iterdir()):
+        for entry in scan_directory(namespace_dir):
             if not entry.is_file() or entry.suffix != _FILE_EXTENSION:
                 continue
             sidecar_path = entry.with_name(entry.stem + _SIDECAR_EXTENSION)

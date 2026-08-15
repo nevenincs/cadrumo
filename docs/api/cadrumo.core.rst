@@ -63,6 +63,7 @@ Submodules
    cadrumo.core._declaracion_idioma
    cadrumo.core._descendant_relacion
    cadrumo.core._deuda_direccion
+   cadrumo.core._directory_scan
    cadrumo.core._document_shape
    cadrumo.core._draft_discrepancy
    cadrumo.core._estado_casilla_oficial

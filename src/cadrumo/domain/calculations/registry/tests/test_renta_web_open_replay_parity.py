@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, scan_directory, validated_casilla_id
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .._remote_state_guard import RemoteStateGuardPolicy, remote_state_policy_from_cross_reference
@@ -37,10 +37,8 @@ _SEDE_HOST = aeat_host("sede")
 _WWW2_HOST = aeat_host("www2")
 
 
-def _discovered_payloads() -> list[Path]:
-    if not _REPLAY_DIR.exists():
-        return []
-    return sorted(p for p in _REPLAY_DIR.glob("*.json"))
+def _discovered_payloads() -> tuple[Path, ...]:
+    return scan_directory(_REPLAY_DIR, pattern="*.json")
 
 
 def _open_simulator_policy() -> RemoteStateGuardPolicy:

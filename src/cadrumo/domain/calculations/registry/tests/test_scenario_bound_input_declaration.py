@@ -49,7 +49,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, scan_directory, validated_casilla_id
 from .....core.resources import bundled_path
 from .. import ModeloRevision, build_snapshot
 from .._errors import RegistryValidationError
@@ -192,7 +192,7 @@ def _scenario_module_facts() -> tuple[dict[Path, int], set[Path], set[tuple[str,
     builders: dict[Path, int] = {}
     runners: set[Path] = set()
     targets: set[tuple[str, str]] = set()
-    for path in sorted(package_root.rglob("*.py")):
+    for path in scan_directory(package_root, pattern="*.py", recursive=True):
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
         except (SyntaxError, UnicodeDecodeError):

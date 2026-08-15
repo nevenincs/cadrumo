@@ -152,8 +152,11 @@ class TestAntiTautology:
     def test_enum_constraint_rejects_mutated_value(self) -> None:
         c = _make(enum=("0A", "1T", "2T", "3T", "4T"))
         rebuilt = CasillaConstraints.model_validate(c.model_dump())
-        # Drift to a value outside the enum.
-        assert rebuilt.violates_text("5T") is not None
+        # Drift to a value outside the enum, rejected for the enum reason
+        # specifically -- not merely rejected for some unrelated cause.
+        reason = rebuilt.violates_text("5T")
+        assert reason is not None
+        assert "enum" in reason
         assert rebuilt.violates_text("1T") is None
 
 
@@ -165,5 +168,12 @@ class TestNumericViolatesPreserved:
 
         c = _make(sign="non_negative", min_value=Decimal("0"), max_value=Decimal("100"))
         assert c.violates(Decimal("50")) is None
-        assert c.violates(Decimal("-1")) is not None
-        assert c.violates(Decimal("200")) is not None
+        # Each rejection is pinned to ITS OWN violated axis, not just any
+        # truthy reason -- a below-range value must fail for the sign/lower
+        # bound, an above-range value for the upper bound.
+        below = c.violates(Decimal("-1"))
+        assert below is not None
+        assert "non_negative" in below
+        above = c.violates(Decimal("200"))
+        assert above is not None
+        assert "max_value" in above

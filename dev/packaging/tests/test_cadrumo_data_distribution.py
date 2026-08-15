@@ -50,6 +50,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
@@ -159,7 +160,7 @@ def _build_wheel(companion: _Companion, out_root: Path) -> _BuiltWheel:
         text=True,
         check=True,
     )
-    wheels = sorted(out_dir.glob(companion.wheel_glob))
+    wheels = scan_directory(out_dir, pattern=companion.wheel_glob)
     if len(wheels) != 1:
         raise AssertionError(
             f"expected exactly one {companion.wheel_glob} in {out_dir}; got {[w.name for w in wheels]!r}"

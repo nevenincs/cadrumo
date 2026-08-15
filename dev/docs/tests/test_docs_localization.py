@@ -34,6 +34,7 @@ from pathlib import Path
 import pytest
 from babel.messages.pofile import read_po
 
+from cadrumo.core import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
@@ -159,19 +160,20 @@ def _conf_language_config() -> dict[str, object]:
         "'language': ns['language'],"
         "'valid_languages': sorted(ns['_VALID_DOCS_LANGUAGES'])}))"
     )
-    env = {
-        **os.environ,
-        "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
-        "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(prefix="cadrumo-locale-parity-"),
-    }
-    result = subprocess.run(
-        [sys.executable, "-c", script],
-        cwd=_REPO_ROOT,
-        capture_output=True,
-        text=True,
-        env=env,
-        check=False,
-    )
+    with tempfile.TemporaryDirectory(prefix="cadrumo-locale-parity-") as storage_root:
+        env = {
+            **os.environ,
+            "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
+            "CADRUMO_LOCAL_STORAGE_ROOT": storage_root,
+        }
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            env=env,
+            check=False,
+        )
     assert result.returncode == 0, result.stdout + result.stderr
     line = next(row for row in result.stdout.splitlines() if row.startswith("LANG_CONFIG="))
     return json.loads(line[len("LANG_CONFIG=") :])
@@ -194,7 +196,9 @@ def test_docs_target_languages_equal_output_language_minus_english() -> None:
         f"{sorted(expected_targets)}"
     )
 
-    committed_trees = {child.name for child in _LOCALES.iterdir() if child.is_dir() and child.name != "pot"}
+    committed_trees = {
+        child.name for child in scan_directory(_LOCALES, select=DirectoryEntryKind.DIRECTORIES) if child.name != "pot"
+    }
     assert committed_trees == expected_targets, (
         f"committed catalogue trees {sorted(committed_trees)} must equal the target languages "
         f"{sorted(expected_targets)}"
@@ -224,7 +228,9 @@ def test_no_orphan_catalogues(language: str) -> None:
         "an orphan, so an empty page set cannot be treated as a clean result"
     )
     lc_messages = _LOCALES / language / "LC_MESSAGES"
-    present = {po.relative_to(lc_messages).as_posix() for po in lc_messages.rglob("*.po")}
+    present = {
+        po.relative_to(lc_messages).as_posix() for po in scan_directory(lc_messages, pattern="*.po", recursive=True)
+    }
     orphans = sorted(present - expected)
     assert not orphans, (
         f"{language}: {len(orphans)} orphan catalogue(s) whose source page no longer exists "

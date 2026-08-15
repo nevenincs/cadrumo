@@ -37,6 +37,7 @@ from pathlib import Path
 import pikepdf
 import pytest
 
+from cadrumo.core import scan_directory
 from cadrumo.tests import FIXTURES_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -52,7 +53,7 @@ def _committed_fixture_pairs() -> list[tuple[Path, Path]]:
     if not fixture_root.is_dir():
         return []
     pairs: list[tuple[Path, Path]] = []
-    for pdf_path in fixture_root.rglob("*.pdf"):
+    for pdf_path in scan_directory(fixture_root, pattern="*.pdf", recursive=True):
         sidecar = pdf_path.with_suffix(".json")
         if sidecar.is_file():
             pairs.append((pdf_path, sidecar))

@@ -55,6 +55,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from ..core import scan_directory
 from ._inventory import SRC_CADRUMO, production_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -85,7 +86,7 @@ def _first_party_roots() -> frozenset[str]:
     than listed, so a new subpackage is judged the day it appears.
     """
     return frozenset(
-        entry.name for entry in SRC_CADRUMO.iterdir() if entry.is_dir() and (entry / "__init__.py").exists()
+        entry.name for entry in scan_directory(SRC_CADRUMO) if entry.is_dir() and (entry / "__init__.py").exists()
     )
 
 
@@ -283,4 +284,6 @@ def test_the_detector_clears_a_private_symbol_in_its_defining_module() -> None:
 def test_the_detector_resolves_a_method_through_its_owning_class() -> None:
     """A ``Class.method`` target names a module one segment further up."""
     assert cross_reference_defect("meth", "core.Modelo.no_such_method") is None
-    assert cross_reference_defect("meth", "core.NoSuchClass.method") is not None
+    reason = cross_reference_defect("meth", "core.NoSuchClass.method")
+    assert reason is not None
+    assert "NoSuchClass" in reason

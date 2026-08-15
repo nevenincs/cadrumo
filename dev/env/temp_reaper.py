@@ -44,6 +44,7 @@ from pathlib import Path
 from tempfile import gettempdir
 from typing import TextIO
 
+from cadrumo.core import scan_directory
 from cadrumo.tests import pytest_numbered_dir_root, reap_abandoned_numbered_dirs
 
 CLAUDE_TEMP_STEM = "claude"
@@ -267,14 +268,14 @@ def assess_claude_sessions(
     mine = own_session_id if own_session_id is not None else os.environ.get(SESSION_ID_VARIABLE, "")
     verdicts: list[SessionVerdict] = []
     try:
-        projects = sorted(root.iterdir())
+        projects = scan_directory(root, require_root=True)
     except OSError:
         return verdicts
     for project in projects:
         if project.is_symlink() or not project.is_dir():
             continue
         try:
-            sessions = sorted(project.iterdir())
+            sessions = scan_directory(project, require_root=True)
         except OSError:
             continue
         for session in sessions:

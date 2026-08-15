@@ -46,6 +46,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 SRC_ROOT = REPO_ROOT / "src"
@@ -276,7 +277,9 @@ def discover_facades() -> dict[str, FacadeInfo]:
     (``__all__: list[str] = [...]``) form.
     """
     facades: dict[str, FacadeInfo] = {}
-    for init_path in PKG_ROOT.rglob("__init__.py"):
+    for init_path in scan_directory(
+        PKG_ROOT, pattern="__init__.py", recursive=True, prune_directories=("__pycache__",)
+    ):
         mod = module_name_for(init_path)
         try:
             src = init_path.read_text(encoding=_UTF_8)
@@ -1907,7 +1910,7 @@ def _literal_dunder_all(tree: ast.Module) -> tuple[str, ...]:
 def _legacy_tui_modules(*, legacy_root: Path, src_root: Path) -> dict[str, tuple[Path, ast.Module]]:
     """Load every production module in the legacy TUI package."""
     modules: dict[str, tuple[Path, ast.Module]] = {}
-    for path in sorted(legacy_root.rglob("*.py")):
+    for path in scan_directory(legacy_root, pattern="*.py", recursive=True, prune_directories=("__pycache__",)):
         if "tests" in path.relative_to(legacy_root).parts:
             continue
         try:
@@ -2137,8 +2140,10 @@ def generate_tui_migration_manifest(
                 )
             )
 
-    source_files = sorted(package_root.rglob("*.py"))
-    development_files = sorted((repo_root / "dev").rglob("*.py"))
+    source_files = scan_directory(package_root, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
+    development_files = scan_directory(
+        repo_root / "dev", pattern="*.py", recursive=True, prune_directories=("__pycache__",)
+    )
     for path in (*source_files, *development_files):
         if path.resolve() == Path(__file__).resolve():
             continue
@@ -2235,8 +2240,7 @@ def main() -> int:
     parser.add_argument("--top", type=int, default=20, help="Top-N offender modules to print")
     args = parser.parse_args()
 
-    py_files = sorted(PKG_ROOT.rglob("*.py"))
-    py_files = [p for p in py_files if "__pycache__" not in p.parts]
+    py_files = list(scan_directory(PKG_ROOT, pattern="*.py", recursive=True, prune_directories=("__pycache__",)))
 
     facades = discover_facades()
     real_facades = {pkg: info for pkg, info in facades.items() if info.has_real_all}

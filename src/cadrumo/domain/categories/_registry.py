@@ -17,7 +17,7 @@ from typing import cast
 
 from pydantic import ValidationError
 
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml
+from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml, scan_directory
 from ...core.decimal import coerce_decimal
 from ...core.i18n import Translatable as tr
 from ...core.paths import file_stat_fingerprint, path_stat_fingerprint
@@ -96,7 +96,7 @@ def load_category_profile_registry(
     """
     target = root if root is not None else bundled_path("registry", "aeat", "categories", "profiles")
     resolved = target.resolve()
-    paths = tuple(sorted(resolved.glob("*.toml")))
+    paths = scan_directory(resolved, pattern="*.toml")
     fingerprint = tuple(file_stat_fingerprint(path) for path in paths)
     return _load_category_profile_registry_cached(str(resolved), fingerprint)
 

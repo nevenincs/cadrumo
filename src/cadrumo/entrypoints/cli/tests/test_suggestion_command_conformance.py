@@ -79,6 +79,7 @@ from dev.quality.cli_action_census_dispositions import (
 )
 
 from ....application.operator_surface import HelpSurface, build_help_document, build_root_landing_report
+from ....core import scan_directory
 from ....tests.cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -332,7 +333,7 @@ def _option_validity_failures(text: str, *, origin: str) -> list[str]:
 
 def _iter_production_modules() -> Iterator[Path]:
     for scan_root in _AST_SCAN_ROOTS:
-        for module_path in sorted(scan_root.rglob("*.py")):
+        for module_path in scan_directory(scan_root, pattern="*.py", recursive=True):
             if "tests" in module_path.parts:
                 continue
             yield module_path
@@ -833,7 +834,7 @@ def _notice_suggestion_transport_failures(module_path: Path) -> list[str]:
 
 def _iter_notice_transport_production_modules() -> Iterator[Path]:
     """Yield every real package module, excluding only test code."""
-    for module_path in sorted(_PACKAGE_ROOT.rglob("*.py")):
+    for module_path in scan_directory(_PACKAGE_ROOT, pattern="*.py", recursive=True):
         if "tests" not in module_path.parts:
             yield module_path
 
@@ -923,7 +924,7 @@ def test_locale_catalogues_cite_live_commands() -> None:
     citation while still catching a renamed or invented verb.
     """
     manager = LocaleManager(_PACKAGE_ROOT, _LOCALES_DIR)
-    locale_paths = sorted(_LOCALES_DIR.glob("*.yml"))
+    locale_paths = scan_directory(_LOCALES_DIR, pattern="*.yml")
     assert locale_paths, f"no locale catalogues found under {_LOCALES_DIR}"
     failures: list[str] = []
     citation_count = 0

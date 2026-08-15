@@ -2,18 +2,12 @@
 
 Pydantic v2 strict records, error types, and filesystem primitives that compose
 the multi-bucket on-disk layout. The facade exposes
-:class:`BucketPaths` / :func:`bucket_paths` /
-:func:`bucket_paths` for the ``db/`` and ``blobs/`` tree;
-:class:`BucketManifest`,
-:class:`ManifestKdfParams` and :class:`BucketKeySchedule` for the plaintext
-manifest; and
-:func:`read_manifest` / :func:`write_manifest` for strict TOML I/O.
+:class:`BucketPaths` / :func:`bucket_paths` for the ``db/`` and ``blobs/``
+tree.
 
-The manifest is discovery metadata only: bucket identity, operator label,
-UTC timestamps, public Argon2id KDF parameters and salt, recovery-enrollment
-state, idle-lock setting, key schedule, schema version, and lifecycle mirror.
-It must not contain passphrases, derived keys, wrapped DEKs, recovery secrets,
-taxpayer payloads, or secure-object ciphertext. Keystore helpers
+The plaintext per-bucket manifest that once registered a bucket here is
+retired: profile discovery, labels and key material all belong to the custody
+capsule, and nothing in production reads or writes a manifest. Keystore helpers
 (:func:`keystore_root`, :func:`keystore_path`,
 :func:`validate_keystore_separation`, and :func:`keystore_sidecar_path`)
 enforce that custody material lives outside the ``buckets/`` tree and the
@@ -30,8 +24,6 @@ committed profile data alone: recovery material is a separate per-profile
 artifact and never travels as an archive member.
 
 See Also:
-    :class:`BucketManifest`
-        Strict per-bucket manifest record stored beside the bucket directory.
     :class:`ExportArchiveHeader`
         Plaintext frontmatter for sealed bucket-export archives.
     :func:`write_sealed_archive`
@@ -61,20 +53,6 @@ from ._export_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 from ._keystore_paths import keystore_path, keystore_root, keystore_sidecar_path, validate_keystore_separation
 from ._layout import BucketPaths, bucket_paths, trash_rename_and_remove
 from ._lockfile import acquire_lock, lock_path, release_lock
-from ._manifest import (
-    BUCKET_MANIFEST_DURABILITY_FLOOR,
-    BUCKET_MANIFEST_SCHEMA_VERSION,
-    BucketKeySchedule,
-    BucketManifest,
-    ManifestKdfParams,
-)
-from ._manifest_io import (
-    MISSING_BUCKET_MANIFEST_MESSAGE,
-    ensure_manifest_schema_readable,
-    manifest_path,
-    read_manifest,
-    write_manifest,
-)
 from ._output_language_hint import (
     clear_bucket_output_language_hint,
     normalize_output_language_hint,
@@ -87,21 +65,15 @@ from ._sealed_archive_writer import CADRUMO_BUCKET_BUNDLE_SUFFIX, write_sealed_a
 
 __all__ = [
     "ARCHIVE_SCHEMA_VERSION",
-    "BUCKET_MANIFEST_DURABILITY_FLOOR",
-    "BUCKET_MANIFEST_SCHEMA_VERSION",
     "CADRUMO_BUCKET_BUNDLE_SUFFIX",
-    "MISSING_BUCKET_MANIFEST_MESSAGE",
     "BucketAlreadyPresentError",
     "BucketBusyError",
     "BucketError",
-    "BucketKeySchedule",
     "BucketLockedError",
-    "BucketManifest",
     "BucketPathTooLongError",
     "BucketPaths",
     "BucketValidationError",
     "ExportArchiveHeader",
-    "ManifestKdfParams",
     "NoActiveBucketError",
     "RecoveryUnavailableError",
     "RecoveryVerificationError",
@@ -110,20 +82,16 @@ __all__ = [
     "acquire_lock",
     "bucket_paths",
     "clear_bucket_output_language_hint",
-    "ensure_manifest_schema_readable",
     "keystore_path",
     "keystore_root",
     "keystore_sidecar_path",
     "lock_path",
-    "manifest_path",
     "normalize_output_language_hint",
     "read_bucket_output_language_hint",
-    "read_manifest",
     "read_sealed_archive",
     "release_lock",
     "trash_rename_and_remove",
     "validate_keystore_separation",
     "write_bucket_output_language_hint",
-    "write_manifest",
     "write_sealed_archive",
 ]

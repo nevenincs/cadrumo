@@ -50,6 +50,7 @@ from functools import cache
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 SOURCE_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo"
@@ -213,9 +214,8 @@ def _tokens(text: str, codes: frozenset[str]) -> set[str]:
 
 
 def _iter_package_modules(package_root: Path) -> Iterator[Path]:
-    for path in sorted(package_root.rglob("*.py")):
-        parts = path.relative_to(package_root).parts
-        if "__pycache__" in parts or "tests" in parts:
+    for path in scan_directory(package_root, pattern="*.py", recursive=True, prune_directories=("__pycache__",)):
+        if "tests" in path.relative_to(package_root).parts:
             continue
         yield path
 
@@ -367,9 +367,7 @@ def census(package_root: Path = REGISTRY_PACKAGE_ROOT) -> tuple[ModeloModuleReco
 def importer_index(source_root: Path = SOURCE_ROOT) -> Mapping[str, tuple[str, ...]]:
     """Return, per module stem, every module under ``source_root`` that imports it."""
     index: dict[str, list[str]] = {}
-    for path in sorted(source_root.rglob("*.py")):
-        if "__pycache__" in path.parts:
-            continue
+    for path in scan_directory(source_root, pattern="*.py", recursive=True, prune_directories=("__pycache__",)):
         try:
             body = path.read_text(encoding=_UTF_8)
         except FileNotFoundError:

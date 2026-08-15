@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
-from ....core import CasillaId, FilingProducerKey, Period
+from ....core import CasillaId, FilingProducerKey, Period, scan_directory
 from ....domain.calculations.registry import (
     CasillaFieldKind,
     ExportFieldDefinition,
@@ -371,7 +371,7 @@ def test_codec_has_one_owner_and_active_consumers_import_the_public_facade() -> 
     )
 
     assert owner.is_file()
-    assert not tuple((root / "adapters/outbound/aeat/export/_formats").rglob("*.py"))
+    assert not scan_directory(root / "adapters/outbound/aeat/export/_formats", pattern="*.py", recursive=True)
     for consumer in consumers:
         source = consumer.read_text(encoding="utf-8")
         assert "fixed_width" in source

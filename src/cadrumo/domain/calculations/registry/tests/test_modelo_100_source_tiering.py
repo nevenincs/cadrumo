@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _ROOT = Path(__file__).resolve().parents[6]
@@ -44,7 +46,7 @@ def test_modelo_100_boe_form_sources_are_layout_only() -> None:
 
 def test_modelo_100_source_citations_do_not_use_layout_sources() -> None:
     offenders = []
-    for path in sorted(_MODELO_100_ROOT.rglob("*.toml")):
+    for path in scan_directory(_MODELO_100_ROOT, pattern="*.toml", recursive=True):
         data = tomllib.loads(path.read_text(encoding="utf-8"))
         for source_ref in _source_citation_refs(data):
             if source_ref in _BOE_FORM_SOURCES:

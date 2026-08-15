@@ -28,7 +28,7 @@ from ....application.flows import (
     answer,
     start_flow,
 )
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, scan_directory
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core.i18n import tr
 
@@ -48,7 +48,7 @@ _FLOW_MODULE_DIRS = (
 def _referenced_flow_keys() -> frozenset[str]:
     keys: set[str] = set()
     for directory in _FLOW_MODULE_DIRS:
-        for module in directory.glob("*.py"):
+        for module in scan_directory(directory, pattern="*.py"):
             keys |= set(_KEY_PATTERN.findall(module.read_text(encoding="utf-8")))
     return frozenset(keys)
 

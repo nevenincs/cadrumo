@@ -36,6 +36,8 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PACKAGE_ROOT = Path(__file__).resolve().parents[3]
@@ -74,7 +76,7 @@ _EXPECTED_REEXPORTERS = 2
 
 
 def _production_modules() -> Iterator[Path]:
-    for path in sorted(_PACKAGE_ROOT.rglob("*.py")):
+    for path in scan_directory(_PACKAGE_ROOT, pattern="*.py", recursive=True):
         if "tests" in path.parts or path.name.startswith("test_"):
             continue
         yield path

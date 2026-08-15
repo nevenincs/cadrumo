@@ -14,7 +14,7 @@ This module previously declared a second root,
 ``src/cadrumo/entrypoints/cli/sanitize/``, and said in prose that it
 scanned it. That package does not exist and never has -- ``git log``
 over the path is empty -- so the guard claimed coverage it had never
-had, over a surface that was not there. ``Path.rglob`` on a missing
+had, over a surface that was not there. A scan of a missing
 directory yields nothing without raising, and the old floor asserted
 only that the collection was non-empty overall, which the surviving
 root satisfied by itself. Hence :meth:`test_every_guarded_root_exists`:
@@ -34,6 +34,8 @@ import re
 from pathlib import Path
 
 import pytest
+
+from cadrumo.core import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -77,7 +79,7 @@ def _modules_under(directory: Path) -> list[Path]:
     """
     return [
         path
-        for path in directory.rglob("*.py")
+        for path in scan_directory(directory, pattern="*.py", recursive=True)
         if not (path.name.startswith("test_") or path.name.startswith("_test_"))
     ]
 

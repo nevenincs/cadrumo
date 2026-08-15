@@ -38,6 +38,7 @@ from typing import Final
 
 import pytest
 
+from .. import DirectoryEntryKind, scan_directory
 from .._storage_taxonomy import (
     STORAGE_TAXONOMY,
     StorageCategory,
@@ -114,7 +115,7 @@ def unexplained_directories(observed: set[Path], expected: set[Path], root: Path
 
 
 def _observed_directories(root: Path) -> set[Path]:
-    return {path for path in root.rglob("*") if path.is_dir()}
+    return set(scan_directory(root, recursive=True, select=DirectoryEntryKind.DIRECTORIES))
 
 
 @pytest.fixture

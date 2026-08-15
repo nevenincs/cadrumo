@@ -36,6 +36,8 @@ from pathlib import Path
 
 import pytest
 
+from ..core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _TESTS_DIR = Path(__file__).parent
@@ -87,7 +89,7 @@ def _collect_populated_builders(
     patterns = ["test_*roundtrip*.py", "test_*anti_tautology*.py"]
     files: set[Path] = set()
     for pat in patterns:
-        files.update(src_root.rglob(pat))
+        files.update(scan_directory(src_root, pattern=pat, recursive=True))
 
     results = []
     for rf in sorted(files):

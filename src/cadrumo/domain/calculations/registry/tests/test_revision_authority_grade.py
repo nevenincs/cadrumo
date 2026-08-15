@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
+from .....core import UNDECLARED_REGISTRY_AUTHORITY_GRADE, DirectoryEntryKind, RegistryAuthorityGrade, scan_directory
 from .....core.resources import bundled_path
 from .._errors import RegistryLoadError
 from .._loader import load_modelo_directory, load_registry_tree
@@ -30,7 +30,8 @@ from .._schema import (
     REVISION_MANIFEST_ONLY_FIELDS,
     ModeloRevision,
 )
-from ._loader_directory_mode_support import _standard_manifest_text
+from ._loader_directory_mode_support import _load_revision as _shared_load_revision
+from ._loader_directory_mode_support import _write_modelo as _shared_write_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -48,32 +49,18 @@ source_refs = ["aeat-manual"]
 """.lstrip()
 
 
-def _revision_manifest_text(extra: str = "") -> str:
-    return (
-        f'[revisions."{_REVISION_ID}"]\n'
-        "valid_from = 2025-01-01\n"
-        'period_selector = { years = [2025], periods = ["0A"] }\n'
-        f'legal_refs = ["{_LEGAL_REF}"]\n'
-        'source_refs = ["aeat-manual"]\n'
-    ) + extra
-
-
 def _write_modelo(root: Path, *, manifest_extra: str = "", fragment_extra: str = "") -> Path:
-    """Materialise a minimal fragmented modelo and return its directory."""
-    modelo_dir = root / "999"
-    revision_dir = modelo_dir / "revisions" / _REVISION_ID
-    (revision_dir / "casillas").mkdir(parents=True)
-    (modelo_dir / "manifest.toml").write_text(_standard_manifest_text("Grade"), encoding="utf-8")
-    (revision_dir / "revision.toml").write_text(_revision_manifest_text(manifest_extra), encoding="utf-8")
-    (revision_dir / "casillas" / "0001-casillas.toml").write_text(
-        _CASILLA_FRAGMENT + fragment_extra,
-        encoding="utf-8",
+    return _shared_write_modelo(
+        root,
+        casilla_fragment=_CASILLA_FRAGMENT,
+        revision_id=_REVISION_ID,
+        manifest_extra=manifest_extra,
+        fragment_extra=fragment_extra,
     )
-    return modelo_dir
 
 
 def _load_revision(modelo_dir: Path) -> ModeloRevision:
-    return load_modelo_directory(modelo_dir).revisions[_REVISION_ID]
+    return _shared_load_revision(modelo_dir, revision_id=_REVISION_ID)
 
 
 @pytest.mark.parametrize("grade", list(RegistryAuthorityGrade))
@@ -206,7 +193,7 @@ def test_a_planted_grade_reds_a_copy_of_a_real_shipped_revision(tmp_path: Path) 
 def _first_bundled_fragmented_modelo() -> Path:
     """Return the first bundled modelo directory carrying a fragmented revision."""
     modelos_dir = bundled_path("registry", "aeat") / "modelos"
-    for candidate in sorted(entry for entry in modelos_dir.iterdir() if entry.is_dir()):
+    for candidate in scan_directory(modelos_dir, select=DirectoryEntryKind.DIRECTORIES):
         if any((candidate / "revisions").glob("*/revision.toml")):
             return candidate
     raise AssertionError(f"no bundled modelo under {modelos_dir} uses the fragmented revision layout")

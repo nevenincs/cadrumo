@@ -30,7 +30,6 @@ regression fence for the landed FX-conversion surface.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -43,6 +42,7 @@ from ....tests.ledger_cli import list_ledger_rows_via_cli as _list_rows
 from ._isolated_profile_storage_fixtures import (  # noqa: F401 - autouse fixture bound by import
     live_fx_isolated_backend as _isolated_backend,
 )
+from ._ledger_corpus_support import _match, _oracle_rules
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -54,31 +54,11 @@ def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
 
 
-# Bound from the shared home rather than written out again here. This module
-# needs live tests enabled because revolut-multi.csv carries GBP/USD rows, so
-# importing it drives the CLI's live ECB euro reference-rate normalizer rather
-# than the provider's now-guarded default (see fx._ecb_provider); that is
-# exactly the isolation `live_fx_isolated_backend` already provides.
-
-
-def _oracle_rules() -> list[dict[str, object]]:
-    manifest = json.loads((_CORPUS / "ground-truth.manifest.json").read_text(encoding="utf-8"))
-    assert isinstance(manifest, dict)
-    raw_rules = manifest.get("rules")
-    assert isinstance(raw_rules, list)
-    rules: list[dict[str, object]] = []
-    for raw_rule in raw_rules:
-        assert isinstance(raw_rule, dict)
-        rules.append({str(key): value for key, value in raw_rule.items()})
-    return rules
-
-
-def _match(description: str, rules: list[dict[str, object]]) -> dict[str, object] | None:
-    for rule in rules:
-        match_val = rule.get("match")
-        if isinstance(match_val, str) and match_val in description:
-            return rule
-    return None
+# This module needs live tests enabled because revolut-multi.csv carries
+# GBP/USD rows, so importing it drives the CLI's live ECB euro reference-rate
+# normalizer rather than the provider's now-guarded default (see
+# fx._ecb_provider); that is exactly the isolation `live_fx_isolated_backend`
+# already provides.
 
 
 def _import_revolut() -> None:

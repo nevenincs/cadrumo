@@ -28,6 +28,7 @@ import pytest
 from pydantic import SecretStr
 
 from ...adapters.outbound.llm import LLMCache, LLMRunTelemetryRecorder, UsageRecorder
+from ...core import scan_directory
 from ...core.config import LLMProvider, override_settings
 from ...core.errors import build_error_envelope
 from ...tests.fixtures.settings import EnvFileFreeSettings
@@ -231,7 +232,7 @@ def test_a_local_degradation_has_no_invented_action(tmp_path: Path) -> None:
 def _llm_package_modules() -> list[Path]:
     """Return every production module in the LLM package."""
     root = Path(__file__).resolve().parent.parent
-    return sorted(path for path in root.rglob("*.py") if "tests" not in path.parts)
+    return sorted(path for path in scan_directory(root, pattern="*.py", recursive=True) if "tests" not in path.parts)
 
 
 _ADAPTER_CONSTRUCTORS = frozenset(

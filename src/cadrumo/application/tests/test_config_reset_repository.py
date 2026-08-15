@@ -15,7 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...adapters.persistence.storage.bucket import bucket_paths
-from ...core import StorageCategory, storage_location
+from ...core import StorageCategory, scan_directory, storage_location
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
 from .._config_reset_models import (
     ConfigResetDeletionMarker,
@@ -83,7 +83,7 @@ def test_create_roundtrips_atomically_with_restrictive_permissions(
     assert repository.list() == (operation,)
     assert path.parent == tmp_path / "reset-operations"
     assert tmp_path / storage_location(StorageCategory.BUCKETS).subpath not in path.parents
-    assert tuple(path.parent.glob("*.tmp")) == ()
+    assert scan_directory(path.parent, pattern="*.tmp") == ()
     if os.name != "nt":
         assert stat.S_IMODE(path.parent.stat().st_mode) == 0o700
         assert stat.S_IMODE(path.stat().st_mode) == 0o600
@@ -285,7 +285,7 @@ def test_repository_refuses_linked_root_redirected_into_bucket(
     with pytest.raises(ConfigResetJournalError):
         repository.create(_operation())
 
-    assert tuple(bucket_dir.glob("*.json")) == ()
+    assert scan_directory(bucket_dir, pattern="*.json") == ()
 
 
 def test_concurrent_fresh_process_writers_leave_one_complete_document(
@@ -316,7 +316,7 @@ def test_concurrent_fresh_process_writers_leave_one_complete_document(
     loaded = repository.load(_OPERATION_ID)
     assert loaded.operation_id == _OPERATION_ID
     assert loaded.updated_at in {loaded.started_at + timedelta(seconds=offset) for offset in range(1, 5)}
-    assert tuple(repository.root.glob("*.tmp")) == ()
+    assert scan_directory(repository.root, pattern="*.tmp") == ()
 
 
 def test_fresh_process_reloads_exact_journal(

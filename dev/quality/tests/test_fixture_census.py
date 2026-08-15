@@ -9,6 +9,7 @@ from textwrap import dedent
 
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 from ..fixture_census import FixtureCensusError, _read_trees, census, iter_source_files
@@ -879,7 +880,7 @@ def test_stable_writer_writes_and_checks_one_real_tree(tmp_path: Path) -> None:
 
     assert parse_manifest(manifest_path) == written
     assert check_manifest(root, manifest_path) == written
-    assert not list(tmp_path.glob(".fixture-ownership.toml.*.tmp"))
+    assert not scan_directory(tmp_path, pattern=".fixture-ownership.toml.*.tmp")
 
 
 def test_stable_writer_refuses_substitutes_and_preserves_existing_bytes(tmp_path: Path) -> None:
@@ -894,7 +895,7 @@ def test_stable_writer_refuses_substitutes_and_preserves_existing_bytes(tmp_path
         write_manifest(root, manifest_path)
 
     assert manifest_path.read_bytes() == previous
-    assert not list(tmp_path.glob(".fixture-ownership.toml.*.tmp"))
+    assert not scan_directory(tmp_path, pattern=".fixture-ownership.toml.*.tmp")
 
 
 def test_stable_writer_refuses_source_mutation_during_evidence_reads(tmp_path: Path) -> None:
@@ -935,7 +936,7 @@ def test_stable_writer_refuses_source_mutation_during_evidence_reads(tmp_path: P
     assert match.group(1) != match.group(2)
     assert "VALUE =" not in diagnostic
     assert manifest_path.read_bytes() == previous
-    assert not list(tmp_path.glob(".fixture-ownership.toml.*.tmp"))
+    assert not scan_directory(tmp_path, pattern=".fixture-ownership.toml.*.tmp")
 
 
 def test_census_reports_resolved_and_unresolved_factory_fixture_candidates(tmp_path: Path) -> None:

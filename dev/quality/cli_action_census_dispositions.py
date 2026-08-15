@@ -22,6 +22,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, cast
 
+from cadrumo.core import scan_directory
 from dev._paths import UTF_8
 
 from .cli_action_census import REPO_ROOT, SOURCE_ROOT, CandidateRecord, census
@@ -595,7 +596,9 @@ def current_exception_override_observations(
     formatting-stable campaign baseline.
     """
     records: list[ExceptionOverrideObservation] = []
-    for source_path in sorted((root / SOURCE_ROOT).rglob("*.py")):
+    for source_path in scan_directory(
+        root / SOURCE_ROOT, pattern="*.py", recursive=True, prune_directories=("__pycache__",)
+    ):
         if "/tests/" in source_path.as_posix() or source_path.name.startswith("test_"):
             continue
         path = source_path.relative_to(root).as_posix()

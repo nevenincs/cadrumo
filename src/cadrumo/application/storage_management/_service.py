@@ -35,7 +35,9 @@ from ...core import (
     StorageScope,
     bucket_scoped_storage_path,
     is_link_like,
+    iter_directory,
     resolve_active_bucket_id,
+    scan_directory,
     storage_location,
     storage_path,
 )
@@ -296,7 +298,7 @@ def _remove_reclaim_targets(targets: Iterable[Path]) -> tuple[int, list[Path]]:
     for target in targets:
         if not target.exists():
             continue
-        entries = (target,) if target.is_file() else tuple(sorted(target.iterdir()))
+        entries = (target,) if target.is_file() else scan_directory(target)
         for entry in entries:
             try:
                 _remove_reclaim_entry(entry)
@@ -489,7 +491,7 @@ def _path_size(path: Path) -> int:
             return 0
     total = 0
     try:
-        for entry in path.iterdir():
+        for entry in iter_directory(path, require_root=True):
             total += _path_size(entry)
     except OSError:
         _LOGGER.debug("could not measure %s", path, exc_info=True)
@@ -554,7 +556,7 @@ def _immediate_entry_count(path: Path) -> int:
     if not path.is_dir():
         return 0
     try:
-        return sum(1 for _ in path.iterdir())
+        return sum(1 for _ in iter_directory(path, require_root=True))
     except OSError:
         _LOGGER.debug("could not enumerate %s", path, exc_info=True)
         return 0

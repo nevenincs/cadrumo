@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from datetime import UTC, date, datetime
-from pathlib import Path
 from typing import TypedDict
 
 import pytest
@@ -14,28 +13,19 @@ from pydantic import ValidationError
 from ....adapters.outbound.aeat.sede import NotificationDocument, RemoteNotification
 from ....application.live.tests._notification_document_support import build_service, sancion_pdf_bytes, served_document
 from ....core import require_active_bucket_id
-from ....core.config import override_settings
 from ....core.hashing import sha256_hex
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_cli_result, unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 
 # INTENTIONAL: integration because it exercises the notifications CLI surface against
 # isolated local storage without contacting AEAT.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(cadrumo_live_state_dir=tmp_path / "probe-live-state"),
-        open_test_profile_session("00000000-0000-4000-8000-000000000000"),
-    ):
-        register_minimal_profile(profile_id="00000000-0000-4000-8000-000000000000")
-        yield
+_isolated_backend = active_profile_isolated_backend_fixture(
+    bucket_id="00000000-0000-4000-8000-000000000000",
+    settings_overrides=lambda tmp_path: {"cadrumo_live_state_dir": tmp_path / "probe-live-state"},
+)
 
 
 def _invoke_notifications(args: Sequence[str]) -> Result:

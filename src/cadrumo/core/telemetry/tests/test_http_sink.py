@@ -39,6 +39,7 @@ from typing import ClassVar, override
 
 import pytest
 
+from ....tests.loopback_recording_server import run_loopback_server, stop_loopback_server
 from ...config import Settings
 from .. import (
     HttpTelemetrySink,
@@ -87,25 +88,9 @@ def _payload() -> TelemetryEventPayload:
         captured_at=_CAPTURED_AT,
     )
 
-
-def _run_loopback_server() -> tuple[ThreadingHTTPServer, threading.Thread, Queue[dict[str, object]]]:
-    events: Queue[dict[str, object]] = Queue()
-    _RecordingTelemetryEndpoint.events = events
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _RecordingTelemetryEndpoint)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    return server, thread, events
-
-
-def _stop_loopback_server(server: ThreadingHTTPServer, thread: threading.Thread) -> None:
-    server.shutdown()
-    server.server_close()
-    thread.join(timeout=3)
-
-
 def test_no_configured_endpoint_never_sends() -> None:
     """A sink built without an endpoint is permanently inert."""
-    server, thread, events = _run_loopback_server()
+    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
     try:
         # Deliberately construct the sink with ``endpoint=None`` even though a
         # live server is running, proving the sink itself refuses to dial out
@@ -113,21 +98,21 @@ def test_no_configured_endpoint_never_sends() -> None:
         sink = HttpTelemetrySink(endpoint=None)
         sink.send(_payload())
     finally:
-        _stop_loopback_server(server, thread)
+        stop_loopback_server(server, thread)
     with pytest.raises(Empty):
         events.get_nowait()
 
 
 def test_consent_gate_refusal_never_reaches_the_http_sink() -> None:
     """Default-off Settings must keep the HTTP sink untouched via ``emit_telemetry_event``."""
-    server, thread, events = _run_loopback_server()
+    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         sink = HttpTelemetrySink(endpoint=endpoint)
         settings = Settings()  # fully-inert default posture
         result = emit_telemetry_event(_payload(), settings=settings, acknowledged=True, sink=sink)
     finally:
-        _stop_loopback_server(server, thread)
+        stop_loopback_server(server, thread)
     assert result is False
     with pytest.raises(Empty):
         events.get_nowait()
@@ -135,14 +120,14 @@ def test_consent_gate_refusal_never_reaches_the_http_sink() -> None:
 
 def test_endpoint_configured_but_consent_off_never_sends() -> None:
     """An opted-out deployment must not send even with a fully configured endpoint."""
-    server, thread, events = _run_loopback_server()
+    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         sink = HttpTelemetrySink(endpoint=endpoint)
         settings = Settings(cadrumo_telemetry_opt_in=False, cadrumo_telemetry_tier=TelemetryTier.OFF)
         result = emit_telemetry_event(_payload(), settings=settings, acknowledged=True, sink=sink)
     finally:
-        _stop_loopback_server(server, thread)
+        stop_loopback_server(server, thread)
     assert result is False
     with pytest.raises(Empty):
         events.get_nowait()
@@ -150,7 +135,7 @@ def test_endpoint_configured_but_consent_off_never_sends() -> None:
 
 def test_fully_permitted_invocation_posts_the_allowlisted_payload() -> None:
     """Consent on, tier set, endpoint configured, acknowledged: the payload is POSTed."""
-    server, thread, events = _run_loopback_server()
+    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         sink = HttpTelemetrySink(endpoint=endpoint)
@@ -162,7 +147,7 @@ def test_fully_permitted_invocation_posts_the_allowlisted_payload() -> None:
         payload = _payload()
         result = emit_telemetry_event(payload, settings=settings, acknowledged=True, sink=sink)
     finally:
-        _stop_loopback_server(server, thread)
+        stop_loopback_server(server, thread)
     assert result is True
     observed = events.get_nowait()
     assert observed["path"] == "/collect"
@@ -216,12 +201,12 @@ def test_allowlisted_payload_cannot_carry_a_sensitive_field_over_http() -> None:
     free-text field), the JSON body it posts cannot carry a sensitive key --
     there is no attribute to smuggle one through.
     """
-    server, thread, events = _run_loopback_server()
+    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         HttpTelemetrySink(endpoint=endpoint).send(_payload())
     finally:
-        _stop_loopback_server(server, thread)
+        stop_loopback_server(server, thread)
     observed = events.get_nowait()
     body = observed["body"]
     assert isinstance(body, dict)

@@ -27,9 +27,9 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError
 
-from ......core.config import Settings
 from ......tests.aeat_literal_fixtures import PDF_100_PATH_FIXTURE, PDF_FORM_PATH_FIXTURE, sede_pdf_url
 from ...errors import RepositoryError
+from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from .. import (
     CorpusArtifactRecord,
     CorpusArtifactRepository,
@@ -38,19 +38,15 @@ from .. import (
     PortalAuthMethod,
     PortalRecord,
     PortalRepository,
-    create_engine_from_settings,
     session_scope,
 )
-from .._orm import metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 @contextmanager
 def _schema_engine(tmp_path: Path, name: str = "constraints.db") -> Iterator[Engine]:
-    settings = Settings(cadrumo_database_url=f"sqlite:///{(tmp_path / name).as_posix()}")
-    engine = create_engine_from_settings(settings)
-    metadata.create_all(engine)
+    engine = bootstrap_sqlite_engine(tmp_path / name)
     try:
         yield engine
     finally:

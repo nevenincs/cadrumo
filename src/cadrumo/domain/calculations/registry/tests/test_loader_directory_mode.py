@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .._errors import RegistryLoadError, RegistryValidationError
 from .._loader import (
     ModeloSource,
@@ -86,7 +87,7 @@ def test_directory_mode_round_trip_matches_every_single_file_modelo(tmp_path: Pa
         assert actual == expected, source.modelo_id
 
     if not checked:
-        assert list(modelos_dir.glob("*.toml")) == []
+        assert scan_directory(modelos_dir, pattern="*.toml") == ()
 
 
 def test_fragment_directory_round_trip_matches_every_single_file_modelo(tmp_path: Path) -> None:
@@ -115,7 +116,7 @@ def test_fragment_directory_round_trip_matches_every_single_file_modelo(tmp_path
         assert actual == expected, source.modelo_id
 
     if not checked:
-        assert list(modelos_dir.glob("*.toml")) == []
+        assert scan_directory(modelos_dir, pattern="*.toml") == ()
 
 
 def test_directory_mode_rejects_manifest_with_revisions_table(tmp_path: Path) -> None:

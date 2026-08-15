@@ -24,6 +24,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....core import scan_directory
 from .._errors import ProrrataInputError, ProrrataSectorError
 from .._prorrata import (
     InputClassification,
@@ -663,7 +664,7 @@ def test_no_parallel_prorrata_implementation_exists() -> None:
         "compute_sectoral_prorrata",
     )
 
-    for py_file in source_root.rglob("*.py"):
+    for py_file in scan_directory(source_root, pattern="*.py", recursive=True):
         if py_file == canonical_module:
             continue
         text = py_file.read_text(encoding="utf-8", errors="ignore")
@@ -700,7 +701,7 @@ def test_no_usage_ratios_to_prorrata_shim_exists() -> None:
         ("from ..usage_ratios", "ProrrataResult"),
     )
 
-    for py_file in source_root.rglob("*.py"):
+    for py_file in scan_directory(source_root, pattern="*.py", recursive=True):
         # Test files may legitimately reference both module names while
         # asserting boundary contracts (this very test does so).
         if py_file.name.startswith("test_"):
@@ -742,7 +743,7 @@ def test_no_parallel_prorrata_cli_surface_exists() -> None:
         'name="prorrata"',
     )
 
-    for py_file in cli_root.rglob("*.py"):
+    for py_file in scan_directory(cli_root, pattern="*.py", recursive=True):
         text = py_file.read_text(encoding="utf-8", errors="ignore")
         for needle in forbidden_command_decorations:
             assert needle not in text, (

@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....core import iter_directory, scan_directory
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageRemoteMirrorPolicy
 from .. import (
@@ -154,7 +155,7 @@ def test_remote_mirror_inspections_accept_opaque_encrypted_payload_round_trip(
         assert mirrored_payload == raw_row.payload
         assert plaintext not in mirrored_payload
         assert plaintext not in manifest_payload
-        for artifact in mirror_provider.root.rglob("*"):
+        for artifact in scan_directory(mirror_provider.root, recursive=True):
             assert plaintext_text not in artifact.relative_to(mirror_provider.root).as_posix()
             if artifact.is_file():
                 assert plaintext not in artifact.read_bytes()
@@ -494,7 +495,7 @@ def _rewrite_local_provider_sidecar(
     *,
     update: dict[str, object],
 ) -> dict[str, object]:
-    sidecar_path = next((provider.root / namespace).glob("*.meta.json"))
+    sidecar_path = next(iter_directory(provider.root / namespace, pattern="*.meta.json"))
     raw_sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
     assert isinstance(raw_sidecar, dict)
     sidecar: dict[str, object] = {}

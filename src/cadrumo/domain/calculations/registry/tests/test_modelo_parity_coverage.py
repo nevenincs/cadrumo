@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -27,7 +28,7 @@ def _modelo_registry_test_ids() -> set[str]:
     include here since no real modelo id ever collides with one.
     """
     ids: set[str] = set()
-    for path in _TEST_ROOT.glob("test_modelo_*_registry.py"):
+    for path in scan_directory(_TEST_ROOT, pattern="test_modelo_*_registry.py"):
         stem = path.stem.removeprefix("test_modelo_").removesuffix("_registry")
         ids.update(stem.split("_"))
     return ids

@@ -28,6 +28,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, NoReturn
 
+from cadrumo.core import scan_directory
 from dev._paths import UTF_8
 
 from ._hashing import sha256_path
@@ -228,7 +229,7 @@ def match_downloaded_cohort_wheels(
     resolved: dict[str, Path] = {}
     for distribution in PYTHON_COHORT_WHEEL_NAMES:
         prefix = _wheel_distribution_prefix(distribution, cohort.version)
-        matches = sorted(path for path in download_dir.glob("*.whl") if path.name.startswith(prefix))
+        matches = [path for path in scan_directory(download_dir, pattern="*.whl") if path.name.startswith(prefix)]
         if not matches:
             refuse_unavailable(
                 mechanism=mechanism,

@@ -39,6 +39,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .....core.resources import bundled_path
 from .....tests.fixtures import (
     FIXTURE_PROVENANCE_REAL,
@@ -61,12 +62,9 @@ _TAG_TO_PROVENANCE = {
 }
 
 
-def _all_fixture_pdfs(modelo_id: str) -> list[Path]:
-    """Return sorted list of all *.pdf files under justificantes/<modelo_id>/."""
-    fixture_dir = _FIXTURE_ROOT / modelo_id
-    if not fixture_dir.is_dir():
-        return []
-    return sorted(fixture_dir.glob("*.pdf"))
+def _all_fixture_pdfs(modelo_id: str) -> tuple[Path, ...]:
+    """Return every ``*.pdf`` under justificantes/<modelo_id>/, sorted."""
+    return scan_directory(_FIXTURE_ROOT / modelo_id, pattern="*.pdf")
 
 
 def _verified_declaracion_pdf_profiles() -> list[tuple[str, str, str, str | None]]:

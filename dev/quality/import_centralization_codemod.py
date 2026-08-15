@@ -47,6 +47,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core import scan_directory
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = REPO_ROOT / "src"
 PKG_ROOT = SRC_ROOT / "cadrumo"
@@ -137,8 +139,7 @@ def collect_plans(
     """
     facades = scan.discover_facades()
 
-    py_files = sorted(PKG_ROOT.rglob("*.py"))
-    py_files = [p for p in py_files if "__pycache__" not in p.parts]
+    py_files = list(scan_directory(PKG_ROOT, pattern="*.py", recursive=True, prune_directories=("__pycache__",)))
     if only_file is not None:
         py_files = [p for p in py_files if p == only_file]
 

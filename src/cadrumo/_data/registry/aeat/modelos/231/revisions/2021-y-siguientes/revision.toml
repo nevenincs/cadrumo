@@ -1,4 +1,5 @@
 [revisions."2021-y-siguientes"]
+authority_grade = "filing"
 valid_from = 2021-01-01
 period_selector = { year_from = 2021, periods = ["0A"] }
 orden_aplicabilidad = ["orden-hac-1285-2020:art-primero-anexo"]
@@ -7,6 +8,18 @@ legal_refs = [
     "orden-hfp-1978-2016:art-1",
     "orden-hfp-1978-2016:art-3",
     "orden-hfp-1978-2016:art-4",
+    "orden-hac-1285-2020:art-primero-anexo",
+]
+source_refs = [
+    "aeat-modelo-231-procedure",
+    "boe-modelo-231-base-order",
+    "boe-modelo-231-current-annex",
+]
+
+
+[revisions."2021-y-siguientes".family_dispositions.formulas]
+reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
+legal_refs = [
     "orden-hac-1285-2020:art-primero-anexo",
 ]
 source_refs = [

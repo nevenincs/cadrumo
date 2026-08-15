@@ -15,11 +15,11 @@ from __future__ import annotations
 
 import hashlib
 from importlib.metadata import version
-from io import BytesIO
 
 import pytest
 
 from ....core import FieldOrigin
+from ....tests.pdf_fixtures import multi_page_text_pdf_bytes
 from .._document_transcription import DocumentTranscription
 from .._evidence import PurchaseInvoiceEvidenceInputError
 from .._evidence_input import EvidenceInput
@@ -51,23 +51,6 @@ _PAGE_TWO_LINES = (
 )
 
 
-def _text_pdf_bytes(*pages: tuple[str, ...]) -> bytes:
-    """Return real PDF bytes with one drawn text page per argument."""
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfgen import canvas
-
-    buf = BytesIO()
-    document = canvas.Canvas(buf, pagesize=A4)
-    for lines in pages:
-        vertical = 720
-        for line in lines:
-            document.drawString(72, vertical, line)
-            vertical -= 24
-        document.showPage()
-    document.save()
-    return buf.getvalue()
-
-
 def _evidence_input(data: bytes, mime_type: str) -> EvidenceInput:
     return EvidenceInput(
         mime_type=mime_type,
@@ -80,7 +63,7 @@ def _evidence_input(data: bytes, mime_type: str) -> EvidenceInput:
 @pytest.fixture
 def invoice_evidence() -> EvidenceInput:
     return _evidence_input(
-        _text_pdf_bytes(_PAGE_ONE_LINES, _PAGE_TWO_LINES),
+        multi_page_text_pdf_bytes(_PAGE_ONE_LINES, _PAGE_TWO_LINES),
         "application/pdf",
     )
 
@@ -198,7 +181,7 @@ class TestRefusals:
             transcribe_text_layer(image)
 
     def test_pdf_without_a_text_layer_is_refused(self) -> None:
-        blank = _evidence_input(_text_pdf_bytes(()), "application/pdf")
+        blank = _evidence_input(multi_page_text_pdf_bytes(()), "application/pdf")
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError):
             transcribe_text_layer(blank)

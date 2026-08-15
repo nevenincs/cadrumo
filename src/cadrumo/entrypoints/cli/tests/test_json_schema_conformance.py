@@ -52,7 +52,7 @@ from ....application.ledger import (
     LedgerRemovalBlocker,
     LedgerTransactionRemovalReport,
 )
-from ....core import PRODUCT_IDENTITY, STR_KEYED_MAPPING_ADAPTER
+from ....core import PRODUCT_IDENTITY, STR_KEYED_MAPPING_ADAPTER, scan_directory
 from ....core.json_contract import SCHEMA_REGISTRY, OutputSchema, SchemaEnvelope
 from ...schema_surface import (
     GROUP_CALLBACK_SCHEMA_KEYS,
@@ -79,7 +79,6 @@ from .. import _app_quickfile_payloads as _app_quickfile_payloads
 from .. import _config_bucket_history_payloads as _config_bucket_history_payloads
 from .. import _config_descendiente_payloads as _config_descendiente_payloads
 from .. import _config_payloads as _config_payloads
-from .. import _config_sandbox_payloads as _config_sandbox_payloads
 from ._lazy_command_tree import materialise_lazy_subcommands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -268,7 +267,7 @@ def test_every_emitted_command_identifier_is_registered() -> None:
     validating_emitters = {"_emit_envelope", "emit_operator_json_success"}
     registered = {
         node.args[0].value
-        for source in Path("src/cadrumo").rglob("*.py")
+        for source in scan_directory(Path("src/cadrumo"), pattern="*.py", recursive=True)
         for node in ast.walk(ast.parse(source.read_text(encoding="utf-8"), filename=str(source)))
         if isinstance(node, ast.Call)
         and (node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", None)) == "register_schema"
@@ -281,7 +280,7 @@ def test_every_emitted_command_identifier_is_registered() -> None:
     root = Path("src/cadrumo/entrypoints/cli")
     violations: list[str] = []
     emitted = 0
-    for path in sorted(root.rglob("*.py")):
+    for path in scan_directory(root, pattern="*.py", recursive=True):
         if path.name.startswith("test_") or path.name == "conftest.py":
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -521,7 +520,7 @@ def test_cli_has_no_bare_emit_definition_import_or_call() -> None:
     root = Path("src/cadrumo/entrypoints/cli")
     violations: list[str] = []
     scanned = 0
-    for path in sorted(root.rglob("*.py")):
+    for path in scan_directory(root, pattern="*.py", recursive=True):
         if path.name.startswith("test_") or path.name == "conftest.py":
             continue
         scanned += 1
@@ -604,7 +603,7 @@ def test_no_bare_emit_json_success_call() -> None:
     violations: list[str] = []
     scanned = 0
     for root in roots:
-        for path in sorted(root.rglob("*.py")):
+        for path in scan_directory(root, pattern="*.py", recursive=True):
             if path.name.startswith("test_") or path.name == "conftest.py":
                 continue
             relative = path.as_posix()

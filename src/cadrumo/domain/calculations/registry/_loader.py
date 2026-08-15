@@ -16,7 +16,15 @@ from typing import cast, get_args, get_origin
 
 from pydantic import BaseModel, ValidationError
 
-from ....core import OBJECT_TUPLE_ADAPTER, FilingProducerKey, compile_filing_projection_ref, freeze_toml, read_toml
+from ....core import (
+    OBJECT_TUPLE_ADAPTER,
+    DirectoryEntryKind,
+    FilingProducerKey,
+    compile_filing_projection_ref,
+    freeze_toml,
+    read_toml,
+    scan_directory,
+)
 from ._compiled_cache import load_compiled_registry_cache, store_compiled_registry_cache
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._export_semantics import ExportComputedKey, ExportDraftAttribute
@@ -451,11 +459,10 @@ def _load_modelo_revisions(resolved: Path) -> dict[str, object]:
     if not revisions_dir.is_dir():
         return {}
     merged_revisions: dict[str, object] = {}
-    for path in sorted(revisions_dir.glob("*.toml")):
+    for path in scan_directory(revisions_dir, pattern="*.toml"):
         _merge_revision_file(path, merged_revisions)
-    for path in sorted(revisions_dir.iterdir()):
-        if path.is_dir():
-            _merge_revision_directory(path, merged_revisions)
+    for path in scan_directory(revisions_dir, select=DirectoryEntryKind.DIRECTORIES):
+        _merge_revision_directory(path, merged_revisions)
     return merged_revisions
 
 
@@ -484,43 +491,46 @@ def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -
     revision_manifest = path / "revision.toml"
     if not revision_manifest.is_file():
         raise RegistryLoadError(f"{path}: revision fragment directory must contain revision.toml")
-    section_dirs = _revision_section_directories(path)
-    _require_revision_section_fragments(section_dirs)
+    section_fragments = _revision_section_fragment_paths(_revision_section_directories(path))
     merged_revision: dict[str, object] = {}
     _merge_revision_manifest(revision_manifest, revision_id, merged_revision)
-    for fragment_path in _revision_section_fragment_paths(section_dirs):
+    for fragment_path in section_fragments:
         _merge_revision_fragment(fragment_path, revision_id, merged_revision)
     merged_revisions[revision_id] = merged_revision
 
 
 def _revision_section_directories(path: Path) -> tuple[Path, ...]:
-    return tuple(sorted(entry for entry in path.iterdir() if entry.is_dir() and entry.name != "locales"))
-
-
-def _require_revision_section_fragments(section_dirs: tuple[Path, ...]) -> None:
-    """Guard every section directory against emptiness.
-
-    Matches :func:`_revision_section_fragment_paths`'s own one-level ``glob``
-    rather than ``rglob`` -- the collector is what actually defines the
-    registry's content, so the guard must see exactly what the collector
-    sees, never more or less. A one-level-only collector paired with a
-    recursive emptiness check could in principle let a section directory
-    holding ONLY nested fragments pass as "populated" while the collector
-    silently read zero of them; in practice this can never happen, because
-    :func:`_validate_section_fragment_names` (``_loader_cache.py``, run for
-    every section directory before a fragment tree is ever merged) already
-    refuses ANY subdirectory nested inside a section directory outright.
-    This still narrows the check to match the collector exactly, so the two
-    can never textually diverge even if that upstream categorical block ever
-    changed shape.
-    """
-    for section_dir in section_dirs:
-        if not any(candidate.is_file() for candidate in section_dir.glob("*.toml")):
-            raise RegistryLoadError(f"{section_dir}: revision section fragment directory contains no TOML fragments")
+    return tuple(
+        entry for entry in scan_directory(path, select=DirectoryEntryKind.DIRECTORIES) if entry.name != "locales"
+    )
 
 
 def _revision_section_fragment_paths(section_dirs: tuple[Path, ...]) -> tuple[Path, ...]:
-    return tuple(sorted(fragment_path for section_dir in section_dirs for fragment_path in section_dir.glob("*.toml")))
+    """Collect every section directory's fragments, refusing an empty section.
+
+    One listing per section directory answers both questions the loader asks
+    of it -- "is this section populated" and "which files does it hold" -- so
+    the two cannot disagree. They were previously two independent one-level
+    walks kept textually identical by hand, on the reasoning that a guard
+    seeing more than the collector could call a section "populated" while the
+    collector read nothing from it. Deriving both from a single listing makes
+    that agreement structural rather than editorial, and halves the walks.
+
+    The listing is narrowed to files, which is what the emptiness question
+    always meant: a directory named ``*.toml`` is not a fragment. Nothing of
+    the sort can exist anyway -- :func:`_validate_section_fragment_names`
+    (``_loader_cache.py``, run for every section directory before a fragment
+    tree is merged) refuses ANY subdirectory nested inside a section
+    directory outright -- so the narrowing restates an upstream categorical
+    block rather than introducing a new rule.
+    """
+    fragments: list[Path] = []
+    for section_dir in section_dirs:
+        section_fragments = scan_directory(section_dir, pattern="*.toml", select=DirectoryEntryKind.FILES)
+        if not section_fragments:
+            raise RegistryLoadError(f"{section_dir}: revision section fragment directory contains no TOML fragments")
+        fragments.extend(section_fragments)
+    return tuple(sorted(fragments))
 
 
 def _read_single_revision_table(path: Path, expected_revision_id: RevisionId) -> dict[str, object]:
@@ -1027,7 +1037,7 @@ def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:
     _validate_legal_directory(legal_dir)
     legal: dict[str, LegalReference] = {}
     parameters: dict[str, LegalParameter] = {}
-    for path in sorted(legal_dir.glob("*.toml")):
+    for path in scan_directory(legal_dir, pattern="*.toml"):
         catalogue = load_catalogue_file(path)
         overlap_legal = set(legal).intersection(catalogue.legal)
         overlap_parameters = set(parameters).intersection(catalogue.parameters)
@@ -1124,18 +1134,15 @@ def _registry_source_fingerprints(resolved: Path) -> tuple[_RegistryPathFingerpr
     schema) is load-bearing and must not be reordered.
     """
     fingerprints: list[_RegistryPathFingerprint] = []
-    authorization_dir = resolved / "authorization.d"
-    if authorization_dir.is_dir():
-        for fragment in sorted(authorization_dir.glob("*.toml")):
-            fingerprints.append(_toml_fingerprint(fragment))
-    for path in sorted((resolved / "legal").glob("*.toml")):
+    for fragment in scan_directory(resolved / "authorization.d", pattern="*.toml"):
+        fingerprints.append(_toml_fingerprint(fragment))
+    for path in scan_directory(resolved / "legal", pattern="*.toml"):
         fingerprints.append(_toml_fingerprint(path))
     modelos_dir = resolved / "modelos"
-    for path in sorted(modelos_dir.glob("*.toml")):
+    for path in scan_directory(modelos_dir, pattern="*.toml"):
         fingerprints.append(_toml_fingerprint(path))
-    if modelos_dir.is_dir():
-        for entry in sorted(modelos_dir.iterdir()):
-            fingerprints.extend(_modelo_directory_fingerprints(entry))
+    for entry in scan_directory(modelos_dir):
+        fingerprints.extend(_modelo_directory_fingerprints(entry))
     schema_path = resolved / "user_profile" / "schema.toml"
     if schema_path.is_file():
         fingerprints.append(_toml_fingerprint(schema_path))
@@ -1188,14 +1195,10 @@ def _collect_modelo_directory_fingerprints(resolved: Path) -> _RegistryPathFinge
     manifest_path = resolved / "manifest.toml"
     fingerprints: list[_RegistryPathFingerprint] = list(_collect_registry_directory_fingerprints(resolved))
     fingerprints.append(_toml_fingerprint(manifest_path))
-    locales_dir = resolved / "locales"
-    if locales_dir.is_dir():
-        for path in sorted(locales_dir.glob("*.toml")):
-            fingerprints.append(_toml_fingerprint(path))
-    revisions_dir = resolved / "revisions"
-    if revisions_dir.is_dir():
-        for path in sorted(revisions_dir.rglob("*.toml")):
-            fingerprints.append(_toml_fingerprint(path))
+    for path in scan_directory(resolved / "locales", pattern="*.toml"):
+        fingerprints.append(_toml_fingerprint(path))
+    for path in scan_directory(resolved / "revisions", pattern="*.toml", recursive=True):
+        fingerprints.append(_toml_fingerprint(path))
     return tuple(fingerprints)
 
 
@@ -1204,14 +1207,10 @@ def _modelo_directory_fingerprints(entry: Path) -> _RegistryPathFingerprints:
     if not (entry.is_dir() and (entry / "manifest.toml").is_file()):
         return ()
     fingerprints: list[_RegistryPathFingerprint] = [_toml_fingerprint(entry / "manifest.toml")]
-    locales_dir = entry / "locales"
-    if locales_dir.is_dir():
-        for path in sorted(locales_dir.rglob("*.toml")):
-            fingerprints.append(_toml_fingerprint(path))
-    revisions_dir = entry / "revisions"
-    if revisions_dir.is_dir():
-        for rev_path in sorted(revisions_dir.rglob("*.toml")):
-            fingerprints.append(_toml_fingerprint(rev_path))
+    for path in scan_directory(entry / "locales", pattern="*.toml", recursive=True):
+        fingerprints.append(_toml_fingerprint(path))
+    for rev_path in scan_directory(entry / "revisions", pattern="*.toml", recursive=True):
+        fingerprints.append(_toml_fingerprint(rev_path))
     return tuple(fingerprints)
 
 
@@ -1246,7 +1245,7 @@ def _load_shared_catalogue_files(legal_dir: Path) -> RegistryCatalogues:
     legal: dict[str, LegalReference] = {}
     sources: dict[str, SourceReference] = {}
     parameters: dict[str, LegalParameter] = {}
-    for path in sorted(legal_dir.glob("*.toml")):
+    for path in scan_directory(legal_dir, pattern="*.toml"):
         catalogue = load_catalogue_file(path)
         overlap_legal = set(legal).intersection(catalogue.legal)
         overlap_sources = set(sources).intersection(catalogue.sources)
@@ -1267,7 +1266,7 @@ def _validate_legal_directory(legal_dir: Path) -> None:
     """Require the shared legal catalogue to remain one flat TOML directory."""
     if not legal_dir.is_dir():
         return
-    for entry in sorted(legal_dir.iterdir()):
+    for entry in scan_directory(legal_dir):
         if entry.is_dir():
             raise RegistryLoadError(f"{entry}: unrecognized legal directory; legal catalogues must be flat")
         if not entry.is_file() or entry.suffix != ".toml":

@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from ...core import scan_directory
 from .. import harness_root, iter_operator_rules, iter_personas
 from .._workspace import materialise_workspace
 
@@ -76,6 +77,6 @@ def test_written_skill_document_matches_the_shipped_bytes(tmp_path: Path) -> Non
 def test_manifest_counts_match_written_files(tmp_path: Path) -> None:
     manifest = materialise_workspace(tmp_path)
     claude = tmp_path / ".claude"
-    assert len(list((claude / "rules").glob("*.md"))) == manifest.rules_written
-    assert len(list((claude / "agents").glob("*.md"))) == manifest.personas_written
+    assert len(list(scan_directory(claude / "rules", pattern="*.md"))) == manifest.rules_written
+    assert len(list(scan_directory(claude / "agents", pattern="*.md"))) == manifest.personas_written
     assert len(list((claude / "skills").glob("*/SKILL.md"))) == manifest.skills_written

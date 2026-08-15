@@ -19,6 +19,7 @@ from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -30,21 +31,20 @@ def _assert_payload_period(payload: dict[str, object], *, year: int, code: str) 
 
 
 def _create_profile() -> None:
-    result = invoke_cached_cli(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--tax-id", "B12345674",
-            "--entity-type", "legal_entity",
-            "--legal-entity-form", "sl",
-            "--name", "Operator",
-            "--surnames", "Operator SL",
-            "--legal-name", "Operator SL",
-            "--activity", "design",
-            "--incn-prior-12-months", "7500000.00",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='operator',
+        facts={
+            "identity.tax_id": 'B12345674',
+            "taxpayer_type.entity_type": 'legal_entity',
+            "taxpayer_type.legal_entity_form": 'sl',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Operator SL',
+            "identity.legal_name": 'Operator SL',
+            "activities.description": 'design',
+            "taxpayer_type.incn_prior_12_months": '7500000.00',
+        },
+    )
 
 
 def _create_202_work_unit(period: str) -> str:

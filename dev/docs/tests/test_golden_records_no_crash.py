@@ -31,6 +31,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
+
 from ..sequences import (
     FrameKind,
     default_docs_root,
@@ -62,7 +64,9 @@ def _golden_paths() -> list[Path]:
     """Every committed sequence golden, excluding authoring inputs."""
     root = default_docs_root() / "_sequences"
     return [
-        path for path in sorted(root.rglob("*.json")) if "contracts" not in path.parts and "fixtures" not in path.parts
+        path
+        for path in scan_directory(root, pattern="*.json", recursive=True)
+        if "contracts" not in path.parts and "fixtures" not in path.parts
     ]
 
 

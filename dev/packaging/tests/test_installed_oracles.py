@@ -25,8 +25,10 @@ from typing import IO, Any, cast
 import pytest
 
 from cadrumo.agent import materialise_marketplace
+from cadrumo.core import iter_directory, scan_directory
 from dev._paths import REPO_ROOT
 
+from .._hashing import sha256_path
 from .._smoke_common import (
     build_companion_wheels,
     build_wheel,
@@ -98,14 +100,6 @@ class InstalledCohort:
 def _installed_script(venv: Path, name: str) -> Path:
     suffix = ".exe" if sys.platform == "win32" else ""
     return (venv_bin_dir(venv) / f"{name}{suffix}").resolve()
-
-
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _text_sha256(value: str) -> str:
@@ -182,14 +176,14 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
             )
         artifacts = {
             "cadrumo": root_wheel.name,
-            "cadrumo-sdist": next(cohort_dir.glob("cadrumo-*.tar.gz")).name,
+            "cadrumo-sdist": next(iter_directory(cohort_dir, pattern="cadrumo-*.tar.gz")).name,
             "cadrumo-data-manuals": data_wheels[0].name,
             "cadrumo-data-manuals-sdist": next(
-                cohort_dir.glob("cadrumo_data_manuals-*.tar.gz"),
+                iter_directory(cohort_dir, pattern="cadrumo_data_manuals-*.tar.gz"),
             ).name,
             "cadrumo-data-official": data_wheels[1].name,
             "cadrumo-data-official-sdist": next(
-                cohort_dir.glob("cadrumo_data_official-*.tar.gz"),
+                iter_directory(cohort_dir, pattern="cadrumo_data_official-*.tar.gz"),
             ).name,
         }
         project_metadata = tomllib.loads(
@@ -201,7 +195,7 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
             cohort_dir / "python-cohort.json",
             {
                 "artifacts": artifacts,
-                "sha256": {name: _sha256(cohort_dir / filename) for name, filename in artifacts.items()},
+                "sha256": {name: sha256_path(cohort_dir / filename) for name, filename in artifacts.items()},
                 "source_commit": source_commit,
                 "version": version,
             },
@@ -406,7 +400,7 @@ def test_marketplace_plugin_embeds_and_executes_the_exact_built_cohort(
     assert retained["source_commit"] == cohort.source_commit
     assert retained["sha256"] == cohort.artifact_sha256
     for distribution, filename in retained["artifacts"].items():
-        assert _sha256(embedded / filename) == cohort.artifact_sha256[distribution]
+        assert sha256_path(embedded / filename) == cohort.artifact_sha256[distribution]
 
     mcp = json.loads((plugin_root / ".mcp.json").read_text(encoding="utf-8"))
     server = mcp["mcpServers"]["cadrumo"]
@@ -589,7 +583,7 @@ def test_real_client_emission_cli_mints_a_sanctioned_record(
     )
 
     assert exit_code == 0
-    records = sorted(evidence_dir.glob("claude-desktop-mcpb-*.json"))
+    records = scan_directory(evidence_dir, pattern="claude-desktop-mcpb-*.json")
     assert len(records) == 1
     record = DistributionEvidence.model_validate_json(records[0].read_text(encoding="utf-8"))
     assert record.row_id == "claude-desktop-mcpb"

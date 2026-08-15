@@ -46,6 +46,7 @@ import sys
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 _ROOT: Final[Path] = REPO_ROOT
@@ -74,7 +75,7 @@ def _scope_paths(scope: str) -> set[str]:
 def stale_rows() -> list[tuple[str, str, str]]:
     """Return ``(plan, row id, missing path)`` for every open row's dead scope path."""
     findings: list[tuple[str, str, str]] = []
-    for plan in sorted(_PLANS.glob("*.md")):
+    for plan in scan_directory(_PLANS, pattern="*.md"):
         parsed: list[tuple[str, str, str, set[str]]] = []
         for line in plan.read_text(encoding="utf-8", errors="replace").split("\n"):
             row = _ROW.match(line)

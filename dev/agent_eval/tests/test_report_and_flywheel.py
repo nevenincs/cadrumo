@@ -17,6 +17,8 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core import scan_directory
+
 from .._flywheel import failure_signature, promote_failure, write_promoted_scenario
 from .._live_scoring import LiveInvariantVerdict, LiveScenarioScore
 from .._models import LiveToolCallRecord, LiveTrajectory, NarrationFaithfulness
@@ -338,7 +340,7 @@ def test_write_promoted_scenario_is_idempotent(tmp_path: Path) -> None:
     text = first.read_text(encoding="utf-8")
     assert signature in text
     assert scenario.name in text
-    assert len(list(tmp_path.glob("*.toml"))) == 1
+    assert len(scan_directory(tmp_path, pattern="*.toml")) == 1
 
 
 def test_distinct_failure_evidence_gets_its_own_promoted_scenario(tmp_path: Path) -> None:
@@ -374,7 +376,7 @@ def test_distinct_failure_evidence_gets_its_own_promoted_scenario(tmp_path: Path
     assert first != second
     assert "lifecycle out of order: file before verify" in first.read_text(encoding="utf-8")
     assert "verification evidence disagrees with the live revision" in second.read_text(encoding="utf-8")
-    assert len(list(tmp_path.glob("*.toml"))) == 2
+    assert len(scan_directory(tmp_path, pattern="*.toml")) == 2
 
 
 def test_promoted_scenario_refuses_a_nonidentical_same_signature_replacement(tmp_path: Path) -> None:

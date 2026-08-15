@@ -17,6 +17,7 @@ __all__ = [
     "RecordDesignCompositeRelativeClosing",
     "RecordDesignExtraction",
     "RecordDesignField",
+    "RecordDesignFieldTypeCorrection",
     "RecordDesignRelativeSuffixMarker",
     "RecordDesignSheet",
     "RecordDesignSkippedSheet",
@@ -318,6 +319,27 @@ class RecordDesignVariableEnvelope(RegistryModel):
     variable_total: RecordDesignVariableTotalMarker
 
 
+class RecordDesignFieldTypeCorrection(RegistryModel):
+    """A declared, sourced correction of one blank ``Tipo`` cell AEAT itself omitted.
+
+    Never inferred and never a silent fallback: the parser applies a correction
+    ONLY when a hand-authored sidecar next to the exact source binary declares
+    one for this exact ``(sheet, source_row)``, and every correction carries
+    its own grounding inline -- the specific editions read and the reason the
+    omission occurred -- so a design read this way is never indistinguishable
+    from one AEAT published cleanly. See
+    :attr:`RecordDesignExtraction.corrections`.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    sheet: str = Field(min_length=1)
+    source_row: int = Field(gt=0)
+    corrected_type: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+    editions_read: tuple[str, ...] = Field(min_length=1)
+
+
 class RecordDesignSheet(RegistryModel):
     """Parsed field rows and declared total length for one workbook sheet."""
 
@@ -328,6 +350,9 @@ class RecordDesignSheet(RegistryModel):
     total_positions: int | None = None
     variable_envelope: RecordDesignVariableEnvelope | None = None
     auxiliary_envelope_header: RecordDesignAuxiliaryEnvelopeHeader | None = None
+    #: Declared corrections applied while reading this sheet's field rows.
+    #: Empty for the overwhelming majority of sheets, which read as published.
+    corrections: tuple[RecordDesignFieldTypeCorrection, ...] = ()
 
     @model_validator(mode="after")
     def _require_one_record_composition_kind(self) -> Self:
@@ -387,6 +412,17 @@ class RecordDesignExtraction(RegistryModel):
     def is_complete(self) -> bool:
         """Whether every sheet of the source was read."""
         return not self.skipped
+
+    @property
+    def corrections(self) -> tuple[RecordDesignFieldTypeCorrection, ...]:
+        """Every declared correction applied anywhere in this source, flattened.
+
+        Non-empty here means this design reads fully only BECAUSE of a
+        declared, sourced correction -- a fact a caller reporting on the read
+        (never a downstream consumer of the values themselves, which are
+        correct either way) must not collapse into "read as published".
+        """
+        return tuple(correction for sheet in self.sheets for correction in sheet.corrections)
 
     def require_complete(self) -> tuple[RecordDesignSheet, ...]:
         """Return every sheet, refusing when the source was only partly read.

@@ -38,6 +38,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.einvoice import ParsedEInvoice, parse_einvoice_document
+from ....core import iter_directory
 from ....domain.invoices import InvoiceClass
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -91,7 +92,9 @@ def test_an_ordinary_document_states_no_correction() -> None:
     """
     corpus = _RECTIFICATIVA.parent
     ordinary = next(
-        path for path in sorted(corpus.glob("*.xml")) if "<Corrective>" not in path.read_text(encoding="utf-8")
+        path
+        for path in iter_directory(corpus, pattern="*.xml")
+        if "<Corrective>" not in path.read_text(encoding="utf-8")
     )
 
     assert parse_einvoice_document(ordinary.read_bytes()).rectifies_invoice_number is None

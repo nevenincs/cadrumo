@@ -176,7 +176,12 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core import CorpusAnchorResolutionError, normalise_corpus_text, resolve_anchored_extracted_unit
+from cadrumo.core import (
+    CorpusAnchorResolutionError,
+    normalise_corpus_text,
+    resolve_anchored_extracted_unit,
+    scan_directory,
+)
 from dev._paths import REPO_ROOT, UTF_8
 
 from ..corpus.fetch_boe_normative import (
@@ -754,7 +759,7 @@ def article_payloads(corpus: Path) -> dict[str, tuple[ArticlePayload, ...]]:
     comparable population without editing this module.
     """
     grouped: dict[str, list[ArticlePayload]] = {}
-    for path in sorted(corpus.glob("*-redacciones.html")):
+    for path in scan_directory(corpus, pattern="*-redacciones.html"):
         match = _REDACTION_PAYLOAD.match(path.name.removesuffix(".html"))
         if match is None:
             continue
@@ -775,7 +780,7 @@ def screen(root: Path) -> ScreenResult:
     """Return one finding per excerpt-backed entry, and the excluded count."""
     entries = load_legal_entries(root)
     corpus = root / _CORPUS_DIR
-    stems = frozenset(path.name.removesuffix(".html") for path in corpus.glob("*.html"))
+    stems = frozenset(path.name.removesuffix(".html") for path in scan_directory(corpus, pattern="*.html"))
     if not stems:
         raise SystemExit(f"read zero corpus files, so the result would be meaningless: {corpus}")
     payloads = article_payloads(corpus)

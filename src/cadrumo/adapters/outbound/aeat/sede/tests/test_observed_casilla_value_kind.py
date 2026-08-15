@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from ......core import CasillaValueKind, validated_casilla_id
+from ......core import CasillaValueKind, scan_directory, validated_casilla_id
 from .._declarations_observations import _observed_value_kind, non_numeric_observed_casillas
 from .._errors import SedeValidationError
 from .._schema import ObservedCasillaSkip, ObservedCasillaValue
@@ -177,7 +177,7 @@ def _carrier_consuming_modules() -> list[Path]:
     casillas, a ``.value`` converted to a Decimal is the read this rule governs.
     """
     modules: list[Path] = []
-    for path in sorted(_SRC_ROOT.rglob("*.py")):
+    for path in scan_directory(_SRC_ROOT, pattern="*.py", recursive=True):
         parts = path.relative_to(_SRC_ROOT).parts
         if "tests" in parts or parts[0] == "_data":
             continue

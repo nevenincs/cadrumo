@@ -21,7 +21,7 @@ from .. import (
     ValidatedRegistryAuthority,
 )
 from .._schema_input_kind import InputKind
-from ._manual_oracle_support import read_manual_worked_example
+from ._manual_oracle_support import declared_manual_inputs, read_manual_worked_example
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -66,22 +66,6 @@ _FORMULA_BY_CASILLA: Mapping[str, str] = {
 }
 
 _ORACLE_PAYLOAD_NAME = "modelo-100-2021-cuotas-integras-escala-aragon.json"
-
-
-def _declared_manual_inputs() -> dict[CasillaId, Decimal]:
-    """The facts the manual PRINTS for this case, read from the oracle's declaration.
-
-    This test and the payload used to be two independent transcriptions of one worked
-    example — the test hardcoding both the inputs and the expected figures, the payload
-    declaring the figures again for the grounding fold, and nothing anywhere checking
-    the two agreed. They did agree; nothing made them.
-    """
-    declared = read_manual_worked_example(_ORACLE_PAYLOAD_NAME).declared_inputs
-    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
-    return {
-        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
-        for casilla_id, value in declared.by_casilla_id.items()
-    }
 
 
 #: Mínimo components the manual does NOT print, supplied as scenario scaffolding.
@@ -148,7 +132,7 @@ def _scenario(*, ccaa: str, scenario_id: str, grounded: bool) -> RegistryCalcula
         revision="2021",
         filing_year=2021,
         period="0A",
-        inputs={**_declared_manual_inputs(), **_STRUCTURAL_ZERO_INPUTS},
+        inputs={**declared_manual_inputs(_ORACLE_PAYLOAD_NAME), **_STRUCTURAL_ZERO_INPUTS},
         binding_values=_BASE_BINDINGS_2021,
         enum_binding_values={"renta-2021-profile-tax-residence-ccaa": ccaa},
         relation_values=_REL_2021,

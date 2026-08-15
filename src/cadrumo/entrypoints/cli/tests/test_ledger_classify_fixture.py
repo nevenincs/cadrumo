@@ -10,21 +10,17 @@ through ``ledger classify --file`` and asserts every row is applied.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Sequence
-from pathlib import Path
+from collections.abc import Sequence
 
 import pytest
 from click.testing import Result
 
 from ....adapters.inbound.financial.providers import CsvProvider
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core.config import override_settings
 from ....domain.transactions import derive_transaction_id
 from ....tests import FIXTURES_DIR
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ._ledger_corpus_support import _match
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -49,14 +45,6 @@ def _rules() -> list[dict[str, object]]:
     return rules
 
 
-def _match(description: str, rules: list[dict[str, object]]) -> dict[str, object] | None:
-    for rule in rules:
-        match_val = rule.get("match")
-        if isinstance(match_val, str) and match_val in description:
-            return rule
-    return None
-
-
 def _expected_csv_text() -> str:
     rules = _rules()
     lines = ["transaction_id,classification,category_id"]
@@ -76,20 +64,12 @@ def test_classify_fixture_matches_oracle_derivation() -> None:
     assert _FIXTURE.read_text(encoding="utf-8") == _expected_csv_text()
 
 
-@pytest.fixture
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session("00000000-0000-4000-8000-000000000000"),
-    ):
-        try:
-            register_minimal_profile(profile_id="00000000-0000-4000-8000-000000000000")
-            yield
-        finally:
-            dispose_engine()
+_isolated_backend = active_profile_isolated_backend_fixture(
+    bucket_id="00000000-0000-4000-8000-000000000000",
+    autouse=False,
+    dispose_engine_around=True,
+    settings_overrides={"cadrumo_output_language": "en"},
+)
 
 
 def test_classify_fixture_applies_through_bulk_classify(_isolated_backend: None) -> None:

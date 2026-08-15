@@ -13,23 +13,21 @@ from ..adapters.persistence.storage import (
     MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
 )
-from ..adapters.persistence.storage.bucket import bucket_paths, read_manifest
+from ..adapters.persistence.storage.bucket import bucket_paths
 from ..adapters.persistence.storage.master_key import (
     BucketSession,
     activate_session,
 )
-from ..adapters.persistence.storage.runtime import StorageRuntimeReadinessCode, inspect_storage_runtime
 from ..adapters.persistence.storage.sql.engine import dispose_engine
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..core import StorageCategory, storage_location
 from ..core.classification import SensitivityClass
-from ..core.config import StorageRouteKind, load_settings, override_settings
+from ..core.config import load_settings, override_settings
 from .secure_sql import (
     dev_test_database_password,
     isolated_cli_runtime_profile,
     isolated_ephemeral_secure_sql,
     isolated_profile_storage_root,
-    isolated_runtime_profile,
     read_db_at_rest_bytes,
     reap_profile_session_keys,
 )
@@ -109,28 +107,6 @@ def test_isolated_ephemeral_secure_sql_does_not_mutate_active_profile_database(t
     assert control_rows_before == 1
     assert control_rows_after == control_rows_before
     assert _secure_object_row_count(isolated_database) == 1
-
-
-def test_isolated_runtime_profile_provisions_manifest_runtime_and_repository(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CONTROL_BUCKET_ID) as profile:
-        manifest = read_manifest(profile.paths)
-        profile.repository.save(
-            namespace="cadrumo-tests.runtime.profile",
-            object_key="runtime-row",
-            classification=SensitivityClass.FINANCIAL,
-            schema_version=1,
-            written_at=datetime.now(UTC),
-            payload=b"runtime-profile-row",
-        )
-
-        runtime = inspect_storage_runtime(profile.settings)
-
-    assert manifest.bucket_id == _CONTROL_BUCKET_ID
-    assert manifest.label == "Test runtime profile"
-    assert profile.runtime.readiness.code is StorageRuntimeReadinessCode.READY
-    assert runtime.route_kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE
-    assert runtime.route_attached_to_active_bucket
-    assert _secure_object_row_count(profile.paths.database_file) == 1
 
 
 def test_profile_bootstrap_storage_uses_shared_dev_database_password(tmp_path: Path) -> None:

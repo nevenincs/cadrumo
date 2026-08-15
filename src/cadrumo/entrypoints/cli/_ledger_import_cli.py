@@ -17,7 +17,7 @@ from ...application.ledger import (
     LedgerSourceVerificationReport,
     import_ledger_source,
 )
-from ...core import resolve_active_bucket_id
+from ...core import DirectoryEntryKind, resolve_active_bucket_id, scan_directory
 from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -250,9 +250,11 @@ def _resolve_import_paths(path: Path) -> list[Path]:
     """Return the statement files to import."""
     if not path.is_dir():
         return [path]
-    files = sorted(
-        child for child in path.iterdir() if child.is_file() and child.suffix.lower() in _IMPORT_DIR_EXTENSIONS
-    )
+    files = [
+        child
+        for child in scan_directory(path, select=DirectoryEntryKind.FILES)
+        if child.suffix.lower() in _IMPORT_DIR_EXTENSIONS
+    ]
     if not files:
         raise _bad(
             tr("cli.ledger.import.empty_directory", path=str(path)),

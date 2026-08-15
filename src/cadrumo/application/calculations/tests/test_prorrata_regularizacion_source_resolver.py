@@ -36,6 +36,7 @@ from ....core import (
     Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
+    scan_directory,
     validated_casilla_id,
 )
 from ....core.resources import bundled_path, resources
@@ -350,7 +351,7 @@ def test_prorrata_repository_caller_ast_census_has_only_explicit_dependencies() 
                 direct_constructor_calls.append((self._source_path, node.lineno))
             self.generic_visit(node)
 
-    for source_path in source_root.rglob("*.py"):
+    for source_path in scan_directory(source_root, pattern="*.py", recursive=True):
         census = _CallerCensus(source_path)
         census.visit(ast.parse(source_path.read_text(encoding="utf-8")))
 
@@ -406,7 +407,7 @@ def test_prorrata_observation_repository_caller_ast_census_has_only_explicit_dep
                 omitted.add((self._source_path.relative_to(source_root).as_posix(), self._current_function))
             self.generic_visit(node)
 
-    for source_path in source_root.rglob("*.py"):
+    for source_path in scan_directory(source_root, pattern="*.py", recursive=True):
         source = source_path.read_text(encoding="utf-8")
         if not any(target_call in source for target_call in target_calls):
             continue

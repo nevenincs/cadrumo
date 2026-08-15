@@ -34,10 +34,9 @@ import pytest
 from sqlalchemy.engine import Engine
 
 from ......core.classification import SensitivityClass
-from ......core.config import Settings
 from ......tests.master_key import EphemeralMasterKeyProvider
+from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from .._orm import Base
-from ..engine import create_engine_from_settings
 from ..secure_objects import SecureObjectRawRow, SecureObjectRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -59,10 +58,7 @@ def test_archive_bundle_round_trips_three_rows(tmp_path: Path) -> None:
     provider = EphemeralMasterKeyProvider()
     with provider:
         db_path = tmp_path / "archive-bundle.db"
-        engine = create_engine_from_settings(
-            Settings(cadrumo_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
+        engine = bootstrap_sqlite_engine(db_path)
         try:
             repo = SecureObjectRepository(engine=engine)
             rows = _ARCHIVE_BUNDLE_FIXTURE_ROWS

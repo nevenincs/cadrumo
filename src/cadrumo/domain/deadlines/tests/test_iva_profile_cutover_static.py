@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _IVA_SECTION = "iva"
@@ -118,7 +120,7 @@ def _profile_fact_paths(container: ast.Tuple | ast.List) -> frozenset[str]:
 
 def _iter_modules() -> Iterator[tuple[Path, ast.Module]]:
     root = _source_root()
-    for path in (root / "src" / "cadrumo").rglob("*.py"):
+    for path in scan_directory(root / "src" / "cadrumo", pattern="*.py", recursive=True):
         yield path, ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
 
 

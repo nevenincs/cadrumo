@@ -28,6 +28,7 @@ __all__ = ["profile_storage_root_fixture"]
 
 from .....tests.cli_runner import invoke_cached_cli
 from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
+from .....tests.user_profile import register_cli_profile
 from ....cli._config import _status_frontend
 from ....cli._config._status_frontend import present_status_tui
 
@@ -250,38 +251,20 @@ def test_bare_key_keyword_still_subsumes_the_compound_key_names(fragment: str) -
 
 
 def _create_profile() -> None:
-    result = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "natural_person",
-            "--irpf-income-categories",
-            "actividad_economica",
-            # Required of every `--quiet` creation since the territorial regime
-            # became an explicit answer: a quiet run cannot fall back to the
-            # guided prompt, so the scope has to be stated. Common regime is
-            # the non-foral default and keeps this fixture's subject the fact
-            # rows rather than the territory.
-            "--tax-residence-jurisdiction-scope",
-            "common_regime",
-            "--iva-regime",
-            "GENERAL",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Operator",
-            "--surnames",
-            "Status",
-            "--activity",
-            "design",
-        ],
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "tax_residence.jurisdiction_scope": 'common_regime',
+            "iva.regime": 'GENERAL',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Status',
+            "activities.description": 'design',
+        },
     )
-    assert result.exit_code == 0, result.output
 
 
 _AUTH_PROVIDER_PATH = "auth.provider"

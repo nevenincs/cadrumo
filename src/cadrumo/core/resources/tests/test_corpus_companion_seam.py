@@ -25,6 +25,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import DirectoryEntryKind, scan_directory
 from ....core.resources import (
     bundled_path,
     resolve_companion_binary,
@@ -53,8 +54,10 @@ def _first_bundled_corpus_binary() -> tuple[tuple[str, ...], bytes]:
     """Return (segments-under-_data, bytes) for a real shipped corpus binary."""
     corpus_root = bundled_path("corpus")
     for suffix in (".xlsx", ".xls", ".pdf"):
-        for candidate in sorted(corpus_root.rglob(f"*{suffix}")):
-            if candidate.is_file() and candidate.stat().st_size < 5_000_000:
+        for candidate in scan_directory(
+            corpus_root, pattern=f"*{suffix}", recursive=True, select=DirectoryEntryKind.FILES
+        ):
+            if candidate.stat().st_size < 5_000_000:
                 relative = candidate.relative_to(corpus_root.parent)
                 return tuple(relative.parts), candidate.read_bytes()
     raise AssertionError("no bundled corpus binary found under the cadrumo tree")
@@ -241,7 +244,7 @@ def built_companion_portions(
             text=True,
             check=True,
         )
-        [wheel] = list(wheel_dir.glob("*.whl"))
+        [wheel] = scan_directory(wheel_dir, pattern="*.whl")
         with zipfile.ZipFile(wheel) as archive:
             members = sorted(
                 name

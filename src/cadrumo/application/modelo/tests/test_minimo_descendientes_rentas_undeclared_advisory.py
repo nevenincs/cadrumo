@@ -36,6 +36,7 @@ from ....tests.profile_capsule import set_active_test_profile_facts
 from ...aggregation import CalculationSourceDiagnostic
 from .._minimo_descendientes_advisory import collect_minimo_descendientes_rentas_undeclared_diagnostics
 from ._advisory_bucket_fixture import _bucket  # noqa: F401
+from ._advisory_bucket_fixture import operator_text as _operator_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -52,19 +53,6 @@ _NOTHING_CLAIMED = {_ESTATAL_CASILLA: Decimal("0")}
 @pytest.fixture
 def bucket_id() -> str:
     return _BUCKET_ID
-
-
-def _operator_text(diagnostic: CalculationSourceDiagnostic) -> str:
-    """The text an OPERATOR sees, not the message field alone.
-
-    A diagnostic states the problem in ``message`` and the fix in ``remedy``,
-    which the calculate CLI projects onto the notice's ``suggestion`` and renders
-    as one line. Asserting against ``message`` alone would let a remedy fall off
-    the operator-facing surface without any test noticing.
-    """
-    remedy = getattr(diagnostic, "remedy", None)
-    message = diagnostic.message
-    return message if remedy is None else f"{message} {remedy}"
 
 
 def _revision() -> ModeloRevision:

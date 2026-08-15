@@ -69,3 +69,31 @@ def _parse_bool(raw: str | None) -> bool | None:
 #: Public alias — cross-package callers must import ``parse_bool`` rather than
 #: the private ``_parse_bool`` implementation name.
 parse_bool = _parse_bool
+
+
+def _enum_value(value: object) -> str:
+    """Return ``Enum.value`` when present, otherwise ``str(value)``.
+
+    ``None`` maps to ``""`` -- an absent value never renders as the literal
+    string ``"None"``, which every caller of this helper is comparing against
+    a closed vocabulary of real wire tokens (a status code, a severity
+    level). A non-enum value with no ``.value`` attribute (a plain ``str``,
+    an ``int``, a ``bool``) round-trips through ``str()`` unchanged.
+
+    This was two independently-defined, byte-identical functions --
+    ``application/workflow/_engine_helpers.py::enum_value`` and
+    ``domain/submission/_preflight.py::_enum_value`` -- before converging
+    here. ``core`` is imported by both layers and owned by neither, so it is
+    the only home that does not force one layer to depend on the other; the
+    domain-layer copy could not have imported the application-layer one, and
+    was correctly local before this convergence existed.
+    """
+    if value is None:
+        return ""
+    raw = getattr(value, "value", value)
+    return str(raw)
+
+
+#: Public alias — cross-package callers must import ``enum_value`` rather than
+#: the private ``_enum_value`` implementation name.
+enum_value = _enum_value

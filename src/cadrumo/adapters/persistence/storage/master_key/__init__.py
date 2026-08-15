@@ -60,7 +60,6 @@ from ._active_session import (
     suspend_active_session,
 )
 from ._bucket_session import BucketSession
-from ._dek_wrap import WrappedDek, unwrap_dek, wrap_dek
 from ._errors import MasterKeyReentrantError
 from ._idle_timeout import evaluate_idle
 from ._kdf_params import KdfParams
@@ -83,14 +82,6 @@ from ._master_key import (
     looks_like_real_tax_id,
     refuse_unsecured_bucket_with_real_profile,
     refuse_unsecured_with_real_nif,
-)
-from ._master_key_bucket_dek import (
-    bucket_dek_path,
-    idle_minutes_for_bucket,
-    load_or_mint_bucket_dek,
-    read_wrapped_bucket_dek,
-    session_absolute_minutes_for_bucket,
-    write_wrapped_bucket_dek,
 )
 from ._master_key_derivation import (
     ARGON2_MEMORY_COST_KIB,
@@ -130,14 +121,12 @@ __all__ = [
     "RecoveryRecord",
     "ThrottleEvaluation",
     "UnsecuredMasterKeyProvider",
-    "WrappedDek",
     "WrappedMasterKey",
     "activate_master_key_provider",
     "activate_session",
     "active_bucket_session_serves",
     "atomic_write_secure_bytes",
     "bind_active_bucket_session",
-    "bucket_dek_path",
     "close_active_bucket_session",
     "close_all_live_bucket_sessions",
     "current_active_bucket_session",
@@ -152,23 +141,16 @@ __all__ = [
     "get_active_master_key",
     "get_master_key_provider",
     "has_active_bucket_session",
-    "idle_minutes_for_bucket",
-    "load_or_mint_bucket_dek",
     "load_wrapped_master_key",
     "login_throttle_path",
     "looks_like_real_tax_id",
-    "read_wrapped_bucket_dek",
     "record_login_failure",
     "refuse_unsecured_bucket_with_real_profile",
     "refuse_unsecured_with_real_nif",
     "reset_login_throttle",
     "save_wrapped_master_key",
-    "session_absolute_minutes_for_bucket",
     "session_serves_bucket",
     "suspend_active_session",
-    "unwrap_dek",
     "unwrap_master_key",
-    "wrap_dek",
     "wrap_master_key",
-    "write_wrapped_bucket_dek",
 ]

@@ -176,6 +176,7 @@ if TYPE_CHECKING:
         profile_custody_sentinel_plaintext,
         verify_profile_custody_sentinel,
     )
+    from ._zeroise import zeroise
 
 
 # Name -> the one submodule that owns it. Binding these eagerly cost 1.02 s,

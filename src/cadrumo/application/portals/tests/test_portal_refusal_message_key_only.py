@@ -27,6 +27,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
 from ....core.errors import CadrumoError, get_registered_error_code
 from ....core.i18n import tr
 from ....domain.portals import PORTAL_REGISTRY
@@ -56,7 +57,7 @@ _RESOLVING_CALLABLES: frozenset[str] = frozenset({"tr", "gettext", "resolve_erro
 
 
 def _package_modules() -> tuple[Path, ...]:
-    return tuple(sorted(path for path in _PORTALS_PACKAGE.glob("*.py")))
+    return scan_directory(_PORTALS_PACKAGE, pattern="*.py")
 
 
 def _parsed_package_modules() -> tuple[tuple[Path, ast.Module], ...]:

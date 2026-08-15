@@ -39,6 +39,7 @@ from typing import Final
 import pydantic
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 from ...packaging.evidence import DistributionEvidence, EvidenceStatus
@@ -145,7 +146,7 @@ def _doc_files() -> tuple[Path, ...]:
     if _README.is_file() and not _is_internal_path(_README):
         sources.append(_README)
     if _DOCS_ROOT.is_dir():
-        for path in sorted(_DOCS_ROOT.rglob("*.md")):
+        for path in scan_directory(_DOCS_ROOT, pattern="*.md", recursive=True):
             if not _is_internal_path(path):
                 sources.append(path)
     return tuple(sources)
@@ -222,7 +223,7 @@ def _passing_evidence_rows() -> frozenset[str]:
     if not _EVIDENCE_DIR.is_dir():
         return frozenset()
     passed: set[str] = set()
-    for path in sorted(_EVIDENCE_DIR.glob("*.json")):
+    for path in scan_directory(_EVIDENCE_DIR, pattern="*.json"):
         try:
             record = DistributionEvidence.model_validate_json(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError, pydantic.ValidationError):

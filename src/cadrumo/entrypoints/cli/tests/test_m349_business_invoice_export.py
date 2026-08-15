@@ -20,6 +20,7 @@ from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage
 from ....tests.user_profile import register_minimal_profile
+from ....tests.user_profile import register_cli_profile
 
 __all__ = ["isolated_profile_storage"]
 
@@ -31,28 +32,18 @@ def _invoke(args: Sequence[str]) -> Result:
 
 
 def _create_profile() -> None:
-    result = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "m349-business-invoices",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Ana",
-            "--surnames",
-            "Operadora",
-            "--irpf-income-categories",
-            "actividad_economica",
-            "--activity",
-            "consultoria intracomunitaria",
-        ],
+    """Register the profile through the shared CLI registration door."""
+    register_cli_profile(
+        label='m349-business-invoices',
+        facts={
+            "identity.tax_id": '12345678Z',
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.name": 'Ana',
+            "identity.surnames": 'Operadora',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "activities.description": 'consultoria intracomunitaria',
+        },
     )
-    assert result.exit_code == 0, result.output
 
 
 def _add_business_invoice(

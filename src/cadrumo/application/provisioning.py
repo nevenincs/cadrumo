@@ -46,6 +46,7 @@ from ..core import (
     OptionalExtra,
     candidates_for_role,
     hardware_tier_for_free_bytes,
+    iter_directory,
     model_candidate,
     optional_extra_available,
 )
@@ -291,7 +292,9 @@ def probe_playwright_browser(cache_root: Path | None = None) -> DependencyStatus
     """
     root = _playwright_browsers_root(cache_root)
     try:
-        installed = root.is_dir() and any(child.name.startswith("chromium") for child in root.iterdir())
+        installed = root.is_dir() and any(
+            child.name.startswith("chromium") for child in iter_directory(root, require_root=True)
+        )
     except OSError:
         installed = False
     if not installed:

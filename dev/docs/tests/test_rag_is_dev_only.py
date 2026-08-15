@@ -24,6 +24,7 @@ from typing import Final
 
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -80,9 +81,9 @@ def test_docs_work_modules_import_without_vaultspec_rag() -> None:
     assert "DOCS-WORK-RAG-FREE" in result.stdout
 
 
-def _production_python_files() -> list[Path]:
+def _production_python_files() -> tuple[Path, ...]:
     """Every Python module under the production package."""
-    return sorted((_REPO_ROOT / "src" / "cadrumo").rglob("*.py"))
+    return scan_directory(_REPO_ROOT / "src" / "cadrumo", pattern="*.py", recursive=True)
 
 
 def test_production_package_never_imports_vaultspec_rag() -> None:
@@ -110,7 +111,7 @@ def test_the_production_scan_detects_a_reference_when_one_exists(tmp_path: Path)
     (tmp_path / "offending.py").write_text("import vaultspec_rag\n", encoding="utf-8")
     found = [
         path.name
-        for path in sorted(tmp_path.rglob("*.py"))
+        for path in scan_directory(tmp_path, pattern="*.py", recursive=True)
         if "vaultspec_rag" in path.read_text(encoding="utf-8", errors="ignore")
     ]
     assert found == ["offending.py"]
