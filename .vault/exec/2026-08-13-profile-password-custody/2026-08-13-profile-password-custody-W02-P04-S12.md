@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#profile-password-custody'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:4332824cf0d7b8d0b980d5a9916e5cb1a225678a4d4bc14f412d4663a918fb48'
+body_hash: 'sha256:30f80c0e8d0ff5a187ccf49a7fba80d83cb3dbd37597d4d70f424652584aa6af'
 step_id: 'S12'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -19,78 +19,66 @@ related:
 
 ## Description
 
-The phase review returned FAIL with two HIGH findings. This record covers
-their remediation and the re-verification, not a second review pass.
-
-- Confirm the retired shared-master provider is gone from live user-profile
-  composition: no provider protocol, ambient key resolver, or global recovery
-  facade is named by any production module under the profile package.
-- Add a structural absence gate over that package, with an anti-tautology proof
-  that the name scanner reds on a module which does use the retired surface, and
-  an anchor asserting the forbidden names are defined only in the retired
-  package so a rename cannot make the gate pass vacuously.
-- Split the local-record read primitive under overloads so a non-optional read
-  is typed as returning bytes and only the explicitly-optional read may return
-  none, preserving the existing fail-closed runtime refusal.
-- Promote the pending label-advance witness to its canonical public model owner,
-  removing the private cross-module dependency the review flagged.
-- Give the shared canonical-payload digest a purpose-built name on the module
-  that owns it, so the hold-evidence models no longer reach into private
-  helpers.
-
-Two conditions blocked verification and were closed as in-scope absorption.
-
-- Complete the retired recovery-facade deletion the phase had started: its
-  re-exports still bound both storage facades, so importing the storage package
-  raised a missing-module error and no gate in the tree could run at all.
-- Retarget the test seeding left behind by the discovery phase. One hundred and
-  seventy-six modules still imported four application symbols the phase
-  deleted; they now compose the current capsule helpers, with a fact-upsert and
-  an active-profile fact helper added to carry the retired plural fact command.
-
-Restore the schema judgement on profile facts, which the capsule cutover left
-without an owner. Registration wrote its initial facts unvalidated and the
-record patch door did the same, so a value at an engine-derived path could be
-stored and displace the calculation that owns it; the only surviving check sat
-in the manager's edit dialog and bound nobody writing through another surface.
-
-Re-point three gates that had gone vacuous: the console-less secret-channel
-proof, the two censo single-authority pins, and the stale taxonomy and
-deferred-import declarations.
+- Review the handover phase against its declared properties, with the
+  non-resurrection guarantee as the central one.
+- Re-run after each refusal rather than closing on the prior reviewer's evidence.
+- Prove the property by mutation rather than by a passing suite.
 
 ## Outcome
 
-Both HIGH findings are closed.
+**Closed on the third review.** It was closed once on false evidence, reopened,
+refused once on true evidence, and has now passed on evidence the reviewer
+generated rather than accepted.
 
-Scoped strict type checking over the custody adapter, the profile package and
-the wizard package reports zero errors, zero warnings, against twelve errors at
-review time. Collection over the whole tree reports no error attributable to
-this campaign, against one hundred and ninety-four before; the eighteen that
-remain are a concurrent registry review-status campaign's and are recorded
-below rather than attributed here.
+The first closure was false because a gate derived its expected scope from its own
+scan root and therefore agreed with itself at any width. The second review refused
+and found the central property measurably false: the handover derived the profile
+to retire solely from the live in-process session, so in the ordinary operator
+flow -- every command-line invocation being a fresh process -- revocation never
+ran and the retired profile's bucket key stayed recoverable with no passphrase in
+four of five crash phases.
 
-The absence gate, the redesigned atomic-create rollback proof, the derived-path
-write refusal, and the taxonomy and deferred-import declarations all pass.
+The third review proves that closed by MUTATION. A probe spawning three
+interpreters measures the retired profile's recoverable key material; at the
+current tree it is refused, and with the pre-fix derivation reinstated in the
+child it returns a thirty-two byte key and reproduces the second review's tell
+verbatim. So the fix is load-bearing rather than coincidental.
+
+**The decisive check was the proof's TOPOLOGY, not its assertions.** The first
+closure survived because a well-written test asserting on recovered material ran
+both logins in ONE process -- the single configuration in which the broken fix
+worked. The regression now spawns real separate processes and asserts against the
+correct artefact of the three that share the word "session". Injecting the
+pre-fix derivation through an import hook reaching every spawned child reds five
+of seven cases and leaves green exactly the phase whose retirement had already
+completed -- the same leak profile the refusal measured, which proves the gate now
+fails on the defect it previously could not see.
+
+Green at close, sequential with markers disabled: the handover module at
+twenty-eight, the crash parametrisation across five separate runs, the custody
+package at forty-four, and the type checker clean over both scopes, which keeps
+the first audit's second finding closed.
 
 ## Notes
 
-Two properties were lost by the cutover rather than by this step, and are
-carried forward as tracked rows rather than closed silently.
+The two traps that had cost earlier rounds were both handed to the reviewer in
+advance and both were confirmed as traps rather than defects: the live-session
+line that reads as the gate but is one of three inputs, and the one word naming
+three artefacts in different custody classes. The reviewer re-read the module
+after a vocabulary rename landed mid-review and confirmed by filtered diff that
+the rename touched no retirement symbol, so its measurements held.
 
-The successor custody surface returns unwrapped key material as an immutable
-value, where the retired facade returned a mutable buffer the wipe primitive
-could reach. The wipeability tests were bound to the deleted facade and went
-with it, so the property is currently unproven anywhere. A new step carries
-restoring it before the final security proof.
+One medium finding is carried forward, outside this step's declared scope: the
+receipt-revocation entry point discards a clear outcome that its sibling already
+honours, so a refused clear is silent and a login can report a profile closed
+while its receipt survives. Narrow reachability, but the campaign's signature
+shape and the reporting value already exists.
 
-The write-door judgement restored here was verified at the two doors this step
-could see. A second new step carries an independent audit of every write door
-for judgement parity, because a surface-only pre-check was exactly the shape
-that let this gap survive unnoticed.
+The crash-phase flake recorded by the refusal did not reproduce across five
+sequential runs and its mechanism is closed in source. The single red observed
+during review was a peer's half-landed edit failing on an undefined name.
 
-External and unattributed: a concurrent campaign leaves several modelo
-revisions and legal references below filing-grade review status, which fails
-eighteen collections; and the taxonomy literal detector no longer recognises a
-token a peer removed from the storage taxonomy, which reds that gate's own
-anti-tautology case together with three declarations in storage-campaign
-modules. Neither was touched here.
+Worth recording about the process rather than the code: this step consumed three
+reviews, and the two that produced real findings were the ones told explicitly
+that refusing to close was the better outcome if it were true. The first review
+was not given that instruction.
