@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:33642067871374ac85489aafec37e1d82c20d2725a858e753114e314f71324fd'
+body_hash: 'sha256:706d5ed063e7d6e20a9367106e1f5ddb9e27e0015c395df1d21f6e1a0c06b7b0'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -35,6 +35,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W03-P05-S13]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S108]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S135]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S140]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S42]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S59]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S75]]'
@@ -75,6 +76,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W04-P07-S83]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S87]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S91]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S138]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -170,6 +172,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W02-P04-S95` - Have Terra XHigh make the receipt deletion honour the clear outcome it already computes, since the discard helper returns whether the compare-and-clear succeeded and the resume path branches on it, while the revocation entry point calls the same helper bare and returns nothing, so a refused clear is silent and a login can report the prior profile as closed while its acceleration receipt survives on disk, the reachability being narrow because the bytes must change under a held per-profile lock but the reporting value already existing
 - `2026-08-13-profile-password-custody-W03-P06-S108` - Have Terra XHigh re-found the label ambiguity refusal test on the custody label authority rather than retire it, since the refusal itself was restored as real operator-facing work and is live, while only the test's mechanism is stale in manufacturing two casefold-equal labels by rewriting the retired plaintext bucket manifest, and the restored refusal already ships five tests that manufacture the same collision correctly
 - `2026-08-13-profile-password-custody-W03-P06-S135` - Have Terra XHigh name the capsules root path in the retired-custody refusal
+- `2026-08-13-profile-password-custody-W03-P06-S140` - Have Terra XHigh resolve the three creation flags that have no mapped fact path by reading the profile schema rather than inferring one
 - `2026-08-13-profile-password-custody-W03-P06-S59` - Have Sol Medium rule on the seventeen operator command subtrees the capsule cutover left unresolved
 - `2026-08-13-profile-password-custody-W03-P06-S75` - Have Terra XHigh clear the six dead entries in the runtime bootstrap-exempt allowlist that name operator verbs the tree no longer registers, since each entry grants exemption from the active-profile session gate matched by command chain, so a future verb registered under one of those names silently inherits an exemption nobody consciously granted, which matters most for the profile deletion verb, and note one further non-resolving entry is a deliberate exemption for a separate module entrypoint rather than a defect
 - `2026-08-13-profile-password-custody-W03-P06-S88` - Have Terra XHigh resolve the command-line lifecycle module that asserts custody verbs are mounted
@@ -192,6 +195,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W04-P07-S83` - Have Terra XHigh make the session-receipt tamper test actually reach the authenticated-data check it exists to cover
 - `2026-08-13-profile-password-custody-W04-P07-S87` - Have Terra XHigh stop the configuration-reset retention decision failing OPEN when no assessment is supplied
 - `2026-08-13-profile-password-custody-W04-P07-S91` - Have Sol Medium rule on the overloaded session vocabulary that caused a wrong architectural premise to survive two rounds of review
+- `2026-08-13-profile-password-custody-W05-P08-S138` - Have Terra XHigh make the delete hold guard compare the owner facts its docstring names rather than the whole assessment object
 
 ### plan
 
