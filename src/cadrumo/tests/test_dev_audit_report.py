@@ -28,8 +28,6 @@ from dev.audit.report import (
     HealthReport,
     Status,
     _declared_contract_count,
-    audit_complexity,
-    audit_duplication,
     audit_layering,
     audit_shadowing,
     build_report,
@@ -38,6 +36,32 @@ from dev.audit.report import (
 from ._inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.fixture(scope="module")
+def live_health_report() -> HealthReport:
+    """Run the composed audit over the real repository ONCE for this module.
+
+    ``build_report`` calls ``audit_duplication(repo_root)`` and
+    ``audit_complexity()`` -- the exact calls the per-dimension tests below made
+    for themselves -- so every one of them re-ran a scan the composed report had
+    already performed. Three tests measured 120.5s, 61.4s and 38.1s, and the
+    second and third were re-deriving what the first already held.
+
+    The dimensions read out of this report are the SAME objects those functions
+    return; nothing here weakens what the tests assert. What is given up is
+    proving the two functions are callable standalone, which ``build_report``
+    exercises anyway by calling them.
+    """
+    return build_report(REPO_ROOT)
+
+
+def _dimension(report: HealthReport, name: str) -> DimensionReport:
+    """Return the named dimension, refusing rather than skipping if absent."""
+    for dimension in report.dimensions:
+        if dimension.name == name:
+            return dimension
+    raise AssertionError(f"composed report carries no {name!r} dimension: {[d.name for d in report.dimensions]}")
 
 
 # ---------------------------------------------------------------------------
@@ -162,9 +186,14 @@ def test_audit_shadowing_red_findings_are_never_in_the_tolerated_baseline() -> N
             assert symbol not in tolerated, f"RED-classified symbol {symbol!r} is in the tolerated baseline"
 
 
-def test_audit_complexity_returns_a_valid_dimension_report() -> None:
-    """The complexity dimension runs the real Radon/Complexipy scan and classifies it."""
-    result = audit_complexity()
+def test_audit_complexity_returns_a_valid_dimension_report(live_health_report: HealthReport) -> None:
+    """The complexity dimension runs the real Radon/Complexipy scan and classifies it.
+
+    Read from the composed report, which obtained it by calling
+    ``audit_complexity()`` -- the identical call this test used to make for
+    itself, on the same live tree.
+    """
+    result = _dimension(live_health_report, "complexity")
 
     assert result.name == "complexity"
     assert result.status in {Status.RED, Status.AMBER, Status.GREEN}
@@ -254,7 +283,9 @@ def test_audit_layering_reports_an_aborted_run_distinctly_from_a_breach(tmp_path
     )
 
 
-def test_audit_duplication_reports_the_live_trees_real_duplication_state() -> None:
+def test_audit_duplication_reports_the_live_trees_real_duplication_state(
+    live_health_report: HealthReport,
+) -> None:
     """The duplication dimension classifies the live tree honestly.
 
     Never RED by design (clone count is advisory debt, never a hard break). The
@@ -264,16 +295,16 @@ def test_audit_duplication_reports_the_live_trees_real_duplication_state() -> No
     clones. The live tree does carry clones, so AMBER with a measured count is
     the only honest verdict here; GREEN would mean the runner scanned nothing.
     """
-    result = audit_duplication(REPO_ROOT)
+    result = _dimension(live_health_report, "duplication")
 
     assert result.name == "duplication"
     assert result.status is Status.AMBER
     assert "clone cluster(s)" in result.headline
 
 
-def test_build_report_composes_all_four_dimensions_in_order() -> None:
+def test_build_report_composes_all_four_dimensions_in_order(live_health_report: HealthReport) -> None:
     """``build_report`` returns exactly the four named dimensions, in a fixed order."""
-    report = build_report(REPO_ROOT)
+    report = live_health_report
 
     assert [d.name for d in report.dimensions] == ["shadowing", "duplication", "layering", "complexity"]
     assert report.overall in {Status.RED, Status.AMBER, Status.GREEN}
