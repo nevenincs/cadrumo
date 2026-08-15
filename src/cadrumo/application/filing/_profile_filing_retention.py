@@ -16,7 +16,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, StorageCategory, storage_location
 from ...core.logging import get_logger
 from ...core.time import validate_utc_aware
 from ...domain.modelos import ModeloRecord
@@ -33,6 +33,15 @@ from ..profile_custody import (
 )
 
 _MAX_BYTES = 32 * 1024
+
+FILING_RETENTION_OWNER_DIRNAME: Final[str] = storage_location(
+    StorageCategory.PROFILE_CUSTODY_HOLD_FILING_OWNER,
+).relative_path().name
+"""This owner's directory name, read from its one declaration in the taxonomy.
+
+The storage path registry spells the same segment in this format's grammar, so
+the name is declared once and read in both places rather than typed in each.
+"""
 
 FILING_RETENTION_SNAPSHOT_SCHEMA_VERSION: Final[int] = 1
 """Current on-disk schema version of :class:`FilingRetentionSnapshot` documents."""
@@ -146,7 +155,7 @@ class FilingRetentionAuthority:
         local_record_store: ProfileCustodyLocalRecordStore | None = None,
     ) -> None:
         self._local_record_store = local_record_store or default_profile_custody_local_record_store()
-        self._root = profile_custody_owner_root(root, "filing-retention-owner")
+        self._root = profile_custody_owner_root(root, FILING_RETENTION_OWNER_DIRNAME)
 
     def record_filing_catalogue(
         self,

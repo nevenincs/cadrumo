@@ -16,7 +16,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, StorageCategory, storage_location
 from ...core.time import validate_utc_aware
 from .._profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
 from ..profile_custody import (
@@ -30,6 +30,15 @@ from ..profile_custody import (
 )
 
 _MAX_BYTES = 8 * 1024
+
+LEGAL_HOLD_OWNER_DIRNAME: Final[str] = storage_location(
+    StorageCategory.PROFILE_CUSTODY_HOLD_LEGAL_OWNER,
+).relative_path().name
+"""This owner's directory name, read from its one declaration in the taxonomy.
+
+The storage path registry spells the same segment in this format's grammar, so
+the name is declared once and read in both places rather than typed in each.
+"""
 
 LEGAL_HOLD_SNAPSHOT_SCHEMA_VERSION: Final[int] = 1
 """Current on-disk schema version of :class:`LegalHoldCaseSnapshot` documents."""
@@ -120,7 +129,7 @@ class LegalHoldCaseAuthority:
         local_record_store: ProfileCustodyLocalRecordStore | None = None,
     ) -> None:
         self._local_record_store = local_record_store or default_profile_custody_local_record_store()
-        self._root = profile_custody_owner_root(root, "legal-case-owner")
+        self._root = profile_custody_owner_root(root, LEGAL_HOLD_OWNER_DIRNAME)
 
     def record_open_case_snapshot(
         self,
