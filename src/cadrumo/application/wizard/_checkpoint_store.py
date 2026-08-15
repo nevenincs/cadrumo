@@ -202,7 +202,7 @@ class ProfileFactsCheckpointStore:
         """
         from ..user_profile import ProfileRecordRepository, ProfileRegistrationError
         from ..workflow import read_profile_bucket_by_id
-        from ._persistence import apply_wizard_fact_changes
+        from ._persistence import WizardFactWriteDoor, apply_wizard_fact_changes
 
         facts = checkpoint_facts_from_answers(self._flow, answers)
         pointer = read_profile_bucket_by_id(self._profile_id)
@@ -217,7 +217,7 @@ class ProfileFactsCheckpointStore:
         apply_wizard_fact_changes(
             profile_id=self._profile_id,
             changes=(*facts, *clearing),
-            event_type="profile.wizard.checkpoint.applied",
+            door=WizardFactWriteDoor.CHECKPOINT,
         )
 
     def load(self, flow_id: str) -> Mapping[str, str] | None:

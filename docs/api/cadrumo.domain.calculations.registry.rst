@@ -128,7 +128,6 @@ Submodules
    cadrumo.domain.calculations.registry._validate_applicability_section
    cadrumo.domain.calculations.registry._validate_application_links
    cadrumo.domain.calculations.registry._validate_authority_grade
-   cadrumo.domain.calculations.registry._validate_cache
    cadrumo.domain.calculations.registry._validate_completeness
    cadrumo.domain.calculations.registry._validate_constructs
    cadrumo.domain.calculations.registry._validate_cross_domain_snapshot
@@ -144,6 +143,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_formulas
    cadrumo.domain.calculations.registry._validate_helpers
    cadrumo.domain.calculations.registry._validate_label_artifacts
+   cadrumo.domain.calculations.registry._validate_layout_authority_content
    cadrumo.domain.calculations.registry._validate_orden_aplicabilidad
    cadrumo.domain.calculations.registry._validate_previous_filing_sources
    cadrumo.domain.calculations.registry._validate_previous_filing_year_coverage
@@ -168,7 +168,8 @@ Submodules
    cadrumo.domain.calculations.registry._validate_source_casilla_ids
    cadrumo.domain.calculations.registry._validate_surfaces
    cadrumo.domain.calculations.registry._validate_valid_from_ejercicio_convention
-   cadrumo.domain.calculations.registry._validate_verdict
    cadrumo.domain.calculations.registry._validate_verification_predicates
+   cadrumo.domain.calculations.registry._validation_memoization
+   cadrumo.domain.calculations.registry._verdict_cache
    cadrumo.domain.calculations.registry._verification_tolerance
    cadrumo.domain.calculations.registry._withholding_bindings

@@ -263,13 +263,13 @@ def test_every_exemption_names_a_live_site() -> None:
 
 
 _SYNTHETIC_VIOLATOR = """
-def make_manifest():
-    return BucketManifest(bucket_id="b", schema_version=1)
+def make_session():
+    return PersistedProfileSession(bucket_id="b", schema_version=1)
 """
 
 _SYNTHETIC_BOUND = """
-def make_manifest():
-    return BucketManifest(bucket_id="b", schema_version=BUCKET_MANIFEST_SCHEMA_VERSION)
+def make_session():
+    return PersistedProfileSession(bucket_id="b", schema_version=PROFILE_SESSION_SCHEMA_VERSION)
 """
 
 _SYNTHETIC_UNENROLLED = """
@@ -287,7 +287,7 @@ def test_detector_fires_on_a_literal_and_stays_silent_on_the_bound_form() -> Non
     """
     violations = literal_version_sites("synthetic.py", ast.parse(_SYNTHETIC_VIOLATOR))
     assert [(site.class_name, site.field, site.value, site.function) for site in violations] == [
-        ("BucketManifest", "schema_version", 1, "make_manifest")
+        ("PersistedProfileSession", "schema_version", 1, "make_session")
     ]
 
     assert literal_version_sites("synthetic.py", ast.parse(_SYNTHETIC_BOUND)) == []
