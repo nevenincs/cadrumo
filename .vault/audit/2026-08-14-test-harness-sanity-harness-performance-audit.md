@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:9c2d402a3d97d98f8ded9ae0976d36bf3932ca9ab51e37902b687d5270d9349e'
+body_hash: 'sha256:a05a067a6a520ae9242e6f2573ba338c7a1c3ff90ee561888fcf8b2a530cfb28'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1269,3 +1269,44 @@ a count, and this campaign has already recorded what happens when a repeat count
 is read as a cost. What is measured is the per-registration figure and one
 module; the suite-wide effect follows from those two, and will be visible in the
 next full profile rather than asserted here.
+
+## Round: the package-local ranking after the KDF fix
+
+Re-measuring the remaining package-local targets in isolation, per the method
+rule, shows the KDF calibration fix already collected most of them:
+
+    in-table (-n auto)   isolated (after)
+    99.75s          ->   22.76s   test_batch_transform_recategorize_relabel_reallocate_at_scale
+    48.50s          ->   29.63s   test_cold_process_m100_2025_work_create_keeps_intracom_type_import_boundary
+    47.21s          ->   30.75s   test_cold_process_work_create_registers_wizard_catalogue
+
+The ~17s that came off each cold-start test is one KDF calibration, which is the
+expected shape: each registers a profile in-process before handing the storage
+root to a cold child. The batch-transform figure moves further because it was
+also carrying contention, exactly the inflation the method rule exists to catch.
+
+None of these needs separate work. What remains in them is subprocess CLI boots
+and the work they exist to exercise.
+
+### Ruled out: `test_every_bundled_design_produces_a_classified_outcome`
+
+The one target in this ranking that is NOT contention: 55.27s in-table and
+**59.51s in isolation**, so if anything the table understated it.
+
+`_outcomes()` is called by four tests in the module and carries no memo of its
+own, which reads as textbook duplication. It is not. Measured directly:
+
+    _outcomes call 0: 58.65s   (218 designs)
+    _outcomes call 1:  0.06s
+    _outcomes call 2:  0.06s
+
+Something downstream of `_classify` already memoises per design, so the first
+caller pays and the other three are free -- which is why the module totals
+60.30s with one test at 59.51s rather than four times that. The remaining cost
+is a single pass over 218 bundled designs at roughly 0.27s each, which is the
+parsing the gate exists to perform.
+
+Worth stating as a pattern: an uncached-looking helper called from four tests is
+not evidence of four executions. The module total is the cheap check that
+distinguishes them -- four uncached calls here would have produced a ~240s
+module, and it produced 60.30s.
