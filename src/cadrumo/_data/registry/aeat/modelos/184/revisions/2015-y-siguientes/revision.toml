@@ -1,5 +1,8 @@
 [revisions."2015-y-siguientes"]
-valid_from = 2015-10-30
+# valid_from is canonicalised to the ejercicio-start convention (January 1 of
+# period_selector.year_from), not the orden's own effective date -- that fact
+# already has its home on orden-hap-2250-2015:art-1's legal.effective_from.
+valid_from = 2015-01-01
 period_selector = { year_from = 2015, periods = ["0A"] }
 legal_refs = [
     "orden-hap-2250-2015:art-1",

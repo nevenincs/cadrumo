@@ -1,5 +1,12 @@
 [revisions."2021-y-siguientes"]
-valid_from = 2021-09-28
+# valid_from is canonicalised to the ejercicio-start convention (January 1 of
+# period_selector.year_from), not the orden's own effective date -- that fact
+# already has its home on orden-hac-1023-2021:modelo-714's legal.effective_from.
+# valid_to/year_to are UNCHANGED by this migration: that closing bound is a
+# separate, still-open finding (the citation grounding it is unverifiable --
+# document_id resolves to an unrelated resolution) and this edit does not
+# resolve it either way.
+valid_from = 2021-01-01
 valid_to = 2025-12-31
 period_selector = { year_from = 2021, year_to = 2025, periods = ["0A"] }
 legal_refs = [

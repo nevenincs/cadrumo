@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:2a8cc4b7012daab38d79dbfadb747648dea55dbbf725965a538d9a05374c6c3a'
+body_hash: 'sha256:a66bc5250b4e9e3840ab556e58748b0b873254dca0d3a04441e7ab8daa352eeb'
 related:
   - "[[2026-08-14-registry-campaign-sequencing-operator-attestation-ledger-audit]]"
 ---
@@ -700,17 +700,21 @@ authored BEFORE an amendment cannot embody it.** A candidate whose
 its modelo is a structural gap by construction, not a heuristic.
 
 **Result: 43 NO REGISTERED DESIGN AT ALL (any date) / 13 STRUCTURAL GAP /
-49 PLAUSIBLE / 3 unresolved. 43+13+49+3 = 108.**
+49 PLAUSIBLE / 3 unresolved. 43+13+49+3 = 108.** (Superseded below: this
+43 includes a false positive, Modelo 100, corrected in this same finding
+to **42** -- see "Correction, confirmed directly" and "Full re-run" further
+down.)
 
 - **NO REGISTERED DESIGN AT ALL (43 candidates, 24 modelos) splits into two
   genuinely different problems, checked by whether `disenos_registro/`
   even has a directory for the modelo:**
   - **6 modelos have unregistered files ON DISK -- the same class as the
     15-file escalation, now measurably larger.** Modelo 038 (1 file),
-    Modelo 100 (16 files, matching the earlier OUTSIDE-partition finding
-    that M100 has zero registered coverage even for its in-scope
-    2020-2025 span), Modelo 122 (1, already escalated), Modelo 189 (1),
-    Modelo 576 (1), Modelo 763 (1).
+    Modelo 100 (16 files -- **corrected below: Modelo 100 is CLEARED, see
+    "Correction, confirmed directly" a few paragraphs down; its in-scope
+    2020-2025 span uses a different, fully-registered mechanism, so it
+    does not belong in this list**), Modelo 122 (1, already escalated),
+    Modelo 189 (1), Modelo 576 (1), Modelo 763 (1).
   - **17 modelos have NO `disenos_registro/` directory at all -- a
     different problem, per the operator's framing.** 121, 136, 140, 143,
     179, 186, 231, 233, 234, 238, 289 (13 candidates alone), 361, 379, 380,

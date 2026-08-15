@@ -40,20 +40,6 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # provisioner; the root callback must not open a session that
     # would block this path.
     "config profile create",
-    # Recovery from a backup archive: same shape as create — the
-    # imported bucket establishes its own session as part of the
-    # import flow.
-    "config profile import",
-    # Recovery from a sealed full-custody archive: same shape as
-    # ``config profile import`` — BucketMaintenanceService.import_
-    # provisions and opens its own session as part of the restore.
-    "config profile archive import",
-    # Read-only header inspection of a sealed archive file. Delegates
-    # to the plaintext-header reader only (no decryption, no bucket
-    # session); must stay reachable even when an unrelated profile is
-    # already active and locked, or before any profile has ever been
-    # created.
-    "config profile archive inspect",
     # The profile-session doors. ``login`` IS the authentication gate: it
     # must run with no session at all, and it is the one verb allowed to
     # prompt, so the root callback must not resume or refuse ahead of it.
@@ -92,32 +78,6 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # profiles, never a bucket's own encrypted state, which that guard refuses
     # outright.
     "config storage",
-    # Tombstoning a profile opens its OWN session scoped to the target, the
-    # same shape as ``config login`` and the custody verbs above:
-    # The physical custody deletion transaction authenticates its target
-    # itself. The root callback must not demand an unrelated active session
-    # before that operation can make its own authorization decision.
-    "config profile delete",
-    # The rest of the target-scoped profile verbs, on the same grounds as
-    # ``delete`` above: each names the profile it operates on and decides
-    # custody authorization at its own boundary. Explicit ``validate NAME``
-    # is the read-only twin of ``show NAME`` and is carved out by the root
-    # callback; its unnamed active-profile form deliberately remains gated.
-    # Credentials are still required — they are just supplied to the target
-    # rather than demanded as a prior login into an unrelated profile.
-    #
-    # ``config profile archive export`` is DELIBERATELY ABSENT and must stay
-    # that way. It is target-scoped like its siblings, so it would qualify on
-    # the mechanical reading — but it is the one verb here that emits a
-    # PORTABLE COPY of the profile's financial records, and the login gate is
-    # the control the operator wants on that. Recency is the point: the gate
-    # demands a currently-valid session (one whose idle and absolute deadlines
-    # have not elapsed), which a target-scoped unlock does not establish.
-    # Mechanical qualification is not sufficient for a verb whose output
-    # leaves the encrypted store; see
-    # ``test_archive_export_must_stay_login_gated``.
-    "config profile duplicate",
-    "config profile rename",
     # Bundled-registry discovery: lists public modelo metadata and must stay
     # reachable before a profile has been unlocked.
     "app modelo list",

@@ -351,12 +351,23 @@ def _normalise_invoice_monetary_fields(payload: dict[str, object]) -> dict[str, 
     ):
         if key not in payload:
             continue
-        coerced = coerce_decimal(payload[key])
-        if (coerced is None, key in optional_fields) == (True, True):
+        raw = payload[key]
+        coerced = coerce_decimal(raw)
+        # An explicit JSON null IS how this model's own model_dump_json()
+        # represents "no value" for an Optional[Decimal] field -- the
+        # standard persistence roundtrip writes every optional field,
+        # unset ones included, rather than omitting them. Treating a
+        # present-null the same as an absent key (both mean "no value")
+        # is what makes that roundtrip symmetric. What must still raise is
+        # a NON-null value that fails to parse (a string, a mis-mapped
+        # import column) -- that is genuinely unreadable, not absent, and
+        # coerce_decimal collapses both cases to None, so only the RAW
+        # value being non-None can tell them apart here.
+        if (raw is not None, coerced is None, key in optional_fields) == (True, True, True):
             raise InvoiceValidationError(
-                f"{key} could not be parsed as a decimal: {_bounded_rejected_value(payload[key])}. "
-                "Leave it out to declare it absent; a value that cannot be read "
-                "is not the same as no value.",
+                f"{key} could not be parsed as a decimal: {_bounded_rejected_value(raw)}. "
+                "Leave it out (or set it to null) to declare it absent; a value that "
+                "cannot be read is not the same as no value.",
             )
         payload[key] = coerced
     return payload
