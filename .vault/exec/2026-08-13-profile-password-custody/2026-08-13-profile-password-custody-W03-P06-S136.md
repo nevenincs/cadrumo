@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:205a8b73f7ddebb1100a0b123d7dffd84b03061d997ac4520e7ecb9c072ba9b1'
+body_hash: 'sha256:991b2defdc32c57ad92847d8a35ba6f60b6ed5132c80f20485fca9f6ac437fbf'
 step_id: 'S136'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -28,8 +28,30 @@ related:
 
 **The convertible population is exhausted, and the row closes on a measured
 state rather than on a claim of completion.** Re-measured against the same census
-that opened it: 99 call sites down to 65, and the success-expecting target — the
-actual conversion set — down from 55 to 23.
+that opened it: the remaining population fell from 99 matches to 65, and the
+success-expecting target — the actual conversion set — from 55 to 23.
+
+**Those denominators are wrong, and the correction is recorded here rather than
+appended, because a closed record carrying a wrong number is the shape that has
+misled this campaign three times already.** The census matched every list
+literal containing `"profile"` followed by `"create"`. Some of those lists are
+not passed to the CLI at all: they are expected values inside assertions — a
+projected action's `cli_path` field, and the expected argv that
+`cli_argv_for` is asserted to produce. Walking each match up to its enclosing
+node separates them: of the 60 matches standing at the correction, **50 are
+genuine invocation arguments**, four are module-scope argument constants that
+ARE spread into real calls, and six are pure assertion literals.
+
+**The conclusions survive the arithmetic and should not be discarded with it.**
+The sweep converted what was mechanically convertible and the gate refused what
+observed the surface; every refusal carries its reason. What moved is the size
+of the population those statements range over.
+
+**The lesson is sharper than the four earlier miscounts and is why this one
+reached a closed record.** The AST pass was *more precise than the text pattern
+it replaced, and precise about the wrong thing*: a list that MENTIONS the verb
+is not a list PASSED to it. Precision aimed at the wrong predicate produces a
+number that looks more trustworthy than the crude one it replaced.
 
 Every one of the 23 remaining is refused for a stated reason rather than left
 pending. Four read the invocation's result afterwards, so the test observes the
@@ -62,8 +84,10 @@ the row's real content.** A census of functions matching a provisioning NAME
 cannot see a test that invokes the verb inline in its own body, and a text
 pattern over modules answers a question that does not determine the work — a
 module with four inline invocations needs four fixes, not one. Thirty named
-helpers, fifty-one modules, ninety-nine call sites: three numbers, each correct
-about its own question, only the last of which sizes the work.
+helpers, fifty-one modules, ninety-nine matches: three numbers, each correct
+about its own question, only the last of which approaches sizing the work — and
+the last is a match count rather than an invocation count, which is the
+correction recorded above.
 
 Seventy of the original ninety-nine sites were inline, so helper conversion
 could ever have reached at most twenty-nine percent of it. That converts an
