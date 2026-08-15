@@ -1397,11 +1397,12 @@ def _retired_bucket_ids(
     live_bucket_id: str | None,
     selected_bucket_id: str | None,
     interrupted_bucket_id: str | None,
+    completed_selection: str | None,
     candidate_bucket_id: str,
 ) -> tuple[str, ...]:
     """Report every prior profile this handover actually moves away from.
 
-    Three observations are folded because no single one is complete, and a
+    Four observations are folded because no single one is complete, and a
     profile whose durable session artefacts survive the handover is resumable
     without its passphrase:
 
@@ -1412,7 +1413,14 @@ def _retired_bucket_ids(
       retired profile in a fresh process, and has already moved on to B once
       an interrupted handover is being replayed;
     * the interrupted handover's own witness, which is the only source left
-      once that publication happened in a process that then died.
+      once that publication happened in a process that then died;
+    * the profile the last COMPLETED handover selected, which is the only
+      source left once an out-of-band pointer writer moved the selection in
+      between. Registering a profile is exactly such a writer -- the create
+      transaction compare-and-swaps the pointer onto the new capsule -- so
+      after register-login-register-login the captured pointer names the
+      profile being entered rather than the one being left, and without this
+      the displaced profile keeps a resumable receipt.
 
     The candidate is excluded rather than filtered later: a login that re-enters
     the profile already selected retires nothing, and revoking there would
@@ -1420,7 +1428,12 @@ def _retired_bucket_ids(
     """
     return tuple(
         value
-        for value in _distinct_bucket_ids(live_bucket_id, selected_bucket_id, interrupted_bucket_id)
+        for value in _distinct_bucket_ids(
+            live_bucket_id,
+            selected_bucket_id,
+            interrupted_bucket_id,
+            completed_selection,
+        )
         if value != candidate_bucket_id
     )
 

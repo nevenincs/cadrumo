@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:0d8bc28da88d43d9c067554a9500740284695fe1d57a00446b65ec8348943c8e'
+body_hash: 'sha256:c0187dc69c08177f9318e76c8709fadd659edfb21db2fb7f012adf4876595469'
 step_id: 'S130'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -59,20 +59,27 @@ revoke, and acting on a half-understood one could revoke the LIVE key rather
 than the retired one. Tolerating a doubtful reading is strictly worse than
 discarding it, and delete-and-refuse is exactly what `REGENERABLE` contracts for.
 
-**Three further formats were enrolled in the same change**, carried in from the
+**Two further formats were enrolled in the same change**, carried in from the
 boundary ruling that pre-answered their format-hood and left their classes open.
-The legal-hold and filing-retention owner snapshots and the derived custody hold
-evidence all gate a DESTRUCTIVE operation, and that is what decides them: an
-absent snapshot and an unreadable one produce the same refusal, so discarding a
-doubtful one blocks an erase, while tolerating one that half-parses can report
-zero open cases or zero retained filings and permit the erase the record exists
-to prevent. All three are `REGENERABLE`, each on its own ground -- filing
-retention because it also projects an already-durable encrypted catalogue, legal
-hold explicitly NOT as a cache since nothing in the tree derives an open case
-identifier, and the hold evidence because nothing ever reads its file back at
-all.
+The legal-hold and filing-retention owner snapshots both gate a DESTRUCTIVE
+operation, and that is what decides them: an absent snapshot and an unreadable
+one produce the same refusal, so discarding a doubtful one blocks an erase,
+while tolerating one that half-parses can report zero open cases or zero
+retained filings and permit the erase the record exists to prevent. Both are
+`REGENERABLE`, each on its own ground -- filing retention because it also
+projects an already-durable encrypted catalogue, legal hold explicitly NOT as a
+cache, since nothing in the tree derives an open case identifier.
 
-**Discovery had to learn about files it could not see.** Enrolling these
+**The third candidate was NOT enrolled, and that is a handover rather than a
+ruling.** The derived custody hold evidence versions itself with a bare literal,
+and a format with no named constant cannot be bound into the enrolment tables at
+all. Naming it means editing the module that declares it, which another agent
+holds, so the class is argued and left ready rather than applied: `REGENERABLE`,
+on the ground the boundary ruling already identified -- its owning refresh
+unconditionally recomputes it from the two snapshots above and overwrites the
+file, and nothing in the tree ever loads it back through its typed grammar.
+
+**Discovery had to learn about files it could not see.** The three enrolments
 immediately reddened the enrollment gate, which enumerates the live format set
 from the path registry and read three correct declarations as stale ones. None
 of the three has a `FILE` path definition: the journal's location is derived

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:c59faff78855e5c4cc013024a52aebad9225ec1cc8f0b7fea6b0f4ab61537ec8'
+body_hash: 'sha256:0be5377dc0f8643d22d3591e0766fe3b4a39f599002b7deec4920947bde73b41'
 step_id: 'S109'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -16,6 +16,7 @@ related:
 ## Scope
 
 - `dev/quality/import_hygiene_scan.py`
+- `src/cadrumo/tests/test_import_edge_integrity_gate.py`
 - `src/cadrumo/tests/test_import_hygiene_gate.py`
 
 ## Description
@@ -114,7 +115,17 @@ false positive — tuple unpacking, PEP 695 `type` aliases, annotated
 assignment, `for` targets, import aliases — is now pinned as its own gate case,
 so the surface walk cannot narrow again.
 
-HEAD moved five times during this work. One of those commits swept the four
-live dangling imports that family 8 had been measuring, so the family's floor
-went from four to zero underneath the measurement. The final numbers are from a
-re-measurement at the later HEAD, not from the earlier run.
+The gates live in a new module, `test_import_edge_integrity_gate.py`, rather
+than appended to the existing import-hygiene gate. That was not a preference:
+appending them took that file from 1172 lines to 1438 against a declared 1250
+ceiling, and the size budget states plainly that re-measuring the baseline will
+not lift a ceiling you broke through. Both gate files now sit inside their
+bands and neither appears in the size verdict. This is the documented
+gate-overlap hazard behaving exactly as warned — the fix for one gate violated
+another — and the resolution was a third shape rather than a concession to
+either.
+
+HEAD moved more than ten times during this work. One of those commits swept the
+four live dangling imports that family 8 had been measuring, so the family's
+floor went from four to zero underneath the measurement. The final numbers are
+from a re-measurement at `31c7a57e9b`, not from the earlier run.

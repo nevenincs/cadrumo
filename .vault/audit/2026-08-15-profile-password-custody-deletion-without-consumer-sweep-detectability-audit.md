@@ -138,7 +138,10 @@ as clean half the time.
 ## Recommendations
 
 Families 8 and 9 in `dev/quality/import_hygiene_scan.py` implement the ruling
-and are gated in `src/cadrumo/tests/test_import_hygiene_gate.py`. Family 8
+and are gated in `src/cadrumo/tests/test_import_edge_integrity_gate.py`, which
+is a new module rather than an extension of the existing import-hygiene gate
+because appending them broke that file through its declared size ceiling.
+Family 8
 holds a hard zero over first-party import targets; family 9 holds a hard zero
 over orphaned re-export bridges and reports the wider orphan set without gating
 it.

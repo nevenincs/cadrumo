@@ -17,6 +17,7 @@ related:
 
 - `.vault/audit/2026-08-15-profile-password-custody-deletion-without-consumer-sweep-detectability-audit.md`
 - `dev/quality/import_hygiene_scan.py`
+- `src/cadrumo/tests/test_import_edge_integrity_gate.py`
 - `src/cadrumo/tests/test_import_hygiene_gate.py`
 
 ## Description

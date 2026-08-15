@@ -209,7 +209,8 @@ def _observed_deletion_fingerprint(
     """
     try:
         inventory = inventory_committed_profile_custody_capsule(profile_id, root=root)
-    except Exception as exc:  # noqa: BLE001 - any inventory failure must block, never soften
+    # Broad on purpose: any inventory failure at all must block, never soften.
+    except Exception as exc:
         raise BucketDeleteRefusedError(
             "current custody deletion cannot fingerprint this target: its committed capsule "
             "could not be inventoried, so a later resume could not tell whether the target "
@@ -270,7 +271,8 @@ def _assessed_filing_retention(
                 "retention_snapshot": "absent",
             },
         ) from exc
-    except Exception as exc:  # noqa: BLE001 - an unreadable snapshot is a non-answer, never a clear one
+    # Broad on purpose: every unreadable shape is a non-answer, never a cleared one.
+    except Exception as exc:
         raise BucketDeleteRefusedError(
             "current custody deletion cannot assess the legal retention floor: this "
             "profile's filing catalogue snapshot exists but could not be read and "
