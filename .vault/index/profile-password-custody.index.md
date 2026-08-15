@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:706d5ed063e7d6e20a9367106e1f5ddb9e27e0015c395df1d21f6e1a0c06b7b0'
+body_hash: 'sha256:3585c4a2e52825feb06cd6f0b1a5743da0eaedba4ebaba4863408d0f95dd62c3'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -48,6 +48,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W04-P07-S124]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S126]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S133]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S141]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S19]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S28]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S32]]'
@@ -184,6 +185,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W04-P07-S124` - Have Terra XHigh reconstruct the rotation crash-window coverage against the two surviving stores after the module was deleted whole to unblock collection
 - `2026-08-13-profile-password-custody-W04-P07-S126` - Have Sol Medium enrol the custody capsule formats in the governed persisted-format inventory
 - `2026-08-13-profile-password-custody-W04-P07-S133` - Have Sol Medium classify the roughly one dozen genuine persisted formats the binding gate found unbound
+- `2026-08-13-profile-password-custody-W04-P07-S141` - Have Terra XHigh complete the half-landed harness extraction that currently breaks collection tree-wide
 - `2026-08-13-profile-password-custody-W04-P07-S19` - Have Terra XHigh dissolve the forwarding port package in five ordered parts
 - `2026-08-13-profile-password-custody-W04-P07-S28` - Have Terra XHigh relocate the surviving per-profile session, wipe and identity residue into the custody package that the accepted decision names as sole authority, in one atomic move, so no surviving primitive is left behind a shared-master name
 - `2026-08-13-profile-password-custody-W04-P07-S39` - Have Terra XHigh delete the re-export bridge module in the custody package and repoint its sole consumer at the two modules it forwards to, in one commit

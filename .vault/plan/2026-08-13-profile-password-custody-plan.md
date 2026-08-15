@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:7810593b0cf9940341417d477d227b089dc9196a0afeaf5d871aa8a30a759423'
+body_hash: 'sha256:000e316b486acd10891f7e272317e1078c3172c7dad4c7134bd01b86378604ac'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -207,7 +207,9 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S131` - Have Sol Medium argue a durability class for the active-profile pointer, which reads regenerable because an operator can re-select a profile, except that a lost pointer on a multi-profile store requires the operator to know which profile was active and the application cannot rebuild that knowledge; `src/cadrumo/core/_bucket_pointer.py and src/cadrumo/core/compatibility_lifecycle.py`.
 - [ ] `W04.P07.S132` - Have Sol Medium argue a durability class for the AEAT authority session record and the two Cl@ave metadata records, which are the artefacts on the far side of the session vocabulary split and carry real recovery cost when unreadable, each needing its own class rather than one ruling covering the trio; `src/cadrumo/adapters/outbound/aeat/ and src/cadrumo/core/compatibility_lifecycle.py`.
 - [x] `W04.P07.S133` - Have Sol Medium classify the roughly one dozen genuine persisted formats the binding gate found unbound, taking the encrypted profile record first since it carries taxpayer facts and has already been bumped once, and arguing each class from what is lost when it stops being readable rather than assigning by proximity, with the derived participation index a real regenerable candidate by its own rule; `src/cadrumo/core/compatibility_lifecycle.py`.
-- [ ] `W04.P07.S141` - Have Terra XHigh complete the half-landed harness extraction that currently breaks collection tree-wide, since the extracted package carries its own project file and source but the root project declares no workspace membership for it so it is not importable, while four production modules in the MCP and CLI entrypoints still import the deleted package; `pyproject.toml and src/cadrumo/entrypoints/`.
+- [x] `W04.P07.S141` - Have Terra XHigh complete the half-landed harness extraction that currently breaks collection tree-wide, since the extracted package carries its own project file and source but the root project declares no workspace membership for it so it is not importable, while four production modules in the MCP and CLI entrypoints still import the deleted package; `pyproject.toml and src/cadrumo/entrypoints/`.
+- [ ] `W04.P07.S142` - Have Terra XHigh repair the telemetry producer test that imports a private helper from a sibling test module which no longer defines it, the helper having been removed rather than renamed with no equivalent surviving, and rule on the shape independently since a test module importing another test module's private helper is fragile by construction; `src/cadrumo/core/telemetry/tests/`.
+- [ ] `W04.P07.S143` - Have Sol Medium rule where companion distributions built from this repository live, since two established companions sit under one directory and a third was placed elsewhere, which is one concept in two homes and the fragmentation this campaign exists to remove; `pyproject.toml`.
 
 ## Wave `W05` - end-to-end proof
 
