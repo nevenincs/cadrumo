@@ -50,7 +50,7 @@ stderr, matching the companion vaultspec-core and vaultspec-rag servers' event
 shape so host-side tooling can consume all three from one reader.
 
 See Also:
-    :func:`~entrypoints.mcp._server.serve`
+    :func:`~cadrumo_harness.mcp._server.serve`
         The entry point that arms this watchdog before the transport starts.
 """
 

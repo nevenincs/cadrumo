@@ -213,7 +213,7 @@ def test_modelo_714_legal_refs_are_boe_corpus_backed() -> None:
 
 def test_modelo_714_form_order_is_boe_corpus_backed() -> None:
     modelo, catalogues = _load_modelo_714()
-    revision = modelo.revisions["2021-y-siguientes"]
+    revision = modelo.revisions["2021"]
     legal = {_PATRIMONIO_FORM_ORDER_REF: catalogues.legal[_PATRIMONIO_FORM_ORDER_REF]}
 
     verify_legal_catalogue(legal, source_root=bundled_path())
@@ -230,7 +230,7 @@ def test_modelo_714_form_order_is_boe_corpus_backed() -> None:
 
 def test_modelo_714_boe_form_source_is_layout_only() -> None:
     modelo, catalogues = _load_modelo_714()
-    revision = modelo.revisions["2021-y-siguientes"]
+    revision = modelo.revisions["2021"]
 
     assert "boe-modelo-714-form" not in catalogues.sources
     assert catalogues.sources["aeat-modelo-714-procedure"].evidence_tier == "official_source_guidance"
@@ -241,8 +241,8 @@ def test_modelo_714_boe_form_source_is_layout_only() -> None:
 
 def test_modelo_714_revision_2021_declares_constructs() -> None:
     modelo, _ = _load_modelo_714()
-    revision = modelo.revisions["2021-y-siguientes"]
-    assert revision.constructs, "714 2021-y-siguientes revision must declare constructs"
+    revision = modelo.revisions["2021"]
+    assert revision.constructs, "714 2021 revision must declare constructs"
     construct_ids = {c.id for c in revision.constructs}
     assert "m714-patrimonio-calculation" in construct_ids
 
@@ -255,7 +255,7 @@ def test_modelo_714_revision_2021_cuota_integra_computed_via_grounded_escala() -
     plus explicit M714 exclusion inputs.
     """
     modelo, _ = _load_modelo_714()
-    revision = modelo.revisions["2021-y-siguientes"]
+    revision = modelo.revisions["2021"]
     # The sole cuota-íntegra formula is the real, art.30-grounded escala — not a placeholder.
     escala_formula = next(f for f in revision.formulas if f.target_casilla_id == _PATRIMONIO_CUOTA_INTEGRA_CASILLA)
     assert escala_formula.id == "patrimonio-cuota-integra-escala-estatal"
@@ -276,7 +276,7 @@ def test_modelo_714_revision_2021_cuota_integra_computed_via_grounded_escala() -
 
 def test_modelo_714_art31_m100_same_year_relation_chain_is_declared() -> None:
     modelo, _ = _load_modelo_714()
-    revision = modelo.revisions["2021-y-siguientes"]
+    revision = modelo.revisions["2021"]
     casillas = {casilla.id: casilla for casilla in revision.casillas}
 
     assert revision.period_selector.year_from == 2021
@@ -387,7 +387,7 @@ def test_modelo_714_snapshot_builds_for_2021_event_period() -> None:
         filing_year=2021,
         period="0A",
     )
-    assert snapshot.revision.id == "2021-y-siguientes"
+    assert snapshot.revision.id == "2021"
     assert _PATRIMONIO_FORM_ORDER_REF in snapshot.legal
 
 

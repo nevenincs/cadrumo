@@ -6,7 +6,7 @@ per-persona declaration in this module is a typed mapping from
 :class:`AgentPersona` to a coarse set of mounted-command-family ``child``
 tokens plus an :class:`~application.operator_surface.OperatorMutability`
 ceiling - derived from each persona document's "Tool scope" section under
-``src/cadrumo/_data/agent/personas/``. It is deliberately NOT a per-tool
+``src/cadrumo-harness/src/cadrumo_harness/_data/agent/personas/``. It is deliberately NOT a per-tool
 allowlist: a second tool-shaped artifact would duplicate the
 manifest's own ``(family, mutability)`` data and could itself drift between
 builds, contrary to ``aeat-registry-authority-flow``'s single-authority
@@ -20,7 +20,7 @@ per-persona declaration against the live manifest is proven separately by
 the build-time pinning test in ``tests/test_persona_scope.py``, not by this
 module.
 
-This complements the existing global :func:`~entrypoints.mcp.confirmation_for_tool`
+This complements the existing global :func:`~cadrumo_harness.mcp.confirmation_for_tool`
 HITL policy: that gate decides *how* a call is approved (auto/confirm/block)
 irrespective of persona; this gate decides *whether* a tool is in the active
 persona's boundary at all. Both run in the ``PreToolUse`` layer.
@@ -80,7 +80,7 @@ _MUTABILITY_RANK: dict[OperatorMutability, int] = {
 class AgentPersona(StrEnum):
     """The seven operator-harness personas, named per their persona document stem.
 
-    Mirrors the file stems under ``src/cadrumo/_data/agent/personas/`` exactly
+    Mirrors the file stems under ``src/cadrumo-harness/src/cadrumo_harness/_data/agent/personas/`` exactly
     (kebab-case), so a persona's runtime identity and its shipped document are
     the same token.
     """
@@ -234,7 +234,7 @@ def is_tool_in_persona_scope(*, persona: AgentPersona, command_key: str) -> bool
     never treated as in scope.
 
     This is independent of, and complements, the global
-    :func:`~entrypoints.mcp.confirmation_for_tool` HITL confirmation tier:
+    :func:`~cadrumo_harness.mcp.confirmation_for_tool` HITL confirmation tier:
     that gate decides how an in-scope call is approved; this gate decides
     whether the call is in the persona's boundary at all.
     """

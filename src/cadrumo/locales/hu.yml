@@ -7481,8 +7481,8 @@ errors:
     refused_retention_floor: 'Törlés elutasítva: %{retained_record_count} benyújtott
       adónyilvántartás még a törvényes megőrzési időn belül van (Ley 58/2003, LGT
       66. és 70. cikk). A legkorábbi biztonságos törlési dátum: %{earliest_safe_erase_date}.
-      Várjon eddig, vagy futtassa újra a --i-acknowledge-legal-retention-obligations
-      és --reason kapcsolóval a felülbíráláshoz.'
+      Várjon eddig, vagy futtassa újra a --override-retention és --reason kapcsolóval
+      a felülbíráláshoz.'
     refused_review_edit_parse: A  paramétert nem sikerült elemezni. Ellenőrizze a
       megadott érték szintaxisát.
     refused_review_filter_parse: A  paramétert nem sikerült elemezni. Ellenőrizze

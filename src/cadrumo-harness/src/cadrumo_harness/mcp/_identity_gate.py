@@ -58,7 +58,7 @@ IDENTITY_READ_COMMANDS: frozenset[str] = frozenset(
 #: The console identity-read TOOLS (no registry command key) that clear the gate;
 #: ``_server`` records the read on dispatch. ``whoami`` is the primary identity
 #: assertion. ``harness.load`` counts because P02 made the harness floor carry
-#: the active-identity block (:func:`~entrypoints.mcp._harness_tools.build_whoami_identity`),
+#: the active-identity block (:func:`~cadrumo_harness.mcp._harness_tools.build_whoami_identity`),
 #: so an agent that loaded the harness has already seen who is active - exactly
 #: what the gate guarantees - and it is the near-universal first call, so counting
 #: it cuts friction without weakening safety: a profile SWITCH still re-arms the

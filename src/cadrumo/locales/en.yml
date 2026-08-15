@@ -7144,7 +7144,7 @@ errors:
     refused_retention_floor: 'Erase refused: %{retained_record_count} filed tax record(s)
       are still within the legal retention period (Ley 58/2003, LGT art. 66 and 70).
       The earliest safe erase date is %{earliest_safe_erase_date}. Wait until then,
-      or re-run with --i-acknowledge-legal-retention-obligations and --reason to override.'
+      or re-run with --override-retention and --reason to override.'
     refused_review_edit_parse: '`--set KEY=VALUE` could not be parsed. Check the syntax
       of the value provided.'
     refused_review_filter_parse: '`--filter KEY=VALUE` could not be parsed. Check

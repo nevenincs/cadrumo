@@ -245,7 +245,11 @@ def _read_regular_tree_bytes(root: Path, *, subject: str) -> dict[str, bytes]:
     members: dict[str, bytes] = {}
 
     def visit(directory: Path) -> None:
-        for child in sorted(iter_directory(directory), key=lambda path: path.name):
+        # require_root: the root is guarded above, but this recursion is not. An
+        # unreadable subdirectory returning empty would drop its members from the
+        # comparison silently, so the tree would compare equal on content it never
+        # read. Reading nothing is a broken tree here, never an empty one.
+        for child in sorted(iter_directory(directory, require_root=True), key=lambda path: path.name):
             if child.is_symlink() or child.is_junction():
                 raise RegistryValidationError(f"{subject} contains a linked member: {child}")
             relative = child.relative_to(root).as_posix()

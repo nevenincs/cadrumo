@@ -20,8 +20,7 @@
     "src/cadrumo/domain/calculations/registry/_record_design.py": "Not acquired complexity: the ruff 0.15.22 -> 0.16.0 formatter reflow joined comprehensions and call chains the old formatter split. A split would be the wrong remedy here.",
     "dev/registry/_workbook_parity.py": "Carries a sys.platform guard so ty resolves winreg only on win32.",
     "src/cadrumo/entrypoints/cli/_ledger.py::ledger_classify": "A wide Typer signature (manual + LLM + saturate + evidence + auto-split routes). The LLM-routing bodies live in _ledger_llm_cli.py; what remains is the option surface and the route dispatch.",
-    "src/cadrumo/entrypoints/cli/_modelo_payloads.py": "The bindings list/resolve payload family was extracted to _modelo_bindings_payloads.py, following the split pattern of _modelo_aux_payloads.py and _modelo_revision_payload_parts.py.",
-    "src/cadrumo/entrypoints/mcp/_server.py::build_server": "MCP SDK handler-registration factory: every @server.list_tools() / @server.call_tool() handler closes over server, window, and the persona/telemetry gates built earlier in the function, so the handlers cannot be hoisted to module level without threading that state through every handler signature. Split direction: extract the per-capability handler-builder closures (tools/prompts/resources) into factory helpers taking the shared state as arguments."
+    "src/cadrumo/entrypoints/cli/_modelo_payloads.py": "The bindings list/resolve payload family was extracted to _modelo_bindings_payloads.py, following the split pattern of _modelo_aux_payloads.py and _modelo_revision_payload_parts.py."
   },
   "modules": {
     "src/cadrumo/adapters/inbound/tui/tests/test_flow_tui_app.py": 1434,
@@ -93,8 +92,6 @@
     "src/cadrumo/domain/contribuyente/_descendant_facts.py::parse_descendiente_flag": 209,
     "src/cadrumo/entrypoints/cli/_ledger.py::ledger_add": 248,
     "src/cadrumo/entrypoints/cli/_ledger.py::ledger_classify": 213,
-    "src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py::ledger_pull_folder": 191,
-    "src/cadrumo/entrypoints/mcp/_server.py::_on_call_tool": 230,
-    "src/cadrumo/entrypoints/mcp/_server.py::build_server": 617
+    "src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py::ledger_pull_folder": 191
   }
 }

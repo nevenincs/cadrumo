@@ -10,7 +10,7 @@ for the LLM client. The live-model persona measurement observed exactly this in 
 ``encoding="utf-8"`` so the relayed text is faithful on every host.
 
 The decode contract now lives in the supervised call runtime
-(:func:`~entrypoints.mcp._call_runtime.run_supervised`), which pins
+(:func:`~cadrumo_harness.mcp._call_runtime.run_supervised`), which pins
 ``encoding="utf-8"``; these tests exercise it against a real child emitting
 UTF-8 Spanish, so the fix is grounded in real platform behaviour rather than an
 injected stub.

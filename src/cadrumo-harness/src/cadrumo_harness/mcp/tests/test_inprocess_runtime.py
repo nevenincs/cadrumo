@@ -1,6 +1,6 @@
 """Real-behavior coverage for the warm in-process CLI runtime.
 
-Exercises :mod:`entrypoints.mcp._inprocess` against the real ``aeat`` Typer app,
+Exercises :mod:`cadrumo_harness.mcp._inprocess` against the real ``aeat`` Typer app,
 the real registry, and real filesystem state - no mocks, stubs, or monkeypatch.
 The runtime's contract is that it runs the genuine CLI pipeline in-process and
 returns a completed run whose captured stdout parses to the same JSON envelope

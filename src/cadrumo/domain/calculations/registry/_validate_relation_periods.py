@@ -38,6 +38,19 @@ def select_relation_source_revisions(
     modelo: ModeloDefinition,
     selector: RelationRevisionSelector,
 ) -> tuple[tuple[ModeloRevision, ...], list[str]]:
+    """Return the source modelo's matching revisions alongside any selection failures.
+
+    Deliberately a dual return, not a candidate for the `list[str]`-only
+    accumulator-convention conversion: every caller (`_validate_relation_sources`
+    and several tests) needs the resolved `ModeloRevision` tuple to keep
+    working -- source-year coverage, coordinate-ownership resolution, and
+    downstream diagnostics all consume it -- so splitting this into a pure
+    selector plus a pure validator would run the SAME revision-matching walk
+    twice per relation. The failures slot is real, wired infrastructure (the
+    caller already does `failures.extend(selector_failures)`), currently
+    always empty only because no branch below yet has a selection failure to
+    report -- not vestigial, just unexercised.
+    """
     selected = tuple(
         revision
         for revision in modelo.revisions.values()
@@ -179,6 +192,14 @@ def validate_relation_source_coordinate_coverage(
     What remains after both exclusions is either genuine coverage or a real,
     currently-unmodelled gap in the SOURCE corpus -- the caller reconciles
     those against a documented allowlist keyed on ``allowance_key``.
+
+    Deliberately a dual return, not a candidate for the `list[str]`-only
+    accumulator-convention conversion: the resolved `(revision, periods)`
+    coverage tuple and the failures are produced by the SAME per-coordinate
+    walk over ``candidates`` (see ``_coordinate_coverage`` / segment
+    resolution below) -- splitting resolution from validation would mean
+    walking every coordinate's owner-segments twice, once to resolve
+    coverage and once to re-derive the same failures.
     """
     candidates = tuple(source_revisions)
     covered_periods_by_revision: dict[str, set[str]] = {}

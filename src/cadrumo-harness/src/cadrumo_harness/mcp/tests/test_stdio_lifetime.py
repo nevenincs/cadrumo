@@ -52,7 +52,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.s
 if TYPE_CHECKING:
     from pathlib import Path
 
-_MODULE = "cadrumo.entrypoints.mcp._stdio_lifetime"
+_MODULE = "cadrumo_harness.mcp._stdio_lifetime"
 _RESOLVER_SNIPPET = f"from {_MODULE} import resolve_stdin_client_pid;print(resolve_stdin_client_pid(), flush=True)"
 
 

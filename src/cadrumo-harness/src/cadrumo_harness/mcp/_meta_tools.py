@@ -284,10 +284,10 @@ def describe_command(
 
     Resolves everything from the live descriptor set and the real classifiers -
     the annotation hints from the descriptor, the confirmation tier from
-    :func:`~entrypoints.mcp._hitl.confirmation_for_tool`, the declared risk from
+    :func:`~cadrumo_harness.mcp._hitl.confirmation_for_tool`, the declared risk from
     :func:`~application.operator_surface.declared_risk` (all-false for a read-only
     command with no row), the owning toolset from
-    :func:`~entrypoints.mcp._toolsets.toolset_for_command`, and the reachable
+    :func:`~cadrumo_harness.mcp._toolsets.toolset_for_command`, and the reachable
     personas from the same scope + handoff-deny gates the call path enforces. A
     key that names no exposed descriptor returns ``None``.
 
@@ -406,7 +406,7 @@ def manage_toolsets(
     """Apply a ``toolsets`` action, mutating ``active`` in place.
 
     ``list`` reports the groups and current state without change. ``activate``
-    adds a toolset (refused past :data:`~entrypoints.mcp._toolsets.MAX_ACTIVE_TOOLSETS`
+    adds a toolset (refused past :data:`~cadrumo_harness.mcp._toolsets.MAX_ACTIVE_TOOLSETS`
     or on an unknown name); ``deactivate`` removes one. Activation widens the
     advertised surface within the active persona's scope (the server applies the
     scope filter when it rebuilds the tool list), so this function owns only the

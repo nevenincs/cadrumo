@@ -6,9 +6,9 @@ declaration is actually wired into ``_server.py``'s ``_list_tools`` /
 ``_call_tool`` behaviour, not merely defined and unused. ``_run_server`` is
 ``# pragma: no cover`` (it blocks on the stdio transport), so the two SDK-side
 callbacks are proven indirectly through the SDK-independent functions they
-delegate to: :func:`~cadrumo.entrypoints.mcp._server.filter_descriptors_for_persona`
+delegate to: :func:`~cadrumo_harness.mcp._server.filter_descriptors_for_persona`
 (the ``_list_tools`` half) and
-:func:`~cadrumo.entrypoints.mcp._server.persona_scope_refusal` (the ``_call_tool``
+:func:`~cadrumo_harness.mcp._server.persona_scope_refusal` (the ``_call_tool``
 half, which the server calls BEFORE ``confirmation_for_tool``).
 
 KNOWN LIMITATION (see ``_persona_scope.py``'s module docstring): the scope is

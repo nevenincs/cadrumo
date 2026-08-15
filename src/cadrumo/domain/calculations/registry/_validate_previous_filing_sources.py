@@ -103,14 +103,15 @@ def _validate_previous_filing_binding(
 
     for source_revision in matching_revisions:
         for source_casilla_id in source_reference.source_casilla_ids:
-            if failure := source_casilla_id_reference_failure(
-                source_revision,
-                source_casilla_id,
-                source_scope=f"{binding_scope} source revision {source_revision.id!r}",
-                missing_failure=(
-                    f"{binding_scope} source casilla id {source_casilla_id!r} is not defined by any "
-                    f"period-compatible {source_modelo.id} revision {source_revision.id!r}"
+            failures.extend(
+                source_casilla_id_reference_failure(
+                    source_revision,
+                    source_casilla_id,
+                    source_scope=f"{binding_scope} source revision {source_revision.id!r}",
+                    missing_failure=(
+                        f"{binding_scope} source casilla id {source_casilla_id!r} is not defined by any "
+                        f"period-compatible {source_modelo.id} revision {source_revision.id!r}"
+                    ),
                 ),
-            ):
-                failures.append(failure)
+            )
     return failures

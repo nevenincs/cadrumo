@@ -35,13 +35,18 @@ def source_casilla_id_reference_failure(
     *,
     source_scope: str,
     missing_failure: str,
-) -> str | None:
-    """Return a closure failure for a source casilla reference, if invalid.
+) -> list[str]:
+    """Return closure failures for a source casilla reference, if invalid.
 
     Cross-revision source references consume only canonical ``casilla.id`` values.
     Display numbers, form numbers, and export refs are refused even when they map
     to exactly one source casilla; the diagnostic names the canonical candidate so
     the author fixes the registry source instead of treating the token as unknown.
+
+    Returns a single-item list on failure, empty on success -- ``list[str]``
+    rather than ``str | None`` so every call site accumulates it the same way
+    as every sibling validator (``failures.extend(...)``), with no special
+    case for a check that happens to report at most one finding today.
 
     Args:
         revision: Source
@@ -55,17 +60,17 @@ def source_casilla_id_reference_failure(
         missing_failure: Failure message to reuse for a truly unknown source id.
     """
     if source_casilla_id in revision_output_ids(revision):
-        return None
+        return []
     noncanonical_targets = casilla_noncanonical_reference_targets(revision, source_casilla_id)
     if noncanonical_targets:
         rendered_targets = ", ".join(noncanonical_targets)
         if len(noncanonical_targets) > 1:
-            return (
+            return [
                 f"{source_scope} source casilla id {source_casilla_id!r} is not a canonical casilla.id "
                 f"and is ambiguous; candidate casilla.id values: {rendered_targets}"
-            )
-        return (
+            ]
+        return [
             f"{source_scope} source casilla id {source_casilla_id!r} is not a canonical casilla.id; "
             f"use canonical casilla.id {rendered_targets!r}"
-        )
-    return missing_failure
+        ]
+    return [missing_failure]

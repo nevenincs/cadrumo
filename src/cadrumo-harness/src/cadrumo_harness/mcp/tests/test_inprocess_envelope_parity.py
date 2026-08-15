@@ -169,7 +169,7 @@ def _cli_exposable_verbs() -> frozenset[str]:
     """Every operator verb the CLI surface exposes, from the live manifest.
 
     ``command_schema_refs`` is the CLI's own registry projection (the same source
-    :func:`~entrypoints.mcp._tools.build_tool_descriptors` reads); an operator
+    :func:`~cadrumo_harness.mcp._tools.build_tool_descriptors` reads); an operator
     verb is one that survives the exposability filter, so the set auto-grows when
     a verb is mounted.
     """

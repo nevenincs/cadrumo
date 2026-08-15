@@ -7689,8 +7689,8 @@ errors:
     refused_retention_floor: 'Borrado rechazado: %{retained_record_count} registro(s)
       tributario(s) presentado(s) siguen dentro del plazo legal de conservación (Ley
       58/2003, LGT art. 66 y 70). La fecha más temprana de borrado seguro es %{earliest_safe_erase_date}.
-      Espere hasta esa fecha o vuelva a ejecutar con --i-acknowledge-legal-retention-obligations
-      y --reason para forzarlo.'
+      Espere hasta esa fecha o vuelva a ejecutar con --override-retention y --reason
+      para forzarlo.'
     refused_review_edit_parse: No se pudo interpretar `--set CLAVE=VALOR`. Comprueba
       la sintaxis del valor indicado.
     refused_review_filter_parse: No se pudo interpretar `--filter CLAVE=VALOR`. Comprueba

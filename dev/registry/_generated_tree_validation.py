@@ -280,7 +280,11 @@ def _require_existing_non_link(path: Path, *, subject: str) -> None:
 
 
 def _children_without_links(directory: Path, *, subject: str) -> tuple[Path, ...]:
-    children = tuple(sorted(iter_directory(directory), key=lambda path: path.name))
+    # require_root: an unreadable directory yielding empty would pass the
+    # link check below without inspecting anything, which is the failure this
+    # helper exists to prevent. ``Path.iterdir`` raised here before the move
+    # onto the shared scanner; this keeps that.
+    children = tuple(sorted(iter_directory(directory, require_root=True), key=lambda path: path.name))
     for child in children:
         if child.is_symlink() or child.is_junction():
             raise RegistryValidationError(f"{subject} contains a linked member: {child}")
