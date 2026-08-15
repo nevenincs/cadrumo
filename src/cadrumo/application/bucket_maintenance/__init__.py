@@ -11,11 +11,14 @@ inner profile primitives keep emitting their lifecycle events.
 
 The service does not re-implement a cross-store write; it
 delegates to the existing top-level user-profile re-exports:
-:func:`application.user_profile.rename_profile`,
-:func:`application.user_profile.delete_profile_with_lifecycle_span`,
-:func:`application.user_profile.remove_profile_bucket_directory`,
-:func:`application.user_profile.serialize_profile_bundle`, and
+:func:`application.user_profile.serialize_profile_bundle` and
 :func:`application.user_profile.deserialize_profile_bundle`.
+
+Three further delegates named here previously -- the rename and the two
+deletion primitives -- no longer exist. They were removed with the destructive
+surface being rebuilt, and the deletion path this package assesses for has no
+producer at present; see :meth:`BucketMaintenanceService.assess_deletion`,
+which refuses rather than pretending to one.
 
 Export/import composition is deliberately typed at the facade boundary:
 commands such as
