@@ -145,7 +145,10 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     assert 'venv.pip_install resource("cryptography"), build_isolation: false' in formula
     assert "venv.pip_install_and_link buildpath" in formula
     assert 'assert_predicate bin/"aeat", :executable?' in formula
-    assert 'assert_predicate bin/"cadrumo-mcp", :executable?' in formula
+    # The formula ships the CLI distribution only. The `cadrumo-mcp` server is
+    # an entry point of the separate `cadrumo-harness` distribution, which
+    # Homebrew does not install here, so the formula must NOT claim it.
+    assert "cadrumo-mcp" not in formula
     assert 'shell_output("#{bin}/aeat --version")' in formula
 
     resources = {name: (url, digest) for name, url, digest in _RESOURCE.findall(formula)}
@@ -157,19 +160,22 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
         f"{built_cohort.release_base}/{built_cohort.official.name}",
         sha256_path(built_cohort.official),
     )
-    assert "mcp" in resources
+    # The MCP SDK belongs to the `cadrumo-harness` distribution, which this
+    # formula does not install, so it must not appear in the CLI closure.
+    assert "mcp" not in resources
     assert "tzdata" not in resources
-    # 70 locked + 2 data companions + 3 isolation-disabled build backends
-    # (setuptools -- the venv from `python -m venv` ships none and Homebrew
-    # installs resources --no-deps; setuptools-scm for argon2; maturin for
-    # cryptography) = 75. The locked count rose from 67 when `textual` became a
-    # runtime dependency for the flow frontend and brought linkify-it-py and
-    # uc-micro-py in with it; the drift went unseen because this test could not
-    # reach its assertions while its fixture was erroring at setup.
+    # The three isolation-disabled build backends: setuptools -- the venv from
+    # `python -m venv` ships none and Homebrew installs resources --no-deps;
+    # setuptools-scm for argon2; maturin for cryptography.
     assert "setuptools" in resources
     assert "setuptools-scm" in resources
     assert "maturin" in resources
-    assert len(resources) == 75
+    # Gate on the property, not a pinned tally: the closure is exactly the
+    # mandatory `cadrumo` lock walk plus the two data companions plus those
+    # three backends, and every member resolves to immutable material. An
+    # exact count encodes one moment and trains everyone to bump the constant.
+    assert len(resources) == len(_RESOURCE.findall(formula))
+    assert all(digest and len(digest) == 64 for _url, digest in resources.values())
     assert all(url.startswith("https://") for url, _digest in resources.values())
     # macOS is ARM-only (Intel dropped 2026-07-21), so no resource is macOS
     # conditional any more and the on_macos block disappears entirely; Linux

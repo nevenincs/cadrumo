@@ -274,7 +274,7 @@ def _run_in_process(argv_tail: Sequence[str], *, acquire_timeout_s: float) -> tu
     the worker thread the in-process runtime drives the CLI on — and is
     untouched by co-resident machine load.
     """
-    from cadrumo.entrypoints.mcp._inprocess import parse_cli_envelope, run_cli_in_process
+    from cadrumo_harness.mcp._inprocess import parse_cli_envelope, run_cli_in_process
 
     started = time.monotonic()
     cpu_started = time.process_time()
@@ -295,10 +295,11 @@ def _timed_build_server_read(command_key: str, *, timeout_s: float) -> tuple[flo
     Returns (wall seconds, process CPU seconds); the memory transport runs
     entirely inside this process, so ``time.process_time`` covers it.
     """
-    from cadrumo.entrypoints.mcp._dispatch import tool_name_for_command
-    from cadrumo.entrypoints.mcp._harness_tools import WHOAMI_TOOL
-    from cadrumo.entrypoints.mcp._server import build_server
-    from cadrumo.entrypoints.mcp._tools import build_tool_descriptors
+    from cadrumo_harness.mcp._dispatch import tool_name_for_command
+    from cadrumo_harness.mcp._harness_tools import WHOAMI_TOOL
+    from cadrumo_harness.mcp._server import build_server
+    from cadrumo_harness.mcp._tools import build_tool_descriptors
+
     from cadrumo.tests import connected_server_and_client_session as connect
 
     async def _drive() -> tuple[float, float]:

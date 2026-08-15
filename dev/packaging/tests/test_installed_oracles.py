@@ -29,9 +29,9 @@ from pathlib import Path
 from typing import IO, Any, cast
 
 import pytest
+from cadrumo_harness import materialise_marketplace
 
 from cadrumo.core import iter_directory, scan_directory
-from cadrumo_harness import materialise_marketplace
 from dev._paths import REPO_ROOT
 
 from .._hashing import sha256_path
@@ -174,7 +174,8 @@ def _build_harness_wheel(work_dir: Path, uv: str, *, build_root: Path) -> Path:
     )
     built = scan_directory(out_dir, pattern=_HARNESS_WHEEL_GLOB)
     if len(built) != 1:
-        raise SystemExit(f"expected one {_HARNESS_DISTRIBUTION} wheel in {out_dir}; got {[row.name for row in built]!r}")
+        names = [row.name for row in built]
+        raise SystemExit(f"expected one {_HARNESS_DISTRIBUTION} wheel in {out_dir}; got {names!r}")
     return built[0]
 
 

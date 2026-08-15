@@ -2192,14 +2192,6 @@ categories:
       label: Travel transport
       notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
 cli:
-  agent:
-    materialise:
-      output_help: Directory to write the Claude-native operator workspace (.claude/
-        plus a CLAUDE.md) into.
-      plugin_summary: 'Wrote Claude plugin to {path}: {skills} skills, {agents} agents
-        ({name} v{version}).'
-      summary: 'Wrote operator workspace to {path}: {rules} rules, {personas} personas,
-        {skills} skills.'
   app:
     ledger:
       bienes_inversion:
@@ -4551,18 +4543,6 @@ cli:
       help: Clear the value of one configuration key
       key_help: Key to clear
     workflow_help: Show config workflow help
-  contract:
-    app_help: 'Emit the operator capability manifest: roots, command families, lifecycle,
-      and result schemas.'
-    schema_module_load_failed: 'Capability surface degraded: the result-schema module
-      ''{module}'' failed to load ({error}); the commands it registers are absent
-      from this manifest. This is usually an unrelated in-flight code change, not
-      a data problem.'
-    summary_commands: 'Registered commands: {count}'
-    summary_families: 'Command families: {count}'
-    summary_heading: Operator surface manifest
-    summary_lifecycle: 'Modelo lifecycle: {steps}'
-    summary_roots: 'Roots: {roots}'
   diagnostics:
     app_help: Local-only operator run-health and session diagnostics.
     browser:

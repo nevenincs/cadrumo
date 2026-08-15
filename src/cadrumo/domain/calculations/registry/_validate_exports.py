@@ -62,7 +62,6 @@ from ._validate_helpers import missing_refs as _missing_refs
 
 
 def validate_export_layout_section(
-    failures: list[str],
     *,
     prefix: str,
     revision: ModeloRevision,
@@ -72,8 +71,8 @@ def validate_export_layout_section(
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
-) -> None:
-    """Append export layout, record, and field failures.
+) -> list[str]:
+    """Return export layout, record, and field failures.
 
     The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
     export layouts. Each layout must carry layout-authority evidence, and each
@@ -82,6 +81,7 @@ def validate_export_layout_section(
     :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition` ids from
     the revision validation context.
     """
+    failures: list[str] = []
     for layout in revision.export_layouts:
         owner = f"export {layout.id}"
         failures.extend(_missing_refs(prefix, owner, layout.legal_refs, legal_refs, "legal"))
@@ -111,6 +111,7 @@ def validate_export_layout_section(
         source_refs=source_refs,
         evidence=evidence,
     )
+    return failures
 
 
 def _validate_generated_projection_layout_bijection(
@@ -478,7 +479,7 @@ def _validate_export_field(
     if field.binding is not None and field.binding not in bindings:
         failures.append(f"{prefix}: export field {field.id!r} references unknown binding {field.binding!r}")
     _validate_export_field_literal_length(failures, prefix=prefix, record=record, field=field)
-    validate_draft_field_slot_width(failures, prefix=prefix, field=field)
+    failures.extend(validate_draft_field_slot_width(prefix=prefix, field=field))
 
 
 def _validate_export_field_references(

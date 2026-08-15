@@ -2383,18 +2383,6 @@ categories:
       label: Transporte en viajes
       notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
 cli:
-  agent:
-    app_help: Materializa el harness del agente operador (reglas, perfiles, habilidades)
-      como un espacio de trabajo .claude nativo de Claude para un entorno de agente.
-    materialise:
-      layout_help: 'Formato de materialización: «workspace» para un espacio de trabajo
-        .claude nativo de Claude, o «plugin» para un plugin de Claude de un solo clic.'
-      output_help: Directorio donde escribir el espacio de trabajo del operador nativo
-        de Claude (.claude/ y un CLAUDE.md).
-      plugin_summary: 'Plugin de Claude escrito en {path}: {skills} habilidades, {agents}
-        agentes ({name} v{version}).'
-      summary: 'Espacio de trabajo del operador escrito en {path}: {rules} reglas,
-        {personas} personas, {skills} habilidades.'
   app:
     ledger:
       bienes_inversion:
@@ -4927,18 +4915,6 @@ cli:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
     workflow_help: Mostrar ayuda del flujo de configuración
-  contract:
-    app_help: 'Emite el manifiesto de capacidades del operador: raices, familias de
-      comandos, ciclo de vida y esquemas de resultado.'
-    schema_module_load_failed: 'Superficie de capacidades degradada: el módulo de
-      esquema de resultados ''{module}'' no se pudo cargar ({error}); los comandos
-      que registra no aparecen en este manifiesto. Suele deberse a un cambio de código
-      en curso no relacionado, no a un problema de datos.'
-    summary_commands: 'Comandos registrados: {count}'
-    summary_families: 'Familias de comandos: {count}'
-    summary_heading: Manifiesto de la superficie del operador
-    summary_lifecycle: 'Ciclo de vida del modelo: {steps}'
-    summary_roots: 'Raices: {roots}'
   diagnostics:
     app_help: Diagnóstico local del estado de las ejecuciones y de la sesión.
     browser:

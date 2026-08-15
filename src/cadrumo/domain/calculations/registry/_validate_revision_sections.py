@@ -87,45 +87,49 @@ def _validate_revision_surface_sections(
     so record, surface, dependency, algorithm, export, and extraction-profile
     checks consume the same declared-id indexes.
     """
-    validate_casilla_section(
-        failures,
-        prefix=prefix,
-        revision=revision,
-        formulas=context.formulas,
-        bindings=context.bindings,
-        export_field_ids=context.export_field_ids,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
-        evidence=evidence,
+    failures.extend(
+        validate_casilla_section(
+            prefix=prefix,
+            revision=revision,
+            formulas=context.formulas,
+            bindings=context.bindings,
+            export_field_ids=context.export_field_ids,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            evidence=evidence,
+        ),
     )
-    validate_formula_section(
-        failures,
-        prefix=prefix,
-        revision=revision,
-        casillas=context.casillas,
-        casilla_by_id=context.casilla_by_id,
-        bindings=context.bindings,
-        parameters=context.parameters,
-        relations=context.relations,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
-        evidence=evidence,
+    failures.extend(
+        validate_formula_section(
+            prefix=prefix,
+            revision=revision,
+            casillas=context.casillas,
+            casilla_by_id=context.casilla_by_id,
+            bindings=context.bindings,
+            parameters=context.parameters,
+            relations=context.relations,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            evidence=evidence,
+        ),
     )
-    validate_parameter_section(
-        failures,
-        prefix=prefix,
-        revision=revision,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
-        evidence=evidence,
+    failures.extend(
+        validate_parameter_section(
+            prefix=prefix,
+            revision=revision,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            evidence=evidence,
+        ),
     )
-    validate_binding_section(
-        failures,
-        prefix=prefix,
-        revision=revision,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
-        evidence=evidence,
+    failures.extend(
+        validate_binding_section(
+            prefix=prefix,
+            revision=revision,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            evidence=evidence,
+        ),
     )
     failures.extend(
         validate_relation_section(
@@ -166,31 +170,33 @@ def _validate_revision_surface_sections(
             evidence=evidence,
         ),
     )
-    validate_export_layout_section(
-        failures,
-        prefix=prefix,
-        revision=revision,
-        casillas=context.casillas,
-        bindings=context.bindings,
-        casilla_by_id=context.casilla_by_id,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
-        evidence=evidence,
+    failures.extend(
+        validate_export_layout_section(
+            prefix=prefix,
+            revision=revision,
+            casillas=context.casillas,
+            bindings=context.bindings,
+            casilla_by_id=context.casilla_by_id,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            evidence=evidence,
+        ),
     )
     failures.extend(validate_export_exemption_declarations(prefix=prefix, modelo_id=modelo_id, revision=revision))
     validate_revision_id_window_agreement(failures, prefix=prefix, revision=revision)
     validate_valid_from_ejercicio_convention(failures, prefix=prefix, revision=revision)
-    validate_extraction_profile_section(
-        failures,
-        prefix=prefix,
-        modelo_id=modelo_id,
-        revision=revision,
-        casillas=context.casillas,
-        exported_casillas=context.exported_casillas,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
-        evidence=evidence,
-        corpus_root=justificante_corpus_root,
+    failures.extend(
+        validate_extraction_profile_section(
+            prefix=prefix,
+            modelo_id=modelo_id,
+            revision=revision,
+            casillas=context.casillas,
+            exported_casillas=context.exported_casillas,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            evidence=evidence,
+            corpus_root=justificante_corpus_root,
+        ),
     )
     validate_cross_reference_section(
         failures,

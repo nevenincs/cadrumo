@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:5c04dfa296c04708dd15da7138624b58f036d3de9b467f33cfe39736cf925c95'
+body_hash: 'sha256:43e7ea10f69f75fedc35e2cd2dd98775356cb35490d25915b644ff412e462518'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
   - "[[2026-08-14-test-harness-sanity-successor-adr]]"
@@ -283,7 +283,6 @@ Grounding queries used: `uvx vaultspec-rag search "resolve the on-disk directory
 - Treat the consumer-count corrections above (`_repo_at`/`_ephemeral_secure_repo`: 10 not 8; `serve_directory`: 7 not 5; `_match`/`_oracle_rules`: 11 not 7) as the census superseding the original assignment tallies, not as errors in either — the assignment counts likely predate later call sites landing on the same shared clusters.
 - The 9/5/4 non-consolidation tallies (AEAT write-refusal guards, standalone gate files, extractor tamper tests) need a dedicated enumeration pass by whoever owns that part of the campaign; this record establishes the pattern is real and load-bearing but does not certify the counts.
 
-
 ### `_period` / `_p` | census | CLOSED — 3 aggregation sites converged, 1 documented delegating wrapper, 1 deliberate non-consolidation
 
 The census reported a `_period` alias recurring across `application/aggregation/tests/` and `application/workflow/tests/`. Every body was the same one-line delegation to the public canonical constructor `Period.from_year_and_code(year, code)`, so the cluster is real but the correct remedy differs by side.
@@ -311,7 +310,6 @@ Surfaced while verifying the `_period` change; **not caused by it, and deliberat
 
 **Action:** owner of the `_inventory.py` change to confirm `iter_directory(..., require_root=True)` reproduces `path.iterdir()` semantics under the anchored-handle walk before landing it, and to add a regression pinning that a capsule published by `isolated_runtime_profile` is visible to `list_current_profile_custody_capsule_ids` in the same process.
 
-
 ### W09 close-phase honesty review | close-gate | independent read-only re-derivation, no regressions, two corrections landed
 
 Run as an independent fresh-context pass against the live tree, briefed to believe none of the wave's checked claims and to treat every checked step as a claim to verify. Read-only; it fixed nothing.
@@ -326,7 +324,6 @@ Run as an independent fresh-context pass against the live tree, briefed to belie
 2. The `aliased_behaviour_count` recorded above as **225** now reads **224** live. Re-run independently and confirmed: `helper_count=7987` (was 7990), `delegating_wrapper_count=1676` (was 1672), `aliased_behaviour_count=224` (was 225). This is concurrent-worktree drift from peer commits landing between the census write and the re-run, not an error in either figure — the census's own notes flag this tree as heavily contended. **The 309 → 225 correction is confirmed real and live; only its last digit has moved since.** Treat 225 as "as-of the census write" rather than a standing invariant, and re-derive before quoting.
 
 **Explicitly still unverified, carried forward rather than assumed:** the exact tallies "9 AEAT live-write refusal guards" and "4 extractor tamper tests" were not exhaustively enumerated by this review either — the review confirmed the qualitative safety property (all separate, none merged) but not the precise counts, which is the same limitation this record already declares for those two figures. The historical "66 modelo-131 clone tests" figure likewise remains unconfirmed from git history; the `@pytest.mark.parametrize` decorators over `_FASE_1_CASES` and `_FASE_4_CASES` are confirmed present, the pre-consolidation count is not.
-
 
 ### no-monkeypatch gate | REGRESSION FOUND AND FIXED | the wave declared a gate clean against a state that no longer held
 
@@ -344,3 +341,51 @@ Run as an independent fresh-context pass against the live tree, briefed to belie
 
 **Standing lesson for the campaign:** a checked gate step records that the gate passed *once*. On a worktree three teams commit to concurrently, that is a perishable claim. The close-phase honesty review must RE-RUN the gates a wave claims green, not re-read the checkmarks — a reviewer that verifies counts and file existence will confirm every structural claim in this record and still miss a red gate entirely, which is precisely what happened here.
 
+### W09 per-step evidence map | close-gate | the formal carry-forward record, and two steps returned to open
+
+The governing constraint is that no plan step is marked complete without a matching execution record **or a close audit recording the deferred carry-forward** — otherwise delivered-as-specified, delivered-narrower and recorded-but-not-implemented all wear the same checkbox. `.vault/exec/2026-08-14-test-harness-sanity/` covers `S47`-`S98` (waves W06-W08) and holds **nothing** for `S111`-`S145`. W09's Phase description asserts this census substitutes for per-step records. **This section is what makes that substitution legitimate where it is, and refuses it where it is not.**
+
+Every checked step S111-S144 was classified by an independent read-only pass as COVERED (a named census section addresses it), TREE-EVIDENT (no prose section, but the claim is directly verifiable in the tree now, with a locator) or EVIDENCE-THIN (neither).
+
+**Result: COVERED 18, TREE-EVIDENT 9, EVIDENCE-THIN 7.** The 27 COVERED and TREE-EVIDENT steps are hereby recorded as carried forward under this audit in lieu of individual exec records, each with a locator in the map. The 7 thin ones are dealt with individually below — not waved through.
+
+**Two steps have been RETURNED TO OPEN (unchecked), because their claims do not hold:**
+
+- **`S138`** (re-run the registry-tests failure-set diff from a quiesced tree) — this record's own Recommendations section still *asks* for that re-run "before this wave is declared closeable". The ask being open is evidence the step is open. It also cannot be satisfied right now: the tree is actively torn by peers mid-relocation (`cadrumo.agent`, `_app_agent_workspace_payloads`, `_lazy_command_tree`, `_run_loopback_server`), measured at 67 collection errors falling to 4 across two runs an hour apart. A step whose precondition is a quiesced tree cannot be complete while the tree is demonstrably not quiesced.
+- **`S137`** (sweep key providers and encrypted sessions for guaranteed teardown) — no locatable record mentions key providers or encrypted sessions at all. A direct probe found **15 `EphemeralMasterKeyProvider` constructions assigned to a name that is never context-managed anywhere in its file** (against 30 that are), across `application/auth`, `storage/tests`, `storage/sql/tests`, `master_key`, `envelope`, `blob_store`. Some are likely passed into a helper that manages them (`_rotation_key_fixtures.py` forwards `old_key=`/`new_key=`), so this is an adjudication list rather than 15 confirmed leaks — but that adjudication is exactly the sweep the step claims to have done. The step text now carries the count so the next owner starts from evidence.
+
+**One step's TEXT was factually wrong and has been corrected:** `S115` said "the five secure-object repository builders". The tree carries **two** canonical builders plus a third justified-divergence construction, as this record's own `_repo_at + _ephemeral_secure_repo` entry documents. Not a work defect — a numeric claim in the step that contradicted the census sitting beside it.
+
+**Remaining EVIDENCE-THIN steps, left checked with the gap stated rather than silently accepted:**
+
+- `S111` (union-find partition into file-disjoint batches) and `S121` (score name-grouped clusters by structural similarity over normalised AST node sequences) and `S122` (adjudicate every drifted cluster above the threshold) — **the work was really done, but only in ephemeral scratchpad tooling, so no persisted artefact traces back to the step.** The similarity mechanism was a Jaccard comparison over normalised AST node-type sequences with names, constants and argument names erased, splitting clusters at a median-similarity threshold of 0.75 into genuine drift versus name collision. Its adjudicated outputs are visible in this record's downstream entries (the `isolated_backend_family` 37→8 reconciliation and the modelo-131 clone triage are both products of it), but the mechanism itself was never persisted. Recorded here so the reasoning survives the scratchpad. **The shipped gate `dev/quality/helper_body_census.py` does exact-hash grouping, not graded similarity** — anyone expecting to find the similarity scorer in the repository will not, and that is the honest state.
+- `S119` — three of its four named helper classes are covered (`sha256_path`, `declared_live_write`, `write_concept_fragment`). The **ephemeral-repository clause has no locatable evidence** in either the census or the tree.
+- `S115` — see the correction above.
+
+**Method note:** this map was produced by an independent agent that had not done the work, briefed to disbelieve the checkmarks, and it contradicted a prior reviewer on `S138` — which had previously been reasoned closed on causation (an identified unrelated cause plus a zero import path) rather than on a clean diff. **The re-run was the specified evidence and reasoning was substituted for it.** That substitution is the exact failure the carry-forward rule names, and it was caught only because a second reviewer was asked for locators instead of conclusions.
+
+### `S145` regime normalisation | determination | the step's own premise was false, and the answer is still useful
+
+`W09.P30.S145` asked whether any current door can still write an unnormalised `iva.regime` value, "since the retired wizard may have been the only path that exercised read-time normalisation".
+
+**PREMISE FALSE.** The wizard is not retired. `src/cadrumo/application/wizard/` carries 16 live non-test modules (`_catalogue.py`, `_commands.py`, `_persistence.py`, `_status.py` and siblings), all actively referencing `iva.regime` / `IVARegime`, and `apply_wizard_fact_changes` / `persist_answers` / `persist_patch` in `application/wizard/_persistence.py` are a live write path today. **A step premised on a retirement that did not happen would have produced a confident wrong answer if the premise had been taken on trust.**
+
+**NORMALISER:** `src/cadrumo/domain/deadlines/_profiles.py:174-175`, inside `_canonicalize_and_pad`, reached from `taxpayer_profile_from_mapping` and so from every `TaxpayerProfile` projection including `application/user_profile/_projections.py:280`. It strips, uppercases and maps `-` to `_`.
+
+**WRITE DOORS — enumerated, not sampled:**
+
+| Door | Pre-persist posture |
+|---|---|
+| Wizard interactive SELECT (`application/wizard/_widgets.py:validate_select`) | typed — exact-case membership against the uppercase `IVARegime` tokens |
+| `--iva-regime` CLI flag (`application/wizard/_commands.py:339-344`) | typed — `click.Choice(case_sensitive=False)` returns the canonically-cased declared choice, so `general` arrives as `GENERAL` |
+| `aeat config profile set` (`entrypoints/cli/_config/_manager_frontend.py`) | not normalised, but gated — routes through `reject_invalid_profile_facts` → `domain/user_profile/_schema.py:enum_value_refusal`, exact-case only against `schema.toml:1154` |
+| Registration initial record (`application/user_profile/_registration.py:184`) | typed — same refusal gate before persist |
+| Cotejo censal adoption (`application/user_profile/_cotejo_apply.py`) | does not write `iva.regime` at all, and is gated regardless |
+| First-run workspace init (`application/setup/_contracts.py`) | normalises explicitly, then coerces to the `IVARegime` enum via `Annotated[..., BeforeValidator(...)]` |
+| Test seeding (`seed_test_profile_record`) | bypasses the judge, but is not a production door and every fixture found writes canonical tokens |
+
+**VERDICT: DEAD DEFENSIVE CODE.** No enumerated live production door can persist an unnormalised `iva.regime`: each either normalises explicitly before persisting or is refused outright by an exact-case enum gate rather than storing a raw token.
+
+**Do NOT delete the normaliser on the strength of this verdict, and this is the load-bearing caveat.** `ProfileRecordRepository.apply_fact_changes` does **not** self-enforce validation — the refusal gate is *caller discipline*, and the determination rests on all in-tree callers currently honouring it (two direct production callers found: `_cotejo_apply.py` and `wizard/_persistence.py`, both gated, plus registration's separate validated create-path). The normaliser is therefore the last backstop behind a discipline convention, not behind a structural guarantee. **The correct follow-up is to make `apply_fact_changes` enforce the enum itself, at which point the normaliser becomes genuinely removable.** Deleting the backstop first would convert a convention into a silent data-integrity risk — and `iva.regime` selects the IVA regime a filing is computed under.
+
+**EVIDENCE GAPS, carried forward:** no empirical check of on-disk records written before the enum gate existed (the no-legacy posture argues none should exist, but that was not verified against real storage), and no check for out-of-tree tooling calling `apply_fact_changes` directly. The determination is a static code reading, which is what the step asked for, and it did not require the test suite — so the torn tree did not affect it.

@@ -22,7 +22,6 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Final
 
-import cadrumo
 from cadrumo_harness import (
     PRODUCT_AUTHOR_NAME,
     iter_operator_rules,
@@ -33,6 +32,8 @@ from cadrumo_harness import (
     materialise_workspace,
     parse_skill_metadata,
 )
+
+import cadrumo
 from cadrumo.core import PRODUCT_IDENTITY, scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 

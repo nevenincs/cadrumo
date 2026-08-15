@@ -29,13 +29,12 @@ _REPO_ROOT = _HERE.parents[1]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+from cadrumo_harness import PRODUCT_AUTHOR_NAME  # noqa: E402
 from dev.packaging.python_cohort import PythonCohort, load_python_cohort  # noqa: E402
 from dev.packaging.uv_constraints import (  # noqa: E402
     export_runtime_constraints,
     render_constraints_file,
 )
-
-from cadrumo_harness import PRODUCT_AUTHOR_NAME  # noqa: E402
 
 _MANIFEST = _HERE / "manifest.json"
 _UTF_8: Final[str] = "utf-8"

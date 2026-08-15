@@ -248,11 +248,16 @@ def _locked_resources(lock_path: Path) -> tuple[Resource, ...]:
     root = roots[0]
     resolved: dict[str, Resource] = {}
     for platform, target in _TARGETS.items():
-        queue = [
-            *root.get("dependencies", []),
-            *root.get("optional-dependencies", {}).get("agent", []),
-        ]
-        seen = {"cadrumo-data-manuals", "cadrumo-data-official"}
+        # The formula installs the ``cadrumo`` distribution and its mandatory
+        # closure only. The agent harness (personas, skills, and the
+        # ``cadrumo-mcp`` server) is the separate ``cadrumo-harness``
+        # distribution, which depends on ``cadrumo`` rather than the reverse and
+        # publishes no cohort artifact a formula resource could pin. Homebrew
+        # installs one distribution per formula, so the harness is out of this
+        # formula's scope: it is obtained with ``pipx install cadrumo-harness``,
+        # through the MCP bundle, or through the Claude plugin.
+        queue = list(root.get("dependencies", []))
+        seen = {"cadrumo-data-manuals", "cadrumo-data-official", "cadrumo-harness"}
         while queue:
             dependency = queue.pop(0)
             name = str(dependency["name"])
@@ -407,7 +412,7 @@ def generate_formula(
     return f'''class Cadrumo < Formula
   include Language::Python::Virtualenv
 
-  desc "Deterministic Spanish tax calculation CLI and MCP server"
+  desc "Deterministic Spanish tax calculation CLI"
   homepage "https://github.com/nevenincs/cadrumo"
   url "{base_url}/{root.path.name}"
   sha256 "{root.sha256}"
@@ -461,7 +466,6 @@ def generate_formula(
 
   test do
     assert_predicate bin/"aeat", :executable?
-    assert_predicate bin/"cadrumo-mcp", :executable?
     assert_match "CADRUMO #{{version}}", shell_output("#{{bin}}/aeat --version")
   end
 end

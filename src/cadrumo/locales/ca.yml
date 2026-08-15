@@ -2371,13 +2371,7 @@ categories:
       notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, altres serveis exteriors).
 cli:
   agent:
-    app_help: Materialitza el harness de l'agent operador (regles, perfils, habilitats)
-      com un espai de treball .claude natiu de Claude per a un entorn d'agent.
     materialise:
-      layout_help: 'Format de materialització: «workspace» per a un espai de treball
-        .claude natiu de Claude, o «plugin» per a un plugin de Claude d''un sol clic.'
-      output_help: Directori on escriure l'espai de treball de l'operador natiu de
-        Claude (.claude/ i un CLAUDE.md).
       plugin_summary: 'Plugin de Claude escrit a {path}: {skills} habilitats, {agents}
         agents ({name} v{version}).'
       summary: 'Espai de treball de l''operador escrit a {path}: {rules} regles, {personas}
