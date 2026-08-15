@@ -65385,6 +65385,9 @@ modelo:
             x-e1in4opectin6t3fe8mm6rr2e9ng:
               label: Prize collection agent
             x-e1in4oped5mn0rriehiiqs3iclmmiro:
+              help: The share of the gross cash prize, or of the value of the prize
+                in kind, that corresponds individually to the payee. Where several
+                prizes were won in one draw, the sum of them all.
               label: Gross prize amount or individual value of the prize in kind
             x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
               label: Place of birth of the non-resident payee
@@ -72883,12 +72886,6 @@ modelo:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               label: Filing year to which the self-assessment relates
-          construct:
-            modelo-604-autoliquidacion:
-              field:
-                title: null
-          field:
-            label: null
         2024-y-siguientes:
           casilla:
             x-c5n6au3f5pn7arb5e9niqqjledq6ipj9cdgmst35:
