@@ -39,6 +39,7 @@ from .. import (
 )
 from .._acceleration_receipt import (
     PROFILE_SESSION_RECORD_MAX_BYTES,
+    AccelerationReceiptRevocationError,
     _pending_retirement_bytes,
     _profile_session_retirement_path,
     _receipt_bytes,
@@ -592,3 +593,74 @@ class TestProfileSessionAcceleration:
                 absolute_minutes=_ABSOLUTE_MINUTES,
             )
         assert not profile_session_path(storage_root=tmp_path, profile_id=profile_id).exists()
+
+
+@pytest.mark.os_keychain
+def test_revocation_refuses_when_the_receipt_survives_the_clear(tmp_path: Path) -> None:
+    """A receipt that cannot be cleared must not be reported as revoked.
+
+    The compare-and-clear already computes whether the exact anchored bytes
+    were removed, and the resume path branches on it. The revocation entry
+    point discarded it and returned ``None``, so a login could report the
+    prior profile closed while its acceleration receipt was still on disk --
+    and the receipt is what makes a resume possible.
+
+    The obstruction is a real open handle rather than a substituted payload.
+    That matters for reachability: the row assumed the bytes had to change
+    under the held per-profile lock, which is a narrow race, but an open
+    handle reproduces the refusal deterministically on Windows and is the
+    ordinary case -- another process reading the file, or a backup agent.
+    """
+    profile_id = _profile_id()
+    dek = secrets.token_bytes(32)
+    record = mint_profile_session(
+        storage_root=tmp_path,
+        profile_id=profile_id,
+        custody_generation=1,
+        dek_epoch=_EPOCH,
+        dek=dek,
+        now=_NOW,
+        idle_minutes=_IDLE_MINUTES,
+        absolute_minutes=_ABSOLUTE_MINUTES,
+    )
+    path = profile_session_path(storage_root=tmp_path, profile_id=profile_id)
+    try:
+        with path.open("rb"):
+            with pytest.raises(AccelerationReceiptRevocationError):
+                delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
+            assert path.exists(), "the refusal must be truthful: the receipt is still there"
+        # The keychain secret is ALREADY gone at this point: revocation deletes
+        # it before attempting the clear. So a refusal leaves an orphaned
+        # receipt whose key is revoked, not a resumable one -- which bounds the
+        # exposure without making the silent success acceptable, since the
+        # caller is still told the profile is closed when an artefact remains.
+        assert keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, _account(profile_id, record.session_id)) is None
+    finally:
+        path.unlink(missing_ok=True)
+
+
+@pytest.mark.os_keychain
+def test_revocation_returns_normally_when_the_receipt_is_cleared(tmp_path: Path) -> None:
+    """The control: an unobstructed revocation still succeeds and removes it.
+
+    Without this the refusal above is satisfied by a revocation that raises
+    unconditionally, which would break every logout.
+    """
+    profile_id = _profile_id()
+    self_dek = secrets.token_bytes(32)
+    mint_profile_session(
+        storage_root=tmp_path,
+        profile_id=profile_id,
+        custody_generation=1,
+        dek_epoch=_EPOCH,
+        dek=self_dek,
+        now=_NOW,
+        idle_minutes=_IDLE_MINUTES,
+        absolute_minutes=_ABSOLUTE_MINUTES,
+    )
+    path = profile_session_path(storage_root=tmp_path, profile_id=profile_id)
+    assert path.exists()
+
+    delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
+
+    assert not path.exists(), "an unobstructed revocation removes the receipt"

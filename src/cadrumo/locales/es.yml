@@ -432,9 +432,18 @@ aggregation:
         fechadas fuera del periodo de declaración solicitado.
   modelo_bindings:
     errors:
+      invoice_line_currency_unconverted: Una línea de factura está denominada en moneda
+        extranjera sin tipo de cambio a euros resuelto, por lo que no puede declararse
+        en este modelo.
       unsupported_period: Periodo de modelo no soportado para la agregación del libro.
   oss_ioss:
     errors:
+      invoice_line_currency_unconverted: Una línea de factura OSS/IOSS está denominada
+        en moneda extranjera sin tipo de cambio a euros resuelto, por lo que no puede
+        declararse en este modelo.
+      invoice_line_rate_kind_unclassifiable: Una línea de factura OSS/IOSS tiene un
+        tipo de IVA que no puede clasificarse en ningún tramo, por lo que su cuota
+        no puede declararse en este modelo.
       iva_amount_mismatches_destination_rate: El importe de IVA persistido no concuerda
         con el tipo del Estado miembro de destino más allá de la tolerancia de un
         céntimo.
@@ -7030,6 +7039,8 @@ errors:
     declaration_parse: No se pudo interpretar la exportación de la declaración presentada
       para la conciliación.
     exchange_rate_provider: El proveedor de tipos de cambio no respondió.
+    fail_acceleration_receipt_revocation: No se ha podido eliminar el acceso rápido
+      de inicio de sesión guardado de este perfil; sigue en el disco.
     fail_access_gate_authorization_manifest: No se pudo cargar el manifiesto de autorización
       de modelos o contiene una entrada de habilitación no válida.
     fail_borrador_parse: No se pudo interpretar el PDF del borrador de Modelo 100
@@ -7318,6 +7329,8 @@ errors:
     internal_profile_project_answers_not_registered: 'Error interno: las respuestas
       del proyecto de perfil no están registradas.'
     internal_profile_registration: 'Error interno: no se pudo registrar el perfil.'
+    internal_wipe_type: 'Error interno: la operación de borrado seguro recibió un
+      valor que no puede sobrescribir.'
     internal_wizard_catalogue_already_registered: 'Error interno: el catálogo del
       asistente ya está registrado.'
     internal_wizard_catalogue_not_registered: 'Error interno: el catálogo del asistente

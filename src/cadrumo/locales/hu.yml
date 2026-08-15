@@ -6853,6 +6853,8 @@ errors:
     declaration_parse: A benyújtott bevallás exportját nem sikerült egyeztetési célból
       elemezni.
     exchange_rate_provider: Az árfolyam-szolgáltató nem válaszolt.
+    fail_acceleration_receipt_revocation: A profil tárolt bejelentkezési gyorsítója
+      nem távolítható el; továbbra is a lemezen van.
     fail_access_gate_authorization_manifest: A modellengedélyezési jegyzéket nem sikerült
       betölteni, vagy érvénytelen engedélyezési bejegyzést tartalmaz.
     fail_borrador_parse: A Modelo 100 tervezet PDF-et nem sikerült bevallássá elemezni.

@@ -6978,6 +6978,8 @@ errors:
     declaration_parse: No s'ha pogut interpretar l'exportació de la declaració presentada
       per a la conciliació.
     exchange_rate_provider: El proveïdor de tipus de canvi no ha respost.
+    fail_acceleration_receipt_revocation: No s'ha pogut eliminar l'accés ràpid d'inici
+      de sessió desat d'aquest perfil; encara és al disc.
     fail_access_gate_authorization_manifest: No s'ha pogut carregar el manifest d'autorització
       de models o conté una entrada d'habilitació no vàlida.
     fail_borrador_parse: No s'ha pogut interpretar el PDF de l'esborrany del Model
