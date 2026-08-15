@@ -44,7 +44,7 @@ from .._recovery_custody import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_PASSWORD = "an operator chosen passphrase that clears the verifier minimum"
+_PASSWORD = "an operator chosen passphrase that clears the verifier minimum"  # noqa: S105 - real test credential
 
 
 class _EnrolledProfile:
@@ -322,7 +322,7 @@ def test_export_requires_the_current_password(enrolled: _EnrolledProfile, tmp_pa
     with pytest.raises(ProfileCustodyPasswordError):
         export_profile_recovery_artifact(
             enrolled.enrollment,
-            current_password="not the operator's passphrase at all",
+            current_password="not the operator's passphrase at all",  # noqa: S106 - real test credential
             password_envelope=enrolled.envelope,
             sentinel=enrolled.sentinel,
             target=target,
@@ -359,7 +359,7 @@ def test_password_only_restore_refuses_the_wrong_password(
     with pytest.raises(ProfileCustodyPasswordError):
         restore_profile_with_password(
             label="Refused",
-            password="a different passphrase entirely, still long enough",
+            password="a different passphrase entirely, still long enough",  # noqa: S106 - real test credential
             password_envelope=enrolled.envelope,
             sentinel=enrolled.sentinel,
             database_bytes=enrolled.database_bytes,
