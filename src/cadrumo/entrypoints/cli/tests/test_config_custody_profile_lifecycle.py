@@ -344,7 +344,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
 
     pointer_default = _run_cadrumo(tmp_path, ("config", "profile", "show"))
     assert pointer_default.returncode == 0, _combined_output(pointer_default)
-    assert "display_name\tbeta" in pointer_default.stdout
+    assert "identity.name\tBeta Operator" in pointer_default.stdout
 
     # A set environment variable cannot displace the pointer: the pointer
     # still selects beta even while the shell names alpha.
@@ -354,12 +354,12 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
     assert env_inert.returncode == 0, _combined_output(env_inert)
-    assert "display_name\tbeta" in env_inert.stdout
+    assert "identity.name\tBeta Operator" in env_inert.stdout
 
     # The flag is the selection channel that does win over the pointer.
     flag_default = _run_cadrumo(tmp_path, ("--profile", "alpha", "config", "profile", "show"))
     assert flag_default.returncode == 0, _combined_output(flag_default)
-    assert "display_name\talpha" in flag_default.stdout
+    assert "identity.name\tAlpha Operator" in flag_default.stdout
 
     explicit_name = _run_cadrumo(
         tmp_path,
@@ -367,7 +367,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
     assert explicit_name.returncode == 0, _combined_output(explicit_name)
-    assert "display_name\tbeta" in explicit_name.stdout
+    assert "identity.name\tBeta Operator" in explicit_name.stdout
 
     explicit_root = _run_cadrumo(
         tmp_path,
@@ -377,7 +377,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
         },
     )
     assert explicit_root.returncode == 0, _combined_output(explicit_root)
-    assert "display_name\talpha" in explicit_root.stdout
+    assert "identity.name\tAlpha Operator" in explicit_root.stdout
 
     explicit_root_by_id = _run_cadrumo(
         tmp_path,
@@ -385,7 +385,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
     assert explicit_root_by_id.returncode == 0, _combined_output(explicit_root_by_id)
-    assert "display_name\talpha" in explicit_root_by_id.stdout
+    assert "identity.name\tAlpha Operator" in explicit_root_by_id.stdout
 
     # Write-side precedence: configure-auth writes an
     # ``AUTH_PROVIDER_CONFIGURED`` event into the resolved bucket's
