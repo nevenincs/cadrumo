@@ -49,11 +49,13 @@ applies_from = 2000-12-16
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-22794"
 review_status = "reviewed"
 
-# Same bundled orden HTML under layout_authority tier for the per-revision
-# workbook-parity-coverage gate. NOT the authoritative AEAT Diseño de Registros
-# (not bundled); grounds only the static form-approval layout.
+# Retiered 2026-08-15: this 1203-byte orden excerpt carries no annex section
+# and no record-layout vocabulary, so it was never layout authority -- the
+# real Diseño de Registro is aeat-dr-341-2016 below. The excerpt remains a
+# genuine official_source_guidance citation (the orden that approves the
+# form), just not the layout's home.
 [sources."enrolled-modelo-341-layout"]
-evidence_tier = "layout_authority"
+evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-min-2000-12-15-m341.html"

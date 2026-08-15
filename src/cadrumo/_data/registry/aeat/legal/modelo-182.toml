@@ -49,15 +49,14 @@ applies_from = 2007-10-12
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-18192"
 review_status = "reviewed"
 
-# Same bundled Orden EHA/3021/2007 HTML, registered a second time under
-# layout_authority tier for the workbook-parity-coverage gate. This is
-# NOT the authoritative AEAT Diseño de Registros (fichero-BOE fixed-width
-# layout) — that PDF is not bundled in this corpus. It grounds only the
-# static form-approval layout (the orden that names the modelo 182 form),
-# honestly satisfying the per-revision parity gate without asserting a
-# verified byte-position record design.
+# Retiered 2026-08-15: this 1155-byte orden excerpt carries no annex section
+# and no record-layout vocabulary, so it was never layout authority -- the
+# real Diseño de Registro is aeat-dr-182-2025 below (aeat-dr-182-2024 also
+# registered). The excerpt remains a genuine official_source_guidance
+# citation (the orden that names the modelo 182 form), just not the
+# layout's home.
 [sources."enrolled-modelo-182-layout"]
-evidence_tier = "layout_authority"
+evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-3021-2007.html"

@@ -49,13 +49,13 @@ applies_from = 2013-12-28
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13798"
 review_status = "reviewed"
 
-# Same bundled orden HTML, registered a second time under layout_authority tier
-# for the per-revision workbook-parity-coverage gate. This is NOT the
-# authoritative AEAT Diseño de Registros (fichero-BOE fixed-width layout) — that
-# is not bundled. It grounds only the static form-approval layout, honestly
-# satisfying the parity gate without asserting a verified byte-position design.
+# Retiered 2026-08-15: this 1094-byte orden excerpt carries no annex section
+# and no record-layout vocabulary, so it was never layout authority -- the
+# real Diseño de Registro is aeat-dr-165-2026 below. The excerpt remains a
+# genuine official_source_guidance citation (the orden that approves the
+# form), just not the layout's home.
 [sources."enrolled-modelo-165-layout"]
-evidence_tier = "layout_authority"
+evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hap-2455-2013.html"
