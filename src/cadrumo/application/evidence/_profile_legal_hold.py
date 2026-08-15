@@ -9,6 +9,7 @@ not re-export this mutation owner.
 from __future__ import annotations
 
 import os
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
@@ -17,6 +18,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, StorageCategory, storage_location
+from ...core.logging import get_logger
 from ...core.time import validate_utc_aware
 from .._profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
 from ..profile_custody import (
@@ -182,4 +184,73 @@ class LegalHoldCaseAuthority:
         ensure_profile_custody_owner_root(self._local_record_store, self._root)
 
 
-__all__ = ["LEGAL_HOLD_SNAPSHOT_SCHEMA_VERSION", "LegalHoldCaseAuthority", "LegalHoldCaseSnapshot"]
+def try_record_legal_hold_snapshot(
+    *,
+    bucket_id: str,
+    open_case_ids: Iterable[str],
+    observed_at: datetime,
+) -> bool:
+    """Record one profile's known open legal cases, and never raise doing it.
+
+    The deletion preflight cannot read a profile's encrypted records -- it runs
+    against profiles it has not unlocked -- so this plaintext snapshot is how
+    the legal-hold position stays knowable without the key. Mirrors
+    :func:`~cadrumo.application.filing.try_record_filing_retention_snapshot`
+    exactly: same best-effort contract, same reason a caller that exists to do
+    something else must never be refused over a deletion-support record.
+
+    The sole caller today is profile registration, recording ``()`` -- and
+    that empty tuple is a fact, not a shrug. Genuinely external legal holds
+    (a court order, live litigation, an adviser instruction) are unknowable
+    to this system and must never be defaulted to cleared; writing an empty
+    snapshot for THAT kind of hold at registration would be manufacturing
+    consent nobody gave. But a profile at the instant of registration has no
+    filings, no expedientes, no records of any kind -- there is structurally
+    nothing yet for an outside hold to be a hold ON. "Zero known open cases"
+    is therefore not an unverified assumption of clearance at registration
+    the way it would be later; it is the same class of fact
+    ``try_record_filing_retention_snapshot`` already records for a brand-new
+    profile's filing history ("no filings exist" rather than "nobody
+    checked").
+
+    This does NOT close the legal-hold gap for a profile's later life. Once a
+    profile has real filings or captured AEAT expedientes, "zero known open
+    cases" recorded once at registration goes stale the moment either
+    changes, and nothing today refreshes it -- there is no capture-time
+    producer for AEAT expedientes and no operator affirmation surface for a
+    genuinely external hold. A future producer at expedientes-capture time,
+    and an operator-affirmation surface with a freshness bound, remain open
+    work; this function only ever asserts what is true at the instant it is
+    called.
+
+    Swallowing is safe only while absence fails CLOSED: with no snapshot the
+    hold assessment refuses, which blocks a deletion rather than permitting
+    one. An empty RECORDED snapshot is a different thing from an absent one
+    and must stay so.
+
+    Returns:
+        ``True`` when the snapshot was written, ``False`` when it was not. The
+        caller is expected to ignore it; it exists so a test can assert the
+        write happened rather than inferring it.
+    """
+    try:
+        LegalHoldCaseAuthority().record_open_case_snapshot(
+            profile_id=UUID(str(bucket_id)),
+            open_case_ids=tuple(open_case_ids),
+            observed_at=observed_at,
+        )
+    except Exception:  # noqa: BLE001 - no caller may fail on a deletion-support record
+        get_logger(__name__).warning(
+            "legal hold snapshot not recorded; a later deletion preflight will refuse",
+            exc_info=True,
+        )
+        return False
+    return True
+
+
+__all__ = [
+    "LEGAL_HOLD_SNAPSHOT_SCHEMA_VERSION",
+    "LegalHoldCaseAuthority",
+    "LegalHoldCaseSnapshot",
+    "try_record_legal_hold_snapshot",
+]
