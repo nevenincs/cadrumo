@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:55c9dcc80f33ee1b967e429ab0364a89431a0c58813fee689fad87b812df8113'
+body_hash: 'sha256:071b7b72a5dfc32391db9a0780398c294a2c3ead21058d141d78887132d8d462'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -76,6 +76,7 @@ Authenticate a candidate profile without disturbing the active one, then publish
 - [ ] `W02.P04.S81` - Have Terra XHigh revoke the retired profile's session material on the DURABLE POINTER unioned with the live session, since the handover derives the profile to retire solely from the live in-process session and every command-line invocation is a fresh process, so in the ordinary operator flow no session is live, the revocation gate never fires, and the retired profile's bucket key remains recoverable with no passphrase, four of the five crash phases leaking identically, mirroring the union the logout path five hundred lines above already performs, and note the handover journal's stored identity is NOT a usable substitute because it is populated from the same live-session value and is therefore absent in exactly the failing cases; `src/cadrumo/application/user_profile/_login_session.py`.
 - [ ] `W02.P04.S82` - Have Terra XHigh re-site the non-resurrection proof across SEPARATE PROCESSES and extend it over the crash parametrisation, since the current test runs both logins in one process, which is the single configuration in which the revocation works, so it verifies the property only where its precondition holds and cannot fail on the defect it exists to refuse; `src/cadrumo/application/user_profile/tests/test_login_handover.py`.
 - [ ] `W02.P04.S89` - Have Terra XHigh make the operator status projection report a verdict for an unregistered pointer instead of raising a raw storage error from the engine guard before any verdict is produced, since the health assessment it is built on declares a dangling-pointer status precisely for that state, so a projection that raises defeats the assessment and the operator meets it as the status verb refusing to run exactly when their profile is broken; `src/cadrumo/application/auth/_operator.py and src/cadrumo/application/user_profile/`.
+- [ ] `W02.P04.S90` - Have Terra XHigh split the operator logout so its key-free revocation proceeds from a cold pointer while only the state rewrite refuses, since the verb needs the key solely because it journals its cleanup intent into encrypted workflow state BEFORE performing the session deletion and lock clearing that need no key at all, making the journal a crash-recovery mechanism rather than anything intrinsic to revoking a session, and note this is a capability split inside a mutation rather than the read-side degradation defect it superficially resembles, so a diagnostic-shaped fix applied here would produce a mutation that half-succeeds silently; `src/cadrumo/application/auth/_operator.py and src/cadrumo/application/user_profile/_login_session.py`.
 
 ## Wave `W03` - restorative transport and operator surfaces
 
