@@ -37,7 +37,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from cadrumo.core import exclusive_file_lock, fsync_parent_dir
+from cadrumo.core import DirectoryEntryKind, exclusive_file_lock, fsync_parent_dir, scan_directory
 from cadrumo.core.hashing import canonical_json_bytes, hash_file
 from cadrumo.domain.calculations.registry import RegistryValidationError, load_modelo_directory
 
@@ -333,7 +333,8 @@ def _verify_generated_export_package(export_root: Path) -> ExportFragmentProvena
     if actual_digests != manifest.output_files:
         raise RegistryValidationError("generated export package file digests do not match its provenance manifest")
     actual_files = {
-        PurePosixPath(*path.relative_to(export_root).parts) for path in export_root.rglob("*") if path.is_file()
+        PurePosixPath(*path.relative_to(export_root).parts)
+        for path in scan_directory(export_root, recursive=True, select=DirectoryEntryKind.FILES)
     }
     expected_files = {PurePosixPath(item.relative_path) for item in manifest.output_files}
     expected_files.add(PurePosixPath(EXPORT_FRAGMENT_PROVENANCE_FILENAME))
@@ -614,7 +615,7 @@ def _move_failed_candidate_aside(target_export_root: Path) -> None:
 def _require_complete_regular_tree(path: Path, *, subject: str) -> None:
     if path.is_symlink() or path.is_junction() or not path.is_dir():
         raise RegistryValidationError(f"{subject} must be a non-linked directory: {path}")
-    children = tuple(path.iterdir())
+    children = scan_directory(path)
     if not children:
         raise RegistryValidationError(f"{subject} must not be empty: {path}")
     for child in children:

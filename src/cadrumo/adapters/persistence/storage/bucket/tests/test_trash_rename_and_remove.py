@@ -28,6 +28,7 @@ from typing import BinaryIO
 
 import pytest
 
+from ......core import scan_directory
 from .._layout import trash_rename_and_remove
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -75,7 +76,7 @@ def test_rename_succeeds_removes_the_directory(tmp_path: Path) -> None:
     assert not target.exists()
     # No trash sibling survives either -- the successful-rename path removes
     # the renamed directory, it does not leave it behind.
-    assert list(tmp_path.iterdir()) == []
+    assert scan_directory(tmp_path) == ()
 
 
 def test_rename_succeeds_ignore_policy_also_removes_it(tmp_path: Path) -> None:
@@ -85,7 +86,7 @@ def test_rename_succeeds_ignore_policy_also_removes_it(tmp_path: Path) -> None:
     trash_rename_and_remove(target, on_trash_cleanup_error="ignore")
 
     assert not target.exists()
-    assert list(tmp_path.iterdir()) == []
+    assert scan_directory(tmp_path) == ()
 
 
 # --------------------------------------------------------------------- #

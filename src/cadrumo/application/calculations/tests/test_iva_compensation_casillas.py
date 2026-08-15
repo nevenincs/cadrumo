@@ -18,7 +18,7 @@ from types import ModuleType
 import pytest
 
 from .... import application, domain
-from ....core import validated_casilla_id
+from ....core import scan_directory, validated_casilla_id
 from ....domain import iva_compensation as iva_compensation_policy
 from .. import _iva_compensation_casillas
 
@@ -150,7 +150,7 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
     discovered: dict[str, ModuleType] = {}
     for package in _SWEPT_PACKAGES:
         root = Path(package.__file__).parent
-        for source in sorted(root.rglob("*.py")):
+        for source in scan_directory(root, pattern="*.py", recursive=True):
             if "tests" in source.parts:
                 continue
             tree = ast.parse(source.read_text(encoding="utf-8"))

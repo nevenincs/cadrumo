@@ -28,6 +28,8 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # ---------------------------------------------------------------------------
@@ -90,7 +92,7 @@ def _find_snapshot_revision_id_injections(root: Path) -> list[tuple[str, int]]:
     The exemption set is NOT applied here; the caller decides how to handle them.
     """
     sites: list[tuple[str, int]] = []
-    for path in sorted(root.rglob("*.py")):
+    for path in scan_directory(root, pattern="*.py", recursive=True):
         rel = _relative_path(path, root)
         if _is_test_path(rel):
             continue

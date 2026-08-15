@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import scan_directory
 from .._authority import stamp_bundled_registry_verdict
 from .._loader import clear_fingerprint_cache
 from .._validate_verdict import VERDICT_OUTCOME_GREEN, read_verdict, shipped_verdict_location
@@ -49,7 +50,7 @@ def _install_copy(source_registry: Path, destination_root: Path, *, mtime: float
     """Copy the tree to a new absolute path and rewrite every mtime (an install)."""
     shutil.copytree(source_registry.parent, destination_root)
     aeat = destination_root / "aeat"
-    for path in sorted(aeat.rglob("*")):
+    for path in scan_directory(aeat, recursive=True):
         os.utime(path, (mtime, mtime))
     os.utime(aeat, (mtime, mtime))
     return aeat

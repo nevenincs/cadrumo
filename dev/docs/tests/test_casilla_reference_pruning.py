@@ -50,7 +50,7 @@ def test_a_page_the_registry_no_longer_produces_is_pruned(tmp_path: Path) -> Non
     generate_casilla_reference(tmp_path, repo_root=_REPO_ROOT)
 
     assert not stale.exists(), "a page no render owns survived, and Sphinx would read it"
-    assert list(out_dir.glob("*.rst")), "the prune removed the pages it was meant to keep"
+    assert any(iter_directory(out_dir, pattern="*.rst")), "the prune removed the pages it was meant to keep"
 
 
 def test_the_index_and_every_rendered_modelo_page_survive_the_prune(tmp_path: Path) -> None:
@@ -78,10 +78,10 @@ def test_regenerating_an_unchanged_registry_leaves_every_page_untouched(tmp_path
     """
     generate_casilla_reference(tmp_path, repo_root=_REPO_ROOT)
     out_dir = _generated_casilla_dir(tmp_path)
-    before = {path.name: path.stat().st_mtime_ns for path in out_dir.glob("*.rst")}
+    before = {path.name: path.stat().st_mtime_ns for path in scan_directory(out_dir, pattern="*.rst")}
 
     generate_casilla_reference(tmp_path, repo_root=_REPO_ROOT)
-    after = {path.name: path.stat().st_mtime_ns for path in out_dir.glob("*.rst")}
+    after = {path.name: path.stat().st_mtime_ns for path in scan_directory(out_dir, pattern="*.rst")}
 
     assert before, "the registry rendered no pages, so this proves nothing"
     assert after == before

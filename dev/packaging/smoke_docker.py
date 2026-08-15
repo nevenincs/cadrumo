@@ -13,6 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core import iter_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 from ._base_image import linux_base_image
@@ -42,7 +43,7 @@ def _work_dir(repo_root: Path, requested: str | None, mode: str) -> Path:
     """Resolve a new Docker packaging smoke work directory."""
     if requested is not None:
         path = Path(requested).resolve()
-        if path.exists() and any(path.iterdir()):
+        if path.exists() and any(iter_directory(path)):
             raise SystemExit(f"--work-dir must be empty or absent: {path}")
         path.mkdir(parents=True, exist_ok=True)
         return path

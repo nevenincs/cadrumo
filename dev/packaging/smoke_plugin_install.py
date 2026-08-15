@@ -28,6 +28,7 @@ if not __package__:
     __package__ = "dev.packaging"
 
 from cadrumo.agent import materialise_marketplace  # noqa: E402
+from cadrumo.core import scan_directory  # noqa: E402
 
 from ._command import CommandResult, run_command  # noqa: E402
 from ._hashing import sha256_path  # noqa: E402
@@ -250,7 +251,7 @@ def _assert_no_credential_leak(logs: Path, *, secrets: tuple[str, ...]) -> None:
     """
     if not secrets:
         return
-    for log_path in sorted(logs.rglob("*")):
+    for log_path in scan_directory(logs, recursive=True):
         if not log_path.is_file():
             continue
         text = log_path.read_text(encoding=_UTF_8, errors="replace")

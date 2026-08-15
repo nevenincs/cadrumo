@@ -232,10 +232,10 @@ def test_regenerating_an_unchanged_catalogue_leaves_every_page_untouched(tmp_pat
     """
     out_dir = _generated_legal_dir(tmp_path)
     generate_legal_reference(tmp_path, repo_root=_REPO_ROOT)
-    before = {path.name: path.stat().st_mtime_ns for path in out_dir.glob("*.rst")}
+    before = {path.name: path.stat().st_mtime_ns for path in scan_directory(out_dir, pattern="*.rst")}
 
     generate_legal_reference(tmp_path, repo_root=_REPO_ROOT)
-    after = {path.name: path.stat().st_mtime_ns for path in out_dir.glob("*.rst")}
+    after = {path.name: path.stat().st_mtime_ns for path in scan_directory(out_dir, pattern="*.rst")}
 
     assert before, "the legal catalogue rendered no pages, so this proves nothing"
     assert after == before
@@ -255,4 +255,4 @@ def test_a_page_the_catalogue_no_longer_produces_is_still_pruned(tmp_path: Path)
     generate_legal_reference(tmp_path, repo_root=_REPO_ROOT)
 
     assert not stale.exists()
-    assert list(out_dir.glob("*.rst")), "the prune removed the pages it was meant to keep"
+    assert any(iter_directory(out_dir, pattern="*.rst")), "the prune removed the pages it was meant to keep"

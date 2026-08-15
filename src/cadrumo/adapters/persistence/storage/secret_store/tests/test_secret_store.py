@@ -17,6 +17,7 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
+from ......core import DirectoryEntryKind, scan_directory
 from ......core.classification import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ......tests.master_key import EphemeralMasterKeyProvider
@@ -315,7 +316,7 @@ class TestListDigests:
 
 def _payload_paths(blob_root: Path) -> list[Path]:
     """Return the encrypted payload files the blob store has written."""
-    return sorted(path for path in blob_root.rglob("*.enc") if path.is_file())
+    return list(scan_directory(blob_root, pattern="*.enc", recursive=True, select=DirectoryEntryKind.FILES))
 
 
 class TestNaturalKeyBinding:

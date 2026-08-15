@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import exclusive_file_lock
+from .....core import DirectoryEntryKind, exclusive_file_lock, scan_directory
 from .....tests.master_key import EphemeralMasterKeyProvider
 from .....tests.secure_sql import dev_test_database_password
 from .. import (
@@ -85,11 +85,10 @@ def test_full_chain_secret_round_trip(tmp_path: Path) -> None:
 
     # The plaintext key and the plaintext value must NOT appear anywhere
     # under the store directory (encrypted-at-rest invariant).
-    for path in (tmp_path / "store-root").rglob("*"):
-        if path.is_file():
-            data = path.read_bytes()
-            assert b"refresh-token-abc-xyz" not in data
-            assert b"aeat:smoke:google-oauth-token" not in data
+    for path in scan_directory(tmp_path / "store-root", recursive=True, select=DirectoryEntryKind.FILES):
+        data = path.read_bytes()
+        assert b"refresh-token-abc-xyz" not in data
+        assert b"aeat:smoke:google-oauth-token" not in data
     index_path = tmp_path / "fallback-store" / "index.json"
     contents = index_path.read_text(encoding="utf-8")
     assert "google-oauth-token" not in contents

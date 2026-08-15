@@ -6,6 +6,7 @@ from datetime import date
 
 import pytest
 
+from .....core import scan_directory
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
 from .._corpus_catalogue import verify_source_file
@@ -536,7 +537,7 @@ def test_formal_withholding_modelos_do_not_cite_fractional_payment_article() -> 
         assert modelo_root.is_dir(), modelo_id
         has_formal_article = False
 
-        for path in sorted(modelo_root.rglob("*.toml")):
+        for path in scan_directory(modelo_root, pattern="*.toml", recursive=True):
             text = path.read_text(encoding="utf-8")
             if _FRACTIONAL_PAYMENT_ARTICLE_REF in text:
                 offenders.append(path.relative_to(modelos_root).as_posix())
@@ -556,7 +557,7 @@ def test_modelo_100_withholding_imports_use_formal_withholding_article() -> None
     missing_formal_article: list[str] = []
     checked: list[str] = []
 
-    for path in sorted(modelo_root.rglob("*.toml")):
+    for path in scan_directory(modelo_root, pattern="*.toml", recursive=True):
         if not (set(path.parts) & _M100_WITHHOLDING_IMPORT_SECTIONS):
             continue
 

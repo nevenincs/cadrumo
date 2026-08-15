@@ -28,6 +28,7 @@ import re
 from collections.abc import Mapping
 from pathlib import Path
 
+from cadrumo.core import scan_directory
 from cadrumo.domain.calculations.registry import RegistryValidationError
 
 __all__ = ["write_generated_casilla_export_refs"]
@@ -70,7 +71,7 @@ def write_generated_casilla_export_refs(
 
     written: list[Path] = []
     seen: set[str] = set()
-    for path in sorted(casillas_root.glob("*.toml")):
+    for path in scan_directory(casillas_root, pattern="*.toml"):
         original = path.read_text(encoding="utf-8")
         lines = original.splitlines(keepends=True)
         changed = False

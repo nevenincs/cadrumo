@@ -19,10 +19,11 @@ tampered manifest cannot drive the KDF into a weaker regime at unlock.
 from __future__ import annotations
 
 import secrets
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .._kdf_bounds import (
     ARGON2_VERSION as _ARGON2_V13,
 )
@@ -54,25 +55,16 @@ from .._kdf_bounds import (
 from .._kdf_salt import KDF_SALT_BYTES, decode_kdf_salt, encode_kdf_salt, require_kdf_salt_length
 from ..errors import StorageValidationError
 
-if TYPE_CHECKING:
-    from ..bucket import ManifestKdfParams
-
-from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-
 _SALT_BYTES = KDF_SALT_BYTES
 
 
 class KdfParams(BaseModel):
     """OWASP-baseline Argon2id parameters with strict validation.
 
-    Distinct from the manifest-side
-    :class:`adapters.persistence.storage.bucket.ManifestKdfParams`
-    record only in ROLE: that record carries whatever parameter set the
-    bucket was enrolled under (so a future cost-bump is non-breaking),
-    this one is the constructor for a new enrolment. They accept the same
-    values, because both read the window from :mod:`.._kdf_bounds` rather
-    than declaring it -- the manifest record used to declare its own, far
-    looser one, and the two disagreed.
+    The constructor for a new enrolment. It reads its window from
+    :mod:`.._kdf_bounds` rather than declaring one, which is what kept it in
+    agreement with the retired manifest-side record that used to declare its
+    own far looser bounds; that record is gone and the window stays shared.
     """
 
     model_config = _STRICT_FROZEN
@@ -111,12 +103,5 @@ class KdfParams(BaseModel):
             salt=secrets.token_bytes(_SALT_BYTES),
             output_length=_OUTPUT_BYTES,
         )
-
-    def to_manifest_params(self) -> ManifestKdfParams:
-        """Return this canonical parameter set as a :class:`ManifestKdfParams` bucket-manifest shape."""
-        from ..bucket import ManifestKdfParams
-
-        return ManifestKdfParams.model_validate(self.model_dump())
-
 
 __all__ = ["KdfParams"]

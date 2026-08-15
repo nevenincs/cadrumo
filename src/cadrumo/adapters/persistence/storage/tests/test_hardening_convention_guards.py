@@ -10,6 +10,7 @@ from typing import NamedTuple
 import pytest
 from dev.locales import LocaleManager
 
+from .....core import scan_directory
 from .....core.errors import ERROR_REGISTRY, CadrumoError, get_registered_error_code
 from .....tests import (
     SRC_CADRUMO,
@@ -572,5 +573,5 @@ def _locale_key_map() -> dict[str, set[str]]:
     manager = LocaleManager(SRC_CADRUMO, locales_dir)
     return {
         locale_path.name: manager.get_yaml_keys(manager.load_locale(locale_path))
-        for locale_path in sorted(locales_dir.glob("*.yml"))
+        for locale_path in scan_directory(locales_dir, pattern="*.yml")
     }

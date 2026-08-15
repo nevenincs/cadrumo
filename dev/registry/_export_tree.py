@@ -17,6 +17,7 @@ from typing import Final, Literal, cast
 import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from cadrumo.core import iter_directory
 from cadrumo.domain.calculations.registry import (
     ENCODING_ALIAS_MAP,
     CasillaFieldKind,
@@ -334,7 +335,7 @@ def _prepare_target(target_export_dir: Path) -> None:
     if target_export_dir.exists():
         if not target_export_dir.is_dir():
             raise RegistryValidationError(f"generated export target is not a directory: {target_export_dir}")
-        if any(target_export_dir.iterdir()):
+        if any(iter_directory(target_export_dir)):
             raise RegistryValidationError(f"generated export target is not empty: {target_export_dir}")
     else:
         target_export_dir.mkdir(parents=True)

@@ -33,7 +33,7 @@ from cadrumo.agent import (
     materialise_workspace,
     parse_skill_metadata,
 )
-from cadrumo.core import PRODUCT_IDENTITY
+from cadrumo.core import PRODUCT_IDENTITY, scan_directory
 from dev._paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
@@ -715,7 +715,7 @@ def _generated_agent_observations(
 ) -> tuple[NamespaceObservation, ...]:
     rows: list[NamespaceObservation] = []
     directory = root / relative_dir
-    for path in sorted(directory.glob("*.md")):
+    for path in scan_directory(directory, pattern="*.md"):
         identifier = path.stem
         projected = (identifier, _frontmatter_name(path)) if frontmatter else (identifier,)
         rows.append(
@@ -756,7 +756,7 @@ def _generated_skill_observations(
 def _generated_rule_observations(root: Path) -> tuple[NamespaceObservation, ...]:
     rows: list[NamespaceObservation] = []
     relative_dir = Path(".claude") / "rules"
-    for path in sorted((root / relative_dir).glob("*.md")):
+    for path in scan_directory(root / relative_dir, pattern="*.md"):
         rows.append(
             _namespace_observation(
                 surface="workspace",
