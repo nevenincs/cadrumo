@@ -45,6 +45,7 @@ import json
 import os
 import sys
 import warnings
+from contextlib import suppress
 
 from pydantic import BaseModel, ValidationError
 
@@ -69,7 +70,6 @@ rather than fail. Standard input is deliberately NOT reserved: it is a legitimat
 readable descriptor, and refusing it would make ``--secrets-fd 0`` behave
 differently from the ``--secrets-stdin`` spelling of the same thing.
 """
-
 
 
 def _reject_duplicate_object_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -167,12 +167,10 @@ def _read_descriptor_to_bound(descriptor: int, *, maximum_bytes: int) -> bytes:
             chunks.append(chunk)
             total += len(chunk)
     finally:
-        try:
+        # An already-closed descriptor is not a failure to report: the read
+        # result stands and there is nothing left to release.
+        with suppress(OSError):
             os.close(descriptor)
-        except OSError:
-            # The descriptor was already closed by the caller or the platform;
-            # the read result stands, and there is nothing left to release.
-            pass
     return b"".join(chunks)
 
 
