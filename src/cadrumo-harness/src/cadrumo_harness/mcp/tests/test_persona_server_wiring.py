@@ -70,10 +70,11 @@ def test_coordinator_tool_list_is_filtered_to_its_declared_families() -> None:
     assert 0 < len(scoped) < len(descriptors)
     scoped_keys = {d.command_key for d in scoped}
     # Every scoped tool's family token is one of the coordinator's declared
-    # families (overview / contract), never a ledger or modelo verb.
+    # families (overview), never a ledger or modelo verb. The capability
+    # manifest it also reads is the MCP-native ``contract`` meta-tool, which
+    # carries no command key and is therefore never persona-filtered here.
     assert "ledger.add" not in scoped_keys
     assert "modelo.work.calculate" not in scoped_keys
-    assert any(key == "contract" for key in scoped_keys)
     assert any(key.startswith("overview.") for key in scoped_keys)
 
 

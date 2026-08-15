@@ -86,7 +86,7 @@ def test_coordinator_holds_no_mutating_family() -> None:
 
 
 def test_coordinator_is_confined_to_orchestration_reads() -> None:
-    assert scope_for_persona(AgentPersona.COORDINATOR).families == {"overview", "contract"}
+    assert scope_for_persona(AgentPersona.COORDINATOR).families == {"overview"}
 
 
 def test_onboarding_scope_excludes_ledger_and_modelo() -> None:
@@ -121,7 +121,7 @@ def test_no_persona_is_granted_the_live_aeat_family() -> None:
 
 def test_is_tool_in_persona_scope_allows_declared_family_commands() -> None:
     assert is_tool_in_persona_scope(persona=AgentPersona.COORDINATOR, command_key="overview.status") is True
-    assert is_tool_in_persona_scope(persona=AgentPersona.COORDINATOR, command_key="contract") is True
+    assert is_tool_in_persona_scope(persona=AgentPersona.COORDINATOR, command_key="overview.status") is True
     assert is_tool_in_persona_scope(persona=AgentPersona.ONBOARDING, command_key="config.profile.create") is True
     assert is_tool_in_persona_scope(persona=AgentPersona.ONBOARDING, command_key="config.auth.configure") is True
     assert is_tool_in_persona_scope(persona=AgentPersona.LEDGER_GROOMER, command_key="ledger.add") is True

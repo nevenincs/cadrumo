@@ -117,12 +117,12 @@ def test_timeout_refusal_is_localized_and_names_the_tier() -> None:
     assert "420" in refusal
 
     installation = _cli_resolution_refusal_envelope(
-        command_key="contract",
+        command_key="registry.inspect",
         error=FileNotFoundError("Installed Cadrumo CLI executable is missing"),
     )
     validated_installation = validate_registered_envelope_document(installation)
     assert validated_installation == installation
-    assert validated_installation["command"] == "contract"
+    assert validated_installation["command"] == "registry.inspect"
     installation_error = _typed_error_envelope(validated_installation)
     assert installation_error["code"] == "mcp.transport.installation_incomplete"
     assert installation_error["context"] == {"installation_incomplete": "true"}

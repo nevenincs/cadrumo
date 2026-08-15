@@ -2,7 +2,7 @@
 
 Proves the surface policy: the default
 ``core`` surface advertises only the always-on floor / grounding / meta tools
-plus the orientation slice (``overview`` family + ``contract``), the ``full``
+plus the orientation slice (the ``overview`` family), the ``full``
 opt-out restores the flat per-verb surface, and a verb outside the advertised
 core stays reachable (``by_name`` spans every descriptor) so it is discovered,
 not lost. The SDK-independent policy is asserted directly; the advertised
@@ -55,10 +55,9 @@ def test_resolve_surface_mode_rejects_an_unknown_value_naming_the_accepted_set()
     assert SURFACE_ENV_VAR in str(excinfo.value)
 
 
-def test_is_orientation_command_covers_the_overview_family_and_contract() -> None:
+def test_is_orientation_command_covers_the_overview_family() -> None:
     assert is_orientation_command("overview.status")
     assert is_orientation_command("overview.agenda")
-    assert is_orientation_command("contract")
     assert not is_orientation_command("ledger.add")
     assert not is_orientation_command("modelo.work.calculate")
 

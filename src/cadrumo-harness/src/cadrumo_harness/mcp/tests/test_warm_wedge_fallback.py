@@ -48,7 +48,7 @@ def _notice_codes(envelope: dict[str, object]) -> list[str]:
 
 
 def test_wedged_warm_transport_degrades_to_subprocess_then_recovers() -> None:
-    descriptor = _descriptor("contract")
+    descriptor = _descriptor("registry.inspect")
     holding = threading.Event()
     release = threading.Event()
 

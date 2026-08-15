@@ -17,7 +17,7 @@ def _decision(command_key: str) -> ConfirmationPolicy:
 
 def test_read_only_tools_auto_approve() -> None:
     assert _decision("overview.status") is ConfirmationPolicy.AUTO_APPROVE
-    assert _decision("contract") is ConfirmationPolicy.AUTO_APPROVE
+    assert _decision("registry.inspect") is ConfirmationPolicy.AUTO_APPROVE
     assert _decision("registry.inspect") is ConfirmationPolicy.AUTO_APPROVE
 
 

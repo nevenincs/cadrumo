@@ -13,10 +13,11 @@ import pytest
 from cadrumo.core import PRODUCT_IDENTITY
 from cadrumo.tests.declared_command_risk import declared_live_write
 from .._annotations import McpAnnotations
-from cadrumo.entrypoints.cli import VerbInputSchema
+from cadrumo.entrypoints.cli import VerbInputSchema, command_schema_refs
 from .._meta_tools import (
     MetaDescribeResult,
     ToolRunOutcome,
+    build_capability_manifest,
     describe_command,
     gate_refusal,
     meta_execute,
@@ -162,17 +163,17 @@ def test_meta_execute_never_reaches_the_runner_on_a_handoff_denied_command() -> 
 
 def test_meta_execute_dispatches_a_read_only_command_end_to_end() -> None:
     descriptors = build_tool_descriptors()
-    outcome = meta_execute("contract", {}, descriptors=descriptors, persona=None, run=_run_subprocess_tool)
+    outcome = meta_execute("registry.inspect", {}, descriptors=descriptors, persona=None, run=_run_subprocess_tool)
     assert outcome.refused is None
     assert outcome.envelope is not None
-    assert outcome.envelope.get("command") == "contract"
+    assert outcome.envelope.get("command") == "registry.inspect"
     assert outcome.is_error is False
 
 
-def test_build_meta_sdk_tools_exposes_search_execute_toolsets_and_describe() -> None:
+def test_build_meta_sdk_tools_exposes_contract_search_execute_toolsets_and_describe() -> None:
     tools = build_meta_sdk_tools()
     names = {tool.name for tool in tools}
-    assert names == {"search", "execute", "toolsets", "describe"}
+    assert names == {"contract", "search", "execute", "toolsets", "describe"}
     for tool in tools:
         assert tool.input_schema["type"] == "object"
     product_descriptions = [tool.description for tool in tools if tool.name in {"search", "execute", "describe"}]
@@ -249,3 +250,32 @@ def test_build_server_advertises_tools_prompts_and_resources() -> None:
     assert capabilities.tools is not None
     assert capabilities.prompts is not None
     assert capabilities.resources is not None
+
+
+def test_capability_manifest_carries_the_live_families_lifecycle_and_schemas() -> None:
+    """The MCP-native ``contract`` tool serves the real operator-surface manifest.
+
+    The manifest is the orientation surface the operator rules cite by field
+    path, so the fields those rules read are asserted here against the live
+    build rather than a fixture: every mounted family carries the
+    ``operator_question`` the routing table paraphrases, the lifecycle ordering
+    is present as data, and the per-command result schemas come from the live
+    CLI registry rather than the empty tuple the mutability projection passes.
+    """
+    manifest = build_capability_manifest()
+    payload = manifest.model_dump(mode="json")
+
+    assert payload["contract"]["command_families"], "manifest advertises no mounted command family"
+    for family in payload["contract"]["command_families"]:
+        assert family["operator_question"].strip(), f"family {family['child']!r} carries no operator question"
+    assert payload["contract"]["lifecycle"]["steps"], "manifest carries no lifecycle ordering"
+
+    live_keys = {ref.command for ref in command_schema_refs()}
+    assert {entry["command"] for entry in payload["command_schemas"]} == live_keys
+
+
+def test_the_capability_manifest_tool_is_advertised_read_only() -> None:
+    contract_tool = next(tool for tool in build_meta_sdk_tools() if tool.name == "contract")
+    assert contract_tool.annotations is not None
+    assert contract_tool.annotations.read_only_hint is True
+    assert contract_tool.input_schema == {"type": "object", "properties": {}, "additionalProperties": False}

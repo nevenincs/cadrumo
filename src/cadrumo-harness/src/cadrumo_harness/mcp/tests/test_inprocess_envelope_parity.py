@@ -103,11 +103,11 @@ def _both_transports(command_key: str, arguments: dict[str, object]) -> tuple[di
 
 
 def test_read_verb_success_envelope_is_byte_identical_across_transports() -> None:
-    # ``contract`` is a read-only verb that needs no active profile, so both
+    # ``registry.inspect`` is a read-only verb that needs no active profile, so both
     # transports emit a full success envelope with no environment-derived skew.
-    subprocess_envelope, inprocess_envelope = _both_transports("contract", {})
+    subprocess_envelope, inprocess_envelope = _both_transports("registry.inspect", {})
     assert _canonical(subprocess_envelope) == _canonical(inprocess_envelope)
-    assert inprocess_envelope["command"] == "contract"
+    assert inprocess_envelope["command"] == "registry.inspect"
     assert inprocess_envelope["status"] in {"success", "warning"}
 
 
@@ -455,10 +455,10 @@ def test_advertised_response_schema_describes_the_real_cli_emitted_envelope() ->
     # read verb through the real CLI in-process and assert its emitted envelope
     # satisfies the MCP-advertised output schema's spine (every required key
     # present, the command const and status enum honoured).
-    descriptor = _mcp_descriptors_by_key()["contract"]
+    descriptor = _mcp_descriptors_by_key()["registry.inspect"]
     # ``contract`` is a read verb needing no active profile; the in-process
     # transport runs the real CLI pipeline and emits the genuine envelope.
-    _, envelope = _both_transports("contract", {})
+    _, envelope = _both_transports("registry.inspect", {})
     output_schema = descriptor.output_schema
     branches = output_schema["oneOf"]
     assert isinstance(branches, list)
@@ -467,7 +467,7 @@ def test_advertised_response_schema_describes_the_real_cli_emitted_envelope() ->
     required = success_branch["required"]
     assert isinstance(required, list)
     for field in required:
-        assert field in envelope, f"CLI envelope for 'contract' is missing MCP-advertised field {field!r}"
+        assert field in envelope, f"CLI envelope for 'registry.inspect' is missing MCP-advertised field {field!r}"
     properties = success_branch["properties"]
     assert isinstance(properties, dict)
     assert envelope["command"] == properties["command"]["const"]

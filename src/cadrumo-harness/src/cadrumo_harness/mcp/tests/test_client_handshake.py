@@ -58,7 +58,7 @@ def test_in_process_client_initializes_lists_and_round_trips_a_read_only_call() 
     # tools-list carries the floor tool and the meta-tools alongside the verbs.
     assert HARNESS_LOAD_TOOL in names
     assert {"search", "execute"} <= set(names)
-    assert tool_name_for_command("contract") in names
+    assert tool_name_for_command("registry.inspect") in names
     # The shipped read-only floor tool avoids depending on a second executable.
     assert result.is_error is False
     assert result.content
@@ -89,7 +89,7 @@ def test_memory_session_tools_list_preserves_object_shaped_response_envelopes() 
     # proves the advertised descriptor serializes through tools/list, not just
     # that the SDK-independent descriptor happens to contain the right keys.
     output_schemas = _run(_list_memory_session_output_schemas())
-    schema = _object_schema_mapping(output_schemas[tool_name_for_command("contract")])
+    schema = _object_schema_mapping(output_schemas[tool_name_for_command("registry.inspect")])
     assert schema["type"] == "object"
     branches = schema["oneOf"]
     assert isinstance(branches, list) and len(branches) == 2
@@ -98,7 +98,7 @@ def test_memory_session_tools_list_preserves_object_shaped_response_envelopes() 
     error_branch = _object_schema_mapping(error_branch)
     success_properties = _object_schema_mapping(success_branch["properties"])
     error_properties = _object_schema_mapping(error_branch["properties"])
-    assert success_properties["command"] == {"const": "contract", "type": "string"}
+    assert success_properties["command"] == {"const": "registry.inspect", "type": "string"}
     assert error_properties["status"] == {"const": "error", "type": "string"}
 
 

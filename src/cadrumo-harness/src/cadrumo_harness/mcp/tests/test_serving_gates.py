@@ -189,7 +189,7 @@ def test_telemetry_records_payload_free_rows(tmp_path: Path) -> None:
     writer = SessionTelemetryWriter(session_id="serving-gates-test", directory=tmp_path)
     # A successful read-only dispatch (contract needs no storage) plus a
     # faithfulness-blocked handoff whose arguments carry a real amount.
-    _run(_call(None, tool_name_for_command("contract"), {}, telemetry=writer))
+    _run(_call(None, tool_name_for_command("registry.inspect"), {}, telemetry=writer))
     _run(_call(None, _FILE_TOOL, {"notes": _UNGROUNDED_AMOUNT}, elicit=_accept_confirmation, telemetry=writer))
 
     raw = writer.path.read_text(encoding="utf-8")

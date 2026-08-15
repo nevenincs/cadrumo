@@ -56,7 +56,7 @@ def test_every_exposable_command_has_a_descriptor() -> None:
     assert "root.status" not in keys
     assert "root.app" not in keys
     assert "root.config" not in keys
-    assert "contract" in keys
+    assert "registry.inspect" in keys
     assert "modelo.work.calculate" in keys
 
 
@@ -97,7 +97,7 @@ def test_config_command_descriptors_advertise_the_config_root_not_app() -> None:
 
 def test_mutability_projects_onto_annotations() -> None:
     by_key = {d.command_key: d for d in build_tool_descriptors()}
-    assert by_key["contract"].annotations.read_only_hint is True
+    assert by_key["registry.inspect"].annotations.read_only_hint is True
     assert by_key["overview.status"].annotations.read_only_hint is True
     assert by_key["ledger.add"].annotations.read_only_hint is False
     assert by_key["ledger.remove"].annotations.destructive_hint is True

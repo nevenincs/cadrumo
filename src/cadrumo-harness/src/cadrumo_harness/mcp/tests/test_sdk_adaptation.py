@@ -29,18 +29,18 @@ def test_descriptors_adapt_to_sdk_tools_with_annotations() -> None:
     assert len(tools) == len(descriptors)
     by_name = {tool.name: tool for tool in tools}
 
-    contract = by_name["cadrumo_contract"]
-    assert contract.annotations is not None
-    assert contract.annotations.read_only_hint is True
-    assert contract.input_schema["type"] == "object"
-    assert contract.output_schema
-    contract_branches = contract.output_schema["oneOf"]
-    assert isinstance(contract_branches, list) and len(contract_branches) == 2
-    contract_success = contract_branches[0]
-    assert isinstance(contract_success, dict)
-    contract_properties = contract_success["properties"]
-    assert isinstance(contract_properties, dict)
-    assert set(contract_properties) == {
+    inspect_tool = by_name["cadrumo_registry_inspect"]
+    assert inspect_tool.annotations is not None
+    assert inspect_tool.annotations.read_only_hint is True
+    assert inspect_tool.input_schema["type"] == "object"
+    assert inspect_tool.output_schema
+    inspect_branches = inspect_tool.output_schema["oneOf"]
+    assert isinstance(inspect_branches, list) and len(inspect_branches) == 2
+    inspect_success = inspect_branches[0]
+    assert isinstance(inspect_success, dict)
+    inspect_properties = inspect_success["properties"]
+    assert isinstance(inspect_properties, dict)
+    assert set(inspect_properties) == {
         "schema_version",
         "command",
         "active_profile",
@@ -48,7 +48,7 @@ def test_descriptors_adapt_to_sdk_tools_with_annotations() -> None:
         "result",
         "notices",
     }
-    assert contract_properties["command"]["const"] == "contract"
+    assert inspect_properties["command"]["const"] == "registry.inspect"
 
     calculate = by_name["cadrumo_modelo_work_calculate"]
     assert calculate.output_schema

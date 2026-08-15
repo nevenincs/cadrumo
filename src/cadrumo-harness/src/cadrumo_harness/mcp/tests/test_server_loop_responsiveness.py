@@ -145,7 +145,7 @@ def test_warm_in_process_verb_is_served_with_the_loop_free() -> None:
     # transport shares the same off-loop dispatch wrapper the subprocess gap tests
     # prove keeps the loop free.
     list_answered, call_ok = asyncio.run(
-        _warm_call_with_concurrent_list(tool_name_for_command("contract"), {}),
+        _warm_call_with_concurrent_list(tool_name_for_command("registry.inspect"), {}),
     )
     assert list_answered
     assert call_ok

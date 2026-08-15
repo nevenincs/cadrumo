@@ -36,16 +36,17 @@ def test_live_tier_stays_on_subprocess_other_tiers_run_in_process() -> None:
     assert tier_runs_in_process(CallTier.LIVE) is False
 
 
-def test_run_cli_in_process_emits_the_read_only_contract_envelope() -> None:
-    # ``app contract`` is a read-only verb that needs no active profile, so it
+def test_run_cli_in_process_emits_a_read_only_success_envelope() -> None:
+    # ``app registry inspect`` is a read-only verb that needs no active profile,
+    # so it
     # exercises the whole in-process pipeline - root callback, verb body, and the
     # shared envelope emitter - without touching encrypted bucket state.
-    run = run_cli_in_process(["--format", "json", "app", "contract"], acquire_timeout_s=30.0)
+    run = run_cli_in_process(["--format", "json", "app", "registry", "inspect"], acquire_timeout_s=30.0)
     assert run is not None
     assert run.returncode == 0
     envelope, is_error = parse_cli_envelope(run)
     assert is_error is False
-    assert envelope["command"] == "contract"
+    assert envelope["command"] == "registry.inspect"
     assert envelope["status"] in {"success", "warning"}
     assert "result" in envelope
     # Nothing may have leaked onto the captured stderr on a clean read.
@@ -53,17 +54,17 @@ def test_run_cli_in_process_emits_the_read_only_contract_envelope() -> None:
 
 
 def test_dispatch_verb_in_process_reconstructs_the_argv_from_the_schema() -> None:
-    descriptor = next(candidate for candidate in build_tool_descriptors() if candidate.command_key == "contract")
+    descriptor = next(candidate for candidate in build_tool_descriptors() if candidate.command_key == "registry.inspect")
     run = dispatch_verb_in_process(descriptor.verb_schema, {}, acquire_timeout_s=30.0)
     assert run is not None
     envelope, is_error = parse_cli_envelope(run)
     assert is_error is False
-    assert envelope["command"] == "contract"
+    assert envelope["command"] == "registry.inspect"
 
 
 def test_parse_cli_envelope_rejects_obsolete_success_envelope_version() -> None:
     run = CompletedCliRun(
-        stdout='{"schema_version": "1", "command": "contract", "status": "success", "result": {}, "notices": []}',
+        stdout='{"schema_version": "1", "command": "registry.inspect", "status": "success", "result": {}, "notices": []}',
         stderr="",
         returncode=0,
     )
@@ -92,8 +93,8 @@ def test_parse_cli_envelope_reads_error_document_from_stderr() -> None:
 @pytest.mark.parametrize(
     "body",
     (
-        '{"schema_version":"2","command":"contract","status":"success","result":{},"notices":[]}',
-        '{"schema_version":"2","command":"contract","active_profile":null,"status":"unknown","result":{},"notices":[]}',
+        '{"schema_version":"2","command":"registry.inspect","status":"success","result":{},"notices":[]}',
+        '{"schema_version":"2","command":"registry.inspect","active_profile":null,"status":"unknown","result":{},"notices":[]}',
     ),
     ids=("missing-envelope-spine", "unknown-status"),
 )
@@ -108,7 +109,7 @@ def test_parse_cli_envelope_rejects_malformed_success_documents(body: str) -> No
 
 def test_parse_cli_envelope_rejects_a_real_registered_result_with_wrong_shape() -> None:
     """The MCP parser cannot admit a result shape the CLI registry rejects."""
-    run = run_cli_in_process(["--format", "json", "app", "contract"], acquire_timeout_s=30.0)
+    run = run_cli_in_process(["--format", "json", "app", "registry", "inspect"], acquire_timeout_s=30.0)
     assert run is not None
     document = json.loads(run.stdout)
     document["result"] = []

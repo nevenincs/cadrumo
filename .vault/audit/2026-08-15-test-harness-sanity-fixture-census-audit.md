@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:1552eb53db4fa9cba5b3cf8b4b45b2a540e8edd2862a15dd74f10fb85e24c754'
+body_hash: 'sha256:4c62f8f722a58bfbcccac155939a0ea73b9b6b00e4b50d001ae10989e3804213'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
   - "[[2026-08-14-test-harness-sanity-successor-adr]]"
@@ -390,7 +390,6 @@ Every checked step S111-S144 was classified by an independent read-only pass as 
 
 **EVIDENCE GAPS, carried forward:** no empirical check of on-disk records written before the enum gate existed (the no-legacy posture argues none should exist, but that was not verified against real storage), and no check for out-of-tree tooling calling `apply_fact_changes` directly. The determination is a static code reading, which is what the step asked for, and it did not require the test suite — so the torn tree did not affect it.
 
-
 ### two half-landed relocations | live-defect FIXED | both were committed broken on main, not in-flight edits
 
 Found while testing whether the tree had quiesced enough to satisfy `S138`. Tree-wide collection was failing, and the first instinct — "peers are mid-edit, wait" — was **wrong on inspection**: `git status` showed both owning files committed and clean, and their mtimes were 100 minutes and 3 hours old. Nobody was editing them. They were abandoned broken. **A torn tree is not self-evidently someone's live work; check before deferring to it.**
@@ -408,7 +407,6 @@ So the two suites that share a shape got one definition, in a package-local home
 Restored beside `_json_array`, implemented to match the canonical `entrypoints/cli/tests/_cli_json_support.py::_json_object` exactly — `STR_KEYED_MAPPING_ADAPTER.validate_python(value)`, the core type-narrowing primitive — rather than the looser `assert isinstance` shape `_json_array` uses, so the two `_json_object` definitions in the tree cannot diverge in behaviour. **Deliberately NOT consolidated onto the canonical:** `cadrumo.llm.tests` importing `cadrumo.entrypoints.cli.tests._cli_json_support` would be a cross-package private reach, which the architecture boundary forbids. The pre-existing cross-package import from `llm/tests` into `application/ledger/tests` is left as found — not this change's to fix, and noted here so it is not mistaken for something this change introduced.
 
 **`S138` remains blocked, and the reason is now measured rather than asserted.** Collection errors across four runs this session: 67 → 4 → 3 → (after these two fixes) 7. The rise at the end is not a regression from these fixes — both symbols cleared the error list — but a peer landing an in-flight relocation of `cadrumo.entrypoints.mcp`, which took out seven suites across `command_search`, `modelo`, `operator_surface` and `cli`. The tree has not been collectable once this session. **`S138` asks for a failure-set diff from a quiesced tree, and there has been no quiesced tree to take one from.**
-
 
 ### `S137` key-provider and session teardown | proven-negative | 15 suspects, zero leaks, and the sweep deliberately stops short of a 30-site hygiene churn
 
@@ -428,4 +426,3 @@ This step had been marked complete with no locatable evidence, was returned to o
 So the test-side gap is a best-effort memory-hygiene nicety over test key material, with no OS handle, no registered global outliving the test, and a GC-reclaimed buffer. **Adding `.close()` to ~30 call sites would be churn on a tree three teams are committing to, in exchange for nothing observable.** Recorded as a deliberate non-fix. The principle generalises the census's own "duplication matters when it can diverge": **a leak matters when it can outlive the test.** One that cannot is a style preference, and this campaign does not spend collision risk on style.
 
 **Verification:** the 9 affected files run sequentially give 154 passed, 1 failed — `test_materialisation.py::test_get_secret_store_writes_a_real_blob_at_the_declared_taxonomy_path`, failing inside `open_test_profile_session` on `UUID("materialisation-wiring-test")` with `ValueError: badly formed hexadecimal UUID string`. That fails before any master-key-provider code runs, and **no code was changed in this step, so the before and after sets are the same set** — there is no diff to claim. That failure is separate pre-existing tree noise and is not attributed to this sweep.
-
