@@ -79,10 +79,9 @@ def _synthetic_locale_scope(tmp_path: Path, request: pytest.FixtureRequest) -> I
 def _write_test_label(label: str) -> str:
     """Enroll one synthetic Spanish value in the test-only catalogue.
 
-    Appends the key/value pair to the active
-    :data:`synthetic_locale_state` root's ``es.yml`` (a no-op outside the
-    ``_synthetic_locale_scope`` fixture's scope) and returns the derived
-    localization key.
+    Lives beside :data:`synthetic_locale_state` because it writes into the
+    catalogue that state owns: a copy in a test module can only append while
+    the scope happens to be open, and cannot know when it is not.
     """
     key = f"test.schema.casilla.{hashlib.sha256(label.encode('utf-8')).hexdigest()}.label"
     if synthetic_locale_state.root is not None:

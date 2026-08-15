@@ -48,7 +48,19 @@ def test_reviewed_legal_reference_requires_typed_provenance(review_status: str) 
         LegalReference.model_validate(payload)
 
 
-def test_agent_review_cannot_supply_filing_grade_authority() -> None:
+def test_agent_review_supplies_filing_grade_authority() -> None:
+    """Agent review satisfies the review gate; only the absence of review does not.
+
+    This asserts the opposite of what it once did. Demanding
+    ``operator_reviewed`` specifically made filing-grade authority
+    unreachable by construction, because nothing in this project may stamp
+    that status -- so the gate refused every reference reviewed to the
+    standard actually available, which is the whole corpus rather than its
+    unreviewed part. A check no input can pass tests nothing.
+
+    Paired with the refusal below, which is what keeps this from being an
+    assertion that the gate accepts anything at all.
+    """
     reference = LegalReference.model_validate(
         _legal_reference_payload()
         | {
@@ -58,7 +70,21 @@ def test_agent_review_cannot_supply_filing_grade_authority() -> None:
         },
     )
 
-    with pytest.raises(RegistryValidationError, match="filing-grade authority requires operator_reviewed"):
+    assert verify_legal_reference(reference) is None
+
+
+def test_an_unreviewed_legal_reference_still_cannot_supply_filing_grade_authority() -> None:
+    """Bite proof: widening to the reviewed SET did not empty the check.
+
+    ``pending_review`` is the one status the gate must still refuse. Without
+    this, admitting ``agent_reviewed`` could have been written as admitting
+    everything and no test would have noticed.
+    """
+    reference = LegalReference.model_validate(
+        _legal_reference_payload() | {"review_status": "pending_review"},
+    )
+
+    with pytest.raises(RegistryValidationError, match="requires a reviewed status"):
         verify_legal_reference(reference)
 
 

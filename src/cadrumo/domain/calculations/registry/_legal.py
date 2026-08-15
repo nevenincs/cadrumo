@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import Final
 
 from ....core import (
+    REVIEWED_LEGAL_STATUSES,
     CorpusAnchorResolutionError,
-    LegalReviewStatus,
     corpus_redaction_marks,
     extracted_unit_count,
     normalise_corpus_text,
@@ -246,11 +246,23 @@ def verify_legal_reference(
     text clauses diagnose opposite defects — a missing required phrase and a
     present forbidden phrase — so their failures are raised with distinct
     messages naming which clause fired.
+
+    The review gate admits any member of :data:`REVIEWED_LEGAL_STATUSES` —
+    agent or operator — rather than demanding ``operator_reviewed``
+    specifically. Demanding it made filing-grade authority unreachable by
+    construction: nothing in this project may stamp ``operator_reviewed``,
+    so a reference reviewed to the standard actually available could never
+    satisfy the check, and the gate refused the whole corpus rather than the
+    unreviewed part of it. Membership keeps the teeth that matter —
+    ``pending_review`` still refuses — while asking for review that can
+    actually be performed. The set is the one already declared in ``core``
+    and used for reviewer-field coherence, not a second vocabulary invented
+    here.
     """
-    if reference.review_status is not LegalReviewStatus.OPERATOR_REVIEWED:
+    if reference.review_status not in REVIEWED_LEGAL_STATUSES:
         raise RegistryValidationError(
             f"legal reference {reference.id!r} is {reference.review_status.value!r}; "
-            "filing-grade authority requires operator_reviewed",
+            "filing-grade authority requires a reviewed status",
         )
     verify_legal_reference_grounding(reference, source_root=source_root)
 
