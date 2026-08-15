@@ -5,7 +5,10 @@ authority_grade = "applicability"
 # its plazo grounded verbatim in orden-eha-1881-2011 art 4: la presentación será
 # trimestral y se efectuará durante el mes siguiente a la finalización de cada
 # trimestre natural. Scheduling/applicability-grade: declaration-header casillas
-# only; no bundled diseño de registro, so no numbered form casilla is fabricated.
+# only. The authoritative Modelo 763 diseño de registro IS bundled
+# (enrolled-modelo-763-layout, re-pointed 2026-08-15) but no casilla-to-
+# position mapping has been authored from it yet, so no numbered form
+# casilla is fabricated here.
 valid_from = 2011-01-01
 period_selector = { year_from = 2011, periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-eha-1881-2011:art-1"]

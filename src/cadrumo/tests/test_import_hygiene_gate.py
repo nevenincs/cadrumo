@@ -90,6 +90,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass, field
+from functools import cache
 from pathlib import Path
 from typing import Final, TypedDict
 
@@ -100,6 +101,7 @@ from dev.quality.import_hygiene_scan import (
     DEMOTED_REGISTRY_LOADER_SYMBOLS,
     PKG_ROOT,
     REGISTRY_LOADER_PACKAGE,
+    ImportSite,
     TuiBoundaryViolationKind,
     discover_facades,
     find_delegate_wrapper_shims,
@@ -239,12 +241,45 @@ def _baseline_sites(baseline: _BaselineDocument) -> tuple[_BaselineSite, ...]:
     )
 
 
+@cache
+def _scanned_py_files() -> tuple[Path, ...]:
+    """Walk the shipped package once per process.
+
+    Seven gates in this module opened with the identical walk and five then ran
+    the identical ``walk_module_imports`` pass over it. That pass measured
+    18.16s and 18.25s on two consecutive calls -- it carries no memo -- so the
+    module paid it once per gate for one unchanging answer.
+    """
+    return tuple(
+        sorted(p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts)
+    )
+
+
+@cache
+def _scanned_import_sites() -> tuple[ImportSite, ...]:
+    """Collect every import site in the shipped package once per process."""
+    return tuple(site for path in _scanned_py_files() for site in walk_module_imports(path))
+
+
+def _package_py_files() -> list[Path]:
+    """Return the shipped module list, rebuilt per caller from the cached walk.
+
+    A list rather than the cached tuple, so each gate owns its own sequence and
+    passes the scanners exactly the type they received before. Copying ~4900
+    paths costs microseconds against an 18s scan.
+    """
+    return list(_scanned_py_files())
+
+
+def _package_import_sites() -> list[ImportSite]:
+    """Return every import site, rebuilt per caller from the cached pass."""
+    return list(_scanned_import_sites())
+
+
 def _current_production_family1_sites() -> tuple[_BaselineSite, ...]:
     """Re-run the real scanner against the live ``src/cadrumo`` tree."""
-    py_files = sorted(
-        p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
-    )
-    all_sites = [site for path in py_files for site in walk_module_imports(path)]
+    py_files = _package_py_files()
+    all_sites = _package_import_sites()
     violations = find_private_import_violations(all_sites)
     non_test = [v for v in violations if not v.is_test]
     return tuple(
@@ -364,10 +399,8 @@ def _current_test_only_underscore_sites() -> tuple[_BaselineSite, ...]:
     Every entry here is individually reasoned in
     ``dev/quality/import_hygiene_test_debt.json``; this is not a bulk ceiling.
     """
-    py_files = sorted(
-        p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
-    )
-    all_sites = [site for path in py_files for site in walk_module_imports(path)]
+    py_files = _package_py_files()
+    all_sites = _package_import_sites()
     violations = find_private_import_violations(all_sites)
     test_only = [v for v in violations if v.is_test]
     return tuple(
@@ -523,9 +556,7 @@ def test_family2_shim_modules_are_exactly_the_dynamic_baseline() -> None:
     baseline = _load_baseline()
     baseline_paths = frozenset(baseline["family2_shim_modules"]["paths"])
 
-    py_files = sorted(
-        p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
-    )
+    py_files = _package_py_files()
     facades = discover_facades()
     shims = find_shim_modules(py_files, facades)
     current_paths = frozenset(shim.path for shim in shims if not shim.is_test)
@@ -564,9 +595,7 @@ def test_family2_test_tree_shims_are_reported_not_silent() -> None:
         stem = p.stem
         return stem == "conftest" or stem.startswith("test_")
 
-    py_files = sorted(
-        p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
-    )
+    py_files = _package_py_files()
     facades = discover_facades()
     shims = find_shim_modules(py_files, facades)
 
@@ -588,9 +617,7 @@ def test_family2_test_tree_shims_are_reported_not_silent() -> None:
 
 def _current_production_delegate_wrappers() -> tuple[tuple[str, str], ...]:
     """Re-run the real scanner and return each production wrapper's ``(path, function)``."""
-    py_files = sorted(
-        p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
-    )
+    py_files = _package_py_files()
     return tuple(
         (wrapper.path, wrapper.function) for wrapper in find_delegate_wrapper_shims(py_files) if not wrapper.is_test
     )
@@ -698,11 +725,9 @@ def test_family3_genuine_duplicate_symbols_are_exactly_the_pinned_set() -> None:
     tolerated_entries = baseline["family3_pinned_duplicate_symbols"]["tolerated_multi_sourced_symbols"]
     tolerated = {entry["symbol"]: entry["confidence"] for entry in tolerated_entries}
 
-    py_files = sorted(
-        p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
-    )
+    py_files = _package_py_files()
     facades = discover_facades()
-    all_sites = [site for path in py_files for site in walk_module_imports(path)]
+    all_sites = _package_import_sites()
     multi_sourced = find_multi_sourced_symbols(facades, all_sites)
 
     case_a_high = [m for m in multi_sourced if m.confidence == "high" and len(m.facades) > 1]
@@ -771,11 +796,9 @@ def test_no_production_import_of_a_demoted_registry_loader_symbol() -> None:
     reason (the pattern already used for the seven siblings that stayed
     exported), never by adding an allowlist entry to this gate.
     """
-    py_files = sorted(
-        p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
-    )
+    py_files = _package_py_files()
     assert py_files, f"no shipped modules found under {PKG_ROOT}; a hard-zero gate over an empty scan is not a zero"
-    all_sites = [site for path in py_files for site in walk_module_imports(path)]
+    all_sites = _package_import_sites()
     violations = find_registry_loader_import_violations(all_sites)
 
     offenders = [f"{v.importer_path}:{v.lineno} imports {v.imported_names}" for v in violations]
@@ -896,9 +919,7 @@ def test_no_shipped_module_imports_the_unshipped_dev_tooling() -> None:
     moving what the shipped side needs under ``src/cadrumo``, never by
     recording a tolerated exception.
     """
-    py_files = sorted(
-        p for p in scan_directory(PKG_ROOT, pattern="*.py", recursive=True) if "__pycache__" not in p.parts
-    )
+    py_files = _package_py_files()
     assert py_files, f"no shipped modules found under {PKG_ROOT}; a hard-zero gate over an empty scan is not a zero"
     violations = find_dev_tooling_import_violations(py_files)
 

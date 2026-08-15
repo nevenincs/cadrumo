@@ -49,11 +49,6 @@ applies_from = 2002-01-16
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-1041"
 review_status = "reviewed"
 
-# Same bundled orden HTML, registered a second time under layout_authority tier
-# for the per-revision workbook-parity-coverage gate. This is NOT the
-# authoritative AEAT Diseño de Registros (fichero-BOE fixed-width layout) — that
-# is not bundled. It grounds only the static form-approval layout, honestly
-# satisfying the parity gate without asserting a verified byte-position design.
 # Re-pointed 2026-08-15: the previous corpus_path (orden-hac-66-2002.html,
 # 1093 bytes) carries no annex section and no record-layout vocabulary --
 # it approves the model but does not contain its positional design. The

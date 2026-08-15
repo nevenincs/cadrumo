@@ -2,9 +2,10 @@
 authority_grade = "applicability"
 # Modelo 341 autoliquidación/solicitud del IVA, approved by orden-min-2000-12-15-m341 art
 # 1 with its plazo grounded verbatim in orden-min-2000-12-15-m341 art 2.
-# Scheduling/applicability-grade: declaration-header casillas only; no bundled
-# Modelo 341 diseño de registro, so no numbered money-closure casilla is
-# fabricated.
+# Scheduling/applicability-grade: declaration-header casillas only. The
+# authoritative Modelo 341 diseño de registro IS bundled (aeat-dr-341-2016)
+# but no casilla-to-position mapping has been authored from it yet, so no
+# numbered money-closure casilla is fabricated here.
 valid_from = 2000-01-01
 period_selector = { year_from = 2000, periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-min-2000-12-15-m341:art-1"]

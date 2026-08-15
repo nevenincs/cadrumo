@@ -1,7 +1,8 @@
-# Modelo 763 record-design parity anchor. Declares the bundled orden-eha-1881-2011
-# form-approval order as the layout authority. runner_required is false: no
-# authoritative Modelo 763 DR is bundled, so this pins the form-approval
-# provenance without asserting a verified byte-position layout.
+# Modelo 763 record-design parity anchor. workbook_source is
+# enrolled-modelo-763-layout, re-pointed 2026-08-15 to the real bundled
+# Diseño de Registro (100952 bytes) after its prior corpus_path (a 1114-byte
+# orden excerpt) was found to carry no layout content. runner_required
+# stays false pending a verified byte-position parity run against the design.
 
 [[revisions."2011-y-siguientes".workbook_parity_refs]]
 id = "modelo-763-orden-static-layout"

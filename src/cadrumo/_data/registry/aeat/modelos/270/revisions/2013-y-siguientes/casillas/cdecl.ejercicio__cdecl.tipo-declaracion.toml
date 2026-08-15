@@ -1,7 +1,8 @@
 # Modelo 270 declaration-header casillas (scheduling/applicability-grade). Only
 # the declaration header is declared, grounded in orden-hap-2368-2013 art 1. No
-# numbered form casilla is invented — no authoritative Modelo 270 diseño de registro
-# is bundled.
+# numbered form casilla is invented — the authoritative Modelo 270 diseño de
+# registro IS bundled (aeat-dr-270-2023) but no casilla-to-position mapping
+# has been authored from it yet.
 
 [[revisions."2013-y-siguientes".casillas]]
 id = "decl.ejercicio"

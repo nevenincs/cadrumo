@@ -21,6 +21,24 @@ from ._enums import ExpenseCategory, UseType
 from ._errors import FincaValidationError
 
 
+#: Current write version for each rental-register record shape.
+#:
+#: Named here, in the layer that DECLARES the shape, rather than repeated as a
+#: literal on the model and again as a column default on the persistence row.
+#: The row previously carried its own ``default="1"``, which the mapper never
+#: exercised -- it copies the record's value in both directions -- so the second
+#: declaration did nothing except stand ready to disagree with this one.
+#:
+#: Five constants rather than one shared value: these are five record shapes
+#: that can version independently, and a single constant would force them to
+#: bump together for no reason the data supports.
+FINCA_SCHEMA_VERSION = "1"
+ARRENDAMIENTO_SCHEMA_VERSION = "1"
+FINCA_RENDIMIENTO_RECORD_SCHEMA_VERSION = "1"
+FINCA_GASTO_SCHEMA_VERSION = "1"
+FINCA_AMORTIZACION_LEDGER_ENTRY_SCHEMA_VERSION = "1"
+
+
 class _FincaRecord(BaseModel):
     """Shared base — frozen, strict, no extra fields."""
 
@@ -75,7 +93,8 @@ class Finca(_FincaRecord):
             consultation date. Set by the operator at finca
             registration; future CCAA-driven enrichment supersedes
             this flag automatically.
-        schema_version: Rental record schema version. ``"1"``.
+        schema_version: Rental record schema version, defaulted from this
+            record's own module-level constant.
     """
 
     id: int | None = Field(default=None, ge=1)
@@ -90,7 +109,7 @@ class Finca(_FincaRecord):
     disposal_date: date | None = None
     use_type: UseType
     is_stressed_area: bool = False
-    schema_version: str = "1"
+    schema_version: str = FINCA_SCHEMA_VERSION
 
     @model_validator(mode="after")
     def _validate_ratios(self) -> Finca:
@@ -177,7 +196,8 @@ class Arrendamiento(_FincaRecord):
             art. 17.6 (rent cap for new contracts in declared
             zonas tensionadas where the landlord is a gran tenedor).
             ``False`` triggers ``FORFEIT_LAU_17_6``.
-        schema_version: Rental record schema version. ``"1"``.
+        schema_version: Rental record schema version, defaulted from this
+            record's own module-level constant.
     """
 
     id: int | None = Field(default=None, ge=1)
@@ -198,7 +218,7 @@ class Arrendamiento(_FincaRecord):
     is_first_rental: bool = False
     rehabilitation_finished_date: date | None = None
     lau_17_6_compliant: bool = True
-    schema_version: str = "1"
+    schema_version: str = ARRENDAMIENTO_SCHEMA_VERSION
 
     @model_validator(mode="after")
     def _validate_invariants(self) -> Arrendamiento:
@@ -236,7 +256,8 @@ class FincaRendimientoRecord(_FincaRecord):
         gross_rent_received: Gross rent collected during the period.
         dias_alquilados: Days the dwelling was let during the period
             (0-366).
-        schema_version: Rental record schema version. ``"1"``.
+        schema_version: Rental record schema version, defaulted from this
+            record's own module-level constant.
     """
 
     id: int | None = Field(default=None, ge=1)
@@ -244,7 +265,7 @@ class FincaRendimientoRecord(_FincaRecord):
     period_year: int = Field(ge=1900, le=2100)
     gross_rent_received: Decimal = Field(ge=Decimal("0"))
     dias_alquilados: int = Field(ge=0, le=366)
-    schema_version: str = "1"
+    schema_version: str = FINCA_RENDIMIENTO_RECORD_SCHEMA_VERSION
 
 
 class FincaGasto(_FincaRecord):
@@ -262,7 +283,8 @@ class FincaGasto(_FincaRecord):
         period_year: Ejercicio.
         category: Closed expense-category enum.
         amount: Gasto amount (positive Decimal).
-        schema_version: Rental record schema version. ``"1"``.
+        schema_version: Rental record schema version, defaulted from this
+            record's own module-level constant.
     """
 
     id: int | None = Field(default=None, ge=1)
@@ -270,7 +292,7 @@ class FincaGasto(_FincaRecord):
     period_year: int = Field(ge=1900, le=2100)
     category: ExpenseCategory
     amount: Decimal = Field(ge=Decimal("0"))
-    schema_version: str = "1"
+    schema_version: str = FINCA_GASTO_SCHEMA_VERSION
 
 
 class FincaAmortizacionLedgerEntry(_FincaRecord):
@@ -298,7 +320,8 @@ class FincaAmortizacionLedgerEntry(_FincaRecord):
         cumulative_amortization_through_year: Sum of
             ``amortization_amount`` for this finca for periods
             ≤ ``period_year``.
-        schema_version: Rental record schema version. ``"1"``.
+        schema_version: Rental record schema version, defaulted from this
+            record's own module-level constant.
     """
 
     id: int | None = Field(default=None, ge=1)
@@ -308,7 +331,7 @@ class FincaAmortizacionLedgerEntry(_FincaRecord):
     basis_used: Decimal = Field(ge=Decimal("0"))
     amortization_amount: Decimal = Field(ge=Decimal("0"))
     cumulative_amortization_through_year: Decimal = Field(ge=Decimal("0"))
-    schema_version: str = "1"
+    schema_version: str = FINCA_AMORTIZACION_LEDGER_ENTRY_SCHEMA_VERSION
 
 
 __all__ = [

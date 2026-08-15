@@ -4,8 +4,10 @@ authority_grade = "applicability"
 # approved by orden-hac-590-2021 art 1 with its plazo grounded verbatim in
 # orden-hac-590-2021 art 3: se presenta durante el mes siguiente al correspondiente
 # periodo trimestral natural. Scheduling/applicability-grade: declaration-header
-# casillas only; no bundled diseño de registro, so no numbered form casilla is
-# fabricated (the base/cuota money-closure casillas await a bundled DR).
+# casillas only. The authoritative Modelo 490 diseño de registro IS bundled
+# (aeat-dr-490-2023) but no casilla-to-position mapping has been authored
+# from it yet, so no numbered form casilla is fabricated here (the
+# base/cuota money-closure casillas still await that mapping).
 valid_from = 2021-01-01
 period_selector = { year_from = 2021, periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-hac-590-2021:art-1"]
