@@ -41,6 +41,7 @@ _PROSE_KEYS = {
     "ca": {
         "errors.auth.auth_former_product_session_state",
         "errors.internal.cli_outbound_payload_boundary",
+        "cli.operator_surface.help.root.paragraph_local_first",
         "adapters.google.calc_sheets.errors.foreign_spreadsheet_not_owned",
         "adapters.google.oauth_flow.errors.profile_state_unresolved",
         "adapters.google.profile_binding.errors.no_active_profile",
@@ -57,6 +58,7 @@ _PROSE_KEYS = {
     "en": {
         "errors.auth.auth_former_product_session_state",
         "errors.internal.cli_outbound_payload_boundary",
+        "cli.operator_surface.help.root.paragraph_local_first",
         "adapters.google.calc_sheets.errors.foreign_spreadsheet_not_owned",
         "adapters.google.oauth_flow.errors.profile_state_unresolved",
         "adapters.google.profile_binding.errors.no_active_profile",
@@ -71,6 +73,7 @@ _PROSE_KEYS = {
     "es": {
         "errors.auth.auth_former_product_session_state",
         "errors.internal.cli_outbound_payload_boundary",
+        "cli.operator_surface.help.root.paragraph_local_first",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted",
         "cli.ledger.add.system_state_not_assignable",
@@ -83,6 +86,7 @@ _PROSE_KEYS = {
     "hu": {
         "errors.auth.auth_former_product_session_state",
         "errors.internal.cli_outbound_payload_boundary",
+        "cli.operator_surface.help.root.paragraph_local_first",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted",
         "cli.ledger.add.system_state_not_assignable",

@@ -5307,7 +5307,7 @@ cli:
           review, registry, and authenticated AEAT reads.
         paragraph_config_root: The config root manages profiles, encrypted local data,
           recovery keys, profile sessions, AEAT authentication, and repair.
-        paragraph_local_first: CADRUMO keeps taxpayer data local and exposes exactly
+        paragraph_local_first: Cadrumo keeps taxpayer data local and exposes exactly
           two command roots.
         paragraph_privacy: Profile labels stay visible. Tax identities, credentials,
           storage identifiers, object keys, and sensitive web-address content stay
@@ -6717,6 +6717,8 @@ errors:
       close the active session before re-entering.'
     internal_observability_run_context_missing: 'Internal error: a telemetry event
       was recorded outside an active run context.'
+    internal_operation_declaration_breach: 'Internal error: an operation executor
+      claimed a phase, effect, resource, or interaction its definition does not declare.'
     internal_output_rendering: 'Internal error: the command output could not be rendered
       safely.'
     internal_profile_keys_registration: 'Internal error: profile keys could not be

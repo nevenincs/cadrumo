@@ -5738,7 +5738,7 @@ cli:
           registro y lecturas autenticadas de la AEAT.
         paragraph_config_root: La raíz config gestiona perfiles, datos locales cifrados,
           claves de recuperación, sesiones, autenticación con la AEAT y reparación.
-        paragraph_local_first: CADRUMO conserva los datos fiscales en local y expone
+        paragraph_local_first: Cadrumo conserva los datos fiscales en local y expone
           exactamente dos raíces de comandos.
         paragraph_privacy: Las etiquetas de perfil son visibles. Se protegen identidades
           fiscales, credenciales, identificadores de almacenamiento, claves de objeto
@@ -7233,6 +7233,9 @@ errors:
       invocó de forma reentrante; cierra la sesión activa antes de volver a entrar.'
     internal_observability_run_context_missing: 'Error interno: se intentó registrar
       un evento de telemetría fuera de un contexto de ejecución activo.'
+    internal_operation_declaration_breach: 'Error interno: un ejecutor de operación
+      reclamó una fase, un efecto, un recurso o una interacción que su definición
+      no declara.'
     internal_output_rendering: 'Error interno: la salida del comando no se pudo representar
       de forma segura.'
     internal_profile_keys_registration: 'Error interno: no se pudieron registrar las

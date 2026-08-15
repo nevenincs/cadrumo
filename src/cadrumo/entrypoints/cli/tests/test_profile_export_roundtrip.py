@@ -43,6 +43,7 @@ from ....domain.calculations.registry import (
 )
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage, isolated_profile_storage_root
+from ....tests.user_profile import register_cli_profile
 
 __all__ = ["isolated_profile_storage"]
 from ....tests.cli_envelope import unwrap_envelope_notices
@@ -77,29 +78,24 @@ def _create_profile(
     tax_id: str,
     activity: str,
     output_language: str | None = None,
-) -> Result:
-    args = [
-        "config",
-        "profile",
-        "create",
-        name,
-        "--quiet",
-        "--tax-id",
-        tax_id,
-        "--activity",
-        activity,
-        "--entity-type",
-        "natural_person",
-        "--iva-regime",
-        "GENERAL",
-        "--name",
-        "Ariadna",
-        "--surnames",
-        "Villar",
-    ]
+) -> str:
+    """Seed one profile through the credential registration door.
+
+    Every test below needs a profile to export or import; none of them is
+    about how it came to exist. Registration is the only creation door, so
+    the seed goes through it and hands back the new profile id.
+    """
+    facts = {
+        "identity.tax_id": tax_id,
+        "activities.description": activity,
+        "taxpayer_type.entity_type": "natural_person",
+        "iva.regime": "GENERAL",
+        "identity.name": "Ariadna",
+        "identity.surnames": "Villar",
+    }
     if output_language is not None:
-        args.extend(("--output-language", output_language))
-    return _invoke(args)
+        facts["preferences.output_language"] = output_language
+    return register_cli_profile(label=name, facts=facts)
 
 
 def _export_profile(
@@ -144,13 +140,8 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
     from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ....adapters.persistence.storage.master_key import (
-        activate_master_key_provider,
-        get_master_key_provider,
-    )
     from ....application.modelo import create_work_unit
     from ....core import Period, resolve_active_bucket_id
-    from ....core.config import override_settings
     from ....domain.modelos import (
         CalculationRevision,
         CalculationRevisionState,
@@ -161,21 +152,21 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
         upsert_calculation_revision,
         upsert_filing_record,
     )
+    from ....tests.profile_capsule import open_test_profile_session
 
-    # 1. Provision profile via CLI.
+    # 1. Provision the profile through the credential registration door.
     csv = tmp_path / "bank.csv"
     csv.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
         "2026-01-10,Client SL,Factura 001,1210.00,EUR,txn-001\n",
         encoding="utf-8",
     )
-    r = _create_profile(
+    _create_profile(
         "source",
         tax_id="12345678Z",
         activity="design",
         output_language="en",
     )
-    assert r.exit_code == 0, r.output
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
@@ -185,10 +176,10 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
     assert r_ledger.exit_code == 0, r_ledger.output
 
     # 3. Seed work unit, calculation revision, and filing record via repositories.
-    with (
-        override_settings(cadrumo_active_profile=bucket_id),
-        activate_master_key_provider(get_master_key_provider()),
-    ):
+    # Registration left this bucket's custody session live, so the helper
+    # binds that exact session rather than re-deriving a master key from a
+    # file-fallback store nothing provisions any more.
+    with open_test_profile_session(bucket_id):
         # Work unit via the canonical create_work_unit action.
         wu_repo = WorkUnitCatalogueRepository(bucket_id=bucket_id)
         cr_repo = CalculationRevisionCatalogueRepository(bucket_id=bucket_id)
@@ -550,12 +541,11 @@ def test_import_label_collision_different_uuid_is_refused(tmp_path: Path) -> Non
     import_tmp = tmp_path / "label-collision-root"
     with isolated_profile_storage_root(tmp_path=import_tmp):
         # Occupy the label "source" in this fresh root with a different UUID profile.
-        r_create = _create_profile(
+        _create_profile(
             "source",
             tax_id="87654321X",
             activity="consulting",
         )
-        assert r_create.exit_code == 0, r_create.output
 
         # Now attempt to import the bundle whose display_name is also "source"
         # but whose profile_id is a different UUID.
@@ -615,8 +605,7 @@ def test_export_emits_cleartext_sensitivity_warning_notice(tmp_path: Path) -> No
 def test_export_requires_explicit_cleartext_or_passphrase(tmp_path: Path) -> None:
     """``export`` no longer writes cleartext JSON unless local/SAR mode is explicit."""
 
-    r_create = _create_profile("explicit-transport", tax_id="87654321X", activity="consulting")
-    assert r_create.exit_code == 0, r_create.output
+    _create_profile("explicit-transport", tax_id="87654321X", activity="consulting")
 
     bundle_path = tmp_path / "implicit-cleartext.json"
     r_export = _invoke(["config", "profile", "export", "explicit-transport", "--to", str(bundle_path)])
@@ -645,8 +634,7 @@ def test_bundle_verbs_reject_argv_passphrase(tmp_path: Path) -> None:
 def test_encrypted_export_refuses_passphrase_confirmation_mismatch(tmp_path: Path) -> None:
     """A stdin value/confirmation mismatch refuses before any bundle is written."""
 
-    r_create = _create_profile("mismatch-transport", tax_id="55555555K", activity="consulting")
-    assert r_create.exit_code == 0, r_create.output
+    _create_profile("mismatch-transport", tax_id="55555555K", activity="consulting")
 
     bundle_path = tmp_path / "mismatch.json"
     result = _invoke(
@@ -713,8 +701,7 @@ def test_import_surfaces_active_profile_switch_info_notice(tmp_path: Path) -> No
 
 def test_export_json_envelope_carries_purpose_transport_and_data_categories(tmp_path: Path) -> None:
     """The plain export envelope reports the same custody metadata SAR does."""
-    r_create = _create_profile("custody", tax_id="87654321X", activity="consulting")
-    assert r_create.exit_code == 0, r_create.output
+    _create_profile("custody", tax_id="87654321X", activity="consulting")
 
     cleartext_path = tmp_path / "custody-cleartext.json"
     r = _export_profile("custody", cleartext_path, json_format=True)

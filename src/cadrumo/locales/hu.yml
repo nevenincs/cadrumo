@@ -5610,7 +5610,7 @@ cli:
         paragraph_config_root: A config gyökér kezeli a profilokat, a titkosított
           helyi adatokat, a helyreállítási kulcsokat, a munkameneteket, az AEAT-hitelesítést
           és a javítást.
-        paragraph_local_first: A CADRUMO helyben tartja az adózói adatokat, és pontosan
+        paragraph_local_first: A Cadrumo helyben tartja az adózói adatokat, és pontosan
           két parancsgyökeret kínál.
         paragraph_privacy: A profilcímkék láthatók. Az adóazonosítók, hitelesítő adatok,
           tárolóazonosítók, objektumkulcsok és érzékeny webcímrészek védettek.
@@ -7050,6 +7050,9 @@ errors:
       módon lett meghívva; zárja be az aktív munkamenetet, mielőtt újra belépne.'
     internal_observability_run_context_missing: 'Belső hiba: telemetriai eseményt
       rögzítettek aktív futási kontextuson kívül.'
+    internal_operation_declaration_breach: 'Belső hiba: egy művelet-végrehajtó olyan
+      fázist, hatást, erőforrást vagy interakciót igényelt, amelyet a definíciója
+      nem deklarál.'
     internal_output_rendering: 'Belső hiba: a parancs kimenetét nem sikerült biztonságosan
       megjeleníteni.'
     internal_profile_keys_registration: 'Belső hiba: a profilkulcsok regisztrálása

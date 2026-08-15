@@ -5691,7 +5691,7 @@ cli:
           i lectures autenticades de l'AEAT.
         paragraph_config_root: L'arrel config gestiona perfils, dades locals xifrades,
           claus de recuperació, sessions, autenticació amb l'AEAT i reparació.
-        paragraph_local_first: CADRUMO conserva les dades fiscals en local i exposa
+        paragraph_local_first: Cadrumo conserva les dades fiscals en local i exposa
           exactament dues arrels d'ordres.
         paragraph_privacy: Les etiquetes de perfil són visibles. Es protegeixen identitats
           fiscals, credencials, identificadors d'emmagatzematge, claus d'objecte i
@@ -7187,6 +7187,9 @@ errors:
       invocat de manera reentrant; tanca la sessió activa abans de tornar a entrar-hi.'
     internal_observability_run_context_missing: 'Error intern: s''ha intentat registrar
       un esdeveniment de telemetria fora d''un context d''execució actiu.'
+    internal_operation_declaration_breach: 'Error intern: un executor d''operació
+      ha reclamat una fase, un efecte, un recurs o una interacció que la seva definició
+      no declara.'
     internal_output_rendering: 'Error intern: la sortida de l''ordre no s''ha pogut
       representar de manera segura.'
     internal_profile_keys_registration: 'Error intern: no s''han pogut registrar les
