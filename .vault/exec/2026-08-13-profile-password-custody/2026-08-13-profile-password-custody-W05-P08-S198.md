@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:e0520866796e5b8c7b494a64354d7762f07e3fd7a3a7dee20cde4d9aa56d3c89'
+body_hash: 'sha256:735fb5d6e076b5d4806529476052632f35848e790d475b132c238a83168da9ea'
 step_id: 'S198'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -130,6 +130,23 @@ the end-to-end logged-in deletion. A second mode widened the exclusion to the
 whole database directory, the lazy alternative, and reded the foreign-file case
 and the derived-set case. The two refusal cases correctly stayed green in both
 modes, since reverting the fix makes the guard stricter, not weaker.
+
+### Verification
+
+The custody-transaction and reset suites ran sequentially with the integration
+lane explicitly selected, because the default marker selection would have
+executed zero cases in the integration modules and printed green. Full output
+was written to a file and read back from disk.
+
+544 passed, 34 failed. Every one of the 34 was then re-run with the fix reverted
+through the out-of-tree plugin: 32 failed identically, so they are ambient and
+predate this row. The two that differed were re-run again on their own at the
+current tree and all five cases in that module passed, so they were transient
+churn from a peer's mid-edit state during the long run, not a regression. No
+custody adapter case and none of the cases added here appear in the failure
+list.
+
+The formatter, linter and both type checkers pass on every changed file.
 
 ## Notes
 

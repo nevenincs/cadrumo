@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:d76526cc1611f5134eee18bea4c9546d4ffc02185fb458833ea07829356b95e6'
+body_hash: 'sha256:2581ead449e8e942f1d3e7d749a8b0db5bf3aefba21a4869f7b5870f37865c95'
 step_id: 'S187'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -147,6 +147,15 @@ that is not reproducible at this HEAD and is corrected here rather than left
 standing. The custody-session refusal appears in no failure. The two new
 reachability tests pass, taking the seven-suite total to eighteen failing and
 thirty-one passing.
+
+**Re-measured once more after peers advanced the tree mid-step, which changed
+one number and no conclusion.** A third run at the later HEAD, taken because a
+finding is only as current as the tree it was measured on, showed nineteen
+failing in the six suites rather than eighteen. The extra one is the
+lock-exclusion concurrency test, which passes on its own in forty seconds and
+fails only inside the long run: a subprocess-timing flake on this worktree's
+backing share, not a regression. Nothing else moved, and the reachability tests
+stayed green across all three runs.
 
 **What was inherited versus verified.** The production ruling, its typed
 clearance, the reachability predicate and both test files were authored before
