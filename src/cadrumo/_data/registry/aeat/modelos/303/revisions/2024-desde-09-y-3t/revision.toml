@@ -17,3 +17,13 @@ year_to = 2024
 # Quarterly periods for standard autoliquidacion; monthly periods for
 # monthly IVA-liquidation taxpayers (REDEME or large-company status).
 periods = ["3T", "4T", "09", "10", "11", "12"]
+
+[revisions."2024-desde-09-y-3t".family_dispositions.applicability]
+reason = "Modelo 303 applicability is defined by filing_schedules and orden_aplicabilidad."
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late"]
+
+[revisions."2024-desde-09-y-3t".family_dispositions.casilla_continuidad_evolutions]
+reason = "Casilla numbering in Modelo 303 remains continuous without within-modelo renumbered casilla evolutions."
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late"]
