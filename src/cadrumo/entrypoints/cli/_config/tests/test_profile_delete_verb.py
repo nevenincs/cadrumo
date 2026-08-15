@@ -42,16 +42,16 @@ def _register(label: str, tax_id: str) -> str:
 
 def _registered_labels() -> set[str]:
     """Read the live profile listing back through the operator's own verb."""
-    result = invoke_cached_cli(["config", "profile", "list", "--format", "json"])
+    result = invoke_cached_cli(["--format", "json", "config", "profile", "list"])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
     return {row["name"] for row in payload["result"]["profiles"]}
 
 
 def _delete(label: str, *, confirm: bool) -> Result:
-    argv = ["config", "profile", "delete", label, "--format", "json"]
+    argv = ["--format", "json", "config", "profile", "delete", label]
     if confirm:
-        argv.insert(4, "--yes")
+        argv.append("--yes")
     return invoke_cached_cli(argv)
 
 
