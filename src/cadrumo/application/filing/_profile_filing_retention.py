@@ -16,6 +16,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.logging import get_logger
 from ...core.time import validate_utc_aware
 from ...domain.modelos import ModeloRecord
 from ...domain.retention import RetentionFloorAssessment, assess_retention_floor
@@ -231,4 +232,56 @@ class FilingRetentionAuthority:
         ensure_profile_custody_owner_root(self._local_record_store, self._root)
 
 
-__all__ = ["FilingRetentionAuthority", "FilingRetentionSnapshot"]
+def try_record_filing_retention_snapshot(
+    *,
+    bucket_id: str,
+    records: Iterable[ModeloRecord],
+    observed_at: datetime,
+) -> bool:
+    """Record one profile's filing facts, and never raise doing it.
+
+    The deletion preflight cannot read a profile's filing catalogue -- it runs
+    against profiles it has not unlocked -- so this plaintext snapshot is how
+    the retention position stays knowable without the key. Two callers write it:
+    profile creation, so "never filed" is a RECORDED fact, and filing
+    persistence, so the position stays current.
+
+    Never raises, and the asymmetry is the reason rather than convenience.
+    Neither caller exists to serve deletion: one creates a profile and one
+    discharges a statutory filing obligation. A caller REFUSED because a
+    deletion-support record could not be written is a worse outcome than a
+    profile whose snapshot is stale or missing, and it would put a deletion
+    concern in the path of both.
+
+    Swallowing is safe only while absence fails CLOSED: with no snapshot the
+    retention assessment refuses, which blocks a deletion rather than
+    permitting one. An empty RECORDED snapshot is a different thing from an
+    absent one and must stay so -- if absence ever comes to mean "nothing
+    retained", this function's contract becomes a fail-open and must be
+    revisited with it.
+
+    Returns:
+        ``True`` when the snapshot was written, ``False`` when it was not. The
+        caller is expected to ignore it; it exists so a test can assert the
+        write happened rather than inferring it.
+    """
+    try:
+        FilingRetentionAuthority().record_filing_catalogue(
+            profile_id=UUID(str(bucket_id)),
+            records=records,
+            observed_at=observed_at,
+        )
+    except Exception:  # noqa: BLE001 - no caller may fail on a deletion-support record
+        get_logger(__name__).warning(
+            "filing retention snapshot not recorded; a later deletion preflight will refuse",
+            exc_info=True,
+        )
+        return False
+    return True
+
+
+__all__ = [
+    "FilingRetentionAuthority",
+    "FilingRetentionSnapshot",
+    "try_record_filing_retention_snapshot",
+]

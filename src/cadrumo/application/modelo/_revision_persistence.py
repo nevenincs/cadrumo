@@ -39,7 +39,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
-from uuid import UUID
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -54,8 +53,7 @@ from ...core import (
     validated_casilla_id,
 )
 from ...core.hashing import sha256_hex
-from ...core.logging import get_logger
-from ..filing import FilingRetentionAuthority
+from ..filing import try_record_filing_retention_snapshot
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepositoryProtocol,
@@ -716,38 +714,21 @@ def _refresh_filing_retention_snapshot(
 ) -> None:
     """Record the filing facts a later deletion preflight will assess.
 
-    The retention position is derived from filed records, but a deletion
-    preflight cannot read them: it runs against profiles it has not unlocked,
-    and the catalogue lives in the bucket's encrypted store. The snapshot exists
-    to bridge that -- it is plaintext, so retention can be assessed later
-    without the key. Writing it HERE is what makes that possible, because this
-    is the moment the position changes and the only moment a session is held by
-    construction.
+    Runs AFTER the catalogue has durably saved, and delegates the write to the
+    filing package's best-effort recorder, which never raises. The ordering and
+    the never-raising are the same decision from two sides: a filing that
+    succeeded with a stale snapshot is recoverable, while a filing refused
+    because a deletion-support record could not be written is not.
 
-    **Never allowed to fail the filing, and that is the decision in this
-    function rather than its placement.** It runs after the catalogue has
-    durably saved, and any failure is logged and swallowed. A filing that
-    succeeded with a stale snapshot is recoverable; a filing REFUSED because a
-    deletion-support record could not be written is not, and it would put a
-    deletion concern in the path of a statutory obligation.
-
-    Swallowing is safe here only because the downstream failure is fail-CLOSED:
-    a missing or stale snapshot makes the retention assessment refuse, which
-    blocks a deletion rather than permitting one. If that ever inverts -- if an
-    absent snapshot comes to mean "nothing retained" -- this swallow becomes a
-    fail-open and must be revisited with it.
+    This is the moment the retention position changes and the only moment a
+    session for the bucket is held by construction, which is why the producer
+    lives here rather than at the deletion preflight that consumes it.
     """
-    try:
-        FilingRetentionAuthority().record_filing_catalogue(
-            profile_id=UUID(str(bucket_id)),
-            records=tuple(catalogue.records.values()),
-            observed_at=observed_at,
-        )
-    except Exception:  # noqa: BLE001 - a filing must never fail on this
-        get_logger(__name__).warning(
-            "filing retention snapshot not refreshed; a later deletion preflight will refuse",
-            exc_info=True,
-        )
+    try_record_filing_retention_snapshot(
+        bucket_id=bucket_id,
+        records=tuple(catalogue.records.values()),
+        observed_at=observed_at,
+    )
 
 
 def persist_filed_revision(
