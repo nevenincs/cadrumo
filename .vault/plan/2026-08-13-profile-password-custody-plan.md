@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:3fb15fd1ca45e0db3fe5823509feba8b61fc8d157f31642ddbbdff6a321870b6'
+body_hash: 'sha256:dbaaaec3c47fc5ae4a79c60469b878cfe634f1fe02e236bd40647d6910ab63da'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -116,6 +116,8 @@ Expose canonical profile verbs and secret channels through typed action envelope
 - [ ] `W03.P06.S113` - Have Terra XHigh carry the login-gating principle recovered from a deleted allowlist comment into the archive export restore work, that a verb whose output leaves the encrypted store must stay login-gated because a target-scoped unlock does not establish recency, the principle having been justified by a cited test that does not exist and now being recorded nowhere else; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
 - [ ] `W03.P06.S122` - Have Terra XHigh re-found the setup-incomplete surface tests on the current custody authority, since they manufacture a bucket without a committed capsule by writing the retired plaintext manifest and the system now refuses that artefact by name, noting the collision fixture built for the label-ambiguity module does not fit because this one wants an uncommitted bucket rather than two colliding labels; `src/cadrumo/entrypoints/cli/_config/tests/test_profile_setup_incomplete_surface.py`.
 - [ ] `W03.P06.S125` - Have Sol Medium rule whether the retired-member refusal should stay whole-store, since one leftover plaintext manifest in any bucket directory makes the profile listing verb exit two with destructive-reset guidance and an operator cannot then enumerate their profiles to find the offending file, which may be intended under the no-legacy regime but currently leaves no path from the refusal to its cause; `src/cadrumo/adapters/persistence/storage/custody/_capsule_discovery.py`.
+- [ ] `W03.P06.S128` - Have Terra XHigh correct the production listing docstring that names the per-bucket plaintext manifest as the canonical source of profile-existence truth written by every creation path, since nothing writes one and listing projects committed capsules, this being the fourth false stated reason found today and the first describing the system's own source of truth in production rather than in a test or an allowlist; `src/cadrumo/entrypoints/cli/_config/__init__.py`.
+- [ ] `W03.P06.S129` - Have Sol Medium rule whether a bucket carrying a manifest and no profile record is still a reachable torn state worth testing, since listing and resolution are capsule-only so such a bucket is invisible to every operator path, which would make the premise of the tests named for it obsolete rather than merely awkward; `src/cadrumo/entrypoints/cli/tests/_profile_lifecycle_support.py`.
 
 ## Wave `W04` - retire superseded custody
 
