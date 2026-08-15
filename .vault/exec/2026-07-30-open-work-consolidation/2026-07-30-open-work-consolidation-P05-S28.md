@@ -3,12 +3,11 @@ tags:
   - '#exec'
   - '#open-work-consolidation'
 date: '2026-07-30'
-modified: '2026-07-30'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:6c7d0346c5c0d795d4c0c702650bed6d2134f1e94801091e08077bdbd43e63ad'
 step_id: 'S28'
-related:
-  - "[[2026-07-30-open-work-consolidation-plan]]"
+related: []
 ---
 
 # Assess whether the same post-auth failure spends a Clave Permanente credential, a question recorded only inline in one step record and tracked nowhere, escalating to a coding campaign with a discovery gate if it proves a defect
