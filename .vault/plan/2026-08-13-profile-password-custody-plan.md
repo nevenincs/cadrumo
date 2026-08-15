@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:bc3641d9c97d0e9eaec4afdf31407deee97b621494a5e5808468adcbbaf19396'
+body_hash: 'sha256:9cafe5da67a5f1db2759820baf4bfeff09efcca83e0c0c630982880e943663b3'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -99,6 +99,7 @@ Separate safe deterministic transport from custody-authorized password restore a
 - [x] `W03.P05.S13` - Have Terra XHigh rebuild deterministic sealed archive transport framing without recovery.wrap, shared-master assumptions, or retired format parsing; `src/cadrumo/adapters/persistence/storage/bucket/`.
 - [ ] `W03.P05.S14` - Have Terra XHigh implement password-only restore, explicit restore-recover lineage, and new-identity portability, wiring the exclusive recovery-artifact export and import to the per-profile artifact module that ALREADY EXISTS in the custody package rather than authoring a second one, that module already being a guarded external export with no coupling to the archive transport; `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/application/user_profile/ and src/cadrumo/adapters/persistence/storage/custody/_recovery_artifact.py`.
 - [ ] `W03.P05.S15` - Have Sol Medium review archive roots, hostile transport refusal, artifact export-import warnings and proof, restore publication, and rollback limits; `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/application/user_profile/`.
+- [ ] `W03.P05.S206` - Have Terra XHigh turn on recovery enrollment at the profile creation door, wiring the composable enrollment mint into the create transaction so a real operator's profile is enrolled at the moment it is created, since the accepted decision places enrollment at creation and the mint lands as a primitive its consumer must call, and the single line that activates it belongs to the transaction whose ordering guarantee closed the displaced-session leak rather than to the row that built the primitive; `src/cadrumo/application/user_profile/_registration.py and src/cadrumo/application/user_profile/_custody_service.py`.
 
 ### Phase `W03.P06` - CLI and TUI authority
 
