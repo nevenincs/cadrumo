@@ -79,8 +79,22 @@ def test_no_production_module_hand_formats_a_provenance_stamp() -> None:
     for path in non_test_package_python_files():
         if path.name == _CANONICAL_MODULE:
             continue
+        source = path.read_text(encoding="utf-8")
+        # Screen before parsing: every finding is a string literal starting with
+        # the stamp prefix, so a module whose source never mentions ``llm`` has
+        # nothing to find. This skips 1,534 of 1,712 parses.
+        #
+        # Screened on ``llm`` rather than the full ``llm:`` prefix deliberately.
+        # A literal can spell its colon as an escape, and ``"llm\x3a..."`` would
+        # slip past the tighter screen while still parsing to a stamp. Screening
+        # on the bare letters costs 166 extra parses and closes that. It is not
+        # airtight either -- a fully escaped ``"\x6c\x6cm:"`` would evade it --
+        # and that is accepted: this gate exists to catch a stamp assembled by
+        # hand, not one hidden on purpose.
+        if _STAMP_PREFIX.rstrip(":") not in source:
+            continue
         try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
+            tree = ast.parse(source)
         except SyntaxError:  # a peer mid-write; not this gate's finding to make
             continue
         literals = _hand_built_stamps(tree)
