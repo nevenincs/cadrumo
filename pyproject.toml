@@ -298,7 +298,7 @@ exclude = [
 # inline types; `external_constants.toml` carries the curated leaf constants.
 include = [
   "src/cadrumo/py.typed",
-  "src/cadrumo/adapters/persistence/storage/master_key/_bip39_wordlist.txt",
+  "src/cadrumo/adapters/persistence/storage/_bip39_wordlist.txt",
   "src/cadrumo/core/external_constants.toml",
 ]
 

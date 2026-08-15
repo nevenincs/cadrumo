@@ -1,0 +1,379 @@
+# Modelo 156 -- the official record-design positions. Transcribed from the
+# bundled ANEXO II of Orden HAC/3580/2003 (source enrolled-modelo-156-layout /
+# aeat-dr-156-2021, corpus/aeat_official/disenos_registro/modelo_156/files/
+# 01-156-diseno-de-registro-vigente.pdf, sha256
+# d387cfeb7254e49d539d5c3a731c0bd6bf275c8c1fdae80e6faa5a1006d5d068).
+#
+# Two casillas carry no semantic_role: the role the naming convention would
+# give them scores above the typo-twin gate's similarity threshold against
+# Modelo 189's and Modelo 345's role for the same concept.
+
+# Campo 5. Positions 18-57, alfanumerico. "Se consignara la razon social
+# completa, sin anagrama."
+[[revisions."2003-y-siguientes".casillas]]
+id = "declarante-razon-social"
+number = "tipo1.18-57"
+section = ["declarante"]
+data_type = "name"
+semantic_role = "m156_declarante_razon_social"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t1-razon-social"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Campo 7. Positions 59-107, alfanumerico de 49 posiciones. The design
+# subdivides the slot (59-67 TELEFONO, 68-107 APELLIDOS Y NOMBRE) but declares
+# ONE top-level campo of 49 bytes, which is the extent declared here.
+[[revisions."2003-y-siguientes".casillas]]
+id = "persona-relacion"
+number = "tipo1.59-107"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m156_persona_relacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t1-persona-relacion"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Campo 8. Positions 108-120, numerico de 13 posiciones. "El numero de
+# justificante correspondiente a la declaracion."
+[[revisions."2003-y-siguientes".casillas]]
+id = "numero-justificante"
+number = "tipo1.108-120"
+section = ["declarante"]
+data_type = "integer"
+semantic_role = "m156_numero_justificante"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t1-numero-justificante"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Campo 9. Positions 121-122, alfabetico: 121 declaracion complementaria ("C"),
+# 122 declaracion sustitutiva ("S").
+[[revisions."2003-y-siguientes".casillas]]
+id = "declaracion-complementaria-sustitutiva"
+number = "tipo1.121-122"
+section = ["declarante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t1-complementaria-sustitutiva"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Campo 10. Positions 123-135, numerico de 13 posiciones. Carries content only
+# when campo 9 declares "C" or "S"; "en cualquier otro caso debera rellenarse a
+# CEROS".
+[[revisions."2003-y-siguientes".casillas]]
+id = "numero-identificativo-anterior"
+number = "tipo1.123-135"
+section = ["declarante"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t1-numero-identificativo-anterior"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Campo 11. Positions 136-144, numerico de 9 posiciones. "El numero total de
+# afiliados o mutualistas declarados ... (Numero de registros de tipo 2)."
+[[revisions."2003-y-siguientes".casillas]]
+id = "numero-total-afiliados"
+number = "tipo1.136-144"
+section = ["declarante"]
+data_type = "integer"
+semantic_role = "m156_numero_total_afiliados"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t1-numero-total-afiliados"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Campo 5. Positions 18-26, alfanumerico de 9 posiciones. "El numero de
+# identificacion fiscal del afiliado o mutualista."
+[[revisions."2003-y-siguientes".casillas]]
+id = "afiliado-nif"
+number = "tipo2.18-26"
+section = ["afiliado"]
+data_type = "nif"
+semantic_role = "m156_afiliado_nif"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t2-afiliado-nif"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Campo 7. Positions 36-75. "Por ser personas fisicas se consignara el primer
+# apellido, un espacio, el segundo apellido, un espacio y el nombre completo."
+# (AEAT prints this row's naturaleza as "Afabetico" -- its own typo for
+# "Alfabetico" -- which is why the PDF reader mis-reads the row; see the layout
+# file's header.)
+[[revisions."2003-y-siguientes".casillas]]
+id = "afiliado-nombre"
+number = "tipo2.36-75"
+section = ["afiliado"]
+data_type = "name"
+semantic_role = "m156_afiliado_nombre"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t2-afiliado-nombre"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Campo 8. Positions 76-87, alfanumerico de 12 posiciones. "Se consignaran
+# unicamente los digitos sin caracteres especiales que identifiquen al afiliado o
+# mutualista al sistema de proteccion."
+[[revisions."2003-y-siguientes".casillas]]
+id = "numero-afiliacion"
+number = "tipo2.76-87"
+section = ["afiliado"]
+data_type = "text"
+semantic_role = "m156_numero_afiliacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t2-numero-afiliacion"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Positions 88-96, alfanumerico de 9 posiciones: ENERO. The design
+# subdivides the slot into 88 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
+# de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
+# el mes correspondiente") and 89-96 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (numerico de 8 posiciones, itself 89-94 parte entera and
+# 95-96 parte decimal). AEAT declares ONE top-level campo of 9 bytes
+# mixing an alphabetic flag with a numeric amount, so no single typed codec
+# renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-enero"
+number = "tipo2.88-96"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_enero"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t2-cotizacion-enero"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Positions 97-105, alfanumerico de 9 posiciones: FEBRERO. The design
+# subdivides the slot into 97 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
+# de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
+# el mes correspondiente") and 98-105 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (numerico de 8 posiciones, itself 98-103 parte entera and
+# 104-105 parte decimal). AEAT declares ONE top-level campo of 9 bytes
+# mixing an alphabetic flag with a numeric amount, so no single typed codec
+# renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-febrero"
+number = "tipo2.97-105"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_febrero"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t2-cotizacion-febrero"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Positions 106-114, alfanumerico de 9 posiciones: MARZO. The design
+# subdivides the slot into 106 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
+# de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
+# el mes correspondiente") and 107-114 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (numerico de 8 posiciones, itself 107-112 parte entera and
+# 113-114 parte decimal). AEAT declares ONE top-level campo of 9 bytes
+# mixing an alphabetic flag with a numeric amount, so no single typed codec
+# renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-marzo"
+number = "tipo2.106-114"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_marzo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t2-cotizacion-marzo"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Positions 115-123, alfanumerico de 9 posiciones: ABRIL. The design
+# subdivides the slot into 115 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
+# de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
+# el mes correspondiente") and 116-123 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (numerico de 8 posiciones, itself 116-121 parte entera and
+# 122-123 parte decimal). AEAT declares ONE top-level campo of 9 bytes
+# mixing an alphabetic flag with a numeric amount, so no single typed codec
+# renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-abril"
+number = "tipo2.115-123"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_abril"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t2-cotizacion-abril"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Positions 124-132, alfanumerico de 9 posiciones: MAYO. The design
+# subdivides the slot into 124 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
+# de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
+# el mes correspondiente") and 125-132 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (numerico de 8 posiciones, itself 125-130 parte entera and
+# 131-132 parte decimal). AEAT declares ONE top-level campo of 9 bytes
+# mixing an alphabetic flag with a numeric amount, so no single typed codec
+# renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-mayo"
+number = "tipo2.124-132"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_mayo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t2-cotizacion-mayo"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Positions 133-141, alfanumerico de 9 posiciones: JUNIO. The design
+# subdivides the slot into 133 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
+# de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
+# el mes correspondiente") and 134-141 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (numerico de 8 posiciones, itself 134-139 parte entera and
+# 140-141 parte decimal). AEAT declares ONE top-level campo of 9 bytes
+# mixing an alphabetic flag with a numeric amount, so no single typed codec
+# renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-junio"
+number = "tipo2.133-141"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_junio"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t2-cotizacion-junio"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Positions 142-150, alfanumerico de 9 posiciones: JULIO. The design
+# subdivides the slot into 142 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
+# de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
+# el mes correspondiente") and 143-150 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (numerico de 8 posiciones, itself 143-148 parte entera and
+# 149-150 parte decimal). AEAT declares ONE top-level campo of 9 bytes
+# mixing an alphabetic flag with a numeric amount, so no single typed codec
+# renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-julio"
+number = "tipo2.142-150"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_julio"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t2-cotizacion-julio"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Positions 151-159, alfanumerico de 9 posiciones: AGOSTO. The design
+# subdivides the slot into 151 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
+# de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
+# el mes correspondiente") and 152-159 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (numerico de 8 posiciones, itself 152-157 parte entera and
+# 158-159 parte decimal). AEAT declares ONE top-level campo of 9 bytes
+# mixing an alphabetic flag with a numeric amount, so no single typed codec
+# renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-agosto"
+number = "tipo2.151-159"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_agosto"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t2-cotizacion-agosto"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Positions 160-168, alfanumerico de 9 posiciones: SEPTIEMBRE. The design
+# subdivides the slot into 160 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
+# de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
+# el mes correspondiente") and 161-168 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (numerico de 8 posiciones, itself 161-166 parte entera and
+# 167-168 parte decimal). AEAT declares ONE top-level campo of 9 bytes
+# mixing an alphabetic flag with a numeric amount, so no single typed codec
+# renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-septiembre"
+number = "tipo2.160-168"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_septiembre"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t2-cotizacion-septiembre"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Positions 169-177, alfanumerico de 9 posiciones: OCTUBRE. The design
+# subdivides the slot into 169 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
+# de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
+# el mes correspondiente") and 170-177 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (numerico de 8 posiciones, itself 170-175 parte entera and
+# 176-177 parte decimal). AEAT declares ONE top-level campo of 9 bytes
+# mixing an alphabetic flag with a numeric amount, so no single typed codec
+# renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-octubre"
+number = "tipo2.169-177"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_octubre"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t2-cotizacion-octubre"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Positions 178-186, alfanumerico de 9 posiciones: NOVIEMBRE. The design
+# subdivides the slot into 178 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
+# de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
+# el mes correspondiente") and 179-186 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (numerico de 8 posiciones, itself 179-184 parte entera and
+# 185-186 parte decimal). AEAT declares ONE top-level campo of 9 bytes
+# mixing an alphabetic flag with a numeric amount, so no single typed codec
+# renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-noviembre"
+number = "tipo2.178-186"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_noviembre"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t2-cotizacion-noviembre"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+
+# Positions 187-195, alfanumerico de 9 posiciones: DICIEMBRE. The design
+# subdivides the slot into 187 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
+# de 1 posicion, "una S o una N, segun se haya cotizado o no, al menos un dia en
+# el mes correspondiente") and 188-195 IMPORTE CUOTA DE COTIZACION
+# DEVENGADA (numerico de 8 posiciones, itself 188-193 parte entera and
+# 194-195 parte decimal). AEAT declares ONE top-level campo of 9 bytes
+# mixing an alphabetic flag with a numeric amount, so no single typed codec
+# renders it: it is declared as the design's own alfanumerico span.
+[[revisions."2003-y-siguientes".casillas]]
+id = "cotizacion-diciembre"
+number = "tipo2.187-195"
+section = ["afiliado", "cotizaciones"]
+data_type = "text"
+semantic_role = "m156_cotizacion_diciembre"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-156-t2-cotizacion-diciembre"]
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]

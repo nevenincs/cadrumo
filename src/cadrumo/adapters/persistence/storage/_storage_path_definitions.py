@@ -53,7 +53,18 @@ BUCKET_LOCK_FILENAME = storage_location(StorageCategory.BUCKET_LOCK).subpath
 BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME = storage_location(StorageCategory.BUCKET_OUTPUT_LANGUAGE_HINT).subpath
 KEYSTORE_DIRNAME = storage_location(StorageCategory.BUCKET_KEYSTORE).subpath
 PROFILE_SESSION_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SESSION).subpath
+#: The crash-window sidecar for an interrupted session-key swap. Its location is
+#: derived from the receipt above at the call site, which is why the name is
+#: declared once in the taxonomy and read here rather than typed at the writer.
+PROFILE_SESSION_RETIREMENT_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SESSION_RETIREMENT).subpath
 LOGIN_THROTTLE_FILENAME = storage_location(StorageCategory.KEYSTORE_LOGIN_THROTTLE).subpath
+#: The three owner directories below the hold-evidence root, each the home of one
+#: persisted format. Declared as whole taxonomy subpaths (``<root>``-relative,
+#: two components) rather than as bare leaf names, so the grammars below spell
+#: exactly what the taxonomy declares.
+PROFILE_CUSTODY_HOLD_LEGAL_OWNER_SUBPATH = storage_location(StorageCategory.PROFILE_CUSTODY_HOLD_LEGAL_OWNER).subpath
+PROFILE_CUSTODY_HOLD_FILING_OWNER_SUBPATH = storage_location(StorageCategory.PROFILE_CUSTODY_HOLD_FILING_OWNER).subpath
+PROFILE_CUSTODY_HOLD_DERIVED_SUBPATH = storage_location(StorageCategory.PROFILE_CUSTODY_HOLD_DERIVED_EVIDENCE).subpath
 PROFILE_CUSTODY_DIRNAME = storage_location(StorageCategory.PROFILE_CAPSULE_CUSTODY).subpath
 #: Bucket-root-relative nested paths (``custody/envelope.v1.json``), not single
 #: components -- so their definitions below omit ``segment``, matching
@@ -283,12 +294,55 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         segment=PROFILE_SESSION_FILENAME,
     ),
     StoragePathDefinition(
+        # The session receipt's crash-window sibling. It has its own schema
+        # version and its own strict reader, so it is a persisted format in its
+        # own right and belongs in this inventory -- the independent source the
+        # durability declaration is checked against. It was previously invisible
+        # here because its writer derives the path from the receipt's own path,
+        # and a durability declaration with no discoverable home reads as stale.
+        key="profile_session_retirement_journal",
+        kind=StoragePathKind.FILE,
+        grammar=f"<root>/{KEYSTORE_DIRNAME}/<bucket_id>/{PROFILE_SESSION_RETIREMENT_FILENAME}",
+        owner="cadrumo.adapters.persistence.storage.custody",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
+        segment=PROFILE_SESSION_RETIREMENT_FILENAME,
+    ),
+    StoragePathDefinition(
         key="login_throttle",
         kind=StoragePathKind.FILE,
         grammar=f"<root>/{KEYSTORE_DIRNAME}/<bucket_id>/{LOGIN_THROTTLE_FILENAME}",
         owner="cadrumo.adapters.persistence.storage.master_key",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=LOGIN_THROTTLE_FILENAME,
+    ),
+    # The three custody hold-evidence records. Each is one file per profile
+    # under its own owner directory, each carries its own schema version, and
+    # each is enrolled in the durability inventory. No ``segment``: the owner
+    # subpaths above are two components, matching the treatment of every other
+    # nested entry here.
+    StoragePathDefinition(
+        key="profile_legal_hold_snapshot",
+        kind=StoragePathKind.FILE,
+        grammar=f"<root>/{PROFILE_CUSTODY_HOLD_LEGAL_OWNER_SUBPATH}/<profile_id>.json",
+        owner="cadrumo.application.evidence",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
+    ),
+    StoragePathDefinition(
+        key="profile_filing_retention_snapshot",
+        kind=StoragePathKind.FILE,
+        grammar=f"<root>/{PROFILE_CUSTODY_HOLD_FILING_OWNER_SUBPATH}/<profile_id>.json",
+        owner="cadrumo.application.filing",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
+    ),
+    StoragePathDefinition(
+        # Fans out one further level: the derived join is written once per
+        # OWNER, so the owner is a parameter here rather than a declared
+        # directory the way the two source snapshots above are.
+        key="profile_custody_hold_evidence",
+        kind=StoragePathKind.FILE,
+        grammar=f"<root>/{PROFILE_CUSTODY_HOLD_DERIVED_SUBPATH}/<owner>/<profile_id>.json",
+        owner="cadrumo.application.user_profile",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         # Was ``<cadrumo_secret_store_dir>/index.json`` -- a placeholder token

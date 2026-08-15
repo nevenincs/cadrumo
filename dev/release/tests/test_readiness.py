@@ -65,14 +65,19 @@ def _write_manifest(root: Path, version: str) -> None:
 def _write_mcpb_manifest(root: Path, version: str) -> None:
     manifest_dir = root / "packaging" / "mcpb"
     manifest_dir.mkdir(parents=True, exist_ok=True)
+    # Mirrors the real committed manifest.json shape: the bundle launches its
+    # own bundle-local bootstrap through ``uv run --no-project`` rather than
+    # an on-index ``uvx --from cadrumo[agent] cadrumo-mcp`` install — the
+    # retired extra is gone, and the harness wheel this bundle needs ships
+    # bundled, resolved by the first-launch ``uv sync`` (packaging/mcpb/build.py).
     (manifest_dir / "manifest.json").write_text(
         json.dumps(
             {
                 "version": version,
                 "server": {
                     "mcp_config": {
-                        "command": "uvx",
-                        "args": ["--from", f"cadrumo[agent]=={version}", "cadrumo-mcp"],
+                        "command": "uv",
+                        "args": ["run", "--no-project", "--directory", "${__dirname}", "src/server.py"],
                     },
                 },
             },

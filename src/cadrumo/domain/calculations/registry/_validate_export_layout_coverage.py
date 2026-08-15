@@ -147,13 +147,20 @@ _DECLARED_FILL: Final = re.compile(
     re.IGNORECASE,
 )
 
-#: One record-discriminating constant, as AEAT quotes it in a design's
-#: ``Contenido`` cell (``Constante "714"``, ``Constante '1'.``, ``Constante
-#: «720».``). ONLY the quoted spelling is read: an unquoted "Constante 2021" or
-#: "Constante. Blanco" does not delimit its own value, and guessing where the
-#: value ends would put a wrong anchor into the join.
-_QUOTED_CONSTANT: Final = re.compile(
-    "[Cc]onstante\\W{0,3}[\"'«“‘]([^\"'»«”’‘“]{1,40})[\"'»”’]",
+#: AEAT's declaration that a position holds a fixed value rather than a datum.
+#: Read from any cell of the row, because AEAT splits the declaration across
+#: cells as often as it keeps it in one: Modelo 714's ``714-02`` writes
+#: ``Constante "<T"`` in a single ``Contenido`` cell, while Modelo 111 and
+#: Modelo 714's own ``714-00`` envelope put ``Constante.`` in ``Descripción``
+#: and ``"<T"`` in ``Contenido``.
+_CONSTANT_DECLARATION: Final = re.compile(r"[Cc]onstante")
+
+#: The quoted value itself (``"714"``, ``'1'``, ``«720»``). ONLY the quoted
+#: spelling is read: an unquoted "Constante 2021" or "Constante. Blanco" does
+#: not delimit its own value, and guessing where the value ends would put a
+#: wrong anchor into the join.
+_QUOTED_VALUE: Final = re.compile(
+    "[\"'«“‘]([^\"'»«”’‘“]{1,40})[\"'»”’]",
 )
 
 #: How many missing positions one sheet enumerates before the message says how
@@ -247,13 +254,32 @@ def _required_positions(sheet: RecordDesignSheet) -> tuple[_RequiredPosition, ..
 
 
 def _sheet_constants(sheet: RecordDesignSheet) -> dict[tuple[int, int], str]:
-    """Return the discriminating constants AEAT declares, by exact coordinate."""
+    """Return the discriminating constants AEAT declares, by exact coordinate.
+
+    The declaration and its value are read across the ROW, not within one cell.
+    AEAT writes them together as often as it splits them -- ``Constante "<T"``
+    in one ``Contenido`` cell, versus ``Constante.`` in ``Descripción`` beside
+    ``"<T"`` in ``Contenido`` -- and requiring them adjacent silently emptied
+    the constant set for whole modelos. A sheet with no constants cannot be
+    joined to its authored record at all, so the check quietly degraded to the
+    weaker layout-wide question for Modelo 111, 115, 117, 123, 126, 128, 130,
+    202, 220, 222, 303, 308, 309, 322, 341, 353 and Modelo 714's own envelope.
+    Nothing announced the downgrade, which is what made it durable.
+
+    Both halves stay required. The word alone anchors nothing, and an unquoted
+    value does not delimit itself; demanding a quoted value in a row AEAT marks
+    ``Constante`` is what keeps an ENUMERATION ("01" ... "12" o "1T") -- which
+    would produce a WRONG join rather than a missing one -- out of the set.
+    """
     constants: dict[tuple[int, int], str] = {}
     for field in sheet.fields:
-        for text in (field.content, field.description):
+        cells = (field.content, field.description)
+        if not any(text and _CONSTANT_DECLARATION.search(text) for text in cells):
+            continue
+        for text in cells:
             if not text:
                 continue
-            matched = _QUOTED_CONSTANT.search(text)
+            matched = _QUOTED_VALUE.search(text)
             if matched is not None:
                 constants[(field.offset, field.length)] = matched.group(1).strip()
                 break

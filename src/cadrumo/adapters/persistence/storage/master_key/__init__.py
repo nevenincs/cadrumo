@@ -20,10 +20,8 @@ unsecured-provider safety guard
 :func:`looks_like_real_tax_id`), and
 :func:`atomic_write_secure_bytes`.
 
-Recovery exports include the low-level BIP-39 primitives
-(:class:`RecoveryKey`, :class:`WrappedMasterKey`,
-:func:`generate_recovery_key`, :func:`encode_mnemonic`,
-:func:`decode_mnemonic`, :func:`wrap_master_key`,
+Recovery exports include the master-key wrapping primitives
+(:class:`WrappedMasterKey`, :func:`wrap_master_key`,
 :func:`unwrap_master_key`, :func:`save_wrapped_master_key`, and
 :func:`load_wrapped_master_key`) plus the on-disk envelope record
 :class:`RecoveryRecord`. Recovery ENROLMENT and RESTORE are per-profile
@@ -101,11 +99,7 @@ from ._master_key_derivation import (
 from ._master_key_io import PassphraseCallback
 from ._provider_session import exit_provider_session
 from ._recovery import (
-    RecoveryKey,
     WrappedMasterKey,
-    decode_mnemonic,
-    encode_mnemonic,
-    generate_recovery_key,
     load_wrapped_master_key,
     save_wrapped_master_key,
     unwrap_master_key,
@@ -133,7 +127,6 @@ __all__ = [
     "MasterKeyReentrantError",
     "NoActiveBucketSessionError",
     "PassphraseCallback",
-    "RecoveryKey",
     "RecoveryRecord",
     "ThrottleEvaluation",
     "UnsecuredMasterKeyProvider",
@@ -146,13 +139,10 @@ __all__ = [
     "close_active_bucket_session",
     "close_all_live_bucket_sessions",
     "current_active_bucket_session",
-    "decode_mnemonic",
     "derive_kek_with_params",
-    "encode_mnemonic",
     "evaluate_idle",
     "evaluate_login_throttle",
     "exit_provider_session",
-    "generate_recovery_key",
     "get_active_hmac_subkey",
     "get_active_master_key",
     "get_master_key_provider",

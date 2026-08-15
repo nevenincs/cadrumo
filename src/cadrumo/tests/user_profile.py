@@ -97,6 +97,7 @@ def register_minimal_profile(
     profile_id: str,
     display_name: str | None = None,
     overrides: Mapping[str, str] | None = None,
+    record_empty_legal_hold: bool = False,
 ) -> UserProfileRecord:
     """Publish a complete profile capsule, and select it, before any bucket read.
 
@@ -124,7 +125,28 @@ def register_minimal_profile(
     preflight against a seeded profile failed for a reason unrelated to the
     test's subject.  Recording an EMPTY snapshot asserts nothing stronger than
     the truth about a freshly seeded profile: no filings exist.
+
+    The legal-hold snapshot is NOT recorded here by default, and that is a
+    ruling rather than an omission: production registration records no such
+    fact -- the legal-case owner has no creation-time writer anywhere in the
+    tree, only a projection an operator must someday feed. An absent legal-hold
+    snapshot means nobody has been asked, not that no case is open, so a
+    profile seeded through this door is left exactly as production leaves it:
+    unable to pass a custody-transaction deletion preflight until something
+    records that fact. Pass ``record_empty_legal_hold=True`` when a test's
+    subject needs a profile that a custody-transaction deletion preflight (the
+    one join of the legal and filing owners, distinct from the filing-only
+    retention floor above) will actually accept -- it records the same "asked
+    and had nothing to report" fact for the legal owner that this door already
+    records for the filing owner, through the same production recorder. It
+    stays opt-in because unconditionally recording it would make every seeded
+    profile deletable regardless of the fact this campaign ruled must be
+    supplied by a human, silently erasing the fail-closed gap production still
+    has.
     """
+    from uuid import UUID
+
+    from ..application.evidence import LegalHoldCaseAuthority
     from ..application.filing import try_record_filing_retention_snapshot
 
     merged: dict[str, str] = dict(_REQUIRED_PLACEHOLDERS)
@@ -146,6 +168,12 @@ def register_minimal_profile(
         records=(),
         observed_at=datetime.now(UTC),
     )
+    if record_empty_legal_hold:
+        LegalHoldCaseAuthority().record_open_case_snapshot(
+            profile_id=UUID(profile_id),
+            open_case_ids=(),
+            observed_at=datetime.now(UTC),
+        )
     ProfileCapsuleLifecycle().select(profile_id)
     return seeded
 

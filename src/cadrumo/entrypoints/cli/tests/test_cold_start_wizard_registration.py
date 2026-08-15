@@ -13,10 +13,24 @@ production CLI raising ``"Wizard catalogue has not been registered"`` /
 *while the in-process test suite stays green* because some other test in the
 session imports the catalogue and registers it process-wide.
 
-That is why this guard runs in a **fresh interpreter**: profile creation and
-work-create execute in two separate cold processes sharing one storage root, so
-the work-create process must register the catalogue through the root callback
-itself. An in-process runner cannot observe the regression.
+That is why this guard runs in a **fresh interpreter**: the profile is
+registered in-process and the work-create then runs in a *separate* cold
+process against the same storage root, so the work-create process must
+register the catalogue through the root callback itself. An in-process runner
+cannot observe the regression.
+
+The profile is seeded in-process rather than by a cold ``profile create``
+because credential registration is the only creation door and it takes a
+passphrase as an argument: no CLI verb, and therefore no subprocess, can mint
+a profile. Only the SEED moved; the assertion still runs in a fresh
+interpreter, which is the whole point of the guard.
+
+``cold_process_profile_create_uses_local_storage_secret_store`` was retired
+with that change. It asserted that a cold ``profile create`` writes
+``master.key`` and ``master.kdf`` under the storage root, and no live door
+writes that store at all any more -- a registered profile's custody rides its
+own capsule envelope. The workspace-pollution half it also carried is covered
+by the fingerprint assertion retained in the work-create guard below.
 """
 
 from __future__ import annotations
@@ -125,32 +139,18 @@ def _run_cli_cold(storage_root: Path, argv: list[str]) -> subprocess.CompletedPr
     )
 
 
-def test_cold_process_profile_create_uses_local_storage_secret_store(tmp_path: Path) -> None:
-    workspace_secret_store_before = _workspace_secret_store_fingerprint()
+def _register_profile_for_cold_run(storage_root: Path, label: str, **facts: str) -> str:
+    """Register one profile in-process against ``storage_root``, and return its id."""
+    from ....core.config import load_settings, override_settings
+    from ....tests.user_profile import register_cli_profile
 
-    setup = _run_cli_cold(
-        tmp_path,
-        [
-            "config",
-            "profile",
-            "create",
-            "coldprofile",
-            "--tax-id",
-            "45678912S",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Cold",
-            "--surnames",
-            "Profile",
-            "--quiet",
-        ],
-    )
-
-    assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
-    assert (tmp_path / "secrets" / "master.key").is_file()
-    assert (tmp_path / "secrets" / "master.kdf").is_file()
-    assert _workspace_secret_store_fingerprint() == workspace_secret_store_before
+    with override_settings(
+        cadrumo_local_storage_root=storage_root,
+        cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+        cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
+        cadrumo_active_profile=None,
+    ):
+        return register_cli_profile(label=label, facts=facts)
 
 
 def test_cold_process_overview_status_without_profile_registers_profile_keys(tmp_path: Path) -> None:
@@ -186,27 +186,19 @@ def test_cold_process_work_create_registers_wizard_catalogue(tmp_path: Path) -> 
     raises the internal registration error instead of creating the unit.
     """
 
-    setup = _run_cli_cold(
+    workspace_secret_store_before = _workspace_secret_store_fingerprint()
+    _register_profile_for_cold_run(
         tmp_path,
-        [
-            "config",
-            "profile",
-            "create",
-            "coldwiz",
-            "--tax-id",
-            "45678912S",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Cold",
-            "--surnames",
-            "Wizard",
-            "--activity",
-            "Servicios",
-            "--quiet",
-        ],
+        "coldwiz",
+        **{
+            "identity.tax_id": "45678912S",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Cold",
+            "identity.surnames": "Wizard",
+            "activities.description": "Servicios",
+        },
     )
-    assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
+    assert _workspace_secret_store_fingerprint() == workspace_secret_store_before
 
     created = _run_cli_cold(
         tmp_path,
@@ -241,32 +233,19 @@ def test_cold_process_m100_2025_work_create_keeps_intracom_type_import_boundary(
     user-facing refusal could be rendered.
     """
 
-    setup = _run_cli_cold(
+    _register_profile_for_cold_run(
         tmp_path,
-        [
-            "config",
-            "profile",
-            "create",
-            "empleada-arrendadora-2025",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "natural_person",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Ana",
-            "--surnames",
-            "Empleada",
-            "--activity",
-            "arrendamiento",
-            "--irpf-income-categories",
-            "actividad_economica",
-            "--irpf-estimation-regime",
-            "directa_normal",
-        ],
+        "empleada-arrendadora-2025",
+        **{
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Ana",
+            "identity.surnames": "Empleada",
+            "activities.description": "arrendamiento",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "irpf.estimation_regime": "directa_normal",
+        },
     )
-    assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
 
     created = _run_cli_cold(
         tmp_path,

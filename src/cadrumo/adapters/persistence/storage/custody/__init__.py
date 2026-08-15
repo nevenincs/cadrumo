@@ -160,6 +160,7 @@ if TYPE_CHECKING:
         export_profile_custody_recovery_artifact,
         import_profile_custody_recovery_artifact,
         parse_profile_custody_recovery_artifact,
+        refuse_hostile_recovery_artifact_destination,
         unlock_imported_profile_custody_recovery_artifact,
     )
     from ._sentinel import (
@@ -314,6 +315,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "read_profile_custody_local_record": "._filesystem",
     "read_profile_custody_sentinel": "._sentinel",
     "recognize_current_profile_capsule": "._capsule",
+    "refuse_hostile_recovery_artifact_destination": "._recovery_artifact",
     "refuse_retired_profile_custody_paths": "._capsule_discovery",
     "remove_profile_custody_deletion_tombstone": "._capsule",
     "rename_profile_custody_capsule_for_deletion": "._capsule",
@@ -487,6 +489,7 @@ __all__ = [
     "read_profile_custody_local_record",
     "read_profile_custody_sentinel",
     "recognize_current_profile_capsule",
+    "refuse_hostile_recovery_artifact_destination",
     "refuse_retired_profile_custody_paths",
     "remove_profile_custody_deletion_tombstone",
     "rename_profile_custody_capsule_for_deletion",

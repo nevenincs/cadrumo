@@ -57,9 +57,17 @@ review_status = "reviewed"
 # "<T" model/page envelope-open literal at position 1. Fields now point at
 # the bundled file, sourced from its manifest.json (real, observed
 # provenance, not re-fetched). record_design_epoch left undeclared (only
-# one design is bundled for this modelo, so no epoch ambiguity to resolve);
-# applies_from set to 2018-01-01, matching the filename's own stated scope
-# ("desde 2018 4T y siguientes").
+# one design is bundled for this modelo, so no epoch ambiguity to resolve).
+#
+# Narrowed 2026-08-15: applies_from was 2018-01-01 while the artefact's own
+# scope is the FOURTH quarter of 2018 onward -- AEAT indexes it as "763 -
+# (Ejercicio 2018 4T y siguientes, actualizado 25-07-2023)" and the stored
+# filename says "desde 2018 4T". The registry was therefore asserting three
+# quarters (2018-1T, 2T and 3T) that this design never claims, and those
+# three are covered by the separately bundled "Ejercicios 2015 a 2018 hasta
+# 3T" design. Set to 2018-10-01, the first day of the 2018 fourth natural
+# trimestre. review_status is left exactly as the operator set it; this
+# narrows an over-claim rather than asserting any new review.
 [sources."enrolled-modelo-763-layout"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -68,6 +76,6 @@ corpus_path = "corpus/aeat_official/disenos_registro/modelo_763/files/01-763-des
 sha256 = "590db67f074251ad1ddfcbebfffbf8d58f6157848b62661fadc334bc5e7af5d4"
 bytes = 100952
 retrieved_at = 2026-07-21
-applies_from = 2018-01-01
+applies_from = 2018-10-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR763e18.xlsx"
 review_status = "reviewed"

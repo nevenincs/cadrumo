@@ -31,6 +31,7 @@ from ...adapters.persistence.storage import (
     create_engine_from_settings,
     crypto,
     custody,
+    generate_recovery_key,
     master_key,
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
@@ -43,11 +44,13 @@ from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from ...core.paths import effective_storage_root
 
 if TYPE_CHECKING:
+    from ...adapters.persistence.storage import RecoveryKey
     from ...domain.buckets import BucketEventHistoryCatalogue
     from ..user_profile import (
         ProfileBucketSessionPort,
         ProfileCustodyEnvelopePort,
         ProfileCustodyPasswordMaterialPort,
+        ProfileCustodyRecoveryEnvelopePort,
         ProfileCustodySecureObjectRepositoryPort,
         ProfileCustodySentinelPort,
         ProfilePersistedSessionPort,
@@ -130,6 +133,20 @@ class ProfileCustodyRecordSessionMaterial:
 
     envelope: ProfileCustodyEnvelopePort
     dek: bytes
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileCustodyRecoveryEnrollmentMaterial:
+    """One optional recovery wrapper and the minted secret that opens it.
+
+    The secret is handed back in its wipeable container rather than as a
+    ``str``, because the operator holds it across an interactive
+    confirmation and a string copy is unreachable by any wipe primitive for
+    its whole lifetime. The caller owns the wipe.
+    """
+
+    envelope: ProfileCustodyRecoveryEnvelopePort
+    recovery_key: RecoveryKey
 
 
 class ProfileCustodyUnlockPort(Protocol):
@@ -552,6 +569,117 @@ def create_profile_custody_registration_material(
     return ProfileCustodyRegistrationMaterial(envelope=envelope, sentinel=sentinel)
 
 
+def create_profile_recovery_enrollment_material(
+    *,
+    profile_id: UUID,
+    dek: bytes,
+    dek_epoch: str,
+    salt: bytes,
+) -> ProfileCustodyRecoveryEnrollmentMaterial:
+    """Mint the optional recovery wrapper and its secret at the custody boundary.
+
+    The secret is a 24-word BIP-39 mnemonic over 256 bits of entropy rather
+    than an operator-typed string. That choice is what makes the wrapper
+    safe to export: an exported artifact's only remaining barrier is the KDF
+    cost applied to whatever entropy the secret carries, and a human-chosen
+    string does not survive offline guessing at any cost this machine can
+    afford to spend on every login.
+
+    The recovery wrapper is calibrated against its OWN salt, independent of
+    the password envelope's. The two wrappers cover the same DEK through
+    genuinely independent derivations, so compromising one KDF input cannot
+    shorten an attack on the other.
+    """
+    calibration = custody.calibrate_profile_kdf(salt=salt)
+    recovery_key = generate_recovery_key()
+    try:
+        envelope = custody.create_profile_custody_recovery_envelope(
+            profile_id=profile_id,
+            recovery_secret=recovery_key.mnemonic,
+            dek=dek,
+            dek_epoch=dek_epoch,
+            kdf=calibration.parameters,
+        )
+    except BaseException:
+        recovery_key.wipe()
+        raise
+    return ProfileCustodyRecoveryEnrollmentMaterial(envelope=envelope, recovery_key=recovery_key)
+
+
+def export_profile_recovery_artifact(
+    recovery_envelope: ProfileCustodyRecoveryEnvelopePort,
+    *,
+    current_password: str,
+    password_envelope: ProfileCustodyEnvelopePort,
+    sentinel: ProfileCustodySentinelPort,
+    target: Path,
+) -> custody.ProfileCustodyRecoveryArtifactExportReceipt:
+    """Write one durable external recovery artifact through the custody owner.
+
+    The destination guard, the current-password proof, and the exclusive
+    create all live in the custody module that owns the artifact format;
+    this boundary only narrows the application's ports back to the
+    substrate records that module requires.
+    """
+    return custody.export_profile_custody_recovery_artifact(
+        _substrate_handle(recovery_envelope, custody.ProfileCustodyRecoveryEnvelope, "recovery envelope"),
+        current_password=current_password,
+        password_envelope=_substrate_handle(password_envelope, custody.ProfileCustodyEnvelope, "password envelope"),
+        sentinel=_substrate_handle(sentinel, custody.ProfileCustodySentinelRecord, "DEK sentinel"),
+        target=target,
+    )
+
+
+def prove_profile_recovery_artifact(
+    source: Path,
+    *,
+    recovery_secret: str,
+    expected_profile_id: UUID,
+    expected_dek_epoch: str,
+    sentinel: ProfileCustodySentinelPort,
+) -> custody.ProfileCustodyRecoveryUnlock:
+    """Read one artifact and prove it against its named identity and sentinel.
+
+    Import and unlock are kept as one boundary call because a parsed but
+    unproven artifact is not a useful application value: it carries an
+    identity claim nothing has checked. Both halves refuse an artifact whose
+    UUID or DEK epoch differs from the target named here, so a substituted
+    artifact is refused twice before any key material exists.
+
+    This installs nothing. Proving an artifact does not enroll it, does not
+    overwrite committed recovery, and does not change any key schedule.
+    """
+    substrate_sentinel = _substrate_handle(sentinel, custody.ProfileCustodySentinelRecord, "DEK sentinel")
+    artifact = custody.import_profile_custody_recovery_artifact(
+        source,
+        expected_profile_id=expected_profile_id,
+        expected_dek_epoch=expected_dek_epoch,
+    )
+    return custody.unlock_imported_profile_custody_recovery_artifact(
+        artifact,
+        recovery_secret,
+        sentinel=substrate_sentinel,
+        expected_profile_id=expected_profile_id,
+        expected_dek_epoch=expected_dek_epoch,
+    )
+
+
+def verify_profile_custody_dek_against_sentinel(
+    *,
+    dek: bytes,
+    profile_id: UUID,
+    dek_epoch: str,
+    sentinel: ProfileCustodySentinelPort,
+) -> None:
+    """Prove a key opens this exact profile before anything is published."""
+    custody.verify_profile_custody_sentinel(
+        dek=dek,
+        profile_id=profile_id,
+        dek_epoch=dek_epoch,
+        sentinel=_substrate_handle(sentinel, custody.ProfileCustodySentinelRecord, "DEK sentinel"),
+    )
+
+
 def load_profile_custody_password_material(
     profile_id: UUID,
     *,
@@ -914,6 +1042,7 @@ __all__ = [
     "ProfileCustodyBucketEventHistoryPort",
     "ProfileCustodyLocalRecordStore",
     "ProfileCustodyRecordSessionMaterial",
+    "ProfileCustodyRecoveryEnrollmentMaterial",
     "ProfileCustodyRegistrationMaterial",
     "ProfileCustodySecureObjectNamespace",
     "ProfileCustodyUnlockPort",
@@ -927,12 +1056,14 @@ __all__ = [
     "canonical_snapshot_payload",
     "committed_profile_custody_inventory",
     "create_profile_custody_registration_material",
+    "create_profile_recovery_enrollment_material",
     "default_profile_bucket_event_history_repository",
     "default_profile_bucket_storage",
     "default_profile_custody_local_record_store",
     "default_profile_record_crypto_port",
     "default_profile_secure_object_inventory",
     "ensure_profile_custody_owner_root",
+    "export_profile_recovery_artifact",
     "load_profile_custody_data_file",
     "load_profile_custody_password_material",
     "profile_advance_session_idle_deadline",
@@ -960,7 +1091,9 @@ __all__ = [
     "profile_session_path",
     "profile_session_serves_bucket",
     "profile_zeroise",
+    "prove_profile_recovery_artifact",
     "refuse_profile_login_without_password_channel",
     "replace_profile_custody_data_file",
     "unlock_profile_custody_password",
+    "verify_profile_custody_dek_against_sentinel",
 ]

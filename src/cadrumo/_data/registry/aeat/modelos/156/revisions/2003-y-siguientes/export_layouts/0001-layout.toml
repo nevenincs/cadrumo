@@ -1,0 +1,59 @@
+# Modelo 156 fichero -- transcribed from the bundled AEAT Diseno de Registro
+# (sources enrolled-modelo-156-layout and aeat-dr-156-2021, both naming
+# corpus/aeat_official/disenos_registro/modelo_156/files/
+# 01-156-diseno-de-registro-vigente.pdf, sha256
+# d387cfeb7254e49d539d5c3a731c0bd6bf275c8c1fdae80e6faa5a1006d5d068).
+#
+# That PDF is headed "ANEXO II -- DISENOS FISICOS Y LOGICOS A LOS QUE DEBE
+# AJUSTARSE ... DEL MODELO 156", AEAT serves it as `156_HAC_3580_2003.pdf`, and
+# AEAT lists it as the modelo's "diseno de registro vigente" with no ejercicio
+# qualifier: it is the anexo of Orden HAC/3580/2003, the orden that approves
+# this modelo, which is why this layout is authored on the 2003-y-siguientes
+# revision. Two details corroborate that it is unchanged 2003-era content rather
+# than a later redesign: TIPO DE SOPORTE still admits 'C' (cartucho magnetico
+# IBM-3480) and 'D' (disquete de 3 1/2"), and the NIF rules cite Real Decreto
+# 338/1990 rather than the Real Decreto 1065/2007 that later designs cite. The
+# page footers read "Ejercicio 2021", which is the re-issue stamp on the same
+# anexo, and no orden amending this modelo is enrolled in the registry.
+#
+# The design declares exactly two records of 250 bytes each: registro de tipo 1
+# (declarante) with 11 numbered campos plus a BLANCOS trailer, and registro de
+# tipo 2 (afiliado o mutualista) with 20 numbered campos plus a BLANCOS trailer.
+# All 32 positions are declared in the record files beside this one, and each
+# record's declared field lengths sum to exactly 250 contiguously from 1.
+#
+# ---------------------------------------------------------------------------
+# READ THIS BEFORE "FIXING" THE COVERAGE REFUSAL ON THIS LAYOUT
+# ---------------------------------------------------------------------------
+# This layout is COMPLETE against the published design, and the export-layout
+# coverage gate will still refuse it, because the PDF record-design reader
+# mis-reads one row of the tipo 2 record.
+#
+# AEAT prints that row's naturaleza cell as "Afabetico" -- their own typo for
+# "Alfabetico". The reader's naturaleza vocabulary
+# (`Alfanum[eé]rico|Alfab[eé]tico|Num[eé]rico|...` in _record_design.py) does not
+# match it, so instead of reading "36 - 75  Afabetico  APELLIDOS Y NOMBRE DEL
+# AFILIADO O MUTUALISTA" as one 40-byte campo it emits a fabricated 1-byte field
+# at offset 36 and spills the rest of the row into that field's description. The
+# tell is arithmetic: the reader's tipo 2 lengths sum to 211 against the 250 the
+# sheet declares, leaving positions 37-75 unaccounted for.
+#
+# The gate therefore asks this layout to write `(36,1)` -- a coordinate that does
+# not exist in the design -- and never asks for the real `(36,40)`. Do not add a
+# 1-byte field at 36 to satisfy it: that would split APELLIDOS Y NOMBRE and emit
+# a truncated name into a real taxpayer's filing. The fix belongs in the reader:
+# accept AEAT's misspelled naturaleza tokens, or record a skip when a row cannot
+# be typed instead of returning is_complete = True.
+#
+# Global rules the design states once, applied throughout:
+#   "Todos los campos alfanumericos y alfabeticos se presentaran alineados a la
+#    izquierda y rellenos de blancos por la derecha, en mayusculas."
+#   "Todos los campos numericos se presentaran alineados a la derecha y rellenos
+#    a ceros por la izquierda sin signos y sin empaquetar."
+#   "Para los caracteres especificos del idioma se utilizara la codificacion
+#    ISO-8859-1."
+
+[[revisions."2003-y-siguientes".export_layouts]]
+id = "modelo-156-fichero-hac-3580-2003"
+legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]

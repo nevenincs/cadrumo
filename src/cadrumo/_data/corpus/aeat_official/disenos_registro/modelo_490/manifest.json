@@ -1,11 +1,12 @@
 {
   "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
   "modelo": "490",
-  "retrieved_at": "2026-07-21",
+  "retrieved_at": "2026-08-15",
   "source_pages": [
-    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html"
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "artefact_count": 1,
+  "artefact_count": 3,
   "artefacts": [
     {
       "modelo": "490",
@@ -18,6 +19,30 @@
       "bytes": 107327,
       "sha256": "f55ecbfff8fb552de76f4e788ff7663269c96b6255b209b5289bf0869de89cb8",
       "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "490",
+      "title": "490 - Orden HAC/590/2021 (Ejercicio 2021 y 2022 hasta periodo 1T)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr490e21.xlsx",
+      "stored_path": "files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx",
+      "original_filename": "dr490e21.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 87923,
+      "sha256": "d8115bd4f4d18745c6a20b9b8c184582c3ddc5ba24a6c955ba51dd92f1534fa7",
+      "retrieved_at": "2026-08-15"
+    },
+    {
+      "modelo": "490",
+      "title": "490 - Orden HAC/590/2021 (Ejercicio 2022 periodo 2T-4T)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr490e22.xlsx",
+      "stored_path": "files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx",
+      "original_filename": "dr490e22.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 106654,
+      "sha256": "9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66",
+      "retrieved_at": "2026-08-15"
     }
   ]
 }

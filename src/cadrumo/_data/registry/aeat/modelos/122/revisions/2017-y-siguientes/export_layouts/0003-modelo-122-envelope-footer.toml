@@ -1,0 +1,39 @@
+# Modelo 122 fichero BOE — envelope footer, and the layout's own grounding.
+#
+# Sheet "Pag. 0" row 15 declares an 18-position closing constant at position
+# "***": "Constante. </T+ modelo+discriminante+Ejercicio+periodo+Tipo+>" with
+# Contenido "</T1220EEEE0A0000>". Its position is not fixed -- it follows the
+# variable-length file content -- so the design reader emits no coordinate for
+# it and it is declared here as its own record, exactly as Modelo 390 declares
+# the same <AUX> wrapper's footer. The tag interpolates the ejercicio, so it is
+# `computed` rather than a literal.
+#
+# Like Modelo 390's footer, this record joins no design sheet: it declares no
+# constant of its own for the coverage gate's constant-based join to match, and
+# that is correct -- Pag. 0 describes the wrapper, not a separate footer record.
+
+[[revisions."2017-y-siguientes".export_layouts]]
+id = "modelo-122-fichero-boe"
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "orden-hfp-105-2017:art-7", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016"]
+
+[[revisions."2017-y-siguientes".export_layouts.records]]
+id = "modelo-122-envelope-footer"
+record_type = "envelope_footer"
+order = 2
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+id = "modelo-122-envelope-close"
+offset = 1
+length = 18
+kind = "computed"
+computed_key = "envelope_closing_tag"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016"]

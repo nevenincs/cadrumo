@@ -540,14 +540,6 @@ DECLARED_UNIMPLEMENTED_SURFACES: Final[Mapping[str, str]] = {
         "one would retire a legal obligation by tidying, and the absence would stop being "
         "visible anywhere. Restoring the verb removes this entry."
     ),
-    "config.profile.delete": (
-        "Profile deletion. The implementation is not merely present but LIVE: the three-phase "
-        "prepare/confirm/delete orchestration on the profile lifecycle service is driven today "
-        "by application.config_reset. So the capability runs in production while the verb that "
-        "named it does not exist, which is why a test written fresh against current authority "
-        "breaks reaching for it. Held because a capability removed without a decision is a "
-        "defect awaiting one, not residue of a retirement someone executed."
-    ),
     "config.profile.rename": (
         "Profile relabelling. The implementation survives as rename_label on the profile custody "
         "service, with a domain protocol declaring it, and no caller reaches it. Held on the same "

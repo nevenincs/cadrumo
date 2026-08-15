@@ -362,6 +362,13 @@ class StorageCategory(StrEnum):
     PROFILE_CUSTODY_TRANSACTION_JOURNAL = "profile-custody-transaction-journal"
     PROFILE_CUSTODY_RECEIPT = "profile-custody-receipt"
     PROFILE_CUSTODY_HOLD_EVIDENCE = "profile-custody-hold-evidence"
+    # The three owner directories below the hold-evidence root. Each names one
+    # persisted format's home, so each is declared here rather than joined as a
+    # literal at the authority that writes into it: the path registry spells the
+    # same segments, and a name typed in both places drifts on the first rename.
+    PROFILE_CUSTODY_HOLD_LEGAL_OWNER = "profile-custody-hold-evidence.legal-owner"
+    PROFILE_CUSTODY_HOLD_FILING_OWNER = "profile-custody-hold-evidence.filing-owner"
+    PROFILE_CUSTODY_HOLD_DERIVED_EVIDENCE = "profile-custody-hold-evidence.derived"
     PROFILE_CUSTODY_LABEL_HEAD = "profile-custody-label-head"
 
     # ── Fixed layout: per-bucket ────────────────────────────────────────────
@@ -386,6 +393,7 @@ class StorageCategory(StrEnum):
     # correcting it moves real directories: it is carried by an authorised
     # destructive local reset, never by a read-tolerant rename.
     KEYSTORE_PROFILE_SESSION = "keystore.profile-session"
+    KEYSTORE_PROFILE_SESSION_RETIREMENT = "keystore.profile-session-retirement"
     KEYSTORE_LOGIN_THROTTLE = "keystore.login-throttle"
 
 

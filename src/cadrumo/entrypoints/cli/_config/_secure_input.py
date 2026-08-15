@@ -1,14 +1,15 @@
 """Secure operator secret input for custody commands.
 
-Secrets reach the custody verbs through exactly two channels, never the
-command line: interactive no-echo prompts on the controlling terminal, or a
-single bounded strict-JSON object read from standard input under
-``--secrets-stdin``. No secret value is ever accepted as an ``argv`` option, so
-passphrases and recovery mnemonics never appear in the process table, shell
-history, or logs.
+Secrets reach the custody verbs through exactly three channels, never the
+command line and never the process environment: interactive no-echo prompts on
+the controlling terminal, a single bounded strict-JSON object read from standard
+input under ``--secrets-stdin``, or the same object read exactly once from an
+inherited file descriptor under ``--secrets-fd``. No secret value is ever
+accepted as an ``argv`` option, so passphrases and recovery mnemonics never
+appear in the process table, shell history, or logs.
 
-The stdin channel reads at most :data:`_MAX_SECRETS_STDIN_BYTES` and validates
-the parsed object against a strict ``extra="forbid"`` pydantic model whose secret
+Both machine channels read at most :data:`_MAX_SECRETS_BYTES` and validate the
+parsed object against a strict ``extra="forbid"`` pydantic model whose secret
 fields are :class:`~pydantic.SecretStr`, so a missing/extra field refuses and the
 values never render in a repr. Parsing rejects a repeated object key at any
 nesting depth (see :func:`_reject_duplicate_object_keys`) rather than silently
@@ -16,12 +17,31 @@ resolving it to its last occurrence, so the strict-parse contract is total: a
 collision can never slip past ``extra="forbid"`` by being resolved before
 pydantic sees the mapping. This module carries the passphrase channel for the
 per-profile custody flows, ``config login`` foremost.
+
+The descriptor channel exists because stdin is a shared, singular resource: a
+caller that must also pipe a document, or that runs a verb from a supervisor
+already owning stdin, has nowhere to put the passphrase but the environment,
+and an environment variable is inherited by every child process, survives for
+the whole process lifetime, and is readable from a crash dump or a CI log. A
+descriptor is none of those: it is passed to one process, read once, and closed.
+:func:`read_secrets_fd` enforces the "once" half — the descriptor is closed
+after its single read and a second attempt on the same number refuses instead
+of returning the empty payload a re-read would produce, which would otherwise
+be indistinguishable from a caller supplying an empty secret.
+
+The descriptor must be inherited from the parent. POSIX callers pass one with
+``os.pipe()`` plus ``pass_fds``. On Windows arbitrary descriptors are not
+inherited by :mod:`subprocess`; a caller there must inherit the underlying
+handle and map it with :func:`msvcrt.open_osfhandle` before naming the resulting
+number. That is a real portability cost of this channel and is stated rather
+than papered over: ``--secrets-stdin`` remains the portable machine channel.
 """
 
 from __future__ import annotations
 
 import getpass
 import json
+import os
 import sys
 import warnings
 
@@ -31,11 +51,31 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.tty import stdin_is_tty
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
-_MAX_SECRETS_STDIN_BYTES = 8192
-"""Upper bound on a ``--secrets-stdin`` payload; a larger read refuses.
+_MAX_SECRETS_BYTES = 8192
+"""Upper bound on a machine-channel secrets payload; a larger read refuses.
 
 A recovery-key + passphrase JSON object is a few hundred bytes; the cap keeps a
-malformed or hostile stream from being read unboundedly into memory.
+malformed or hostile stream from being read unboundedly into memory. Shared by
+the stdin and descriptor channels so the two cannot drift into different bounds.
+"""
+
+_RESERVED_OUTPUT_DESCRIPTORS = frozenset({1, 2})
+"""Descriptors this channel refuses outright: standard output and standard error.
+
+Reading from an output stream is a caller bug rather than a secret channel, and
+on a host where those descriptors are attached to a console the read would block
+rather than fail. Standard input is deliberately NOT reserved: it is a legitimate
+readable descriptor, and refusing it would make ``--secrets-fd 0`` behave
+differently from the ``--secrets-stdin`` spelling of the same thing.
+"""
+
+_consumed_secret_descriptors: set[int] = set()
+"""Descriptor numbers already read by :func:`read_secrets_fd` in this process.
+
+The one-shot guarantee is enforced here rather than trusted from the close:
+descriptor numbers are reused by the operating system, so a closed number can be
+reopened onto something else entirely, and a second read must refuse loudly
+rather than return whatever now sits behind it.
 """
 
 
@@ -60,39 +100,149 @@ def _reject_duplicate_object_keys(pairs: list[tuple[str, object]]) -> dict[str, 
     return dict(pairs)
 
 
+def _validate_secrets_payload[SecretsModelT: BaseModel](
+    raw: bytes,
+    model: type[SecretsModelT],
+    *,
+    invalid_json_key: str,
+    missing_fields_key: str,
+) -> SecretsModelT:
+    """Decode and strictly validate one machine-channel secrets payload.
+
+    Shared by both machine channels so the bound, the duplicate-key refusal and
+    the strict-model contract cannot drift apart between them; only the refusal
+    keys differ, because a message naming the wrong flag sends the operator to a
+    channel they did not use.
+    """
+    try:
+        decoded = raw.decode(UTF_8_ENCODING)
+        payload = json.loads(decoded, object_pairs_hook=_reject_duplicate_object_keys)
+    except (ValueError, UnicodeDecodeError) as exc:
+        raise _CliRefusedBoundaryError(translated_message=invalid_json_key) from exc
+    if not isinstance(payload, dict):
+        raise _CliRefusedBoundaryError(translated_message=invalid_json_key)
+    try:
+        return model.model_validate(payload)
+    except ValidationError as exc:
+        raise _CliRefusedBoundaryError(translated_message=missing_fields_key) from exc
+
+
 def read_secrets_stdin[SecretsModelT: BaseModel](model: type[SecretsModelT]) -> SecretsModelT:
     """Read one bounded strict-JSON object from stdin and validate it against ``model``.
 
     The payload must be a single JSON object carrying exactly the fields ``model``
     declares (``extra="forbid"``). A payload larger than
-    :data:`_MAX_SECRETS_STDIN_BYTES`, invalid UTF-8, non-object JSON, malformed
+    :data:`_MAX_SECRETS_BYTES`, invalid UTF-8, non-object JSON, malformed
     JSON, a repeated object key at any nesting depth (see
     :func:`_reject_duplicate_object_keys`), or a missing/unexpected field
     refuses with a localised :class:`CliRefusedBoundaryError`; the raw bytes
     are never echoed or logged.
     """
-    raw = sys.stdin.buffer.read(_MAX_SECRETS_STDIN_BYTES + 1)
-    if len(raw) > _MAX_SECRETS_STDIN_BYTES:
+    raw = sys.stdin.buffer.read(_MAX_SECRETS_BYTES + 1)
+    if len(raw) > _MAX_SECRETS_BYTES:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.secrets_stdin_too_large",
         )
+    return _validate_secrets_payload(
+        raw,
+        model,
+        invalid_json_key="cli.config.custody.errors.secrets_stdin_invalid_json",
+        missing_fields_key="cli.config.custody.errors.secrets_stdin_missing_fields",
+    )
+
+
+def _read_descriptor_to_bound(descriptor: int, *, maximum_bytes: int) -> bytes:
+    """Drain ``descriptor`` up to ``maximum_bytes`` + 1, then close it.
+
+    Reads through :func:`os.read` rather than wrapping the descriptor in a
+    buffered file object: a wrapper that is garbage-collected without an
+    explicit close emits a ``ResourceWarning`` and, on some hosts, closes the
+    descriptor a second time. The close happens here, unconditionally, so a
+    refusal on a malformed payload still leaves no descriptor open onto the
+    secret.
+
+    A short read is not end of stream on a pipe, so the loop continues until
+    :func:`os.read` returns empty or the bound is exceeded.
+    """
+    chunks: list[bytes] = []
+    total = 0
     try:
-        decoded = raw.decode(UTF_8_ENCODING)
-        payload = json.loads(decoded, object_pairs_hook=_reject_duplicate_object_keys)
-    except (ValueError, UnicodeDecodeError) as exc:
+        while total <= maximum_bytes:
+            chunk = os.read(descriptor, maximum_bytes + 1 - total)
+            if not chunk:
+                break
+            chunks.append(chunk)
+            total += len(chunk)
+    finally:
+        try:
+            os.close(descriptor)
+        except OSError:
+            # The descriptor was already closed by the caller or the platform;
+            # the read result stands, and there is nothing left to release.
+            pass
+    return b"".join(chunks)
+
+
+def read_secrets_fd[SecretsModelT: BaseModel](model: type[SecretsModelT], *, descriptor: int) -> SecretsModelT:
+    """Read one bounded strict-JSON secrets object from ``descriptor``, exactly once.
+
+    The one-shot contract is the reason this exists as its own channel rather
+    than a stdin variant: the descriptor is closed as soon as it has been read,
+    and its number is recorded so a second call refuses instead of returning the
+    empty payload a re-read of a closed or reopened descriptor would produce.
+    Silently reading empty would surface as "missing required fields", pointing
+    the operator at their payload when the real fault is a double read.
+
+    ``descriptor`` itself is a small integer on ``argv``; the secret is not.
+    Standard output and standard error are refused (:data:`_RESERVED_OUTPUT_DESCRIPTORS`)
+    because reading an output stream is a caller bug that would block rather
+    than fail on a console-attached host. A descriptor that is not open, not
+    readable, or not inherited refuses with its own message rather than the
+    payload-shaped ones, so an inheritance mistake is not reported as a JSON
+    fault.
+    """
+    if descriptor < 0 or descriptor in _RESERVED_OUTPUT_DESCRIPTORS:
         raise _CliRefusedBoundaryError(
-            translated_message="cli.config.custody.errors.secrets_stdin_invalid_json",
-        ) from exc
-    if not isinstance(payload, dict):
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.custody.errors.secrets_stdin_invalid_json",
+            translated_message="cli.config.custody.errors.secrets_fd_reserved_stream",
+            context={"descriptor": str(descriptor)},
         )
-    try:
-        return model.model_validate(payload)
-    except ValidationError as exc:
+    if descriptor in _consumed_secret_descriptors:
         raise _CliRefusedBoundaryError(
-            translated_message="cli.config.custody.errors.secrets_stdin_missing_fields",
+            translated_message="cli.config.custody.errors.secrets_fd_already_consumed",
+            context={"descriptor": str(descriptor)},
+        )
+    _consumed_secret_descriptors.add(descriptor)
+    try:
+        raw = _read_descriptor_to_bound(descriptor, maximum_bytes=_MAX_SECRETS_BYTES)
+    except OSError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.secrets_fd_unreadable",
+            context={"descriptor": str(descriptor)},
         ) from exc
+    if len(raw) > _MAX_SECRETS_BYTES:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.secrets_fd_too_large",
+        )
+    return _validate_secrets_payload(
+        raw,
+        model,
+        invalid_json_key="cli.config.custody.errors.secrets_fd_invalid_json",
+        missing_fields_key="cli.config.custody.errors.secrets_fd_missing_fields",
+    )
+
+
+def resolve_secrets_channel(*, secrets_stdin: bool, secrets_fd: int | None) -> None:
+    """Refuse an invocation naming both machine secret channels at once.
+
+    Two channels supplying one passphrase is not a precedence question with a
+    safe answer: whichever loses is a secret the caller staged and this process
+    never consumed, left resident in a pipe the caller believes was drained.
+    The refusal names both flags so the caller knows which one to drop.
+    """
+    if secrets_stdin and secrets_fd is not None:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.secrets_channel_conflict",
+        )
 
 
 def _stdin_is_a_real_console() -> bool:
@@ -211,6 +361,8 @@ def prompt_secret_no_echo(prompt: str) -> str:
 
 __all__ = [
     "prompt_secret_no_echo",
+    "read_secrets_fd",
     "read_secrets_stdin",
+    "resolve_secrets_channel",
     "terminal_can_prompt_for_secrets",
 ]
