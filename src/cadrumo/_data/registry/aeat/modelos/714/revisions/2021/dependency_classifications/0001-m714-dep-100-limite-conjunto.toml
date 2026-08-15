@@ -1,0 +1,19 @@
+[[revisions."2021".dependency_classifications]]
+id = "m714-dep-100-limite-conjunto"
+source_modelo = "100"
+treatment = "direct_annual_settlement"
+target_constructs = ["m714-patrimonio-calculation"]
+relation_refs = [
+    "m714-rel-100-base-imponible-general",
+    "m714-rel-100-base-imponible-ahorro",
+    "m714-rel-100-cuota-integra-estatal",
+    "m714-rel-100-cuota-integra-autonomica",
+]
+legal_refs = [
+    "ley-19-1991:art-31",
+    "ley-35-2006:art-48",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-63",
+    "ley-35-2006:art-74",
+]
+source_refs = ["aeat-modelo-100-procedure", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]

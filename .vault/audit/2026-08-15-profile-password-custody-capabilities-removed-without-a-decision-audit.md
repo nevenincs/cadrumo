@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:7c418a914def1aa87b41d50fc8db86d01c9946372c0f25cfe597a675be354cd5'
+body_hash: 'sha256:ff46a7517f9849ebcaff22c9e9115bb9490dad53be74cc82b44b84b733c75197'
 related: []
 ---
 
@@ -325,3 +325,44 @@ likely anyone is to probe the step before it. **The defence is to reproduce
 through the operator's actual workflow, not through the shortest path that
 produces the symptom** -- and specifically, when a refusal says "not ready", to
 establish what would make it ready before concluding that nothing can.
+
+### Correction: scripted creation was retired by design, and the design is legible
+
+The scripted-creation item above is **partially withdrawn**. It was recorded as a
+capability removed without a decision, on the evidence that the router refuses,
+an accepted decision record still promises creation, and the operator surfaces
+still advertise it. Measurement now shows the decision is legible in the design.
+
+Creation is not gone. **Non-interactive creation is gone.** The verb still
+exists and is still the advertised entry point in the curated help; on a capable
+terminal it diverts to the profile manager, which registers through the
+credential-first door. On a host without a usable console -- which is every test
+process -- it reaches the command and refuses.
+
+So the retired capability is precisely SCRIPTED creation, and the retirement is
+coherent with password custody rather than incidental to it: a passphrase cannot
+be safely supplied on a command line, so a creation path that accepts one
+without a console is a surface the custody model cannot honour. That reasoning
+was never written down, which is why the removal read as accidental, but it is
+not arbitrary and it is not a mistake.
+
+**What survives the correction.** The accepted decision record still promises a
+creation flow it no longer describes accurately, and the operator-facing help
+still advertises the verb without stating the terminal requirement, so an
+operator on a console-less host meets a refusal the documentation did not
+prepare them for. That is a documentation and decision-record gap rather than a
+lost capability, which is a materially smaller item than the one first recorded.
+
+**And the 294 stale tests are reframed rather than resolved.** They assert
+non-interactive creation, which is retired by design, so they are testing a
+capability the product deliberately does not offer. They should be re-founded on
+the surviving surfaces rather than preserved as evidence of a lost contract --
+the opposite of the instruction this audit originally gave, which was to leave
+them alone pending a decision. The decision existed; only its record did not.
+
+The correction was found by an agent that nearly reported the opposite. It wrote
+"no CLI surface exposes credential registration" into its own working notes
+while the search it had just run returned two hits in that very file, and caught
+it by reading the output rather than its own summary of the output. Had the
+label been trusted, this audit would have gained a false escalation -- that
+operators cannot create a profile at all -- about a shipped product.

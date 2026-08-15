@@ -4,11 +4,11 @@
 slot and an `aliases: tuple[CasillaAlias, ...]` slot. The
 snapshot-build validator now enforces that every casilla sharing a
 `semantic_role` declares the same `data_type` and structurally
-compatible `constraints`. Single-occurrence role values emit a
-typo-twin diagnostic warning and fail registry-scope validation.
+compatible `constraints`. Single-occurrence role values are reported
+as typo-twin diagnostic findings and fail registry-scope validation.
 
 These tests exercise the field shape, the consistency validator,
-the typo-twin warning surface, and the alias-preservation
+the typo-twin diagnostic surface, and the alias-preservation
 round-trip.
 """
 
@@ -42,9 +42,9 @@ from .._validate_semantic_role_typos import (
     _SemanticRoleTypoIndex,
 )
 from .._validate_semantic_roles import (
-    _emit_semantic_role_typo_twin_warnings,
     _validate_semantic_role_cardinality,
     _validate_semantic_role_consistency,
+    _validate_semantic_role_typo_twins,
 )
 from ._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label
 
@@ -820,31 +820,24 @@ class TestTypoTwinWarning:
             "iva_oss_union_servicios_destino_fr_cuota",
         }
 
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings(reviewed_modelos)
+        failures = _validate_semantic_role_typo_twins(reviewed_modelos)
 
-        messages = [str(item.message) for item in captured]
         for role in reviewed_roles:
-            assert not any(role in message for message in messages)
+            assert not any(role in failure for failure in failures)
 
     def test_single_occurrence_role_emits_warning(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer-nif", data_type="nif")  # note hyphen typo
         m = _registry_modelo("180", "2023", [a])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert any("taxpayer-nif" in str(w.message) for w in captured)
+        failures = _validate_semantic_role_typo_twins([m])
+        assert any("taxpayer-nif" in failure for failure in failures)
 
     def test_single_occurrence_near_duplicate_role_emits_warning(self) -> None:
         typo = _casilla(cid="a", semantic_role="taxpayer_niff", data_type="nif")
         canonical_a = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
         canonical_b = _casilla(cid="c", semantic_role="taxpayer_nif", data_type="nif")
         m = _registry_modelo("180", "2023", [typo, canonical_a, canonical_b])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert any("taxpayer_niff" in str(w.message) for w in captured)
+        failures = _validate_semantic_role_typo_twins([m])
+        assert any("taxpayer_niff" in failure for failure in failures)
 
     def test_typo_twin_blocks_registry_scope(self) -> None:
         typo = _casilla(cid="a", semantic_role="taxpayer_niff", data_type="nif")
@@ -871,21 +864,16 @@ class TestTypoTwinWarning:
             semantic_role_cardinality_reason="legacy source spelling is legally unique",
         )
         m = _registry_modelo("180", "2023", [a])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
+        assert _validate_semantic_role_typo_twins([m]) == ()
 
     def test_repeated_role_does_not_warn(self) -> None:
         a = _casilla(cid="a", semantic_role="taxpayer_nif", data_type="nif")
         b = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
         m1 = _registry_modelo("180", "2023", [a])
         m2 = _registry_modelo("184", "2023", [b])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m1, m2])
-        role_warnings = [w for w in captured if "taxpayer_nif" in str(w.message)]
-        assert role_warnings == []
+        failures = _validate_semantic_role_typo_twins([m1, m2])
+        role_failures = [f for f in failures if "taxpayer_nif" in f]
+        assert role_failures == []
 
     def test_axis_sibling_roles_do_not_warn_as_typos(self) -> None:
         aumento = _casilla(
@@ -897,10 +885,7 @@ class TestTypoTwinWarning:
             semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_disminucion",
         )
         m = _registry_modelo("200", "2024-y-siguientes", [aumento, disminucion])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
+        assert _validate_semantic_role_typo_twins([m]) == ()
 
     def test_near_duplicate_with_same_axis_still_warns(self) -> None:
         typo = _casilla(
@@ -912,10 +897,8 @@ class TestTypoTwinWarning:
             semantic_role="is_correccion_operaciones_a_plazos_art11_4_permanente_aumento",
         )
         m = _registry_modelo("200", "2024-y-siguientes", [typo, canonical])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert any("permanent_aumento" in str(w.message) for w in captured)
+        failures = _validate_semantic_role_typo_twins([m])
+        assert any("permanent_aumento" in failure for failure in failures)
 
     def test_non_axis_token_pairs_are_not_axis_siblings(self) -> None:
         cases = (
@@ -1027,27 +1010,22 @@ class TestTypoTwinWarning:
         first_slot = _casilla(cid="a", semantic_role="related_party_nif_1", data_type="nif")
         second_slot = _casilla(cid="b", semantic_role="related_party_nif_2", data_type="nif")
         m = _registry_modelo("232", "2018-y-siguientes", [first_slot, second_slot])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert captured == []
+        assert _validate_semantic_role_typo_twins([m]) == ()
 
     def test_coti_scope_marker_is_not_optional_axis_token(self) -> None:
         coti = _casilla(cid="a", semantic_role="irpf_ganancia_fondos_coti_ganancia")
         general_a = _casilla(cid="b", semantic_role="irpf_ganancia_fondos_ganancia")
         general_b = _casilla(cid="c", semantic_role="irpf_ganancia_fondos_ganancia")
         m = _registry_modelo("100", "2025", [coti, general_a, general_b])
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            _emit_semantic_role_typo_twin_warnings([m])
-        assert any("irpf_ganancia_fondos_coti_ganancia" in str(item.message) for item in captured)
+        failures = _validate_semantic_role_typo_twins([m])
+        assert any("irpf_ganancia_fondos_coti_ganancia" in failure for failure in failures)
 
 
 class TestSemanticRoleTypoTwinHelpers:
     """Direct coverage of the extracted near-match scan helpers.
 
-    The end-to-end warning surface above exercises these through
-    ``_emit_semantic_role_typo_twin_warnings``; these tests pin the filter-chain
+    The end-to-end surface above exercises these through
+    ``_validate_semantic_role_typo_twins``; these tests pin the filter-chain
     contract at the helper boundary so the cheap-to-expensive ordering and the
     sibling exemptions cannot silently regress.
     """

@@ -27,7 +27,6 @@ from ._validate_semantic_role_required import (
 __all__ = (
     "REQUIRED_ROLE_LABEL_PATTERNS",
     "collect_casillas_by_semantic_role",
-    "emit_semantic_role_typo_twin_warnings",
     "required_role_declaration_failures",
     "semantic_role_cardinality_failures",
     "semantic_role_consistency_failures",
@@ -206,13 +205,6 @@ def _validate_semantic_role_cardinality(
     return tuple(failures)
 
 
-def _emit_semantic_role_typo_twin_warnings(
-    modelos: Iterable[ModeloDefinition],
-) -> None:
-    """Warn when a ``semantic_role`` value appears on exactly one casilla."""
-    _semantic_role_typos.emit_grouped_semantic_role_typo_twin_warnings(_collect_role_observations(modelos))
-
-
 def _validate_semantic_role_typo_twins(
     modelos: Iterable[ModeloDefinition],
 ) -> tuple[str, ...]:
@@ -223,4 +215,3 @@ def _validate_semantic_role_typo_twins(
 semantic_role_cardinality_failures = _validate_semantic_role_cardinality
 semantic_role_consistency_failures = _validate_semantic_role_consistency
 semantic_role_typo_twin_failures = _validate_semantic_role_typo_twins
-emit_semantic_role_typo_twin_warnings = _emit_semantic_role_typo_twin_warnings
