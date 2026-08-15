@@ -932,7 +932,7 @@ def _commit_auth_choice(collected: Mapping[str, str]) -> tuple[str, AuthConfigur
         CLI surfaces.
     """
     from ....application.auth import configure_operator_auth, select_operator_certificate_source
-    from ....application.wizard import apply_wizard_fact_changes
+    from ....application.wizard import WizardFactWriteDoor, apply_wizard_fact_changes
     from ....core import require_active_bucket_id
     from ....domain.user_profile import UserProfileFact
 
@@ -944,7 +944,7 @@ def _commit_auth_choice(collected: Mapping[str, str]) -> tuple[str, AuthConfigur
     apply_wizard_fact_changes(
         profile_id=require_active_bucket_id(),
         changes=committed,
-        event_type="profile.auth.facts.applied",
+        door=WizardFactWriteDoor.MANAGER_AUTH,
     )
 
     chosen_certificate = collected.get(_CERTIFICATE_KEY, "").strip()
@@ -1083,7 +1083,7 @@ def _run_add_row() -> ManagerActionOutcome:
         next_section_row_index,
         section_row_facts,
     )
-    from ....application.wizard import apply_wizard_fact_changes
+    from ....application.wizard import WizardFactWriteDoor, apply_wizard_fact_changes
     from ....core import require_active_bucket_id
     from ....domain.user_profile import ProfileSchemaValidationError, load_user_profile_schema
     from ._manager_frontend import build_active_profile_overview, present_form
@@ -1121,7 +1121,7 @@ def _run_add_row() -> ManagerActionOutcome:
         apply_wizard_fact_changes(
             profile_id=require_active_bucket_id(),
             changes=facts,
-            event_type="profile.manager.row.added",
+            door=WizardFactWriteDoor.MANAGER_ROW,
         )
     except ProfileSchemaValidationError:
         return ManagerActionOutcome(

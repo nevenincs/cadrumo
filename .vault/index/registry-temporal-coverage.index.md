@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:0fc8c2c4c68752f62bd52234c28d7fa173113558874425345ecc2ba6012e9834'
+body_hash: 'sha256:3702ad6632034161a56e3dfcc07aa7f5f59053db2353d759b780c3df1cce2847'
 related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S01]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S02]]'
@@ -36,6 +36,7 @@ related:
   - '[[2026-08-15-registry-temporal-coverage-audit]]'
   - '[[2026-08-15-registry-temporal-coverage-authority-grade-proposal-reference]]'
   - '[[2026-08-15-registry-temporal-coverage-legal-grounding-consolidation-audit]]'
+  - '[[2026-08-15-registry-temporal-coverage-schema-family-coverage-census-audit]]'
 ---
 
 # `registry-temporal-coverage` feature index
@@ -56,6 +57,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-14-registry-temporal-coverage-load-closure-census-audit` - `registry-temporal-coverage` audit: `load closure census`
 - `2026-08-15-registry-temporal-coverage-audit` - `registry-temporal-coverage` audit: `coverage instrument close-out and operator summary`
 - `2026-08-15-registry-temporal-coverage-legal-grounding-consolidation-audit` - 2026-08-15-registry-temporal-coverage-legal-grounding-consolidation-audit
+- `2026-08-15-registry-temporal-coverage-schema-family-coverage-census-audit` - `registry-temporal-coverage` audit: `schema family coverage census and the three grounded discriminators`
 
 ### exec
 

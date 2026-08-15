@@ -5277,7 +5277,6 @@ cli:
         profile_list: List profile facts.
         profile_login: Log in to a profile and make it the active one.
         profile_logout: Close the active profile session.
-        profile_sar: Export a subject-access data package.
         profile_show: Show one profile's facts.
         profile_status: Show active profile readiness.
         reset_resume: Continue an incomplete reset operation.

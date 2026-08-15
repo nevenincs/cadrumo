@@ -126,7 +126,7 @@ def persist_active_profile_field(path: str, value: str, *, label: str | None = N
     the previous view: the edit door may normalise or refuse a value, and
     the operator must see what was actually stored.
     """
-    from ....application.wizard import apply_wizard_fact_changes
+    from ....application.wizard import WizardFactWriteDoor, apply_wizard_fact_changes
     from ....core import require_active_bucket_id
     from ....domain.user_profile import UserProfileFact
 

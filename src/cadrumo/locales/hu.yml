@@ -5578,7 +5578,6 @@ cli:
         profile_list: Profiladatok listázása.
         profile_login: Bejelentkezés egy profilba, és aktívvá tétele.
         profile_logout: Az aktív profil munkamenetének lezárása.
-        profile_rename: Profil átnevezése és mappájának áthelyezése.
         profile_sar: Érintetti hozzáférési adatcsomagot exportál.
         profile_show: Egy profil adatainak megjelenítése.
         profile_status: Az aktív profil készültségének megjelenítése.

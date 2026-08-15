@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:9eac5f709e75efeacb59f72f1fda90744bcdb13b795638de89c179b22db72cd9'
+body_hash: 'sha256:96ce294db320cb53711050293dac9cf9c76415f49232fc31284927123a3cdc5d'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -229,6 +229,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S166` - Have Terra XHigh compose the full-corpus collectability proof into a lane that is actually run, since the harness that would have caught two test packages being uncollectable is real and mutation-tested but is enrolled only in a standalone recipe every other lane ignores and in a single separately-named continuous-integration job, so every routine local and integration run stayed green throughout the window those packages could not import, and a green lane structurally unable to see a collection error is what makes one read as infrastructure noise and get scrolled past; `justfile and .github/workflows/ci.yml`.
 - [ ] `W04.P07.S167` - Have Terra XHigh restore the hard-cutover absence gate's anti-tautology proof, whose fixture now trips the retired-name net as well as the package net so the two are no longer isolated and the proof asserts less than it reads as asserting, the gate's substantive absence assertions all passing while this one case is red at HEAD and was red before any current work touched it; `src/cadrumo/application/tests/test_custody_hard_cutover_absence.py`.
 - [ ] `W04.P07.S169` - Have Sol Medium repair the command-line test helper that still constructs the retired bucket manifest inside a deferred function-local import, which hides it from collection so it passes every collect-only proof and fails only at run time, and which needs the capsule discovery-marker replacement rather than a manifest write; `src/cadrumo/entrypoints/cli/tests/test_active_profile_env_override_name.py`.
+- [ ] `W04.P07.S171` - Have Sol Medium regenerate the two generated quality manifests that still name the retired workspace-initialisation package and its three symbols, once the tree is quiet enough that regeneration does not sweep concurrent peer work into the change, neither manifest sitting inside the test paths so neither reds collection and both therefore drifting silently; `dev/quality/fixture_ownership.toml and dev/quality/error_code_default_recovery_rehoming.toml`.
 
 ## Wave `W05` - end-to-end proof
 
