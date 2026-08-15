@@ -127,7 +127,6 @@ def _run_cli_cold(storage_root: Path, argv: list[str]) -> subprocess.CompletedPr
             setting_env(
                 "cadrumo_secret_passphrase"
             ): base_settings.cadrumo_dev_test_database_password.get_secret_value(),
-            setting_env("cadrumo_profile_kdf_measure_calibration"): "false",
         },
     )
     return subprocess.run(
