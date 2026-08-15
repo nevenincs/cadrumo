@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:53419b8fbb38adce4d5fc5383fa083aef8aa1ed882a8d467660c501c65f818de'
+body_hash: 'sha256:0926c2d06375ddac44718dacceeb4660d948e4e1646ee80b18ccba583e6cf16e'
 related: []
 ---
 
@@ -240,3 +240,46 @@ after the profile-session versus authority-session collision and the reserved
 "binding" term. Here "enrollment" named both format enrollment and key-schedule
 enrollment. In every instance the defence was the same: confirm the hit is about
 your artefact before building on it, by reading what the source says it touches.
+
+### Correction and disposition: the pre-capsule buckets were already written off
+
+A halt was called on the key-schedule deletion because four buckets in the
+operator's live store carry the legacy keystore artefact with real encrypted
+databases -- 5.3 MB, 516 KB, 311 KB and 106 KB, labelled `wgergely`, `wgergely`,
+`sync-test` and `operator`, two of them already tombstoned. The stated reason
+was that deleting the legacy route would strand roughly six megabytes.
+
+**That framing was wrong and is corrected here.** Those buckets are already
+unreadable by the current tree, three independent refusals deep, and none of the
+refusals is the branch proposed for deletion. None carries a profile capsule, so
+the schedule resolver returns nothing and the legacy read arm is never reached.
+Their manifests declare schema version 2 while both the current version and the
+durability floor are 3. And the strict manifest model refuses their extra
+fields outright.
+
+The floor is the decisive fact, because it is a decision rather than an
+accident. The manifest tier carries no upgrade dispatch, so the floor sits equal
+to the current version by design, and the code states the consequence directly:
+raising the version forces raising the floor with it, dropping older manifests,
+which is the pre-release posture. **Version-2 manifests were written off when
+the version reached 3.** These four are unreadable because that decision was
+taken, not because anything is pending.
+
+So the deletion changes RECOVERABILITY, not reachability, which is already zero
+-- and recoverability is not destroyed either, only moved into git history on a
+pre-release tree carrying no released data.
+
+The operator has since ruled directly that no data needs preserving, and the
+deletion proceeds. Recorded because the corrected reasoning outlives this
+instance: **before claiming a deletion will strand data, establish whether the
+data is reachable TODAY.** A gate that fires on the presence of an artefact
+rather than on its reachability produces a true observation and a false
+conclusion, and costs a round trip to the owner.
+
+One corroboration from the same measurement, pointing the other way. There are
+zero capsule artefacts anywhere on the operator's real disk -- no commit record,
+no envelope, no sentinel, no custody directory. Every bucket the operator
+actually holds predates the cutover. The campaign's target state has never been
+materialised on real disk, which supports the read-path finding from the
+opposite side: nothing in production has ever produced the state the read path
+expects.
