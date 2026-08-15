@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:21822bf771c390ac609bfefc8b4a7c3ab7db55b9df5fbb17f3e97f361d1dbeb3'
+body_hash: 'sha256:20b2ab4ce654bb29392b634e3971e96d3f188d82accbbecb97a8994a9f716743'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1039,3 +1039,67 @@ generous ceilings on the handful of gates that legitimately outrun it in child
 processes; and a fail-closed backstop that names any future offender instead of
 absorbing it. The backstop is what makes the exception list maintainable -- a
 new heavy test announces itself once, loudly, rather than degrading the suite.
+
+## Round: the dev durations table, finally readable
+
+The fail-closed worker policy above is what made this round possible: the `dev`
+slice had never produced a durations table, because every attempt wedged. The
+first run after the fix completed in 985s and ranked, for the first time:
+
+    177.91s  packaging test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary
+    109.03s  packaging test_real_wheels_form_one_complete_authority_cohort
+     97.74s  docs      test_every_committed_golden_matches_live_execution
+     96.78s  docs      test_every_enrolled_page_is_coherent_top_to_bottom
+     95.34s  packaging test_three_wheel_cohort_installs_only_aeat_human_script
+
+### Fixed: the three-wheel cohort was built twice
+
+The second and third entries live in one module and built the IDENTICAL cohort
+from the IDENTICAL `build_root`, differing only in the directory it landed in.
+Measured directly rather than inferred from the durations: `build_wheel` 16.5s
+plus `build_companion_wheels` 38.8s, so each test spent ~55s reproducing the
+other's artifacts.
+
+A module-scoped fixture now builds once. The run shows exactly the intended
+shape -- ONE 54.63s setup where there were two builds -- and the module falls
+from the 204.37s the two tests summed to, to 152.97s.
+
+Safe because the wheels are consumed READ-ONLY: opened with `zipfile`, and
+handed to pip as resolved absolute paths. Everything a test mutates -- its
+venv, its install, its product state -- still comes from that test's own
+`tmp_path`, so the tests stay independent in every respect except the bytes
+they read. `_install_cohort_with_pip` takes the work directory only as a `cwd`,
+which was checked before relying on it.
+
+The first entry (`test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary`,
+177.91s) is NOT part of this: it builds from `commit_defined_build_root`, a
+clean commit-defined extract, so its artifacts are genuinely different and
+cannot be served from the same fixture.
+
+### A limit of the snapshot technique, worth recording
+
+The usual before/after -- `git archive` a commit into scratch and run both
+trees -- CANNOT be used on this module. The build shells out to `git ls-files`,
+and an archived tree has no `.git`, so the baseline run failed instantly with
+`command failed (128): git ls-files src/cadrumo/_data` rather than producing a
+figure.
+
+That failure was loud, so it did not become a fake baseline. But a quieter
+variant of the same thing would: a snapshot that runs but silently takes a
+different path than the live tree measures something other than what it claims.
+Where the technique cannot apply, the component measurement (the 16.5s and
+38.8s builds, taken directly) is the honest substitute -- not a snapshot figure
+obtained by working around the obstacle.
+
+Deliberately NOT worked around by reverting the tracked file in place to
+measure it: a mutation window in this worktree is shippable state, and peers
+commit continuously.
+
+### The remaining failure is not this change
+
+`test_real_wheels_form_one_complete_authority_cohort` fails on
+`authority.validate_registry()` raising a pydantic `ModeloRevision` pattern
+mismatch -- the standing tree-wide registry red, now reaching the packaging
+probe. This change alters WHERE wheels are built and never their content, so it
+cannot produce a registry validation error. Checked by reading the actual
+exception rather than accepting the pass/fail count.
