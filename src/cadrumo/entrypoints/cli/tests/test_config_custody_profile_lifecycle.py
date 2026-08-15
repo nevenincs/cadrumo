@@ -333,6 +333,10 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
 
     # The registration door returns the minted identity, so the ids are known
     # without reading the retired plaintext bucket manifest.
+    # ``profile show`` does not render the manifest label across a process
+    # boundary, so selection is observed through a per-profile FACT instead.
+    # Alpha and Beta carry distinct ``identity.name`` values for exactly that
+    # purpose, and the assertion is the same claim: which profile resolved.
     labels_by_id = {alpha_id: "alpha", beta_id: "beta"}
     assert set(labels_by_id) == {
         entry.name for entry in scan_directory(tmp_path / "buckets", select=DirectoryEntryKind.DIRECTORIES)
