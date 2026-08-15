@@ -73382,6 +73382,288 @@ modelo:
           iva-cuota-soportada-interiores:
             help: null
             label: Cuota IVA soportado en operaciones interiores corrientes
+          iva-deducible-aic-corrientes-tipo-10-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              corrientes al tipo 10% - Base imponible
+          iva-deducible-aic-corrientes-tipo-10-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              corrientes al tipo 10% - Cuota deducible
+          iva-deducible-aic-corrientes-tipo-21-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              corrientes al tipo 21% - Base imponible
+          iva-deducible-aic-corrientes-tipo-21-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              corrientes al tipo 21% - Cuota deducible
+          iva-deducible-aic-corrientes-tipo-4-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              corrientes al tipo 4% - Base imponible
+          iva-deducible-aic-corrientes-tipo-4-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              corrientes al tipo 4% - Cuota deducible
+          iva-deducible-aic-corrientes-tipo-5-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              corrientes al tipo 5% - Base imponible
+          iva-deducible-aic-corrientes-tipo-5-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              corrientes al tipo 5% - Cuota deducible
+          iva-deducible-aic-corrientes-total-base:
+            label: 'Total: IVA soportado deducible en adquisiciones intracomunitarias
+              de bienes corrientes - Base imponible'
+          iva-deducible-aic-corrientes-total-cuota:
+            label: 'Total: IVA soportado deducible en adquisiciones intracomunitarias
+              de bienes corrientes - Cuota deducible'
+          iva-deducible-aic-inversion-tipo-10-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              de inversión al tipo 10% - Base imponible
+          iva-deducible-aic-inversion-tipo-10-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              de inversión al tipo 10% - Cuota deducible
+          iva-deducible-aic-inversion-tipo-21-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              de inversión al tipo 21% - Base imponible
+          iva-deducible-aic-inversion-tipo-21-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              de inversión al tipo 21% - Cuota deducible
+          iva-deducible-aic-inversion-tipo-4-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              de inversión al tipo 4% - Base imponible
+          iva-deducible-aic-inversion-tipo-4-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              de inversión al tipo 4% - Cuota deducible
+          iva-deducible-aic-inversion-tipo-5-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              de inversión al tipo 5% - Base imponible
+          iva-deducible-aic-inversion-tipo-5-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              de inversión al tipo 5% - Cuota deducible
+          iva-deducible-aic-inversion-total-base:
+            label: 'Total: IVA soportado deducible en adquisiciones intracomunitarias
+              de bienes de inversión - Base imponible'
+          iva-deducible-aic-inversion-total-cuota:
+            label: 'Total: IVA soportado deducible en adquisiciones intracomunitarias
+              de bienes de inversión - Cuota deducible'
+          iva-deducible-aic-servicios-tipo-10-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de servicios
+              al tipo 10% - Base imponible
+          iva-deducible-aic-servicios-tipo-10-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de servicios
+              al tipo 10% - Cuota deducible
+          iva-deducible-aic-servicios-tipo-21-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de servicios
+              al tipo 21% - Base imponible
+          iva-deducible-aic-servicios-tipo-21-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de servicios
+              al tipo 21% - Cuota deducible
+          iva-deducible-aic-servicios-tipo-4-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de servicios
+              al tipo 4% - Base imponible
+          iva-deducible-aic-servicios-tipo-4-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de servicios
+              al tipo 4% - Cuota deducible
+          iva-deducible-aic-servicios-tipo-5-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de servicios
+              al tipo 5% - Base imponible
+          iva-deducible-aic-servicios-tipo-5-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de servicios
+              al tipo 5% - Cuota deducible
+          iva-deducible-aic-servicios-total-base:
+            label: 'Total: IVA soportado deducible en adquisiciones intracomunitarias
+              de servicios - Base imponible'
+          iva-deducible-aic-servicios-total-cuota:
+            label: 'Total: IVA soportado deducible en adquisiciones intracomunitarias
+              de servicios - Cuota deducible'
+          iva-deducible-compensaciones-reagp-base:
+            label: Compensaciones del régimen especial de la agricultura, ganadería
+              y pesca - Base imponible
+          iva-deducible-compensaciones-reagp-cuota:
+            label: Compensaciones del régimen especial de la agricultura, ganadería
+              y pesca - Cuota deducible
+          iva-deducible-importaciones-corrientes-tipo-10-base:
+            label: IVA soportado deducible en importaciones de bienes corrientes al
+              tipo 10% - Base imponible
+          iva-deducible-importaciones-corrientes-tipo-10-cuota:
+            label: IVA soportado deducible en importaciones de bienes corrientes al
+              tipo 10% - Cuota deducible
+          iva-deducible-importaciones-corrientes-tipo-21-base:
+            label: IVA soportado deducible en importaciones de bienes corrientes al
+              tipo 21% - Base imponible
+          iva-deducible-importaciones-corrientes-tipo-21-cuota:
+            label: IVA soportado deducible en importaciones de bienes corrientes al
+              tipo 21% - Cuota deducible
+          iva-deducible-importaciones-corrientes-tipo-4-base:
+            label: IVA soportado deducible en importaciones de bienes corrientes al
+              tipo 4% - Base imponible
+          iva-deducible-importaciones-corrientes-tipo-4-cuota:
+            label: IVA soportado deducible en importaciones de bienes corrientes al
+              tipo 4% - Cuota deducible
+          iva-deducible-importaciones-corrientes-tipo-5-base:
+            label: IVA soportado deducible en importaciones de bienes corrientes al
+              tipo 5% - Base imponible
+          iva-deducible-importaciones-corrientes-tipo-5-cuota:
+            label: IVA soportado deducible en importaciones de bienes corrientes al
+              tipo 5% - Cuota deducible
+          iva-deducible-importaciones-corrientes-total-base:
+            label: 'Total: IVA soportado deducible en importaciones de bienes corrientes
+              - Base imponible'
+          iva-deducible-importaciones-inversion-tipo-10-base:
+            label: IVA soportado deducible en importaciones de bienes de inversión
+              al tipo 10% - Base imponible
+          iva-deducible-importaciones-inversion-tipo-10-cuota:
+            label: IVA soportado deducible en importaciones de bienes de inversión
+              al tipo 10% - Cuota deducible
+          iva-deducible-importaciones-inversion-tipo-21-base:
+            label: IVA soportado deducible en importaciones de bienes de inversión
+              al tipo 21% - Base imponible
+          iva-deducible-importaciones-inversion-tipo-21-cuota:
+            label: IVA soportado deducible en importaciones de bienes de inversión
+              al tipo 21% - Cuota deducible
+          iva-deducible-importaciones-inversion-tipo-4-base:
+            label: IVA soportado deducible en importaciones de bienes de inversión
+              al tipo 4% - Base imponible
+          iva-deducible-importaciones-inversion-tipo-4-cuota:
+            label: IVA soportado deducible en importaciones de bienes de inversión
+              al tipo 4% - Cuota deducible
+          iva-deducible-importaciones-inversion-tipo-5-base:
+            label: IVA soportado deducible en importaciones de bienes de inversión
+              al tipo 5% - Base imponible
+          iva-deducible-importaciones-inversion-tipo-5-cuota:
+            label: IVA soportado deducible en importaciones de bienes de inversión
+              al tipo 5% - Cuota deducible
+          iva-deducible-importaciones-inversion-total-base:
+            label: 'Total: IVA soportado deducible en importaciones de bienes de inversión
+              - Base imponible'
+          iva-deducible-importaciones-inversion-total-cuota:
+            label: 'Total: IVA soportado deducible en importaciones de bienes de inversión
+              - Cuota deducible'
+          iva-deducible-interiores-corrientes-tipo-10-base:
+            label: IVA soportado deducible en operaciones interiores corrientes al
+              tipo 10% - Base imponible
+          iva-deducible-interiores-corrientes-tipo-10-cuota:
+            label: IVA soportado deducible en operaciones interiores corrientes al
+              tipo 10% - Cuota deducible
+          iva-deducible-interiores-corrientes-tipo-21-base:
+            label: IVA soportado deducible en operaciones interiores corrientes al
+              tipo 21% - Base imponible
+          iva-deducible-interiores-corrientes-tipo-21-cuota:
+            label: IVA soportado deducible en operaciones interiores corrientes al
+              tipo 21% - Cuota deducible
+          iva-deducible-interiores-corrientes-tipo-4-base:
+            label: IVA soportado deducible en operaciones interiores corrientes al
+              tipo 4% - Base imponible
+          iva-deducible-interiores-corrientes-tipo-4-cuota:
+            label: IVA soportado deducible en operaciones interiores corrientes al
+              tipo 4% - Cuota deducible
+          iva-deducible-interiores-corrientes-tipo-5-base:
+            label: IVA soportado deducible en operaciones interiores corrientes al
+              tipo 5% - Base imponible
+          iva-deducible-interiores-corrientes-tipo-5-cuota:
+            label: IVA soportado deducible en operaciones interiores corrientes al
+              tipo 5% - Cuota deducible
+          iva-deducible-interiores-inversion-tipo-10-base:
+            label: IVA soportado deducible en operaciones interiores con bienes de
+              inversión al tipo 10% - Base imponible
+          iva-deducible-interiores-inversion-tipo-10-cuota:
+            label: IVA soportado deducible en operaciones interiores con bienes de
+              inversión al tipo 10% - Cuota deducible
+          iva-deducible-interiores-inversion-tipo-21-base:
+            label: IVA soportado deducible en operaciones interiores con bienes de
+              inversión al tipo 21% - Base imponible
+          iva-deducible-interiores-inversion-tipo-21-cuota:
+            label: IVA soportado deducible en operaciones interiores con bienes de
+              inversión al tipo 21% - Cuota deducible
+          iva-deducible-interiores-inversion-tipo-4-base:
+            label: IVA soportado deducible en operaciones interiores con bienes de
+              inversión al tipo 4% - Base imponible
+          iva-deducible-interiores-inversion-tipo-4-cuota:
+            label: IVA soportado deducible en operaciones interiores con bienes de
+              inversión al tipo 4% - Cuota deducible
+          iva-deducible-interiores-inversion-tipo-5-base:
+            label: IVA soportado deducible en operaciones interiores con bienes de
+              inversión al tipo 5% - Base imponible
+          iva-deducible-interiores-inversion-tipo-5-cuota:
+            label: IVA soportado deducible en operaciones interiores con bienes de
+              inversión al tipo 5% - Cuota deducible
+          iva-deducible-interiores-inversion-total-base:
+            label: 'Total: IVA soportado deducible en operaciones interiores con bienes
+              de inversión - Base imponible'
+          iva-deducible-interiores-inversion-total-cuota:
+            label: 'Total: IVA soportado deducible en operaciones interiores con bienes
+              de inversión - Cuota deducible'
+          iva-deducible-intragrupo-corrientes-tipo-10-base:
+            label: IVA soportado deducible en operaciones intragrupo corrientes al
+              tipo 10% - Base imponible
+          iva-deducible-intragrupo-corrientes-tipo-10-cuota:
+            label: IVA soportado deducible en operaciones intragrupo corrientes al
+              tipo 10% - Cuota deducible
+          iva-deducible-intragrupo-corrientes-tipo-21-base:
+            label: IVA soportado deducible en operaciones intragrupo corrientes al
+              tipo 21% - Base imponible
+          iva-deducible-intragrupo-corrientes-tipo-21-cuota:
+            label: IVA soportado deducible en operaciones intragrupo corrientes al
+              tipo 21% - Cuota deducible
+          iva-deducible-intragrupo-corrientes-tipo-4-base:
+            label: IVA soportado deducible en operaciones intragrupo corrientes al
+              tipo 4% - Base imponible
+          iva-deducible-intragrupo-corrientes-tipo-4-cuota:
+            label: IVA soportado deducible en operaciones intragrupo corrientes al
+              tipo 4% - Cuota deducible
+          iva-deducible-intragrupo-corrientes-tipo-5-base:
+            label: IVA soportado deducible en operaciones intragrupo corrientes al
+              tipo 5% - Base imponible
+          iva-deducible-intragrupo-corrientes-tipo-5-cuota:
+            label: IVA soportado deducible en operaciones intragrupo corrientes al
+              tipo 5% - Cuota deducible
+          iva-deducible-intragrupo-corrientes-total-base:
+            label: 'Total: IVA soportado deducible en operaciones intragrupo corrientes
+              - Base imponible'
+          iva-deducible-intragrupo-corrientes-total-cuota:
+            label: 'Total: IVA soportado deducible en operaciones intragrupo corrientes
+              - Cuota deducible'
+          iva-deducible-intragrupo-inversion-tipo-10-base:
+            label: IVA soportado deducible en operaciones intragrupo con bienes de
+              inversión al tipo 10% - Base imponible
+          iva-deducible-intragrupo-inversion-tipo-10-cuota:
+            label: IVA soportado deducible en operaciones intragrupo con bienes de
+              inversión al tipo 10% - Cuota deducible
+          iva-deducible-intragrupo-inversion-tipo-21-base:
+            label: IVA soportado deducible en operaciones intragrupo con bienes de
+              inversión al tipo 21% - Base imponible
+          iva-deducible-intragrupo-inversion-tipo-21-cuota:
+            label: IVA soportado deducible en operaciones intragrupo con bienes de
+              inversión al tipo 21% - Cuota deducible
+          iva-deducible-intragrupo-inversion-tipo-4-base:
+            label: IVA soportado deducible en operaciones intragrupo con bienes de
+              inversión al tipo 4% - Base imponible
+          iva-deducible-intragrupo-inversion-tipo-4-cuota:
+            label: IVA soportado deducible en operaciones intragrupo con bienes de
+              inversión al tipo 4% - Cuota deducible
+          iva-deducible-intragrupo-inversion-tipo-5-base:
+            label: IVA soportado deducible en operaciones intragrupo con bienes de
+              inversión al tipo 5% - Base imponible
+          iva-deducible-intragrupo-inversion-tipo-5-cuota:
+            label: IVA soportado deducible en operaciones intragrupo con bienes de
+              inversión al tipo 5% - Cuota deducible
+          iva-deducible-intragrupo-inversion-total-base:
+            label: 'Total: IVA soportado deducible en operaciones intragrupo con bienes
+              de inversión - Base imponible'
+          iva-deducible-intragrupo-inversion-total-cuota:
+            label: 'Total: IVA soportado deducible en operaciones intragrupo con bienes
+              de inversión - Cuota deducible'
+          iva-deducible-rectificacion-base:
+            label: Rectificación de deducciones - Base imponible
+          iva-deducible-rectificacion-cuota:
+            label: Rectificación de deducciones - Cuota deducible
+          iva-deducible-rectificacion-intragrupo-base:
+            label: Rectificación de deducciones de operaciones intragrupo - Base imponible
+          iva-deducible-rectificacion-intragrupo-cuota:
+            label: Rectificación de deducciones de operaciones intragrupo - Cuota
+              deducible
+          iva-deducible-resolucion-firme-tipos-no-vigentes-base:
+            label: Cuotas deducibles en virtud de resolución administrativa o sentencia
+              firmes con tipos no vigentes - Base imponible
+          iva-deducible-resolucion-firme-tipos-no-vigentes-cuota:
+            label: Cuotas deducibles en virtud de resolución administrativa o sentencia
+              firmes con tipos no vigentes - Cuota deducible
           iva-isp-interior-base:
             help: null
             label: Base imponible IVA autorepercutido en operaciones interiores con
@@ -73390,6 +73672,100 @@ modelo:
             help: null
             label: Cuota IVA autorepercutida en operaciones interiores con inversion
               del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
+          iva-modificacion-bases-cuotas-base:
+            label: Modificación de bases imponibles y cuotas - Base imponible
+          iva-modificacion-bases-cuotas-cuota:
+            label: Modificación de bases imponibles y cuotas - Cuota
+          iva-modificacion-bases-cuotas-intragrupo-base:
+            label: Modificación de bases imponibles y cuotas de operaciones intragrupo
+              - Base imponible
+          iva-modificacion-bases-cuotas-intragrupo-cuota:
+            label: Modificación de bases imponibles y cuotas de operaciones intragrupo
+              - Cuota
+          iva-modificacion-concurso-acreedores-base:
+            label: Modificación de bases imponibles y cuotas por concurso de acreedores
+              - Base imponible
+          iva-modificacion-concurso-acreedores-cuota:
+            label: Modificación de bases imponibles y cuotas por concurso de acreedores
+              - Cuota
+          iva-modificacion-recargo-base:
+            label: Modificación de bases imponibles y cuotas del recargo de equivalencia
+              - Base imponible
+          iva-modificacion-recargo-concurso-base:
+            label: Modificación de bases imponibles y cuotas del recargo de equivalencia
+              por concurso de acreedores - Base imponible
+          iva-modificacion-recargo-concurso-cuota:
+            label: Modificación de bases imponibles y cuotas del recargo de equivalencia
+              por concurso de acreedores - Cuota
+          iva-modificacion-recargo-cuota:
+            label: Modificación de bases imponibles y cuotas del recargo de equivalencia
+              - Cuota
+          iva-repercutido-agencias-viajes-tipo-21-base:
+            label: IVA devengado en el régimen especial de agencias de viajes al tipo
+              21% - Base imponible
+          iva-repercutido-agencias-viajes-tipo-21-cuota:
+            label: IVA devengado en el régimen especial de agencias de viajes al tipo
+              21% - Cuota
+          iva-repercutido-bienes-usados-tipo-0-base:
+            label: IVA devengado en el régimen especial de bienes usados al tipo 0%
+              - Base imponible
+          iva-repercutido-bienes-usados-tipo-0-cuota:
+            label: IVA devengado en el régimen especial de bienes usados al tipo 0%
+              - Cuota
+          iva-repercutido-bienes-usados-tipo-10-base:
+            label: IVA devengado en el régimen especial de bienes usados al tipo 10%
+              - Base imponible
+          iva-repercutido-bienes-usados-tipo-10-cuota:
+            label: IVA devengado en el régimen especial de bienes usados al tipo 10%
+              - Cuota
+          iva-repercutido-bienes-usados-tipo-21-base:
+            label: IVA devengado en el régimen especial de bienes usados al tipo 21%
+              - Base imponible
+          iva-repercutido-bienes-usados-tipo-21-cuota:
+            label: IVA devengado en el régimen especial de bienes usados al tipo 21%
+              - Cuota
+          iva-repercutido-bienes-usados-tipo-4-base:
+            label: IVA devengado en el régimen especial de bienes usados al tipo 4%
+              - Base imponible
+          iva-repercutido-bienes-usados-tipo-4-cuota:
+            label: IVA devengado en el régimen especial de bienes usados al tipo 4%
+              - Cuota
+          iva-repercutido-bienes-usados-tipo-5-base:
+            label: IVA devengado en el régimen especial de bienes usados al tipo 5%
+              - Base imponible
+          iva-repercutido-bienes-usados-tipo-5-cuota:
+            label: IVA devengado en el régimen especial de bienes usados al tipo 5%
+              - Cuota
+          iva-repercutido-criterio-caja-tipo-0-base:
+            label: IVA devengado en el régimen especial del criterio de caja al tipo
+              0% - Base imponible
+          iva-repercutido-criterio-caja-tipo-0-cuota:
+            label: IVA devengado en el régimen especial del criterio de caja al tipo
+              0% - Cuota
+          iva-repercutido-criterio-caja-tipo-10-base:
+            label: IVA devengado en el régimen especial del criterio de caja al tipo
+              10% - Base imponible
+          iva-repercutido-criterio-caja-tipo-10-cuota:
+            label: IVA devengado en el régimen especial del criterio de caja al tipo
+              10% - Cuota
+          iva-repercutido-criterio-caja-tipo-21-base:
+            label: IVA devengado en el régimen especial del criterio de caja al tipo
+              21% - Base imponible
+          iva-repercutido-criterio-caja-tipo-21-cuota:
+            label: IVA devengado en el régimen especial del criterio de caja al tipo
+              21% - Cuota
+          iva-repercutido-criterio-caja-tipo-4-base:
+            label: IVA devengado en el régimen especial del criterio de caja al tipo
+              4% - Base imponible
+          iva-repercutido-criterio-caja-tipo-4-cuota:
+            label: IVA devengado en el régimen especial del criterio de caja al tipo
+              4% - Cuota
+          iva-repercutido-criterio-caja-tipo-5-base:
+            label: IVA devengado en el régimen especial del criterio de caja al tipo
+              5% - Base imponible
+          iva-repercutido-criterio-caja-tipo-5-cuota:
+            label: IVA devengado en el régimen especial del criterio de caja al tipo
+              5% - Cuota
           iva-repercutido-intragrupo-tipo-0-base:
             label: IVA devengado en operaciones intragrupo al tipo 0% - Base imponible
           iva-repercutido-intragrupo-tipo-0-cuota:
@@ -73410,6 +73786,18 @@ modelo:
             label: IVA devengado en operaciones intragrupo al tipo 5% - Base imponible
           iva-repercutido-intragrupo-tipo-5-cuota:
             label: IVA devengado en operaciones intragrupo al tipo 5% - Cuota
+          iva-repercutido-recargo-tipo-0-5-base:
+            label: Recargo de equivalencia al tipo 0,5% - Base imponible
+          iva-repercutido-recargo-tipo-1-4-base:
+            label: Recargo de equivalencia al tipo 1,4% - Base imponible
+          iva-repercutido-recargo-tipo-1-75-base:
+            label: Recargo de equivalencia al tipo 1,75% - Base imponible
+          iva-repercutido-recargo-tipo-1-75-cuota:
+            label: Recargo de equivalencia al tipo 1,75% - Cuota
+          iva-repercutido-recargo-tipo-5-2-base:
+            label: Recargo de equivalencia al tipo 5,2% - Base imponible
+          iva-total-bases-iva:
+            label: Total bases imponibles del IVA devengado
           iva-volumen-operaciones-entregas-intracomunitarias:
             help: null
             label: Entregas intracomunitarias de bienes y servicios
@@ -75039,6 +75427,20 @@ modelo:
               help: null
               label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
                 Otros inmuebles - Total
+            declaracion-a:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Impuestos efectivamente satisfechos en el extranjero
+            declaracion-b:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Parte de la base liquidable gravada en el extranjero
+            declaracion-i:
+              help: null
+              label: Ingreso - Importe del ingreso
+            declaracion-negativa:
+              help: null
+              label: Declaración negativa
             identificacion-1:
               help: null
               label: Modalidades especiales de tributación - En 2020 ha tenido su
@@ -75144,6 +75546,58 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Periodo (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Sujeto pasivo - Domicilio habitual - Código de provincia
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaración complementaria - Cuotas a ingresar de anteriores
+                autoliquidaciones o liquidaciones administrativas
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Clase de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Porcentaje de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Sujeto pasivo - Estado civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Fecha de la declaración - Año
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Fecha de la declaración - Día
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Fecha de la declaración - Localidad
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Fecha de la declaración - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Sujeto pasivo - Fecha de nacimiento
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Sujeto pasivo - Nacionalidad
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Régimen económico del matrimonio
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representante - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representante - Apellidos y nombre o razón social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Sujeto pasivo - Sexo
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingreso - Forma de pago
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidación - Límite cuota íntegra - Parte de la base imponible
@@ -75361,6 +75815,20 @@ modelo:
               help: null
               label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
                 Otros inmuebles - Total
+            declaracion-a:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Impuestos efectivamente satisfechos en el extranjero
+            declaracion-b:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Parte de la base liquidable gravada en el extranjero
+            declaracion-i:
+              help: null
+              label: Ingreso - Importe del ingreso
+            declaracion-negativa:
+              help: null
+              label: Declaración negativa
             identificacion-1:
               help: null
               label: Modalidades especiales de tributación - En 2022 ha tenido su
@@ -75466,6 +75934,58 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Periodo (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Sujeto pasivo - Domicilio habitual - Código de provincia
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaración complementaria - Cuotas a ingresar de anteriores
+                autoliquidaciones o liquidaciones administrativas
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Clase de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Porcentaje de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Sujeto pasivo - Estado civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Fecha de la declaración - Año
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Fecha de la declaración - Día
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Fecha de la declaración - Localidad
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Fecha de la declaración - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Sujeto pasivo - Fecha de nacimiento
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Sujeto pasivo - Nacionalidad
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Régimen económico del matrimonio
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representante - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representante - Apellidos y nombre o razón social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Sujeto pasivo - Sexo
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingreso - Forma de pago
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidación - Límite cuota íntegra - Parte de la base imponible
@@ -75683,6 +76203,20 @@ modelo:
               help: null
               label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
                 Otros inmuebles - Total
+            declaracion-a:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Impuestos efectivamente satisfechos en el extranjero
+            declaracion-b:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Parte de la base liquidable gravada en el extranjero
+            declaracion-i:
+              help: null
+              label: Ingreso - Importe del ingreso
+            declaracion-negativa:
+              help: null
+              label: Declaración negativa
             identificacion-1:
               help: null
               label: Modalidades especiales de tributación - En 2023 ha tenido su
@@ -75788,6 +76322,58 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Periodo (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Sujeto pasivo - Domicilio habitual - Código de provincia
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaración complementaria - Cuotas a ingresar de anteriores
+                autoliquidaciones o liquidaciones administrativas
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Clase de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Porcentaje de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Sujeto pasivo - Estado civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Fecha de la declaración - Año
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Fecha de la declaración - Día
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Fecha de la declaración - Localidad
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Fecha de la declaración - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Sujeto pasivo - Fecha de nacimiento
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Sujeto pasivo - Nacionalidad
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Régimen económico del matrimonio
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representante - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representante - Apellidos y nombre o razón social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Sujeto pasivo - Sexo
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingreso - Forma de pago
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidación - Límite cuota íntegra - Parte de la base imponible
@@ -76005,6 +76591,20 @@ modelo:
               help: null
               label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
                 Otros inmuebles - Total
+            declaracion-a:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Impuestos efectivamente satisfechos en el extranjero
+            declaracion-b:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Parte de la base liquidable gravada en el extranjero
+            declaracion-i:
+              help: null
+              label: Ingreso - Importe del ingreso
+            declaracion-negativa:
+              help: null
+              label: Declaración negativa
             identificacion-1:
               help: null
               label: Modalidades especiales de tributación - En 2024 ha tenido su
@@ -76110,6 +76710,58 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Periodo (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Sujeto pasivo - Domicilio habitual - Código de provincia
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaración complementaria - Cuotas a ingresar de anteriores
+                autoliquidaciones o liquidaciones administrativas
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Clase de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Porcentaje de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Sujeto pasivo - Estado civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Fecha de la declaración - Año
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Fecha de la declaración - Día
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Fecha de la declaración - Localidad
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Fecha de la declaración - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Sujeto pasivo - Fecha de nacimiento
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Sujeto pasivo - Nacionalidad
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Régimen económico del matrimonio
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representante - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representante - Apellidos y nombre o razón social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Sujeto pasivo - Sexo
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingreso - Forma de pago
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidación - Límite cuota íntegra - Parte de la base imponible
@@ -76327,6 +76979,20 @@ modelo:
               help: null
               label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
                 Otros inmuebles - Total
+            declaracion-a:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Impuestos efectivamente satisfechos en el extranjero
+            declaracion-b:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Parte de la base liquidable gravada en el extranjero
+            declaracion-i:
+              help: null
+              label: Ingreso - Importe del ingreso
+            declaracion-negativa:
+              help: null
+              label: Declaración negativa
             identificacion-1:
               help: null
               label: Modalidades especiales de tributación - En 2025 ha tenido su
@@ -76432,6 +77098,58 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Periodo (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Sujeto pasivo - Domicilio habitual - Código de provincia
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaración complementaria - Cuotas a ingresar de anteriores
+                autoliquidaciones o liquidaciones administrativas
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Clase de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Porcentaje de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Sujeto pasivo - Estado civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Fecha de la declaración - Año
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Fecha de la declaración - Día
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Fecha de la declaración - Localidad
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Fecha de la declaración - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Sujeto pasivo - Fecha de nacimiento
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Sujeto pasivo - Nacionalidad
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Régimen económico del matrimonio
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representante - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representante - Apellidos y nombre o razón social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Sujeto pasivo - Sexo
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingreso - Forma de pago
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidación - Límite cuota íntegra - Parte de la base imponible

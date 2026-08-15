@@ -44,8 +44,17 @@ def _create_profile(
     by the shared seeding door itself, through the same recorder registration
     calls, so every suite that seeds a profile gets the fact rather than only
     the ones that remembered to restore it.
+
+    The empty LEGAL case snapshot is still recorded here, and deliberately not
+    at that door, because no production door records it either: the deletion
+    preflight demands both hold owners' facts and only the filing owner has a
+    creation-time writer. Recording it at the seeding door would make every
+    seeded profile carry a fact a real one does not, hiding that gap behind
+    green suites. It is scaffolding for a production gap this suite does not
+    own, which is why it stays visible here.
     """
     from ...tests.user_profile import register_minimal_profile
+    from ..evidence import LegalHoldCaseAuthority
 
     with open_test_profile_session(profile_id):
         register_minimal_profile(
@@ -53,6 +62,11 @@ def _create_profile(
             display_name=label,
             overrides={"identity.tax_id": tax_id, "identity.name": label},
         )
+    LegalHoldCaseAuthority().record_open_case_snapshot(
+        profile_id=UUID(profile_id),
+        open_case_ids=(),
+        observed_at=datetime.now(UTC),
+    )
 
 
 def _delete_profile_through_custody(profile_id: str, *, root: Path) -> None:

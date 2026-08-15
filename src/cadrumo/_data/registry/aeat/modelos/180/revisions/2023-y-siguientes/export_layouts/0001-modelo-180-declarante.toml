@@ -73,6 +73,46 @@ legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-
 source_refs = ["aeat-dr-180-2023"]
 
 [[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-decl-apellidos-razon-social"
+offset = 18
+length = 40
+kind = "header"
+# One slot carries "apellidos y nombre" for a persona fisica and "razon
+# social" for a persona juridica, so it must read the fact that is populated
+# for BOTH: full_name. surnames/given_name are blank for an entity and
+# legal_name is blank for a natural person, so either would blank the slot
+# for half the declarant population. The design's "primer apellido, un
+# espacio, el segundo apellido, un espacio y el nombre completo,
+# necesariamente en este orden" is exactly the surnames-first join
+# compose_legal_full_name already performs.
+producer_key = "taxpayer.full_name"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-decl-tipo-soporte"
+offset = 58
+length = 1
+kind = "literal"
+# The design admits exactly two claves: "C" (cinta magnetica) and "T"
+# (transmision telematica). Cadrumo emits a file for telematic presentation,
+# and blank is not an admitted value, so "T" is the only clave this producer
+# can correctly write.
+literal = "T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
 id = "modelo-180-decl-total-perceptores"
 offset = 136
 length = 9

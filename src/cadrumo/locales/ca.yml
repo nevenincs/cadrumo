@@ -70965,6 +70965,287 @@ modelo:
           iva-cuota-soportada-interiores:
             help: null
             label: Quota IVA suportat en operacions interiors corrents
+          iva-deducible-aic-corrientes-tipo-10-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              corrents al tipus 10% - base imposable
+          iva-deducible-aic-corrientes-tipo-10-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              corrents al tipus 10% - quota deduïble
+          iva-deducible-aic-corrientes-tipo-21-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              corrents al tipus 21% - base imposable
+          iva-deducible-aic-corrientes-tipo-21-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              corrents al tipus 21% - quota deduïble
+          iva-deducible-aic-corrientes-tipo-4-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              corrents al tipus 4% - base imposable
+          iva-deducible-aic-corrientes-tipo-4-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              corrents al tipus 4% - quota deduïble
+          iva-deducible-aic-corrientes-tipo-5-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              corrents al tipus 5% - base imposable
+          iva-deducible-aic-corrientes-tipo-5-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              corrents al tipus 5% - quota deduïble
+          iva-deducible-aic-corrientes-total-base:
+            label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
+              de béns corrents - base imposable'
+          iva-deducible-aic-corrientes-total-cuota:
+            label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
+              de béns corrents - quota deduïble'
+          iva-deducible-aic-inversion-tipo-10-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              d'inversió al tipus 10% - base imposable
+          iva-deducible-aic-inversion-tipo-10-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              d'inversió al tipus 10% - quota deduïble
+          iva-deducible-aic-inversion-tipo-21-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              d'inversió al tipus 21% - base imposable
+          iva-deducible-aic-inversion-tipo-21-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              d'inversió al tipus 21% - quota deduïble
+          iva-deducible-aic-inversion-tipo-4-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              d'inversió al tipus 4% - base imposable
+          iva-deducible-aic-inversion-tipo-4-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              d'inversió al tipus 4% - quota deduïble
+          iva-deducible-aic-inversion-tipo-5-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              d'inversió al tipus 5% - base imposable
+          iva-deducible-aic-inversion-tipo-5-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              d'inversió al tipus 5% - quota deduïble
+          iva-deducible-aic-inversion-total-base:
+            label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
+              de béns d''inversió - base imposable'
+          iva-deducible-aic-inversion-total-cuota:
+            label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
+              de béns d''inversió - quota deduïble'
+          iva-deducible-aic-servicios-tipo-10-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
+              al tipus 10% - base imposable
+          iva-deducible-aic-servicios-tipo-10-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
+              al tipus 10% - quota deduïble
+          iva-deducible-aic-servicios-tipo-21-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
+              al tipus 21% - base imposable
+          iva-deducible-aic-servicios-tipo-21-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
+              al tipus 21% - quota deduïble
+          iva-deducible-aic-servicios-tipo-4-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
+              al tipus 4% - base imposable
+          iva-deducible-aic-servicios-tipo-4-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
+              al tipus 4% - quota deduïble
+          iva-deducible-aic-servicios-tipo-5-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
+              al tipus 5% - base imposable
+          iva-deducible-aic-servicios-tipo-5-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
+              al tipus 5% - quota deduïble
+          iva-deducible-aic-servicios-total-base:
+            label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
+              de serveis - base imposable'
+          iva-deducible-aic-servicios-total-cuota:
+            label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
+              de serveis - quota deduïble'
+          iva-deducible-compensaciones-reagp-base:
+            label: Compensacions del règim especial de l'agricultura, ramaderia i
+              pesca - base imposable
+          iva-deducible-compensaciones-reagp-cuota:
+            label: Compensacions del règim especial de l'agricultura, ramaderia i
+              pesca - quota deduïble
+          iva-deducible-importaciones-corrientes-tipo-10-base:
+            label: IVA suportat deduïble en importacions de béns corrents al tipus
+              10% - base imposable
+          iva-deducible-importaciones-corrientes-tipo-10-cuota:
+            label: IVA suportat deduïble en importacions de béns corrents al tipus
+              10% - quota deduïble
+          iva-deducible-importaciones-corrientes-tipo-21-base:
+            label: IVA suportat deduïble en importacions de béns corrents al tipus
+              21% - base imposable
+          iva-deducible-importaciones-corrientes-tipo-21-cuota:
+            label: IVA suportat deduïble en importacions de béns corrents al tipus
+              21% - quota deduïble
+          iva-deducible-importaciones-corrientes-tipo-4-base:
+            label: IVA suportat deduïble en importacions de béns corrents al tipus
+              4% - base imposable
+          iva-deducible-importaciones-corrientes-tipo-4-cuota:
+            label: IVA suportat deduïble en importacions de béns corrents al tipus
+              4% - quota deduïble
+          iva-deducible-importaciones-corrientes-tipo-5-base:
+            label: IVA suportat deduïble en importacions de béns corrents al tipus
+              5% - base imposable
+          iva-deducible-importaciones-corrientes-tipo-5-cuota:
+            label: IVA suportat deduïble en importacions de béns corrents al tipus
+              5% - quota deduïble
+          iva-deducible-importaciones-corrientes-total-base:
+            label: 'Total: IVA suportat deduïble en importacions de béns corrents
+              - base imposable'
+          iva-deducible-importaciones-inversion-tipo-10-base:
+            label: IVA suportat deduïble en importacions de béns d'inversió al tipus
+              10% - base imposable
+          iva-deducible-importaciones-inversion-tipo-10-cuota:
+            label: IVA suportat deduïble en importacions de béns d'inversió al tipus
+              10% - quota deduïble
+          iva-deducible-importaciones-inversion-tipo-21-base:
+            label: IVA suportat deduïble en importacions de béns d'inversió al tipus
+              21% - base imposable
+          iva-deducible-importaciones-inversion-tipo-21-cuota:
+            label: IVA suportat deduïble en importacions de béns d'inversió al tipus
+              21% - quota deduïble
+          iva-deducible-importaciones-inversion-tipo-4-base:
+            label: IVA suportat deduïble en importacions de béns d'inversió al tipus
+              4% - base imposable
+          iva-deducible-importaciones-inversion-tipo-4-cuota:
+            label: IVA suportat deduïble en importacions de béns d'inversió al tipus
+              4% - quota deduïble
+          iva-deducible-importaciones-inversion-tipo-5-base:
+            label: IVA suportat deduïble en importacions de béns d'inversió al tipus
+              5% - base imposable
+          iva-deducible-importaciones-inversion-tipo-5-cuota:
+            label: IVA suportat deduïble en importacions de béns d'inversió al tipus
+              5% - quota deduïble
+          iva-deducible-importaciones-inversion-total-base:
+            label: 'Total: IVA suportat deduïble en importacions de béns d''inversió
+              - base imposable'
+          iva-deducible-importaciones-inversion-total-cuota:
+            label: 'Total: IVA suportat deduïble en importacions de béns d''inversió
+              - quota deduïble'
+          iva-deducible-interiores-corrientes-tipo-10-base:
+            label: IVA suportat deduïble en operacions interiors corrents al tipus
+              10% - base imposable
+          iva-deducible-interiores-corrientes-tipo-10-cuota:
+            label: IVA suportat deduïble en operacions interiors corrents al tipus
+              10% - quota deduïble
+          iva-deducible-interiores-corrientes-tipo-21-base:
+            label: IVA suportat deduïble en operacions interiors corrents al tipus
+              21% - base imposable
+          iva-deducible-interiores-corrientes-tipo-21-cuota:
+            label: IVA suportat deduïble en operacions interiors corrents al tipus
+              21% - quota deduïble
+          iva-deducible-interiores-corrientes-tipo-4-base:
+            label: IVA suportat deduïble en operacions interiors corrents al tipus
+              4% - base imposable
+          iva-deducible-interiores-corrientes-tipo-4-cuota:
+            label: IVA suportat deduïble en operacions interiors corrents al tipus
+              4% - quota deduïble
+          iva-deducible-interiores-corrientes-tipo-5-base:
+            label: IVA suportat deduïble en operacions interiors corrents al tipus
+              5% - base imposable
+          iva-deducible-interiores-corrientes-tipo-5-cuota:
+            label: IVA suportat deduïble en operacions interiors corrents al tipus
+              5% - quota deduïble
+          iva-deducible-interiores-inversion-tipo-10-base:
+            label: IVA suportat deduïble en operacions interiors amb béns d'inversió
+              al tipus 10% - base imposable
+          iva-deducible-interiores-inversion-tipo-10-cuota:
+            label: IVA suportat deduïble en operacions interiors amb béns d'inversió
+              al tipus 10% - quota deduïble
+          iva-deducible-interiores-inversion-tipo-21-base:
+            label: IVA suportat deduïble en operacions interiors amb béns d'inversió
+              al tipus 21% - base imposable
+          iva-deducible-interiores-inversion-tipo-21-cuota:
+            label: IVA suportat deduïble en operacions interiors amb béns d'inversió
+              al tipus 21% - quota deduïble
+          iva-deducible-interiores-inversion-tipo-4-base:
+            label: IVA suportat deduïble en operacions interiors amb béns d'inversió
+              al tipus 4% - base imposable
+          iva-deducible-interiores-inversion-tipo-4-cuota:
+            label: IVA suportat deduïble en operacions interiors amb béns d'inversió
+              al tipus 4% - quota deduïble
+          iva-deducible-interiores-inversion-tipo-5-base:
+            label: IVA suportat deduïble en operacions interiors amb béns d'inversió
+              al tipus 5% - base imposable
+          iva-deducible-interiores-inversion-tipo-5-cuota:
+            label: IVA suportat deduïble en operacions interiors amb béns d'inversió
+              al tipus 5% - quota deduïble
+          iva-deducible-interiores-inversion-total-base:
+            label: 'Total: IVA suportat deduïble en operacions interiors amb béns
+              d''inversió - base imposable'
+          iva-deducible-interiores-inversion-total-cuota:
+            label: 'Total: IVA suportat deduïble en operacions interiors amb béns
+              d''inversió - quota deduïble'
+          iva-deducible-intragrupo-corrientes-tipo-10-base:
+            label: IVA suportat deduïble en operacions intragrup corrents al tipus
+              10% - base imposable
+          iva-deducible-intragrupo-corrientes-tipo-10-cuota:
+            label: IVA suportat deduïble en operacions intragrup corrents al tipus
+              10% - quota deduïble
+          iva-deducible-intragrupo-corrientes-tipo-21-base:
+            label: IVA suportat deduïble en operacions intragrup corrents al tipus
+              21% - base imposable
+          iva-deducible-intragrupo-corrientes-tipo-21-cuota:
+            label: IVA suportat deduïble en operacions intragrup corrents al tipus
+              21% - quota deduïble
+          iva-deducible-intragrupo-corrientes-tipo-4-base:
+            label: IVA suportat deduïble en operacions intragrup corrents al tipus
+              4% - base imposable
+          iva-deducible-intragrupo-corrientes-tipo-4-cuota:
+            label: IVA suportat deduïble en operacions intragrup corrents al tipus
+              4% - quota deduïble
+          iva-deducible-intragrupo-corrientes-tipo-5-base:
+            label: IVA suportat deduïble en operacions intragrup corrents al tipus
+              5% - base imposable
+          iva-deducible-intragrupo-corrientes-tipo-5-cuota:
+            label: IVA suportat deduïble en operacions intragrup corrents al tipus
+              5% - quota deduïble
+          iva-deducible-intragrupo-corrientes-total-base:
+            label: 'Total: IVA suportat deduïble en operacions intragrup corrents
+              - base imposable'
+          iva-deducible-intragrupo-corrientes-total-cuota:
+            label: 'Total: IVA suportat deduïble en operacions intragrup corrents
+              - quota deduïble'
+          iva-deducible-intragrupo-inversion-tipo-10-base:
+            label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
+              al tipus 10% - base imposable
+          iva-deducible-intragrupo-inversion-tipo-10-cuota:
+            label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
+              al tipus 10% - quota deduïble
+          iva-deducible-intragrupo-inversion-tipo-21-base:
+            label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
+              al tipus 21% - base imposable
+          iva-deducible-intragrupo-inversion-tipo-21-cuota:
+            label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
+              al tipus 21% - quota deduïble
+          iva-deducible-intragrupo-inversion-tipo-4-base:
+            label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
+              al tipus 4% - base imposable
+          iva-deducible-intragrupo-inversion-tipo-4-cuota:
+            label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
+              al tipus 4% - quota deduïble
+          iva-deducible-intragrupo-inversion-tipo-5-base:
+            label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
+              al tipus 5% - base imposable
+          iva-deducible-intragrupo-inversion-tipo-5-cuota:
+            label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
+              al tipus 5% - quota deduïble
+          iva-deducible-intragrupo-inversion-total-base:
+            label: 'Total: IVA suportat deduïble en operacions intragrup amb béns
+              d''inversió - base imposable'
+          iva-deducible-intragrupo-inversion-total-cuota:
+            label: 'Total: IVA suportat deduïble en operacions intragrup amb béns
+              d''inversió - quota deduïble'
+          iva-deducible-rectificacion-base:
+            label: Rectificació de deduccions - base imposable
+          iva-deducible-rectificacion-cuota:
+            label: Rectificació de deduccions - quota deduïble
+          iva-deducible-rectificacion-intragrupo-base:
+            label: Rectificació de deduccions d'operacions intragrup - base imposable
+          iva-deducible-rectificacion-intragrupo-cuota:
+            label: Rectificació de deduccions d'operacions intragrup - quota deduïble
+          iva-deducible-resolucion-firme-tipos-no-vigentes-base:
+            label: Quotes deduïbles en virtut de resolució administrativa o sentència
+              fermes amb tipus no vigents - base imposable
+          iva-deducible-resolucion-firme-tipos-no-vigentes-cuota:
+            label: Quotes deduïbles en virtut de resolució administrativa o sentència
+              fermes amb tipus no vigents - quota deduïble
           iva-isp-interior-base:
             help: null
             label: Base imposable de l'IVA autorepercutit en operacions interiors
@@ -70972,6 +71253,95 @@ modelo:
           iva-isp-interior-cuota:
             help: null
             label: IVA autorepercutit meritat en operacions interiors
+          iva-modificacion-bases-cuotas-base:
+            label: Modificació de bases imposables i quotes - base imposable
+          iva-modificacion-bases-cuotas-cuota:
+            label: Modificació de bases imposables i quotes - quota
+          iva-modificacion-bases-cuotas-intragrupo-base:
+            label: Modificació de bases imposables i quotes d'operacions intragrup
+              - base imposable
+          iva-modificacion-bases-cuotas-intragrupo-cuota:
+            label: Modificació de bases imposables i quotes d'operacions intragrup
+              - quota
+          iva-modificacion-concurso-acreedores-base:
+            label: Modificació de bases imposables i quotes per concurs de creditors
+              - base imposable
+          iva-modificacion-concurso-acreedores-cuota:
+            label: Modificació de bases imposables i quotes per concurs de creditors
+              - quota
+          iva-modificacion-recargo-base:
+            label: Modificació de bases imposables i quotes del recàrrec d'equivalència
+              - base imposable
+          iva-modificacion-recargo-concurso-base:
+            label: Modificació de bases imposables i quotes del recàrrec d'equivalència
+              per concurs de creditors - base imposable
+          iva-modificacion-recargo-concurso-cuota:
+            label: Modificació de bases imposables i quotes del recàrrec d'equivalència
+              per concurs de creditors - quota
+          iva-modificacion-recargo-cuota:
+            label: Modificació de bases imposables i quotes del recàrrec d'equivalència
+              - quota
+          iva-repercutido-agencias-viajes-tipo-21-base:
+            label: IVA meritat en el règim especial d'agències de viatges al tipus
+              21% - base imposable
+          iva-repercutido-agencias-viajes-tipo-21-cuota:
+            label: IVA meritat en el règim especial d'agències de viatges al tipus
+              21% - quota
+          iva-repercutido-bienes-usados-tipo-0-base:
+            label: IVA meritat en el règim especial de béns usats al tipus 0% - base
+              imposable
+          iva-repercutido-bienes-usados-tipo-0-cuota:
+            label: IVA meritat en el règim especial de béns usats al tipus 0% - quota
+          iva-repercutido-bienes-usados-tipo-10-base:
+            label: IVA meritat en el règim especial de béns usats al tipus 10% - base
+              imposable
+          iva-repercutido-bienes-usados-tipo-10-cuota:
+            label: IVA meritat en el règim especial de béns usats al tipus 10% - quota
+          iva-repercutido-bienes-usados-tipo-21-base:
+            label: IVA meritat en el règim especial de béns usats al tipus 21% - base
+              imposable
+          iva-repercutido-bienes-usados-tipo-21-cuota:
+            label: IVA meritat en el règim especial de béns usats al tipus 21% - quota
+          iva-repercutido-bienes-usados-tipo-4-base:
+            label: IVA meritat en el règim especial de béns usats al tipus 4% - base
+              imposable
+          iva-repercutido-bienes-usados-tipo-4-cuota:
+            label: IVA meritat en el règim especial de béns usats al tipus 4% - quota
+          iva-repercutido-bienes-usados-tipo-5-base:
+            label: IVA meritat en el règim especial de béns usats al tipus 5% - base
+              imposable
+          iva-repercutido-bienes-usados-tipo-5-cuota:
+            label: IVA meritat en el règim especial de béns usats al tipus 5% - quota
+          iva-repercutido-criterio-caja-tipo-0-base:
+            label: IVA meritat en el règim especial del criteri de caixa al tipus
+              0% - base imposable
+          iva-repercutido-criterio-caja-tipo-0-cuota:
+            label: IVA meritat en el règim especial del criteri de caixa al tipus
+              0% - quota
+          iva-repercutido-criterio-caja-tipo-10-base:
+            label: IVA meritat en el règim especial del criteri de caixa al tipus
+              10% - base imposable
+          iva-repercutido-criterio-caja-tipo-10-cuota:
+            label: IVA meritat en el règim especial del criteri de caixa al tipus
+              10% - quota
+          iva-repercutido-criterio-caja-tipo-21-base:
+            label: IVA meritat en el règim especial del criteri de caixa al tipus
+              21% - base imposable
+          iva-repercutido-criterio-caja-tipo-21-cuota:
+            label: IVA meritat en el règim especial del criteri de caixa al tipus
+              21% - quota
+          iva-repercutido-criterio-caja-tipo-4-base:
+            label: IVA meritat en el règim especial del criteri de caixa al tipus
+              4% - base imposable
+          iva-repercutido-criterio-caja-tipo-4-cuota:
+            label: IVA meritat en el règim especial del criteri de caixa al tipus
+              4% - quota
+          iva-repercutido-criterio-caja-tipo-5-base:
+            label: IVA meritat en el règim especial del criteri de caixa al tipus
+              5% - base imposable
+          iva-repercutido-criterio-caja-tipo-5-cuota:
+            label: IVA meritat en el règim especial del criteri de caixa al tipus
+              5% - quota
           iva-repercutido-intragrupo-tipo-0-base:
             label: IVA meritat en operacions intragrup al tipus 0% - base imposable
           iva-repercutido-intragrupo-tipo-0-cuota:
@@ -70992,6 +71362,18 @@ modelo:
             label: IVA meritat en operacions intragrup al tipus 5% - base imposable
           iva-repercutido-intragrupo-tipo-5-cuota:
             label: IVA meritat en operacions intragrup al tipus 5% - quota
+          iva-repercutido-recargo-tipo-0-5-base:
+            label: Recàrrec d'equivalència al tipus 0,5% - base imposable
+          iva-repercutido-recargo-tipo-1-4-base:
+            label: Recàrrec d'equivalència al tipus 1,4% - base imposable
+          iva-repercutido-recargo-tipo-1-75-base:
+            label: Recàrrec d'equivalència al tipus 1,75% - base imposable
+          iva-repercutido-recargo-tipo-1-75-cuota:
+            label: Recàrrec d'equivalència al tipus 1,75% - quota
+          iva-repercutido-recargo-tipo-5-2-base:
+            label: Recàrrec d'equivalència al tipus 5,2% - base imposable
+          iva-total-bases-iva:
+            label: Total bases imposables de l'IVA meritat
           iva-volumen-operaciones-entregas-intracomunitarias:
             help: null
             label: Lliuraments intracomunitaris de béns i serveis
@@ -72436,6 +72818,20 @@ modelo:
               help: null
               label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
                 immobles - Total
+            declaracion-a:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Impostos efectivament satisfets a l'estranger
+            declaracion-b:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Part de la base liquidable gravada a l'estranger
+            declaracion-i:
+              help: null
+              label: Ingrés - Import de l'ingrés
+            declaracion-negativa:
+              help: null
+              label: Declaració negativa
             identificacion-1:
               help: null
               label: Modalitats especials de tributació - El 2020 ha tingut la residència
@@ -72540,6 +72936,58 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Codi de província
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaració complementària - Quotes a ingressar d'anteriors autoliquidacions
+                o liquidacions administratives
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Subjecte passiu - Discapacitat - Classe de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Subjecte passiu - Discapacitat - Percentatge de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Subjecte passiu - Estat civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Data de la declaració - Any
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Data de la declaració - Dia
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Data de la declaració - Localitat
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Data de la declaració - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Subjecte passiu - Data de naixement
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Subjecte passiu - Nacionalitat
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Règim econòmic del matrimoni
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representant - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representant - Cognoms i nom o raó social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Subjecte passiu - Sexe
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingrés - Forma de pagament
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidació - Límit de la quota íntegra - Part de la base imposable
@@ -72756,6 +73204,20 @@ modelo:
               help: null
               label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
                 immobles - Total
+            declaracion-a:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Impostos efectivament satisfets a l'estranger
+            declaracion-b:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Part de la base liquidable gravada a l'estranger
+            declaracion-i:
+              help: null
+              label: Ingrés - Import de l'ingrés
+            declaracion-negativa:
+              help: null
+              label: Declaració negativa
             identificacion-1:
               help: null
               label: Modalitats especials de tributació - El 2022 ha tingut la residència
@@ -72860,6 +73322,58 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Codi de província
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaració complementària - Quotes a ingressar d'anteriors autoliquidacions
+                o liquidacions administratives
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Subjecte passiu - Discapacitat - Classe de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Subjecte passiu - Discapacitat - Percentatge de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Subjecte passiu - Estat civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Data de la declaració - Any
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Data de la declaració - Dia
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Data de la declaració - Localitat
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Data de la declaració - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Subjecte passiu - Data de naixement
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Subjecte passiu - Nacionalitat
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Règim econòmic del matrimoni
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representant - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representant - Cognoms i nom o raó social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Subjecte passiu - Sexe
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingrés - Forma de pagament
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidació - Límit de la quota íntegra - Part de la base imposable
@@ -73076,6 +73590,20 @@ modelo:
               help: null
               label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
                 immobles - Total
+            declaracion-a:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Impostos efectivament satisfets a l'estranger
+            declaracion-b:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Part de la base liquidable gravada a l'estranger
+            declaracion-i:
+              help: null
+              label: Ingrés - Import de l'ingrés
+            declaracion-negativa:
+              help: null
+              label: Declaració negativa
             identificacion-1:
               help: null
               label: Modalitats especials de tributació - El 2023 ha tingut la residència
@@ -73180,6 +73708,58 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Codi de província
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaració complementària - Quotes a ingressar d'anteriors autoliquidacions
+                o liquidacions administratives
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Subjecte passiu - Discapacitat - Classe de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Subjecte passiu - Discapacitat - Percentatge de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Subjecte passiu - Estat civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Data de la declaració - Any
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Data de la declaració - Dia
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Data de la declaració - Localitat
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Data de la declaració - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Subjecte passiu - Data de naixement
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Subjecte passiu - Nacionalitat
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Règim econòmic del matrimoni
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representant - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representant - Cognoms i nom o raó social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Subjecte passiu - Sexe
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingrés - Forma de pagament
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidació - Límit de la quota íntegra - Part de la base imposable
@@ -73396,6 +73976,20 @@ modelo:
               help: null
               label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
                 immobles - Total
+            declaracion-a:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Impostos efectivament satisfets a l'estranger
+            declaracion-b:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Part de la base liquidable gravada a l'estranger
+            declaracion-i:
+              help: null
+              label: Ingrés - Import de l'ingrés
+            declaracion-negativa:
+              help: null
+              label: Declaració negativa
             identificacion-1:
               help: null
               label: Modalitats especials de tributació - El 2024 ha tingut la residència
@@ -73500,6 +74094,58 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Codi de província
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaració complementària - Quotes a ingressar d'anteriors autoliquidacions
+                o liquidacions administratives
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Subjecte passiu - Discapacitat - Classe de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Subjecte passiu - Discapacitat - Percentatge de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Subjecte passiu - Estat civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Data de la declaració - Any
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Data de la declaració - Dia
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Data de la declaració - Localitat
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Data de la declaració - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Subjecte passiu - Data de naixement
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Subjecte passiu - Nacionalitat
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Règim econòmic del matrimoni
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representant - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representant - Cognoms i nom o raó social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Subjecte passiu - Sexe
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingrés - Forma de pagament
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidació - Límit de la quota íntegra - Part de la base imposable
@@ -73716,6 +74362,20 @@ modelo:
               help: null
               label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
                 immobles - Total
+            declaracion-a:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Impostos efectivament satisfets a l'estranger
+            declaracion-b:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Part de la base liquidable gravada a l'estranger
+            declaracion-i:
+              help: null
+              label: Ingrés - Import de l'ingrés
+            declaracion-negativa:
+              help: null
+              label: Declaració negativa
             identificacion-1:
               help: null
               label: Modalitats especials de tributació - El 2025 ha tingut la residència
@@ -73820,6 +74480,58 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Codi de província
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaració complementària - Quotes a ingressar d'anteriors autoliquidacions
+                o liquidacions administratives
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Subjecte passiu - Discapacitat - Classe de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Subjecte passiu - Discapacitat - Percentatge de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Subjecte passiu - Estat civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Data de la declaració - Any
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Data de la declaració - Dia
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Data de la declaració - Localitat
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Data de la declaració - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Subjecte passiu - Data de naixement
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Subjecte passiu - Nacionalitat
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Règim econòmic del matrimoni
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representant - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representant - Cognoms i nom o raó social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Subjecte passiu - Sexe
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingrés - Forma de pagament
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidació - Límit de la quota íntegra - Part de la base imposable
