@@ -2,11 +2,14 @@
 authority_grade = "applicability"
 # Modelo 576 autoliquidación del Impuesto Especial sobre Determinados Medios de
 # Transporte (IEDMT) por matriculación, approved by orden-eha-3851-2007 art 1.
-# Scheduling/applicability-grade: declaration-header casillas only. The
-# authoritative Modelo 576 diseño de registro IS bundled
-# (enrolled-modelo-576-layout, re-pointed 2026-08-15) but no casilla-to-
-# position mapping has been authored from it yet, so no numbered form
-# casilla is fabricated here.
+# The authoritative Modelo 576 diseño de registro is bundled
+# (enrolled-modelo-576-layout, re-pointed 2026-08-15) and the full
+# casilla-to-position mapping HAS now been transcribed from it: 40 form
+# casillas plus the pre-existing declaration header, and a fixed-width export
+# layout whose 60 fields tile the design's single 1517-position record exactly
+# once with no gap and no overlap. authority_grade is deliberately left
+# untouched here; regrading is an operator decision, not a consequence of the
+# layout landing.
 # Deadline-shape note: art 1 delegates el lugar, plazo y forma to Orden
 # EHA/1981/2005 — la autoliquidación se presenta con carácter PREVIO a la
 # matriculación definitiva del medio de transporte, un plazo POR EVENTO, no una
