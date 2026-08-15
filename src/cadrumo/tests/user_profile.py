@@ -132,37 +132,53 @@ def register_minimal_profile(
     return seeded
 
 
-def register_cli_profile(*, label: str, facts: Mapping[str, str] | None = None) -> str:
-    """Register a profile a CLI-surface test can afterwards unlock, and return its id.
+def register_cli_profile(*, label: str, facts: Mapping[str, str] | None = None, complete: bool = True) -> str:
+    """Register a profile a CLI-surface test can afterwards use, and return its id.
 
     The sibling :func:`register_minimal_profile` seeds a complete record for
     application-layer tests.  A CLI test needs something that door does not
     provide: the custody envelope has to open under the passphrase the isolated
     CLI backend configures, so every ``aeat`` invocation that follows can unlock
-    the profile it just created.  Seeding a record writes no such envelope, which
-    is why the two doors are not interchangeable and why this one exists.
+    the profile.  Seeding a record writes no such envelope, which is why the two
+    doors are not interchangeable and why this one exists.
 
-    The required placeholders are applied first and the caller's ``facts`` win
-    over them, which is what the retired scripted-creation flag did: a test that
-    only cares about a tax id should not have to restate the territorial and IVA
-    regime a readiness check will demand.
+    Three steps, because the retired scripted-creation flag did all three.  The
+    required placeholders are applied first and the caller's ``facts`` win over
+    them, so a test that only cares about a tax id need not restate the regimes
+    a readiness gate demands.  The profile is then logged in: registration
+    closes its own session, so a freshly registered profile is LOCKED, and every
+    later bucket read needs an unlocked session rather than a repair.  Setup is
+    completed last, through the production compare-and-swap, because the
+    credential door leaves a profile incomplete on purpose and a readiness gate
+    refuses an incomplete profile before any modelo work.
 
-    The profile is left INCOMPLETE, as the production credential door leaves it.
-    Completing setup writes a bucket record, and a bucket created through this
-    door cannot presently be opened -- so a test needing a complete profile is
-    blocked upstream of this helper, not by it.
+    Pass ``complete=False`` for a test whose subject is the incomplete state.
     """
-    from ..application.user_profile import register_profile_with_credentials
+    from uuid import UUID as _UUID
+
+    from ..application.user_profile import login_profile, register_profile_with_credentials
     from ..core.config import load_settings
+    from .profile_capsule import bound_test_profile_record
 
     merged: dict[str, str] = dict(_REQUIRED_PLACEHOLDERS)
     if facts:
         merged.update(facts)
+    passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
     outcome = register_profile_with_credentials(
         label=label,
-        passphrase=load_settings().cadrumo_dev_test_database_password.get_secret_value(),
+        passphrase=passphrase,
         facts=tuple(UserProfileFact(path=path, value=value) for path, value in merged.items() if value),
     )
+    login_profile(name=label, passphrase_callback=lambda: passphrase)
+    if complete:
+        identity = _UUID(outcome.profile_id)
+        with bound_test_profile_record(identity) as repository:
+            current = repository.load(identity)
+            repository.complete_setup(
+                identity,
+                expected_revision=current.record_revision,
+                expected_content_digest=current.content_digest,
+            )
     return outcome.profile_id
 
 

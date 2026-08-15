@@ -35,6 +35,8 @@ import http.server
 import socketserver
 import threading
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from functools import partial
 from pathlib import Path
 
@@ -86,15 +88,22 @@ class _SlowPagefindHandler(http.server.SimpleHTTPRequestHandler):
         """Keep the test output clean."""
 
 
-def _serve(directory: Path, handler_cls: type) -> tuple[socketserver.TCPServer, int]:
+@contextmanager
+def _serve(directory: Path, handler_cls: type) -> Iterator[tuple[socketserver.TCPServer, int]]:
     # Threading: the slow handler must delay only its own response, not stall
     # the page's other assets behind it.
     handler = partial(handler_cls, directory=str(directory))
     httpd = socketserver.ThreadingTCPServer(("127.0.0.1", 0), handler)
     httpd.daemon_threads = True
     port = httpd.server_address[1]
-    threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    return httpd, port
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield httpd, port
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+        thread.join(timeout=5)
 
 
 def _palette_site(out: Path, *, with_index: bool) -> Path:
@@ -123,8 +132,7 @@ def test_palette_signals_in_flight_search_then_clears(tmp_path: Path) -> None:
     out.mkdir()
     build = _palette_site(out, with_index=True)
 
-    httpd, port = _serve(build, _SlowPagefindHandler)
-    try:
+    with _serve(build, _SlowPagefindHandler) as (_httpd, port):
         from playwright.sync_api import sync_playwright
 
         with sync_playwright() as pw:
@@ -161,8 +169,6 @@ def test_palette_signals_in_flight_search_then_clears(tmp_path: Path) -> None:
             busy_log = page.evaluate("window.__busyLog")
             settled_status = page.inner_text(".cadrumo-palette-status")
             browser.close()
-    finally:
-        httpd.shutdown()
 
     assert rows_while_busy > 0, "palette blanked its rows while searching"
     assert spinner_visible == "1", f"spinner not shown while busy (opacity {spinner_visible})"
@@ -180,8 +186,7 @@ def test_palette_never_busy_without_a_pagefind_index(tmp_path: Path) -> None:
     # No index pass: the palette's `import()` 404s and it degrades to nav-only.
     build = _palette_site(out, with_index=False)
 
-    httpd, port = _serve(build, http.server.SimpleHTTPRequestHandler)
-    try:
+    with _serve(build, http.server.SimpleHTTPRequestHandler) as (_httpd, port):
         from playwright.sync_api import sync_playwright
 
         with sync_playwright() as pw:
@@ -204,8 +209,6 @@ def test_palette_never_busy_without_a_pagefind_index(tmp_path: Path) -> None:
             busy_log = page.evaluate("window.__busyLog")
             final_busy = page.get_attribute(".cadrumo-palette-list", "aria-busy")
             browser.close()
-    finally:
-        httpd.shutdown()
 
     # A failed import resolves fast, so the 120ms delay means the reader never
     # sees a spinner at all -- and crucially it is not left spinning forever.

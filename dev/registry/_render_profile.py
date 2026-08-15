@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Annotated, Final, Literal
 
 import rtoml
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 
 from cadrumo.core import is_link_like
 from cadrumo.core.hashing import content_hash_hex, sha256_file
@@ -72,6 +72,23 @@ class RenderProfileDesignIdentity(_StrictModel):
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
+def _coerce_ordinal(value: object) -> object:
+    """Accept a legacy authored int literal alongside the parser's printed str label.
+
+    Committed render-profile authoring data predates the parser's widened
+    ``str | None`` ordinal and still writes bare integers (``ordinal = 14``).
+    Coercing here lets that authored data hydrate unchanged.
+    """
+    if value is None or isinstance(value, str):
+        return value
+    if isinstance(value, int) and not isinstance(value, bool):
+        return str(value)
+    raise ValueError("ordinal must be a printed str label, a legacy int literal, or None")
+
+
+type _AnchorOrdinal = Annotated[str | None, BeforeValidator(_coerce_ordinal)]
+
+
 class RenderProfileAnchor(_StrictModel):
     """Complete parser-owned field identity; no selector or wildcard exists."""
 
@@ -81,7 +98,7 @@ class RenderProfileAnchor(_StrictModel):
     #: The ordinal AEAT printed, verbatim -- a str because it is a printed LABEL,
     #: never an arithmetic value. Mirrors
     #: :attr:`domain.calculations.registry.RecordDesignField.ordinal`.
-    ordinal: str | None = Field(default=None, min_length=1)
+    ordinal: _AnchorOrdinal = Field(min_length=1)
     record_identity: str = Field(min_length=1)
 
 

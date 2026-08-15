@@ -14,6 +14,7 @@ from cadrumo.domain.calculations.registry import (
     ModeloId,
     ProjectionEndpointDeclaration,
     RegistryRevisionInspection,
+    RegistryValidationError,
     RevisionId,
 )
 
@@ -179,7 +180,7 @@ def _join_record_design_semantics(
             fields=tuple(
                 JoinedRecordDesignField(
                     parser_field=field,
-                    semantic_entry=entries_by_anchor[_parser_anchor_key(field)],
+                    semantic_entry=_require_semantic_entry(entries_by_anchor, field),
                 )
                 for field in sheet.fields
             ),
@@ -206,6 +207,30 @@ def _join_record_design_semantics(
             else None
         ),
     )
+
+
+def _require_semantic_entry(
+    entries_by_anchor: dict[_AnchorKey, SemanticMapEntry],
+    field: RecordDesignIntermediateField,
+) -> SemanticMapEntry:
+    """Resolve one parser field's reviewed meaning, or refuse by name.
+
+    ``join_record_design_semantics`` always runs ``validate_semantic_map``
+    first, which already proves an exact bijection between parser anchors and
+    semantic-map anchors -- so this lookup cannot miss through that entry
+    point. It stays an explicit, named refusal rather than a bare subscript
+    because the private join helper below it is not itself gated: a semantic
+    map missing an entry for a field the parser can see must surface as a
+    legible gap here too, never a bare ``KeyError`` inside the generator that
+    authors filing artefacts.
+    """
+    entry = entries_by_anchor.get(_parser_anchor_key(field))
+    if entry is None:
+        raise RegistryValidationError(
+            f"semantic map has no entry for parser field: record_identity={field.record_identity!r}, "
+            f"sheet={field.sheet!r}, ordinal={field.ordinal!r}, source_row={field.source_row!r}",
+        )
+    return entry
 
 
 def _parser_anchor_key(field: RecordDesignIntermediateField) -> _AnchorKey:

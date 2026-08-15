@@ -1,15 +1,23 @@
 [revisions."2025-y-siguientes"]
 authority_grade = "filing"
-valid_from = 2025-01-01
-period_selector = { year_from = 2025, periods = ["0A"] }
+# valid_from corrected from 2025 to 2023. The prior boundary was wrong on two
+# independent grounds: Orden HFP/1338/2023's own Disposicion Final Segunda(a)
+# states this model applies first for ejercicio 2023 (filed 2024), and AEAT's
+# own bundled record-design file is named "01-151-ejercicio-2023-y-siguientes.xls"
+# -- the design corpus and the legal text agree at 2023. This revision's own
+# id (still literally "2025-y-siguientes") is now doubly stale against its
+# corrected data -- a rename is deferred per the standing ruling on locale-key
+# blast radius, matching the M151/M303 precedent from earlier this session.
+valid_from = 2023-01-01
+period_selector = { year_from = 2023, periods = ["0A"] }
 legal_refs = [
     "ley-35-2006:art-93",
     "ley-35-2006:art-93-ahorro",
     "rd-439-2007:art-113",
-    "orden-eha-2887-2008:modelo-151",
+    "orden-hfp-1338-2023:art-1",
 ]
 orden_aplicabilidad = [
-    "orden-eha-2887-2008:modelo-151",
+    "orden-hfp-1338-2023:art-1",
 ]
 source_refs = [
     "aeat-modelo-151-procedure",

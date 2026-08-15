@@ -780,6 +780,24 @@ applies_from = 2024-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/216e2024.xlsx"
 review_status = "reviewed"
 
+# Historical Modelo 216 design, pre-2024, outside the current declared span.
+# Already acquired and manifested (2026-07-21) but previously unregistered --
+# registration, not acquisition. Records historical inventory; asserts no
+# coverage claim. Re-fetched from the live AEAT URL on 2026-08-15 and
+# confirmed byte-identical (sha256 match) before registering.
+[sources."aeat-dr-216-2020-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_216/files/02-216-ejercicios-2020-a-2023.xlsx"
+sha256 = "a68460b791ed6c14d698eb0aef3752eda9d407c4fc9b3249d0e4053887f9fee8"
+bytes = 112839
+retrieved_at = 2026-07-21
+applies_from = 2020-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_20/216v01e2020_v1.07.xlsx"
+review_status = "reviewed"
+
 # Modelo 296 sources - annual resumen (informativa) companion to Modelo 216,
 # governed by the same bundled Orden HAC/56/2024 (BOE-A-2024-1772).
 [sources."aeat-modelo-296-procedure"]
@@ -818,4 +836,22 @@ bytes = 304691
 retrieved_at = 2026-07-21
 applies_from = 2024-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/DR_296_2024.pdf"
+review_status = "reviewed"
+
+# Historical Modelo 296 design, pre-2024, outside the current declared span.
+# Already acquired and manifested (2026-07-21) but previously unregistered --
+# registration, not acquisition. Records historical inventory; asserts no
+# coverage claim. Re-fetched from the live AEAT URL on 2026-08-15 and
+# confirmed byte-identical (sha256 match) before registering.
+[sources."aeat-dr-296-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_296/files/02-296-ejercicio-2023.pdf"
+sha256 = "858152af847e23e3165ba38295696466dfdf96f1ec55503f606cf982a4ae778f"
+bytes = 228371
+retrieved_at = 2026-07-21
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/DR_296_2023.pdf"
 review_status = "reviewed"

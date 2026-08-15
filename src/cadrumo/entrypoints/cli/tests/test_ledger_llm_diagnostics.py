@@ -13,7 +13,6 @@ them back typed.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -37,12 +36,10 @@ from ....domain.transactions import (
     set_classification,
 )
 from ....llm import LLMProvider, LLMResponse
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 from .._ledger_rule_payloads import (
     LedgerLlmDiagnosticsResult,
     LlmConfidenceProviderPayload,
@@ -53,20 +50,15 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000000"
 
+_isolated_backend = active_profile_isolated_backend_fixture(
+    bucket_id=_BUCKET_ID,
+    autouse=False,
+    settings_overrides={"cadrumo_output_language": "en"},
+)
+
 
 def _invoke(args: list[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-@pytest.fixture
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_BUCKET_ID),
-    ):
-        register_minimal_profile(profile_id=_BUCKET_ID)
-        yield
 
 
 def _seed_usage() -> None:

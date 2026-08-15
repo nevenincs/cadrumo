@@ -11,46 +11,21 @@ consumers.
 
 from __future__ import annotations
 
-import hashlib
-import importlib.resources
-import json
 from datetime import date
-from pathlib import Path
 
 import pytest
 
-from .....tests.locales_root_fixture import locales_root_scope
 from .._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
 from .._validate_semantic_roles import (
     REQUIRED_ROLE_LABEL_PATTERNS,
     collect_casillas_by_semantic_role,
     required_role_declaration_failures,
 )
+from ._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_TEST_LOCALES_ROOT: Path | None = None
-
-
-def _write_test_label(label: str) -> str:
-    key = f"test.schema.casilla.{hashlib.sha256(label.encode('utf-8')).hexdigest()}.label"
-    if _TEST_LOCALES_ROOT is not None:
-        with (_TEST_LOCALES_ROOT / "es.yml").open("a", encoding="utf-8") as handle:
-            handle.write(f"{json.dumps(key)}: {json.dumps(label, ensure_ascii=False)}\n")
-    return key
-
-
-@pytest.fixture(autouse=True)
-def _synthetic_locale_scope(tmp_path: Path):  # type: ignore[no-untyped-def]
-    global _TEST_LOCALES_ROOT
-    packaged_es = importlib.resources.files("cadrumo").joinpath("locales", "es.yml")
-    (tmp_path / "es.yml").write_text(packaged_es.read_text(encoding="utf-8"), encoding="utf-8")
-    with locales_root_scope(tmp_path):
-        _TEST_LOCALES_ROOT = tmp_path
-        try:
-            yield
-        finally:
-            _TEST_LOCALES_ROOT = None
+__all__ = ["_synthetic_locale_scope"]
 
 
 def _casilla(

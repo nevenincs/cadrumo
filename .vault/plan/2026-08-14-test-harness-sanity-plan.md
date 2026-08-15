@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-15'
-body_hash: 'sha256:66035b3ec3fbee3ca161abe7c2ae0d8b0c2cf2b73bdca17a84c1d9cfe8ae2c31'
+body_hash: 'sha256:28c0b7b6010b22d6e43e4e85bc6be702b18207f5295d7d49df295e24564bedba'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -215,7 +215,9 @@ The classes the name-keyed census cannot reach. Drift is scored by structural si
 - [ ] `W09.P30.S128` - Fold the four differently-named review-package builders onto a path-returning sibling of the canonical bytes builder; `src/cadrumo/application/modelo/tests, src/cadrumo/entrypoints/cli/tests`.
 - [ ] `W09.P30.S129` - Route the secure-object namespace registration mirror in the persistence package to an owner both test packages may import; `src/cadrumo/adapters/persistence/operations/tests`.
 - [x] `W09.P30.S130` - Consolidate the drifted release-cohort builders onto a deterministic clock and retire the wall-clock variant; `dev/packaging/tests/_release_cohort_support.py`.
-- [ ] `W09.P30.S131` - Rename the worked-example oracle input reader so it stops colliding by name with the manual-input allowlist concept a separate ADR governs; `src/cadrumo/domain/calculations/registry/tests`.
+- [ ] `W09.P30.S131` - Rename the worked-example oracle reader to oracle_declared_figures so it stops sharing vocabulary with the manual-input allowlist that governs silent-blank casillas; `src/cadrumo/domain/calculations/registry/tests/_manual_oracle_support.py`.
+- [ ] `W09.P30.S132` - Converge the hand-spelled CLI runtime isolation fixture onto the taxonomy-derived canonical helper, closing a storage-path defect the canonical docstring records as already fixed elsewhere; `src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`.
+- [ ] `W09.P30.S133` - Determine whether any production path rebuilds the transactions or invoices directory from the taxonomy rather than the resolved setting, which would make the drifted override a live defect rather than a self-consistent one; `src/cadrumo/core, src/cadrumo/application`.
 
 ## Parallelization
 

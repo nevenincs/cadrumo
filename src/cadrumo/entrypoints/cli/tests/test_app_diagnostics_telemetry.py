@@ -29,11 +29,9 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler
-from pathlib import Path
 from queue import Empty, Queue
 from typing import Any, ClassVar, cast, override
 
@@ -42,34 +40,26 @@ from click.testing import Result
 from pydantic import ValidationError
 
 from ....adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
-from ....core.config import override_settings
 from ....core.telemetry import TelemetryEventPayload, TelemetryTier
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.loopback_recording_server import run_loopback_server, stop_loopback_server
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 from .._diagnostics_payloads import TelemetryFlushResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "88888888-9999-4aaa-8bbb-cccccccccccc"
 
+_isolated_backend = active_profile_isolated_backend_fixture(
+    bucket_id=_BUCKET_ID,
+    autouse=False,
+    settings_overrides={"cadrumo_output_language": "en"},
+)
+
 
 def _invoke(args: list[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-@pytest.fixture
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_BUCKET_ID),
-    ):
-        register_minimal_profile(profile_id=_BUCKET_ID)
-        yield
 
 
 class _RecordingTelemetryEndpoint(BaseHTTPRequestHandler):

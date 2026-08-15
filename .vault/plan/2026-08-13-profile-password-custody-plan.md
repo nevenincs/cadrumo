@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:aae7562463a2b82757abd41ad3fad5269e783d5f1108842373432a95d7739eff'
+body_hash: 'sha256:fc4825a91ac55190a52fd1af09caa6ce05a1a24687ce54418b975d214ccac25d'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -187,6 +187,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S115` - Have Sol Medium decide whether per-profile session windows survive the cutover as a capsule field or drop to settings only, since the idle and absolute window overrides are the manifest's last functional dependency and the capsule has no home for them, so removing the reader without ruling would collapse every profile to the configured default as a behaviour change disguised as a deletion; `src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/core/config/`.
 - [ ] `W04.P07.S116` - Have Terra XHigh delete the bucket manifest digest and deletion fingerprint helpers, exported from the maintenance package with zero production callers, being dead capacity rather than a dependency; `src/cadrumo/application/bucket_maintenance/_manifest_digest.py`.
 - [ ] `W04.P07.S117` - Have Terra XHigh remove the bucket manifest reader and its two session-window consumers now that the amended decision records the manifest as retired but present, sequencing behind the per-profile session-window ruling because removing the reader IS that behaviour change rather than a precondition for it, and coordinating with the keystore work that is deleting from the same data-key module so the two do not collide on one file; `src/cadrumo/adapters/persistence/storage/bucket/_manifest_io.py and src/cadrumo/adapters/persistence/storage/master_key/_master_key_bucket_dek.py`.
+- [ ] `W04.P07.S118` - Have Terra XHigh re-derive every stated reason in the runtime bootstrap-exempt allowlist against the tree, since two of its justifications were found false in one day, one citing a test that was never written and one asserting a manifest read that no longer happens, and the entries were correct in both cases so the defect is that a reader inherits a false reason rather than re-deriving it, which is worse than a file carrying no comments at all; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
 
 ## Wave `W05` - end-to-end proof
 

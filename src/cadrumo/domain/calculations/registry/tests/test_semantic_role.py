@@ -14,12 +14,9 @@ round-trip.
 
 from __future__ import annotations
 
-import hashlib
-import json
 import warnings
 from collections.abc import Iterable
 from datetime import date
-from pathlib import Path
 from typing import Any, Literal, TypedDict
 
 import pytest
@@ -27,7 +24,6 @@ from pydantic import ValidationError
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
-from .....tests.locales_root_fixture import locales_root_scope
 from .. import load_modelo_path
 from .._schema import (
     CasillaAlias,
@@ -50,40 +46,13 @@ from .._validate_semantic_roles import (
     _validate_semantic_role_cardinality,
     _validate_semantic_role_consistency,
 )
+from ._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _TEST_CASILLA_ID: CasillaId = validated_casilla_id("test_casilla", surface="_TEST_CASILLA_ID")
-_TEST_LOCALES_ROOT: Path | None = None
 
-
-def _write_test_label(label: str) -> str:
-    key = f"test.schema.casilla.{hashlib.sha256(label.encode('utf-8')).hexdigest()}.label"
-    if _TEST_LOCALES_ROOT is not None:
-        with (_TEST_LOCALES_ROOT / "es.yml").open("a", encoding="utf-8") as handle:
-            handle.write(f"{json.dumps(key)}: {json.dumps(label, ensure_ascii=False)}\n")
-    return key
-
-
-@pytest.fixture(autouse=True)
-def _synthetic_locale_scope(tmp_path: Path, request):  # type: ignore[no-untyped-def]
-    global _TEST_LOCALES_ROOT
-    bundled_markers = (
-        "committed",
-        "m100_2024_2025",
-        "reviewed_singleton_markers",
-        "quarterly_contraparte",
-    )
-    if any(marker in request.node.nodeid for marker in bundled_markers):
-        yield
-        return
-    (tmp_path / "es.yml").write_text("", encoding="utf-8")
-    with locales_root_scope(tmp_path):
-        _TEST_LOCALES_ROOT = tmp_path
-        try:
-            yield
-        finally:
-            _TEST_LOCALES_ROOT = None
+__all__ = ["_synthetic_locale_scope"]
 
 
 def _casilla(

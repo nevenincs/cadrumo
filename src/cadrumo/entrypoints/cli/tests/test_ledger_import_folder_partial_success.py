@@ -13,35 +13,24 @@ satisfied by a runner that refuses everything, and that would be worse.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
+_isolated_backend = active_profile_isolated_backend_fixture(bucket_id=_PROFILE_ID)
+"""Give every case an active profile.
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    """Give every case an active profile.
-
-    Without it the command refuses on "no active profile" and exits before the
-    folder loop runs at all -- so each test decides its outcome before the code
-    under test executes, which is how all four passed and said nothing.
-    """
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_PROFILE_ID),
-    ):
-        register_minimal_profile(profile_id=_PROFILE_ID)
-        yield
+Without it the command refuses on "no active profile" and exits before the
+folder loop runs at all -- so each test decides its outcome before the code
+under test executes, which is how all four passed and said nothing.
+"""
 
 
 _GOOD_STATEMENT = (

@@ -41,15 +41,11 @@ bounded, and the row count is not the property under test.
 from __future__ import annotations
 
 import gzip
-import http.server
 import json
 import re
 import shutil
-import socketserver
-import threading
 from collections.abc import Mapping
 from dataclasses import dataclass
-from functools import partial
 from pathlib import Path
 
 import pytest
@@ -57,6 +53,7 @@ import pytest
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
+from ._http_serve_support import serve_directory
 from ...deploy.docs_static_site import (
     CANONICAL_DOCS_BASE_URL,
     DEFAULT_SOURCE_LANGUAGE,
@@ -118,11 +115,7 @@ def _kinds_in_built_index(site: Path) -> dict[str, int]:
     the record kinds a reader's palette can actually narrow by, taken from the
     written artefact rather than from the injection's own report.
     """
-    handler = partial(http.server.SimpleHTTPRequestHandler, directory=str(site))
-    httpd = socketserver.TCPServer(("127.0.0.1", 0), handler)
-    port = httpd.server_address[1]
-    threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    try:
+    with serve_directory(site) as (_httpd, port):
         from playwright.sync_api import sync_playwright
 
         page_name = sorted(p.name for p in site.glob("*.html"))[0]
@@ -139,8 +132,6 @@ def _kinds_in_built_index(site: Path) -> dict[str, int]:
                 }"""
             )
             browser.close()
-    finally:
-        httpd.shutdown()
     return dict(filters.get("kind") or {})
 
 
@@ -494,11 +485,7 @@ def _search_urls(site: Path, queries: tuple[str, ...]) -> dict[str, list[str]]:
     One browser session, one Pagefind init, every query — the same search call
     the reader's palette makes, against the root's own loaded index.
     """
-    handler = partial(http.server.SimpleHTTPRequestHandler, directory=str(site))
-    httpd = socketserver.TCPServer(("127.0.0.1", 0), handler)
-    port = httpd.server_address[1]
-    threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    try:
+    with serve_directory(site) as (_httpd, port):
         from playwright.sync_api import sync_playwright
 
         page_name = sorted(p.name for p in site.glob("*.html"))[0]
@@ -524,8 +511,6 @@ def _search_urls(site: Path, queries: tuple[str, ...]) -> dict[str, list[str]]:
                 list(queries),
             )
             browser.close()
-    finally:
-        httpd.shutdown()
     return {query: list(hits) for query, hits in found.items()}
 
 

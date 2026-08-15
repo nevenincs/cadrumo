@@ -119,27 +119,6 @@ required_text = [
     "modelo de comunicación",
 ]
 
-[legal."orden-eha-2887-2008:modelo-151"]
-evidence_tier = "legal_authority"
-authority = "boe"
-kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-eha-2887-2008.html#modelo-151"
-document_id = "BOE-A-2008-16237"
-article = "modelo 151"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-16237"
-published_at = 2008-10-08
-effective_from = 2008-01-01
-review_status = "agent_reviewed"
-reviewed_at = 2026-06-29
-reviewed_by = "agent-review"
-notes = "Orden EHA/2887/2008: aprueba el Modelo 151 de declaracion del IRPF para contribuyentes en el regimen especial aplicable a trabajadores desplazados a territorio espanol."
-required_text = [
-    "se aprueba el modelo 151 de declaración",
-    "régimen especial aplicable a los trabajadores desplazados",
-    "Esta orden aprueba el Modelo 151",
-    "artículo 93 de la Ley 35/2006",
-]
-
 [sources."aeat-modelo-151-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
@@ -177,3 +156,44 @@ retrieved_at = 2026-07-21
 applies_from = 2023-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR151E2023.xls"
 review_status = "reviewed"
+
+
+[legal."orden-hap-2783-2015:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2783-2015.html#textoxslt"
+document_id = "BOE-A-2015-14021"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-14021"
+published_at = 2015-12-23
+effective_from = 2015-12-24
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-15
+reviewed_by = "agent-review"
+corpus_tier = "full_consolidated"
+notes = "Orden HAP/2783/2015 art 1: aprobacion del modelo 151 de declaracion del IRPF para el regimen especial de trabajadores desplazados (impatriados), ejercicio 2015. Disposicion final sexta: el modelo se utiliza por primera vez para la declaracion del periodo impositivo 2015. Fetched via curl, bytes read back from disk before authoring this entry. Superseded in part by Orden HFP/1338/2023 (arts 6-10 derogados por su Disposicion Derogatoria Unica), which replaces this orden as the governing instrument from ejercicio 2023 onward."
+required_text = [
+    "Aprobación del modelo 151",
+    "trabajadores desplazados a territorio español",
+]
+
+[legal."orden-hfp-1338-2023:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1338-2023.html#textoxslt"
+document_id = "BOE-A-2023-25416"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-25416"
+published_at = 2023-12-15
+effective_from = 2023-12-16
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-15
+reviewed_by = "agent-review"
+corpus_tier = "full_consolidated"
+notes = "Orden HFP/1338/2023 art 1: aprobacion del modelo 151 actualizado, para contribuyentes del regimen especial de trabajadores, profesionales, emprendedores e inversores desplazados. Disposicion Final Segunda(a): se utiliza por primera vez para la declaracion del ejercicio 2023, presentada en 2024. Disposicion Derogatoria Unica: deroga los articulos 6 a 10 de la Orden HAP/2783/2015. Fetched via curl, bytes read back from disk before authoring this entry. AEAT's own bundled record-design file (01-151-ejercicio-2023-y-siguientes.xls) independently confirms this same 2023 boundary."
+required_text = [
+    "Aprobación del modelo 151",
+    "desplazados a territorio español",
+]

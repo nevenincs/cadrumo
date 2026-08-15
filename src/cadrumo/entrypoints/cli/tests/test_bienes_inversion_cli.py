@@ -3,16 +3,12 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
-from pathlib import Path
 
 import pytest
 
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_cli_result
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 from .._bienes_inversion_payloads import (
     BienesInversionDeclareResult,
     BienesInversionListResult,
@@ -25,15 +21,7 @@ _PROFILE_ID = "00000000-0000-4000-8000-000000000000"
 _ACQUISITION_LEDGER_ID = "ledger-capital-good-1"
 _PRORRATA_SECTOR_ID = "sector-services"
 
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_PROFILE_ID),
-    ):
-        register_minimal_profile(profile_id=_PROFILE_ID)
-        yield
+_isolated_backend = active_profile_isolated_backend_fixture(bucket_id=_PROFILE_ID)
 
 
 def test_bienes_inversion_declare_and_list_preserve_schema_two_identity_fields() -> None:

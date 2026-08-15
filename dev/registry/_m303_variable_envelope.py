@@ -182,11 +182,14 @@ def _require_body_anchor(
     envelope: RecordDesignIntermediateVariableEnvelope,
 ) -> None:
     anchor = semantic.body_anchor
+    # ``body_ordinal`` stays the marker's genuine ``int`` -- a sequential
+    # envelope marker, never a printed field label -- rendered to ``str`` only
+    # here, at the boundary with the now-``str`` anchor it is compared against.
     actual = (
         envelope.sheet,
         envelope.body_source_row,
         envelope.body_source_cell,
-        envelope.body_ordinal,
+        str(envelope.body_ordinal),
         envelope.record_identity,
     )
     expected = (
@@ -219,7 +222,7 @@ def _require_relative_closer(
         envelope.sheet,
         closing.source_row,
         closing.source_cell,
-        closing.ordinal,
+        str(closing.ordinal),
         envelope.record_identity,
     )
     if expected != actual or closing.offset != "***" or closing.length != 18 or closing.content != _CLOSER_TEMPLATE:
