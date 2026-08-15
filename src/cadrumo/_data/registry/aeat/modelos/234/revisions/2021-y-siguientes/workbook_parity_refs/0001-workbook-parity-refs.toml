@@ -1,7 +1,10 @@
-# Modelo 234 record-design parity anchor. Declares the bundled orden-hac-342-2021
-# form-approval order as the layout authority. runner_required is false: no
-# authoritative Modelo 234 DR is bundled, so this pins the form-approval
-# provenance without asserting a verified byte-position layout.
+# Modelo 234 record-design parity anchor. KNOWN GAP, permanent, not a
+# worklist item (2026-08-15): enrolled-modelo-234-layout was retiered (it was
+# never real layout content, any era) and AEAT's live Diseños de Registro
+# index carries no Modelo 234 title anywhere (checked all page families,
+# current and historical) -- no design has ever been published for this
+# modelo, so no honest redirect target exists. This reference correctly
+# fails registry validation until that changes.
 
 [[revisions."2021-y-siguientes".workbook_parity_refs]]
 id = "modelo-234-orden-static-layout"

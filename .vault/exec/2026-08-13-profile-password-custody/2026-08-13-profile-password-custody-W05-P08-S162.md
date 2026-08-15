@@ -44,6 +44,16 @@ VALID.
 
 **So the record is not missing, not unwritten, and not locked -- it is
 invisible across the process boundary, and the refusal names the wrong cause.**
+
+**That conclusion was UNDER-EVIDENCED when written, and is now confirmed by a
+different experiment rather than by this one.** The in-process read that
+appeared to prove the record valid ran in the process that CREATED it, which is
+exactly the condition under which a cache can serve a record that never reached
+disk. Every result recorded above is equally consistent with the record never
+having been persisted -- login and status do not need it, and only the record
+read splits. The successor step settled it with a third process and with bytes
+on disk: the record IS durable. The answer here was right; the reasoning
+offered for it could not have established it.
 A diagnostic asserting a record is missing, about a record that reads as valid
 moments earlier in another process, is worse than a plain failure: it sends
 whoever reads it looking for something absent instead of for a boundary.

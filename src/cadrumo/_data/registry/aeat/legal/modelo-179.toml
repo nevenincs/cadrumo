@@ -49,11 +49,16 @@ applies_from = 2021-06-17
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10163"
 review_status = "reviewed"
 
-# Same bundled orden HTML under layout_authority tier for the per-revision
-# workbook-parity-coverage gate. NOT the authoritative AEAT Diseño de Registros
-# (not bundled); grounds only the static form-approval layout.
+# Retiered 2026-08-15: this 1023-byte orden excerpt carries no annex section
+# and no record-layout vocabulary, so it was never layout authority.
+# CONFIRMED unpublished, not a harvest gap: checked AEAT's live Diseños de
+# Registro index (current + historical pages across all page families) for
+# any Modelo 179 title and found none -- this is a permanent limitation, not
+# a worklist item to fill later. This excerpt remains a genuine
+# official_source_guidance citation (the orden that approves the form), just
+# not the layout's home.
 [sources."enrolled-modelo-179-layout"]
-evidence_tier = "layout_authority"
+evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-612-2021.html"

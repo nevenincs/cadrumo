@@ -1,7 +1,10 @@
-# Modelo 380 record-design parity anchor. Declares the bundled orden-eha-1308-2005
-# form-approval order as the layout authority. runner_required is false: no
-# authoritative Modelo 380 DR is bundled, so this pins the form-approval
-# provenance without asserting a verified byte-position money-closure layout.
+# Modelo 380 record-design parity anchor. KNOWN GAP, permanent, not a
+# worklist item (2026-08-15): enrolled-modelo-380-layout was retiered (it was
+# never real layout content, any era) and AEAT's live Diseños de Registro
+# index carries no Modelo 380 title anywhere (checked all page families,
+# current and historical) -- no design has ever been published for this
+# modelo, so no honest redirect target exists. This reference correctly
+# fails registry validation until that changes.
 
 [[revisions."2005-y-siguientes".workbook_parity_refs]]
 id = "modelo-380-orden-static-layout"

@@ -1,8 +1,10 @@
-# Modelo 233 record-design parity anchor. Declares the bundled orden-hac-1400-2018
-# form-approval order as the layout authority. This scheduling/applicability-grade
-# revision carries no calc formulas, so runner_required is false: the anchor pins
-# the official form-approval provenance without asserting a verified fixed-width
-# byte-position record design (no authoritative Modelo 233 DR is bundled).
+# Modelo 233 record-design parity anchor. KNOWN GAP, permanent, not a
+# worklist item (2026-08-15): enrolled-modelo-233-layout was retiered (it was
+# never real layout content, any era) and AEAT's live Diseños de Registro
+# index carries no Modelo 233 title anywhere (checked all page families,
+# current and historical) -- no design has ever been published for this
+# modelo, so no honest redirect target exists. This reference correctly
+# fails registry validation until that changes.
 
 [[revisions."2018-y-siguientes".workbook_parity_refs]]
 id = "modelo-233-orden-static-layout"

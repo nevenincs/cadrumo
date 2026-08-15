@@ -51,6 +51,8 @@ from typing import Literal
 from pydantic import Field, PrivateAttr, computed_field, model_validator
 
 from ....core import (
+    REVIEWED_LEGAL_STATUSES,
+    REVIEWED_REVISION_REVIEW_STATUSES,
     LegalReviewStatus,
     RevisionReviewStatus,
 )
@@ -126,6 +128,24 @@ class ModelLawCoverageLedger(CoverageModel):
     revision: str
     gates: tuple[EvidenceTierCoverageGate, ...]
     authority_scope: CoverageAuthorityScope = "filing"
+    authority_fallback_reason: str | None = Field(default=None, min_length=1, max_length=512)
+    """Why a REVIEW-eligible revision was still measured through inspection.
+
+    Review state and filing capability are different conditions, and the fold
+    tests only the first. A reviewed revision can still be unable to produce a
+    filing-grade snapshot, and without this field that outcome is indistinguishable
+    from a revision nobody reviewed: both read ``inspection_only``.
+    """
+
+    authority_review_tier: RevisionReviewStatus | None = None
+    """Which review standard established a ``filing`` scope, or None when inspection-only.
+
+    Agent review is sufficient to reach the filing fold, so ``authority_scope``
+    alone no longer says what backs the ledger. A reader who sees ``filing``
+    without this field would infer a human signoff that may never have happened.
+    It is the WEAKEST tier in the chain: the revision's own status, downgraded to
+    agent review if any legal reference it cites rests on agent review.
+    """
 
     @property
     def filing_eligible(self) -> bool:
@@ -228,7 +248,7 @@ class ConstructEvidenceRow(CoverageModel):
     @property
     def authority_checked(self) -> bool:
         """Return whether this row was created through the validated audit fold."""
-        return self._authority_proof is _AUTHORITY_CHECK_PROOF
+        return self._authority_proof in _AUTHORITY_CHECK_PROOFS
 
     @model_validator(mode="after")
     def _validate_evidence_shape(self) -> ConstructEvidenceRow:
@@ -389,15 +409,30 @@ def _model_law_coverage_for_revision(
         sources=catalogues.sources,
         legal_ref_ids=frozenset(catalogues.legal),
     )
-    if _revision_is_filing_eligible(revision, inspection, catalogues.legal):
-        snapshot = build_validated_snapshot(
-            modelo,
-            catalogues,
-            filing_year=_representative_year(revision),
-            period=revision.period_selector.periods[0],
-            revision_id=revision.id,
-        )
-        return build_model_law_coverage_ledger(snapshot, _authority_proof=_AUTHORITY_CHECK_PROOF)
+    proof = _revision_filing_authority_proof(revision, inspection, catalogues.legal)
+    if proof is not None:
+        try:
+            snapshot = build_validated_snapshot(
+                modelo,
+                catalogues,
+                filing_year=_representative_year(revision),
+                period=revision.period_selector.periods[0],
+                revision_id=revision.id,
+            )
+        except RegistryValidationError as capability_refusal:
+            # Reviewed, but not filing-CAPABLE. Review state and filing
+            # capability are different conditions and the proof above tests only
+            # the first; 83 revisions currently declare no export layout and
+            # refuse here. Caught rather than propagated because this audit
+            # reports on the whole corpus: letting one revision abort the fold
+            # would replace 102 ledgers with a stack trace. Recorded rather than
+            # swallowed, so the ledger can still distinguish this from a revision
+            # nobody reviewed -- both otherwise read `inspection_only`.
+            return build_model_law_coverage_ledger(
+                inspection,
+                _fallback_reason=str(capability_refusal).splitlines()[0][:512],
+            )
+        return build_model_law_coverage_ledger(snapshot, _authority_proof=proof)
     return build_model_law_coverage_ledger(inspection)
 
 
@@ -448,7 +483,8 @@ def audit_registry_construct_evidence(
                 sources=catalogues.sources,
                 legal_ref_ids=frozenset(catalogues.legal),
             )
-            if _revision_is_filing_eligible(revision, inspection, catalogues.legal):
+            proof = _revision_filing_authority_proof(revision, inspection, catalogues.legal)
+            if proof is not None:
                 snapshot = build_validated_snapshot(
                     modelo,
                     catalogues,
@@ -459,7 +495,7 @@ def audit_registry_construct_evidence(
                 ledgers.append(
                     _build_construct_evidence_ledger(
                         snapshot,
-                        authority_proof=_AUTHORITY_CHECK_PROOF,
+                        authority_proof=proof,
                     ),
                 )
             else:
@@ -471,6 +507,7 @@ def build_model_law_coverage_ledger(
     authority: RegistrySnapshot | RegistryRevisionInspection,
     *,
     _authority_proof: _AuthorityCheckProof | None = None,
+    _fallback_reason: str | None = None,
 ) -> ModelLawCoverageLedger:
     """Build the four-tier coverage ledger for one typed registry authority.
 
@@ -492,9 +529,9 @@ def build_model_law_coverage_ledger(
         sources: Mapping[SourceRefId, SourceReference] = authority.sources
         workbook_parity_refs: Iterable[WorkbookParityReference] = authority.workbook_parity_refs.values()
         live_cross_references: Iterable[LiveCrossReferenceDecision] = authority.live_cross_references.values()
-        authority_scope: CoverageAuthorityScope = (
-            "filing" if _authority_proof is _AUTHORITY_CHECK_PROOF else "inspection_only"
-        )
+        proven = _authority_proof if _authority_proof in _AUTHORITY_CHECK_PROOFS else None
+        authority_scope: CoverageAuthorityScope = "filing" if proven is not None else "inspection_only"
+        review_tier = proven.review_tier if proven is not None else None
     else:
         modelo_id = authority.modelo_id
         revision_id = authority.revision_id
@@ -503,6 +540,7 @@ def build_model_law_coverage_ledger(
         workbook_parity_refs = authority.workbook_parity_refs
         live_cross_references = authority.live_cross_references
         authority_scope = "inspection_only"
+        review_tier = None
 
     return ModelLawCoverageLedger(
         modelo=modelo_id,
@@ -525,6 +563,8 @@ def build_model_law_coverage_ledger(
             ),
         ),
         authority_scope=authority_scope,
+        authority_review_tier=review_tier,
+        authority_fallback_reason=_fallback_reason,
     )
 
 
@@ -574,7 +614,7 @@ def _build_construct_evidence_ledger(
 
     for binding in revision.bindings:
         declared_status = _status_for_declared_refs(binding.legal_refs, binding.source_refs)
-        authority_checked = authority_proof is _AUTHORITY_CHECK_PROOF
+        authority_checked = authority_proof in _AUTHORITY_CHECK_PROOFS
         if declared_status == "grounded" and authority_checked:
             selector_status: ConstructEvidenceStatus = "inherited"
             reason = f"selector evidence is inherited from binding {binding.id!r}"
@@ -613,7 +653,7 @@ def _declared_construct_evidence_row(
     authority_proof: _AuthorityCheckProof | None,
 ) -> ConstructEvidenceRow:
     declared_status = _status_for_declared_refs(declaration.legal_refs, declaration.source_refs)
-    authority_checked = authority_proof is _AUTHORITY_CHECK_PROOF
+    authority_checked = authority_proof in _AUTHORITY_CHECK_PROOFS
     status: ConstructEvidenceStatus = (
         declared_status if authority_checked or declared_status != "grounded" else "unvalidated"
     )
@@ -644,7 +684,7 @@ def _construct_evidence_row(
     authority_proof: _AuthorityCheckProof | None,
 ) -> ConstructEvidenceRow:
     """Create a row and attach the private proof only after shape validation."""
-    if authority_proof is not _AUTHORITY_CHECK_PROOF or status not in {"grounded", "inherited"}:
+    if authority_proof not in _AUTHORITY_CHECK_PROOFS or status not in _AUTHORITY_CHECKED_STATUSES:
         return ConstructEvidenceRow(
             kind=kind,
             construct_id=construct_id,
@@ -665,7 +705,7 @@ def _construct_evidence_row(
         reason=reason,
     )
     object.__setattr__(unvalidated_row, "status", status)
-    object.__setattr__(unvalidated_row, "_authority_proof", _AUTHORITY_CHECK_PROOF)
+    object.__setattr__(unvalidated_row, "_authority_proof", authority_proof)
     return unvalidated_row
 
 
@@ -785,19 +825,39 @@ def _status(*values: tuple[object, ...]) -> CoverageGateStatus:
     return "satisfied" if any(values) else "gap"
 
 
-def _revision_is_filing_eligible(
+def _revision_filing_authority_proof(
     revision: ModeloRevision,
     inspection: RegistryRevisionInspection,
     legal: Mapping[LegalRefId, LegalReference],
-) -> bool:
-    """Return whether canonical review state permits a filing snapshot fold."""
-    if revision.review_status is not RevisionReviewStatus.OPERATOR_REVIEWED:
-        return False
-    return all(
-        (reference := legal.get(legal_id)) is not None
-        and reference.review_status is LegalReviewStatus.OPERATOR_REVIEWED
-        for legal_id in inspection.legal_ref_ids
-    )
+) -> _AuthorityCheckProof | None:
+    """Return the proof for a filing fold, or None when review state forbids one.
+
+    Both clauses test MEMBERSHIP of the reviewed sets rather than demanding
+    ``operator_reviewed``. Demanding it made this branch unreachable: no revision
+    in the corpus has ever carried that status, and nothing in this project may
+    stamp it, so the fold below never ran once. Unlike the sibling checks in
+    ``_snapshot.py`` and ``_legal.py`` this one does not raise -- it selects
+    between a filing fold and an inspection fold -- so instead of refusing
+    loudly it quietly answered a weaker question than it appeared to, and the
+    ledger said nothing about which question that was.
+
+    ``pending_review`` still yields None, which is the tooth that matters.
+
+    The returned proof carries the WEAKEST tier in the chain, not the revision's
+    own. A revision an operator signed off that cites an agent-reviewed article
+    rests on agent review for that article, and recording the stronger tier
+    would overstate what backs the ledger.
+    """
+    if revision.review_status not in REVIEWED_REVISION_REVIEW_STATUSES:
+        return None
+    tier = revision.review_status
+    for legal_id in inspection.legal_ref_ids:
+        reference = legal.get(legal_id)
+        if reference is None or reference.review_status not in REVIEWED_LEGAL_STATUSES:
+            return None
+        if reference.review_status is LegalReviewStatus.AGENT_REVIEWED:
+            tier = RevisionReviewStatus.AGENT_REVIEWED
+    return _PROOF_BY_TIER[tier]
 
 
 def _representative_year(revision: ModeloRevision) -> int:

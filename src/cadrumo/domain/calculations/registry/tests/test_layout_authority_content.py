@@ -44,7 +44,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: The companion test re-derives that it still carries the properties it is
 #: named for, so a retier or a replaced file makes the anchor fail loudly
 #: instead of making every assertion below pass vacuously.
-_ANCHOR_SOURCE_ID = "enrolled-modelo-233-layout"
+#: Re-anchored 2026-08-15: the original anchor (enrolled-modelo-233-layout)
+#: was retiered to official_source_guidance along with the other nine
+#: confirmed-unpublished cohort members. modelo-186 is the one remaining
+#: false layout-authority claim in this shape -- filed as its own item,
+#: deliberately untouched pending its own resolution -- so it is the stable
+#: anchor until that lands, at which point this constant needs another swap.
+_ANCHOR_SOURCE_ID = "enrolled-modelo-186-layout"
 
 #: A source whose file is a genuine consolidated orden carrying its annex.
 _HONEST_SOURCE_ID = "boe-modelo-714-layout"
