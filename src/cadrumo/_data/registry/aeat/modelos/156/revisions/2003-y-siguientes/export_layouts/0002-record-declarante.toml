@@ -24,7 +24,7 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 2-4. MODELO DECLARACION. Constante '156'.
 [[revisions."2003-y-siguientes".export_layouts.records.fields]]
@@ -39,7 +39,7 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 5-8. EJERCICIO. "Las cuatro cifras del ejercicio fiscal al que
 # corresponde la declaracion" -- the draft's own filing year.
@@ -55,7 +55,7 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 9-17. N.I.F. DEL DECLARANTE. A NIF exactly fills its 9-byte slot;
 # left-zero padding would strip real leading digits from a low-numbered DNI on
@@ -72,7 +72,7 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 18-57. RAZON SOCIAL DEL DECLARANTE.
 [[revisions."2003-y-siguientes".export_layouts.records.fields]]
@@ -87,7 +87,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posicion 58. TIPO DE SOPORTE. The design admits 'C' (cartucho magnetico),
 # 'D' (disquete) and 'T' (transmision telematica). Cadrumo emits a file for
@@ -105,7 +105,7 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 59-107. PERSONA CON QUIEN RELACIONARSE. The design subdivides the
 # slot (59-67 TELEFONO, 68-107 APELLIDOS Y NOMBRE) but declares ONE top-level
@@ -122,7 +122,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 108-120. NUMERO DE JUSTIFICANTE DE LA DECLARACION.
 [[revisions."2003-y-siguientes".export_layouts.records.fields]]
@@ -137,7 +137,7 @@ padding = "left_zero"
 justification = "right"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 121-122. DECLARACION COMPLEMENTARIA O SUSTITUTIVA: 121 "C", 122 "S".
 [[revisions."2003-y-siguientes".export_layouts.records.fields]]
@@ -152,7 +152,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 123-135. NUMERO IDENTIFICATIVO DE LA DECLARACION ANTERIOR.
 # "En cualquier otro caso debera rellenarse a CEROS."
@@ -168,7 +168,7 @@ padding = "left_zero"
 justification = "right"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 136-144. NUMERO TOTAL DE REGISTROS DE AFILIADOS O MUTUALISTAS.
 [[revisions."2003-y-siguientes".export_layouts.records.fields]]
@@ -183,7 +183,7 @@ padding = "left_zero"
 justification = "right"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 145-250. BLANCOS.
 [[revisions."2003-y-siguientes".export_layouts.records.fields]]
@@ -197,4 +197,4 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]

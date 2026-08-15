@@ -64,6 +64,22 @@ class SecureObjectNamespaceDefinition(BaseModel):
     scope: StorageNamespaceScope
     custody_disposition: StorageCustodyDisposition
     default_object_key: str | None = Field(default=None, min_length=1)
+    record_formats: tuple[str, ...] = ()
+    """Persisted-format inventory keys carried by this namespace's rows.
+
+    A namespace is not a persisted format. The great majority hold rows under
+    the secure-object envelope's one schema version and one upgrader registry,
+    and declare nothing here. The few that do carry a record grammar enrolled in
+    the durability inventory on its own axis: the envelope governs whether the
+    bytes decrypt, the record's own declaration governs whether what is inside
+    them can still be read, and a floor on the first does not cover the second.
+
+    Declared beside the namespace rather than in the gate that reads it, so the
+    author adding such a record sees the obligation where the row lives. Three
+    of these once sat in a hand-maintained table inside a test module, where a
+    correct durability declaration read as a stale one because nothing in
+    production pointed at it.
+    """
     remote_mirror_policy: StorageRemoteMirrorPolicy = StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA
     remote_mirror_requires_revision: bool = True
     remote_mirror_requires_integrity_manifest: bool = True
@@ -285,6 +301,7 @@ USER_PROFILE_VALUE_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="user-profile:{profile_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+    record_formats=("profile_record",),
 )
 USER_PROFILE_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="user_profile_snapshot",
@@ -808,6 +825,14 @@ AEAT_BROWSER_SESSION_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="{storage_state_path_posix}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+    # Three separately versioned authority-session metadata records ride this
+    # one namespace. That a namespace can carry several is the clearest
+    # statement that a namespace is not the unit of persisted format.
+    record_formats=(
+        "aeat_certificate_session_metadata",
+        "aeat_clave_movil_session_metadata",
+        "aeat_clave_permanente_session_metadata",
+    ),
 )
 CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="clave_movil_diagnostics",
@@ -1129,6 +1154,11 @@ TRANSACTION_PARTICIPATION_INDEX_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="{transaction_id}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.DERIVED_REBUILDABLE,
+    # Enrolled and classified on its own axis, though its version constant is
+    # read straight off this namespace's ``schema_version`` rather than declared
+    # independently -- the softest case in this field, recorded rather than
+    # smoothed over.
+    record_formats=("participation_index",),
 )
 DOMAIN_NAMESPACE_DEFINITIONS = (
     BUCKET_EVENT_HISTORY_NAMESPACE,

@@ -135,6 +135,7 @@ def test_restore_refuses_missing_arbitrary_and_malformed_current_database(tmp_pa
             data_files={},
             record_session=session,
             database_bytes=b"",
+            authority="password",
         )
     with pytest.raises(ValueError, match="refuses arbitrary capsule data files"):
         ProfileCapsuleLifecycle(root=tmp_path / "arbitrary").restore(
@@ -144,6 +145,7 @@ def test_restore_refuses_missing_arbitrary_and_malformed_current_database(tmp_pa
             data_files={"untrusted.bin": b"arbitrary"},
             record_session=session,
             database_bytes=database_bytes,
+            authority="password",
         )
     with pytest.raises(ProfileRecordIntegrityError, match="authenticated current-record validation"):
         ProfileCapsuleLifecycle(root=tmp_path / "malformed").restore(
@@ -153,6 +155,7 @@ def test_restore_refuses_missing_arbitrary_and_malformed_current_database(tmp_pa
             data_files={},
             record_session=session,
             database_bytes=b"not a sqlite database",
+            authority="password",
         )
 
 
@@ -197,6 +200,7 @@ def test_restore_refuses_duplicate_or_mismatched_current_record_lineage(tmp_path
             data_files={},
             record_session=session,
             database_bytes=duplicate_database.read_bytes(),
+            authority="password",
         )
     assert isinstance(duplicate_refusal.value.__cause__, ProfileRecordIntegrityError)
     # Two rows: the count really is what failed, so the count is what is named.
@@ -213,6 +217,7 @@ def test_restore_refuses_duplicate_or_mismatched_current_record_lineage(tmp_path
             data_files={},
             record_session=mismatched_session,
             database_bytes=_database(tmp_path / "source").read_bytes(),
+            authority="password",
         )
     assert isinstance(mismatch_refusal.value.__cause__, ProfileRecordIntegrityError)
     assert "provenance" in str(mismatch_refusal.value.__cause__)
@@ -232,6 +237,7 @@ def test_restore_refuses_a_database_bound_to_a_different_profile_uuid(tmp_path: 
             data_files={},
             record_session=other_session,
             database_bytes=_database(tmp_path / "source").read_bytes(),
+            authority="password",
         )
 
     assert isinstance(refusal.value.__cause__, ProfileRecordIntegrityError)

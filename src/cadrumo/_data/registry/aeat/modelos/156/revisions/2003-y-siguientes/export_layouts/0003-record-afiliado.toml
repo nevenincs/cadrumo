@@ -24,7 +24,7 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 2-4. MODELO DECLARACION. Constante '156'.
 [[revisions."2003-y-siguientes".export_layouts.records.fields]]
@@ -39,7 +39,7 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 5-8. EJERCICIO. "Consignar lo contenido en estas mismas posiciones
 # del registro de tipo 1" -- so it reads the same draft attribute tipo 1 reads.
@@ -55,7 +55,7 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 9-17. N.I.F. DEL DECLARANTE. "Consignar lo contenido en estas
 # mismas posiciones del registro de tipo 1" -- same producer key as tipo 1.
@@ -71,7 +71,7 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 18-26. N.I.F. DEL AFILIADO O MUTUALISTA.
 [[revisions."2003-y-siguientes".export_layouts.records.fields]]
@@ -86,7 +86,7 @@ padding = "none"
 justification = "none"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 27-35. BLANCO. The design declares no datum here.
 [[revisions."2003-y-siguientes".export_layouts.records.fields]]
@@ -100,7 +100,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 36-75. APELLIDOS Y NOMBRE DEL AFILIADO O MUTUALISTA.
 [[revisions."2003-y-siguientes".export_layouts.records.fields]]
@@ -115,7 +115,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 76-87. NUMERO DE AFILIACION.
 [[revisions."2003-y-siguientes".export_layouts.records.fields]]
@@ -130,7 +130,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 88-96. ENERO. Subdivided 88 SITUACION MENSUAL DE LAS
 # COTIZACIONES ('S' o 'N') and 89-96 IMPORTE CUOTA DE COTIZACION
@@ -148,7 +148,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 97-105. FEBRERO. Subdivided 97 SITUACION MENSUAL DE LAS
 # COTIZACIONES ('S' o 'N') and 98-105 IMPORTE CUOTA DE COTIZACION
@@ -166,7 +166,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 106-114. MARZO. Subdivided 106 SITUACION MENSUAL DE LAS
 # COTIZACIONES ('S' o 'N') and 107-114 IMPORTE CUOTA DE COTIZACION
@@ -184,7 +184,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 115-123. ABRIL. Subdivided 115 SITUACION MENSUAL DE LAS
 # COTIZACIONES ('S' o 'N') and 116-123 IMPORTE CUOTA DE COTIZACION
@@ -202,7 +202,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 124-132. MAYO. Subdivided 124 SITUACION MENSUAL DE LAS
 # COTIZACIONES ('S' o 'N') and 125-132 IMPORTE CUOTA DE COTIZACION
@@ -220,7 +220,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 133-141. JUNIO. Subdivided 133 SITUACION MENSUAL DE LAS
 # COTIZACIONES ('S' o 'N') and 134-141 IMPORTE CUOTA DE COTIZACION
@@ -238,7 +238,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 142-150. JULIO. Subdivided 142 SITUACION MENSUAL DE LAS
 # COTIZACIONES ('S' o 'N') and 143-150 IMPORTE CUOTA DE COTIZACION
@@ -256,7 +256,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 151-159. AGOSTO. Subdivided 151 SITUACION MENSUAL DE LAS
 # COTIZACIONES ('S' o 'N') and 152-159 IMPORTE CUOTA DE COTIZACION
@@ -274,7 +274,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 160-168. SEPTIEMBRE. Subdivided 160 SITUACION MENSUAL DE LAS
 # COTIZACIONES ('S' o 'N') and 161-168 IMPORTE CUOTA DE COTIZACION
@@ -292,7 +292,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 169-177. OCTUBRE. Subdivided 169 SITUACION MENSUAL DE LAS
 # COTIZACIONES ('S' o 'N') and 170-177 IMPORTE CUOTA DE COTIZACION
@@ -310,7 +310,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 178-186. NOVIEMBRE. Subdivided 178 SITUACION MENSUAL DE LAS
 # COTIZACIONES ('S' o 'N') and 179-186 IMPORTE CUOTA DE COTIZACION
@@ -328,7 +328,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 187-195. DICIEMBRE. Subdivided 187 SITUACION MENSUAL DE LAS
 # COTIZACIONES ('S' o 'N') and 188-195 IMPORTE CUOTA DE COTIZACION
@@ -346,7 +346,7 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Posiciones 196-250. BLANCOS.
 [[revisions."2003-y-siguientes".export_layouts.records.fields]]
@@ -360,4 +360,4 @@ padding = "right_space"
 justification = "left"
 signed = false
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]

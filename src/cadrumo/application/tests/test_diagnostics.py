@@ -214,6 +214,47 @@ def test_config_repair_preserves_the_active_profile_typed_verdict() -> None:
     assert verdict.missing_argument_names == ("profile_name",)
 
 
+def test_profile_readiness_reports_no_profile_configured_when_genuinely_absent() -> None:
+    """A cold environment with no registered profile keeps the honest sentence.
+
+    The control for the locked-profile row below: a real absence must still
+    report absence, or a fix that widened the locked branch too far would
+    silently swallow this case instead.
+    """
+    from ...core.i18n import tr
+
+    report = build_config_repair_report()
+    profile_readiness = next(check for check in report.checks if check.name == "profile.readiness")
+
+    assert profile_readiness.summary == tr("cli.diagnostics.summary.profile_none", default="No profile configured")
+
+
+def test_profile_readiness_reports_the_lock_rather_than_no_profile_configured(tmp_path: Path) -> None:
+    """A locked profile must not fall through to the "no profile configured" row.
+
+    Before the fix: neither status set diagnostics keys off included
+    ``profile_locked``, so a real, intact, merely-not-logged-in profile fell
+    through to the same summary a cold environment with no profile at all
+    gets -- true of the second, false of the first.
+    """
+    from ...core.i18n import tr
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        with suspend_active_session():
+            assert not has_active_bucket_session()
+            report = build_config_repair_report()
+
+    profile_readiness = next(check for check in report.checks if check.name == "profile.readiness")
+
+    assert profile_readiness.status == "warn"
+    assert profile_readiness.summary == tr("cli.diagnostics.summary.profile_locked")
+    assert profile_readiness.summary != tr("cli.diagnostics.summary.profile_none", default="No profile configured")
+    verdict = profile_readiness.precondition_verdict
+    assert verdict is not None
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.profile.login"
+
+
 def test_config_repair_report_contains_registry_and_setup_checks(config_repair_report: ConfigRepairReport) -> None:
     report = config_repair_report
     assert report.package_name == "cadrumo"

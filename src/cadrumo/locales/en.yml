@@ -4576,6 +4576,8 @@ cli:
       auth_state_unreadable: Authentication readiness cannot be checked until saved
         local session data is readable.
       profile_keys_set: '%{present}/%{total} profile keys set.'
+      profile_locked: You are not logged in. Run `aeat config login` to unlock your
+        profile.
       profile_missing_fields: 'Profile is missing %{count} required field(s): %{fields}'
       profile_none: No profile configured
       profile_storage: active_profile=%{active_profile} source=%{source} status=%{status}
@@ -48507,6 +48509,69 @@ modelo:
       revision:
         2003-y-siguientes:
           casilla:
+            afiliado-nif:
+              help: null
+              label: Tax ID of the member or mutualist
+            afiliado-nombre:
+              help: null
+              label: Surnames and given name of the member or mutualist
+            cotizacion-abril:
+              help: null
+              label: 'April contribution: monthly status and accrued premium amount'
+            cotizacion-agosto:
+              help: null
+              label: 'August contribution: monthly status and accrued premium amount'
+            cotizacion-diciembre:
+              help: null
+              label: 'December contribution: monthly status and accrued premium amount'
+            cotizacion-enero:
+              help: null
+              label: 'January contribution: monthly status and accrued premium amount'
+            cotizacion-febrero:
+              help: null
+              label: 'February contribution: monthly status and accrued premium amount'
+            cotizacion-julio:
+              help: null
+              label: 'July contribution: monthly status and accrued premium amount'
+            cotizacion-junio:
+              help: null
+              label: 'June contribution: monthly status and accrued premium amount'
+            cotizacion-marzo:
+              help: null
+              label: 'March contribution: monthly status and accrued premium amount'
+            cotizacion-mayo:
+              help: null
+              label: 'May contribution: monthly status and accrued premium amount'
+            cotizacion-noviembre:
+              help: null
+              label: 'November contribution: monthly status and accrued premium amount'
+            cotizacion-octubre:
+              help: null
+              label: 'October contribution: monthly status and accrued premium amount'
+            cotizacion-septiembre:
+              help: null
+              label: 'September contribution: monthly status and accrued premium amount'
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Supplementary or replacement return
+            declarante-razon-social:
+              help: null
+              label: Business name of the filer
+            numero-afiliacion:
+              help: null
+              label: Membership number
+            numero-identificativo-anterior:
+              help: null
+              label: Identifying number of the previous return
+            numero-justificante:
+              help: null
+              label: Filing receipt number
+            numero-total-afiliados:
+              help: null
+              label: Total number of member or mutualist records
+            persona-relacion:
+              help: null
+              label: Contact person
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Filing year to which the return relates
@@ -65287,16 +65352,26 @@ modelo:
               help: null
               label: Return type (original / substitute / supplementary)
             x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
+              help: Sum of the withholding or payment-on-account bases recorded in
+                the payee records, in euros.
               label: Total base amount for withholding or payment on account
             x-chim6r1eehnn8obc5lkmqs3fe9q6abbge9imqqbfec:
+              help: Sum of the gross prize amounts recorded in the payee records,
+                in euros, unsigned and without a decimal separator.
               label: Total amount or valuation of the prizes
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: Total number of payees listed in the type 2 detail records. A
+                payee appearing in several records is counted once for each appearance.
               label: Total number of declared payee records
             x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
+              help: Sum of the withholdings or payments on account recorded in the
+                payee records, in euros.
               label: Total amount of withholding or payment on account
             x-e1in4opec9gn6p9de9in8pbecdkmurg:
               label: Base for withholding or payment on account
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
+              help: 'Completed only where the payee type is code 5: F if the payee
+                is a natural person and J if a legal person or entity.'
               label: Legal personality code of the non-resident payee
             x-e1in4opecpim6q315ln62or9dlkmarjkds:
               label: Date of birth of the non-resident payee
@@ -65311,14 +65386,26 @@ modelo:
             x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
               label: Place of birth of the non-resident payee
             x-e1in4opedpkmc:
+              help: Tax identification number of the prize recipient. Left blank only
+                where the payee type is code 5 and the payee has no Spanish NIF, in
+                which case the identification number in the country of residence is
+                mandatory instead.
               label: Payee tax identification number
             x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
               label: Tax identification number in the country of tax residence
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: Tax identification number of the person or entity acting as the
+                payee's representative, where there is one. Blank in every other case.
               label: Tax identification number of the payee's legal representative
             x-e1in4opedpnmqojick:
+              help: For natural persons, first surname, a space, second surname, a
+                space and the full given name, in that order. For legal persons or
+                entities, the complete legal or business name, without logos.
               label: Payee surnames and given name, legal name or business name
             x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
+              help: Surnames and given name of the representative if a natural person,
+                or the complete legal or business name if a legal person or entity.
+                Blank in every other case.
               label: Surnames and given name, legal name or business name of the payee's
                 representative
             x-e1in4opee1gmispde9in6qb4cln66qb1:
@@ -65328,6 +65415,10 @@ modelo:
             x-e1in4opee9in8pbecdkmurg:
               label: Amount of withholding or payment on account
             x-e1in4opeehkn0rpde1in4or5e1q6usg:
+              help: Code 1 natural person subject to personal income tax, 2 income-attribution
+                entity resident in Spain, 3 legal person or resident entity subject
+                to corporate income tax, 4 permanent establishment in Spain, 5 non-resident
+                person or entity operating without a permanent establishment.
               label: Payee type
           construct:
             modelo-270-informative:
@@ -72765,6 +72856,20 @@ modelo:
         official_name: null
         title: null
       revision:
+        2021-2023:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the self-assessment relates
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (calendar month)
+          construct:
+            modelo-604-autoliquidacion:
+              field:
+                title: null
+          field:
+            label: null
         2021-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -72773,6 +72878,274 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Period (calendar month)
+          construct:
+            modelo-604-autoliquidacion:
+              field:
+                title: null
+          field:
+            label: null
+        2024-y-siguientes:
+          casilla:
+            x-c5n6au3f5pn7arb5e9niqqjledq6ipj9cdgmst35:
+              help: null
+              label: Informative annex. Receipt number
+            x-cdnmqs3c5pi6aorcc5p62or9dtn2qorfdlo6opbdcln78obid5gg:
+              help: null
+              label: Supplementary return
+            x-cdnmqs3c5pn7arb5e9niqqjledq6ipj9cdgmst355lgmst35e9kmusg:
+              help: null
+              label: Receipt number of the previous return
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the self-assessment relates
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Language of the return
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (calendar month)
+            x-chim6r1eehkn0rpdc5qn8rrcd5onaqb4c5hmirre:
+              help: null
+              label: 'Self-assessment type (I: payable, N: nil)'
+            x-chnmqbb5ecn64r3fe5qma:
+              help: null
+              label: Tax domicile in Spanish territory. Block
+            x-chnmqbb5ecn66obcd5j6ior1chnn4bbeelmmasjf:
+              help: null
+              label: Tax domicile in Spanish territory. Number qualifier
+            x-chnmqbb5ecn66rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Tax domicile in Spanish territory. Postcode
+            x-chnmqbb5ecn66rr4d5jmubbge9nncqbecdkm2:
+              help: null
+              label: Tax domicile in Spanish territory. Province code
+            x-chnmqbb5ecn66rrde1m6arb5dpq6u:
+              help: null
+              label: Tax domicile in Spanish territory. Address supplement
+            x-chnmqbb5ecn6asr3c5m6asj1:
+              help: null
+              label: Tax domicile in Spanish territory. Staircase
+            x-chnmqbb5ecn6orr3c5m6ip31cg:
+              help: null
+              label: Tax domicile in Spanish territory. Locality or town
+            x-chnmqbb5ecn6qtbed5hmis39ds:
+              help: null
+              label: Tax domicile in Spanish territory. Municipality
+            x-chnmqbb5ecn6srrdc9p6abbmd5gg:
+              help: null
+              label: Tax domicile in Spanish territory. Street name
+            x-chnmqbb5ecn6stbdclp6ubb3c5pm2:
+              help: null
+              label: Tax domicile in Spanish territory. House number
+            x-chnmqbb5ecn70r31dpq62:
+              help: null
+              label: Tax domicile in Spanish territory. Floor
+            x-chnmqbb5ecn70rriehgmo:
+              help: null
+              label: Tax domicile in Spanish territory. Entrance
+            x-chnmqbb5ecn70sjfepkmsor9c4:
+              help: null
+              label: Tax domicile in Spanish territory. Province
+            x-chnmqbb5ecn70tb5e9q62:
+              help: null
+              label: Tax domicile in Spanish territory. Door
+            x-chnmqbb5ecn78qbgdsmmstbdclp62or9dtn0:
+              help: null
+              label: Tax domicile in Spanish territory. Numbering type
+            x-chnmqbb5ecn78qbgdsmncqb1:
+              help: null
+              label: Tax domicile in Spanish territory. Street type
+            x-chnmqbb5f0n66rr4d5jmubbgc5kn6:
+              help: null
+              label: Tax domicile abroad. Country code
+            x-chnmqbb5f0n66rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Tax domicile abroad. Postcode (ZIP)
+            x-chnmqbb5f0n66rrde1m6arb5dpq6u:
+              help: null
+              label: Tax domicile abroad. Address supplement
+            x-chnmqbb5f0n68rrdd5hmir39ds:
+              help: null
+              label: Tax domicile abroad. Address
+            x-chnmqbb5f0n70ob9ec:
+              help: null
+              label: Tax domicile abroad. Country
+            x-chnmqbb5f0n70rr2dhgm6qbfdo:
+              help: null
+              label: Tax domicile abroad. Town or city
+            x-chnmqbb5f0n70sjfepkmsor9c4mn4pb7d5nmsbb5edq62p3f:
+              help: null
+              label: Tax domicile abroad. Province, region or state
+            x-dhkn2bhg64mm4objckmmirbgdtn6iojcck:
+              help: null
+              label: Taxable non-exempt transactions for the period. Taxable base
+                [01]
+            x-dhkn2bhg68mm6tbfehgg:
+              help: null
+              label: Taxable non-exempt transactions for the period. Tax [02]
+            x-dhkn2bhg6cmm4objckmn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Adjustments. Taxable base [03]
+            x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Adjustments. Sign of the taxable base [03]
+            x-dhkn2bhg6gmm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Adjustments. Tax [04]
+            x-dhkn2bhg6gmn6qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Adjustments. Sign of the tax [04]
+            x-dhkn2bhg6kmmus35e9gm6qbfdpin6bb5f1imst31ec:
+              help: null
+              label: Exempt transactions carried out in the period [05]
+            x-dhkn2bhg6omm2bb4cli7aor9e8:
+              help: null
+              label: To be deducted [06]
+            x-dhkn2bhg6smn4pbjelm78ob4ds:
+              help: null
+              label: Self-assessment result [07]
+            x-dhkn2bhg70mm8qb6clp6arj3d5gg:
+              help: null
+              label: Difference ([02] - [04]) [08]
+            x-dhkn2bhg74mm6tbfehgiqpbjehgm8ro:
+              help: null
+              label: Tax on the period's taxable non-exempt transactions attributable
+                to the State Administration [09]
+            x-dhkn2bhh60mm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6bb5edq62p3f:
+              help: null
+              label: Tax on adjustments made in the period attributable to the State
+                Administration [10]
+            x-dhkn2bhh60mn6qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aspdclpn8ob4ds:
+              help: null
+              label: Sign of the period's adjustment tax attributable to the State
+                Administration [10]
+            x-dhkn2bhh64mn0rricdimst31d9iiqobke9km4tb9c9m6abb5edq62p3f:
+              help: null
+              label: Percentage attributable to the State Administration [11]
+            x-dhkn2bhh68mn4pbjelm78ob4dsmmasrkc5i6u:
+              help: null
+              label: Result attributable to the State Administration ([09] - [10])
+                [12]
+            x-edo2sorfchkmerpdc9km6:
+              help: null
+              label: Taxable person. BIC code
+            x-edo2sorfchkmerpddhimi:
+              help: null
+              label: Taxable person. LEI code (ISO 17442)
+            x-edo2ss35e9pmurj15lhmurjkc5hn8ro:
+              help: null
+              label: Taxable person. Contact person
+            x-edo2st35dhimcrredsmm6rreehgm6t3f:
+              help: null
+              label: Taxable person. Contact telephone
+            x-ehin4shec5m62tj15phnarrkc4mn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Taxation by territory. Álava. Tax on adjustments made in the
+                period [14]
+            x-ehin4shec5m62tj15phnarrkc4mn6tbaclq62spddpniqpbocln78obj:
+              help: null
+              label: Taxation by territory. Álava. Tax on taxable non-exempt transactions
+                for the period [13]
+            x-ehin4shec5m62tj15phnarrkc4mn8rrkc5m2qobke9km4tb9c9m6a:
+              help: null
+              label: Taxation by territory. Álava. Total attributable tax [15]
+            x-ehin4shec5m62tj15pkmqs3fe9q6abbfe1in4ob3d5nmspbj5lingpbeehgn6:
+              help: null
+              label: Taxation by territory. Álava. Amount of exempt transactions [17]
+            x-ehin4shec5m62tj15po6usj3cln78obackmm2t3id5h7aqb2dhig:
+              help: null
+              label: Taxation by territory. Álava. Attributable percentage [16]
+            x-ehin4shec5m62tj15ppmipredsmm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Taxation by territory. Álava. Sign of the adjustment tax for
+                the period [14]
+            x-ehin4sheclpn8ob4dsn66tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Taxation by territory. State. Tax on adjustments made in the
+                period [34]
+            x-ehin4sheclpn8ob4dsn66tbfehgiqsrld9in8obj5ln6ubb5f1imst31ec:
+              help: null
+              label: Taxation by territory. State. Tax on taxable non-exempt transactions
+                for the period [33]
+            x-ehin4sheclpn8ob4dsn66tbfehgiqt3fehgmobb1ehp6iojld5h6op8:
+              help: null
+              label: Taxation by territory. State. Total attributable tax [35]
+            x-ehin4sheclpn8ob4dsn6irbgdtp78p9ddto6asj1cdkmurj5ecmmau35dpq62so:
+              help: null
+              label: Taxation by territory. State. Amount of exempt transactions [37]
+            x-ehin4sheclpn8ob4dsn70rricdimst31d9iiqobke9km4tb9c9m6a:
+              help: null
+              label: Taxation by territory. State. Attributable percentage [36]
+            x-ehin4sheclpn8ob4dsn76qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Taxation by territory. State. Sign of the adjustment tax for
+                the period [34]
+            x-ehin4shectqmis3lf9hmuo9ecdqmut315lp6aorkd5j6ior1cdkmurj5ec:
+              help: null
+              label: Taxation by territory. Gipuzkoa. Tax on adjustments made in the
+                period [19]
+            x-ehin4shectqmis3lf9hmuo9ecdqmut315lpnaqj5ehgn6bbedsmmau35dpq62so:
+              help: null
+              label: Taxation by territory. Gipuzkoa. Tax on taxable non-exempt transactions
+                for the period [18]
+            x-ehin4shectqmis3lf9hmuo9ecdqmut315lq6ut31dgmm2t3id5h7aqb2dhig:
+              help: null
+              label: Taxation by territory. Gipuzkoa. Total attributable tax [20]
+            x-ehin4shectqmis3lf9hmuo9ed5mn0rriehiiqrrgclp62or9dtn6aspdcls6arjkc5pg:
+              help: null
+              label: Taxation by territory. Gipuzkoa. Amount of exempt transactions
+                [22]
+            x-ehin4shectqmis3lf9hmuo9ee1nn4or5dpq62qj55lgn8sj9c9qmiojcck:
+              help: null
+              label: Taxation by territory. Gipuzkoa. Attributable percentage [21]
+            x-ehin4shectqmis3lf9hmuo9eedkmerjf5lhnarrkc4mn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Taxation by territory. Gipuzkoa. Sign of the adjustment tax for
+                the period [19]
+            x-ehin4shedpgncobie9gisorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Taxation by territory. Navarre. Tax on adjustments made in the
+                period [29]
+            x-ehin4shedpgncobie9gisorldtq62bbjell6at31ecmmsrpdcls6arjkc5pg:
+              help: null
+              label: Taxation by territory. Navarre. Tax on taxable non-exempt transactions
+                for the period [28]
+            x-ehin4shedpgncobie9gisorldtq62bbkdtq62r1dc5q74qb2elkm4r35:
+              help: null
+              label: Taxation by territory. Navarre. Total attributable tax [30]
+            x-ehin4shedpgncobie9gisqbde1nn4t355lnn0pbic5hmirreclpiqpbocln78obj:
+              help: null
+              label: Taxation by territory. Navarre. Amount of exempt transactions
+                [32]
+            x-ehin4shedpgncobie9giss3fe9hmarjkc5l6abb1ehp6iojld5h6op8:
+              help: null
+              label: Taxation by territory. Navarre. Attributable percentage [31]
+            x-ehin4shedpgncobie9gissr9ctn6ubb3elnn8o9de9im6t39cpkm6ob3d5nmspbj:
+              help: null
+              label: Taxation by territory. Navarre. Sign of the adjustment tax for
+                the period [29]
+            x-ehin4sheepknkor1f5gisorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Taxation by territory. Bizkaia. Tax on adjustments made in the
+                period [24]
+            x-ehin4sheepknkor1f5gisorldtq62bbjell6at31ecmmsrpdcls6arjkc5pg:
+              help: null
+              label: Taxation by territory. Bizkaia. Tax on taxable non-exempt transactions
+                for the period [23]
+            x-ehin4sheepknkor1f5gisorldtq62bbkdtq62r1dc5q74qb2elkm4r35:
+              help: null
+              label: Taxation by territory. Bizkaia. Total attributable tax [25]
+            x-ehin4sheepknkor1f5gisqbde1nn4t355lnn0pbic5hmirreclpiqpbocln78obj:
+              help: null
+              label: Taxation by territory. Bizkaia. Amount of exempt transactions
+                [27]
+            x-ehin4sheepknkor1f5giss3fe9hmarjkc5l6abb1ehp6iojld5h6op8:
+              help: null
+              label: Taxation by territory. Bizkaia. Attributable percentage [26]
+            x-ehin4sheepknkor1f5gissr9ctn6ubb3elnn8o9de9im6t39cpkm6ob3d5nmspbj:
+              help: null
+              label: Taxation by territory. Bizkaia. Sign of the adjustment tax for
+                the period [24]
           construct:
             modelo-604-autoliquidacion:
               field:

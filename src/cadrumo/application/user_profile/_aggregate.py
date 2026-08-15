@@ -45,6 +45,21 @@ ProfileFactSummary = Annotated[
 ]
 
 
+ProfileRestoreAuthority = Literal["password", "recovery_artifact"]
+"""Which door proved the key a restore republishes a capsule under.
+
+Declared beside ``publication_kind`` because it is the same class of axis and
+answers the question that one leaves open: a view already says a capsule was
+published by a restore, but not what authorised it. The two members are not
+interchangeable. ``password`` means the profile's own credential unwrapped its
+own envelope; ``recovery_artifact`` means a portable artifact was proved with
+its recovery secret, which recovers the DATA path and deliberately does not
+hand back password access -- a recovery-proved restore republishes the same
+password envelope, and credential rotation remains a separate, unbuilt
+capability.
+"""
+
+
 class CommittedProfileView(BaseModel):
     """A safe read model, assembled from a committed capsule and label owner."""
 
@@ -72,5 +87,6 @@ __all__ = [
     "CommittedProfileView",
     "LockedProfileFactSummary",
     "ProfileFactSummary",
+    "ProfileRestoreAuthority",
     "UnlockedProfileFactSummary",
 ]

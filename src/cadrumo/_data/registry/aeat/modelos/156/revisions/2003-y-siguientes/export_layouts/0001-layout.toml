@@ -1,8 +1,17 @@
-# Modelo 156 fichero -- transcribed from the bundled AEAT Diseno de Registro
-# (sources enrolled-modelo-156-layout and aeat-dr-156-2021, both naming
+# Modelo 156 fichero -- transcribed from the bundled AEAT Diseno de Registro at
 # corpus/aeat_official/disenos_registro/modelo_156/files/
 # 01-156-diseno-de-registro-vigente.pdf, sha256
-# d387cfeb7254e49d539d5c3a731c0bd6bf275c8c1fdae80e6faa5a1006d5d068).
+# d387cfeb7254e49d539d5c3a731c0bd6bf275c8c1fdae80e6faa5a1006d5d068.
+#
+# TWO registry sources name that one file with that one hash:
+# enrolled-modelo-156-layout (which deliberately declares no applies_from and no
+# record_design_epoch) and aeat-dr-156-2021 (which declares applies_from
+# 2021-01-01 and epoch "2021"). Only the former is cited here, for two reasons.
+# First, correctness: the coverage gate reads every record_design source a layout
+# cites, so citing both makes it read the same two sheets twice and double every
+# count it reports. Second, honesty: the file is the anexo of the 2003 orden, so
+# the 2021 applies_from is a stamp this layout must not lean on while it is
+# authored on the 2003-y-siguientes revision.
 #
 # That PDF is headed "ANEXO II -- DISENOS FISICOS Y LOGICOS A LOS QUE DEBE
 # AJUSTARSE ... DEL MODELO 156", AEAT serves it as `156_HAC_3580_2003.pdf`, and
@@ -56,4 +65,4 @@
 [[revisions."2003-y-siguientes".export_layouts]]
 id = "modelo-156-fichero-hac-3580-2003"
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
