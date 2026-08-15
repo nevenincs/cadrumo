@@ -167,9 +167,7 @@ def _result_and_lines(
         severity=NoticeSeverity.INFO,
         code=("config.profile.delete.deleted" if deleted else "config.profile.delete.preflight"),
         message=tr(
-            "cli.config.profile.delete.notices.deleted"
-            if deleted
-            else "cli.config.profile.delete.notices.preflight",
+            "cli.config.profile.delete.notices.deleted" if deleted else "cli.config.profile.delete.notices.preflight",
         ),
         context={"profile_id": assessment.bucket_id},
     )
