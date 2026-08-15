@@ -20,6 +20,7 @@ from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._errors import OperatorSurfaceContractError
 from ._models import (
+    FamilyMountState,
     LifecycleContract,
     ModeloLifecycleStep,
     MountedCommandDomain,
@@ -45,6 +46,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
             "profile",
             "login",
             "logout",
+            "passphrase",
             "auth",
             "repair",
             "check",
@@ -112,6 +114,22 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         operator_question="close the active taxpayer profile session and clear its pointer",
         service_owner="cadrumo.application.user_profile",
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.CUSTODY,
+        root=RootSurfaceName.CONFIG,
+        child="passphrase",
+        operator_question="rotate the profile custody passphrase after verifying the current one",
+        service_owner="cadrumo.application.user_profile",
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+        mount_state=FamilyMountState.DECLARED_UNIMPLEMENTED,
+        unimplemented_reason=(
+            "credential rotation is absent from every layer, not retired by any decision: no application-layer "
+            "rotation function exists, only unorchestrated primitives in the custody package, so the taxpayer "
+            "cannot change a profile passphrase at all. This declaration is the operator surface's record that "
+            "the capability is owed. Deleting it would assert a retirement no ruling supports; mounting a verb "
+            "over the missing capability would advertise a door with nothing behind it."
+        ),
     ),
     MountedCommandFamily(
         domain=MountedCommandDomain.AUTH,

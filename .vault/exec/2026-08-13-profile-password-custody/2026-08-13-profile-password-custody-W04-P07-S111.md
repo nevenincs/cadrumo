@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:e72d2fad1c7497969d14660d73f67963d4a07559b1c1eddba1dc0c53051acd67'
+body_hash: 'sha256:36a3f0be250ecfbda85d22845e2586b612b89ac0506f6f40dd7ea971a604288f'
 step_id: 'S111'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -84,6 +84,15 @@ campaign's authorised destructive reset and are untouched here.
   import-hygiene scan output.
 - The pre-authentication and corrupt-envelope refusal types were measured
   before being asserted, so neither assertion was written from a guess.
+- The regression is immune to the ambient sequential-registration handover
+  defect by construction, and this was checked rather than assumed. The
+  anti-tautology test expects a login to FAIL, so it is precisely the shape
+  that could pass for the wrong reason. It pins the specific
+  `ProfileCustodyRecordError` and the current-format phrase, which the
+  handover refusal — a different exception type entirely — cannot satisfy. An
+  earlier draft caught a bare exception and would have been vulnerable to
+  exactly that substitution. The three tests were also confirmed free of the
+  handover refusal in their captured run output.
 
 ## Notes
 

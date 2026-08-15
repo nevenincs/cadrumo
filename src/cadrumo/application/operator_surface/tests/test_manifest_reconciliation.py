@@ -248,6 +248,93 @@ def test_reconciliation_rejects_orphan_mounted_family_with_identity_and_provenan
     assert "unexpected contract declaration" in str(exc_info.value)
 
 
+def test_reconciliation_accepts_a_family_that_declares_its_capability_missing() -> None:
+    """An unreachable family is not a disagreement when it says why.
+
+    Contract and tree agree the family is not reachable; the declaration exists
+    to record which capability is owed. Refusing it would leave only two moves,
+    both wrong: delete the record, which asserts a retirement no ruling has
+    made, or mount a verb over a capability that does not exist.
+    """
+    inventory = _complete_inventory()
+    inventory["mounted_families"] = (
+        *inventory["mounted_families"],
+        MountedFamilyInventoryRow(
+            root="config",
+            child="passphrase",
+            provenance="OperatorSurfaceContract.command_families",
+            unimplemented_reason="credential rotation exists at no layer; the capability is owed, not retired",
+        ),
+    )
+
+    report = reconcile_operator_surface_inventory(**inventory)
+
+    assert len(report.leaves) == 1
+
+
+def test_reconciliation_rejects_an_unimplemented_note_the_live_tree_has_outgrown() -> None:
+    """The carve-out's staleness teeth: a closed gap must lose its note.
+
+    Without this arm the marker is a permanent silencer -- a family could ship
+    its capability and go on being described as missing, which is the same
+    dishonesty as the orphan it replaced, only inverted.
+    """
+    inventory = _complete_inventory()
+    inventory["mounted_families"] = (
+        MountedFamilyInventoryRow(
+            root="app",
+            child="ledger",
+            provenance="OperatorSurfaceContract.command_families",
+            unimplemented_reason="ledger capability is owed",
+        ),
+    )
+
+    with pytest.raises(OperatorSurfaceContractError, match="stale declared-unimplemented family") as exc_info:
+        reconcile_operator_surface_inventory(**inventory)
+
+    assert "app ledger" in str(exc_info.value)
+
+
+def test_the_unimplemented_carve_out_is_not_a_hole_in_the_orphan_gate() -> None:
+    """Anti-tautology: the gate must still refuse an unreasoned orphan.
+
+    The two cases differ ONLY by the stated reason, and they are asserted in
+    one pass so a change that made the gate ignore unreachable families
+    wholesale -- which would pass the accepting test above on its own -- cannot
+    also pass here.
+    """
+    inventory = _complete_inventory()
+    unreasoned = MountedFamilyInventoryRow(
+        root="config",
+        child="ghost",
+        provenance="OperatorSurfaceContract.command_families",
+    )
+    reasoned = MountedFamilyInventoryRow(
+        root="config",
+        child="passphrase",
+        provenance="OperatorSurfaceContract.command_families",
+        unimplemented_reason="credential rotation exists at no layer; the capability is owed, not retired",
+    )
+
+    inventory["mounted_families"] = (*inventory["mounted_families"], unreasoned, reasoned)
+    with pytest.raises(OperatorSurfaceContractError, match="orphan mounted family declaration") as exc_info:
+        reconcile_operator_surface_inventory(**inventory)
+
+    assert "config ghost" in str(exc_info.value)
+    assert "config passphrase" not in str(exc_info.value)
+
+
+def test_an_unimplemented_row_must_say_which_capability_is_missing() -> None:
+    """A blank reason would satisfy the carve-out while informing nobody."""
+    with pytest.raises(ValidationError, match="which capability is missing"):
+        MountedFamilyInventoryRow(
+            root="config",
+            child="passphrase",
+            provenance="OperatorSurfaceContract.command_families",
+            unimplemented_reason="   ",
+        )
+
+
 def test_reconciliation_rejects_silent_missing_surface_and_policy_exposure_contradiction() -> None:
     inventory = _complete_inventory()
     inventory["input_schemas"] = ()

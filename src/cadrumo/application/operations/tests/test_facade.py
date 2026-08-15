@@ -61,6 +61,7 @@ def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
         "core",
         "_capabilities",
         "_events",
+        "_execution_context",
         "_executor",
         "_interactions",
         "_journal",

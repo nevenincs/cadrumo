@@ -312,6 +312,22 @@ class _CandidateProfileLogin:
 
 
 @dataclass(slots=True)
+class _HandoverRecovery:
+    """What one recovery classification leaves for the login that observed it.
+
+    ``interrupted`` is the witness the login must still replay, and is absent
+    whenever recovery settled the handover itself.  ``completed_selection``
+    names the profile the last COMPLETED handover selected, which is the only
+    durable record of what the pointer named before an out-of-band writer moved
+    it -- and is therefore the sole remaining source for the profile this login
+    is moving away from once that happened in an earlier process.
+    """
+
+    interrupted: _ProfileLoginHandoverJournal | None = None
+    completed_selection: str | None = None
+
+
+@dataclass(slots=True)
 class _LoginAttempt:
     """Resolved, lock-scoped inputs shared by one login attempt."""
 
@@ -321,6 +337,7 @@ class _LoginAttempt:
     pointer_transaction: ActiveProfilePointerTransaction
     storage_root: Path
     interrupted_handover: _ProfileLoginHandoverJournal | None
+    completed_selection: str | None = None
 
 
 @dataclass(slots=True)
@@ -511,7 +528,7 @@ def _recover_interrupted_handover(
     *,
     storage_root: Path,
     pointer_transaction: ActiveProfilePointerTransaction,
-) -> _ProfileLoginHandoverJournal | None:
+) -> _HandoverRecovery:
     """Classify an interrupted handover without unlocking or overwriting it.
 
     A process crash has already destroyed A's in-process handles.  The durable
@@ -519,23 +536,49 @@ def _recover_interrupted_handover(
     activation event is durable, the caller must re-authenticate B and replay
     the stable journal event; once activation is witnessed, no replay is
     needed and the journal can be removed.
+
+    The terminal receipt is classified by its PHASE alone, before the pointer
+    is consulted at all.  A journal reaches ``A_RETIRED`` only after the
+    handover has run to its end -- the receipt is written after A's authorities
+    are closed and its durable session artefacts revoked -- so there is no such
+    thing as an interrupted terminal handover, and the two pointer states it
+    witnessed answer no question that is still open.  It is retained past its
+    own completion purely so ONE later login observes the boundary, and in that
+    interval the pointer legitimately moves for reasons the handover never
+    witnessed: registering a profile compare-and-swaps the pointer onto the new
+    capsule inside the create transaction, so an ordinary
+    register-login-register-login sequence leaves the retained receipt matching
+    neither of its own states.  Judging a finished handover against a pointer
+    that has since moved on reported a live interruption where none existed and
+    refused every subsequent login.
+
+    Every pre-terminal phase still carries real outstanding work, so it is
+    still judged against the pointer and still fails closed when that pointer
+    is unrecognisable.
     """
     journal = _load_handover_journal(storage_root=storage_root)
     if journal is None:
-        return None
+        return _HandoverRecovery()
+    if journal.phase is _HandoverPhase.A_RETIRED:
+        _complete_witnessed_retirement(storage_root=storage_root, journal=journal)
+        _clear_handover_journal(storage_root=storage_root, journal=journal)
+        return _HandoverRecovery(completed_selection=journal.profile_b)
     current = pointer_transaction.capture()
     before = journal.pointer_before()
     after = journal.pointer_after()
     if current == before:
+        # The pointer stands where it did before this handover, so nothing it
+        # selected survived and the profile it moved away from is still the
+        # selected one.  There is no completed selection to carry.
         _clear_handover_journal(storage_root=storage_root, journal=journal)
-        return None
+        return _HandoverRecovery()
     if current != after:
         _refuse_handover_journal("pointer no longer matches either witnessed handover state")
-    if journal.phase in {_HandoverPhase.ACTIVATED, _HandoverPhase.A_RETIRED}:
+    if journal.phase is _HandoverPhase.ACTIVATED:
         _complete_witnessed_retirement(storage_root=storage_root, journal=journal)
         _clear_handover_journal(storage_root=storage_root, journal=journal)
-        return None
-    return journal
+        return _HandoverRecovery(completed_selection=journal.profile_b)
+    return _HandoverRecovery(interrupted=journal)
 
 
 def _complete_witnessed_retirement(*, storage_root: Path, journal: _ProfileLoginHandoverJournal) -> None:
@@ -873,10 +916,11 @@ def _prepare_login_attempt(
 ) -> _LoginAttempt:
     """Resolve the target and capture the exact pointer for one handover."""
     selected = pointer_transaction.read()
-    interrupted_handover = _recover_interrupted_handover(
+    recovery = _recover_interrupted_handover(
         storage_root=storage_root,
         pointer_transaction=pointer_transaction,
     )
+    interrupted_handover = recovery.interrupted
     target = resolve_login_target(name) if name is not None else _resolve_selected_target(selected)
     prior_pointer = pointer_transaction.capture()
     if interrupted_handover is not None and target.bucket_id != interrupted_handover.profile_b:
@@ -888,6 +932,7 @@ def _prepare_login_attempt(
         pointer_transaction=pointer_transaction,
         storage_root=storage_root,
         interrupted_handover=interrupted_handover,
+        completed_selection=recovery.completed_selection,
     )
 
 
@@ -1061,6 +1106,7 @@ def _finish_candidate_login(
             pointer_transaction=attempt.pointer_transaction,
             storage_root=attempt.storage_root,
             interrupted_handover=attempt.interrupted_handover,
+            completed_selection=attempt.completed_selection,
         )
     except BaseException:
         candidate.close()
@@ -1121,9 +1167,10 @@ def _promote_candidate_login(
     pointer_transaction: ActiveProfilePointerTransaction,
     storage_root: Path,
     interrupted_handover: _ProfileLoginHandoverJournal | None,
+    completed_selection: str | None,
 ) -> ProfileLoginOutcome:
     """CAS-publish, activate, then retire A through durable phases."""
-    # The live session is ONE of three inputs to the retirement set, never the
+    # The live session is ONE of four inputs to the retirement set, never the
     # gate: it is absent in an ordinary invocation, which is a fresh process.
     # This binding survives for its own separate job -- closing the in-process
     # session object by identity, further down in _retire_previous_authorities.
@@ -1132,6 +1179,7 @@ def _promote_candidate_login(
         live_bucket_id=_live_bucket_id(previous_live),
         selected_bucket_id=selected_bucket_id,
         interrupted_bucket_id=None if interrupted_handover is None else interrupted_handover.profile_a,
+        completed_selection=completed_selection,
         candidate_bucket_id=candidate.bucket_id,
     )
     retired_bucket_id = retired_bucket_ids[0] if retired_bucket_ids else None

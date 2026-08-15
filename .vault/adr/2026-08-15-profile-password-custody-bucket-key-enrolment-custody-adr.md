@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:767697703db12ada2cd232e606d1923ce2800b6521f12e4a39b7c242216c47d1'
+body_hash: 'sha256:c9dade5a5728a0bb1febd4293e68bab87aeb9cc013f04c37e279d5976aa8fb6f'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
   - "[[2026-08-15-profile-password-custody-bucket-key-schedule-custody-mismatch-adr]]"
@@ -68,6 +68,11 @@ measurement whose absence let the wrong claim be made twice.
 - The exposure argument that defeated minting a second wrapped copy never
   depended on the false premise, and is restated below because it is the
   durable half of the sibling record.
+- A live ambient defect on the authentication path was ruled out of this
+  record's evidence by measurement rather than by assumption; the shape of the
+  measurement and the ordering matrix that localises the defect are in the
+  S110 execution record. It is a login failure and never a read failure, so it
+  cannot produce a bucket the storage layer will not open.
 
 ## Considered options
 
