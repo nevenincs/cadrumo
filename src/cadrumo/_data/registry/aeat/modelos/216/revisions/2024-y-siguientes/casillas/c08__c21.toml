@@ -1,15 +1,25 @@
 # Modelo 216 record design — money closure grounded in the AEAT instructions
 # (aeat-modelo-216-procedure) and the Orden HAC/56/2024 form layout
-# (boe-modelo-216-form-layout). Rentas dinerarias (08/11), rentas en especie
-# (09/12), their totals (10/13), prior-declaration results (20), and the
+# (boe-modelo-216-form-layout). Block I, rentas SOMETIDAS a retención o ingreso
+# a cuenta: base (08/09) and retenciones (11/12) each broken down into
+# dividendos y otras rentas de participación en fondos propios de entidades and
+# resto de rentas, their totals (10/13), prior-declaration results (20), and the
 # resultado a ingresar (21).
+#
+# The breakdown axis is dividendos-vs-resto, NOT dinerarias-vs-especie. Orden
+# HAC/56/2024 replaced the Orden EHA/3290/2008 breakdown: "En el modelo 216
+# [...] también se realiza un desglose del importe total de retenciones e
+# ingresos a cuenta en el correspondiente a dividendos y otras rentas de
+# participación en fondos propios de entidades y el correspondiente a otras
+# rentas." The bundled diseño `aeat-dr-216-2024` names each box the same way,
+# and the word "dinerarias" does not occur anywhere in the establishing orden.
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "08"
 number = "08"
-section = ["rentas_dinerarias"]
+section = ["rentas_sometidas", "base"]
 data_type = "money"
-semantic_role = "irnr_retencion_base_dineraria"
+semantic_role = "irnr_retencion_base_dividendos"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
@@ -18,9 +28,9 @@ source_refs = ["boe-modelo-216-form-layout"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "09"
 number = "09"
-section = ["rentas_especie"]
+section = ["rentas_sometidas", "base"]
 data_type = "money"
-semantic_role = "irnr_retencion_base_especie"
+semantic_role = "irnr_retencion_base_resto"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
@@ -29,7 +39,7 @@ source_refs = ["boe-modelo-216-form-layout"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "10"
 number = "10"
-section = ["totales"]
+section = ["rentas_sometidas", "base"]
 data_type = "money"
 semantic_role = "irnr_retencion_base_total"
 required = false
@@ -41,9 +51,9 @@ source_refs = ["boe-modelo-216-form-layout"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "11"
 number = "11"
-section = ["rentas_dinerarias"]
+section = ["rentas_sometidas", "retenciones"]
 data_type = "money"
-semantic_role = "irnr_retencion_cuota_dineraria"
+semantic_role = "irnr_retencion_cuota_dividendos"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
@@ -52,9 +62,9 @@ source_refs = ["boe-modelo-216-form-layout"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "12"
 number = "12"
-section = ["rentas_especie"]
+section = ["rentas_sometidas", "retenciones"]
 data_type = "money"
-semantic_role = "irnr_retencion_cuota_especie"
+semantic_role = "irnr_retencion_cuota_resto"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
@@ -63,7 +73,7 @@ source_refs = ["boe-modelo-216-form-layout"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "13"
 number = "13"
-section = ["totales"]
+section = ["rentas_sometidas", "retenciones"]
 data_type = "money"
 semantic_role = "irnr_retencion_cuota_total"
 required = false
