@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:e569af26e78a3dc717d0ef195848d9d0edbac35b545f6aa8889ec88a8909186c'
+body_hash: 'sha256:3c2b158f7f0d7a946f6482e7b415234b200d37e592ae3d037fc4d6d0abd69400'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -171,3 +171,36 @@ Found because a peer, migrating this code onto the shared
 `cadrumo.core.scan_directory` primitive, wrote the correct attribution into its
 docstring and contradicted the claim. Verified here rather than taken on trust,
 and the peer is right.
+
+## The compiled registry was loaded 66 times across the test suite
+
+`load_registry_tree` carries no memo of its own. Four consecutive calls in one
+process measured 15.62s, 3.10s, 4.67s and 15.29s: the spread is the
+fingerprint-keyed disk cache hitting or missing as peers edit the tree, and the
+floor is never free. The suite held 66 such call sites across 45 test modules,
+35 of them outside the registry package where the existing session-scoped
+`registry_tree` fixture cannot reach. `test_source_resolver` alone made 15
+identical calls; `test_m303_orden_anual_authority` made 9 while the fixture that
+makes the same call sat one directory up, unused.
+
+Both are now migrated -- the second onto the existing fixture, the first onto a
+new `cadrumo.tests.registry_tree.bundled_registry_tree()` importable from any
+package.
+
+Two properties make sharing one compiled tree safe, and both were checked rather
+than assumed. The accessor takes no arguments, so it holds exactly one entry and
+cannot answer for a different root; a test loading its own tree keeps calling the
+uncached function. And `ModeloDefinition` and `RegistryCatalogues` are declared
+`frozen`, so an attribute write raises -- handing every caller the same objects
+is safe by construction rather than by convention. Were they mutable this would
+be a hazard, because one test's edit would reach every later test in the worker.
+
+One failure in the migrated module was NOT caused by the sharing, and the
+distinction mattered: modelo 390 carries revisions 2022-2025 while the test asks
+for 2026, which raises `NoRevisionForPeriodError` identically under a direct
+uncached load. A shared-object bug would have looked the same from the test's
+side, so it was reproduced against the uncached path before being dismissed.
+
+Recorded here because the change landed inside `c180fe8e6e`, a peer's broad
+commit that captured the working tree before this session could commit it under
+its own message. That is the third such sweep today.
