@@ -1416,15 +1416,54 @@ def _run_wizard_persistence_path(
     )
 
 
-_DEFAULT_PROFILE_NEXT_COMMAND = "aeat app modelo work create"
-_NON_RESIDENT_IRNR_NEXT_COMMAND = "aeat app modelo describe 210"
+#: The routing projection's default suggestion: a profile carrying no
+#: fiscal-residency classification that redirects it elsewhere. Public
+#: because a consumer projecting this same guidance onto another surface
+#: (the profile manager) needs to tell "the ordinary default applies" from
+#: "this profile earned a specific next step" without re-deriving the
+#: comparison.
+DEFAULT_PROFILE_NEXT_COMMAND = "aeat app modelo work create"
 
 
-def _next_step_command_for_profile_values(profile_values: dict[str, str]) -> str:
+def profile_next_step_modelo(profile_values: dict[str, str]) -> str | None:
+    """The modelo id the routing projection singles out, or ``None`` for the default.
+
+    The one canonical classification a taxpayer's declared facts route
+    through — currently a single rule (IRNR non-residents route to Modelo
+    210, TRLIRNR RDLeg 5/2004 Art. 2) — ``None`` for every profile the
+    projection does not single out. This is the PRIMARY authority;
+    :func:`next_step_command_for_profile_values` derives its CLI command
+    text from it rather than repeating the classification, so a consumer
+    whose channel cannot carry command prose (the shared
+    :class:`~cadrumo.core.json_contract.Notice` structurally forbids an
+    embedded executable ``aeat ...`` invocation outside its typed action
+    projection) can still word its own sentence around the routed modelo.
+
+    Args:
+        profile_values: Dotted-path fact values as the wizard's canonical
+            question-id keys, or the equivalent
+            :func:`~cadrumo.application.user_profile.record_to_path_values`
+            projection of a :class:`~cadrumo.domain.user_profile.UserProfileRecord`
+            — the two share the same ``taxpayer_type.fiscal_residency`` key.
+    """
     fiscal_residency = profile_values.get("taxpayer_type.fiscal_residency", "").strip().lower()
     if fiscal_residency == "non_resident_irnr":
-        return _NON_RESIDENT_IRNR_NEXT_COMMAND
-    return _DEFAULT_PROFILE_NEXT_COMMAND
+        return "210"
+    return None
+
+
+def next_step_command_for_profile_values(profile_values: dict[str, str]) -> str:
+    """Resolve the CLI command a profile's declared facts point at next.
+
+    Derived from :func:`profile_next_step_modelo`, the canonical
+    classification, falling back to :data:`DEFAULT_PROFILE_NEXT_COMMAND` when
+    it singles out no modelo. Consumed by the scripted wizard's own success
+    line, which renders the command as text.
+    """
+    modelo = profile_next_step_modelo(profile_values)
+    if modelo is None:
+        return DEFAULT_PROFILE_NEXT_COMMAND
+    return f"aeat app modelo describe {modelo}"
 
 
 def _ccaa_was_defaulted(
@@ -1467,7 +1506,7 @@ def _emit_wizard_success(
     mode: WizardPersistMode,
     profile_name: str,
     *,
-    next_command: str = _DEFAULT_PROFILE_NEXT_COMMAND,
+    next_command: str = DEFAULT_PROFILE_NEXT_COMMAND,
     ccaa_defaulted: bool = False,
     modify_no_resume: bool = False,
     modify_no_resume_message: str | None = None,
@@ -1817,7 +1856,7 @@ def _execute_wizard_command(
     _emit_wizard_success(
         mode,
         profile_name,
-        next_command=_next_step_command_for_profile_values(profile_values),
+        next_command=next_step_command_for_profile_values(profile_values),
         ccaa_defaulted=_ccaa_was_defaulted(
             mode,
             explicit_flags,
@@ -1902,6 +1941,9 @@ def build_wizard_command(
 
 
 __all__ = [
+    "DEFAULT_PROFILE_NEXT_COMMAND",
     "SETUP_FLOW",
     "build_wizard_command",
+    "next_step_command_for_profile_values",
+    "profile_next_step_modelo",
 ]

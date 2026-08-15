@@ -70,6 +70,34 @@ entry = "uv run --no-sync python -m dev.quality.types"
 pass_filenames = false
 types = ["python"]
 
+# ── Locale co-landing (verify-only) ─────────────────────────────────────────
+# The only locale gate here that compares a CHANGE rather than a state. Every
+# other one -- `dev.locales audit`, the parity suites -- asks whether the tree is
+# currently consistent, which can only turn red after a commit has already
+# separated a catalogue key from the code that consumes it. This one asks
+# whether THIS change kept them together, which is the last moment the answer is
+# still actionable.
+#
+# Verify-only and stash-free by construction: it reads `git show` blobs and
+# writes nothing, so it is compatible with the policy at the top of this file.
+#
+# Cost is bounded by the change, not the tree. A commit touching no Python exits
+# after one `git diff --name-only`; the whole-tree confirmation behind the orphan
+# invariant runs only when a change actually removed a call site.
+#
+# With an empty index (`prek run --all-files`, or any CI invocation) the verb
+# compares HEAD~1..HEAD instead of reporting a vacuous pass. Pass an explicit
+# `--change BASE..HEAD` to check a whole branch.
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "locale-co-landing"
+name = "locale key co-lands with its call site"
+language = "system"
+entry = "uv run --no-sync python -m dev.locales co-landing"
+pass_filenames = false
+
 # ── Vault hygiene (manual stage only) ───────────────────────────────────────
 # Both hooks below are autofixers / advisory diagnostics; they remain on the
 # manual stage so they never trigger at commit time. Run via

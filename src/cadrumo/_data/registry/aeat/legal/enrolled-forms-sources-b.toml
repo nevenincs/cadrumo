@@ -232,7 +232,7 @@ source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-f
 review_status = "reviewed"
 
 [sources."boe-modelo-361-form"]
-evidence_tier = "layout_authority"
+evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-eha-789-2010.html"

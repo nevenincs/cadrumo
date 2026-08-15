@@ -22,60 +22,6 @@ migration_step = "S67"
 exception_observations = ["selector|constructor_keyword|suggestion|'aeat config profile edit'|1", "selector|constructor_keyword|suggestion|'aeat config profile edit'|2"]
 
 [[disposition]]
-path = "src/cadrumo/adapters/inbound/tui/_status_screen.py"
-enclosing_symbol = "<module>"
-candidate_role = "command_literal"
-alias = "<command-literal>"
-action_identity = "aeat config login NAME"
-role = "producer"
-reason = "src/cadrumo/adapters/inbound/tui/_status_screen.py:57 <module>: the concrete command initializes '_RECOVERY_COMMANDS', the action-bearing value produced by <module>."
-
-[[disposition]]
-path = "src/cadrumo/adapters/inbound/tui/_status_screen.py"
-enclosing_symbol = "<module>"
-candidate_role = "command_literal"
-alias = "<command-literal>"
-action_identity = "aeat config passphrase change"
-role = "producer"
-reason = "src/cadrumo/adapters/inbound/tui/_status_screen.py:56 <module>: the concrete command initializes '_RECOVERY_COMMANDS', the action-bearing value produced by <module>."
-
-[[disposition]]
-path = "src/cadrumo/adapters/inbound/tui/_status_screen.py"
-enclosing_symbol = "<module>"
-candidate_role = "command_literal"
-alias = "<command-literal>"
-action_identity = "aeat config recover"
-role = "producer"
-reason = "src/cadrumo/adapters/inbound/tui/_status_screen.py:55 <module>: the concrete command initializes '_RECOVERY_COMMANDS', the action-bearing value produced by <module>."
-
-[[disposition]]
-path = "src/cadrumo/adapters/inbound/tui/_status_screen.py"
-enclosing_symbol = "<module>"
-candidate_role = "command_literal"
-alias = "<command-literal>"
-action_identity = "aeat config recovery create"
-role = "producer"
-reason = "src/cadrumo/adapters/inbound/tui/_status_screen.py:52 <module>: the concrete command initializes '_RECOVERY_COMMANDS', the action-bearing value produced by <module>."
-
-[[disposition]]
-path = "src/cadrumo/adapters/inbound/tui/_status_screen.py"
-enclosing_symbol = "<module>"
-candidate_role = "command_literal"
-alias = "<command-literal>"
-action_identity = "aeat config recovery rotate"
-role = "producer"
-reason = "src/cadrumo/adapters/inbound/tui/_status_screen.py:53 <module>: the concrete command initializes '_RECOVERY_COMMANDS', the action-bearing value produced by <module>."
-
-[[disposition]]
-path = "src/cadrumo/adapters/inbound/tui/_status_screen.py"
-enclosing_symbol = "<module>"
-candidate_role = "command_literal"
-alias = "<command-literal>"
-action_identity = "aeat config recovery verify"
-role = "producer"
-reason = "src/cadrumo/adapters/inbound/tui/_status_screen.py:54 <module>: the concrete command initializes '_RECOVERY_COMMANDS', the action-bearing value produced by <module>."
-
-[[disposition]]
 path = "src/cadrumo/adapters/inbound/tui/_theme.py"
 enclosing_symbol = "NoticeBand.compose"
 candidate_role = "transformer"
@@ -3555,60 +3501,6 @@ alias = "<command-literal>"
 action_identity = "aeat app review view ID"
 role = "renderer"
 reason = "src/cadrumo/application/operator_surface/_help.py:627 _app_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
-
-[[disposition]]
-path = "src/cadrumo/application/operator_surface/_help.py"
-enclosing_symbol = "_config_custody_section"
-candidate_role = "command_literal"
-alias = "<command-literal>"
-action_identity = "aeat config passphrase change"
-role = "renderer"
-reason = "src/cadrumo/application/operator_surface/_help.py:296 _config_custody_section: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
-
-[[disposition]]
-path = "src/cadrumo/application/operator_surface/_help.py"
-enclosing_symbol = "_config_custody_section"
-candidate_role = "command_literal"
-alias = "<command-literal>"
-action_identity = "aeat config recover"
-role = "renderer"
-reason = "src/cadrumo/application/operator_surface/_help.py:316 _config_custody_section: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
-
-[[disposition]]
-path = "src/cadrumo/application/operator_surface/_help.py"
-enclosing_symbol = "_config_custody_section"
-candidate_role = "command_literal"
-alias = "<command-literal>"
-action_identity = "aeat config recovery create"
-role = "renderer"
-reason = "src/cadrumo/application/operator_surface/_help.py:304 _config_custody_section: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
-
-[[disposition]]
-path = "src/cadrumo/application/operator_surface/_help.py"
-enclosing_symbol = "_config_custody_section"
-candidate_role = "command_literal"
-alias = "<command-literal>"
-action_identity = "aeat config recovery rotate"
-role = "renderer"
-reason = "src/cadrumo/application/operator_surface/_help.py:308 _config_custody_section: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
-
-[[disposition]]
-path = "src/cadrumo/application/operator_surface/_help.py"
-enclosing_symbol = "_config_custody_section"
-candidate_role = "command_literal"
-alias = "<command-literal>"
-action_identity = "aeat config recovery status"
-role = "renderer"
-reason = "src/cadrumo/application/operator_surface/_help.py:300 _config_custody_section: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
-
-[[disposition]]
-path = "src/cadrumo/application/operator_surface/_help.py"
-enclosing_symbol = "_config_custody_section"
-candidate_role = "command_literal"
-alias = "<command-literal>"
-action_identity = "aeat config recovery verify"
-role = "renderer"
-reason = "src/cadrumo/application/operator_surface/_help.py:312 _config_custody_section: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
 
 [[disposition]]
 path = "src/cadrumo/application/operator_surface/_help.py"
@@ -7845,15 +7737,6 @@ alias = "<command-literal>"
 action_identity = "aeat app modelo verification-report list"
 role = "renderer"
 reason = "src/cadrumo/application/operator_surface/_help.py:238 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
-
-[[disposition]]
-path = "src/cadrumo/application/operator_surface/_help.py"
-enclosing_symbol = "_root_help"
-candidate_role = "command_literal"
-alias = "<command-literal>"
-action_identity = "aeat config recover"
-role = "renderer"
-reason = "src/cadrumo/application/operator_surface/_help.py:259 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
 
 [[disposition]]
 path = "src/cadrumo/application/operator_surface/_help.py"

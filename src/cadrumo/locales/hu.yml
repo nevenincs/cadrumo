@@ -7680,6 +7680,7 @@ flows:
     language:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
     namespace_detail: '{number}. részlet'
+    next_step_modelo: A profil megadott adatai a(z) {modelo} modellhez vezetnek.
     required_field_unavailable: Kötelező profilmező
     section_title: '{title} - {present}/{total}'
     title: 'Profil: {profile}'
@@ -7941,7 +7942,7 @@ flows:
         Ez nem vonható vissza.
       title: Újraindítja a teljes folyamatot?
     header: '{flow} - {position}. kérdés a(z) {total} közül, {section} szakasz'
-    header_single_section: '{flow} — {position}. kérdés / {total}'
+    header_single_section: '{flow} - {position}. kérdés / {total}'
     section_unavailable: Nem elérhető szakasz
 ledger:
   evidence:
@@ -49687,12 +49688,30 @@ modelo:
       revision:
         '2025':
           casilla:
+            clave-identificacion:
+              help: null
+              label: Az azonosítás módjának kódja
+            clave-mercado:
+              help: null
+              label: A piac típuskódja
+            clave-representacion:
+              help: null
+              label: Az értékpapír megjelenítési kódja
+            clave-titularidad:
+              help: null
+              label: A tulajdonlás típuskódja
             clave-valor:
               help: null
               label: Az értékpapír típuskódja
             codigo-pais:
               help: null
               label: Országkód
+            codigo-provincia:
+              help: null
+              label: Tartománykód
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Kiegészítő vagy helyettesítő bevallás
             declarado-nif:
               help: null
               label: A bejelentett fél adószáma
@@ -49702,18 +49721,48 @@ modelo:
             declarante-nif:
               help: null
               label: A bejelentő adószáma
+            declarante-razon-social:
+              help: null
+              label: A bejelentő cégneve
             ejercicio-declaracion:
               help: null
               label: A bevallás éve
+            identificacion-valores:
+              help: null
+              label: Az értékpapírok azonosítója
             nominal-unitario-valores:
               help: null
               label: Az értékpapírok egységnyi névértéke
+            numero-identificativo-anterior:
+              help: null
+              label: A korábbi bevallás azonosító száma
+            numero-justificante:
+              help: null
+              label: A bevallás igazolásszáma
+            numero-total-declarados:
+              help: null
+              label: A bejelentett felek teljes száma
             numero-valores:
               help: null
               label: Az értékpapírok száma
+            persona-relacion:
+              help: null
+              label: Kapcsolattartó személy
+            porcentaje-participacion:
+              help: null
+              label: Tulajdoni hányad százaléka
+            representante-legal-nif:
+              help: null
+              label: A törvényes képviselő adószáma
+            tipo-soporte:
+              help: null
+              label: Az adathordozó típusa
             valoracion:
               help: null
               label: Értékelés
+            valoracion-total:
+              help: null
+              label: Teljes értékelés
           field:
             label: null
     '190':
@@ -70995,6 +71044,24 @@ modelo:
           iva-isp-interior-cuota:
             help: null
             label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél
+          iva-repercutido-intragrupo-tipo-0-base:
+            label: Csoporton belüli ügyletek után keletkezett ÁFA 0% kulccsal - adóalap
+          iva-repercutido-intragrupo-tipo-0-cuota:
+            label: Csoporton belüli ügyletek után keletkezett ÁFA 0% kulccsal - adóösszeg
+          iva-repercutido-intragrupo-tipo-10-base:
+            label: Csoporton belüli ügyletek után keletkezett ÁFA 10% kulccsal - adóalap
+          iva-repercutido-intragrupo-tipo-10-cuota:
+            label: Csoporton belüli ügyletek után keletkezett ÁFA 10% kulccsal - adóösszeg
+          iva-repercutido-intragrupo-tipo-21-base:
+            label: Csoporton belüli ügyletek után keletkezett ÁFA 21% kulccsal - adóalap
+          iva-repercutido-intragrupo-tipo-4-base:
+            label: Csoporton belüli ügyletek után keletkezett ÁFA 4% kulccsal - adóalap
+          iva-repercutido-intragrupo-tipo-4-cuota:
+            label: Csoporton belüli ügyletek után keletkezett ÁFA 4% kulccsal - adóösszeg
+          iva-repercutido-intragrupo-tipo-5-base:
+            label: Csoporton belüli ügyletek után keletkezett ÁFA 5% kulccsal - adóalap
+          iva-repercutido-intragrupo-tipo-5-cuota:
+            label: Csoporton belüli ügyletek után keletkezett ÁFA 5% kulccsal - adóösszeg
           iva-volumen-operaciones-entregas-intracomunitarias:
             help: null
             label: Közösségen belüli termék- és szolgáltatásértékesítések

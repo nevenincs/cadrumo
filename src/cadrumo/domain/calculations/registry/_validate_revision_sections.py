@@ -36,6 +36,7 @@ from ._validate_dependency_sections import (
 )
 from ._validate_evidence import EvidenceValidator
 from ._validate_export_exemption import validate_export_exemption_declarations
+from ._validate_export_layout_coverage import validate_export_layout_record_coverage
 from ._validate_exports import validate_export_layout_section
 from ._validate_formulas import validate_formula_section
 from ._validate_helpers import missing_refs as _missing_refs
@@ -183,6 +184,9 @@ def _validate_revision_surface_sections(
         ),
     )
     failures.extend(validate_export_exemption_declarations(prefix=prefix, modelo_id=modelo_id, revision=revision))
+    failures.extend(
+        validate_export_layout_record_coverage(prefix=prefix, revision=revision, source_refs=source_refs),
+    )
     failures.extend(validate_revision_id_window_agreement(prefix=prefix, revision=revision))
     failures.extend(validate_valid_from_ejercicio_convention(prefix=prefix, revision=revision))
     failures.extend(

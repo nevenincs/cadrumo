@@ -32,7 +32,6 @@ from typing import Any
 import pytest
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.application.user_profile import UserProfileLifecycleRepository
 from cadrumo.core import resolve_active_bucket_id
 from cadrumo.domain.transactions import (
     BusinessClassification,
@@ -51,7 +50,7 @@ from cadrumo.domain.user_profile import (
 )
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
-from cadrumo.tests.profile_capsule import open_test_profile_session
+from cadrumo.tests.profile_capsule import open_test_profile_session, seed_test_profile_record
 from cadrumo.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 
 from .. import GoldenScenario, load_scenario, run_golden_scenario
@@ -110,8 +109,11 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )
-    lifecycle = UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository)
-    lifecycle.save(record)
+    seed_test_profile_record(
+        record,
+        root=runtime_profile.storage_root,
+        label="Response-provenance golden-eval test profile",
+    )
 
 
 def _seed_ledger_row(*, direction: TransactionDirection, amount: Decimal, filing_year: int, label: str) -> None:

@@ -24,7 +24,21 @@ Major declarations:
 
 from __future__ import annotations
 
-from ._ast_scanner import scan_namespace_markers, scan_source_tree
+from ._ast_scanner import (
+    declares_locale_keys,
+    scan_namespace_markers,
+    scan_namespace_markers_in_text,
+    scan_source_text,
+    scan_source_tree,
+)
+from ._colanding import (
+    LAST_CHANGE,
+    STAGED_CHANGE,
+    ColandingFinding,
+    ColandingResult,
+    check_colanding,
+    resolve_change,
+)
 from ._errors import LocaleError, LocaleWriteConflictError
 from ._fstring_registry import get_registered_keys
 from ._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
@@ -42,12 +56,16 @@ from .manager import LocaleManager, LocaleNode, StrictUniqueKeyLoader
 __all__ = [
     "DOCS_SRC_DIR",
     "HARNESS_SRC_DIR",
+    "LAST_CHANGE",
     "LOCALES_DIR",
     "RESERVED_INTERPOLATION_TOKENS",
     "SRC_DIR",
+    "STAGED_CHANGE",
     "CatalogueLeafState",
     "CatalogueStatusRecord",
     "CatalogueWriteGuard",
+    "ColandingFinding",
+    "ColandingResult",
     "LocaleError",
     "LocaleManager",
     "LocaleNode",
@@ -55,11 +73,16 @@ __all__ = [
     "StrictUniqueKeyLoader",
     "catalogue_status",
     "catalogue_write_guard",
+    "check_colanding",
     "classify_catalogue_leaf",
+    "declares_locale_keys",
     "get_registered_keys",
+    "resolve_change",
     "scan_modelo_schema_keys",
     "scan_namespace_markers",
+    "scan_namespace_markers_in_text",
     "scan_profile_schema_keys",
     "scan_registry_keys",
+    "scan_source_text",
     "scan_source_tree",
 ]

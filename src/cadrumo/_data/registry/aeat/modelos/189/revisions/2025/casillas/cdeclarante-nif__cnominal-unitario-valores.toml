@@ -28,6 +28,7 @@ data_type = "nif"
 semantic_role = "m189_declarado_nif"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t2-nif-declarado"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order"]
 
@@ -39,6 +40,7 @@ data_type = "name"
 semantic_role = "m189_declarado_nombre"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t2-nombre-declarado"]
 legal_refs = ["orden-eha-3481-2008:art-1"]
 source_refs = ["boe-modelo-189-base-order"]
 
@@ -50,6 +52,7 @@ data_type = "country_code"
 semantic_role = "m189_codigo_pais"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t2-codigo-pais"]
 legal_refs = ["orden-hfp-1284-2023:art-11"]
 source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1284"]
 
@@ -61,6 +64,7 @@ data_type = "text"
 semantic_role = "m189_clave_valor"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t2-clave-valor"]
 legal_refs = ["orden-hfp-1180-2023:art-primero"]
 source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180"]
 
@@ -72,6 +76,7 @@ data_type = "money"
 semantic_role = "m189_valoracion"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t2-valoracion"]
 legal_refs = ["orden-hfp-1180-2023:art-primero", "orden-hac-132-2026:art-unico"]
 source_refs = [
     "boe-modelo-189-base-order",
@@ -87,6 +92,7 @@ data_type = "decimal"
 semantic_role = "m189_numero_valores"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t2-numero-valores"]
 legal_refs = ["orden-hfp-1284-2023:art-11", "orden-hac-132-2026:art-unico"]
 source_refs = [
     "boe-modelo-189-base-order",
@@ -102,6 +108,7 @@ data_type = "money"
 semantic_role = "m189_nominal_unitario_valores"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-189-t2-nominal-unitario"]
 legal_refs = ["orden-hfp-1284-2023:art-11", "orden-hac-132-2026:art-unico"]
 source_refs = [
     "boe-modelo-189-base-order",

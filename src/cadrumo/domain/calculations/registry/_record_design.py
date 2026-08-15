@@ -1343,6 +1343,23 @@ _PDF_RECORD_HEADING_REVERSED_RE = re.compile(
     r"^(?:[A-Z]\.?\s*-?\s*)?TYPE\s+(?P<record>\d+)\s+RECORD\s*:\s*(?P<title>.+)$",
     re.IGNORECASE,
 )
+#: A THIRD Spanish word order -- "REGISTRO DE TIPO <n>: <title>" -- which AEAT
+#: uses at least as often as the two above: modelos 165, 180, 182, 184, 187, 188,
+#: 193, 296 and 345 all head their perceptor/declarado record with it, several
+#: separating number from title with a full stop rather than a colon.
+#:
+#: DELIBERATELY NOT A SPLITTING HEADING. The same phrase occurs inside ordinary
+#: field prose ("Consignar lo contenido en estas mismas posiciones del registro
+#: de tipo 1.", "... del registro de tipo 2. Registro de perceptor, toma el valor
+#: 1) ..."), so treating a match as a record boundary on the text alone would
+#: manufacture records that do not exist -- the opposite defect, and a worse one,
+#: because an invented record inflates every coverage denominator derived from
+#: the design. A match here only STAGES a name; whether a record actually starts
+#: is decided by geometry, in :meth:`_PdfParseState._begins_a_new_record_body`.
+_PDF_RECORD_HEADING_TYPE_LAST_RE = re.compile(
+    r"^(?:[A-Z]\.?\s*-?\s*)?REGISTRO DE TIPO\s+(?P<record>\d+)\s*[:.]\s*(?P<title>\S.*)$",
+    re.IGNORECASE,
+)
 
 
 @dataclass(slots=True)
@@ -1385,6 +1402,19 @@ class _PdfSheetDraft:
     name: str
     fields: list[RecordDesignField] = field(default_factory=list)
     current: _PdfFieldDraft | None = None
+    #: Whether the source NAMED this record body. ``False`` marks a body the
+    #: geometry proved exists -- its positions restart at 1 -- whose heading the
+    #: parser did not recognise, so its identity is unknown. Such a body is
+    #: reported as a skipped sheet rather than returned, because handing back a
+    #: record under a name nobody read would be an invented record identity.
+    identified: bool = True
+    #: The source row at which this body's first position was seen, used to name
+    #: an unidentified body by where it is rather than by what it might be.
+    opened_at_row: int | None = None
+
+    def has_started(self) -> bool:
+        """Whether any field of this record body has been seen yet."""
+        return bool(self.fields) or self.current is not None
 
     def start_field(self, row: _PdfRow) -> None:
         self.finish_current()
@@ -1524,47 +1554,68 @@ def _extract_pdf_page_lines(page: Page) -> tuple[str, ...]:
     return tuple(text.splitlines())
 
 
+@dataclass(frozen=True, slots=True)
+class _PdfSheetResult:
+    """One finished record body and whether the source named it."""
+
+    sheet: RecordDesignSheet
+    identified: bool
+    opened_at_row: int | None
+
+
+def _unidentified_record_body_name(row_number: int) -> str:
+    """Name an unnamed record body by WHERE it is, never by what it might be."""
+    return f"<unidentified record body beginning at source row {row_number}>"
+
+
 class _PdfParseState:
     """Mutable state for the PDF record-design line parser.
 
-    Encapsulates the three locals (``current`` draft sheet,
-    ``in_table`` flag, ``pending_name`` carried across page-name
-    boundaries) so the per-line dispatch can mutate them without
-    threading three out-parameters through every helper.
+    Encapsulates the locals (``current`` draft sheet, ``in_table`` flag,
+    ``pending_name`` carried across page-name boundaries, ``pending_record_name``
+    staged by a candidate record heading) so the per-line dispatch can mutate
+    them without threading out-parameters through every helper.
     """
 
-    __slots__ = ("current", "in_table", "pending_name", "sheets", "source_label")
+    __slots__ = ("current", "in_table", "pending_name", "pending_record_name", "results", "source_label")
 
     def __init__(self, *, source_label: str) -> None:
-        self.sheets: list[RecordDesignSheet] = []
+        self.results: list[_PdfSheetResult] = []
         self.current: _PdfSheetDraft | None = None
         self.in_table: bool = False
         self.pending_name: str | None = None
+        self.pending_record_name: str | None = None
         self.source_label = source_label
 
     def finalise(self) -> RecordDesignExtraction:
-        """Return the parsed records, naming any the parser opened and could not fill.
+        """Return the parsed records, naming every one the parser did not read.
 
-        The empty-sheet filter here is the PDF equivalent of the workbook skip
-        list: a record heading the parser recognised but found no field rows
-        under is a record it did NOT read, and dropping it silently made the
-        document look shorter than it is rather than incompletely read.
+        Three things land in ``skipped`` rather than being dropped, and each was
+        previously invisible:
+
+        * a record heading the parser recognised but found no field rows under;
+        * a record body whose existence geometry proves -- its positions restart
+          at 1 -- but whose heading the parser did not recognise, so it has no
+          identity to return it under;
+        * both together.
+
+        The rule is one sentence: A READ THAT RETURNS FEWER RECORDS THAN THE
+        DOCUMENT CONTAINS MUST NEVER REPORT COMPLETE. Every one of these makes
+        :attr:`RecordDesignExtraction.is_complete` false, so
+        :meth:`RecordDesignExtraction.require_complete` -- the guard that exists
+        precisely to catch an incomplete read -- can finally see them.
         """
-        if self.current is not None:
-            self.sheets.append(self.current.finish(source_label=self.source_label))
-        non_empty = tuple(sheet for sheet in self.sheets if sheet.fields)
-        if not non_empty:
+        self._close_current_body()
+        read = tuple(result.sheet for result in self.results if result.identified and result.sheet.fields)
+        if not read:
             raise RegistryValidationError("record-design PDF did not contain parseable field rows")
         return RecordDesignExtraction(
             source=self.source_label,
-            sheets=non_empty,
+            sheets=read,
             skipped=tuple(
-                RecordDesignSkippedSheet(
-                    name=sheet.name,
-                    reason="record heading recognised but no field rows parsed under it",
-                )
-                for sheet in self.sheets
-                if not sheet.fields
+                RecordDesignSkippedSheet(name=result.sheet.name, reason=_skipped_record_reason(result))
+                for result in self.results
+                if not (result.identified and result.sheet.fields)
             ),
         )
 
@@ -1575,6 +1626,7 @@ class _PdfParseState:
             return
         if self._consume_record_heading(line):
             return
+        self._stage_candidate_record_name(line)
         if self._consume_table_header(line):
             return
         if self._consume_title_continuation(line):
@@ -1585,23 +1637,37 @@ class _PdfParseState:
             return
         self._consume_field_continuation(line)
 
+    def _close_current_body(self) -> None:
+        if self.current is None:
+            return
+        self.results.append(
+            _PdfSheetResult(
+                sheet=self.current.finish(source_label=self.source_label),
+                identified=self.current.identified,
+                opened_at_row=self.current.opened_at_row,
+            ),
+        )
+        self.current = None
+
+    def _open_body(self, name: str, *, identified: bool = True) -> None:
+        self._close_current_body()
+        self.current = _PdfSheetDraft(name, identified=identified)
+        self.pending_record_name = None
+
     def _consume_page_name(self, line: str) -> bool:
         page_name = _pdf_page_name(line)
         if page_name is None:
             return False
         self.pending_name = page_name
         if self.current is not None and self.current.name != page_name:
-            self.sheets.append(self.current.finish(source_label=self.source_label))
-            self.current = _PdfSheetDraft(page_name)
+            self._open_body(page_name)
         return True
 
     def _consume_record_heading(self, line: str) -> bool:
         heading_name = _pdf_record_heading_name(line)
         if heading_name is None:
             return False
-        if self.current is not None:
-            self.sheets.append(self.current.finish(source_label=self.source_label))
-        self.current = _PdfSheetDraft(heading_name)
+        self._open_body(heading_name)
         self.in_table = False
         return True
 
@@ -1621,19 +1687,74 @@ class _PdfParseState:
         self.current.name = _normalise_pdf_sheet_name(_join_pdf_parts([self.current.name, line]))
         return True
 
+    def _stage_candidate_record_name(self, line: str) -> None:
+        """Remember a candidate record name WITHOUT acting on it.
+
+        Staged rather than consumed on both counts: the line stays in the
+        parser's ordinary pipeline exactly as before (so no field description
+        loses text it used to carry), and no record boundary is created from
+        the text. Only :meth:`_begins_a_new_record_body`, reading position
+        geometry, decides a record actually starts -- at which point this name
+        is used if one was staged since the last field row, and discarded
+        otherwise. A candidate matched inside field prose is therefore inert.
+        """
+        candidate = _pdf_candidate_record_name(line)
+        if candidate is not None:
+            self.pending_record_name = candidate
+
+    def _begins_a_new_record_body(self, row: _PdfRow) -> bool:
+        """Whether ``row`` starts a record body distinct from the one being read.
+
+        POSITION 1 OCCURS EXACTLY ONCE PER RECORD. A fixed-width record is
+        contiguous from its first byte, so a row declaring position 1 while the
+        body under construction already holds fields is not a continuation of
+        that body under any reading -- it is the next record. This is geometry
+        AEAT itself declares, not a text heuristic, so it holds for every
+        heading spelling, every word order and every design that heads its
+        records with no recognisable line at all.
+
+        Modelo 180 is the worked case: AEAT heads its perceptor record
+        ``REGISTRO DE TIPO 2: REGISTRO DE PERCEPTOR.`` -- a word order the
+        heading recogniser did not know -- so seventeen perceptor positions
+        were appended to the declarante record, the extraction returned ONE
+        sheet for a two-record document, and it reported itself complete.
+        """
+        return self.current is not None and row.offset == 1 and self.current.has_started()
+
     def _consume_field_row(self, line: str, row_number: int) -> bool:
         row = _parse_pdf_row(line, row_number)
         if row is None:
             return False
         if self.current is None:
             self.current = _PdfSheetDraft(self.pending_name or "PDF record design")
+        elif self._begins_a_new_record_body(row):
+            staged = self.pending_record_name
+            self._open_body(
+                staged if staged is not None else _unidentified_record_body_name(row_number),
+                identified=staged is not None,
+            )
+        if self.current.opened_at_row is None:
+            self.current.opened_at_row = row_number
         self.current.start_field(row)
         self.in_table = True
+        self.pending_record_name = None
         return True
 
     def _consume_field_continuation(self, line: str) -> None:
         if self.in_table and self.current is not None and self.current.current is not None:
             self.current.current.append_continuation(line)
+
+
+def _skipped_record_reason(result: _PdfSheetResult) -> str:
+    if not result.sheet.fields:
+        return "record heading recognised but no field rows parsed under it"
+    return (
+        f"a distinct record body begins here -- its positions restart at 1 at source row "
+        f"{result.opened_at_row} -- but the source's heading for it was not recognised, so this "
+        f"record has no read identity. It is reported unread rather than merged into the record "
+        f"above it, because merging understates the document by a whole record while still "
+        f"reporting the read complete"
+    )
 
 
 def _extract_pdf_lines(lines: tuple[str, ...], *, source_label: str) -> RecordDesignExtraction:
@@ -1734,6 +1855,20 @@ def _pdf_page_name(line: str) -> str | None:
 
 def _pdf_record_heading_name(line: str) -> str | None:
     match = _PDF_RECORD_HEADING_RE.match(line) or _PDF_RECORD_HEADING_REVERSED_RE.match(line)
+    if match is None:
+        return None
+    title = _normalise_pdf_sheet_name(match.group("title"))
+    return f"Tipo {match.group('record')} - {title}"
+
+
+def _pdf_candidate_record_name(line: str) -> str | None:
+    """Return the record name a line MIGHT be heading, for geometry to confirm.
+
+    Separate from :func:`_pdf_record_heading_name` precisely because it is not
+    trusted on its own: see :data:`_PDF_RECORD_HEADING_TYPE_LAST_RE` for why
+    this word order cannot split a record on the text alone.
+    """
+    match = _PDF_RECORD_HEADING_TYPE_LAST_RE.match(line)
     if match is None:
         return None
     title = _normalise_pdf_sheet_name(match.group("title"))

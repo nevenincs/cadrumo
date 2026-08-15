@@ -136,6 +136,7 @@ if TYPE_CHECKING:
         resolve_active_capability,
         resolve_capability,
     )
+    from ._capsule_record import ProfileRecordSession
     from ._censo_errors import (
         CensoSyncError,
     )
@@ -367,6 +368,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfilePreflightRequirement": "._commands",
     "ProfilePreflightService": "._preflight",
     "ProfileRecordRepository": "._profile_record_repository",
+    "ProfileRecordSession": "._capsule_record",
     "ProfileRegistrationError": "._registration",
     "ProfileRegistrationOutcome": "._registration",
     "ProfileSectionView": "._overview",
@@ -541,6 +543,7 @@ __all__ = [
     "ProfilePreflightRequirement",
     "ProfilePreflightService",
     "ProfileRecordRepository",
+    "ProfileRecordSession",
     "ProfileRegistrationError",
     "ProfileRegistrationOutcome",
     "ProfileSectionView",

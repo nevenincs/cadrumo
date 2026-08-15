@@ -7887,6 +7887,7 @@ flows:
     language:
       unavailable: Este perfil no ofrece un ajuste de idioma.
     namespace_detail: detalle {number}
+    next_step_modelo: Los datos declarados de este perfil lo dirigen al Modelo {modelo}.
     required_field_unavailable: Campo obligatorio del perfil
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
@@ -8146,7 +8147,7 @@ flows:
         página. No se puede deshacer.
       title: ¿Reiniciar todo el proceso?
     header: '{flow} - pregunta {position} de {total}, sección {section}'
-    header_single_section: '{flow} — pregunta {position} de {total}'
+    header_single_section: '{flow} - pregunta {position} de {total}'
     section_unavailable: Sección no disponible
 ledger:
   evidence:
@@ -52075,12 +52076,30 @@ modelo:
       revision:
         '2025':
           casilla:
+            clave-identificacion:
+              help: null
+              label: Clave de identificacion
+            clave-mercado:
+              help: null
+              label: Clave de mercado
+            clave-representacion:
+              help: null
+              label: Clave de representacion
+            clave-titularidad:
+              help: null
+              label: Clave de titularidad
             clave-valor:
               help: null
               label: Clave de valor
             codigo-pais:
               help: null
               label: Codigo pais
+            codigo-provincia:
+              help: null
+              label: Codigo provincia
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaracion complementaria o sustitutiva
             declarado-nif:
               help: null
               label: NIF del declarado
@@ -52090,18 +52109,48 @@ modelo:
             declarante-nif:
               help: null
               label: NIF del declarante
+            declarante-razon-social:
+              help: null
+              label: Razon social del declarante
             ejercicio-declaracion:
               help: null
               label: Ejercicio de declaracion
+            identificacion-valores:
+              help: null
+              label: Identificacion de los valores
             nominal-unitario-valores:
               help: null
               label: Nominal unitario de los valores
+            numero-identificativo-anterior:
+              help: null
+              label: Numero identificativo de la declaracion anterior
+            numero-justificante:
+              help: null
+              label: Numero de justificante de la declaracion
+            numero-total-declarados:
+              help: null
+              label: Numero total de declarados
             numero-valores:
               help: null
               label: Numero de valores
+            persona-relacion:
+              help: null
+              label: Persona con quien relacionarse
+            porcentaje-participacion:
+              help: null
+              label: Porcentaje de participacion
+            representante-legal-nif:
+              help: null
+              label: NIF del representante legal
+            tipo-soporte:
+              help: null
+              label: Tipo de soporte
             valoracion:
               help: null
               label: Valoracion
+            valoracion-total:
+              help: null
+              label: Valoracion total
           field:
             label: Modelo 189 ejercicio 2025 (Orden EHA/3481/2008; Ordenes HFP/1180/2023,
               HFP/1284/2023 y HAC/132/2026)
@@ -73341,6 +73390,26 @@ modelo:
             help: null
             label: Cuota IVA autorepercutida en operaciones interiores con inversion
               del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
+          iva-repercutido-intragrupo-tipo-0-base:
+            label: IVA devengado en operaciones intragrupo al tipo 0% - Base imponible
+          iva-repercutido-intragrupo-tipo-0-cuota:
+            label: IVA devengado en operaciones intragrupo al tipo 0% - Cuota
+          iva-repercutido-intragrupo-tipo-10-base:
+            label: IVA devengado en operaciones intragrupo al tipo 10% - Base imponible
+          iva-repercutido-intragrupo-tipo-10-cuota:
+            label: IVA devengado en operaciones intragrupo al tipo 10% - Cuota
+          iva-repercutido-intragrupo-tipo-21-base:
+            label: IVA devengado en operaciones intragrupo al tipo 21% - Base imponible
+          iva-repercutido-intragrupo-tipo-21-cuota:
+            label: IVA devengado en operaciones intragrupo al tipo 21% - Cuota
+          iva-repercutido-intragrupo-tipo-4-base:
+            label: IVA devengado en operaciones intragrupo al tipo 4% - Base imponible
+          iva-repercutido-intragrupo-tipo-4-cuota:
+            label: IVA devengado en operaciones intragrupo al tipo 4% - Cuota
+          iva-repercutido-intragrupo-tipo-5-base:
+            label: IVA devengado en operaciones intragrupo al tipo 5% - Base imponible
+          iva-repercutido-intragrupo-tipo-5-cuota:
+            label: IVA devengado en operaciones intragrupo al tipo 5% - Cuota
           iva-volumen-operaciones-entregas-intracomunitarias:
             help: null
             label: Entregas intracomunitarias de bienes y servicios

@@ -317,6 +317,33 @@ name = "pytorch-cu130"
 url = "https://download.pytorch.org/whl/cu130"
 explicit = true
 
+# Where a companion distribution built from this repository lives. One criterion,
+# applied to all three, and it is NOT "companion": does the distribution own Python
+# source?
+#
+#   owns source     ->  src/<distribution-name>/       (a src/ layout inside it)
+#   owns no source  ->  packaging/<distribution_name>/ (a build recipe alone)
+#
+# `cadrumo-harness` (src/cadrumo-harness/) owns `src/cadrumo_harness/`: real modules,
+# its own colocated test suites, its own `cadrumo-mcp` console script. It sits beside
+# `src/cadrumo` because both are source trees this repository authors.
+#
+# `cadrumo-data-manuals` (packaging/cadrumo_data_manuals/) and `cadrumo-data-official`
+# (packaging/cadrumo_data_official/) own NO source. Each is a project file plus a
+# hatchling build hook that force-includes a disjoint slice of the ONE corpus tree at
+# `src/cadrumo/_data/corpus` under a mirrored `cadrumo_data` namespace. They author
+# nothing and they repackage — the same job as packaging/{homebrew,scoop,mcpb,
+# marketplace}, which emit a formula, a manifest and a bundle from trees they do not
+# own. That shared job is what `packaging/` is for.
+#
+# So the two homes are not one concept split across two directories; they are two
+# concepts, and this rule assigns each. A distribution that grows its own source moves
+# to `src/`; one that sheds its source moves to `packaging/`. There is no third home,
+# and no distribution belongs at the repository root. The directory name is the
+# distribution name: hyphenated under `src/` (matching the distribution), snake under
+# `packaging/` (matching the import namespace those recipes emit). Every name here is
+# `cadrumo`-prefixed, and only `cadrumo-harness` carries a console script besides the
+# core `aeat` — `cadrumo-mcp`, per the product-identity discipline.
 [tool.uv.sources]
 torch = [
     {index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'"},

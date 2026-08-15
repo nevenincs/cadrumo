@@ -49,6 +49,7 @@ from ..adapters.persistence.storage import (
 )
 from ..adapters.persistence.storage import (
     STORAGE_NAMESPACE_REGISTRY,
+    SYNC_RUN_RECORDS_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
     SecureObjectNamespaceDefinition,
     SecureObjectNamespaceIntegrity,
@@ -820,6 +821,30 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
             command_family="audit",
             owner_domains=("modelo_audit", "modelo_filing"),
             namespace_policies=(_MODEL_FILING_POLICY,),
+        ),
+        _surface(
+            "app ledger invoice import",
+            command_family="recovery",
+            owner_domains=("ledger",),
+            namespace_policies=(_LEDGER_POLICY,),
+        ),
+        _surface(
+            "app ledger restore",
+            command_family="recovery",
+            owner_domains=("ledger",),
+            namespace_policies=(_LEDGER_POLICY,),
+        ),
+        _surface(
+            "app modelo m145 export",
+            command_family="recovery",
+            owner_domains=("modelo_filing",),
+            namespace_policies=(_MODEL_FILING_POLICY,),
+        ),
+        _surface(
+            "config google sync calc export",
+            command_family="recovery",
+            owner_domains=("google_sync",),
+            namespace_policies=(_secure_object_policy(SYNC_RUN_RECORDS_NAMESPACE),),
         ),
     )
 

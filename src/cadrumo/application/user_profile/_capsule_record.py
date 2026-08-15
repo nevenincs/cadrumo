@@ -28,7 +28,7 @@ from ...domain.buckets import (
     append_bucket_event,
     build_bucket_event,
 )
-from ...domain.user_profile import UserProfileRecord
+from ...domain.user_profile import UserProfileError, UserProfileRecord
 from ..profile_custody import (
     ProfileCustodySecureObjectNamespace,
     default_profile_bucket_event_history_repository,
@@ -66,12 +66,27 @@ _REQUIRED_EVENT_FIELDS = frozenset(
 _RECORD_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
-class ProfileRecordConflictError(ValueError):
-    """The authenticated record changed before its CAS command committed."""
+class ProfileRecordConflictError(UserProfileError, ValueError):
+    """The authenticated record changed before its CAS command committed.
+
+    Joins the :class:`~domain.user_profile.UserProfileError` family so the
+    refusal binds to the error registry and one clause still catches the whole
+    user-profile surface. :exc:`ValueError` is retained deliberately: it is
+    load-bearing ancestry here, not decoration -- see
+    :class:`ProfileRecordIntegrityError`.
+    """
 
 
-class ProfileRecordIntegrityError(ValueError):
-    """A current-record row or its event witness is malformed or mis-bound."""
+class ProfileRecordIntegrityError(UserProfileError, ValueError):
+    """A current-record row or its event witness is malformed or mis-bound.
+
+    Joins the :class:`~domain.user_profile.UserProfileError` family so the
+    refusal binds to the error registry. :exc:`ValueError` is retained
+    because the lifecycle restore path converts a failed authenticated
+    validation into its own refusal through a ``ValueError`` arm; dropping the
+    builtin ancestry would let the inner refusal escape that conversion and
+    reach the operator naming a stage it never reached.
+    """
 
 
 class ProfileRecordCommandEvent(BaseModel):
@@ -479,9 +494,12 @@ def _build_record_event(
 ):
     try:
         event_type = BucketEventType(command.event_type)
+    except ValueError as exc:
+        raise ProfileRecordIntegrityError("profile record command event names no current bucket event type") from exc
+    try:
         occurred_at = datetime.fromisoformat(command.occurred_at).astimezone(UTC)
     except ValueError as exc:
-        raise ProfileRecordIntegrityError("profile record command event is not a current bucket event") from exc
+        raise ProfileRecordIntegrityError("profile record command event instant is not a parsable timestamp") from exc
     if occurred_at != record.updated_at:
         raise ProfileRecordIntegrityError("profile record event instant differs from its replacement record")
     if _REQUIRED_EVENT_FIELDS.intersection(command.payload):

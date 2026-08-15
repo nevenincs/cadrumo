@@ -42,7 +42,13 @@ from ._checkpoint_store import (
     checkpoint_answers_from_record,
     checkpoint_facts_from_answers,
 )
-from ._commands import build_wizard_command, setup_flow_definition
+from ._commands import (
+    DEFAULT_PROFILE_NEXT_COMMAND,
+    build_wizard_command,
+    next_step_command_for_profile_values,
+    profile_next_step_modelo,
+    setup_flow_definition,
+)
 from ._compiler import ensure_profile_keys_registered
 from ._copy_sources import (
     register_profile_copy_sources,
@@ -104,6 +110,7 @@ from ._status import (
 from ._widgets import validate_widget_answer
 
 __all__ = [
+    "DEFAULT_PROFILE_NEXT_COMMAND",
     "DESCENDANTS_COUNT_PAGE_ID",
     "DESCENDANTS_GROUP_ID",
     "DESCENDANT_DOOR_LOCALE_KEYS",
@@ -145,7 +152,9 @@ __all__ = [
     "descendant_facts_from_answers",
     "ensure_profile_keys_registered",
     "load_active_taxpayer_profile",
+    "next_step_command_for_profile_values",
     "persist_descendant_door_answers",
+    "profile_next_step_modelo",
     "project_answers",
     "register_profile_copy_sources",
     "register_taxpayer_projection_validator",

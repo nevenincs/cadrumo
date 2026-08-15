@@ -10,6 +10,7 @@ bucket.  It does not build a parallel workflow-state profile aggregate.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from ..application.user_profile import conditional_profile_missing_required
@@ -113,7 +114,19 @@ def register_minimal_profile(
     made every caller read workflow state before the capsule existed.  Taking no
     state removes the trap rather than documenting it, and the seeded record is
     returned because that is what the function actually produces.
+
+    The empty filing catalogue snapshot is recorded here through the same
+    recorder production registration uses, because publishing a capsule is only
+    half of what being born as a profile means.  A real profile carries the
+    recorded fact that its filing owner was asked and had nothing to report; a
+    profile seeded without it is indistinguishable from one nobody ever asked,
+    and the retention assessment refuses on that absence -- so every deletion
+    preflight against a seeded profile failed for a reason unrelated to the
+    test's subject.  Recording an EMPTY snapshot asserts nothing stronger than
+    the truth about a freshly seeded profile: no filings exist.
     """
+    from ..application.filing import try_record_filing_retention_snapshot
+
     merged: dict[str, str] = dict(_REQUIRED_PLACEHOLDERS)
     merged["identity.tax_id"] = _distinct_valid_nif(profile_id)
     if overrides:
@@ -127,6 +140,11 @@ def register_minimal_profile(
     seeded = seed_test_profile_record(
         record,
         label=display_name or f"profile-{profile_id}",
+    )
+    try_record_filing_retention_snapshot(
+        bucket_id=profile_id,
+        records=(),
+        observed_at=datetime.now(UTC),
     )
     ProfileCapsuleLifecycle().select(profile_id)
     return seeded

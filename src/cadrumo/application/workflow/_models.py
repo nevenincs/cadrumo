@@ -49,6 +49,7 @@ See Also:
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -219,33 +220,37 @@ def declaration_key(modelo: str, period: Period) -> str:
     return f"{modelo.strip()}:{_period_identity_segment(period)}"
 
 
-class ActiveProfileRecordResolution(BaseModel):
+@dataclass(frozen=True, slots=True)
+class ActiveProfileRecordResolution:
     """One active-profile record read, together with WHY it produced nothing.
 
-    The record read has three outcomes an operator would act on differently --
-    a record, a locked profile, and an absent one -- and a bare ``None`` for
-    the last two erases the difference at exactly the boundary that reports it.
+    The read has three outcomes an operator would act on differently -- a
+    record, a locked profile, and an absent one -- and a bare ``None`` for the
+    last two erases the difference at exactly the boundary that reports it.
     :attr:`unavailability` carries the reason instead, so a projection can say
     "log in" where logging in is the remedy and reserve the absent-record
     finding for a record that is genuinely not there.
 
     Exactly one of :attr:`record` and :attr:`unavailability` is populated.
 
+    This is a frozen dataclass rather than one of this module's strict pydantic
+    records because it never crosses a serialization boundary and because a
+    pydantic field annotated with :class:`UserProfileRecord` must resolve that
+    domain record when the class is built. The domain record pulls the modelo
+    registry eagerly, so annotating it here would drag the registry into every
+    consumer that imports the workflow package.
+
     See Also:
         :class:`~cadrumo.core.ProfileRecordUnavailability`
             Closed set of reasons the record did not resolve.
     """
 
-    model_config = _STRICT_FROZEN
-
     record: UserProfileRecord | None = None
     unavailability: ProfileRecordUnavailability | None = None
 
-    @model_validator(mode="after")
-    def _validate_exactly_one_outcome(self) -> ActiveProfileRecordResolution:
+    def __post_init__(self) -> None:
         if (self.record is None) == (self.unavailability is None):
             raise ValueError("an active-profile record resolution carries either a record or one reason, never both")
-        return self
 
 
 def _active_profile_selection() -> tuple[str | None, str | None]:
@@ -271,15 +276,11 @@ def resolve_active_profile_record() -> ActiveProfileRecordResolution:
     profile is the ordinary logged-out state and its capsule is untouched, so
     it must not be reported as an absent record; only a selector that resolves
     to no committed capsule is that.
-
-    ``secure_objects`` (a :class:`SecureObjectRepository` override) and
-    ``schema`` are optional overrides forwarded to the record repository; a
-    per-bucket store and the bundled schema are resolved when ``None``.
     """
     from ...domain.user_profile import ProfileNotFoundError
     from ..user_profile import ProfileRecordRepository, profile_record_session_if_authenticated
 
-    identifier, bucket_id = WorkflowState._active_profile_selection()  # noqa: SLF001 - own class
+    identifier, bucket_id = _active_profile_selection()
     if bucket_id is None:
         if identifier is not None:
             _log.debug("active profile record resolution found no live bucket for the selected profile")
@@ -353,23 +354,25 @@ class WorkflowState(BaseModel):
         ``schema`` are optional overrides forwarded to
         :func:`~cadrumo.application.user_profile.build_lifecycle_service`; a
         per-bucket store and the bundled schema are resolved when ``None``.
-        """
-        identifier, bucket_id = self._active_profile_selection()
-        if bucket_id is None:
-            if identifier is not None:
-                _log.debug(
-                    "active profile record resolution returned no profile record: selected profile has no live bucket",
-                )
-            return None
-        from ...domain.user_profile import ProfileNotFoundError
-        from ..user_profile import ProfileRecordRepository
 
-        with override_settings(cadrumo_active_profile=bucket_id):
-            try:
-                return ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
-            except ProfileNotFoundError as exc:
-                _log.debug("active profile record resolution returned no profile record: %s", type(exc).__name__)
-                return None
+        This is the convenience view for callers that legitimately act only on
+        a present record and treat every absence alike. A caller that REPORTS
+        the absence to an operator must use
+        :func:`resolve_active_profile_record` instead: the ``None`` here does
+        not distinguish a locked profile from one whose record is genuinely
+        gone, and a projection that guesses between them tells the operator
+        their financial records are missing when they merely need to log in.
+        """
+        return self.resolve_active_profile_record().record
+
+    def resolve_active_profile_record(self) -> ActiveProfileRecordResolution:
+        """Return the active-profile record read together with its absence reason.
+
+        See :func:`resolve_active_profile_record`, whose contract this shares;
+        the active profile is resolved from process state rather than from this
+        record, so the two are the same read reached from either handle.
+        """
+        return resolve_active_profile_record()
 
     def active_profile_bucket_id(self) -> str | None:
         """Return the selected profile's canonical secure bucket UUID.
@@ -379,16 +382,7 @@ class WorkflowState(BaseModel):
         UUID. A selector without a current capsule has no secure bucket and
         returns ``None``; health diagnostics retain the raw selector separately.
         """
-        return self._active_profile_selection()[1]
-
-    @staticmethod
-    def _active_profile_selection() -> tuple[str | None, str | None]:
-        """Return the raw active selector and its canonical live bucket UUID."""
-        identifier = _resolve_active_bucket_id()
-        if identifier is None:
-            return None, None
-        pointer = resolve_profile_bucket(identifier)
-        return identifier, pointer.bucket_id if pointer is not None else None
+        return _active_profile_selection()[1]
 
 
 def active_transaction_catalogue_repository(

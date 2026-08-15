@@ -31,7 +31,14 @@ from ....adapters.persistence.storage.custody import (
 from ....application.user_profile._capsule_record import ProfileRecordSession
 from ....application.user_profile._lifecycle import ProfileCapsuleLifecycle
 from ....application.user_profile._profile_record_repository import bound_profile_record_session
-from ....core import BucketPointer, pointer_path, read_pointer, resolve_active_bucket_id, write_pointer
+from ....core import (
+    BucketPointer,
+    ProfileRecordUnavailability,
+    pointer_path,
+    read_pointer,
+    resolve_active_bucket_id,
+    write_pointer,
+)
 from ....core.config import override_settings
 from ....core.errors import NoActiveProfileError, get_registered_error_code
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
@@ -120,20 +127,32 @@ def test_no_active_profile_error_has_registered_error_code() -> None:
     assert code.message_key == "errors.refused.refused_no_active_profile"
 
 
-def test_active_profile_record_logs_missing_secure_record(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
-    """A pointer without a current capsule returns no record but is not silent."""
+def test_active_profile_record_names_an_absent_capsule_as_the_reason(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A pointer without a current capsule returns no record, and says which absence it is.
+
+    The convenience accessor still collapses to ``None``; the resolution beside
+    it carries the reason, which is what a projection reporting the absence to
+    an operator must read. A selector with no committed capsule is the one
+    absence that genuinely means the record is not there.
+    """
 
     bucket_id = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
     write_pointer(tmp_path, BucketPointer(bucket_id=bucket_id, schema_version=1))
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
         caplog.set_level(logging.DEBUG, logger="cadrumo.application.workflow._models")
 
-        assert WorkflowState().active_profile_record() is None
+        state = WorkflowState()
+        assert state.active_profile_record() is None
+        resolution = state.resolve_active_profile_record()
 
-    assert (
-        "active profile record resolution returned no profile record: selected profile has no live bucket"
-        in caplog.text
-    )
+    assert resolution.record is None
+    assert resolution.unavailability is ProfileRecordUnavailability.NO_LIVE_CAPSULE
+    assert "active profile record resolution found no live bucket for the selected profile" in caplog.text
+    # The reason-erasing framing this replaced must not return unnoticed.
+    assert "returned no profile record" not in caplog.text
     assert bucket_id not in caplog.text
 
 

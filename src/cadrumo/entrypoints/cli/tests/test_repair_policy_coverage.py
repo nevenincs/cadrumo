@@ -1,26 +1,33 @@
 """Policy coverage gate for repair, recovery, import, export, and profile-history commands.
 
-The catalog is bound in both directions. The *coverage* direction (a
-policy-relevant command declared in the CLI sources must carry a policy row)
-walks the command declarations by AST. The *liveness* direction — every
-catalogued ``command_path`` must resolve to a command the live CLI actually
-registers — is derived from the live click tree, with nothing hand-listed:
-see :func:`test_every_catalogued_command_path_resolves_in_the_live_cli`.
+The catalog is bound in both directions, and both are now derived from the
+live click tree rather than any hand-listed inventory. The *coverage*
+direction (a policy-relevant command the live CLI registers must carry a
+policy row) filters :func:`_live_command_paths` through
+:func:`_requires_policy_coverage`. The *liveness* direction — every catalogued
+``command_path`` must resolve to a command the live CLI actually registers —
+walks the same tree the other way: see
+:func:`test_every_catalogued_command_path_resolves_in_the_live_cli`.
 
-That second direction is what keeps a policy row from outliving its verb. The
-row is an operator-facing inventory of command paths written WITHOUT the
+A hand-maintained module list previously stood in for the coverage direction,
+which let a declared-but-unmounted command satisfy the check by AST alone, and
+let a module added without also being added to the list go uncovered by
+construction. Both failure modes are structural with a hand-listed
+denominator and impossible against the live tree: a command cannot be
+"coverage-visible but not actually registered", because coverage IS derived
+from what is registered.
+
+The row is an operator-facing inventory of command paths written WITHOUT the
 ``aeat`` executable token, so neither
 :mod:`test_documented_command_conformance` (which anchors on the executable
 token in docs) nor :mod:`test_suggestion_command_conformance` (which anchors on
 it in string literals) can see it. Six rows for retired custody verbs and two
-for never-implemented profile-bundle verbs sat here unnoticed for exactly that
-reason.
+for never-implemented profile-bundle verbs once sat here unnoticed for exactly
+that reason.
 """
 
 from __future__ import annotations
 
-import ast
-from pathlib import Path
 from typing import cast
 
 import click
@@ -31,24 +38,6 @@ from ....application.repair_integrity import build_repair_policy_command_surface
 from ....tests.cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_CLI_DIR = Path(__file__).resolve().parents[1]
-
-_POLICY_COMMAND_MODULES: tuple[tuple[Path, str, tuple[str, ...]], ...] = (
-    (_CLI_DIR / "_config" / "__init__.py", "app", ("config",)),
-    (_CLI_DIR / "_config" / "_custody.py", "app", ("config",)),
-    (_CLI_DIR / "_config" / "_bucket_history.py", "profile_app", ("config", "profile")),
-    (_CLI_DIR / "_config" / "_repair_cli.py", "repair_app", ("config", "repair")),
-    (_CLI_DIR / "_config" / "_repair_profile.py", "repair_app", ("config", "repair")),
-    (_CLI_DIR / "_ledger.py", "app", ("app", "ledger")),
-    (_CLI_DIR / "_ledger_import_cli.py", "app", ("app", "ledger")),
-    (_CLI_DIR / "_ledger_read_cli.py", "app", ("app", "ledger")),
-    (_CLI_DIR / "_modelo.py", "app", ("app", "modelo")),
-    (_CLI_DIR / "_modelo_audit_cli.py", "audit_app", ("app", "modelo", "audit")),
-    (_CLI_DIR / "_modelo_export_cli.py", "app", ("app", "modelo")),
-    (_CLI_DIR / "_modelo_records_cli.py", "filing_record_app", ("app", "modelo", "filing-record")),
-    (_CLI_DIR / "_app_live.py", "app", ("app", "live")),
-)
 
 # Command-path prefixes whose every leaf is policy-relevant in full because it
 # mutates or inspects secure-storage custody, independently of the leaf-name
@@ -61,24 +50,6 @@ _CUSTODY_FAMILY_PREFIXES: tuple[tuple[str, ...], ...] = (
     ("config", "recovery"),
     ("config", "passphrase"),
 )
-
-
-def test_declared_policy_command_modules_all_exist() -> None:
-    """Every module this gate AST-walks is still on disk.
-
-    The walk's denominator is a hand-maintained module list, so a deleted module
-    silently shrinks what the coverage direction can discover. Two entries
-    (``_custody_secret.py`` and ``_profile_bundle.py``) were deleted by the
-    custody cutover and left standing here, which raised a bare
-    ``FileNotFoundError`` from inside the coverage assertion — an error, not a
-    failure, and therefore unreadable as the drift signal it was. A stale entry
-    must fail as a stale entry.
-    """
-    missing = [str(path.relative_to(_CLI_DIR)) for path, _, _ in _POLICY_COMMAND_MODULES if not path.is_file()]
-    assert not missing, (
-        f"policy-command modules listed by this gate no longer exist: {missing}. "
-        "Remove the entry (and any catalog row that only it discovered), or restore the module."
-    )
 
 
 def test_policy_command_surface_catalog_covers_cli_repair_import_export_and_profile_history_commands() -> None:
@@ -239,98 +210,15 @@ def test_repair_secure_object_surfaces_use_registry_metadata_instead_of_role_mar
 
 
 def _policy_relevant_command_paths_from_sources() -> set[str]:
-    paths: set[str] = set()
-    for source_path, root_var, root_prefix in _POLICY_COMMAND_MODULES:
-        paths.update(_command_paths_from_module(source_path, root_var=root_var, root_prefix=root_prefix))
-    return {path for path in paths if _requires_policy_coverage(path)}
+    """Every policy-relevant command path the live CLI actually registers.
 
-
-def _command_paths_from_module(source_path: Path, *, root_var: str, root_prefix: tuple[str, ...]) -> set[str]:
-    tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
-    constructor_names = _typer_constructor_names(tree)
-    mounts: dict[str, list[tuple[str, str]]] = {}
-    commands: dict[str, list[str]] = {}
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call):
-            _collect_typer_mount(node.value, mounts, constructor_names)
-        if isinstance(node, ast.FunctionDef):
-            _collect_typer_commands(node, commands)
-
-    paths: set[str] = set()
-
-    def walk(app_var: str, prefix: tuple[str, ...]) -> None:
-        for command_name in commands.get(app_var, ()):
-            paths.add(" ".join((*prefix, command_name)))
-        for child_var, mount_name in mounts.get(app_var, ()):
-            walk(child_var, (*prefix, mount_name))
-
-    walk(root_var, root_prefix)
-    return paths
-
-
-def _typer_constructor_names(tree: ast.AST) -> dict[str, str]:
-    """Map ``var = typer.Typer(name="...")`` assignments to their declared mount name."""
-    names: dict[str, str] = {}
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Call):
-            continue
-        func = node.value.func
-        is_typer = (isinstance(func, ast.Attribute) and func.attr == "Typer") or (
-            isinstance(func, ast.Name) and func.id == "Typer"
-        )
-        if not is_typer:
-            continue
-        declared = _keyword_literal(node.value, "name")
-        if declared is None:
-            continue
-        for target in node.targets:
-            if isinstance(target, ast.Name):
-                names[target.id] = declared
-    return names
-
-
-def _collect_typer_mount(
-    call: ast.Call,
-    mounts: dict[str, list[tuple[str, str]]],
-    constructor_names: dict[str, str],
-) -> None:
-    if not isinstance(call.func, ast.Attribute) or call.func.attr != "add_typer":
-        return
-    if not isinstance(call.func.value, ast.Name):
-        return
-    if not call.args or not isinstance(call.args[0], ast.Name):
-        return
-    child_var = call.args[0].id
-    # ``add_typer(child, name="x")`` names the mount at the call site;
-    # ``add_typer(child)`` inherits the child's ``typer.Typer(name="x")``.
-    mount_name = _keyword_literal(call, "name") or constructor_names.get(child_var)
-    if mount_name is None:
-        return
-    mounts.setdefault(call.func.value.id, []).append((child_var, mount_name))
-
-
-def _collect_typer_commands(node: ast.FunctionDef, commands: dict[str, list[str]]) -> None:
-    for decorator in node.decorator_list:
-        if not isinstance(decorator, ast.Call):
-            continue
-        if not isinstance(decorator.func, ast.Attribute) or decorator.func.attr != "command":
-            continue
-        if not isinstance(decorator.func.value, ast.Name):
-            continue
-        commands.setdefault(decorator.func.value.id, []).append(_command_name(decorator, fallback=node.name))
-
-
-def _command_name(call: ast.Call, *, fallback: str) -> str:
-    if call.args and isinstance(call.args[0], ast.Constant) and isinstance(call.args[0].value, str):
-        return call.args[0].value
-    return fallback.replace("_", "-")
-
-
-def _keyword_literal(call: ast.Call, name: str) -> str | None:
-    for keyword in call.keywords:
-        if keyword.arg == name and isinstance(keyword.value, ast.Constant) and isinstance(keyword.value.value, str):
-            return keyword.value.value
-    return None
+    Derived from the same live click-tree walk the liveness direction uses
+    (:func:`_live_command_paths`), so a command cannot be coverage-visible
+    without being registered, and a newly mounted module is discovered the
+    moment its command is reachable rather than the moment someone remembers
+    to add its source file to a hand-maintained list.
+    """
+    return {path for path in _live_command_paths() if _requires_policy_coverage(path)}
 
 
 def _requires_policy_coverage(command_path: str) -> bool:

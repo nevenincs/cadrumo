@@ -15,17 +15,6 @@ legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-156-procedure"]
 
 [[revisions."2003-y-siguientes".casillas]]
-id = "decl.probe-total-afiliados"
-number = "tipo1.136-144"
-section = ["declarante"]
-data_type = "integer"
-semantic_role = "numero_total_declarados"
-required = true
-input_kind = "manual"
-legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-156-2021"]
-
-[[revisions."2003-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
 number = "tipo-declaracion"
 section = ["declarante"]

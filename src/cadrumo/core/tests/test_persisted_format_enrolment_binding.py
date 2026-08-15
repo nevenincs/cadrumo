@@ -68,6 +68,7 @@ VERSIONED_FORMAT_IMPLEMENTATIONS: Final[Mapping[str, str]] = {
     "profile_session_retirement_journal": "PROFILE_SESSION_RETIREMENT_SCHEMA_VERSION",
     "profile_filing_retention_snapshot": "FILING_RETENTION_SNAPSHOT_SCHEMA_VERSION",
     "profile_legal_hold_snapshot": "LEGAL_HOLD_SNAPSHOT_SCHEMA_VERSION",
+    "profile_custody_hold_evidence": "CUSTODY_HOLD_EVIDENCE_SCHEMA_VERSION",
 }
 """Inventory key -> the module-level version constant that declares its format.
 
