@@ -371,6 +371,7 @@ def test_discovery_refuses_a_retired_manifest_by_stat_only_without_opening_its_b
     assert captured.value.context == {
         "refusal": "LEGACY_CUSTODY_DETECTED",
         "recovery_guidance": ("DESTRUCTIVE_RESET", "REENROLL_PROFILE"),
+        "capsules_root": str(tmp_path / "buckets"),
         "retired_member_paths": ("manifest.toml",),
     }
     assert opened_retired_paths == []

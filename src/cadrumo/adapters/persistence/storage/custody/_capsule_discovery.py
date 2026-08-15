@@ -65,6 +65,12 @@ def refuse_retired_profile_custody_paths(capsules_root: Path) -> None:
     The detector intentionally reports no parsed attributes and no candidate
     identity.  A caller can act only on the stable refusal and its explicit
     reset/re-enrol guidance, never on an inferred retired profile.
+
+    The capsules root is reported alongside the member names because the only
+    sanctioned remedy is a destructive reset of that store, and an operator
+    cannot reset a location the refusal withholds.  It names a directory, never
+    a bucket or an identity, so it discloses nothing the detector declined to
+    infer and requires reading no retired content.
     """
     detected = detect_retired_profile_custody_member_paths(capsules_root)
     if not detected:
@@ -72,6 +78,7 @@ def refuse_retired_profile_custody_paths(capsules_root: Path) -> None:
     raise ProfileCustodyRefusedError(
         ProfileCustodyRefusal.LEGACY_CUSTODY_DETECTED,
         context={
+            "capsules_root": str(capsules_root),
             "retired_member_paths": detected,
         },
         recovery_guidance=(
