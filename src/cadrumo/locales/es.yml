@@ -50259,6 +50259,16 @@ modelo:
       revision:
         2017-y-siguientes:
           casilla:
+            x-c5pm6pbechkmarjkclpisob2dtn6ubb1dpq6ior9e1gm8ro:
+              label: Regularización ascendientes con discapacidad. Importe del abono
+                anticipado
+            x-c5pm6pbechkmarjkclpisp35chqm6or9dtn0:
+              label: Regularización ascendientes con discapacidad. Importe de la deducción
+            x-c5pm6pbechkmarjkclpisrj9co:
+              label: Regularización ascendientes con discapacidad. NIF del ascendiente
+            x-c5pm6pbechkmarjkclpisrjfdlh74p8:
+              label: Regularización ascendientes con discapacidad. Apellidos y nombre
+                del ascendiente
             x-cdnmsublctiisob2dtn6ubb1dpq6ior9e1gm8ro:
               label: Regularización cónyuge no separado con discapacidad. Importe
                 del abono anticipado
@@ -50282,6 +50292,9 @@ modelo:
             x-chin6or5dpi6ipbeehin6bjedtmm4sj5:
               label: Regularización descendientes con discapacidad. Apellidos y nombre
                 del descendiente
+            x-cpgmqqbcd5giqrjldlin4rrjc4n78qbkelm6u:
+              label: Regularización familia numerosa. Número de identificación del
+                título de familia numerosa
           construct:
             modelo-122-regularizacion:
               field:

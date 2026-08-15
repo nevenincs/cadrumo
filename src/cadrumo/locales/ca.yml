@@ -47999,6 +47999,16 @@ modelo:
       revision:
         2017-y-siguientes:
           casilla:
+            x-c5pm6pbechkmarjkclpisob2dtn6ubb1dpq6ior9e1gm8ro:
+              label: Regularització ascendents amb discapacitat. Import de l'abonament
+                anticipat
+            x-c5pm6pbechkmarjkclpisp35chqm6or9dtn0:
+              label: Regularització ascendents amb discapacitat. Import de la deducció
+            x-c5pm6pbechkmarjkclpisrj9co:
+              label: Regularització ascendents amb discapacitat. NIF de l'ascendent
+            x-c5pm6pbechkmarjkclpisrjfdlh74p8:
+              label: Regularització ascendents amb discapacitat. Cognoms i nom de
+                l'ascendent
             x-cdnmsublctiisob2dtn6ubb1dpq6ior9e1gm8ro:
               label: Regularització cònjuge no separat amb discapacitat. Import de
                 l'abonament anticipat
