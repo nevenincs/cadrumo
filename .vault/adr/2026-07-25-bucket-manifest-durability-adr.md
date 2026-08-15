@@ -380,6 +380,26 @@ withdrawn rather than deferred. What survives from this record is its diagnosis,
 which the measurement below confirms was accurate about the hazard and wrong
 about the scale.
 
+**Further amendment: "present" described the tree at the time and no longer
+does.** When the wording above was written, a reader still existed, so the
+manifest was a file the product could still open. That reader was removed under
+the session-window step, and nothing writes a manifest either. What remains is a
+byte total in the bucket disk-usage report, which stats the file behind an
+existence guard and never parses it, and a retired-member name used to RECOGNISE
+a pre-cutover bucket.
+
+The consequence is that the storage hierarchy's path definition for the manifest
+was struck. A path definition is a claim that the hierarchy has this member; with
+no reader and no writer, that claim was backed by nothing, and the enrollment
+gate reported it as an undeclared format for exactly that reason. The gate was
+right and the hierarchy was wrong.
+
+Read "retired but present" as **retired, with pre-cutover bytes possibly still on
+an operator's disk, reachable by no code path that parses them.** Restoring a
+path definition, a reader, or a durability class for this format is a decision
+that needs its own record, not a repair of this one — the absence is now asserted
+by a named test rather than left as a silence.
+
 **A pre-capsule bucket is unreachable through every operator path.** Profile
 listing and profile resolution both project committed custody capsules; a bucket
 directory carrying a `manifest.toml` and no capsule cannot be listed, cannot be

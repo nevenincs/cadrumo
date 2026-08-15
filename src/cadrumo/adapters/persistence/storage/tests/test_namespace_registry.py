@@ -539,15 +539,27 @@ def test_test_only_namespaces_do_not_require_remote_mirror_metadata() -> None:
 def test_registry_path_definitions_name_persisted_hierarchy_segments() -> None:
     bucket_root = STORAGE_NAMESPACE_REGISTRY.path_by_key("bucket_root")
     bucket_db = STORAGE_NAMESPACE_REGISTRY.path_by_key("bucket_db")
-    manifest = STORAGE_NAMESPACE_REGISTRY.path_by_key("bucket_manifest")
     lockfile = STORAGE_NAMESPACE_REGISTRY.path_by_key("bucket_lock")
     blob_manifest = STORAGE_NAMESPACE_REGISTRY.path_by_key("blob_manifest")
 
     assert bucket_root.segment == BUCKETS_DIRNAME
     assert bucket_db.segment == BUCKET_DB_DIRNAME
-    assert manifest.segment == BUCKET_MANIFEST_FILENAME
     assert lockfile.segment == BUCKET_LOCK_FILENAME
     assert blob_manifest.schema_version == BLOB_MANIFEST_SCHEMA_VERSION
+
+
+def test_the_retired_plaintext_manifest_has_no_path_definition() -> None:
+    """The retirement is asserted, not merely left as an absence.
+
+    A member that simply stops being declared is indistinguishable from one
+    nobody got around to declaring -- which is the confusion that let this
+    manifest sit half-retired, its reader deleted while the hierarchy still
+    declared it as a live format. Naming the absence means re-adding a
+    definition is a deliberate act that fails here first.
+    """
+    with pytest.raises(KeyError):
+        STORAGE_NAMESPACE_REGISTRY.path_by_key("bucket_manifest")
+    assert BUCKET_MANIFEST_FILENAME not in {path.segment for path in STORAGE_NAMESPACE_REGISTRY.paths}
 
 
 # ---------------------------------------------------------------------------

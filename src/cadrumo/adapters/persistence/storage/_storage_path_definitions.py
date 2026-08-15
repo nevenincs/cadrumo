@@ -45,6 +45,9 @@ BUCKET_DB_DIRNAME = storage_location(StorageCategory.BUCKET_DATABASE).subpath
 #: sibling constant above is the directory that holds it.
 BUCKET_DATABASE_FILENAME = storage_location(StorageCategory.BUCKET_DATABASE_FILE).subpath
 BUCKET_BLOBS_DIRNAME = storage_location(StorageCategory.BUCKET_BLOBS).subpath
+#: Names the RETIRED plaintext bucket manifest, kept to recognise it on a
+#: pre-cutover bucket. It backs no path definition below -- see the note where
+#: one would otherwise sit.
 BUCKET_MANIFEST_FILENAME = storage_location(StorageCategory.BUCKET_MANIFEST).subpath
 BUCKET_LOCK_FILENAME = storage_location(StorageCategory.BUCKET_LOCK).subpath
 BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME = storage_location(StorageCategory.BUCKET_OUTPUT_LANGUAGE_HINT).subpath
@@ -201,14 +204,13 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_BLOBS_DIRNAME,
     ),
-    StoragePathDefinition(
-        key="bucket_manifest",
-        kind=StoragePathKind.FILE,
-        grammar=f"<root>/{BUCKETS_DIRNAME}/<bucket_id>/{BUCKET_MANIFEST_FILENAME}",
-        owner="cadrumo.adapters.persistence.storage.bucket",
-        anchor=StoragePathAnchor.STORAGE_ROOT,
-        segment=BUCKET_MANIFEST_FILENAME,
-    ),
+    # The plaintext bucket manifest has NO definition here, deliberately. Its
+    # reader was removed with the capsule cutover and nothing writes one, so a
+    # definition would declare a hierarchy member no current bucket has -- the
+    # same "declaration backed by nothing" the enrollment gate exists to catch,
+    # committed on purpose. The filename constant survives above because the
+    # name is still needed to RECOGNISE the retired member on a bucket that
+    # predates the cutover; naming a retired member is not declaring a format.
     StoragePathDefinition(
         key="bucket_lock",
         kind=StoragePathKind.FILE,
