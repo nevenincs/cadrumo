@@ -569,6 +569,16 @@ def create_profile_custody_registration_material(
     return ProfileCustodyRegistrationMaterial(envelope=envelope, sentinel=sentinel)
 
 
+ProfileRecoveryArtifactWarning = custody.ProfileCustodyRecoveryArtifactWarning
+"""The closed set of warnings every recovery-artifact export must surface.
+
+Re-exported at the boundary rather than flattened to plain strings on the
+way through. The warnings are a closed value set an operator surface has to
+render exhaustively, and a surface that receives them as bare strings cannot
+be checked for having handled all of them.
+"""
+
+
 def create_profile_recovery_enrollment_material(
     *,
     profile_id: UUID,
@@ -1050,6 +1060,7 @@ __all__ = [
     "ProfileRecordCryptoError",
     "ProfileRecordCryptoPort",
     "ProfileRecordEncryptedBlob",
+    "ProfileRecoveryArtifactWarning",
     "ProfileSecureObjectInventoryPort",
     "canonical_snapshot_bytes",
     "canonical_snapshot_digest",
