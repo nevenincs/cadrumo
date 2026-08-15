@@ -35,30 +35,44 @@ bucket directory: the same ``db/<product>.db`` member the engine opens sits
 inside the tree this module inventories.
 """
 
-DATABASE_REPRESENTATION_RELATIVE_PATHS: Final[frozenset[str]] = frozenset(
+DATABASE_SIDECAR_RELATIVE_PATHS: Final[frozenset[str]] = frozenset(
     {
-        _BUCKET_DATABASE_RELATIVE_PATH,
         f"{_BUCKET_DATABASE_RELATIVE_PATH}-wal",
         f"{_BUCKET_DATABASE_RELATIVE_PATH}-shm",
     }
 )
-"""The three capsule members whose BYTES track a connection, not custody content.
+"""Members the digest ignores ENTIRELY, path and bytes alike.
 
 The engine opens the capsule database in ``journal_mode=WAL``, so an open
 connection parks committed pages in a ``-wal`` sidecar with a ``-shm`` index
-beside it, and closing that connection checkpoints those pages back into the
-main file. All three paths therefore change -- two vanish and the third grows
--- for a reason that is a change of REPRESENTATION, not a change of what the
-capsule holds.
+beside it, and closing that connection removes both. Their very presence is a
+statement about whether a connection is open, so neither their bytes nor their
+existence can be held constant across a transaction that closes one.
+"""
 
-Naming the main database file alongside its sidecars is the part that is easy
-to get wrong. Excluding only ``-wal`` and ``-shm`` looks sufficient and is not:
-a checkpoint folds the sidecar's pages into ``db/<product>.db`` itself, which
-was measured growing from 12288 to 94208 bytes across one ordinary session
-close with no logical write between the two observations.
+DATABASE_PRESENCE_ONLY_RELATIVE_PATHS: Final[frozenset[str]] = frozenset({_BUCKET_DATABASE_RELATIVE_PATH})
+"""Members the digest covers by PATH but not by content.
 
-Membership is exact, never a suffix rule. A foreign file dropped anywhere under
-``db/`` is not one of these three and stays fully digest-covered.
+This is the capsule's own encrypted database, and it is the concession this
+module has to argue for rather than assume. Excluding only the two sidecars
+above looks sufficient and is not: closing the connection CHECKPOINTS the
+sidecar's pages into the main file, which was measured growing from 12288 to
+94208 bytes across one ordinary session close with no logical write between the
+two observations. Holding its bytes constant across a transaction whose first
+act closes that connection is therefore not merely strict, it is unsatisfiable
+-- it would refuse every deletion of a profile the operator is signed into,
+which is the same self-invalidation excluding the sidecars exists to fix, one
+file over.
+
+So its bytes are out. Its PATH is not: a database that vanished, or became a
+directory, between preflight and execution moves the digest and refuses. That
+is a real guard and it costs nothing, but it must not be oversold -- content
+between those two points is genuinely unwatched, and that limitation is stated
+on :class:`ProfileCustodyInventory` where a reader of the digest will meet it.
+
+Both collections are exact paths read off the storage taxonomy, never a suffix
+or directory rule. A foreign file dropped anywhere under the database directory
+is in neither and stays fully content-covered.
 """
 
 
@@ -75,28 +89,39 @@ class ProfileCustodyInventoryEntry:
 class ProfileCustodyInventory:
     """Bounded, no-follow exact inventory used by local custody transactions.
 
-    :attr:`entries` is the honest observation: every regular file the walk saw.
-    :attr:`digest_entries` is the subset the :attr:`digest` covers, which omits
-    :data:`DATABASE_REPRESENTATION_RELATIVE_PATHS`.
+    The capsule holds three kinds of member, and the digest treats each
+    differently:
 
-    The two differ because a local deletion has to compare an inventory taken
-    at preflight against the same capsule at execution, and its own first
+    - Custody records -- the password envelope, the DEK sentinel, the label
+      projection, the commit record, the recovery envelope, and anything else
+      not named below. Covered by path AND content. These are write-once
+      canonical JSON, so one byte different is a different capsule.
+    - The capsule database, :data:`DATABASE_PRESENCE_ONLY_RELATIVE_PATHS`.
+      Covered by path only.
+    - Its write-ahead sidecars, :data:`DATABASE_SIDECAR_RELATIVE_PATHS`. Not
+      covered at all.
+
+    :attr:`entries` is the honest observation: every regular file the walk saw,
+    whatever its treatment. :attr:`digest_entries` is the subset whose CONTENT
+    the digest covers, and it is the one a caller should measure or count when
+    it needs a figure that survives a connection closing.
+
+    The split exists because a local deletion compares an inventory taken at
+    preflight against the same capsule at execution, and its own first
     destructive act -- revoking the live profile secret -- closes the capsule's
-    database connection. That close checkpoints and removes the write-ahead
-    sidecars, so a digest over raw bytes could never match itself and a profile
-    the operator was signed into could not be deleted at all.
+    database connection. That close removes the sidecars and checkpoints their
+    pages into the database file, so a digest over raw bytes could never match
+    itself and a profile the operator was signed into could not be deleted at
+    all.
 
-    What the digest still guarantees is unchanged: every byte-stable custody
-    record (the password envelope, the DEK sentinel, the label projection, the
-    commit record, the recovery envelope) is covered exactly, and any file
-    appearing or vanishing anywhere else in the capsule moves it.
-
-    What it no longer guarantees is worth stating plainly rather than leaving
-    to be discovered: rows written into the capsule DATABASE between preflight
-    and execution no longer move the digest. That coverage is not recoverable
-    at this layer -- the database's logical content is only readable through
-    the DEK, which a deletion deliberately never holds, and its raw bytes are a
-    function of connection state. Presence is still checked; content is not.
+    THE LIMITATION, stated here rather than left to be discovered: rows written
+    into the capsule DATABASE between preflight and execution do not move the
+    digest. Nothing else catches them either -- the deletion is the only reader
+    of this inventory in that window. It is not recoverable at this layer,
+    because the database's logical content is readable only through the DEK,
+    which a deletion deliberately never holds, and its raw bytes are a function
+    of connection state. What survives is that the database must still BE there,
+    and that every other member is byte-exact.
     """
 
     profile_id: UUID
@@ -136,10 +161,15 @@ def _build_profile_custody_inventory(
     total_bytes = sum(entry.size_bytes for entry in ordered)
     if total_bytes > PROFILE_CUSTODY_INVENTORY_MAX_TOTAL_BYTES:
         raise ProfileCustodyRecordError("profile custody inventory exceeds its total byte limit")
-    covered = tuple(entry for entry in ordered if entry.relative_path not in DATABASE_REPRESENTATION_RELATIVE_PATHS)
+    covered = tuple(
+        entry
+        for entry in ordered
+        if entry.relative_path not in DATABASE_SIDECAR_RELATIVE_PATHS
+        and entry.relative_path not in DATABASE_PRESENCE_ONLY_RELATIVE_PATHS
+    )
     if not covered:
         raise ProfileCustodyRecordError("profile custody inventory covers no durable custody record")
-    canonical = canonical_json_bytes([[entry.relative_path, entry.size_bytes, entry.sha256] for entry in covered])
+    canonical = canonical_json_bytes(_digest_members(ordered))
     return ProfileCustodyInventory(
         profile_id=profile_id,
         entries=ordered,
@@ -147,6 +177,26 @@ def _build_profile_custody_inventory(
         total_bytes=total_bytes,
         digest=prefixed_digest(canonical),
     )
+
+
+def _digest_members(ordered: tuple[ProfileCustodyInventoryEntry, ...]) -> list[list[object]]:
+    """Project each observed entry onto what the digest is entitled to claim.
+
+    A content-covered member contributes its path, size and hash; the database
+    contributes its path alone, which is what makes its disappearance a
+    conflict while its checkpointing is not; a sidecar contributes nothing.
+    The shapes differ in length, so a presence member can never collide with a
+    content member that happens to share its path.
+    """
+    members: list[list[object]] = []
+    for entry in ordered:
+        if entry.relative_path in DATABASE_SIDECAR_RELATIVE_PATHS:
+            continue
+        if entry.relative_path in DATABASE_PRESENCE_ONLY_RELATIVE_PATHS:
+            members.append([entry.relative_path])
+            continue
+        members.append([entry.relative_path, entry.size_bytes, entry.sha256])
+    return members
 
 
 def _inventory_posix_directory(
@@ -290,7 +340,8 @@ def _inventory_windows_entry(
 
 
 __all__ = [
-    "DATABASE_REPRESENTATION_RELATIVE_PATHS",
+    "DATABASE_PRESENCE_ONLY_RELATIVE_PATHS",
+    "DATABASE_SIDECAR_RELATIVE_PATHS",
     "PROFILE_CUSTODY_DATA_FILE_MAX_BYTES",
     "PROFILE_CUSTODY_DATA_MAX_ENTRIES",
     "PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES",

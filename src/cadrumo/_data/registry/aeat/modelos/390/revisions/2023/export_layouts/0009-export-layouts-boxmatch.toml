@@ -1,0 +1,150 @@
+[[revisions."2023".export_layouts]]
+id = "modelo-390-2023-fichero-boe"
+
+# Modelo 390 revision 2023: export fields for the box-number-proved
+# casillas in the sibling casilla fragment. Merges into the page records
+# declared in the earlier fragments.
+#
+# Offsets and lengths transcribed from aeat-dr-390-2023 (sha256 179c02eddc8bab411c249fc3fda19c7015d668e1dd7930d4af79f38998b9c5a7).
+
+[[revisions."2023".export_layouts.records]]
+id = "modelo-390-page-02"
+record_type = "page_02"
+order = 2
+encoding = "latin-1"
+line_ending = "none"
+
+# 5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 0,5% - Base imponible [35]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-recargo-tipo-0-5-base"
+offset = 1271
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-5.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 1,4% - Base imponible [599]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-recargo-tipo-1-4-base"
+offset = 1339
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-1-4.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 5,2% - Base imponible [601]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-recargo-tipo-5-2-base"
+offset = 1373
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-5-2.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 1,75% - Base imponible [41]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-recargo-tipo-1-75-base"
+offset = 1407
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-1-75.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - Base Imponible y cuota - Recargo de equivalencia - Tipo 1,75% - Cuota [42]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-recargo-tipo-1-75-cuota"
+offset = 1424
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-1-75.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equivalencia - Base imponible [43]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-modificacion-recargo-base"
+offset = 1441
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.modificacion.recargo.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equivalencia - Cuota [44]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-modificacion-recargo-cuota"
+offset = 1458
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.modificacion.recargo.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equiv. Concurso acreedores - Base imponible [45]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-modificacion-recargo-concurso-base"
+offset = 1475
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.modificacion.recargo-concurso.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+# 5. Operaciones Reg. Gral. - Base Imponible y cuota - Modific. recargo equiv. Concurso acreedores - Cuota [46]
+[[revisions."2023".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-modificacion-recargo-concurso-cuota"
+offset = 1492
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.modificacion.recargo-concurso.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]

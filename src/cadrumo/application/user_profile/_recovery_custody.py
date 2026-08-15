@@ -44,9 +44,11 @@ from typing import TYPE_CHECKING
 
 from ..profile_custody import (
     create_profile_recovery_enrollment_material,
-    export_profile_recovery_artifact as _export_recovery_artifact,
     prove_profile_recovery_artifact,
     unlock_profile_custody_password,
+)
+from ..profile_custody import (
+    export_profile_recovery_artifact as _export_recovery_artifact,
 )
 from ._capsule_record import ProfileRecordSession
 from ._lifecycle import ProfileCapsuleLifecycle

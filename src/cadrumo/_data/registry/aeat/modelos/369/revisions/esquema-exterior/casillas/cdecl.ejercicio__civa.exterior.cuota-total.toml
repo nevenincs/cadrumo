@@ -48,3 +48,9 @@ legal_refs = [
     "orden-hac-610-2021:art-1",
 ]
 source_refs = ["aeat-dr-369-2021"]
+# This schema's record design carries no total-cuota position: the design
+# prints per-destination base and cuota detail rows only. Verified across
+# every sheet of this schema. Not filed_via_binding_field -- that would
+# assert the value IS written, and no binding writes it either.
+export_exemption_reason = "not_in_record_design"
+

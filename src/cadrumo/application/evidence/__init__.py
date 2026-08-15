@@ -59,7 +59,7 @@ from ._models import (
     VerificationCheck,
     derive_bundle_id,
 )
-from ._profile_legal_hold import LegalHoldCaseAuthority
+from ._profile_legal_hold import LegalHoldCaseAuthority, try_record_legal_hold_snapshot
 from ._service import (
     EvidenceBundleRepository,
     EvidenceBundleService,
@@ -79,4 +79,6 @@ __all__ = [
     "LegalHoldCaseAuthority",
     "VerificationCheck",
     "derive_bundle_id",
+    "try_record_legal_hold_snapshot",
 ]
+

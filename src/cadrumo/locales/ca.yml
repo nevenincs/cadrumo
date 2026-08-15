@@ -47999,12 +47999,45 @@ modelo:
       revision:
         2017-y-siguientes:
           casilla:
+            x-c5pm6pbechkmarjkclpisob2dtn6ubb1dpq6ior9e1gm8ro:
+              label: Regularització ascendents amb discapacitat. Import de l'abonament
+                anticipat
+            x-c5pm6pbechkmarjkclpisp35chqm6or9dtn0:
+              label: Regularització ascendents amb discapacitat. Import de la deducció
+            x-c5pm6pbechkmarjkclpisrj9co:
+              label: Regularització ascendents amb discapacitat. NIF de l'ascendent
+            x-c5pm6pbechkmarjkclpisrjfdlh74p8:
+              label: Regularització ascendents amb discapacitat. Cognoms i nom de
+                l'ascendent
+            x-cdnmsublctiisob2dtn6ubb1dpq6ior9e1gm8ro:
+              label: Regularització cònjuge no separat amb discapacitat. Import de
+                l'abonament anticipat
+            x-cdnmsublctiisp35chqm6or9dtn0:
+              label: Regularització cònjuge no separat amb discapacitat. Import de
+                la deducció
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici a què es refereix la regularització
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+            x-chin6or5dpi6ipbeehin6bj1c9nmsrpdc5n78qb3d5o62p3f:
+              label: Regularització descendents amb discapacitat. Import de l'abonament
+                anticipat
+            x-chin6or5dpi6ipbeehin6bj4cli7aor3d5nms:
+              label: Regularització descendents amb discapacitat. Import de la deducció
+            x-chin6or5dpi6ipbeehin6bjed5j0:
+              label: Regularització descendents amb discapacitat. NIF del descendent
+            x-chin6or5dpi6ipbeehin6bjedtmm4sj5:
+              label: Regularització descendents amb discapacitat. Cognoms i nom del
+                descendent
+            x-cpgmqqbcd5giqrjldlin4rrjc4n62ojfdpniqobeehkm6qbgc5i6u:
+              label: Regularització família nombrosa. Import de l'abonament anticipat
+            x-cpgmqqbcd5giqrjldlin4rrjc4n68pb4elhm6qbfdo:
+              label: Regularització família nombrosa. Import de la deducció
+            x-cpgmqqbcd5giqrjldlin4rrjc4n78qbkelm6u:
+              label: Regularització família nombrosa. Número d'identificació del títol
+                de família nombrosa
           construct:
             modelo-122-regularizacion:
               field:
@@ -65841,6 +65874,8 @@ modelo:
                 o una entitat.'
               label: Clau de personalitat del perceptor no resident
             x-e1in4opecpim6q315ln62or9dlkmarjkds:
+              help: Només s'emplena quan el tipus de perceptor és la clau 5 i la clau
+                de personalitat és F.
               label: Data de naixement del perceptor no resident
             x-e1in4opecpim6q315lo62prf:
               help: Data en què s'hagi satisfet o abonat al perceptor el premi obtingut.
@@ -65850,6 +65885,9 @@ modelo:
                 sobre el qual s'hagi fet l'aposta que determina l'obtenció del premi.
               label: Data de celebració del sorteig o aposta
             x-e1in4opectin6t3fe8mm6rr2e9ng:
+              help: Es consigna una X exclusivament quan es presenten al cobrament
+                premis prèviament distribuïts en forma de participacions, de manera
+                que qui cobra el premi no n'és el beneficiari últim.
               label: Gestor de cobrament del premi
             x-e1in4oped5mn0rriehiiqs3iclmmiro:
               help: Part de l'import íntegre del premi dinerari o del valor del premi
@@ -65857,6 +65895,10 @@ modelo:
                 sorteig va obtenir diversos premis, la suma de tots.
               label: Import íntegre del premi o valor individual del premi en espècie
             x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
+              help: Només quan el tipus de perceptor és la clau 5 i la clau de personalitat
+                és F. Municipi i, si escau, província, regió o departament del lloc
+                de naixement, seguits del codi de país o territori de l'Annex II de
+                l'Ordre EHA/3496/2011.
               label: Lloc de naixement del perceptor no resident
             x-e1in4opedpkmc:
               help: NIF del perceptor del premi. Només es deixa en blanc si el tipus
@@ -65865,6 +65907,10 @@ modelo:
                 fiscal al país de residència.
               label: Número d'identificació fiscal (NIF) del perceptor
             x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
+              help: 'Només quan el tipus de perceptor és la clau 5 i no disposa de
+                NIF espanyol: número de passaport o, si no, del document d''identitat
+                vàlid al país d''origen si és persona física, o el número o codi identificador
+                assignat per l''autoritat fiscal del país d''origen si és entitat.'
               label: Número d'identificació fiscal al país de residència fiscal
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               help: NIF de la persona o entitat que, si escau, intervingui com a representant
@@ -65882,6 +65928,10 @@ modelo:
               label: Cognoms i nom, raó social o denominació del representant del
                 perceptor
             x-e1in4opee1gmispde9in6qb4cln66qb1:
+              help: 'Només quan el tipus de perceptor és la clau 5: dos caràcters
+                alfabètics indicatius del país o territori de residència del perceptor
+                segons l''Annex II de l''Ordre EHA/3496/2011. En qualsevol altre cas
+                s''omple amb blancs.'
               label: País o territori de residència fiscal del perceptor
             x-e1in4opee1p6utj9dphmio8:
               help: Dos dígits de la província o ciutat autònoma del domicili del
@@ -65890,6 +65940,8 @@ modelo:
                 és la clau 5.
               label: Codi de província del domicili del perceptor
             x-e1in4opee9in8pbecdkmurg:
+              help: Import de la retenció o ingrés a compte efectivament practicats
+                per l'entitat pagadora del premi.
               label: Import de la retenció o ingrés a compte
             x-e1in4opeehkn0rpde1in4or5e1q6usg:
               help: Clau 1 persona física contribuent de l'IRPF, 2 entitat en règim
@@ -71323,6 +71375,12 @@ modelo:
           iva-deducible-aic-inversion-tipo-10-cuota:
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               d'inversió al tipus 10% - quota deduïble
+          iva-deducible-aic-inversion-tipo-2-base:
+            label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
+              - Tipus 2% - Base imposable [769]
+          iva-deducible-aic-inversion-tipo-2-cuota:
+            label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
+              - Tipus 2% - Quota deduïble [770]
           iva-deducible-aic-inversion-tipo-21-base:
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               d'inversió al tipus 21% - base imposable
@@ -71341,6 +71399,12 @@ modelo:
           iva-deducible-aic-inversion-tipo-5-cuota:
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               d'inversió al tipus 5% - quota deduïble
+          iva-deducible-aic-inversion-tipo-7-5-base:
+            label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
+              - Tipus 7,5% - Base imposable [771]
+          iva-deducible-aic-inversion-tipo-7-5-cuota:
+            label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
+              - Tipus 7,5% - Quota deduïble [772]
           iva-deducible-aic-inversion-total-base:
             label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
               de béns d''inversió - base imposable'
@@ -71353,6 +71417,12 @@ modelo:
           iva-deducible-aic-servicios-tipo-10-cuota:
             label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
               al tipus 10% - quota deduïble
+          iva-deducible-aic-servicios-tipo-2-base:
+            label: IVA deduïble en adquisicions intracomunitàries de serveis - Tipus
+              2% - Base imposable [773]
+          iva-deducible-aic-servicios-tipo-2-cuota:
+            label: IVA deduïble en adquisicions intracomunitàries de serveis - Tipus
+              2% - Quota deduïble [774]
           iva-deducible-aic-servicios-tipo-21-base:
             label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
               al tipus 21% - base imposable
@@ -71371,6 +71441,12 @@ modelo:
           iva-deducible-aic-servicios-tipo-5-cuota:
             label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
               al tipus 5% - quota deduïble
+          iva-deducible-aic-servicios-tipo-7-5-base:
+            label: IVA deduïble en adquisicions intracomunitàries de serveis - Tipus
+              7,5% - Base imposable [775]
+          iva-deducible-aic-servicios-tipo-7-5-cuota:
+            label: IVA deduïble en adquisicions intracomunitàries de serveis - Tipus
+              7,5% - Quota deduïble [776]
           iva-deducible-aic-servicios-total-base:
             label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
               de serveis - base imposable'
@@ -73370,10 +73446,6 @@ modelo:
                 title: null
           field:
             label: null
-        2021-y-siguientes:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              label: Exercici a què es refereix l'autoliquidació
         2024-y-siguientes:
           casilla:
             x-c5n6au3f5pn7arb5e9niqqjledq6ipj9cdgmst35:

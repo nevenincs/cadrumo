@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 class _RoutingInputs(TypedDict):
     """The exact keyword set :func:`login_tui_is_the_right_frontend` accepts."""
 
-    secrets_stdin: bool
+    machine_secret_supplied: bool
     headless_secret: bool
     json_format: bool
     full_screen: bool
@@ -48,7 +48,7 @@ class _RoutingInputs(TypedDict):
 
 def _interactive_operator(
     *,
-    secrets_stdin: bool = False,
+    machine_secret_supplied: bool = False,
     headless_secret: bool = False,
     json_format: bool = False,
     full_screen: bool = True,
@@ -63,7 +63,7 @@ def _interactive_operator(
     asserting the untouched interactive shape and passing for the wrong reason.
     """
     return {
-        "secrets_stdin": secrets_stdin,
+        "machine_secret_supplied": machine_secret_supplied,
         "headless_secret": headless_secret,
         "json_format": json_format,
         "full_screen": full_screen,
@@ -95,7 +95,7 @@ def test_naming_a_profile_is_not_a_routing_input_at_all() -> None:
 @pytest.mark.parametrize(
     "inputs",
     [
-        pytest.param(_interactive_operator(secrets_stdin=True), id="secrets_stdin"),
+        pytest.param(_interactive_operator(machine_secret_supplied=True), id="machine_secret_supplied"),
         pytest.param(_interactive_operator(headless_secret=True), id="headless_secret"),
         pytest.param(_interactive_operator(json_format=True), id="json_format"),
         pytest.param(_interactive_operator(full_screen=False), id="full_screen"),
@@ -186,6 +186,11 @@ def test_the_resolved_rule_reads_the_format_and_the_arguments(tmp_path) -> None:
         assert login_screen_is_available(_context(output_format="json"), secrets_stdin=False) is False
         ctx = _context(output_format="text")
         assert login_screen_is_available(ctx, secrets_stdin=True) is False
+        # The one-shot descriptor is the second machine channel and must reach
+        # the predicate as the same "already supplied" condition the stdin
+        # object does; a descriptor that failed to thread would leave the
+        # screen offered on a host where the password has already arrived.
+        assert login_screen_is_available(ctx, secrets_stdin=False, secrets_fd=7) is False
 
 
 def test_a_gated_verb_is_offered_no_screen_on_a_host_that_cannot_show_one(tmp_path) -> None:

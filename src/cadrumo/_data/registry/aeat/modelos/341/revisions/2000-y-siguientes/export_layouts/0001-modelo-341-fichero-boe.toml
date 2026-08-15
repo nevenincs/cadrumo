@@ -17,6 +17,18 @@
 #           here is signed.
 # Nota 1 fixes the only admitted tipo de declaracion for batch presentation:
 # "D (Devolucion)".
+#
+# COVERAGE: 30 of the 33 positions the official design requires. The three
+# unwritten positions are named gaps, each marked KNOWN GAP below, and each is a
+# slot for which this project holds no honest value:
+#   @93+4   Version del Programa      (Nota 1, entidad desarrolladora)
+#   @101+9  NIF Empresa Desarrollo    (Nota 1, entidad desarrolladora)
+#   @277+11 SWIFT                     (no BIC producer key exists)
+# None is filled with a filler. A filler at these coordinates would emit the
+# identical bytes -- the renderer space-fills every record before writing fields
+# -- while making the coverage gate count the position as written. The gate
+# cannot see through that, so the honest figure is 30/33 with three gaps rather
+# than 33/33 with three blanks.
 
 [[revisions."2000-y-siguientes".export_layouts]]
 id = "modelo-341-fichero-boe"
@@ -142,24 +154,19 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-# Campo 9, "Version del Programa (Nota 1)": Nota 1 assigns it to the entidad
-# desarrolladora ("Debe consignarse el identificador de la version del SW
-# desarrollado por la ED"). Cadrumo is the developing entity for the file it
-# emits, but the design states no format and the registry declares no producer
-# key for a software version, so the slot is rendered as the design's blanks
-# rather than filled with an invented identifier.
-[[revisions."2000-y-siguientes".export_layouts.records.fields]]
-id = "modelo-341-envelope-program-version"
-offset = 93
-length = 4
-kind = "filler"
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-341-2016"]
+# KNOWN GAP 1 of 3, deliberate and reported. Positions 93-96, "Version del
+# Programa", are one of this design's two "Nota 1" slots; Nota 1 assigns both to
+# the entidad desarrolladora del software ("Debe consignarse el identificador de
+# la version del SW desarrollado por la ED"). No entidad-desarrolladora identity
+# is declared anywhere in this project, so the slot is left UNWRITTEN rather than
+# guessed -- the treatment Modelo 131 committed for the same two slots of the
+# same AEAT envelope grammar.
+#
+# Unwritten rather than filler, deliberately. The record renderer pre-fills every
+# record with spaces and writes fields at their offsets, so an omitted span and a
+# right_space filler emit byte-identical output. The only thing a filler would
+# change is that the coverage gate would count the position as WRITTEN. That is
+# coverage no datum earned, so the position is omitted and reported as a gap.
 
 [[revisions."2000-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-envelope-reserved-2"
@@ -174,23 +181,12 @@ signed = false
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-# Campo 11, "NIF Empresa Desarrollo (Nota 1)": the NIF of the entidad
-# desarrolladora del SW. presenter.tax_id is the fact the filing carries for the
-# party that produces and presents the file, and is what the sibling M390
-# envelope writes into the byte-identical slot of the same AEAT envelope grammar.
-[[revisions."2000-y-siguientes".export_layouts.records.fields]]
-id = "modelo-341-envelope-developer-nif"
-offset = 101
-length = 9
-kind = "header"
-producer_key = "presenter.tax_id"
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-341-2016"]
+# KNOWN GAP 2 of 3, deliberate and reported. Positions 101-109, "NIF Empresa
+# Desarrollo", are the second "Nota 1" slot: the NIF of the entidad
+# desarrolladora del SW. The presenter is NOT the software developer, so writing
+# presenter.tax_id here would put a wrong identity into a slot AEAT defines for
+# someone else -- inventing an identity by misattribution rather than by making
+# one up, but inventing it either way. Left UNWRITTEN, as Modelo 131 does.
 
 [[revisions."2000-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-envelope-reserved-3"
@@ -549,23 +545,15 @@ signed = false
 legal_refs = ["ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-# Campo 23, "SWIFT". The registry declares no producer key for a BIC, so this
-# slot is rendered as blanks rather than filled from an invented fact. It is a
-# real content position and this is a KNOWN GAP, not an omissible slot: AEAT
-# does not mark it reserved or fill. Closing it needs a BIC fact on the selected
-# account, which is a filing-producer change outside this registry lane.
-[[revisions."2000-y-siguientes".export_layouts.records.fields]]
-id = "modelo-341-p01-swift"
-offset = 277
-length = 11
-kind = "filler"
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-341-2016"]
+# KNOWN GAP 3 of 3, deliberate and reported. Campo 23, positions 277-287,
+# "SWIFT". AEAT marks this slot neither reserved nor fill, so it is a real
+# content position -- but the registry declares no producer key for a BIC
+# (selected_account.iban is the only account fact there is). It was briefly
+# authored as a filler, which emits exactly the same bytes it does now while
+# making the coverage gate count it as written; that is the one thing the gate
+# cannot see through, so the position is left UNWRITTEN and reported as a gap
+# instead. Closing it needs a BIC fact on the selected account, a filing-producer
+# change outside this registry lane.
 
 [[revisions."2000-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-reserved-tail"

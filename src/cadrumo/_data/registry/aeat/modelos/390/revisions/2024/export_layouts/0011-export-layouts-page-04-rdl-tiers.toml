@@ -1,0 +1,132 @@
+[[revisions."2024".export_layouts]]
+id = "modelo-390-2024-fichero-boe"
+
+# Pagina 4: the RDL 4/2024 temporary 2 % and 7,5 % deducible AIC rungs.
+# Offsets and lengths transcribed from aeat-dr-390-2024 (sha256 8be79bacc86034c3c7951d2ea671c030800ed9a4cc3f52b9e5d407bc19bc03f0).
+
+[[revisions."2024".export_layouts.records]]
+id = "modelo-390-page-04"
+record_type = "page_04"
+order = 5
+encoding = "latin-1"
+line_ending = "none"
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 2% - Base imponible [769]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-deducible-aic-inversion-tipo-2-base"
+offset = 13
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-2.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 2% - Cuota [770]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-deducible-aic-inversion-tipo-2-cuota"
+offset = 30
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-2.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 7,5% - Base imponible [771]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-deducible-aic-inversion-tipo-7-5-base"
+offset = 115
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-7-5.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 7,5% - Cuota [772]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-deducible-aic-inversion-tipo-7-5-cuota"
+offset = 132
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-7-5.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 2% - Base imponible [773]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-deducible-aic-servicios-tipo-2-base"
+offset = 251
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-2.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 2% - Cuota [774]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-deducible-aic-servicios-tipo-2-cuota"
+offset = 268
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-2.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 7,5% - Base imponible [775]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-deducible-aic-servicios-tipo-7-5-base"
+offset = 353
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-7-5.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2024"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 7,5% - Cuota [776]
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-deducible-aic-servicios-tipo-7-5-cuota"
+offset = 370
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-7-5.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2024"]

@@ -391,6 +391,10 @@ def _config_help() -> HelpDocument:
                         command="aeat config logout",
                         description=tr("cli.operator_surface.help.config.profile_logout"),
                     ),
+                    HelpEntry(
+                        command="aeat config profile delete NAME",
+                        description=tr("cli.operator_surface.help.config.profile_delete"),
+                    ),
                 ),
             ),
             HelpSection(

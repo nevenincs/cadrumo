@@ -90,7 +90,7 @@ def _emit_profile_record_unreadable(
 
 def _read_profile_record(*, profile_id: str, bucket_id: str):
     """Read a profile record under a bucket session scoped to that profile."""
-    from ....adapters.persistence.storage.master_key import active_bucket_session_serves
+    from ....adapters.persistence.storage import active_bucket_session_serves
     from ....application.user_profile import ProfileNotFoundError, ProfileRecordRepository
 
     # Ask the bound session which bucket it serves; matching the pointer and
