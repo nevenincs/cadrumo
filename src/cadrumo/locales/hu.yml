@@ -673,19 +673,6 @@ application:
           auth test` parancsot az AEAT adatok olvasása előtt.
         verify_failed: Az AEAT munkamenetet nem sikerült ellenőrizni; futtassa a `aeat
           config auth test` parancsot az AEAT adatok olvasása előtt.
-  bucket_maintenance:
-    errors:
-      delete_active_bucket: Az aktív bucket nem törölhető; előbb jelentkezzen be másik
-        profilba az aeat config login NÉV paranccsal.
-      delete_not_confirmed: Ez a művelet visszafordíthatatlan. Futtassa újra a --yes
-        kapcsolóval a megerősítéshez.
-      import_bucket_collision: A(z) {bucket_id} azonosítójú bucket már létezik; használja
-        a --force-replace kapcsolót a felülírásához.
-      import_missing_filing_baseline: 'A bucket-archívum profiljából hiányoznak a
-        benyújtási azonossági mezők: %{missing_flags}. Javítsa a forrásprofilt, majd
-        exportálja újra.'
-      import_payload_invalid: A profilarchívum tartalma érvénytelen vagy sérült.
-      restore_not_archived: A bucket nincs archiválva (nincs törölve); nincs mit visszaállítani.
   calculations:
     binding_prefill:
       errors:
@@ -1877,12 +1864,6 @@ application:
           translation_failed: A nyilvántartási képlet nem fordítható táblázatképletté.
   user_profile:
     errors:
-      aggregate_label_mismatch: 'A profiltárolás inkonzisztens: a manifest címkéje
-        nem egyezik a biztonságos rekorddal.'
-      aggregate_profile_id_mismatch: 'A profiltárolás inkonzisztens: a manifest profilazonossága
-        nem egyezik a biztonságos rekorddal.'
-      aggregate_status_mismatch: 'A profiltárolás inkonzisztens: a manifest életciklus-állapota
-        nem egyezik a biztonságos rekorddal.'
       censal_read_identity_absent: A nyilvántartási olvasás nem tartalmazott adóazonosítót,
         ezért nem erősíthető meg, hogy ehhez a profilhoz tartozik.
       censal_read_identity_cleared: Ennek a profilnak az adóazonosítója ki lett ürítve,
@@ -1900,8 +1881,6 @@ application:
         a nyilvántartását: ennek a profilnak még nincs, ezért a lekérdezés nem tudja
         megerősíteni, hogy az AEAT által visszaadott rekord az Öné. Futtassa az aeat
         config profile edit parancsot a megadásához.'
-      duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil
-        használja; egy adózónak egy profilja lehet.
       lifecycle_profile_already_exists: Már létezik profil az aktív bucketben.
       lifecycle_profile_not_tombstoned: A profil nincs törölve; az újraaktiválás elutasítja
         az élő profilt.

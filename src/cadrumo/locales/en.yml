@@ -647,17 +647,6 @@ application:
           before reading AEAT data.
         verify_failed: AEAT session could not be verified; run `aeat config auth test`
           before reading AEAT data.
-  bucket_maintenance:
-    errors:
-      delete_not_confirmed: This operation is destructive. Re-run with --yes to confirm.
-      import_bucket_collision: A bucket with id {bucket_id} already exists; use --force-replace
-        to overwrite it.
-      import_missing_filing_baseline: 'The bucket archive profile is missing filing
-        identity fields: %{missing_flags}. Repair the source profile and export it
-        again.'
-      import_payload_invalid: The profile archive content is invalid or corrupted.
-      restore_not_archived: The bucket is not archived (tombstoned); there is nothing
-        to restore.
   calculations:
     binding_prefill:
       errors:
@@ -1801,12 +1790,6 @@ application:
             formula.
   user_profile:
     errors:
-      aggregate_label_mismatch: 'Profile storage is inconsistent: the manifest label
-        does not match the secure record.'
-      aggregate_profile_id_mismatch: 'Profile storage is inconsistent: the manifest
-        profile identity does not match the secure record.'
-      aggregate_status_mismatch: 'Profile storage is inconsistent: the manifest lifecycle
-        status does not match the secure record.'
       censal_read_identity_absent: The censal read carried no tax identity, so it
         cannot be confirmed to belong to this profile.
       censal_read_identity_cleared: This profile's fiscal ID was cleared, so a censal
@@ -1822,8 +1805,6 @@ application:
       censal_read_identity_unset: 'Record your fiscal ID before pulling your census:
         this profile has none yet, so the pull cannot confirm the record AEAT returns
         is yours. Run aeat config profile edit to add it.'
-      duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
-        one taxpayer must have one profile.
       lifecycle_profile_already_exists: A profile already exists in the active bucket.
       lifecycle_profile_not_tombstoned: The profile is not tombstoned; reactivate
         refuses a live profile.

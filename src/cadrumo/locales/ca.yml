@@ -714,19 +714,6 @@ application:
           test` abans de llegir dades AEAT.
         verify_failed: No s'ha pogut verificar la sessió AEAT; executa `aeat config
           auth test` abans de llegir dades AEAT.
-  bucket_maintenance:
-    errors:
-      delete_not_confirmed: Aquesta operació és destructiva. Torna a executar-la amb
-        --yes per confirmar.
-      import_bucket_collision: Ja existeix un bucket amb l'id {bucket_id}; usa --force-replace
-        per sobreescriure'l.
-      import_missing_filing_baseline: 'El perfil de l''arxiu de bucket no té camps
-        d''identitat per presentar: %{missing_flags}. Repara el perfil d''origen i
-        torna''l a exportar.'
-      import_payload_invalid: El contingut de l'arxiu de perfil no és vàlid o està
-        malmès.
-      restore_not_archived: El bucket no està arxivat (donat de baixa); no hi ha res
-        a recuperar.
   calculations:
     binding_prefill:
       errors:
@@ -1970,12 +1957,6 @@ application:
             de full de càlcul.
   user_profile:
     errors:
-      aggregate_label_mismatch: 'L''emmagatzematge del perfil no és coherent: l''etiqueta
-        del manifest no coincideix amb el registre segur.'
-      aggregate_profile_id_mismatch: 'L''emmagatzematge del perfil no és coherent:
-        la identitat del manifest no coincideix amb el registre segur.'
-      aggregate_status_mismatch: 'L''emmagatzematge del perfil no és coherent: l''estat
-        de cicle de vida del manifest no coincideix amb el registre segur.'
       censal_read_identity_absent: La lectura censal no inclou cap NIF, de manera
         que no es pot confirmar que correspongui a aquest perfil.
       censal_read_identity_cleared: El NIF d'aquest perfil s'ha buidat, de manera
@@ -1993,9 +1974,6 @@ application:
         cens: aquest perfil encara no en té cap, de manera que la consulta no pot
         confirmar que el registre que retorna l''AEAT sigui vostre. Executeu aeat
         config profile edit per afegir-lo.'
-      duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
-        contribuent ha de tenir un sol perfil.
-      lifecycle_profile_already_exists: Ja existeix un perfil al bucket actiu.
       lifecycle_profile_not_tombstoned: El perfil no està donat de baixa; la reactivació
         rebutja un perfil actiu.
       lifecycle_profile_tombstoned_rename: No es pot canviar el nom d'un perfil eliminat.
