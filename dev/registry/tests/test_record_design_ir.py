@@ -60,7 +60,7 @@ def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_
         filing_year=2025,
         design_epoch="2025",
     )
-    parsed_sheets = extract_record_design(resolved.path)
+    parsed_sheets = extract_record_design(resolved.path).accept_partial()
 
     intermediate = load_record_design_intermediate(
         source_root,
@@ -293,7 +293,7 @@ def test_intermediate_preserves_each_modelo_303_variable_envelope(
         filing_year=filing_year,
         design_epoch=design_epoch,
     )
-    parsed = extract_record_design(resolved.path)
+    parsed = extract_record_design(resolved.path).accept_partial()
 
     intermediate = load_record_design_intermediate(
         source_root,
@@ -355,7 +355,9 @@ def test_intermediate_preserves_each_modelo_220_composite_relative_closing(
         design_epoch=design_epoch,
     )
     parser_envelope = next(
-        sheet.variable_envelope for sheet in extract_record_design(resolved.path) if sheet.variable_envelope is not None
+        sheet.variable_envelope
+        for sheet in extract_record_design(resolved.path).accept_partial()
+        if sheet.variable_envelope is not None
     )
     intermediate = load_record_design_intermediate(
         source_root,
@@ -425,7 +427,7 @@ def test_intermediate_classifies_each_modelo_390_page_zero_as_a_total_less_auxil
             filing_year=filing_year,
             design_epoch=design_epoch,
         ).path,
-    )
+    ).accept_partial()
     intermediate = load_record_design_intermediate(
         source_root,
         catalogues.sources,

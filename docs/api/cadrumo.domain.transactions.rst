@@ -18,6 +18,7 @@ Submodules
    cadrumo.domain.transactions._enums
    cadrumo.domain.transactions._errors
    cadrumo.domain.transactions._irpf_categories
+   cadrumo.domain.transactions._lineage_models
    cadrumo.domain.transactions._llm
    cadrumo.domain.transactions._m210_income_classification
    cadrumo.domain.transactions._model_tier

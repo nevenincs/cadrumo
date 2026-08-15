@@ -41,7 +41,7 @@ _REVISION_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$")
 # (rather than derived from the runtime schema) because the scaffold's
 # authorship order mirrors the contributor checklist, not the schema's
 # internal field order; a schema field with no scaffolded fragment directory
-# (e.g. `parameters`, `algorithm_providers`) is optional and only needed by a
+# (e.g. `parameters`) is optional and only needed by a
 # subset of modelos, so it is not force-created by default.
 _SECTION_DIRECTORIES: tuple[str, ...] = (
     "casillas",

@@ -15,9 +15,9 @@ from dev._paths import REPO_ROOT
 
 from ..dead_code import DeadCodeOutcome, run_dead_code_scan
 
-_REPO_ROOT = REPO_ROOT
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+
+_REPO_ROOT = REPO_ROOT
 
 
 def test_real_scan_over_the_tree_returns_a_typed_outcome_with_real_findings() -> None:

@@ -19,9 +19,9 @@ from dev._paths import REPO_ROOT
 
 from ..security import SecurityOutcome, run_security_scan
 
-_REPO_ROOT = REPO_ROOT
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+
+_REPO_ROOT = REPO_ROOT
 
 
 def _require_uvx() -> None:

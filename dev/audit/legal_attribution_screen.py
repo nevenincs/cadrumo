@@ -8,7 +8,10 @@ an article whose own text reads "Se aprueba el modelo 193", and 296 cited one
 concerning "modelo 123". The evidence gate passed all four, correctly by its
 own contract, because the phrase it checks genuinely is in the file.
 
-Those four have since been corrected and the worklist reads zero. The screen
+Those four were corrected at MODELO level, and for a time this screen read zero
+because modelo-level citations were all it looked at. Three of them survived at
+REVISION level -- 187, 188 and 194 still cite the article approving 193 -- and
+became visible only once the input was widened to both surfaces. The screen
 prints its current counts and freezes no figure in this prose, so a reader is
 told what the catalogue says today rather than what it said at authoring.
 
@@ -29,11 +32,11 @@ pass that produced this screen.
 A SCREEN, not a gate. It was written as one because citations were known-wrong
 and a gate would have landed red on every peer for a defect they did not
 create; correcting them is legal-authority work, needing the right approving
-orden located in the bundled corpus. The worklist is empty now, so the stated
-condition for promoting this to a pytest gate is MET and the promotion is
-simply not taken here -- it is a scope decision with its own row, not a
-consequence of this file being read. The detection is the hard part and it is
-done here.
+orden located in the bundled corpus. The worklist is NOT empty -- widening the
+input to revision-level citations surfaced three survivors -- so the stated
+condition for promoting this to a pytest gate is not met, and promoting it now
+would land red on peers for a defect none of them created. The detection is the
+hard part and it is done here.
 
 MEASURED LIMIT, and the widening that was rejected. This screen catches the
 APPROVAL shape only, and there is a real mis-attribution it does not see: modelo
@@ -64,11 +67,16 @@ from __future__ import annotations
 
 import re
 import sys
+from pathlib import Path
 from typing import Final, NamedTuple
 
 from dev._paths import REPO_ROOT
 
 from .legal_catalogue import load_legal_entries, required_text_by_entry
+
+#: Registry authoring tree, relative to the repository root, matching the
+#: convention the catalogue loader beside this module already uses.
+REGISTRY_DIR: Final = Path("src/cadrumo/_data/registry/aeat")
 
 #: Phrases a Spanish approving provision uses. Matched accent-insensitively
 #: against a folded copy, because the corpus and the catalogue disagree on
@@ -151,21 +159,38 @@ def find_mismatches(
 
 
 def _modelo_refs_from_registry() -> dict[str, tuple[str, ...]]:
-    """Return each registry modelo's declared ``legal_refs``."""
-    from cadrumo.core import NON_REGISTRY_MODELOS, Modelo
-    from cadrumo.domain.calculations.registry import bundled_authority
+    """Return every citation each registry modelo makes, at both levels.
 
-    authority = bundled_authority()
+    Reads BOTH the modelo definition's own ``legal_refs`` and those of each of
+    its revisions. A revision-level citation makes exactly the same attribution
+    claim as a modelo-level one, and reading only the modelo level left three
+    mis-attributions standing after the modelo-level ones were corrected:
+    modelos 187, 188 and 194 each cite an article whose approving text names
+    modelo 193, at revision level, where this screen had never looked. The
+    worklist read zero and was telling the truth about the surface it read.
+
+    Loads through the raw compiler rather than the validated authority. The
+    authority applies registry-wide business-rule validation, so any unrelated
+    refusal anywhere in the tree makes it raise -- and this screen then cannot
+    run at all, precisely when authoring activity is heaviest and a
+    mis-attribution is most likely to be introduced. A screen that reads
+    citations does not need the tree to be valid; it needs the tree to be
+    readable. The catalogue side of this screen already reads authored TOML
+    directly for the same reason.
+
+    The population is every modelo the registry actually defines, taken from the
+    tree itself. No skip list is consulted, because a modelo absent from the
+    registry is absent from the walk rather than something to except.
+    """
+    from cadrumo.domain.calculations.registry._loader import load_registry_tree
+
+    modelos, _catalogues = load_registry_tree(REPO_ROOT / REGISTRY_DIR)
     refs: dict[str, tuple[str, ...]] = {}
-    for member in Modelo:
-        # Skipped by DECLARATION rather than by catching the lookup's refusal:
-        # the codebase already states which members carry no registry definition,
-        # so reading that is precise where a bare except would also swallow a
-        # genuine registry fault and report it as "no refs to check".
-        if member in NON_REGISTRY_MODELOS:
-            continue
-        definition = authority.modelo(member.value)
-        refs[member.value] = tuple(getattr(definition, "legal_refs", ()) or ())
+    for definition in modelos:
+        cited: set[str] = {str(ref) for ref in (getattr(definition, "legal_refs", ()) or ())}
+        for revision in definition.revisions.values():
+            cited.update(str(ref) for ref in (getattr(revision, "legal_refs", ()) or ()))
+        refs[definition.id] = tuple(sorted(cited))
     return refs
 
 

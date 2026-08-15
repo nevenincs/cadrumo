@@ -14,4 +14,5 @@ Submodules
    :maxdepth: 4
 
    cadrumo.domain.justificante._errors
+   cadrumo.domain.justificante._protocols
    cadrumo.domain.justificante._schema

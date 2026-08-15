@@ -26,6 +26,7 @@ Submodules
    cadrumo.application.auth._errors
    cadrumo.application.auth._mutation
    cadrumo.application.auth._operator
+   cadrumo.application.auth._operator_cleanup
    cadrumo.application.auth._operator_probes
    cadrumo.application.auth._operator_results
    cadrumo.application.auth._operator_scope

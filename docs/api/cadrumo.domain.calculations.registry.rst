@@ -126,6 +126,7 @@ Submodules
    cadrumo.domain.calculations.registry._toml_helpers
    cadrumo.domain.calculations.registry._validate
    cadrumo.domain.calculations.registry._validate_algorithms
+   cadrumo.domain.calculations.registry._validate_applicability_section
    cadrumo.domain.calculations.registry._validate_application_links
    cadrumo.domain.calculations.registry._validate_authority_grade
    cadrumo.domain.calculations.registry._validate_cache
@@ -147,6 +148,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_orden_aplicabilidad
    cadrumo.domain.calculations.registry._validate_previous_filing_sources
    cadrumo.domain.calculations.registry._validate_previous_filing_year_coverage
+   cadrumo.domain.calculations.registry._validate_record_design_epochs
    cadrumo.domain.calculations.registry._validate_record_sections
    cadrumo.domain.calculations.registry._validate_reference_checker
    cadrumo.domain.calculations.registry._validate_reference_sections
@@ -156,6 +158,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_relation_sources
    cadrumo.domain.calculations.registry._validate_revision_closure
    cadrumo.domain.calculations.registry._validate_revision_context
+   cadrumo.domain.calculations.registry._validate_revision_id_window_agreement
    cadrumo.domain.calculations.registry._validate_revision_identity
    cadrumo.domain.calculations.registry._validate_revision_rules
    cadrumo.domain.calculations.registry._validate_revision_sections

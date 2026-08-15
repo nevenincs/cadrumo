@@ -32,6 +32,7 @@ Subpackages
    cadrumo.domain.justificante
    cadrumo.domain.manuals
    cadrumo.domain.modelos
+   cadrumo.domain.notifications
    cadrumo.domain.portals
    cadrumo.domain.prorrata_register
    cadrumo.domain.renta

@@ -19,14 +19,14 @@ from ..dead_code import (
     vulture_command,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
 # A real captured two-finding vulture run against this tree.
 _CAPTURED_STDOUT = (
     "src\\cadrumo\\application\\review\\_operator.py:256: unreachable code after 'if' (100% confidence)\n"
     "src\\cadrumo\\application\\storage\\calc_sheets\\_parity_harness.py:94: "
     "unused variable 'cache_discovery' (100% confidence)\n"
 )
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_command_targets_the_configured_paths() -> None:

@@ -15,5 +15,4 @@ Submodules
 
    cadrumo.application.bucket_maintenance._contracts
    cadrumo.application.bucket_maintenance._manifest_digest
-   cadrumo.application.bucket_maintenance._sandbox
    cadrumo.application.bucket_maintenance._service
