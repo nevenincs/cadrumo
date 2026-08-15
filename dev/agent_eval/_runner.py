@@ -1,24 +1,34 @@
 """Runner for the operator golden-task eval.
 
+Boundary posture: ``dev.agent_eval`` is a CONSUMER of the shipped surfaces, never
+a reach around them. Harness-owned material (skills, personas, operator rules)
+comes from the ``cadrumo_harness`` distribution's public facade; taxpayer- and
+application-state material comes from the real ``aeat`` CLI / MCP dispatch the
+caller performs; and this module imports nothing from ``cadrumo``'s adapters,
+application or entrypoints layers.
+
 Pure with respect to the CLI: the set of resolvable command keys is injected by
 the caller (the test wires it from the live CLI schema registry), so this module
 never imports the entrypoints layer. The registry snapshot it reads for the
-provenance dimension is a pure registry read through ``cadrumo.core.resources`` and
-needs no profile or secret storage. The response-provenance dimension follows the
-same injection pattern: the caller dispatches a real ``modelo.work.calculate``
-through the actual CLI/MCP command handling and passes the decoded JSON
-``observations`` rows in; this module only asserts over the already-fetched rows
-and never dispatches the call itself. The narration-faithfulness dimension
-(eval-catalogue category 9) follows the identical pattern one layer further: the
-caller runs the real ``cadrumo.entrypoints.mcp._faithfulness.faithfulness_check``
-against a narration and the captured calculate JSON, and passes the per-step
-verdict in - this module never imports ``entrypoints.mcp`` (that would invert the
-hexagonal direction, since ``entrypoints.cli`` already imports ``cadrumo.agent``) and
-never runs the check itself. The confirmation-gate dimension (eval-catalogue
-category 8) follows the same pattern once more: the caller invokes the real
-``cadrumo.entrypoints.mcp._hitl.confirmation_for_tool`` for a step and hands the
-resulting tier in as a :class:`~agent.eval._models.ConfirmationGateCheck`;
-this module never imports ``entrypoints.mcp`` and never resolves a confirmation
+provenance and verification-contract dimensions is a pure registry read through
+the public ``cadrumo.core.resources`` facade and needs no profile or secret
+storage; it stays a direct read because no CLI verb projects a revision's
+``verification_expectations``, and the CLI-boundary half of the same question is
+already covered by the separate response-provenance dimension below. The
+response-provenance dimension follows the injection pattern: the caller
+dispatches a real ``modelo.work.calculate`` through the actual CLI/MCP command
+handling and passes the decoded JSON ``observations`` rows in; this module only
+asserts over the already-fetched rows and never dispatches the call itself. The
+narration-faithfulness dimension (eval-catalogue category 9) follows the
+identical pattern one layer further: the caller runs the real
+``cadrumo_harness.mcp._faithfulness.faithfulness_check`` against a narration and
+the captured calculate JSON, and passes the per-step verdict in - this module
+never imports the MCP server layer and never runs the check itself. The
+confirmation-gate dimension (eval-catalogue category 8) follows the same pattern
+once more: the caller invokes the real
+``cadrumo_harness.mcp._hitl.confirmation_for_tool`` for a step and hands the
+resulting tier in as a :class:`~dev.agent_eval._models.ConfirmationGateCheck`;
+this module never imports the MCP server layer and never resolves a confirmation
 tier itself. The contradiction dimension (eval-catalogue category 4) follows the
 same pattern: the caller dispatches two independent real CLI/MCP invocations for
 the same target (a readiness-shaped signal and a second, legitimately-blocking
@@ -39,9 +49,9 @@ import tomllib
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 
+from cadrumo_harness import iter_skill_documents
 from pydantic import BaseModel, ConfigDict
 
-from cadrumo.agent import iter_skill_documents
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.core.resources import resources

@@ -232,7 +232,7 @@ def _citation_verification_lines(report: RegistryCitationsVerificationReport) ->
         f"topic_count\t{report.topic_count}",
     ]
     for issue in report.issues:
-        lines.append("\t".join(("issue", issue.level, issue.code, issue.reference_id or "", issue.message)))
+        lines.append("\t".join(("issue", issue.level.value, issue.code, issue.reference_id or "", issue.message)))
     return lines
 
 
@@ -318,7 +318,7 @@ def _manual_verification_lines(report: RegistryManualVerificationReport) -> list
         f"topic_count\t{report.topic_count}",
     ]
     for issue in report.issues:
-        lines.append("\t".join(("issue", issue.level, issue.code, issue.reference_id or "", issue.message)))
+        lines.append("\t".join(("issue", issue.level.value, issue.code, issue.reference_id or "", issue.message)))
     return lines
 
 

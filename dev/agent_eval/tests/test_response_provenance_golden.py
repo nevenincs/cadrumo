@@ -12,7 +12,7 @@ command handling (the identical transport
 :func:`cadrumo.entrypoints.mcp._dispatch.tool_request_argv` projects the
 ``cadrumo_modelo_work_calculate`` MCP tool call onto: ``app modelo work calculate``),
 decodes the JSON RESPONSE payload's ``observations`` rows, and feeds them into
-:func:`cadrumo.agent.eval.run_golden_scenario` via its ``response_observations``
+:func:`dev.agent_eval.run_golden_scenario` via its ``response_observations``
 parameter so the ``response_provenance_present`` dimension asserts over the
 payload the operator actually reads.
 

@@ -240,12 +240,11 @@ def _manifest_casilla_exemption_failure(
 
 
 def validate_export_exemption_declarations(
-    failures: list[str],
     *,
     prefix: str,
     modelo_id: str,
     revision: ModeloRevision,
-) -> None:
+) -> list[str]:
     """Refuse a revision that cannot emit, and every export exemption lacking a reason.
 
     Resolves the revision's export layouts the way snapshot build does — through
@@ -265,12 +264,12 @@ def validate_export_exemption_declarations(
     worklist, and it shrinks only when a layout is authored.
 
     Args:
-        failures: Accumulator the registry validator drains; never raises.
         prefix: Caller-supplied ``modelo N revision R`` diagnostic prefix.
         modelo_id: Modelo identifier, used to scope out cross-modelo binding
             edges whose source casilla ids name a foreign modelo.
         revision: The :class:`ModeloRevision` under validation.
     """
+    failures: list[str] = []
     # Refused on emitting NOTHING, not on lacking a fixed-width layout specifically.
     # Modelo 100 files through an XML dictionary and declares no fichero BOE at all;
     # refusing it for the missing fixed-width layout would report a modelo that CAN
@@ -283,19 +282,19 @@ def validate_export_exemption_declarations(
             "filing capability being absent. Author the revision's export layout from its official "
             "record design.",
         )
-        return
+        return failures
     # Checked BEFORE the manifest, deliberately. A revision carrying neither a
     # layout nor a completeness manifest is the least capable state there is, and
     # ordering the manifest test first would let it return clean.
     manifest = revision.completeness_manifest
     if manifest is None:
-        return
+        return failures
     addressed = _fixed_width_addressed_casillas(revision)
     if addressed is None:
         # An XML-dictionary revision emits, but has no fichero-BOE completeness
         # gate for a casilla to be exempt FROM, so the per-casilla scan below
         # does not apply to it.
-        return
+        return failures
     consumers = _consumption_edges(revision, modelo_id)
 
     casilla_by_id = {casilla.id: casilla for casilla in revision.casillas}
@@ -308,6 +307,7 @@ def validate_export_exemption_declarations(
         )
         if failure is not None:
             failures.append(failure)
+    return failures
 
 
 __all__ = ["validate_export_exemption_declarations"]

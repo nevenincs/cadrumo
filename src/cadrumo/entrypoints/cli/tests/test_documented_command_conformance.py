@@ -750,8 +750,8 @@ def _validate_command(cited: _CitedCommand) -> list[str]:
     # group can only be a subcommand name that does not exist (the shape that
     # let `aeat app ledger payable-invoice` pass while uninvokable after the
     # invoice unification rename). A leftover token that is really the *value*
-    # of a value-consuming option on the resolved group (`aeat app agent
-    # --layout plugin`) is NOT a dead subcommand: the string parser cannot know
+    # of a value-consuming option on the resolved group (`aeat app quickfile
+    # --modelo 130`) is NOT a dead subcommand: the string parser cannot know
     # the group's options, so it over-collects the value into the verb path;
     # exclude those values by consulting the resolved command's real params.
     if hasattr(cmd, "list_commands") and leftover:
@@ -867,33 +867,33 @@ def test_live_introspection_matches_reality() -> None:
 def test_value_consuming_option_value_is_not_a_dead_subcommand() -> None:
     """A value-consuming option's value under a group is not a dead subcommand.
 
-    ``aeat app agent --layout plugin`` cites the real ``--layout`` option of the
-    ``app agent`` group with the value ``plugin``. The string parser cannot know
-    the group's options, so it over-collects ``plugin`` into the verb path and
+    ``aeat app quickfile --modelo 130`` cites the real ``--modelo`` option of the
+    ``app quickfile`` group with the value ``130``. The string parser cannot know
+    the group's options, so it over-collects ``130`` into the verb path and
     longest-prefix resolution leaves it as a leftover under a live group. Without
-    consulting the resolved command's params, the gate wrongly flagged ``plugin``
+    consulting the resolved command's params, the gate wrongly flagged the value
     as a dead subcommand. The validator must treat it as the option value it is,
     while still refusing a genuinely non-existent subcommand under the same
     group.
     """
-    # Precondition: `app agent` is a live group and `--layout` is a real,
+    # Precondition: `app quickfile` is a live group and `--modelo` is a real,
     # value-consuming option of it (guards the fixture against CLI drift).
-    agent = _resolve_path(("app", "agent"))
-    assert agent.resolved_path == ("app", "agent")
-    assert agent.command is not None
-    assert hasattr(agent.command, "list_commands")
-    assert "--layout" in _value_consuming_option_names(agent.command)
+    quickfile = _resolve_path(("app", "quickfile"))
+    assert quickfile.resolved_path == ("app", "quickfile")
+    assert quickfile.command is not None
+    assert hasattr(quickfile.command, "list_commands")
+    assert "--modelo" in _value_consuming_option_names(quickfile.command)
 
-    layout_value = _parse_command_line("aeat app agent --layout plugin")
-    assert layout_value is not None
-    assert layout_value.tokens == ("app", "agent", "--layout", "plugin")
-    assert not _validate_command(layout_value), (
+    option_value = _parse_command_line("aeat app quickfile --modelo 130")
+    assert option_value is not None
+    assert option_value.tokens == ("app", "quickfile", "--modelo", "130")
+    assert not _validate_command(option_value), (
         "the value of a value-consuming option must not be flagged as a dead subcommand"
     )
 
     # A fabricated, genuinely non-existent subcommand under the same live group
     # (with no option consuming it) must still be refused.
-    dead = _parse_command_line("aeat app agent totally-fake-subcommand")
+    dead = _parse_command_line("aeat app quickfile totally-fake-subcommand")
     assert dead is not None
     flagged = _validate_command(dead)
     assert flagged, "a genuinely dead subcommand under a live group must be refused"

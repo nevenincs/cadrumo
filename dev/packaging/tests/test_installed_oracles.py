@@ -1,10 +1,15 @@
 """Bind the installed CLI and MCP tax oracles to one real wheel cohort.
 
-The test builds one committed three-wheel cohort, installs it once with the
-``agent`` extra, records the installed metadata origins and hashes, then runs
-both public tax-work oracles from that same environment. This closes the gap
-where independently passing probes could accidentally exercise different
-virtual environments, rebuilt wheels, or ambient commands.
+The test builds one committed three-wheel cohort plus the sibling
+``cadrumo-harness`` wheel that now carries the MCP server, installs them once
+into a single environment, records the installed metadata origins and hashes,
+then runs both public tax-work oracles from that same environment. This closes
+the gap where independently passing probes could accidentally exercise
+different virtual environments, rebuilt wheels, or ambient commands.
+
+The ``cadrumo-mcp`` console script is a ``cadrumo-harness`` entry point: the
+``cadrumo`` wheel is a pure CLI and ships no agent-harness runtime, so nothing
+here may reach for an extra on the root distribution to obtain the server.
 """
 
 from __future__ import annotations
@@ -12,6 +17,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -24,8 +30,8 @@ from typing import IO, Any, cast
 
 import pytest
 
-from cadrumo.agent import materialise_marketplace
 from cadrumo.core import iter_directory, scan_directory
+from cadrumo_harness import materialise_marketplace
 from dev._paths import REPO_ROOT
 
 from .._hashing import sha256_path
@@ -49,6 +55,13 @@ _DISTRIBUTIONS = (
     "cadrumo-data-manuals",
     "cadrumo-data-official",
 )
+#: The sibling agent-harness distribution. It is versioned independently of the
+#: command/data cohort, so it is probed on its own rather than folded into the
+#: one-version cohort assertions below.
+_HARNESS_DISTRIBUTION = "cadrumo-harness"
+_HARNESS_PROJECT_DIR = Path("src") / "cadrumo-harness"
+_HARNESS_WHEEL_GLOB = "cadrumo_harness-*.whl"
+_REQUIREMENT_NAME_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 _COHORT_PROBE = """
 import json
 import sysconfig
@@ -58,6 +71,7 @@ from pathlib import Path
 names = ("cadrumo", "cadrumo-data-manuals", "cadrumo-data-official")
 distributions = {name: distribution(name) for name in names}
 root = distributions["cadrumo"]
+harness = distribution("cadrumo-harness")
 print(json.dumps({
     "scripts_dir": str(Path(sysconfig.get_path("scripts")).resolve()),
     "versions": {name: item.version for name, item in distributions.items()},
@@ -75,6 +89,15 @@ print(json.dumps({
         for entry in root.entry_points
         if entry.group == "console_scripts"
     },
+    "harness_version": harness.version,
+    "harness_site_root": str(Path(harness.locate_file("")).resolve()),
+    "harness_direct_url": json.loads(harness.read_text("direct_url.json") or "null"),
+    "harness_requirements": list(harness.requires or ()),
+    "harness_console_scripts": {
+        entry.name: entry.value
+        for entry in harness.entry_points
+        if entry.group == "console_scripts"
+    },
 }, sort_keys=True))
 """
 
@@ -86,6 +109,7 @@ class InstalledCohort:
     work_dir: Path
     venv: Path
     root_wheel: Path
+    harness_wheel: Path
     data_wheels: tuple[Path, Path]
     cli: Path
     mcp_server: Path
@@ -100,6 +124,12 @@ class InstalledCohort:
 def _installed_script(venv: Path, name: str) -> Path:
     suffix = ".exe" if sys.platform == "win32" else ""
     return (venv_bin_dir(venv) / f"{name}{suffix}").resolve()
+
+
+def _requirement_name(requirement: str) -> str:
+    """Return the distribution name of one core-metadata ``Requires-Dist`` line."""
+    match = _REQUIREMENT_NAME_PATTERN.match(requirement)
+    return match.group(0).lower().replace("_", "-") if match else ""
 
 
 def _text_sha256(value: str) -> str:
@@ -128,6 +158,26 @@ def _extract_source_commit(repo_root: Path, work_dir: Path, source_commit: str) 
     return extract_root
 
 
+def _build_harness_wheel(work_dir: Path, uv: str, *, build_root: Path) -> Path:
+    """Build the sibling agent-harness wheel from one immutable source tree.
+
+    Mirrors the data companions' build: one ``uv build --project`` per sibling
+    distribution, from the extracted source commit rather than the shared
+    worktree, so the artifact corresponds to a commit. The harness is not a
+    member of the retained three-wheel Python cohort, so it is built into its
+    own output directory and never written beside the cohort manifest.
+    """
+    out_dir = work_dir / "harness-wheel"
+    run_checked(
+        [uv, "build", "--project", str(build_root / _HARNESS_PROJECT_DIR), "--out-dir", str(out_dir)],
+        cwd=build_root,
+    )
+    built = scan_directory(out_dir, pattern=_HARNESS_WHEEL_GLOB)
+    if len(built) != 1:
+        raise SystemExit(f"expected one {_HARNESS_DISTRIBUTION} wheel in {out_dir}; got {[row.name for row in built]!r}")
+    return built[0]
+
+
 @pytest.fixture(scope="module")
 def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohort:
     """Build HEAD once, install one cohort once, and inspect installed metadata."""
@@ -147,12 +197,26 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
             "cadrumo-data-manuals": supplied.sha256["cadrumo-data-manuals"],
             "cadrumo-data-official": supplied.sha256["cadrumo-data-official"],
         }
+        # The harness is not a cohort member, so a supplied cohort directory may
+        # or may not carry its wheel. Prefer the supplied one; otherwise build it
+        # from the SAME source commit the supplied cohort was built from, never
+        # from the shared working tree.
+        prebuilt_harness = scan_directory(cohort_dir, pattern=_HARNESS_WHEEL_GLOB)
+        if len(prebuilt_harness) == 1:
+            harness_wheel = prebuilt_harness[0]
+        else:
+            harness_wheel = _build_harness_wheel(
+                work_dir,
+                uv,
+                build_root=_extract_source_commit(_REPO_ROOT, work_dir, source_commit),
+            )
     else:
         source_commit_result = run_checked(["git", "rev-parse", "HEAD"], cwd=_REPO_ROOT)
         source_commit = source_commit_result.stdout.strip()
         assert len(source_commit) == 40
         build_root = _extract_source_commit(_REPO_ROOT, work_dir, source_commit)
         root_wheel = build_wheel(_REPO_ROOT, work_dir, uv, build_root=build_root)
+        harness_wheel = _build_harness_wheel(work_dir, uv, build_root=build_root)
         built_data_wheels = build_companion_wheels(work_dir, uv, build_root=build_root)
         assert len(built_data_wheels) == 2
         data_wheels = (built_data_wheels[0], built_data_wheels[1])
@@ -218,7 +282,8 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
             "install",
             "--disable-pip-version-check",
             "--no-cache-dir",
-            f"{root_wheel.resolve()}[agent]",
+            str(root_wheel.resolve()),
+            str(harness_wheel.resolve()),
             *(str(wheel.resolve()) for wheel in data_wheels),
         ],
         cwd=work_dir,
@@ -249,6 +314,7 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         work_dir=work_dir,
         venv=venv,
         root_wheel=root_wheel,
+        harness_wheel=harness_wheel,
         data_wheels=data_wheels,
         cli=cli,
         mcp_server=mcp_server,
@@ -280,7 +346,15 @@ def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: Installed
         f"cadrumo-data-official=={version}",
     } <= requirements
     assert metadata["console_scripts"]["aeat"] == "cadrumo.entrypoints.cli:main"
-    assert metadata["console_scripts"]["cadrumo-mcp"] == "cadrumo.entrypoints.mcp:main"
+    # The split is load-bearing, not cosmetic: the command-bearing wheel is a
+    # pure CLI, so the server script must come from the harness distribution and
+    # must NOT also be declared by the root one.
+    assert "cadrumo-mcp" not in metadata["console_scripts"]
+    assert metadata["harness_console_scripts"]["cadrumo-mcp"] == "cadrumo_harness.mcp:main"
+    assert Path(metadata["harness_site_root"]).resolve() == Path(metadata["site_roots"]["cadrumo"]).resolve()
+    assert metadata["harness_direct_url"]["url"] == cohort.harness_wheel.resolve().as_uri()
+    # Dependency direction: the harness consumes the CLI distribution.
+    assert any(_requirement_name(requirement) == "cadrumo" for requirement in metadata["harness_requirements"])
 
     artifacts = {
         "cadrumo": cohort.root_wheel,

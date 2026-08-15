@@ -8,13 +8,13 @@ captured verbatim as a :class:`LiveTrajectory` for scoring against the golden
 scenarios with the faithfulness and confirmation checks applied to OBSERVED
 calls, not caller-injected verdicts.
 
-Hexagonal note: this module never imports ``entrypoints.mcp``. The server is a
-SUBPROCESS reached over stdio through the ``mcp`` client SDK (a lazy,
-extra-gated import mirroring the server's own posture), and the tool-name →
-registry-command-key mapping is caller-supplied — the caller (a test, which may
-import ``entrypoints.mcp``) builds it from the same descriptor source the
-server serves, preserving the injection pattern the runner's docstring
-documents for every other dimension.
+Boundary note: this module never imports the MCP server layer
+(``cadrumo_harness.mcp``). The server is a SUBPROCESS reached over stdio through
+the ``mcp`` client SDK (a lazy, extra-gated import mirroring the server's own
+posture), and the tool-name → registry-command-key mapping is caller-supplied —
+the caller (a test, which may import ``cadrumo_harness.mcp``) builds it from the
+same descriptor source the server serves, preserving the injection pattern the
+runner's docstring documents for every other dimension.
 
 The driver is injectable behind :class:`PersonaDriver`:
 

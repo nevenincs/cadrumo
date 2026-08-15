@@ -146,6 +146,35 @@ def register_lazy_subcommand(group_name: str, lazy: LazySubcommand) -> None:
     _LAZY_REGISTRY.setdefault(group_name, {})[lazy.name] = lazy
 
 
+def materialise_lazy_subcommands(app: typer.Typer) -> None:
+    """Load every lazily-registered subcommand reachable from ``app``.
+
+    Walks ``app`` and its registered Typer groups, draining
+    :data:`_LAZY_REGISTRY` for each group name reached. Idempotent, and
+    terminates on a cyclic group graph via the identity-seen set.
+
+    A consumer that walks the FULL command tree — a conformance gate, the
+    capability projection, a reference generator — must drain the table first,
+    or it silently walks a tree missing whole command families and reports
+    success while blind to them.
+
+    Args:
+        app: Root Typer application whose subtree is materialised in place.
+    """
+    seen: set[int] = set()
+    pending: list[typer.Typer] = [app]
+    while pending:
+        node = pending.pop()
+        if id(node) in seen:
+            continue
+        seen.add(id(node))
+        for lazy in _LAZY_REGISTRY.get(node.info.name or "", {}).values():
+            lazy.load()
+        for group in node.registered_groups:
+            if group.typer_instance is not None:
+                pending.append(group.typer_instance)
+
+
 #: ``Context.meta`` key carrying the unparsed invocation remainder
 #: (subcommand chain + options) captured before click clears
 #: ``ctx.args`` / the protected list ahead of the group-callback run.
@@ -292,5 +321,6 @@ __all__ = [
     "INVOCATION_REMAINDER_META_KEY",
     "CadrumoTyperGroup",
     "LazySubcommand",
+    "materialise_lazy_subcommands",
     "register_lazy_subcommand",
 ]

@@ -127,25 +127,27 @@ def _validate_revision_surface_sections(
         source_refs=source_refs,
         evidence=evidence,
     )
-    validate_relation_section(
-        failures,
-        prefix=prefix,
-        revision=revision,
-        bindings=context.bindings,
-        binding_by_id=context.binding_by_id,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
-        evidence=evidence,
+    failures.extend(
+        validate_relation_section(
+            prefix=prefix,
+            revision=revision,
+            bindings=context.bindings,
+            binding_by_id=context.binding_by_id,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            evidence=evidence,
+        ),
     )
-    validate_dependency_classification_section(
-        failures,
-        prefix=prefix,
-        revision=revision,
-        construct_by_id=context.construct_by_id,
-        relation_by_id=context.relation_by_id,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
-        evidence=evidence,
+    failures.extend(
+        validate_dependency_classification_section(
+            prefix=prefix,
+            revision=revision,
+            construct_by_id=context.construct_by_id,
+            relation_by_id=context.relation_by_id,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            evidence=evidence,
+        ),
     )
     failures.extend(
         validate_applicability_section(
@@ -155,13 +157,14 @@ def _validate_revision_surface_sections(
             legal_refs=legal_refs,
         ),
     )
-    validate_filing_schedule_section(
-        failures,
-        prefix=prefix,
-        revision=revision,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
-        evidence=evidence,
+    failures.extend(
+        validate_filing_schedule_section(
+            prefix=prefix,
+            revision=revision,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            evidence=evidence,
+        ),
     )
     validate_export_layout_section(
         failures,
@@ -174,7 +177,7 @@ def _validate_revision_surface_sections(
         source_refs=source_refs,
         evidence=evidence,
     )
-    validate_export_exemption_declarations(failures, prefix=prefix, modelo_id=modelo_id, revision=revision)
+    failures.extend(validate_export_exemption_declarations(prefix=prefix, modelo_id=modelo_id, revision=revision))
     validate_revision_id_window_agreement(failures, prefix=prefix, revision=revision)
     validate_valid_from_ejercicio_convention(failures, prefix=prefix, revision=revision)
     validate_extraction_profile_section(

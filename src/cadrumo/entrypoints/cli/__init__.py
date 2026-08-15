@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     # Type-checking-only: gives static consumers of the lazy `command_schema_refs`
     # re-export (below, via `__getattr__`) its real signature without paying the
     # eager registry-parse import cost at runtime -- this line never executes.
-    from ._app_contract import command_schema_refs as command_schema_refs
+    from ._command_schema import command_schema_refs as command_schema_refs
     from ._config._google import OAuthClientPayload as OAuthClientPayload
     from ._modelo_rendering import calculation_revision_lines, calculation_revision_payload
 from typer._types import TyperChoice as _TyperChoice
@@ -1139,8 +1139,6 @@ def _app_root(
 
 _LAZY_COMMAND_REGISTRATIONS: tuple[tuple[str, str, str], ...] = (
     ("app", "overview", "._overview"),
-    ("app", "contract", "._app_contract"),
-    ("app", "agent", "._app_agent_workspace"),
     ("app", "diagnostics", "._app_diagnostics"),
     ("app", "ledger", "._ledger"),
     ("app", "live", "._app_live"),
@@ -1212,18 +1210,44 @@ app.add_typer(app_app, name="app")
 _decorate_typer_app(app)
 
 
+def full_command_tree() -> click.Command:
+    """Materialise the whole CLI as one fully-loaded Click command tree.
+
+    Drains every lazily-registered subtree reachable from :data:`app`, converts
+    the root Typer application to its Click command, and pins the root name to
+    the ``aeat`` executable token so a walker reports operator-facing paths.
+
+    Callers outside this distribution — a conformance gate over the shipped
+    operator harness, a reference generator, a capability projection — need the
+    COMPLETE tree, and the lazy registry means the naively converted root is
+    missing whole command families. This is the one supported way to obtain the
+    complete tree; nothing outside this package reads the lazy registry.
+
+    Returns:
+        The root Click command with every subtree loaded.
+    """
+    from typer.main import get_command
+
+    from ._command_suggestions import materialise_lazy_subcommands
+
+    materialise_lazy_subcommands(app)
+    root = get_command(app)
+    root.name = app.info.name or _PRODUCT_IDENTITY.cli_executable
+    return root
+
+
 def __getattr__(name: str) -> object:
     """Lazily resolve re-exported names without importing heavy submodules eagerly.
 
-    ``_app_contract``, ``_config._google``, and ``_modelo_rendering`` are
+    ``_command_schema``, ``_config._google``, and ``_modelo_rendering`` are
     kept off the eager import path precisely so constructing the Cadrumo CLI
     app object never pulls the registry-dependent command tree; a
-    top-level ``from ._app_contract import command_schema_refs`` (and
+    top-level ``from ._command_schema import command_schema_refs`` (and
     siblings) would defeat that and reintroduce the startup cost
     :mod:`._stdio` / the lazy command-tree gate guard against.
     """
     if name == "command_schema_refs":
-        from ._app_contract import command_schema_refs
+        from ._command_schema import command_schema_refs
 
         return command_schema_refs
     if name == "OAuthClientPayload":
@@ -1374,6 +1398,7 @@ __all__ = [
     "calculation_revision_lines",
     "calculation_revision_payload",
     "command_schema_refs",
+    "full_command_tree",
     "main",
     "resolve_cli_precondition_action",
 ]

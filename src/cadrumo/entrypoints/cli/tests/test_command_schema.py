@@ -1,4 +1,4 @@
-"""Exact production reconciliation for the ``aeat app contract`` schema surface."""
+"""Exact production reconciliation for the CLI result-schema projection."""
 
 from __future__ import annotations
 
@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 
 from ....core import scan_directory
-from ....core.json_contract import SCHEMA_REGISTRY, NoticeSeverity
+from ....core.json_contract import SCHEMA_REGISTRY
 from ...schema_surface import RESULT_SCHEMA_MODULES
-from .. import _app_contract
+from .. import _command_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -43,25 +43,10 @@ def test_canonical_schema_module_declaration_has_every_in_tree_schema_owner() ->
 
 
 def test_declared_schema_modules_reconcile_exactly_to_registry_projection() -> None:
-    failures = _app_contract._ensure_result_schemas_registered()
+    failures = _command_schema._ensure_result_schemas_registered()
     assert failures == ()
 
-    references = _app_contract.command_schema_refs()
+    references = _command_schema.command_schema_refs()
     registry_references = {(command, schema.__name__) for command, schema in SCHEMA_REGISTRY.items()}
     assert {(reference.command, reference.schema_name) for reference in references} == registry_references
     assert {schema.__module__ for schema in SCHEMA_REGISTRY.values()} == set(RESULT_SCHEMA_MODULES)
-
-
-def test_schema_module_load_failure_projects_typed_locale_notice() -> None:
-    failure = _app_contract.SchemaModuleLoadFailure(
-        module=RESULT_SCHEMA_MODULES[0],
-        error="ImportError: E_SCHEMA_OWNER_UNAVAILABLE",
-    )
-
-    notices = _app_contract._schema_load_notices((failure,))
-
-    assert len(notices) == 1
-    notice = notices[0]
-    assert notice.severity is NoticeSeverity.WARNING
-    assert notice.code == "contract.schema_module_load_failed"
-    assert notice.context == {"module": failure.module, "error": failure.error}

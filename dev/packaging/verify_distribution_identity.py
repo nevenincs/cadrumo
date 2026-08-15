@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Final
 
 import cadrumo
-from cadrumo.agent import (
+from cadrumo_harness import (
     PRODUCT_AUTHOR_NAME,
     iter_operator_rules,
     iter_personas,
@@ -38,6 +38,11 @@ from dev._paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
 _REQUIRED_HARNESS_PREFIX: Final[str] = "cadrumo-"
+#: The agent harness (operator rules, personas, skills, and the MCP server) is a
+#: sibling distribution with its own source root; the CLI package tree under
+#: ``src/cadrumo`` no longer carries any of it.
+_HARNESS_SOURCE_ROOT: Final[Path] = Path("src") / "cadrumo-harness" / "src"
+_HARNESS_PYTHON_PACKAGE: Final[str] = "cadrumo_harness"
 _MARKDOWN_SUFFIX: Final[str] = ".md"
 _EXPECTED_PRODUCT_IDENTITY: Final[dict[str, str]] = {
     "human_executable": "aeat",
@@ -284,23 +289,24 @@ import json
 from pathlib import Path
 
 import cadrumo
+import cadrumo_harness
 
-from cadrumo.entrypoints.mcp._dispatch import tool_name_for_command
-from cadrumo.entrypoints.mcp._corpus_tools import CORPUS_SEARCH_TOOL, build_corpus_search_tool
-from cadrumo.entrypoints.mcp._harness_tools import (
+from cadrumo_harness.mcp._dispatch import tool_name_for_command
+from cadrumo_harness.mcp._corpus_tools import CORPUS_SEARCH_TOOL, build_corpus_search_tool
+from cadrumo_harness.mcp._harness_tools import (
     HARNESS_LOAD_TOOL,
     WHOAMI_TOOL,
     build_harness_floor_tool,
     build_whoami_tool,
 )
-from cadrumo.entrypoints.mcp._prompts import ORIENTATION_PROMPT_NAME, build_prompt_catalogue, prompt_document
-from cadrumo.entrypoints.mcp._resources import (
+from cadrumo_harness.mcp._prompts import ORIENTATION_PROMPT_NAME, build_prompt_catalogue, prompt_document
+from cadrumo_harness.mcp._resources import (
     list_harness_resource_templates,
     list_harness_resources,
 )
-from cadrumo.entrypoints.mcp._server import build_meta_sdk_tools, build_sdk_tools, build_server
-from cadrumo.entrypoints.mcp._terminology_tools import TERMINOLOGY_SEARCH_TOOL, build_terminology_search_tool
-from cadrumo.entrypoints.mcp._tools import build_tool_descriptors
+from cadrumo_harness.mcp._server import build_meta_sdk_tools, build_sdk_tools, build_server
+from cadrumo_harness.mcp._terminology_tools import TERMINOLOGY_SEARCH_TOOL, build_terminology_search_tool
+from cadrumo_harness.mcp._tools import build_tool_descriptors
 
 prompts = []
 for prompt in build_prompt_catalogue():
@@ -383,6 +389,7 @@ model_facing_descriptions.extend({
 } for row in list_harness_resource_templates())
 print(json.dumps({
     "package_file": str(Path(cadrumo.__file__).resolve()),
+    "harness_package_file": str(Path(cadrumo_harness.__file__).resolve()),
     "mcp_server": build_server(descriptors).name,
     "orientation_prompt": ORIENTATION_PROMPT_NAME,
     "sample_tool": tool_name_for_command("modelo.work.calculate"),
@@ -1070,7 +1077,12 @@ def _mcp_projection(repo_root: Path, runtime_root: Path) -> dict[str, object]:
         for key, value in os.environ.items()
         if not key.startswith(PRODUCT_IDENTITY.environment_prefix) and not key.startswith("PYTHON")
     }
-    env["PYTHONPATH"] = str(repo_root / "src")
+    # Both source roots: the MCP server now lives in the sibling cadrumo-harness
+    # distribution, so the projection must import THIS revision of each tree
+    # rather than whatever copy the active environment happens to carry.
+    env["PYTHONPATH"] = os.pathsep.join(
+        (str(repo_root / "src"), str(repo_root / _HARNESS_SOURCE_ROOT)),
+    )
     env[f"{PRODUCT_IDENTITY.environment_prefix}LOCAL_STORAGE_ROOT"] = str(runtime_root)
     completed = subprocess.run(  # noqa: S603 - fixed current-interpreter probe.
         [sys.executable, "-c", _MCP_PROJECTION_SCRIPT],
@@ -1095,6 +1107,11 @@ def _mcp_projection(repo_root: Path, runtime_root: Path) -> dict[str, object]:
         repo_root / "src" / PRODUCT_IDENTITY.python_package
     ):
         raise ValueError("MCP projection imported Cadrumo from a different repository revision")
+    harness_package_file = document.get("harness_package_file")
+    if not isinstance(harness_package_file, str) or not Path(harness_package_file).resolve(
+        strict=True
+    ).is_relative_to(repo_root / _HARNESS_SOURCE_ROOT / _HARNESS_PYTHON_PACKAGE):
+        raise ValueError("MCP projection imported the Cadrumo harness from a different repository revision")
     return document
 
 
@@ -1533,8 +1550,10 @@ def _model_facing_failure_lines(check: ModelFacingDescriptionCheck) -> tuple[str
             "removed. If that change is intended, re-pin "
             f"{_PIN_CONSTANT_NAME} in {_PIN_LOCATOR} to the observed digest, in the SAME commit as the "
             "change that moved the surface. Re-pin ONLY from a tree whose description sources are clean "
-            "against HEAD (src/cadrumo/locales, src/cadrumo/entrypoints, src/cadrumo/agent, "
-            "src/cadrumo/_data/agent, packaging/mcpb) - a digest computed over uncommitted work bakes that "
+            "against HEAD (src/cadrumo/locales, src/cadrumo/entrypoints, "
+            "src/cadrumo-harness/src/cadrumo_harness, packaging/mcpb) - the harness source root covers the "
+            "authored operator data, the workspace generators, and the MCP server that projects them. "
+            "A digest computed over uncommitted work bakes that "
             "work into a committed gate and is wrong the moment it lands.",
         )
     return tuple(lines)

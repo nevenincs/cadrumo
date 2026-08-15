@@ -15,7 +15,7 @@ so casilla 07 resolves to the same 1.600,00 EUR oracle figure
 ``test_modelo_130_value_oracle.py`` grounds, runs the real
 ``cadrumo.entrypoints.mcp._faithfulness.faithfulness_check`` against real narration
 text and the captured calculate JSON, and feeds the verdict into
-:func:`cadrumo.agent.eval.run_golden_scenario` via its
+:func:`dev.agent_eval.run_golden_scenario` via its
 ``narration_faithfulness_checks`` parameter so the pass/fail composition itself
 proves the two-part posture: advisory off the handoff path, hard block on it.
 

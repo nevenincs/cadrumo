@@ -23,7 +23,8 @@ lifecycle sequencing / cross-surface contradiction handling: when one surface
 correct move is to stop and report the disagreement — never to retry past it with a
 further mutating tool call. This is the enforcement surface for the
 ``cadrumo-operator-lifecycle-ordering`` rule's "Contradictions between surfaces are a stop, not
-a retry" section (``src/cadrumo/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md``). This
+a retry" section
+(``src/cadrumo-harness/src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md``). This
 pair follows the standalone ``check_*_scenario`` shape used by
 :class:`ExitCodeScenario`/:class:`ExitCodeVerdict` and
 :class:`UnderDeclarationScenario`/:class:`UnderDeclarationVerdict` rather
@@ -117,14 +118,14 @@ class NarrationFaithfulness(BaseModel):
 
     An operator-facing narration must not state a numeric value absent from
     the tool result it describes. This model deliberately mirrors
-    :class:`entrypoints.mcp._faithfulness.FaithfulnessResult` field-for-field
+    :class:`cadrumo_harness.mcp._faithfulness.FaithfulnessResult` field-for-field
     (``faithful``, ``blocking``, ``flagged_values``, the derived ``blocks``
-    property) rather than importing that class: ``cadrumo.agent`` is a read-accessor
-    package consumed BY ``cadrumo.entrypoints`` (e.g.
-    ``entrypoints.cli._app_agent_workspace`` imports ``agent.materialise_workspace``),
-    so ``agent.eval`` importing back from ``entrypoints.mcp`` would invert the
-    hexagonal direction and create a package cycle. The caller (a test, or a
-    future live harness driver) invokes the real ``faithfulness_check`` and hands
+    property) rather than importing that class: ``dev.agent_eval`` is a CONSUMER of
+    the shipped surfaces - the ``cadrumo`` CLI and the ``cadrumo_harness``
+    distribution built on top of it - and reaching into the MCP server's private
+    modules for a verdict shape would bind this scorer to one transport's
+    internals instead of to the surface it evaluates. The caller (a test, or a
+    live harness driver) invokes the real ``faithfulness_check`` and hands
     its verdict fields in per step - this module never performs the check itself,
     mirroring the injection pattern ``response_observations`` already
     established for the response-provenance dimension.
@@ -154,13 +155,14 @@ class NarrationFaithfulness(BaseModel):
 
 
 class ConfirmationTier(StrEnum):
-    """Mirror of ``cadrumo.entrypoints.mcp._hitl.ConfirmationPolicy``'s value set.
+    """Mirror of ``cadrumo_harness.mcp._hitl.ConfirmationPolicy``'s value set.
 
-    Declared locally rather than imported, for the identical hexagonal-direction
-    reason documented on :class:`NarrationFaithfulness`: ``cadrumo.agent`` is a
-    read-accessor package consumed BY ``cadrumo.entrypoints``, so ``agent.eval``
-    importing back from ``entrypoints.mcp`` would invert the direction and create
-    a package cycle. The three members mirror ``ConfirmationPolicy`` byte-for-byte
+    Declared locally rather than imported, for the identical consumer-boundary
+    reason documented on :class:`NarrationFaithfulness`: ``dev.agent_eval``
+    consumes the ``cadrumo`` CLI and the ``cadrumo_harness`` distribution through
+    their public surfaces, so binding a scoring model to an MCP server private
+    module would couple the eval to one transport's internals. The three members
+    mirror ``ConfirmationPolicy`` byte-for-byte
     (``auto_approve`` / ``confirm`` / ``block``) so a caller-injected real verdict
     (``ConfirmationPolicy.CONFIRM.value``) round-trips into this enum unchanged.
     """
@@ -181,7 +183,7 @@ class ConfirmationGateCheck(BaseModel):
 
     ``actual_tier`` is caller-injected (mirroring ``NarrationFaithfulness``): the
     caller invokes the real ``confirmation_for_tool`` from
-    ``cadrumo.entrypoints.mcp._hitl`` against the step's real annotations and hands
+    ``cadrumo_harness.mcp._hitl`` against the step's real annotations and hands
     the resulting tier in as a :class:`ConfirmationTier`. This model performs no
     check itself.
 
@@ -544,8 +546,8 @@ class LiveToolCallRecord(BaseModel):
     and records every ``tools/call`` round-trip verbatim. ``command_key`` is the
     registry command key the tool name maps back to, resolved through a
     caller-supplied mapping (the caller builds it from the same descriptor
-    source the server serves; this package never imports ``entrypoints.mcp``,
-    preserving the hexagonal direction the runner's docstring documents).
+    source the server serves; this package never imports the MCP server layer,
+    preserving the consumer boundary the runner's docstring documents).
 
     Attributes:
         tool_name: The MCP tool name as advertised by ``tools/list``.

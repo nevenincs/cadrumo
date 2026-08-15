@@ -11,6 +11,7 @@ from ....application.registry import (
     RegistryCorpusIssueProjection,
     RegistryTopicProjection,
 )
+from ....core.errors import BaseSeverity
 from .._registry_corpus_payloads import CitationListResult, CitationShowResult, CitationVerifyResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -50,7 +51,7 @@ def test_citation_payloads_preserve_typed_application_projections() -> None:
         cite="Ley 37/1992, art. 1",
     )
     issue = RegistryCorpusIssueProjection(
-        level="error",
+        level=BaseSeverity.ERROR,
         code="legal-catalogue-validation",
         message="reference is missing a corpus document",
         reference_id="ley-37-1992:art-1",
@@ -74,10 +75,17 @@ def test_citation_payloads_reject_malformed_nested_legal_rows() -> None:
         CitationListResult.model_validate({"reference_count": 1, "topic_count": 0, "references": [reference]})
 
     issue = RegistryCorpusIssueProjection(
-        level="error",
+        level=BaseSeverity.ERROR,
         code="legal-catalogue-validation",
         message="reference is missing a corpus document",
     ).model_dump(mode="json")
+    # ``model_dump(mode="json")`` renders the strict enum field to its plain
+    # JSON string value; restore the enum instance here so the malformed-row
+    # assertion below still refuses for the field this test targets (a blank
+    # ``message``), not for an incidental ``level`` type mismatch introduced
+    # by the dict round-trip. ``model_validate_json`` (real JSON text) accepts
+    # the string form directly -- only the python-dict path needs this.
+    issue["level"] = BaseSeverity.ERROR
     issue["message"] = ""
     with pytest.raises(ValidationError):
         CitationVerifyResult.model_validate(

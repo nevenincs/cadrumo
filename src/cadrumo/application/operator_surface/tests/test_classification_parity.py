@@ -64,7 +64,7 @@ def test_open_world_covers_the_sede_family_and_no_local_verb() -> None:
         "modelo.reconcile.pull",
     ):
         assert classify_command(key, mutability=OperatorMutability.READ_ONLY).open_world, key
-    for key in ("ledger.add", "modelo.work.calculate", "overview.status", "contract"):
+    for key in ("ledger.add", "modelo.work.calculate", "overview.status", "review.queue"):
         assert not classify_command(key, mutability=OperatorMutability.LOCAL_STATE_MUTATING).open_world, key
 
 

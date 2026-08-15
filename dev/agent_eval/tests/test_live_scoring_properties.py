@@ -15,7 +15,7 @@ its injected faithfulness port, not off any verdict the scorer computed.
 ``_ObservedFaithfulnessCheck`` is an implementation of the caller-injected
 ``FaithfulnessCheckFn`` port, not a double of the code under test. The scorer's
 own contract is that the caller supplies this callable
-(``cadrumo.agent.eval`` never imports ``entrypoints.mcp``), so providing one
+(``dev.agent_eval`` never imports the MCP server layer), so providing one
 here is the architecture's intended seam; the assertions read the corpus it was
 handed rather than any answer it returned.
 """

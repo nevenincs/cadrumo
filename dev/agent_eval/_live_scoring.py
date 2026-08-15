@@ -5,11 +5,11 @@ a DECLARED trajectory's properties, this module asserts the OBSERVED one — the
 keys a live subagent persona actually issued, the narrations it actually
 produced, and the elicitation answers it actually gave. Every check that
 belongs to another layer stays caller-injected, preserving this package's
-hexagonal injection pattern (the runner's docstring is the authority): the
-faithfulness function arrives as a callable the caller imports from
-``entrypoints.mcp``, and the live-write / handoff leaf sets arrive as data
-because their single declarations live in the server layer this package must
-not import.
+consumer boundary (the runner's docstring is the authority): the
+faithfulness function arrives as a callable the caller imports from the MCP
+server layer (``cadrumo_harness.mcp``), and the live-write / handoff leaf sets
+arrive as data because their single declarations live in that server layer this
+package must not import.
 
 A live model's path is legitimately non-deterministic in its READS, so the
 trajectory dimension is coverage, not equality: the scenario's
@@ -291,7 +291,7 @@ def score_live_trajectory(
         valid_commands: The resolvable registry command keys, injected from the
             live CLI schema registry by the caller.
         faithfulness_check_fn: The REAL faithfulness check, injected by the
-            caller (this package never imports ``entrypoints.mcp``).
+            caller (this package never imports ``cadrumo_harness.mcp``).
         live_write_leaves: The forbidden AEAT live-write leaf verbs, injected
             from their single server-layer declaration.
         handoff_leaves: The irreversible filing-handoff leaf verbs, injected
@@ -617,8 +617,8 @@ class IdentityStateProtocol(Protocol):
     """The per-session identity-read state the gate mutates, caller-injected.
 
     Structurally satisfied by
-    ``entrypoints.mcp._identity_gate.SessionIdentityState``; declared here so this
-    package never imports ``entrypoints.mcp`` (the hexagonal direction the
+    ``cadrumo_harness.mcp._identity_gate.SessionIdentityState``; declared here so
+    this package never imports ``cadrumo_harness.mcp`` (the consumer boundary the
     runner's docstring documents), mirroring :class:`FaithfulnessCheckFn`.
     """
 
@@ -708,7 +708,7 @@ def score_identity_trajectory(
     (post-switch) identity. A command is classified a MUTATION by the same gate - a
     freshly-armed session refuses it - so ``mutating_step_present`` needs no
     separate mutability oracle. The gate arrives injected (this package never
-    imports ``entrypoints.mcp``), so the dimension scores the real decision, never
+    imports ``cadrumo_harness.mcp``), so the dimension scores the real decision, never
     a re-implementation.
 
     Args:

@@ -10,7 +10,7 @@ legitimately fails cross-period clean-state (the same reproduction as
 in ``entrypoints/cli/tests/test_modelo_work_natural_key.py``: an M130 quarter with
 no prior filed M100 for the preceding year), decodes the real stdout envelope, and
 feeds the real exit code plus the real envelope into
-:func:`cadrumo.agent.eval.check_exit_code_scenario`. No mocks: the exit code, the
+:func:`dev.agent_eval.check_exit_code_scenario`. No mocks: the exit code, the
 envelope shape, the ``status``, and the continuation-command citation are all
 real CLI/registry output.
 """

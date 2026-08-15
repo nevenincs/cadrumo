@@ -30,12 +30,13 @@ from typing import Any
 
 import pytest
 
-from ...application.operator_surface import (
+from cadrumo.application.operator_surface import (
     CommandSchemaRef,
     build_operator_surface_manifest,
     get_operator_surface_contract,
 )
-from ...core.json_contract import ENVELOPE_SCHEMA_VERSION, Notice, SchemaEnvelope
+from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION, Notice, SchemaEnvelope
+
 from .. import iter_operator_rules, iter_personas, iter_skill_documents
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -86,8 +87,8 @@ def _valid_command_paths() -> frozenset[str]:
 
 def _command_schema_refs_via_cli() -> tuple[CommandSchemaRef, ...]:
     # Reuse the CLI's own payload-discovery + projection so the gate sees exactly
-    # the surface an operator's `aeat app contract` would.
-    from ...entrypoints.cli import command_schema_refs
+    # the registered command surface the capability manifest reports.
+    from cadrumo.entrypoints.cli import command_schema_refs
 
     return command_schema_refs()
 
@@ -114,27 +115,9 @@ def _command_path_from_invocation(invocation: str) -> str | None:
 @functools.lru_cache(maxsize=1)
 def _live_root_command() -> Any:
     """Materialise the full live Click command tree (all lazy subtrees loaded)."""
-    from typer.main import get_command
+    from cadrumo.entrypoints.cli import full_command_tree
 
-    from ...entrypoints.cli import app as live_app
-    from ...entrypoints.cli._command_suggestions import _LAZY_REGISTRY
-
-    seen: set[int] = set()
-    pending = [live_app]
-    while pending:
-        node = pending.pop()
-        if id(node) in seen:
-            continue
-        seen.add(id(node))
-        for lazy in _LAZY_REGISTRY.get(node.info.name or "", {}).values():
-            lazy.load()
-        for group in node.registered_groups:
-            if group.typer_instance is not None:
-                pending.append(group.typer_instance)
-
-    root = get_command(live_app)
-    root.name = live_app.info.name or "aeat"
-    return root
+    return full_command_tree()
 
 
 def _flags_of(command: Any) -> frozenset[str]:
