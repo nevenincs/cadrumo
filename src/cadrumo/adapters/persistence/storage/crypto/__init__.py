@@ -111,6 +111,7 @@ def __dir__() -> list[str]:
     """Report the full public surface, including names not yet resolved."""
     return sorted(set(__all__) | set(globals()))
 
+
 __all__ = [
     "GCM_TAG_SIZE",
     "KEY_SIZE",

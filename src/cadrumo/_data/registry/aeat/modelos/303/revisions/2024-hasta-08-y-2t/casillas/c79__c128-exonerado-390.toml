@@ -20,6 +20,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f039"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -36,6 +37,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f024"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -53,6 +55,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f025"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -70,6 +73,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f028"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -87,6 +91,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f029"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -104,6 +109,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f034"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -121,6 +127,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f041"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -138,6 +145,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f019"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -157,6 +165,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f020"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -176,6 +185,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f021"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -195,6 +205,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f022"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -214,6 +225,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f026"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -231,6 +243,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f027"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -248,6 +261,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f035"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -265,6 +279,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f036"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -282,6 +297,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f037"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -299,6 +315,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f038"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -316,6 +333,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f040"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -333,6 +351,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f023"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -352,6 +371,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f030"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -369,6 +389,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f031"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -386,6 +407,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f032"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"
@@ -403,6 +425,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-early", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2024-early.dp30304.f033"]
 
 [revisions."2024-hasta-08-y-2t".casillas.constraints]
 sign = "non_negative"

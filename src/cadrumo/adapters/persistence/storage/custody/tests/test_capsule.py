@@ -359,7 +359,10 @@ def test_discovery_refuses_a_retired_manifest_by_stat_only_without_opening_its_b
             opened_retired_paths.append(os.fspath(candidate))
 
     sys.addaudithook(record_open)
-    assert detect_retired_profile_custody_member_paths(tmp_path / "buckets") == ("manifest.toml",)
+    assert detect_retired_profile_custody_member_paths(
+        tmp_path / "buckets",
+        keystore_root=tmp_path / "keystore",
+    ) == ("manifest.toml",)
     with pytest.raises(ProfileCustodyRefusedError) as captured:
         list_current_profile_custody_capsule_ids(settings=settings)
 
@@ -372,9 +375,88 @@ def test_discovery_refuses_a_retired_manifest_by_stat_only_without_opening_its_b
         "refusal": "LEGACY_CUSTODY_DETECTED",
         "recovery_guidance": ("DESTRUCTIVE_RESET", "REENROLL_PROFILE"),
         "capsules_root": str(tmp_path / "buckets"),
+        "keystore_root": str(tmp_path / "keystore"),
         "retired_member_paths": ("manifest.toml",),
     }
     assert opened_retired_paths == []
+
+
+def test_discovery_refuses_a_retired_keystore_member_by_stat_only_without_opening_its_bytes(tmp_path: Path) -> None:
+    """A retired shared-master wrapped DEK is recognised outside the buckets tree.
+
+    The keystore is a sibling of ``buckets/``, so this store's buckets tree is
+    entirely current-format and carries no retired member at all.  Only the
+    keystore holds retired key material, which is the case a buckets-only
+    detector reported as a clean, profile-less store.
+    """
+    settings = _settings(tmp_path)
+    retired = tmp_path / "keystore" / str(_PROFILE_ID) / "bucket.dek.json"
+    retired.parent.mkdir(parents=True)
+    retired.write_bytes(b"retired wrapped DEK bytes must never be parsed")
+    opened_retired_paths: list[object] = []
+
+    def record_open(event: str, arguments: tuple[object, ...]) -> None:
+        if event != "open" or not arguments:
+            return
+        candidate = arguments[0]
+        if isinstance(candidate, (str, bytes, os.PathLike)) and os.fspath(candidate) == os.fspath(retired):
+            opened_retired_paths.append(os.fspath(candidate))
+
+    sys.addaudithook(record_open)
+    assert detect_retired_profile_custody_member_paths(
+        tmp_path / "buckets",
+        keystore_root=tmp_path / "keystore",
+    ) == ("bucket.dek.json",)
+    with pytest.raises(ProfileCustodyRefusedError) as captured:
+        list_current_profile_custody_capsule_ids(settings=settings)
+
+    assert captured.value.refusal is ProfileCustodyRefusal.LEGACY_CUSTODY_DETECTED
+    assert captured.value.recovery_guidance == (
+        ProfileCustodyRecoveryGuidance.DESTRUCTIVE_RESET,
+        ProfileCustodyRecoveryGuidance.REENROLL_PROFILE,
+    )
+    assert captured.value.context == {
+        "refusal": "LEGACY_CUSTODY_DETECTED",
+        "recovery_guidance": ("DESTRUCTIVE_RESET", "REENROLL_PROFILE"),
+        "capsules_root": str(tmp_path / "buckets"),
+        "keystore_root": str(tmp_path / "keystore"),
+        "retired_member_paths": ("bucket.dek.json",),
+    }
+    assert opened_retired_paths == []
+
+
+def test_a_current_store_with_live_keystore_sidecars_is_not_refused(tmp_path: Path) -> None:
+    """The other half of the detector: it must refuse a retired store and nothing else.
+
+    A detector that refuses every store is as broken as one that refuses none,
+    so this exercises a published capsule whose keystore carries the LIVE
+    sidecars (the persisted session record and the login-throttle cache) and
+    asserts discovery still returns that capsule.
+    """
+    settings = _settings(tmp_path)
+    envelope = _password_envelope()
+    publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=uuid4(),
+        publication_kind="enroll",
+        password_envelope=envelope,
+        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+        data_files={"state/current.bin": b"current encrypted payload"},
+        settings=settings,
+    )
+    live_keystore = tmp_path / "keystore" / str(_PROFILE_ID)
+    live_keystore.mkdir(parents=True, exist_ok=True)
+    (live_keystore / "session.v2.json").write_bytes(b"{}")
+    (live_keystore / "login-throttle.json").write_bytes(b"{}")
+
+    assert (
+        detect_retired_profile_custody_member_paths(
+            tmp_path / "buckets",
+            keystore_root=tmp_path / "keystore",
+        )
+        == ()
+    )
+    assert list_current_profile_custody_capsule_ids(settings=settings) == (_PROFILE_ID,)
 
 
 def test_discovery_refuses_an_invalid_current_marker_instead_of_skipping_it(tmp_path: Path) -> None:

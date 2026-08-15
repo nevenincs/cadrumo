@@ -50,6 +50,7 @@ if TYPE_CHECKING:
     )
     from ._capsule_discovery import (
         PROFILE_CUSTODY_RETIRED_BUCKET_MEMBER_PATHS,
+        PROFILE_CUSTODY_RETIRED_KEYSTORE_MEMBER_PATHS,
         detect_retired_profile_custody_member_paths,
         refuse_retired_profile_custody_paths,
     )
@@ -233,6 +234,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "PROFILE_CUSTODY_RECOVERY_MAX_BYTES": "._recovery",
     "PROFILE_CUSTODY_RECOVERY_SCHEMA_VERSION": "._recovery",
     "PROFILE_CUSTODY_RETIRED_BUCKET_MEMBER_PATHS": "._capsule_discovery",
+    "PROFILE_CUSTODY_RETIRED_KEYSTORE_MEMBER_PATHS": "._capsule_discovery",
     "PROFILE_CUSTODY_SENTINEL_FILENAME": "._sentinel",
     "PROFILE_CUSTODY_SENTINEL_MAX_BYTES": "._sentinel",
     "ProfileCustodyCapsuleLabel": "._capsule_records",
@@ -395,6 +397,7 @@ __all__ = [
     "PROFILE_CUSTODY_RECOVERY_MAX_BYTES",
     "PROFILE_CUSTODY_RECOVERY_SCHEMA_VERSION",
     "PROFILE_CUSTODY_RETIRED_BUCKET_MEMBER_PATHS",
+    "PROFILE_CUSTODY_RETIRED_KEYSTORE_MEMBER_PATHS",
     "PROFILE_CUSTODY_SENTINEL_FILENAME",
     "PROFILE_CUSTODY_SENTINEL_MAX_BYTES",
     "PROFILE_SESSION_KEYCHAIN_SERVICE",

@@ -51,34 +51,59 @@ capsules have no manifest member: their only discovery authority is the
 commit marker and their label is a non-authoritative current projection.
 """
 
+PROFILE_CUSTODY_RETIRED_KEYSTORE_MEMBER_PATHS: tuple[str, ...] = ("bucket.dek.json",)
+"""Closed, exact retired members checked below every keystore candidate.
 
-def detect_retired_profile_custody_member_paths(capsules_root: Path) -> tuple[str, ...]:
-    """Return exact retired member names found by the anchored, no-open detector."""
-    if not os.path.lexists(capsules_root):
-        return ()
-    return _anchored_retired_bucket_member_paths(capsules_root)
+``bucket.dek.json`` was the shared-master-wrapped bucket data-encryption key.
+Its writer is gone, so no current-format store can produce one, and a store
+still carrying it holds ciphertext whose only key route is the retired
+shared-master schedule.  That is a re-enrolment case, never a read: the
+detector recognises the name and nothing else.
+
+The keystore root is a SIBLING of the buckets root, never nested inside a
+bucket, so a store can carry retired key material with an entirely current
+buckets tree.  Checking only below the buckets root left exactly that store
+undetected.
+"""
 
 
-def refuse_retired_profile_custody_paths(capsules_root: Path) -> None:
+def detect_retired_profile_custody_member_paths(capsules_root: Path, *, keystore_root: Path) -> tuple[str, ...]:
+    """Return exact retired member names found by the anchored, no-open detector.
+
+    Both stores that can hold retired material are scanned: the buckets root
+    for the retired plaintext manifest, and the sibling keystore root for
+    retired shared-master key material.  Either root may be absent; an absent
+    root simply contributes nothing.
+    """
+    detected = set(_anchored_retired_member_paths(capsules_root, PROFILE_CUSTODY_RETIRED_BUCKET_MEMBER_PATHS))
+    detected.update(_anchored_retired_member_paths(keystore_root, PROFILE_CUSTODY_RETIRED_KEYSTORE_MEMBER_PATHS))
+    return tuple(sorted(detected))
+
+
+def refuse_retired_profile_custody_paths(capsules_root: Path, *, keystore_root: Path) -> None:
     """Raise the one destructive-reset refusal when a retired member exists.
 
     The detector intentionally reports no parsed attributes and no candidate
     identity.  A caller can act only on the stable refusal and its explicit
     reset/re-enrol guidance, never on an inferred retired profile.
 
-    The capsules root is reported alongside the member names because the only
+    Both scanned roots are reported alongside the member names because the only
     sanctioned remedy is a destructive reset of that store, and an operator
-    cannot reset a location the refusal withholds.  It names a directory, never
-    a bucket or an identity, so it discloses nothing the detector declined to
-    infer and requires reading no retired content.
+    cannot reset a location the refusal withholds.  Retired key material lives
+    outside the buckets tree, so naming only the buckets root would point the
+    operator at a directory whose removal leaves the refusal standing.  Each
+    names a directory, never a bucket or an identity, so the refusal discloses
+    nothing the detector declined to infer and requires reading no retired
+    content.
     """
-    detected = detect_retired_profile_custody_member_paths(capsules_root)
+    detected = detect_retired_profile_custody_member_paths(capsules_root, keystore_root=keystore_root)
     if not detected:
         return
     raise ProfileCustodyRefusedError(
         ProfileCustodyRefusal.LEGACY_CUSTODY_DETECTED,
         context={
             "capsules_root": str(capsules_root),
+            "keystore_root": str(keystore_root),
             "retired_member_paths": detected,
         },
         recovery_guidance=(
@@ -88,15 +113,17 @@ def refuse_retired_profile_custody_paths(capsules_root: Path) -> None:
     )
 
 
-def _anchored_retired_bucket_member_paths(capsules_root: Path) -> tuple[str, ...]:
+def _anchored_retired_member_paths(scan_root: Path, member_paths: tuple[str, ...]) -> tuple[str, ...]:
+    if not os.path.lexists(scan_root):
+        return ()
     if os.name != "nt":
-        return _anchored_retired_bucket_member_paths_posix(capsules_root)
-    return _anchored_retired_bucket_member_paths_windows(capsules_root)
+        return _anchored_retired_member_paths_posix(scan_root, member_paths)
+    return _anchored_retired_member_paths_windows(scan_root, member_paths)
 
 
-def _anchored_retired_bucket_member_paths_posix(capsules_root: Path) -> tuple[str, ...]:
+def _anchored_retired_member_paths_posix(scan_root: Path, member_paths: tuple[str, ...]) -> tuple[str, ...]:
     detected: set[str] = set()
-    with posix_directory_fd(capsules_root) as root_fd:
+    with posix_directory_fd(scan_root) as root_fd:
         for candidate_name in os.listdir(root_fd):
             if not _is_posix_directory(root_fd, candidate_name):
                 continue
@@ -104,12 +131,12 @@ def _anchored_retired_bucket_member_paths_posix(capsules_root: Path) -> tuple[st
             if candidate_fd is None:
                 continue
             try:
-                for member_path in PROFILE_CUSTODY_RETIRED_BUCKET_MEMBER_PATHS:
+                for member_path in member_paths:
                     if posix_child_exists(
                         candidate_fd,
                         member_path,
                         trace=None,
-                        display_path=capsules_root / candidate_name / member_path,
+                        display_path=scan_root / candidate_name / member_path,
                     ):
                         detected.add(member_path)
             finally:
@@ -117,23 +144,23 @@ def _anchored_retired_bucket_member_paths_posix(capsules_root: Path) -> tuple[st
     return tuple(sorted(detected))
 
 
-def _anchored_retired_bucket_member_paths_windows(capsules_root: Path) -> tuple[str, ...]:
+def _anchored_retired_member_paths_windows(scan_root: Path, member_paths: tuple[str, ...]) -> tuple[str, ...]:
     detected: set[str] = set()
     with ExitStack() as anchors:
-        anchor_directory(anchors, capsules_root, final_access=0x80000000)
+        anchor_directory(anchors, scan_root, final_access=0x80000000)
         try:
-            with os.scandir(capsules_root) as entries:
+            with os.scandir(scan_root) as entries:
                 for entry in entries:
                     try:
                         if not entry.is_dir(follow_symlinks=False):
                             continue
                     except OSError:
                         continue
-                    candidate = capsules_root / entry.name
+                    candidate = scan_root / entry.name
                     try:
                         with ExitStack() as candidate_anchors:
                             anchor_directory(candidate_anchors, candidate, final_access=0x80000000)
-                            for member_path in PROFILE_CUSTODY_RETIRED_BUCKET_MEMBER_PATHS:
+                            for member_path in member_paths:
                                 if lexists(candidate / member_path, trace=None):
                                     detected.add(member_path)
                     except ProfileCustodyRecordError:
@@ -304,6 +331,7 @@ def _canonical_profile_id(candidate_name: str) -> UUID | None:
 
 __all__ = [
     "PROFILE_CUSTODY_RETIRED_BUCKET_MEMBER_PATHS",
+    "PROFILE_CUSTODY_RETIRED_KEYSTORE_MEMBER_PATHS",
     "anchored_current_capsule_ids",
     "detect_retired_profile_custody_member_paths",
     "refuse_retired_profile_custody_paths",

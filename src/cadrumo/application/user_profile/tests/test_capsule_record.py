@@ -199,7 +199,8 @@ def test_restore_refuses_duplicate_or_mismatched_current_record_lineage(tmp_path
             database_bytes=duplicate_database.read_bytes(),
         )
     assert isinstance(duplicate_refusal.value.__cause__, ProfileRecordIntegrityError)
-    assert "exactly one current record row" in str(duplicate_refusal.value.__cause__)
+    # Two rows: the count really is what failed, so the count is what is named.
+    assert "exactly one current record row; it holds 2" in str(duplicate_refusal.value.__cause__)
 
     mismatched_session = ProfileRecordSession.from_envelope(envelope=_envelope(password_generation=8), dek=_DEK)
     with pytest.raises(
@@ -234,4 +235,9 @@ def test_restore_refuses_a_database_bound_to_a_different_profile_uuid(tmp_path: 
         )
 
     assert isinstance(refusal.value.__cause__, ProfileRecordIntegrityError)
-    assert "exactly one current record row" in str(refusal.value.__cause__)
+    # One row, wrong key. The count clause passes here, so a message naming the
+    # count would describe the half that did not fail and send a reader looking
+    # for a missing or duplicated row that is not what went wrong.
+    cause = str(refusal.value.__cause__)
+    assert "addressed to a different object key" in cause
+    assert "exactly one current record row" not in cause

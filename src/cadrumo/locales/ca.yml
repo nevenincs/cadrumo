@@ -1979,10 +1979,6 @@ application:
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
       profile_already_exists: El perfil '%{profile}' ja existeix; executa aeat config
         login NAME per activar-lo o aeat config profile delete NAME primer.
-      profile_not_registered: El perfil '%{profile}' no existeix; executa `aeat config
-        profile create NAME` per crear-lo.
-      profile_tombstoned_not_selectable: El perfil '%{profile}' està eliminat i no
-        es pot seleccionar.
       registration_label_blank: El nom del perfil no pot estar buit.
       registration_passphrase_too_short: La contrasenya ha de tenir com a mínim {minimum_length}
         caràcters.
@@ -1991,10 +1987,6 @@ application:
         emmagatzemat és %{classification}.
       repository_profile_bucket_mismatch: El perfil %{profile_id} no pertany al bucket
         %{bucket_id}; un bucket de perfil conté exactament una identitat de perfil.
-      repository_profile_record_missing: No s'ha trobat el registre de perfil al bucket
-        actiu.
-      repository_profile_record_version_unsupported: La versió de l'esquema del registre
-        de perfil no és compatible amb aquesta aplicació.
       repository_profile_snapshot_missing: No s'ha trobat la instantània de perfil
         al bucket actiu.
       repository_profile_snapshot_version_unsupported: La versió de l'esquema de la
@@ -5664,9 +5656,6 @@ cli:
           CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
           i CADRUMO_SECRET_PASSPHRASE; els logs queden per defecte sota aquest directori
           d'emmagatzematge.
-        profile_delete: Eliminar un perfil de contribuent.
-        profile_duplicate: Duplicar un perfil de contribuent existent.
-        profile_export: Exporta un paquet portàtil del perfil.
         profile_history: Inspecciona l'historial append-only d'esdeveniments del perfil.
         profile_list: Llistar els perfils de contribuent disponibles.
         profile_login: Inicia la sessió en un perfil i el converteix en l'actiu.

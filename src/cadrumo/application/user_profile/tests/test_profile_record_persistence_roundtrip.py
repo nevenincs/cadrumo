@@ -22,6 +22,11 @@ the loaded profile schema declares, so a "non-default" value for either is
 not a stronger fixture but an unconstructible record. That exclusion is
 asserted rather than assumed, so it fails if the pinning is ever relaxed.
 
+The fixture material itself lives in
+:mod:`_profile_record_boundary_support`, shared with the cross-process suite
+so the two prove their claims about the same record rather than about two
+fixtures that happen to look alike.
+
 The anti-tautology proofs mutate the persisted payload through the same
 encrypted write path and confirm the load side refuses. If either ever
 passes with the boundary broken, every roundtrip assertion over this record
@@ -31,27 +36,17 @@ is worthless and the suite must be re-audited.
 from __future__ import annotations
 
 import json
-from base64 import b64encode
 from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
-from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
-from uuid import UUID
 
 import pytest
 from pydantic import ValidationError
-from pydantic_core import PydanticUndefined
 
-from ....adapters.persistence.storage.custody import (
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyWrappedDek,
-    create_profile_custody_sentinel,
-)
 from ....core import SecureObjectWrite
 from ....domain.buckets import BucketEventType
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileRecord
 from ...profile_custody import (
     profile_custody_secure_object_namespace,
     profile_custody_secure_object_repository,
@@ -63,135 +58,26 @@ from .._capsule_record import (
     ProfileRecordStore,
     profile_record_object_key,
 )
-from .._lifecycle import ProfileCapsuleLifecycle
+from ._profile_record_boundary_support import (
+    CREATED_AT,
+    PROFILE_ID,
+    RECORD_NAMESPACE,
+    REPLACED_AT,
+    UPDATED_AT,
+    defaultable_fields_at_default,
+    open_record_session,
+    populated_facts,
+    publish_capsule,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_PROFILE_ID = UUID("3f8b1d42-6c07-4e59-9a13-2b7e5c04d8af")
-_DEK = bytes(range(100, 132))
-_RECORD_NAMESPACE = "cadrumo.application.user_profile.value"
-
-_CREATED_AT = datetime(2024, 1, 4, 9, 0, 0, tzinfo=UTC)
-_UPDATED_AT = datetime(2024, 6, 15, 14, 32, 17, tzinfo=UTC)
-_REPLACED_AT = datetime(2024, 9, 2, 8, 5, 41, tzinfo=UTC)
-
-_SCHEMA_PINNED_FIELDS = frozenset({"schema_id", "schema_version"})
-"""Fields a record validator pins to the loaded schema's own declaration.
-
-Neither can carry a non-default value: ``_validate_payload_schema_identity``
-refuses any ``schema_id`` or ``schema_version`` that is not exactly the
-canonical one, in both the future and pre-current directions. Excluding them
-from the non-default sweep is a statement about the model, not a concession,
-and :func:`test_schema_identity_fields_are_pinned_not_merely_defaulted`
-proves the pinning still holds.
-"""
-
-_FACTORY_DEFAULT_FIELDS = frozenset({"created_at", "updated_at"})
-"""Clock-defaulted fields whose non-default proof is equality, not inequality.
-
-Their default factory is ``utc_now``, so comparing a loaded value against a
-freshly evaluated default would differ for any record whatsoever and prove
-nothing. What does prove it is that the fixture pins two distinct fixed
-instants and the strict roundtrip reproduces both exactly: a boundary that
-dropped either would re-default it to the load instant, which is not the
-pinned literal.
-"""
-
-
-def _envelope() -> ProfileCustodyEnvelope:
-    return ProfileCustodyEnvelope.create(
-        profile_id=_PROFILE_ID,
-        password_generation=4,
-        dek_epoch=b64encode(b"epoch-roundtrip!").decode("ascii"),
-        kdf=ProfileCustodyKdfParameters(
-            algorithm="argon2id",
-            version=19,
-            memory_mib=19,
-            iterations=2,
-            parallelism=1,
-            salt_b64=b64encode(b"salt-roundtrip!!").decode("ascii"),
-            output_bytes=32,
-        ),
-        wrapped_dek=ProfileCustodyWrappedDek(
-            nonce_b64=b64encode(b"nonce-round!").decode("ascii"),
-            ciphertext_b64=b64encode(b"c" * 32).decode("ascii"),
-            tag_b64=b64encode(b"tag-roundtrip!!!").decode("ascii"),
-        ),
-    )
-
-
-def _populated_facts() -> tuple[UserProfileFact, ...]:
-    """Return facts whose every defaultable field also carries a non-default.
-
-    ``source`` defaults to ``manual_cli`` and both window bounds default to
-    ``None``, so each fact declares a different declared provenance token and
-    a closed effective-dated window. A boundary that dropped a fact's window
-    or re-defaulted its provenance would surface as inequality.
-    """
-    return (
-        UserProfileFact(
-            path="activities.cnae",
-            value="6201",
-            source="setup_wizard",
-            valid_from=date(2024, 1, 1),
-            valid_to=date(2024, 12, 31),
-        ),
-        UserProfileFact(
-            path="activities.description",
-            value="Servicios de programacion informatica",
-            source="modelo_036_import",
-            valid_from=date(2023, 7, 1),
-            valid_to=date(2025, 6, 30),
-        ),
-        UserProfileFact(
-            path="attribution_entity.legal_form",
-            value="comunidad_de_bienes",
-            source="registry_inference",
-            valid_from=date(2022, 4, 15),
-            valid_to=date(2026, 3, 31),
-        ),
-    )
-
-
-def _initial_record() -> UserProfileRecord:
-    """Return revision one with every non-lineage defaultable field non-default."""
-    return UserProfileRecord(
-        profile_id=str(_PROFILE_ID),
-        facts=_populated_facts(),
-        setup_state=ProfileSetupState.INCOMPLETE,
-        created_at=_CREATED_AT,
-        updated_at=_UPDATED_AT,
-    )
 
 
 def _create_capsule(root: Path) -> tuple[ProfileRecordSession, UserProfileRecord]:
     """Publish a real capsule holding the populated revision-one record."""
-    envelope = _envelope()
-    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=_DEK)
-    record = _initial_record()
-    ProfileCapsuleLifecycle(root=root).create(
-        label="Roundtrip operator",
-        profile_id=_PROFILE_ID,
-        password_envelope=envelope,
-        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
-        data_files={},
-        initial_record=record,
-        record_session=session,
-    )
+    session = open_record_session()
+    record = publish_capsule(root)
     return session, record
-
-
-def _replacement_of(current: UserProfileRecord) -> UserProfileRecord:
-    """Return revision two, populating the two lineage fields non-default."""
-    return UserProfileRecord(
-        profile_id=str(_PROFILE_ID),
-        facts=_populated_facts(),
-        setup_state=ProfileSetupState.INCOMPLETE,
-        record_revision=current.record_revision + 1,
-        previous_record_digest=current.content_digest,
-        created_at=_CREATED_AT,
-        updated_at=_REPLACED_AT,
-    )
 
 
 def _store(session: ProfileRecordSession, root: Path) -> ProfileRecordStore:
@@ -209,37 +95,6 @@ def _record_objects(session: ProfileRecordSession, root: Path) -> Generator[Any]
         yield objects
 
 
-def _advance_to_revision_two(
-    session: ProfileRecordSession,
-    root: Path,
-    written: UserProfileRecord,
-    *,
-    event_payload: dict[str, str] | None = None,
-) -> UserProfileRecord:
-    """Drive the real replacement so the capsule holds revision two.
-
-    The anti-tautology proofs mutate the payload by writing a further row
-    revision, which leaves a revision-ONE record's row carrying a predecessor
-    and trips the initial-lineage guard. That guard would refuse the load for
-    a reason unrelated to the payload, masking whether the decode validated
-    anything. Advancing first removes the confound: at revision two the
-    replacement lineage is legitimately satisfied, so a refusal can only come
-    from the payload itself.
-    """
-    replacement = _replacement_of(written)
-    _store(session, root).replace(
-        replacement=replacement,
-        event=ProfileRecordCommandEvent(
-            event_type=BucketEventType.PROFILE_VALUES_UPDATED.value,
-            occurred_at=_REPLACED_AT.isoformat(),
-            payload=event_payload or {},
-        ),
-        expected_revision=written.record_revision,
-        expected_content_digest=written.content_digest,
-    )
-    return replacement
-
-
 def _rewrite_persisted_payload(
     session: ProfileRecordSession,
     root: Path,
@@ -255,7 +110,7 @@ def _rewrite_persisted_payload(
     namespace = profile_custody_secure_object_namespace()
     object_key = profile_record_object_key(session.profile_id)
     with _record_objects(session, root) as objects:
-        raw = next(row for row in objects.iter_all_records_raw() if row.namespace == _RECORD_NAMESPACE)
+        raw = next(row for row in objects.iter_all_records_raw() if row.namespace == RECORD_NAMESPACE)
         loaded = objects.load(
             namespace.namespace,
             object_key,
@@ -271,7 +126,7 @@ def _rewrite_persisted_payload(
                     object_key=object_key,
                     classification=namespace.sensitivity,
                     schema_version=namespace.schema_version,
-                    written_at=_REPLACED_AT,
+                    written_at=REPLACED_AT,
                     payload=json.dumps(payload).encode("utf-8"),
                     write_provenance=raw.write_provenance,
                     source_event_id=raw.source_event_id,
@@ -340,14 +195,7 @@ def test_every_defaultable_field_is_populated_non_default_across_the_boundary(
     _advance_to_revision_two(session, root, written)
     loaded = _store(session, root).load().record
 
-    at_default: list[str] = []
-    for name, field in UserProfileRecord.model_fields.items():
-        if name in _SCHEMA_PINNED_FIELDS or name in _FACTORY_DEFAULT_FIELDS:
-            continue
-        if field.default is PydanticUndefined or field.default_factory is not None:
-            continue
-        if getattr(loaded, name) == field.default:
-            at_default.append(name)
+    at_default = defaultable_fields_at_default(loaded)
 
     assert not at_default, (
         "these defaultable fields sit at their model default across the boundary, so a "
@@ -355,8 +203,8 @@ def test_every_defaultable_field_is_populated_non_default_across_the_boundary(
         f"{sorted(at_default)}"
     )
     # The clock-defaulted pair is proven by exact reproduction instead.
-    assert loaded.created_at == _CREATED_AT
-    assert loaded.updated_at == _REPLACED_AT
+    assert loaded.created_at == CREATED_AT
+    assert loaded.updated_at == REPLACED_AT
     assert loaded.created_at != loaded.updated_at
 
 
@@ -383,11 +231,11 @@ def test_schema_identity_fields_are_pinned_not_merely_defaulted() -> None:
     for overrides, fragment in cases:
         with pytest.raises(ValidationError) as refusal:
             UserProfileRecord(
-                profile_id=str(_PROFILE_ID),
-                facts=_populated_facts(),
+                profile_id=str(PROFILE_ID),
+                facts=populated_facts(),
                 setup_state=ProfileSetupState.INCOMPLETE,
-                created_at=_CREATED_AT,
-                updated_at=_UPDATED_AT,
+                created_at=CREATED_AT,
+                updated_at=UPDATED_AT,
                 **overrides,
             )
         assert fragment in str(refusal.value)

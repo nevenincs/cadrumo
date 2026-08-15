@@ -1810,12 +1810,6 @@ application:
       no_active_profile_selected: No active profile selected.
       profile_already_exists: Profile '%{profile}' already exists; run aeat config
         login NAME to activate it or aeat config profile delete NAME first.
-      profile_manifest_missing: Profile '%{profile}' has no registered bucket manifest
-        at %{bucket_dir}.
-      profile_not_registered: Profile '%{profile}' does not exist; run `aeat config
-        profile create NAME` to create it.
-      profile_tombstoned_not_selectable: Profile '%{profile}' is tombstoned and cannot
-        be selected.
       registration_label_blank: The profile name cannot be empty.
       registration_passphrase_too_short: The password must be at least {minimum_length}
         characters long.
@@ -1824,10 +1818,6 @@ application:
         is %{classification}.
       repository_profile_bucket_mismatch: Profile %{profile_id} does not belong to
         bucket %{bucket_id}; a profile bucket holds exactly one profile identity.
-      repository_profile_record_missing: Profile record was not found in the active
-        bucket.
-      repository_profile_record_version_unsupported: Profile record schema version
-        is not supported by this application.
       repository_profile_snapshot_missing: Profile snapshot was not found in the active
         bucket.
       repository_profile_snapshot_version_unsupported: Profile snapshot schema version
@@ -5283,9 +5273,6 @@ cli:
         paragraph_storage_isolation: For an isolated blank state, set CADRUMO_LOCAL_STORAGE_ROOT,
           CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR, and CADRUMO_SECRET_PASSPHRASE;
           logs default under that storage root.
-        profile_delete: Delete a profile after explicit confirmation.
-        profile_duplicate: Copy a profile to a new id.
-        profile_export: Export a portable profile bundle.
         profile_history: Inspect the append-only profile event history.
         profile_list: List profile facts.
         profile_login: Log in to a profile and make it the active one.
