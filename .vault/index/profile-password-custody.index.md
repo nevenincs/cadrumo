@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:aa5324707b95d9ab90d8409c05d51571a9120c0e9bdd587f8b5e843b1fd1c5d8'
+body_hash: 'sha256:bd4bc35c79f4880cf36afc5f228ee0b41254aeed638752c8808f36586a001ecc'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -35,6 +35,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W03-P06-S42]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S88]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S19]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S28]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S32]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S35]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S37]]'
@@ -151,6 +152,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W02-P04-S95` - Have Terra XHigh make the receipt deletion honour the clear outcome it already computes, since the discard helper returns whether the compare-and-clear succeeded and the resume path branches on it, while the revocation entry point calls the same helper bare and returns nothing, so a refused clear is silent and a login can report the prior profile as closed while its acceleration receipt survives on disk, the reachability being narrow because the bytes must change under a held per-profile lock but the reporting value already existing
 - `2026-08-13-profile-password-custody-W03-P06-S88` - Have Terra XHigh resolve the command-line lifecycle module that asserts custody verbs are mounted
 - `2026-08-13-profile-password-custody-W04-P07-S19` - Have Terra XHigh dissolve the forwarding port package in five ordered parts
+- `2026-08-13-profile-password-custody-W04-P07-S28` - Have Terra XHigh relocate the surviving per-profile session, wipe and identity residue into the custody package that the accepted decision names as sole authority, in one atomic move, so no surviving primitive is left behind a shared-master name
 - `2026-08-13-profile-password-custody-W04-P07-S61` - Have Terra XHigh bring the integration test lane under a standing watch
 - `2026-08-13-profile-password-custody-W04-P07-S62` - Have Sol Medium rule which layer owns the bucket manifest
 - `2026-08-13-profile-password-custody-W04-P07-S69` - Have Terra XHigh remove the second bucket-root creator that survives as dead production code
