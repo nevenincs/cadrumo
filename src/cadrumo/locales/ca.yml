@@ -65833,6 +65833,9 @@ modelo:
             x-e1in4opec9gn6p9de9in8pbecdkmurg:
               label: Base de retenció o ingrés a compte
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
+              help: 'Només s''emplena quan el tipus de perceptor és la clau 5: F si
+                el perceptor és persona física i J si es tracta d''una persona jurídica
+                o una entitat.'
               label: Clau de personalitat del perceptor no resident
             x-e1in4opecpim6q315ln62or9dlkmarjkds:
               label: Data de naixement del perceptor no resident
@@ -65872,6 +65875,10 @@ modelo:
             x-e1in4opee1gmispde9in6qb4cln66qb1:
               label: País o territori de residència fiscal del perceptor
             x-e1in4opee1p6utj9dphmio8:
+              help: Dos dígits de la província o ciutat autònoma del domicili del
+                perceptor. Es consignen els dígits 98 per a contribuents de l'IRPF
+                amb residència habitual a l'estranger i 99 quan el tipus de perceptor
+                és la clau 5.
               label: Codi de província del domicili del perceptor
             x-e1in4opee9in8pbecdkmurg:
               label: Import de la retenció o ingrés a compte
