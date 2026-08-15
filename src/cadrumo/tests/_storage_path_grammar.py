@@ -53,6 +53,14 @@ _PLACEHOLDER_PATTERNS: Final[dict[str, str]] = {
     # precedence, so an ungrouped alternation would leak across the
     # surrounding literal segments the compiler splices this fragment into.
     "auth_provider_kind": r"(?:certificate|clave_movil|clave_permanente)",
+    # A profile UUID, spelled precisely rather than as a free-form token: the
+    # custody hold-evidence filenames are ``str(UUID)`` and nothing else, so
+    # bounding them only by "not a path separator" would accept a filename the
+    # owning authority cannot produce.
+    "profile_id": r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+    # Closed set: the two custody hold-evidence owners the derived join fans
+    # out over. Same non-capturing-group reasoning as the provider kind above.
+    "owner": r"(?:legal|filing)",
     # Free-form application-chosen identifiers: a bucket id, an outbound
     # namespace, an HMAC-prefix segment, an operator-mutable label, a
     # config-reset operation id, an LLM provider/model. None of these are
