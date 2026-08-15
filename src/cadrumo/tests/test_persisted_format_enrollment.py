@@ -226,7 +226,7 @@ def test_every_discovered_file_format_resolves_to_a_declared_directory() -> None
         for run in literal_directory_runs(grammar=definition.grammar, kind=definition.kind):
             if run not in known:
                 unanchored.append(f"{definition.key!r} spells directory {run!r}, which no StorageCategory declares")
-    assert unanchored == (), "\n".join(unanchored)
+    assert not unanchored, "\n".join(unanchored)
 
 
 def test_application_owned_journal_name_agrees_with_the_registry() -> None:
