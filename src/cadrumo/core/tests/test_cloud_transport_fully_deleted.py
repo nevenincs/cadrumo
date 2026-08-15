@@ -43,7 +43,7 @@ transport they actually ran at. The partition is checked against the readers
 discovered in source, because the assertion this replaced said it ran over the
 readers that exist while naming two of five.
 
-**The set is symbols, never the word ``subprocess``.** ``entrypoints/mcp/
+**The set is symbols, never the word ``subprocess``.** ``cadrumo_harness/mcp/
 _call_runtime.py`` shells the deterministic CLI for every MCP tool call: it is
 a subprocess transport and it is NOT the cloud LLM transport. A word-sweep
 would delete the MCP server's entire call path. A duplication-audit helper that

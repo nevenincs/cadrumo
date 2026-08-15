@@ -19,7 +19,6 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.config import Settings
-from ....core.resources import bundled_path
 from ....domain.buckets import (
     BucketEventObjectType as BucketEventObjectType,
 )
@@ -29,7 +28,6 @@ from ....domain.buckets import (
 from ....domain.calculations.registry import (
     InputKind,
     RegistryModeloObservation,
-    load_registry_tree,
     previous_filing_observation_requirements,
     relation_source_requirements,
     select_revision,
@@ -50,6 +48,7 @@ from ....domain.modelos import (
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
+from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
 from ...workflow import (
@@ -207,7 +206,7 @@ def _resolved_revision(*, modelo: str, filing_year: int, period: str):
     ``resources().modelos.authority``, whose ``.load()`` validates the entire
     registry tree and currently refuses unconditionally as a result.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, _catalogues = bundled_registry_tree()
     modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
     return select_revision(modelo_definition, filing_year=filing_year, period=period)
 

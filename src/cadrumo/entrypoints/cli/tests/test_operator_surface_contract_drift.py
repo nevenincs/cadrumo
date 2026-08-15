@@ -3,13 +3,12 @@
 The companion of :func:`test_every_cli_leaf_has_a_registered_schema`. That gate
 proves every CLI leaf has a registered JSON schema; this one proves the
 :class:`~cadrumo.application.operator_surface.OperatorSurfaceContract` — the source
-the ``aeat app contract`` capability manifest (and, later, the MCP ``tools/list``)
-is built from — declares *exactly* the mounted command families and their
-sub-verbs.
+the operator capability manifest (and the MCP ``tools/list``) is built from —
+declares *exactly* the mounted command families and their sub-verbs.
 
 Without this gate the contract is self-referential: the sibling
 ``test_required_children_match_mounted_command_families`` checks the contract
-against itself, and ``test_app_contract`` checks the manifest against the same
+against itself, and the manifest tests check it against the same
 contract. Neither resolves the real Typer tree, so a whole family
 (``config google``, ``config check``, ``config reset``) or a sub-verb (every
 ``app live`` child but ``filed``) could be — and was — absent from the manifest
@@ -72,7 +71,7 @@ def _resolve_live_surface() -> dict[str, dict[str, frozenset[str]]]:
 
     For a family whose child is a group with sub-commands, the sub-verb set is its
     direct child names. For a family whose child is a leaf command (or an
-    ``invoke_without_command`` group with no registered leaf, e.g. ``app contract``),
+    ``invoke_without_command`` group with no registered leaf, e.g. ``app quickfile``),
     the sub-verb set is the degenerate self-reference ``{child}`` — matching the
     contract's convention of summarising such a verb as ``commands=(child,)``.
     """
@@ -177,17 +176,18 @@ def test_no_risk_row_outlives_the_command_it_classifies() -> None:
 
     The reverse is NOT asserted, because an absent row is a designed state
     rather than a gap. ``classify`` derives safe for a command with no row, so
-    read-only verbs are intentionally undeclared, and today 26 of them are --
-    the overview reports, the citation reads, ``config check``, ``contract``.
+    read-only verbs are intentionally undeclared, and many of them are --
+    the overview reports, the citation reads, ``config check``.
     Asserting an exact mirror would therefore fail against correct data and
     would have to be "fixed" by declaring rows that say nothing, which is how a
     risk table stops meaning anything. The classification tests own the other
     direction, where absence is checked as behaviour rather than inventory.
     """
-    from ...mcp import build_tool_descriptors
+    from .._command_schema import command_schema_refs
+    from .._verb_input_schema import is_exposable_command
 
-    live_keys = {descriptor.command_key for descriptor in build_tool_descriptors()}
-    assert live_keys, "descriptor set is empty, so this gate would pass while checking nothing"
+    live_keys = {ref.command for ref in command_schema_refs() if is_exposable_command(ref.command)}
+    assert live_keys, "exposable command set is empty, so this gate would pass while checking nothing"
     assert COMMAND_RISK, "risk table is empty, so this gate would pass while checking nothing"
 
     orphans = sorted(key for key in COMMAND_RISK if key not in live_keys)

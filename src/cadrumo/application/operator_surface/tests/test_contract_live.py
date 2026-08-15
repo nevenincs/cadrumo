@@ -1,7 +1,7 @@
 """Live reconciliation of the operator surface against the materialised CLI.
 
 Separated from the unit contract suite because it walks the real Typer/Click
-tree and builds the MCP descriptors, which is an integration-scope act. The
+tree and projects every verb's input schema, which is an integration-scope act. The
 marker taxonomy allows one execution-scope marker per module, so an
 integration test cannot share a module with unit tests -- and the split is
 honest rather than clerical: this module is the only one here that materialises
@@ -25,9 +25,8 @@ from ._contract_locale_fixture import pin_english_locale
 
 __all__ = ["pin_english_locale"]
 
+from ....entrypoints.cli import VerbLeafKind, build_verb_input_schemas, command_schema_refs, is_exposable_command
 from ....entrypoints.cli import app as cli_app
-from ....entrypoints.cli import command_schema_refs
-from ....entrypoints.mcp import VerbLeafKind, build_tool_descriptors, build_verb_input_schemas
 from ....entrypoints.schema_surface import (
     CALLBACK_EXCLUSION_REASON_BY_CLI_PATH,
     CALLBACK_RESULT_REUSE_BY_CLI_PATH,
@@ -147,16 +146,14 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
         expected_kind = VerbLeafKind.CALLBACK if key in GROUP_CALLBACK_SCHEMA_KEYS else VerbLeafKind.COMMAND
         assert schema.resolved_leaf.kind is expected_kind
 
-    descriptors = build_tool_descriptors()
-    descriptor_by_key = {descriptor.command_key: descriptor for descriptor in descriptors}
-    assert len(descriptor_by_key) == len(descriptors), "MCP exposed one command identity more than once"
-    expected_mcp_keys = (
+    exposable_keys = frozenset(key for key in registered_keys if is_exposable_command(key))
+    expected_exposable_keys = (
         frozenset(raw_terminal_path_by_key) | frozenset(CALLBACK_SCHEMA_KEY_BY_CLI_PATH.values())
     ) - ROOT_LANDING_SCHEMA_KEYS
-    assert frozenset(descriptor_by_key) == expected_mcp_keys, (
-        "MCP descriptors did not equal raw terminal commands plus declared callback schema surfaces: "
-        f"missing={sorted(expected_mcp_keys - set(descriptor_by_key))!r}; "
-        f"unexpected={sorted(set(descriptor_by_key) - expected_mcp_keys)!r}"
+    assert exposable_keys == expected_exposable_keys, (
+        "exposable command keys did not equal raw terminal commands plus declared callback schema surfaces: "
+        f"missing={sorted(expected_exposable_keys - exposable_keys)!r}; "
+        f"unexpected={sorted(exposable_keys - expected_exposable_keys)!r}"
     )
 
     live_leaves = tuple(
@@ -208,8 +205,8 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
     mcp_exposures = tuple(
         McpExposureInventoryRow(
             subject_leaf_key=key,
-            exposed=key in descriptor_by_key,
-            provenance="build_tool_descriptors",
+            exposed=key in exposable_keys,
+            provenance="is_exposable_command",
         )
         for key in sorted(input_schemas)
     )
@@ -271,20 +268,7 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
         assert row.profile_policy is not None
         assert row.profile_policy.should_expose_via_mcp is False
 
-    for key, descriptor in descriptor_by_key.items():
-        raw_input_schema = input_schemas[key]
-        assert (
-            descriptor.verb_schema.command_key,
-            descriptor.verb_schema.cli_path,
-            descriptor.verb_schema.parameters,
-            descriptor.verb_schema.help,
-        ) == (
-            raw_input_schema.command_key,
-            raw_input_schema.cli_path,
-            raw_input_schema.parameters,
-            raw_input_schema.help,
-        )
-        assert descriptor.input_schema == descriptor.verb_schema.json_schema()
+    for key in sorted(exposable_keys):
         assert reconciled_by_key[key].result_schema is not None
         assert reconciled_by_key[key].input_schema is not None
 

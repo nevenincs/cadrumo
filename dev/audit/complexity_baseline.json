@@ -366,10 +366,8 @@
       "src/cadrumo/entrypoints/cli/_overview.py::overview_status": 13,
       "src/cadrumo/entrypoints/cli/_overview_rendering.py::overview_calendar_profile_output": 12,
       "src/cadrumo/entrypoints/cli/registry.py::_diff_revisions_lines": 13,
-      "src/cadrumo/entrypoints/mcp/_input_schema.py::_parameter_from_click": 11,
-      "src/cadrumo/entrypoints/mcp/_input_schema.py::cli_argv_for": 13,
-      "src/cadrumo/entrypoints/mcp/_meta_tools.py::describe_command": 11,
-      "src/cadrumo/entrypoints/mcp/_meta_tools.py::manage_toolsets": 16
+      "src/cadrumo/entrypoints/cli/_verb_input_schema.py::_parameter_from_click": 11,
+      "src/cadrumo/entrypoints/cli/_verb_input_schema.py::cli_argv_for": 13
     },
     "maintainability": {
       "src/cadrumo/application/auth/_operator.py": 18.63,
@@ -455,9 +453,7 @@
       "src/cadrumo/entrypoints/cli/_ledger_read_cli.py::_register_ledger_check_command": 26,
       "src/cadrumo/entrypoints/cli/_modelo_cli_support.py::parse_row_spec": 23,
       "src/cadrumo/entrypoints/cli/_modelo_projection_cli.py::_register_modelo_compare_command": 21,
-      "src/cadrumo/entrypoints/mcp/_input_schema.py::cli_argv_for": 26,
-      "src/cadrumo/entrypoints/mcp/_meta_tools.py::manage_toolsets": 21,
-      "src/cadrumo/entrypoints/mcp/_server.py::build_server": 109
+      "src/cadrumo/entrypoints/cli/_verb_input_schema.py::cli_argv_for": 26
     }
   },
   "tests": {

@@ -309,7 +309,8 @@ class FincaRow(Base):
             ``LOCAL_COMERCIAL`` / ``VIVIENDA_TURISTICA`` / ``VIVIENDA_DESOCUPADA``.
         is_stressed_area: Whether the finca sits in a declared
             stressed-rent area for LIRPF art. 23.2 tier resolution.
-        schema_version: Per-row schema version; defaults to ``"1"``.
+        schema_version: Per-row schema version, always copied from the
+            domain record; this column declares no default of its own.
     """
 
     __tablename__ = "rental_fincas"
@@ -332,7 +333,7 @@ class FincaRow(Base):
     disposal_date: Mapped[date | None] = mapped_column(Date(), nullable=True)
     use_type: Mapped[str] = mapped_column(String(32), nullable=False)
     is_stressed_area: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    schema_version: Mapped[str] = mapped_column(String(8), nullable=False, default="1")
+    schema_version: Mapped[str] = mapped_column(String(8), nullable=False)
 
 
 class ArrendamientoRow(Base):
@@ -372,7 +373,8 @@ class ArrendamientoRow(Base):
             completed, when applicable.
         lau_17_6_compliant: True when the contract complies with the
             Ley de Arrendamientos Urbanos art. 17.6.
-        schema_version: Per-row schema version; defaults to ``"1"``.
+        schema_version: Per-row schema version, always copied from the
+            domain record; this column declares no default of its own.
     """
 
     __tablename__ = "rental_contracts"
@@ -412,7 +414,7 @@ class ArrendamientoRow(Base):
     is_first_rental: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     rehabilitation_finished_date: Mapped[date | None] = mapped_column(Date(), nullable=True)
     lau_17_6_compliant: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    schema_version: Mapped[str] = mapped_column(String(8), nullable=False, default="1")
+    schema_version: Mapped[str] = mapped_column(String(8), nullable=False)
 
     finca: Mapped[FincaRow] = relationship("FincaRow", lazy="joined")
 
@@ -431,7 +433,8 @@ class FincaRendimientoRecordRow(Base):
         gross_rent_received: Gross rent received during the period.
         dias_alquilados: Days the property was actually rented during
             the period (0..366).
-        schema_version: Per-row schema version; defaults to ``"1"``.
+        schema_version: Per-row schema version, always copied from the
+            domain record; this column declares no default of its own.
     """
 
     __tablename__ = "rental_income_records"
@@ -455,7 +458,7 @@ class FincaRendimientoRecordRow(Base):
     period_year: Mapped[int] = mapped_column(Integer, nullable=False)
     gross_rent_received: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     dias_alquilados: Mapped[int] = mapped_column(Integer, nullable=False)
-    schema_version: Mapped[str] = mapped_column(String(8), nullable=False, default="1")
+    schema_version: Mapped[str] = mapped_column(String(8), nullable=False)
 
     contract: Mapped[ArrendamientoRow] = relationship("ArrendamientoRow", lazy="joined")
 
@@ -477,7 +480,8 @@ class FincaGastoRow(Base):
             ``FORMALIZACION_CONTRATO``, ``DEFENSA_JURIDICA``,
             ``SALDOS_DUDOSO_COBRO``, ``OTROS``).
         amount: Expense amount.
-        schema_version: Per-row schema version; defaults to ``"1"``.
+        schema_version: Per-row schema version, always copied from the
+            domain record; this column declares no default of its own.
     """
 
     __tablename__ = "rental_expenses"
@@ -496,7 +500,7 @@ class FincaGastoRow(Base):
     period_year: Mapped[int] = mapped_column(Integer, nullable=False)
     category: Mapped[str] = mapped_column(String(48), nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
-    schema_version: Mapped[str] = mapped_column(String(8), nullable=False, default="1")
+    schema_version: Mapped[str] = mapped_column(String(8), nullable=False)
 
     finca: Mapped[FincaRow] = relationship("FincaRow", lazy="joined")
 
@@ -532,7 +536,7 @@ class FincaAmortizacionLedgerRow(Base):
         Numeric(15, 2),
         nullable=False,
     )
-    schema_version: Mapped[str] = mapped_column(String(8), nullable=False, default="1")
+    schema_version: Mapped[str] = mapped_column(String(8), nullable=False)
 
     finca: Mapped[FincaRow] = relationship("FincaRow", lazy="joined")
 

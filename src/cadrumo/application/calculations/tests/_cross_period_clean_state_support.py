@@ -18,7 +18,6 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....core import CasillaId, Period, RegistryAuthorityGrade
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import Modelo202Modality, RegistrySnapshot
-from ....domain.calculations.registry._loader import load_registry_tree
 from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
@@ -39,6 +38,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
+from ....tests.registry_tree import bundled_registry_tree
 from ...modelo import (
     create_work_unit,
     import_external_filing_evidence,
@@ -111,7 +111,7 @@ def _snapshot_390() -> RegistrySnapshot:
     ``.load()`` validates the entire registry tree -- including modelos with no
     export layout at all -- and currently refuses unconditionally as a result.
     """
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = bundled_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "390")
     return build_snapshot(
         modelo,

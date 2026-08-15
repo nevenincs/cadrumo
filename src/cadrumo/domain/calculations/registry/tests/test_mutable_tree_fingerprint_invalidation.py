@@ -42,7 +42,7 @@ from .._loader import (
     load_registry_tree,
 )
 from .._loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR
-from .._validate_verdict import (
+from .._verdict_cache import (
     certify_registry_validation,
     compute_verdict_key,
     registry_validation_is_certified,

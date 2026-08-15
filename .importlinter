@@ -332,7 +332,6 @@ forbidden_modules =
     cadrumo.adapters
     cadrumo.llm
     cadrumo.entrypoints.cli
-    cadrumo.entrypoints.mcp
 
 [importlinter:contract:tui-feature-independence]
 name = TUI feature implementations share components rather than each other

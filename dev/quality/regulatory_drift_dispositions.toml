@@ -1666,11 +1666,6 @@ kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/entrypoints/mcp/_completions.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
 path = "src/cadrumo/llm/_pricing.py"
 kind = "decimal_literal"
 group = "decimal-regulatory-literals"

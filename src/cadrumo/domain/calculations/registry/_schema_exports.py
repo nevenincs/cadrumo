@@ -44,6 +44,7 @@ __all__ = [
     "DeclaracionIdiomaValue",
     "ExportComputedKey",
     "ExportDraftAttribute",
+    "ExportFieldDataType",
     "ExportFieldDefinition",
     "ExportLayoutDefinition",
     "ExportLayoutFormatValue",
@@ -60,6 +61,21 @@ __all__ = [
 
 type OneBasedExportOffset = Annotated[int, Field(ge=1)]
 """A positive one-based byte coordinate in an AEAT fixed-width export record."""
+
+
+type ExportFieldDataType = Literal["text", "integer", "decimal", "money", "date", "boolean"]
+"""The canonical wire-facing scalar vocabulary for an export field's rendered/parsed shape.
+
+Deliberately narrower than :class:`~._schema_surfaces.CasillaDefinition`'s own
+``data_type`` (18 members, e.g. ``nif``, ``ratio``, ``iban``) and
+:class:`~._schema_formula.ParameterDefinition`'s own ``data_type`` (8 members,
+e.g. ``ratio``, ``bracket_table``) -- an export or binding field is never one
+of those richer casilla- or formula-level shapes, only the six primitives a
+fixed-width/XML-dictionary wire slot can actually encode. This is the sole
+declaration: :attr:`ExportFieldDefinition.data_type` and
+:data:`~._binding_selector_utils.BindingExportDataType` both alias it rather
+than re-declaring the six literals.
+"""
 
 
 class M303EnvelopePrefixRole(StrEnum):
@@ -214,7 +230,7 @@ class ExportFieldDefinition(RegistryModel):
     projection_ref: FilingProjectionRef | None = None
     draft_attribute: ExportDraftAttribute | None = None
     computed_key: ExportComputedKey | None = None
-    data_type: Literal["text", "integer", "decimal", "money", "date", "boolean"]
+    data_type: ExportFieldDataType
     required: bool
     padding: ExportPaddingValue
     justification: ExportJustificationValue

@@ -103,3 +103,50 @@ def test_a_construct_member_missing_legal_refs_is_refused_not_silently_skipped()
             source_refs=catalogues.sources,
             evidence=evidence,
         )
+
+
+#: Identity and grounding fields on ``ConstructDefinition`` that are not
+#: member-reference sections: ``id``/``localization_key`` name the construct
+#: itself, ``legal_refs``/``source_refs`` are the construct's OWN grounding
+#: declaration (what ``validate_construct_closure`` checks member refs
+#: AGAINST), never a set of member ids to walk.
+_NON_MEMBER_CONSTRUCT_FIELDS = frozenset({"id", "localization_key", "legal_refs", "source_refs"})
+
+
+def test_construct_member_attrs_is_exactly_the_construct_definitions_member_sections() -> None:
+    """``_CONSTRUCT_MEMBER_ATTRS`` must name every member-reference field and no other.
+
+    Read live from :class:`ConstructDefinition` rather than restated, so a
+    field added to or removed from the model is what this test measures, not
+    a copy of the model that could itself drift.
+
+    Containment alone would only catch a value that points at a field the
+    model no longer has. What actually matters is completeness: a new
+    section-bearing field on ``ConstructDefinition`` — a fifteenth member kind
+    a future revision might declare — currently has nothing forcing a
+    matching ``_CONSTRUCT_MEMBER_ATTRS`` entry, so
+    ``validate_construct_closure`` would silently never walk it: construct
+    members of that new kind would go unvalidated with no failure, no
+    refusal, and no visible gap. Asserting both directions is what makes that
+    addition fail loudly instead.
+    """
+    construct_member_sections = frozenset(ConstructDefinition.model_fields) - _NON_MEMBER_CONSTRUCT_FIELDS
+    declared_attrs = frozenset(_CONSTRUCT_MEMBER_ATTRS.values())
+
+    assert declared_attrs <= construct_member_sections, (
+        f"_CONSTRUCT_MEMBER_ATTRS names {sorted(declared_attrs - construct_member_sections)!r}, which "
+        "ConstructDefinition no longer declares as a member-reference field"
+    )
+    assert construct_member_sections <= declared_attrs, (
+        f"ConstructDefinition declares member-reference field(s) "
+        f"{sorted(construct_member_sections - declared_attrs)!r} that _CONSTRUCT_MEMBER_ATTRS does not "
+        "walk -- construct members of this kind are never validated for legal/source ref inclusion"
+    )
+
+
+def test_construct_member_attrs_keys_are_unique_diagnostic_labels() -> None:
+    """The prose ``kind`` labels can't be derived (there is no enum for them), but they
+    must stay one-to-one with the member-reference fields: a duplicate or missing label
+    would make ``member_objects[kind]`` ambiguous or unreachable for the field it names.
+    """
+    assert len(_CONSTRUCT_MEMBER_ATTRS) == len(set(_CONSTRUCT_MEMBER_ATTRS.values()))

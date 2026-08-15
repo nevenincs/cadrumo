@@ -81,10 +81,32 @@ def test_the_census_reproduces_itself_exactly() -> None:
     assert render_ledger(first) == render_ledger(second)
 
 
+@pytest.fixture(scope="module")
+def recovered_census() -> tuple[Finding, ...]:
+    """Run the census ONCE for the parametrized recovery cases.
+
+    The census scans the production tree and measured ~19s a run, so the
+    parametrized test below paid it once per case for an answer that does not
+    vary with the parameters -- they filter one shared result by path and kind.
+
+    Deliberately NOT applied to ``test_the_census_reproduces_itself_exactly``,
+    and ``census`` is deliberately left unmemoised at its definition. That test
+    calls it twice precisely to prove two runs agree; serving both calls from
+    one cached result would make it compare an object with itself and pass no
+    matter how non-deterministic the census became. The redundancy here is
+    waste, but the redundancy there is the measurement.
+    """
+    return census()
+
+
 @pytest.mark.parametrize(("path", "kind"), _KNOWN_INSTANCES, ids=lambda value: str(value).rsplit("/", 1)[-1])
-def test_the_detector_recovers_known_regulatory_data(path: str, kind: FindingKind) -> None:
+def test_the_detector_recovers_known_regulatory_data(
+    path: str,
+    kind: FindingKind,
+    recovered_census: tuple[Finding, ...],
+) -> None:
     """Each file the plan names as carrying regulatory data yields a finding of the right kind."""
-    matching = [f for f in census() if f.path == path and f.kind is kind]
+    matching = [f for f in recovered_census if f.path == path and f.kind is kind]
 
     assert matching, f"the detector found no {kind} in {path}; it is too weak to certify the rest"
 

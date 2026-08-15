@@ -16,7 +16,7 @@ See Also:
         Production authority that loads registry material before validation.
     :func:`cadrumo.domain.calculations.registry._validate_registry_scope.validate_registry_scope`
         Cross-model relation and registry-scope validation invoked here.
-    :mod:`cadrumo.domain.calculations.registry._validate_cache`
+    :mod:`cadrumo.domain.calculations.registry._validation_memoization`
         Identity-keyed failure caches used by this validator.
 """
 
@@ -35,13 +35,9 @@ from ._source_evidence_fingerprint import (
     SourceEvidenceFingerprint,
     collect_source_evidence_fingerprints,
 )
-from ._validate_cache import (
-    CATALOGUE_FAILURE_CACHE,
-    MODELO_VALIDATION_CACHE,
-    REGISTRY_VALIDATION_CACHE,
-)
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
+from ._validate_layout_authority_content import validate_layout_authority_content
 from ._validate_record_design_epochs import (
     validate_record_design_epoch_uniqueness,
     validate_record_design_epoch_window,
@@ -53,6 +49,11 @@ from ._validate_revision_rules import (
     validate_revision_windows,
 )
 from ._validate_revision_sections import validate_revision_definition
+from ._validation_memoization import (
+    CATALOGUE_FAILURE_CACHE,
+    MODELO_VALIDATION_CACHE,
+    REGISTRY_VALIDATION_CACHE,
+)
 
 if TYPE_CHECKING:
     from ...user_profile import ProfileSchemaDefinition
@@ -215,6 +216,11 @@ class RegistryValidator:
         # verification.
         failures.extend(validate_record_design_epoch_uniqueness(self._sources))
         failures.extend(validate_record_design_epoch_window(self._sources))
+        # Accumulating rather than raising through verify_source_catalogue: that
+        # path stops at the first bad source and dedupes by file, so a cohort of
+        # unbacked claims would surface as one message naming one of them. Each
+        # claim is its own declaration and each is named.
+        failures.extend(validate_layout_authority_content(self._sources, source_root=self._source_root))
         self._catalogue_failures = tuple(failures)
         CATALOGUE_FAILURE_CACHE[cache_key] = (self._legal, self._sources, self._catalogue_failures)
         return self._catalogue_failures

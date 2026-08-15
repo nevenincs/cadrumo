@@ -40,6 +40,27 @@ class IdReferenceChecker:
     Holds the per-kind ID sets and a failures buffer so per-kind
     reference walkers can stay focused on their own field paths instead
     of juggling closure state.
+
+    Deliberately NOT an instance of the ``failures=`` parameter convention
+    the rest of the registry's section validators moved away from (see the
+    accumulator-convention reconciliation this module was audited under).
+    That convention passes a FOREIGN accumulator into an otherwise-
+    independent function -- the caller must pre-create the list, the
+    signature hides the output, and the function cannot be tested without
+    manufacturing one. This class is a COHESIVE COLLABORATOR instead: it
+    owns its own state (the id sets AND the failures buffer together),
+    is constructed exactly once per referential-integrity sweep, is shared
+    by roughly twenty related `_check_*` helpers that all genuinely operate
+    over the same index, and is drained in exactly one place
+    (`_validate_references._check_all_id_references`). Testing it means
+    constructing one, running a check, and reading `.failures` -- which
+    already IS isolated testing, not a symptom of leaked mutable state.
+    Converting `chk`/`chk_opt`/`chk_tuple`/`chk_legal_source_refs` to return
+    their own findings would touch every one of those ~25 call sites for no
+    structural gain, on the exact module that raises the referential-
+    integrity gate. Leave this class's accumulation as-is; the boundary
+    between the two conventions is the point, not an oversight to converge
+    away.
     """
 
     __slots__ = (

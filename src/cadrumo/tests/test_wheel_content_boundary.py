@@ -232,9 +232,7 @@ def test_wheel_ships_no_agent_harness_payload(wheel_members: frozenset[str]) -> 
     dependency direction the split removed.
     """
 
-    offenders = sorted(
-        member for member in wheel_members if member.startswith(f"{_WHEEL_DATA_PREFIX}/agent/")
-    )
+    offenders = sorted(member for member in wheel_members if member.startswith(f"{_WHEEL_DATA_PREFIX}/agent/"))
     assert wheel_members, "the wheel listed no members; every probe would read as absent alike"
     assert not offenders, (
         f"the cadrumo wheel ships {len(offenders)} agent-harness member(s) that belong to cadrumo-harness; "

@@ -13,7 +13,7 @@ milliseconds).
 
 Mirrors two precedents together, one per risk it addresses:
 
-* :mod:`domain.calculations.registry._validate_verdict`'s KEYING shape: JSON,
+* :mod:`domain.calculations.registry._verdict_cache`'s KEYING shape: JSON,
   not pickle (the payload is a plain ``dict[str, str | None]``, so there is no
   reason to accept pickle's arbitrary-code-on-load surface for a runtime
   artefact a wheel ships); a source-digest key embedded in the payload. This

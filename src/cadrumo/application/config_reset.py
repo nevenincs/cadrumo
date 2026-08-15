@@ -12,7 +12,7 @@ from ..core.config import load_settings
 from ..core.errors import CadrumoError
 from ..core.hashing import sha256_hex
 from ..core.time import now
-from ..domain.retention import RetentionFloorAssessment
+from ..domain.retention import RetentionFloorAssessment, RetentionFloorError
 from ._config_reset_models import (
     ConfigResetDeletionMarker,
     ConfigResetOperation,
@@ -685,6 +685,43 @@ def _reconcile_pointer(
     return operation
 
 
+def _refuse_erase_inside_the_retention_floor(target: ConfigResetTarget) -> None:
+    """Refuse to erase a target whose filed records are still legally retained.
+
+    The Administration's right to review a filed self-assessment prescribes four
+    years (Ley 58/2003 LGT art. 66/67) and the supporting documentation must be
+    conserved for the same window (art. 70.2), so erasing inside it destroys
+    evidence the law requires kept. The operator may proceed only by recording
+    an explicit override.
+
+    Deliberately checked HERE, at the point bytes are destroyed, rather than
+    trusted from the pause that normally stops such a target reaching this
+    function. A guard that lives only in an earlier phase is one refactor away
+    from being skipped, and the failure it would permit is unrecoverable. No
+    supported flow reaches this refusal today; that is the point of a backstop,
+    and it is proven by forging the state the earlier phase prevents.
+
+    The count and the date come from the recorded decision, which
+    :meth:`~application.filing.FilingRetentionAuthority.assess` computed from
+    the filing snapshot -- so the message and the computation cannot drift.
+    ``latest_safe_erase_date`` is the instant the WHOLE set clears, which is
+    exactly the EARLIEST date erasing all of it is safe; the two names describe
+    one instant from opposite ends.
+    """
+    retention = target.retention
+    if retention is None or not retention.blocks_erase or retention.override_approved:
+        return
+    safe_from = retention.latest_safe_erase_date
+    raise RetentionFloorError(
+        translated_message="errors.refused.refused_retention_floor",
+        context={
+            "retained_record_count": retention.retained_record_count,
+            "earliest_safe_erase_date": (safe_from.date().isoformat() if safe_from is not None else "unknown"),
+            "bucket_id": target.bucket_id,
+        },
+    )
+
+
 def _delete_targets(
     repository: ConfigResetJournalRepository,
     operation: ConfigResetOperation,
@@ -708,6 +745,7 @@ def _delete_targets(
             continue
         fingerprint = target.fingerprint
         assert fingerprint is not None
+        _refuse_erase_inside_the_retention_floor(target)
         if target.phase is not ConfigResetTargetPhase.DELETING:
             target = _update_target(
                 target,

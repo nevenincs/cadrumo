@@ -45,6 +45,9 @@ BUCKET_DB_DIRNAME = storage_location(StorageCategory.BUCKET_DATABASE).subpath
 #: sibling constant above is the directory that holds it.
 BUCKET_DATABASE_FILENAME = storage_location(StorageCategory.BUCKET_DATABASE_FILE).subpath
 BUCKET_BLOBS_DIRNAME = storage_location(StorageCategory.BUCKET_BLOBS).subpath
+#: Names the RETIRED plaintext bucket manifest, kept to recognise it on a
+#: pre-cutover bucket. It backs no path definition below -- see the note where
+#: one would otherwise sit.
 BUCKET_MANIFEST_FILENAME = storage_location(StorageCategory.BUCKET_MANIFEST).subpath
 BUCKET_LOCK_FILENAME = storage_location(StorageCategory.BUCKET_LOCK).subpath
 BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME = storage_location(StorageCategory.BUCKET_OUTPUT_LANGUAGE_HINT).subpath
@@ -52,10 +55,14 @@ KEYSTORE_DIRNAME = storage_location(StorageCategory.BUCKET_KEYSTORE).subpath
 PROFILE_SESSION_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SESSION).subpath
 LOGIN_THROTTLE_FILENAME = storage_location(StorageCategory.KEYSTORE_LOGIN_THROTTLE).subpath
 PROFILE_CUSTODY_DIRNAME = storage_location(StorageCategory.PROFILE_CAPSULE_CUSTODY).subpath
+#: Bucket-root-relative nested paths (``custody/envelope.v1.json``), not single
+#: components -- so their definitions below omit ``segment``, matching
+#: ``bucket_database_file``'s treatment of the same shape.
 PROFILE_PASSWORD_ENVELOPE_FILENAME = storage_location(StorageCategory.PROFILE_CAPSULE_PASSWORD_ENVELOPE).subpath
 PROFILE_RECOVERY_ENVELOPE_FILENAME = storage_location(StorageCategory.PROFILE_CAPSULE_RECOVERY_ENVELOPE).subpath
 PROFILE_DATA_DIRNAME = storage_location(StorageCategory.PROFILE_CAPSULE_DATA).subpath
 PROFILE_COMMIT_FILENAME = storage_location(StorageCategory.PROFILE_CAPSULE_COMMIT).subpath
+ACTIVE_PROFILE_POINTER_FILENAME = storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).subpath
 #: Directory holding the application-owned config-reset journal. The
 #: application module owns the durable journal itself; the name is declared
 #: once in the core taxonomy (:class:`~cadrumo.core.StorageCategory.CONFIG_RESET_JOURNAL`)
@@ -197,14 +204,13 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_BLOBS_DIRNAME,
     ),
-    StoragePathDefinition(
-        key="bucket_manifest",
-        kind=StoragePathKind.FILE,
-        grammar=f"<root>/{BUCKETS_DIRNAME}/<bucket_id>/{BUCKET_MANIFEST_FILENAME}",
-        owner="cadrumo.adapters.persistence.storage.bucket",
-        anchor=StoragePathAnchor.STORAGE_ROOT,
-        segment=BUCKET_MANIFEST_FILENAME,
-    ),
+    # The plaintext bucket manifest has NO definition here, deliberately. Its
+    # reader was removed with the capsule cutover and nothing writes one, so a
+    # definition would declare a hierarchy member no current bucket has -- the
+    # same "declaration backed by nothing" the enrollment gate exists to catch,
+    # committed on purpose. The filename constant survives above because the
+    # name is still needed to RECOGNISE the retired member on a bucket that
+    # predates the cutover; naming a retired member is not declaring a format.
     StoragePathDefinition(
         key="bucket_lock",
         kind=StoragePathKind.FILE,
@@ -220,6 +226,45 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         owner="cadrumo.adapters.persistence.storage.bucket",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME,
+    ),
+    # The profile capsule's three current-format records. Each is a single
+    # on-disk file with its own schema version, so each is a persisted format
+    # in its own right and belongs in this inventory -- the independent source
+    # the durability declaration is checked against. They were previously
+    # absent from it while their layout constants were already declared above,
+    # so the names existed here but the paths did not, and the enrollment gate
+    # read every capsule format as a declaration backed by nothing.
+    StoragePathDefinition(
+        key="profile_capsule_password_envelope",
+        kind=StoragePathKind.FILE,
+        grammar=f"<root>/{BUCKETS_DIRNAME}/<bucket_id>/{PROFILE_PASSWORD_ENVELOPE_FILENAME}",
+        owner="cadrumo.adapters.persistence.storage.custody",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
+    ),
+    StoragePathDefinition(
+        key="profile_capsule_recovery_envelope",
+        kind=StoragePathKind.FILE,
+        grammar=f"<root>/{BUCKETS_DIRNAME}/<bucket_id>/{PROFILE_RECOVERY_ENVELOPE_FILENAME}",
+        owner="cadrumo.adapters.persistence.storage.custody",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
+    ),
+    StoragePathDefinition(
+        key="profile_capsule_commit",
+        kind=StoragePathKind.FILE,
+        grammar=f"<root>/{BUCKETS_DIRNAME}/<bucket_id>/{PROFILE_COMMIT_FILENAME}",
+        owner="cadrumo.adapters.persistence.storage.custody",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
+        segment=PROFILE_COMMIT_FILENAME,
+    ),
+    StoragePathDefinition(
+        # Root-scoped rather than bucket-scoped, and deliberately so: it names
+        # WHICH bucket is active, so it cannot live inside one.
+        key="active_profile_pointer",
+        kind=StoragePathKind.FILE,
+        grammar=f"<root>/{ACTIVE_PROFILE_POINTER_FILENAME}",
+        owner="cadrumo.core.config",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
+        segment=ACTIVE_PROFILE_POINTER_FILENAME,
     ),
     StoragePathDefinition(
         key="keystore_bucket",

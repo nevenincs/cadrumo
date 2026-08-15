@@ -48,8 +48,17 @@ applies_from = 2017-02-11
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-1334"
 review_status = "reviewed"
 
+# Retiered 2026-08-15: this 2101-byte orden excerpt carries no annex section
+# and no record-layout vocabulary, so it was never layout authority.
+# CONFIRMED unpublished, not a harvest gap: checked AEAT's live Diseños de
+# Registro index (current + historical pages, modelos-01-99 through
+# resto-modelos, all ten "01"/"100"/"200"/"300"/"resto" page families) for
+# any Modelo 121 title and found none -- this is a permanent limitation, not
+# a worklist item to fill later. This excerpt remains a genuine
+# official_source_guidance citation (the orden that approves the form), just
+# not the layout's home.
 [sources."enrolled-modelo-121-layout"]
-evidence_tier = "layout_authority"
+evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hfp-105-2017.html"

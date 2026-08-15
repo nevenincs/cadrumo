@@ -11,12 +11,9 @@ from decimal import Decimal
 
 from ..core import CasillaId, RegistryAuthorityGrade
 from ..core.resources import bundled_path
-from ..domain.calculations.registry import (
-    CasillaObservation,
-    RegistryModeloObservation,
-    load_registry_tree,
-)
+from ..domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ..domain.calculations.registry.tests import build_snapshot
+from ..tests.registry_tree import bundled_registry_tree
 
 
 def registry_grounded_observations(
@@ -59,7 +56,7 @@ def registry_grounded_observation_rows(
     pass a lower grade explicitly.
     """
 
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = bundled_registry_tree()
     modelo_definition = next(item for item in modelos if item.id == modelo)
     snapshot = build_snapshot(
         modelo_definition,

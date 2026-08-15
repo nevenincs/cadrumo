@@ -12,7 +12,7 @@ from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ._binding_aggregation import binding_aggregation_op
 from ._errors import RegistryValidationError
-from ._schema import DataBindingDefinition, ModeloRevision, OneBasedExportOffset
+from ._schema import DataBindingDefinition, ExportFieldDataType, ModeloRevision, OneBasedExportOffset
 
 __all__ = [
     "BindingExportDataType",
@@ -37,7 +37,15 @@ __all__ = [
 ]
 
 
-BindingExportDataType = Literal["text", "integer", "decimal", "money", "date", "boolean"]
+BindingExportDataType = ExportFieldDataType
+"""Alias of :data:`~._schema_exports.ExportFieldDataType`, the canonical declaration.
+
+A binding's export-facing ``data_type`` is the same six-member wire vocabulary
+an :class:`~._schema_exports.ExportFieldDefinition` declares -- kept as a
+separate name here because binding selector models predate the export schema
+consolidation and callers already import ``BindingExportDataType``, not
+because it is a distinct vocabulary.
+"""
 
 
 class BindingFixedExportSelector(BaseModel):

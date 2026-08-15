@@ -7640,8 +7640,8 @@ errors:
     refused_retention_floor: 'Esborrament rebutjat: %{retained_record_count} registre(s)
       tributari(s) presentat(s) encara són dins del termini legal de conservació (Llei
       58/2003, LGT art. 66 i 70). La data més primerenca d''esborrament segur és %{earliest_safe_erase_date}.
-      Espereu fins aleshores o torneu a executar amb --i-acknowledge-legal-retention-obligations
-      i --reason per forçar-ho.'
+      Espereu fins aleshores o torneu a executar amb --override-retention i --reason
+      per forçar-ho.'
     refused_review_edit_parse: No s'ha pogut interpretar `--set CLAU=VALOR`. Comprova
       la sintaxi del valor indicat.
     refused_review_filter_parse: No s'ha pogut interpretar `--filter CLAU=VALOR`.
@@ -49242,6 +49242,18 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període (anual, 0A)
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
+              label: Guany patrimonial
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
+              label: NIF de la societat o fons d'inversió
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
+              label: Retenció o ingrés a compte
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
+              label: Tipus de renda
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
+              label: Total de guanys patrimonials
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
+              label: Total de retencions o ingressos a compte
             x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
               help: null
               label: Base liquidable general (règim d'impatriats, exclosa la part
@@ -72518,6 +72530,12 @@ modelo:
             identificacion-8:
               help: null
               label: Comunitat o Ciutat Autònoma de residència el 2020
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (anual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidació - Límit de la quota íntegra - Part de la base imposable
@@ -72574,76 +72592,12 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidació - Total de la quota íntegra - Total de la quota íntegra
-          field:
-            label: Impost sobre el Patrimoni 2021
-        2021-y-siguientes:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: Exercici a què es refereix la declaració
-            x-chim6r1ee1in4qbfchng:
-              help: null
-              label: Període (anual, 0A)
-            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
-              help: null
-              label: Liquidació - Part de la base imposable de l'estalvi de l'IRPF
-                exclosa del límit conjunt
-            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
-              help: null
-              label: Base imposable (patrimoni net)
-            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
-              help: null
-              label: Base liquidable (base imposable menys reduccions, art. 28)
-            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
-              help: null
-              label: Liquidació - Quota a ingressar
-            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
-              help: null
-              label: Liquidació - Quota íntegra (escala art. 30)
-            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
-              help: null
-              label: Liquidació - Part de la quota íntegra de l'Impost sobre el Patrimoni
-                susceptible de limitació
-            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
-              help: null
-              label: Liquidació - Quota minorada
-            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
-              help: null
-              label: Liquidació - Dividends i participacions en beneficis no integrats
-                en l'IRPF
-            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
-              help: null
-              label: Liquidació - Excés del límit conjunt
-            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
-              help: null
-              label: Liquidació - Suma de les bases imposables de l'IRPF
-            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
-              help: null
-              label: Liquidació - Part de les quotes íntegres de l'IRPF corresponent
-                a la base de l'estalvi exclosa
-            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
-              help: null
-              label: Liquidació - Quotes íntegres de l'IRPF
-            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
-              help: null
-              label: Liquidació - Límit conjunt de quotes de l'IP i de l'IRPF (60%,
-                art. 31)
-            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
-              help: null
-              label: Liquidació - 80% de la quota íntegra de l'Impost sobre el Patrimoni
-                (sòl de reducció, art. 31)
-            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
-              help: null
-              label: Liquidació - Suma de quotes a efectes del límit conjunt
-            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
-              help: null
-              label: Liquidació - Total quota íntegra
           construct:
             m714-patrimonio-calculation:
               field:
-                title: null
+                title: Model 714 Impost sobre el Patrimoni quota
           field:
-            label: null
+            label: Impost sobre el Patrimoni 2021
         '2022':
           casilla:
             declaracion-01:
@@ -72896,6 +72850,12 @@ modelo:
             identificacion-8:
               help: null
               label: Comunitat o Ciutat Autònoma de residència el 2022
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (anual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidació - Límit de la quota íntegra - Part de la base imposable
@@ -72952,6 +72912,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidació - Total de la quota íntegra - Total de la quota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Model 714 Impost sobre el Patrimoni quota
           field:
             label: Impost sobre el Patrimoni 2022
         '2023':
@@ -73206,6 +73170,12 @@ modelo:
             identificacion-8:
               help: null
               label: Comunitat o Ciutat Autònoma de residència el 2023
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (anual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidació - Límit de la quota íntegra - Part de la base imposable
@@ -73262,6 +73232,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidació - Total de la quota íntegra - Total de la quota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Model 714 Impost sobre el Patrimoni quota
           field:
             label: Impost sobre el Patrimoni 2023
         '2024':
@@ -73516,6 +73490,12 @@ modelo:
             identificacion-8:
               help: null
               label: Comunitat o Ciutat Autònoma de residència el 2024
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (anual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidació - Límit de la quota íntegra - Part de la base imposable
@@ -73572,6 +73552,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidació - Total de la quota íntegra - Total de la quota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Model 714 Impost sobre el Patrimoni quota
           field:
             label: Impost sobre el Patrimoni 2024
         '2025':
@@ -73826,6 +73810,12 @@ modelo:
             identificacion-8:
               help: null
               label: Comunitat o Ciutat Autònoma de residència el 2025
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (anual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidació - Límit de la quota íntegra - Part de la base imposable
@@ -73882,6 +73872,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidació - Total de la quota íntegra - Total de la quota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Model 714 Impost sobre el Patrimoni quota
           field:
             label: Impost sobre el Patrimoni 2025
     '720':

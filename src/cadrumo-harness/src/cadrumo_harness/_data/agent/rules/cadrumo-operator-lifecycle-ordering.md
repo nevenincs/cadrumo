@@ -1,7 +1,7 @@
 # Lifecycle ordering — calculate, then verify, then file
 
 The modelo lifecycle has one canonical order. The manifest carries it as data
-(`aeat app contract --format json` → `contract.lifecycle.steps`, currently
+(the MCP `contract` tool → `contract.lifecycle.steps`, currently
 `calculate → verify → file`) so this ordering is never a convention you invent —
 confirm it against that field if you are ever unsure, rather than trusting a stale
 paraphrase.

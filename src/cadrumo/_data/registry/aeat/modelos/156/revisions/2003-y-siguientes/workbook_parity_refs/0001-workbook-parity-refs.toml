@@ -1,8 +1,10 @@
-# Modelo 156 record-design parity anchor. Declares the bundled orden-hac-3580-2003
-# form-approval order as the layout authority. This scheduling/applicability-grade
-# revision carries no calc formulas, so runner_required is false: the anchor pins
-# the official form-approval provenance without asserting a verified fixed-width
-# byte-position record design (no authoritative Modelo 156 DR is bundled).
+# Modelo 156 record-design parity anchor. workbook_source is
+# enrolled-modelo-156-layout, re-pointed 2026-08-15 to the real bundled
+# Diseño de Registro (39458 bytes) after its prior corpus_path (a 1112-byte
+# orden excerpt) was found to carry no layout content. This
+# scheduling/applicability-grade revision carries no calc formulas, so
+# runner_required is false: the anchor pins the official layout provenance
+# without asserting a verified byte-position parity run.
 
 [[revisions."2003-y-siguientes".workbook_parity_refs]]
 id = "modelo-156-orden-static-layout"

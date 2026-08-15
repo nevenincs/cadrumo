@@ -49,8 +49,14 @@ applies_from = 2021-05-28
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-8878"
 review_status = "reviewed"
 
+# Retiered 2026-08-15: this 1009-byte orden excerpt carries no annex section
+# and no record-layout vocabulary, so it was never layout authority -- the
+# real Diseño de Registro is aeat-dr-604-2024 below (aeat-dr-604-2021 also
+# registered, applies_to 2023-12-31). The excerpt remains a genuine
+# official_source_guidance citation (the orden that approves the form), just
+# not the layout's home.
 [sources."enrolled-modelo-604-layout"]
-evidence_tier = "layout_authority"
+evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-510-2021.html"

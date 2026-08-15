@@ -17,8 +17,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import Period
-from ....core.resources import bundled_path
-from ....domain.calculations.registry import load_registry_tree
+from ....tests.registry_tree import bundled_registry_tree
 from ..runtime import build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -48,7 +47,7 @@ def test_the_projection_is_narrower_than_the_revision_binding_set(filing_year: i
     binding set wholesale and the authority boundary has been crossed.
     """
     projected = _modelo_100_bindings(filing_year)
-    modelos, _catalogues = load_registry_tree(bundled_path() / "registry" / "aeat")
+    modelos, _catalogues = bundled_registry_tree()
     revision = next(m for m in modelos if m.id == "100").revisions[str(filing_year)]
 
     assert 0 < len(projected) < len(revision.bindings), filing_year

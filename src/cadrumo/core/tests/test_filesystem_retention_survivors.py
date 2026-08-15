@@ -4,7 +4,7 @@
 the four hand-rolled raw-filesystem retention walkers found in
 :mod:`cadrumo.core.observability`,
 :mod:`cadrumo.adapters.outbound.aeat.sede`,
-:mod:`cadrumo.entrypoints.mcp`, and
+``cadrumo_harness.mcp``, and
 :mod:`cadrumo.domain.calculations.registry`.
 
 Each bound (age cutoff, count cap, byte ceiling) is pinned alone and then

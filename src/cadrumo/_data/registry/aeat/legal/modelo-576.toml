@@ -30,15 +30,22 @@ applies_from = 2008-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-22442"
 review_status = "reviewed"
 
+# Re-pointed 2026-08-15: the previous corpus_path (orden-eha-3851-2007.html,
+# 959 bytes) carries no annex section and no record-layout vocabulary. The
+# real Diseño de Registro (65097 bytes) is bundled and was never cited --
+# verified directly: "N° | Posic. | Lon | Tipo | Descripción | Validación |
+# Contenido", the canonical AEAT layout table header, starting with the
+# T57601 start-of-data label at position 1. Fields now point at the bundled
+# file, sourced from its manifest.json (real, observed provenance, not
+# re-fetched). applies_from/record_design_epoch left undeclared: titled
+# "vigente" (currently in force) with no single coverage-start date stated.
 [sources."enrolled-modelo-576-layout"]
 evidence_tier = "layout_authority"
-authority = "boe"
-kind = "form_spec"
-corpus_path = "corpus/normatives/html/orden-eha-3851-2007.html"
-sha256 = "67573ebf484f8428a7275d9dc2ba6c95f1f85a82c9ddafd4a715df22ea479d28"
-bytes = 959
-retrieved_at = 2026-07-04
-published_at = 2007-12-31
-applies_from = 2008-01-01
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-22442"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_576/files/01-576-diseno-de-registro-vigente.xlsx"
+sha256 = "d1964b0c5b2c360b1a06e510ae3f7fce632cd3f7882be0365a8fdb3c26e0dbc7"
+bytes = 65097
+retrieved_at = 2026-07-21
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr576.xlsx"
 review_status = "reviewed"

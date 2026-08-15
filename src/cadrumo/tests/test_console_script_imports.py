@@ -92,10 +92,12 @@ def test_retired_aeat_package_root_is_absent_from_the_source_tree() -> None:
 
 
 def test_console_scripts_expose_only_the_canonical_cadrumo_commands() -> None:
-    """Package metadata has one human CLI and one distinct MCP executable, with no alias."""
+    """``cadrumo`` ships exactly one human CLI; the MCP executable is the harness's."""
     pyproject = tomllib.loads((_PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
-    assert pyproject["project"]["scripts"] == {
-        "aeat": "cadrumo.entrypoints.cli:main",
-        "cadrumo-mcp": "cadrumo.entrypoints.mcp:main",
-    }
+    assert pyproject["project"]["scripts"] == {"aeat": "cadrumo.entrypoints.cli:main"}
+
+    harness = tomllib.loads(
+        (_PROJECT_ROOT / "src" / "cadrumo-harness" / "pyproject.toml").read_text(encoding="utf-8"),
+    )
+    assert harness["project"]["scripts"] == {"cadrumo-mcp": "cadrumo_harness.mcp:main"}

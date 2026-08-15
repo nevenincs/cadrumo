@@ -182,8 +182,9 @@ class UserProfilePortableExport(BaseModel):
     attempting to parse ``profile``. Increment it when the serialised shape
     changes in a backward-incompatible way.
 
-    Version 3 is the only supported shape; earlier shapes are refused, not
-    bridged. It carries ``profile`` plus the financial-history fields
+    Which versions are accepted is the bundle lineage's decision, not this
+    model's, so it is not restated here. This is the version-3 SHAPE: it
+    carries ``profile`` plus the financial-history fields
     ``work_units``, ``ledger_transactions``, ``calculation_revisions``, and
     ``filing_records``. It also declares the v3 generic secure-object carry
     surface and coverage manifest; those fields default empty until the
@@ -195,7 +196,15 @@ class UserProfilePortableExport(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bundle_schema_version: int = Field(default=3, ge=1)
+    # Required, with NO default, on two grounds. A default here would be a
+    # second declaration of the current write version, which is owned by the
+    # bundle lineage alongside its durability floor and its upgrader table --
+    # and a version bump must land its hop with it, so the two halves of one
+    # obligation cannot sit in different layers. A default is also silent
+    # read-tolerance: a payload carrying no version would validate as whichever
+    # number happened to be written here, so a bundle nothing wrote would parse
+    # as current. Absent must refuse.
+    bundle_schema_version: int = Field(ge=1)
     # Provenance metadata, deliberately NOT content-addressable: two exports of
     # identical bucket state differ by this timestamp. That is acceptable because
     # the sealed-archive transport is itself non-deterministic by design (a random

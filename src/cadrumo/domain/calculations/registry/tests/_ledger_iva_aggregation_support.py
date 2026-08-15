@@ -26,6 +26,7 @@ from .....core import (
 )
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import bundled_path, resources
+from .....tests.registry_tree import bundled_registry_tree
 from ....iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,
@@ -43,7 +44,6 @@ from .. import (
     RegistryCalculationResult,
     RegistryModeloObservation,
     calculate_registry_snapshot,
-    load_registry_tree,
     materialize_relation_binding_values,
     resolve_available_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
@@ -278,7 +278,7 @@ def _calculate_390_from_observations_and_303_filings(
     # aggregation result, never a filing claim -- rather than through
     # ``resources().modelos.authority``, whose ``.load()`` validates every
     # modelo in the bundled tree before returning anything.
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = bundled_registry_tree()
     modelo_390 = next(modelo for modelo in modelos if modelo.id == "390")
     snapshot = build_snapshot(
         modelo_390,

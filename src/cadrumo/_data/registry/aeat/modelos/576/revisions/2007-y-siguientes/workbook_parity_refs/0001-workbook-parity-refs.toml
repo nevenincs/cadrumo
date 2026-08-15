@@ -1,7 +1,8 @@
-# Modelo 576 record-design parity anchor. Declares the bundled orden-eha-3851-2007
-# form-approval order as the layout authority. runner_required is false: no
-# authoritative Modelo 576 DR is bundled, so this pins the form-approval
-# provenance without asserting a verified byte-position layout.
+# Modelo 576 record-design parity anchor. workbook_source is
+# enrolled-modelo-576-layout, re-pointed 2026-08-15 to the real bundled
+# Diseño de Registro (65097 bytes) after its prior corpus_path (a 959-byte
+# orden excerpt) was found to carry no layout content. runner_required
+# stays false pending a verified byte-position parity run against the design.
 
 [[revisions."2007-y-siguientes".workbook_parity_refs]]
 id = "modelo-576-orden-static-layout"

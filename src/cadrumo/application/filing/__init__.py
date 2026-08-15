@@ -253,7 +253,10 @@ from ._producer_snapshot import (
     build_filing_producer_snapshot,
     resolve_m303_filing_facts,
 )
-from ._profile_filing_retention import FilingRetentionAuthority
+from ._profile_filing_retention import (
+    FilingRetentionAuthority,
+    try_record_filing_retention_snapshot,
+)
 from ._projection import FilingProjectionValue, FilingRecordRenderContext
 from ._review import (
     ModeloApprovalStaleReason,
@@ -1257,6 +1260,7 @@ __all__ = [
     "load_default_filing_profile",
     "m303_rectificativa_motive_producer_values",
     "modelo_record_repository_for_application",
+    "try_record_filing_retention_snapshot",
     "project_m303_exonerado_390_value_arrival",
     "refresh_review_status",
     "render_m303_filing_envelope",

@@ -31,8 +31,8 @@ regulated work.
 
 The CLI has exactly two roots: `aeat config` (local configuration, profile/bucket
 custody, auth, diagnostics) and `aeat app` (operational tax work: `overview`,
-`ledger`, `live`, `modelo`, `registry`, `review`). Read the capability manifest with
-`aeat app contract --format json` to learn the command tree, each family's intent,
+`ledger`, `live`, `modelo`, `registry`, `review`). Call the MCP `contract` tool to
+read the capability manifest and learn the command tree, each family's intent,
 and its mutability before you act.
 
 ## Respect mutability

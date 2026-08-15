@@ -28,7 +28,6 @@ dependencies = [
   # and MCP server cannot perform grounded tax work without both corpus slices.
   "cadrumo-data-manuals==0.2.2",
   "cadrumo-data-official==0.2.2",
-  "cadrumo-harness==0.1.0",
   # Capability-gated integrations live in [project.optional-dependencies].
   # `anthropic` (Anthropic-API LLM provider), the `google-*` stack
   # (Drive/Sheets export), and `playwright*` (live AEAT browser) are lazily
@@ -328,7 +327,17 @@ torch = [
 # distributions from the configured package index.
 cadrumo-data-manuals = { path = "packaging/cadrumo_data_manuals" }
 cadrumo-data-official = { path = "packaging/cadrumo_data_official" }
-cadrumo-harness = { path = "src/cadrumo-harness" }
+cadrumo-harness = { workspace = true }
+
+# `cadrumo-harness` is a formal uv workspace member (not merely a path source, like
+# the two data companions above) so it is locked together with `cadrumo` in this
+# single `uv.lock` and can be addressed independently via `uv export --package
+# cadrumo-harness` (`dev/packaging/uv_constraints.py` needs this to pin the MCP
+# server's own third-party closure for the Scoop/MCPB bundles). Membership does NOT
+# create a dependency: `cadrumo` still declares no reliance on `cadrumo-harness`
+# anywhere in `[project.dependencies]` — only the `dev` group does, for local tooling.
+[tool.uv.workspace]
+members = ["src/cadrumo-harness"]
 
 [tool.vaultspec-rag]
 managed-torch-direct-dependency = true
@@ -558,6 +567,10 @@ convention = "google"
 "src/cadrumo/**/tests/**/*.py" = ["T20", "D", "E501"]
 "src/cadrumo/tests/**/*.py" = ["T20", "D"]
 "src/cadrumo/**/conftest.py" = ["D"]
+# The sibling cadrumo-harness distribution colocates its tests the same way, so
+# the same audience-scoped exemption applies to them.
+"src/cadrumo-harness/**/tests/**/*.py" = ["T20", "D", "E501"]
+"src/cadrumo-harness/**/conftest.py" = ["D"]
 # dev/docs/ holds contributor-only documentation tools and tests.
 "dev/docs/**/*.py" = ["T20", "D", "E402"]
 # `dev/` holds contributor-only developer tooling (quality gates, audits,
@@ -725,7 +738,7 @@ convention = "google"
 "dev/packaging/tests/test_cadrumo_data_distribution.py" = ["S603", "S607"]
 # The stdio-lifetime watchdog can only be proven against real spawned processes
 # and real pipes; every argv is a fixed `sys.executable -c <literal>`.
-"src/cadrumo/entrypoints/mcp/tests/test_stdio_lifetime.py" = ["S603"]
+"src/cadrumo-harness/src/cadrumo_harness/mcp/tests/test_stdio_lifetime.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/tests/test_substrate_smoke.py" = ["S603"]
 "src/cadrumo/domain/calculations/registry/tests/test_cross_domain_snapshot_registration.py" = ["S603"]
@@ -928,7 +941,7 @@ reportUnnecessaryTypeIgnoreComment = "error"
 
 # ── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
-testpaths = ["src/cadrumo", "dev/packaging/tests/test_installed_oracles.py"]
+testpaths = ["src/cadrumo", "src/cadrumo-harness", "dev/packaging/tests/test_installed_oracles.py"]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
 addopts = "-n auto --dist=loadfile --tb=short -m 'unit and not external_tool and not os_keychain' --strict-markers"

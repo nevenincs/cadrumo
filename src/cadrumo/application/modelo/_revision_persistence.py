@@ -53,6 +53,7 @@ from ...core import (
     validated_casilla_id,
 )
 from ...core.hashing import sha256_hex
+from ..filing import try_record_filing_retention_snapshot
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepositoryProtocol,
@@ -705,6 +706,31 @@ def _prior_domiciliation_payload(
     }
 
 
+def _refresh_filing_retention_snapshot(
+    *,
+    bucket_id: str,
+    catalogue: ModeloRecordCatalogue,
+    observed_at: datetime,
+) -> None:
+    """Record the filing facts a later deletion preflight will assess.
+
+    Runs AFTER the catalogue has durably saved, and delegates the write to the
+    filing package's best-effort recorder, which never raises. The ordering and
+    the never-raising are the same decision from two sides: a filing that
+    succeeded with a stale snapshot is recoverable, while a filing refused
+    because a deletion-support record could not be written is not.
+
+    This is the moment the retention position changes and the only moment a
+    session for the bucket is held by construction, which is why the producer
+    lives here rather than at the deletion preflight that consumes it.
+    """
+    try_record_filing_retention_snapshot(
+        bucket_id=bucket_id,
+        records=tuple(catalogue.records.values()),
+        observed_at=observed_at,
+    )
+
+
 def persist_filed_revision(
     *,
     target: CalculationRevision,
@@ -888,6 +914,12 @@ def persist_filed_revision(
     filing_repository.save_with_secure_object_writes(
         updated_filing_catalogue,
         extra_writes,
+    )
+
+    _refresh_filing_retention_snapshot(
+        bucket_id=work_unit.bucket_id,
+        catalogue=updated_filing_catalogue,
+        observed_at=now,
     )
 
     # Cross-period carry projection (co-emitted with MODELO_FILED above): record

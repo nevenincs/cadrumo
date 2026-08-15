@@ -33,7 +33,7 @@ application layer owns the command contract and mutability taxonomy; entrypoint
 adapters own rendering, command-tree traversal, and schema-registry enumeration.
 
 See Also:
-    :mod:`entrypoints.mcp`
+    ``cadrumo_harness.mcp``
         Tool-exposure entrypoint that consumes the same manifest without
         duplicating the operator-surface contract.
     :mod:`core.json_contract`

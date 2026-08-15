@@ -149,6 +149,20 @@ CONSTANTS_AWAITING_CLASSIFICATION: Final[Mapping[str, str]] = {
         "Private crash-window sidecar for an interrupted session-key swap; unrecognised by the "
         "storage taxonomy, so a key would assert a boundary nothing else acknowledges."
     ),
+    "FINCA_SCHEMA_VERSION": (
+        "Rental-register finca record. These five arrive here by being NAMED, not by being new: "
+        "each was a bare literal on the domain model duplicated by a column default on the "
+        "persistence row, so the version existed twice and this gate could see neither. Naming "
+        "them makes them visible and openly unclassified, which is the honest state -- giving a "
+        "literal a name is not a durability decision, and pretending otherwise is how the four "
+        "register shapes above came to be excused without anyone deciding."
+    ),
+    "ARRENDAMIENTO_SCHEMA_VERSION": "Rental-register arrendamiento record; named alongside the finca record above.",
+    "FINCA_RENDIMIENTO_RECORD_SCHEMA_VERSION": "Per-period gross-rent ledger record; named alongside the finca record.",
+    "FINCA_GASTO_SCHEMA_VERSION": "Deductible-gasto record; named alongside the finca record above.",
+    "FINCA_AMORTIZACION_LEDGER_ENTRY_SCHEMA_VERSION": (
+        "Amortización cumulative-ledger entry; named alongside the finca record above."
+    ),
 }
 """Formats with NO durability class yet -- an open gap, not a set of exemptions.
 
@@ -297,10 +311,17 @@ def test_the_unclassified_gap_is_a_number_a_reader_can_see() -> None:
 
     Raise it only when a genuinely new format arrives unclassified; lower it as
     each one is argued. Never adjust it to make a run pass.
+
+    It last moved UP, from 14 to 19, and that direction was the good outcome:
+    five rental-register shapes had been carrying their version as a bare
+    literal, which this gate discovers by constant NAME and therefore could not
+    see at all. Naming them did not classify them. A number that grows because
+    five hidden formats became visible is worth more than one that stayed still
+    while they hid.
     """
-    assert len(CONSTANTS_AWAITING_CLASSIFICATION) == 14, (
+    assert len(CONSTANTS_AWAITING_CLASSIFICATION) == 19, (
         f"{len(CONSTANTS_AWAITING_CLASSIFICATION)} persisted formats await a durability class, not "
-        "the 14 recorded here. If one has been argued, remove it from "
+        "the 19 recorded here. If one has been argued, remove it from "
         "CONSTANTS_AWAITING_CLASSIFICATION and lower this number in the same change; if a new "
         "format arrived unclassified, raise it deliberately rather than to restore green."
     )

@@ -156,7 +156,7 @@ if TYPE_CHECKING:
     from ...domain.invoices import InvoiceCatalogue
     from ...domain.transactions import TransactionCatalogue
     from ...domain.user_profile import UserProfileRecord
-    from ..mcp import VerbInputSchema
+    from ._verb_input_schema import VerbInputSchema
 
 __all__ = [
     "active_profile_label",
@@ -539,7 +539,7 @@ def emit_progress_line(line: str) -> None:
 @cache
 def _live_action_input_schema(command_key: str) -> VerbInputSchema:
     """Resolve one action target through the live Click input-schema authority."""
-    from ..mcp import build_verb_input_schemas
+    from ._verb_input_schema import build_verb_input_schemas
 
     return build_verb_input_schemas((command_key,))[command_key]
 
@@ -601,7 +601,7 @@ def _action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
     """Derive executable text commands from the same resolved action DTOs as JSON."""
     from ...core.json_contract import ResolvedNoticeAction
     from ...core.product_identity import PRODUCT_IDENTITY
-    from ..mcp import cli_argv_for
+    from ._verb_input_schema import cli_argv_for
 
     lines: list[str] = []
     for notice in notices:
@@ -803,14 +803,26 @@ def _current_operator_surface_input_schemas() -> tuple[
     tuple[str, ...],
     Mapping[str, VerbInputSchema],
 ]:
-    """Collect the complete result-schema and S05 input-schema projections."""
-    from ...entrypoints.mcp import build_verb_input_schemas
-    from ._command_schema import command_schema_refs
+    """Collect the live result-schema and S05 input-schema projections.
 
-    schema_references = command_schema_refs()
-    command_keys = tuple(reference.command for reference in schema_references)
-    if len(set(command_keys)) != len(command_keys):
+    A key in :data:`~._verb_input_schema.DECLARED_UNIMPLEMENTED_SURFACES` carries
+    a registered result schema while its verb is knowingly absent, so the live
+    tree walk resolves no leaf for it and it takes part in no live
+    reconciliation row. Those keys are dropped from BOTH projections here rather
+    than half-dropped downstream; every OTHER divergence between the registry
+    and the walk is drift and still raises.
+    """
+    from ._command_schema import command_schema_refs
+    from ._verb_input_schema import DECLARED_UNIMPLEMENTED_SURFACES, build_verb_input_schemas
+
+    registered = command_schema_refs()
+    registered_keys = tuple(reference.command for reference in registered)
+    if len(set(registered_keys)) != len(registered_keys):
         raise ValueError("current result-schema registry has duplicate command identities")
+    schema_references = tuple(
+        reference for reference in registered if reference.command not in DECLARED_UNIMPLEMENTED_SURFACES
+    )
+    command_keys = tuple(reference.command for reference in schema_references)
     input_schemas = build_verb_input_schemas(tuple(sorted(command_keys)))
     if set(input_schemas) != set(command_keys):
         raise ValueError("current input-schema projection does not exactly match the result-schema registry")
@@ -930,21 +942,15 @@ def _current_operator_surface_schema_inventory() -> _CurrentOperatorSurfaceSchem
 def _current_operator_surface_mcp_exposures(
     command_keys: tuple[str, ...],
 ) -> tuple[McpExposureInventoryRow, ...]:
-    """Project current MCP exposure while rejecting duplicate and orphan tools."""
+    """Project which registry command keys an operator surface may expose."""
     from ...application.operator_surface import McpExposureInventoryRow
-    from ...entrypoints.mcp import build_tool_descriptors
+    from ._verb_input_schema import is_exposable_command
 
-    descriptors = build_tool_descriptors()
-    descriptor_by_key = {descriptor.command_key: descriptor for descriptor in descriptors}
-    if len(descriptor_by_key) != len(descriptors):
-        raise ValueError("current MCP projection has duplicate command identities")
-    if not set(descriptor_by_key).issubset(command_keys):
-        raise ValueError("current MCP projection contains a command absent from the result-schema registry")
     return tuple(
         McpExposureInventoryRow(
             subject_leaf_key=command_key,
-            exposed=command_key in descriptor_by_key,
-            provenance="build_tool_descriptors",
+            exposed=is_exposable_command(command_key),
+            provenance="is_exposable_command",
         )
         for command_key in sorted(command_keys)
     )

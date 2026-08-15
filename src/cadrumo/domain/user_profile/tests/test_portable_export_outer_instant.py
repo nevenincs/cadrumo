@@ -24,6 +24,10 @@ from .._values import UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+#: Fixture value pinning the shape under test. The model carries no default
+#: because the current write version belongs to the bundle lineage, which
+#: this layer cannot see; this claims nothing about what production stamps.
+_SHAPE_UNDER_TEST = 3
 _PROFILE_ID = "a4f1c2e0-1111-4222-8333-444455556666"
 _UTC_INSTANT = datetime(2026, 1, 1, 10, 0, 0, tzinfo=UTC)
 _NAIVE_INSTANT = datetime(2026, 1, 1, 10, 0, 0)
@@ -40,12 +44,14 @@ def _profile() -> UserProfileRecord:
 @pytest.mark.parametrize("instant", (_NAIVE_INSTANT, _OFFSET_INSTANT), ids=("naive", "offset"))
 def test_export_refuses_a_non_utc_outer_stamp(instant: datetime) -> None:
     with pytest.raises(ValidationError):
-        UserProfilePortableExport(exported_at=instant, profile=_profile())
+        UserProfilePortableExport(bundle_schema_version=_SHAPE_UNDER_TEST, exported_at=instant, profile=_profile())
 
 
 def test_export_refuses_a_non_utc_outer_stamp_from_serialized_text() -> None:
     """The refusal has to hold on the import path, which is where a bundle arrives."""
-    payload = UserProfilePortableExport(exported_at=_UTC_INSTANT, profile=_profile()).model_dump(mode="json")
+    payload = UserProfilePortableExport(
+        bundle_schema_version=_SHAPE_UNDER_TEST, exported_at=_UTC_INSTANT, profile=_profile()
+    ).model_dump(mode="json")
     payload["exported_at"] = "2026-01-01T10:00:00"
 
     with pytest.raises(ValidationError):
@@ -53,7 +59,9 @@ def test_export_refuses_a_non_utc_outer_stamp_from_serialized_text() -> None:
 
 
 def test_a_utc_export_round_trips_canonically() -> None:
-    export = UserProfilePortableExport(exported_at=_UTC_INSTANT, profile=_profile())
+    export = UserProfilePortableExport(
+        bundle_schema_version=_SHAPE_UNDER_TEST, exported_at=_UTC_INSTANT, profile=_profile()
+    )
 
     restored = UserProfilePortableExport.model_validate_json(export.model_dump_json())
 
@@ -75,4 +83,6 @@ def test_the_outer_stamp_and_the_carried_rows_share_one_policy() -> None:
             payload_b64="eyJhIjogMX0=",
         )
     with pytest.raises(ValidationError):
-        UserProfilePortableExport(exported_at=_NAIVE_INSTANT, profile=_profile())
+        UserProfilePortableExport(
+            bundle_schema_version=_SHAPE_UNDER_TEST, exported_at=_NAIVE_INSTANT, profile=_profile()
+        )

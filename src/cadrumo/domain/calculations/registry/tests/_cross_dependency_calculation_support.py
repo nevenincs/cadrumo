@@ -6,7 +6,7 @@ from functools import cache
 
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id, validated_casilla_id_map
 from .....core.resources import bundled_path
-from .. import load_registry_tree
+from .....tests.registry_tree import bundled_registry_tree
 from .._bindings import CasillaObservation, RegistryModeloObservation
 from .._errors import NoRevisionForPeriodError
 from .._relations import RegistryFoldRequirement
@@ -57,7 +57,7 @@ def _observations_from_requirements(
 
 @cache
 def _cross_dependency_registry_tree():
-    return load_registry_tree(bundled_path("registry", "aeat"))
+    return bundled_registry_tree()
 
 
 def _grounded_observations(

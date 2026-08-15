@@ -20,5 +20,5 @@ Subtrees:
 - `skills/` — executable workflow playbooks (preconditions, command sequence, JSON
   success assertions) for the canonical end-to-end tax flows.
 
-The capability catalogue the agent reads first is emitted by
-`aeat app contract --format json`.
+The capability catalogue the agent reads first is served by the MCP server's
+`contract` tool.

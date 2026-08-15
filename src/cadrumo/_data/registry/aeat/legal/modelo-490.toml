@@ -49,8 +49,13 @@ applies_from = 2021-06-09
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-9721"
 review_status = "reviewed"
 
+# Retiered 2026-08-15: this 961-byte orden excerpt carries no annex section
+# and no record-layout vocabulary, so it was never layout authority -- the
+# real Diseño de Registro is aeat-dr-490-2023 below. The excerpt remains a
+# genuine official_source_guidance citation (the orden that approves the
+# form), just not the layout's home.
 [sources."enrolled-modelo-490-layout"]
-evidence_tier = "layout_authority"
+evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-590-2021.html"

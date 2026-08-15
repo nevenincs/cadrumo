@@ -9,7 +9,7 @@ real repro is a real M130 calculate that returned correct casilla values but no
 
 This module dispatches a REAL ``modelo.work.calculate`` through the actual CLI
 command handling (the identical transport
-:func:`cadrumo.entrypoints.mcp._dispatch.tool_request_argv` projects the
+:func:`cadrumo_harness.mcp._dispatch.tool_request_argv` projects the
 ``cadrumo_modelo_work_calculate`` MCP tool call onto: ``app modelo work calculate``),
 decodes the JSON RESPONSE payload's ``observations`` rows, and feeds them into
 :func:`dev.agent_eval.run_golden_scenario` via its ``response_observations``
@@ -179,7 +179,7 @@ def _dispatch_real_m130_calculate(
     Drives real command handling end to end (create work unit -> seed real
     ledger rows -> calculate) — the same transport the ``cadrumo_modelo_work_calculate``
     MCP tool dispatches to, since
-    :func:`cadrumo.entrypoints.mcp._dispatch.tool_request_argv` projects that tool
+    :func:`cadrumo_harness.mcp._dispatch.tool_request_argv` projects that tool
     call onto the identical ``app modelo work calculate`` CLI argv this test
     invokes directly. Every returned value is what the real registry engine and
     the real CLI envelope serializer produced — not a hand-rolled dict.

@@ -304,13 +304,14 @@ def _validate_relation_source_revision(
 ) -> list[str]:
     failures: list[str] = []
     source_scope = f"{relation_scope} source revision {source_revision.id!r}"
-    if failure := source_casilla_id_reference_failure(
-        source_revision,
-        relation.source_casilla_id,
-        source_scope=source_scope,
-        missing_failure=f"{source_scope} has no source casilla id {relation.source_casilla_id!r}",
-    ):
-        failures.append(failure)
+    failures.extend(
+        source_casilla_id_reference_failure(
+            source_revision,
+            relation.source_casilla_id,
+            source_scope=source_scope,
+            missing_failure=f"{source_scope} has no source casilla id {relation.source_casilla_id!r}",
+        ),
+    )
     unknown_source_periods = sorted(set(source_periods).difference(source_revision.period_selector.periods))
     if unknown_source_periods:
         failures.append(f"{source_scope} does not support source periods {unknown_source_periods!r}")

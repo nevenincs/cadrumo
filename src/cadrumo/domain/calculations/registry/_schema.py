@@ -177,6 +177,7 @@ __all__ = [
     "EvidenceTier",
     "ExportComputedKey",
     "ExportDraftAttribute",
+    "ExportFieldDataType",
     "ExportFieldDefinition",
     "ExportLayoutDefinition",
     "ExportRecordDefinition",
@@ -258,6 +259,7 @@ from ._schema_base import (
 from ._schema_exports import (
     ExportComputedKey,
     ExportDraftAttribute,
+    ExportFieldDataType,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,

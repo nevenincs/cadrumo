@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from functools import cache
 
-from .....core.resources import bundled_path
-from .._loader import load_registry_tree
+from .....tests.registry_tree import bundled_registry_tree
 from .._schema import ModeloDefinition, RegistryCatalogues
 
 _FORMAL_WITHHOLDING_MODELOS = frozenset({"111", "115", "123", "180", "190", "193"})
@@ -16,7 +15,7 @@ _FRACTIONAL_PAYMENT_ARTICLE_REF = "rd-439-2007:art-109"
 
 @cache
 def _registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelos, catalogues = bundled_registry_tree()
     return tuple(modelos), catalogues
 
 

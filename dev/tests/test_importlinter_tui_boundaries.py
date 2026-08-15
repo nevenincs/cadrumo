@@ -73,7 +73,6 @@ def _write_real_tui_topology(root: Path) -> None:
         "cadrumo.tests",
         "cadrumo.entrypoints",
         "cadrumo.entrypoints.cli",
-        "cadrumo.entrypoints.mcp",
         "cadrumo.entrypoints.tui",
         "cadrumo.entrypoints.tui.launcher",
         "cadrumo.entrypoints.tui.components",
@@ -135,11 +134,6 @@ def test_launcher_descendant_may_wire_an_adapter_descendant(tmp_path: Path) -> N
     (
         (
             "cadrumo.application.service",
-            "from cadrumo.entrypoints.tui import launcher\n",
-            "Backend and sibling entrypoints must not depend on the dedicated TUI",
-        ),
-        (
-            "cadrumo.entrypoints.mcp.tool",
             "from cadrumo.entrypoints.tui import launcher\n",
             "Backend and sibling entrypoints must not depend on the dedicated TUI",
         ),

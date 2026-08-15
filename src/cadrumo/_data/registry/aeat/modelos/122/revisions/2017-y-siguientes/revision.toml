@@ -3,8 +3,10 @@ authority_grade = "applicability"
 # Modelo 122 regularización del derecho a la deducción por familia numerosa /
 # personas con discapacidad a cargo (IRPF), approved by orden-hfp-105-2017 art 5
 # with its plazo grounded verbatim in orden-hfp-105-2017 art 7. Scheduling/
-# applicability-grade: declaration-header casillas only; no bundled diseño de
-# registro, so no numbered form casilla is fabricated.
+# applicability-grade: declaration-header casillas only. The authoritative
+# Modelo 122 diseño de registro IS bundled (aeat-dr-122-2016) but no
+# casilla-to-position mapping has been authored from it yet, so no numbered
+# form casilla is fabricated here.
 # Deadline-shape note: art 7 sets an event-anchored plazo — from the date the
 # advance payments were unduly received until the close of the annual IRPF
 # campaign — not a fixed calendar window. This revision therefore carries NO

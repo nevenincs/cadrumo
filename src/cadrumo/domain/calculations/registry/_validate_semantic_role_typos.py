@@ -1,8 +1,7 @@
-"""Semantic-role typo warning helpers."""
+"""Semantic-role typo diagnostic helpers."""
 
 from __future__ import annotations
 
-import warnings
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from difflib import SequenceMatcher
@@ -22,14 +21,6 @@ class _RoleObservationLike(Protocol):
     revision_id: RevisionId
     casilla_id: CasillaId
     semantic_role_cardinality: str
-
-
-def emit_grouped_semantic_role_typo_twin_warnings(
-    grouped: Mapping[str, Sequence[_RoleObservationLike]],
-) -> None:
-    """Warn when a ``semantic_role`` value appears on exactly one casilla."""
-    for failure in grouped_semantic_role_typo_twin_failures(grouped):
-        warnings.warn(failure, stacklevel=2)
 
 
 def grouped_semantic_role_typo_twin_failures(

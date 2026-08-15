@@ -34,8 +34,8 @@ import socket
 import threading
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from queue import Empty, Queue
-from typing import ClassVar, override
+from queue import Empty
+from typing import override
 
 import pytest
 
@@ -48,34 +48,13 @@ from .. import (
     build_telemetry_payload,
     emit_telemetry_event,
 )
+from ._telemetry_endpoint_support import RecordingTelemetryEndpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _WORKSPACE_HASH = "d" * 64
 _CAPTURED_AT = "2026-07-04T00:00:00+00:00"
 
-
-class _RecordingTelemetryEndpoint(BaseHTTPRequestHandler):
-    """Local telemetry-collector-shaped endpoint used to inspect the real HTTP POST."""
-
-    events: ClassVar[Queue[dict[str, object]]]
-
-    def do_POST(self) -> None:
-        body = self.rfile.read(int(self.headers.get("content-length", "0")))
-        self.events.put(
-            {
-                "path": self.path,
-                "content_type": self.headers.get("content-type"),
-                "body": json.loads(body.decode("utf-8")),
-            },
-        )
-        self.send_response(HTTPStatus.OK)
-        self.send_header("content-length", "0")
-        self.end_headers()
-
-    @override
-    def log_message(self, format: str, *args: object) -> None:
-        """Silence stdlib request logging during tests."""
 
 
 def _payload() -> TelemetryEventPayload:
@@ -90,7 +69,7 @@ def _payload() -> TelemetryEventPayload:
 
 def test_no_configured_endpoint_never_sends() -> None:
     """A sink built without an endpoint is permanently inert."""
-    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
+    server, thread, events = run_loopback_server(RecordingTelemetryEndpoint)
     try:
         # Deliberately construct the sink with ``endpoint=None`` even though a
         # live server is running, proving the sink itself refuses to dial out
@@ -105,7 +84,7 @@ def test_no_configured_endpoint_never_sends() -> None:
 
 def test_consent_gate_refusal_never_reaches_the_http_sink() -> None:
     """Default-off Settings must keep the HTTP sink untouched via ``emit_telemetry_event``."""
-    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
+    server, thread, events = run_loopback_server(RecordingTelemetryEndpoint)
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         sink = HttpTelemetrySink(endpoint=endpoint)
@@ -120,7 +99,7 @@ def test_consent_gate_refusal_never_reaches_the_http_sink() -> None:
 
 def test_endpoint_configured_but_consent_off_never_sends() -> None:
     """An opted-out deployment must not send even with a fully configured endpoint."""
-    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
+    server, thread, events = run_loopback_server(RecordingTelemetryEndpoint)
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         sink = HttpTelemetrySink(endpoint=endpoint)
@@ -135,7 +114,7 @@ def test_endpoint_configured_but_consent_off_never_sends() -> None:
 
 def test_fully_permitted_invocation_posts_the_allowlisted_payload() -> None:
     """Consent on, tier set, endpoint configured, acknowledged: the payload is POSTed."""
-    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
+    server, thread, events = run_loopback_server(RecordingTelemetryEndpoint)
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         sink = HttpTelemetrySink(endpoint=endpoint)
@@ -201,7 +180,7 @@ def test_allowlisted_payload_cannot_carry_a_sensitive_field_over_http() -> None:
     free-text field), the JSON body it posts cannot carry a sensitive key --
     there is no attribute to smuggle one through.
     """
-    server, thread, events = run_loopback_server(_RecordingTelemetryEndpoint)
+    server, thread, events = run_loopback_server(RecordingTelemetryEndpoint)
     try:
         endpoint = f"http://127.0.0.1:{server.server_port}/collect"
         HttpTelemetrySink(endpoint=endpoint).send(_payload())

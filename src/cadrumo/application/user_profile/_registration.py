@@ -28,6 +28,7 @@ See Also:
 from __future__ import annotations
 
 from base64 import b64encode
+from datetime import UTC, datetime
 from secrets import token_bytes
 from typing import TYPE_CHECKING, Final
 from uuid import UUID
@@ -38,6 +39,7 @@ from ...core import NIST_PASSPHRASE_MIN_LENGTH, PassphraseStrength, assess_passp
 from ...core.errors import CadrumoError
 from ...core.identity import BucketId, ProfileId
 from ...domain.user_profile import ProfileSetupState, UserProfileRecord, new_profile_id
+from ..filing import try_record_filing_retention_snapshot
 from ..profile_custody import create_profile_custody_registration_material
 from ._capsule_record import ProfileRecordSession
 from ._custody_transactions import ProfileCustodyTransactionConflictError
@@ -204,6 +206,23 @@ def register_profile_with_credentials(
             ) from exc
     finally:
         session.close()
+
+    # Record that this profile has filed NOTHING, rather than leaving the fact
+    # absent. The two states are not the same: an empty recorded snapshot says
+    # the filing owner was asked and answered, while an absent one says nobody
+    # asked -- and the retention assessment refuses on absence, so without this
+    # a brand-new profile and one whose snapshot write failed are
+    # indistinguishable and both block deletion for the same opaque reason.
+    #
+    # Best-effort by the same asymmetry that governs the filing-time write: a
+    # registration REFUSED because a deletion-support record could not be
+    # written is worse than a profile whose snapshot is missing, which merely
+    # fails closed later.
+    try_record_filing_retention_snapshot(
+        bucket_id=str(identity),
+        records=(),
+        observed_at=datetime.now(UTC),
+    )
 
     return ProfileRegistrationOutcome(
         profile_id=str(identity),

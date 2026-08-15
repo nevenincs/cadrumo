@@ -1,7 +1,8 @@
 # Modelo 604 declaration-header casillas (scheduling/applicability-grade). Only
 # the declaration header is declared, grounded in orden-hac-510-2021 art 1. No
-# numbered form casilla is invented — no authoritative Modelo 604 diseño de
-# registro is bundled.
+# numbered form casilla is invented — the authoritative Modelo 604 diseño de
+# registro IS bundled (aeat-dr-604-2021 / aeat-dr-604-2024) but no
+# casilla-to-position mapping has been authored from it yet.
 
 [[revisions."2021-y-siguientes".casillas]]
 id = "decl.ejercicio"
