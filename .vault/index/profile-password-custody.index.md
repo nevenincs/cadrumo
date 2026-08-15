@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:3585c4a2e52825feb06cd6f0b1a5743da0eaedba4ebaba4863408d0f95dd62c3'
+body_hash: 'sha256:ce3d66dee269b0b049620b84477e50a77899da71ef6fea517ae4d4629f7dd60e'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -44,6 +44,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W04-P07-S115]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S117]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S120]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S121]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S123]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S124]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S126]]'
@@ -77,6 +78,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W04-P07-S83]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S87]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S91]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S134]]'
   - '[[2026-08-13-profile-password-custody-W05-P08-S138]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -181,6 +183,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W04-P07-S115` - Have Sol Medium decide whether per-profile session windows survive the cutover as a capsule field or drop to settings only
 - `2026-08-13-profile-password-custody-W04-P07-S117` - Have Terra XHigh remove the bucket manifest reader now that the retirement is ruled, taking its per-bucket session-window override with it
 - `2026-08-13-profile-password-custody-W04-P07-S120` - Have Terra XHigh repair the rotation crash-window test module broken at HEAD, which imports a keystore filename constant whose definition the deletion removed and which it is now the only referent of, this being a collection error that can abort a whole run rather than a single failing test
+- `2026-08-13-profile-password-custody-W04-P07-S121` - Have Sol Medium rule on the bucket deletion assessment contract, since the fingerprint type is now producerless and its only consumer is the populated branch requiring label and fingerprint and retention together
 - `2026-08-13-profile-password-custody-W04-P07-S123` - Have Terra XHigh make the persisted-format inventory detect an enrolled format whose code no longer exists
 - `2026-08-13-profile-password-custody-W04-P07-S124` - Have Terra XHigh reconstruct the rotation crash-window coverage against the two surviving stores after the module was deleted whole to unblock collection
 - `2026-08-13-profile-password-custody-W04-P07-S126` - Have Sol Medium enrol the custody capsule formats in the governed persisted-format inventory
@@ -197,6 +200,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W04-P07-S83` - Have Terra XHigh make the session-receipt tamper test actually reach the authenticated-data check it exists to cover
 - `2026-08-13-profile-password-custody-W04-P07-S87` - Have Terra XHigh stop the configuration-reset retention decision failing OPEN when no assessment is supplied
 - `2026-08-13-profile-password-custody-W04-P07-S91` - Have Sol Medium rule on the overloaded session vocabulary that caused a wrong architectural premise to survive two rounds of review
+- `2026-08-13-profile-password-custody-W05-P08-S134` - Have Sol Medium rule what the destructive profile deletion surface should be, since both of its primitives have zero definitions anywhere in the tree
 - `2026-08-13-profile-password-custody-W05-P08-S138` - Have Terra XHigh make the delete hold guard compare the owner facts its docstring names rather than the whole assessment object
 
 ### plan
