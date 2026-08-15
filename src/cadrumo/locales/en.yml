@@ -65259,6 +65259,11 @@ modelo:
               label: Payee tax identification number
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               label: Tax identification number of the payee's legal representative
+            x-e1in4opedpnmqojick:
+              label: Payee surnames and given name, legal name or business name
+            x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
+              label: Surnames and given name, legal name or business name of the payee's
+                representative
           construct:
             modelo-270-informative:
               field:

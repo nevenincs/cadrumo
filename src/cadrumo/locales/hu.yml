@@ -65767,6 +65767,11 @@ modelo:
               label: A kedvezményezett adóazonosító száma
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               label: A kedvezményezett törvényes képviselőjének adóazonosító száma
+            x-e1in4opedpnmqojick:
+              label: A kedvezményezett vezeték- és utóneve, cégneve vagy elnevezése
+            x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
+              label: A kedvezményezett képviselőjének vezeték- és utóneve, cégneve
+                vagy elnevezése
           construct:
             modelo-270-informative:
               field:
@@ -71384,6 +71389,35 @@ modelo:
           iva-deducible-resolucion-firme-tipos-no-vigentes-cuota:
             label: Jogerős közigazgatási határozat vagy bírósági ítélet alapján, már
               nem hatályos kulcsokkal levonható ÁFA - levonható adóösszeg
+          iva-especificas-adquisiciones-interiores-exentas:
+            label: Különös ügyletek - Adómentes belföldi beszerzések [230]
+          iva-especificas-adquisiciones-intracomunitarias-exentas:
+            label: Különös ügyletek - Adómentes Közösségen belüli beszerzések [109]
+          iva-especificas-base-iva-soportado-no-deducible:
+            label: Különös ügyletek - A le nem vonható előzetes áfa adóalapja [232]
+          iva-especificas-criterio-caja-adquisiciones-base:
+            label: Különös ügyletek - Termékbeszerzés pénzforgalmi elszámolás szerint
+              - Adóalap [656]
+          iva-especificas-criterio-caja-adquisiciones-cuota:
+            label: Különös ügyletek - Termékbeszerzés pénzforgalmi elszámolás szerint
+              - Adóösszeg [657]
+          iva-especificas-criterio-caja-entregas-base:
+            label: Különös ügyletek - Termékértékesítés pénzforgalmi elszámolás szerint
+              - Adóalap [654]
+          iva-especificas-criterio-caja-entregas-cuota:
+            label: Különös ügyletek - Termékértékesítés pénzforgalmi elszámolás szerint
+              - Adóösszeg [655]
+          iva-especificas-entrega-interior-inversion-triangular:
+            label: Különös ügyletek - Fordított adózás alá eső belföldi termékértékesítés
+              háromszögügyletben [113]
+          iva-especificas-importaciones-exentas:
+            label: Különös ügyletek - Adómentes import [231]
+          iva-especificas-operaciones-derecho-devolucion-mensual:
+            label: Különös ügyletek - A havi visszatérítésre jogosító adóköteles ügyletek
+              [111]
+          iva-especificas-servicios-tai-inversion-sujeto-pasivo:
+            label: Különös ügyletek - Belföldön teljesített, fordított adózás alá
+              eső szolgáltatások [523]
           iva-isp-interior-base:
             help: null
             label: Fordított adózású ÁFA adóalapja belföldi ügyleteknél

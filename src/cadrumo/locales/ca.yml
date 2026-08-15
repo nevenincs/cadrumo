@@ -65716,6 +65716,11 @@ modelo:
               label: Número d'identificació fiscal (NIF) del perceptor
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               label: NIF del representant legal del perceptor
+            x-e1in4opedpnmqojick:
+              label: Cognoms i nom, raó social o denominació del perceptor
+            x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
+              label: Cognoms i nom, raó social o denominació del representant del
+                perceptor
           construct:
             modelo-270-informative:
               field:

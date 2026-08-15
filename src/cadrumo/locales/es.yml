@@ -68057,6 +68057,11 @@ modelo:
               label: NIF del perceptor
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               label: NIF del representante legal del perceptor
+            x-e1in4opedpnmqojick:
+              label: Apellidos y nombre, razón social o denominación del perceptor
+            x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
+              label: Apellidos y nombre, razón social o denominación del representante
+                del perceptor
           construct:
             modelo-270-informative:
               field:
@@ -73729,6 +73734,37 @@ modelo:
           iva-deducible-resolucion-firme-tipos-no-vigentes-cuota:
             label: Cuotas deducibles en virtud de resolución administrativa o sentencia
               firmes con tipos no vigentes - Cuota deducible
+          iva-especificas-adquisiciones-interiores-exentas:
+            label: Operaciones específicas - Adquisiciones interiores exentas [230]
+          iva-especificas-adquisiciones-intracomunitarias-exentas:
+            label: Operaciones específicas - Adquisiciones intracomunitarias exentas
+              [109]
+          iva-especificas-base-iva-soportado-no-deducible:
+            label: Operaciones específicas - Bases imponibles del IVA soportado no
+              deducible [232]
+          iva-especificas-criterio-caja-adquisiciones-base:
+            label: Operaciones específicas - Adquisiciones de bienes en régimen especial
+              del criterio de caja - Base imponible [656]
+          iva-especificas-criterio-caja-adquisiciones-cuota:
+            label: Operaciones específicas - Adquisiciones de bienes en régimen especial
+              del criterio de caja - Cuota [657]
+          iva-especificas-criterio-caja-entregas-base:
+            label: Operaciones específicas - Entregas de bienes en régimen especial
+              del criterio de caja - Base imponible [654]
+          iva-especificas-criterio-caja-entregas-cuota:
+            label: Operaciones específicas - Entregas de bienes en régimen especial
+              del criterio de caja - Cuota [655]
+          iva-especificas-entrega-interior-inversion-triangular:
+            label: Operaciones específicas - Entregas interiores de bienes devengadas
+              por inversión del sujeto pasivo en operaciones triangulares [113]
+          iva-especificas-importaciones-exentas:
+            label: Operaciones específicas - Importaciones exentas [231]
+          iva-especificas-operaciones-derecho-devolucion-mensual:
+            label: Operaciones específicas - Operaciones sujetas que originan el derecho
+              a la devolución mensual [111]
+          iva-especificas-servicios-tai-inversion-sujeto-pasivo:
+            label: Operaciones específicas - Servicios localizados en el territorio
+              de aplicación del impuesto por inversión del sujeto pasivo [523]
           iva-isp-interior-base:
             help: null
             label: Base imponible IVA autorepercutido en operaciones interiores con
