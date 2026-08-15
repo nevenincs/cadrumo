@@ -1,0 +1,189 @@
+# Modelo 390 apartado 11, "Operaciones especificas" (pagina 7 of the
+# Diseno de Registros). Eleven boxes, each occupying exactly one position.
+#
+# Apartado 12 ("Prorratas", boxes [114]-[118]) is NOT registered here: on
+# this page each of those box numbers occupies FIVE distinct positions, one
+# per declared activity, and whether that is one casilla carried forward or
+# five separate casillas is an open scope question. Registering it either
+# way without that ruling would either render one activity's value into all
+# five rows or invent five box numbers AEAT does not print.
+#
+# Every box number, offset and length is transcribed verbatim from this
+# revision's own bundled Diseno de Registros (source aeat-dr-390-2025,
+# sha256 6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252), pagina 7.
+
+# Box [230] - '11. Oper. Específicas - Adquisiciones interiores exentas [230]' (offset 13, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.especificas.adquisiciones-interiores-exentas"
+number = "230"
+section = ["iva", "anual", "operaciones_especificas"]
+data_type = "money"
+semantic_role = "iva_operaciones_especificas_adquisiciones_interiores_exentas"
+continuidad_id = "iva-especificas-adquisiciones-interiores-exentas"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 11 operaciones especificas block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-20", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-07-casilla-adquisiciones-interiores-exentas"]
+
+# Box [109] - '11. Oper. específicas - Adquisiciones intracomunitarias exentas [109]' (offset 30, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.especificas.adquisiciones-intracomunitarias-exentas"
+number = "109"
+section = ["iva", "anual", "operaciones_especificas"]
+data_type = "money"
+semantic_role = "iva_operaciones_especificas_adquisiciones_intracomunitarias_exentas"
+continuidad_id = "iva-especificas-adquisiciones-intracomunitarias-exentas"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 11 operaciones especificas block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-26", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-07-casilla-adquisiciones-intracomunitarias-exentas"]
+
+# Box [231] - '11. Oper. Específicas - Importaciones exentas [231]' (offset 47, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.especificas.importaciones-exentas"
+number = "231"
+section = ["iva", "anual", "operaciones_especificas"]
+data_type = "money"
+semantic_role = "iva_operaciones_especificas_importaciones_exentas"
+continuidad_id = "iva-especificas-importaciones-exentas"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 11 operaciones especificas block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-27", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-07-casilla-importaciones-exentas"]
+
+# Box [232] - '11. Oper. Específicas - Bases imponibles IVA soportado no deducible [232]' (offset 64, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.especificas.base-iva-soportado-no-deducible"
+number = "232"
+section = ["iva", "anual", "operaciones_especificas"]
+data_type = "money"
+semantic_role = "iva_operaciones_especificas_base_iva_soportado_no_deducible"
+continuidad_id = "iva-especificas-base-iva-soportado-no-deducible"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 11 operaciones especificas block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-95", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-07-casilla-base-iva-soportado-no-deducible"]
+
+# Box [111] - '11. Oper. específicas - Oper. sujetas que originan el derecho a la devolución mensual [111]' (offset 81, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.especificas.operaciones-derecho-devolucion-mensual"
+number = "111"
+section = ["iva", "anual", "operaciones_especificas"]
+data_type = "money"
+semantic_role = "iva_operaciones_especificas_operaciones_derecho_devolucion_mensual"
+continuidad_id = "iva-especificas-operaciones-derecho-devolucion-mensual"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 11 operaciones especificas block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-116", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-07-casilla-operaciones-derecho-devolucion-mensual"]
+
+# Box [113] - '11. Oper. específicas - Entrega interior bienes devengada por invers. sujet. pasiv. operac. triangul. [113]' (offset 98, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.especificas.entrega-interior-inversion-triangular"
+number = "113"
+section = ["iva", "anual", "operaciones_especificas"]
+data_type = "money"
+semantic_role = "iva_operaciones_especificas_entrega_interior_inversion_triangular"
+continuidad_id = "iva-especificas-entrega-interior-inversion-triangular"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 11 operaciones especificas block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-26", "ley-37-1992:art-84", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-07-casilla-entrega-interior-inversion-triangular"]
+
+# Box [523] - '11. Oper. Específicas - Servicios localizados en el territorio de aplicación del impuesto por inversión del sujeto pasivo [523]' (offset 115, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.especificas.servicios-tai-inversion-sujeto-pasivo"
+number = "523"
+section = ["iva", "anual", "operaciones_especificas"]
+data_type = "money"
+semantic_role = "iva_operaciones_especificas_servicios_tai_inversion_sujeto_pasivo"
+continuidad_id = "iva-especificas-servicios-tai-inversion-sujeto-pasivo"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 11 operaciones especificas block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-07-casilla-servicios-tai-inversion-sujeto-pasivo"]
+
+# Box [654] - '11. Oper. Específicas - Importes de las entregas de bienes regimen especial criterio caja - Base imponible [654]' (offset 132, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.especificas.criterio-caja-entregas.base"
+number = "654"
+section = ["iva", "anual", "operaciones_especificas"]
+data_type = "money"
+semantic_role = "iva_operaciones_especificas_criterio_caja_entregas_base"
+continuidad_id = "iva-especificas-criterio-caja-entregas-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 11 operaciones especificas block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-undecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-07-casilla-criterio-caja-entregas-base"]
+
+# Box [655] - '11. Oper. Específicas - Importes de las entregas de bienes regimen especial criterio caja - Cuota [655]' (offset 149, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.especificas.criterio-caja-entregas.cuota"
+number = "655"
+section = ["iva", "anual", "operaciones_especificas"]
+data_type = "money"
+semantic_role = "iva_operaciones_especificas_criterio_caja_entregas_cuota"
+continuidad_id = "iva-especificas-criterio-caja-entregas-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 11 operaciones especificas block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-undecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-07-casilla-criterio-caja-entregas-cuota"]
+
+# Box [656] - '11. Oper. Específicas - Importes de las adquisiciones de bienes regimen especial criterio caja - Base imponible [656]' (offset 166, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.especificas.criterio-caja-adquisiciones.base"
+number = "656"
+section = ["iva", "anual", "operaciones_especificas"]
+data_type = "money"
+semantic_role = "iva_operaciones_especificas_criterio_caja_adquisiciones_base"
+continuidad_id = "iva-especificas-criterio-caja-adquisiciones-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 11 operaciones especificas block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-quaterdecies", "ley-37-1992:art-163-terdecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-07-casilla-criterio-caja-adquisiciones-base"]
+
+# Box [657] - '11. Oper. Específicas - Importes de las adquisiciones de bienes regimen especial criterio caja - Cuota [657]' (offset 183, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.especificas.criterio-caja-adquisiciones.cuota"
+number = "657"
+section = ["iva", "anual", "operaciones_especificas"]
+data_type = "money"
+semantic_role = "iva_operaciones_especificas_criterio_caja_adquisiciones_cuota"
+continuidad_id = "iva-especificas-criterio-caja-adquisiciones-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 11 operaciones especificas block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-quaterdecies", "ley-37-1992:art-163-terdecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-07-casilla-criterio-caja-adquisiciones-cuota"]

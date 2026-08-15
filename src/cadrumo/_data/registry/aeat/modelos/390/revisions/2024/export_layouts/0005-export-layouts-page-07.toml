@@ -1,0 +1,276 @@
+[[revisions."2024".export_layouts]]
+id = "modelo-390-2024-fichero-boe"
+
+# Pagina 7: apartado 11 (operaciones especificas) and apartado 12
+# (prorratas). This design record had no authored record at all; the
+# coverage gate joined its sheet to the envelope header on the shared
+# "<T"/"390" constants alone. The "07000" page discriminant below makes the
+# join unique and per-record.
+#
+# The apartado 12 prorrata block (30 positions: five activity rows of
+# [114]-[118] plus five free-text activity names) is NOT written here. See
+# the sibling casilla fragment for why.
+#
+# Offsets and lengths are transcribed verbatim from aeat-dr-390-2024 (sha256 8be79bacc86034c3c7951d2ea671c030800ed9a4cc3f52b9e5d407bc19bc03f0).
+#
+# End-of-record constant: this design publishes "</T3900700>", eleven
+# characters in a field it declares twelve bytes wide (cell H53 of the
+# bundled workbook, read raw). The 2024 and 2025 designs publish
+# "</T39007000>" in the SAME cell of the same sheet at the identical offset
+# and length, and every other page of every year follows "</T390NN000>".
+# The eleven-character spelling is an AEAT publication typo; writing it
+# verbatim would emit a record one byte short and shift every following byte
+# of the file. The corrected constant is read from AEAT's own later
+# publication of this same record, not invented.
+#
+# KNOWN CONSEQUENCE, deliberate: the export-layout coverage gate joins a
+# design sheet to an authored record by comparing declared constants, and
+# disqualifies any record that CONTRADICTS the sheet at a shared coordinate.
+# Writing the correct twelve-character tag therefore contradicts the typo at
+# (765, 12), so for the 2022 and 2023 revisions this sheet falls back to the
+# envelope header and the positions authored below are not credited to it.
+# That is the gate meeting a defective source, not a defect in this record.
+# Do NOT 'fix' it by writing the eleven-character tag: that trades a correct
+# filing for a green measurement.
+
+[[revisions."2024".export_layouts.records]]
+id = "modelo-390-page-07"
+record_type = "page_07"
+order = 8
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-07-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-07-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "390"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-07-number"
+offset = 6
+length = 5
+kind = "literal"
+literal = "07000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-07-end"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+# NOT AUTHORED, deliberately: indicador de pagina complementaria at
+# offset 12, length 1. AEAT declares its contenido as
+# 'Blanco (No complementaria) o "C" (Complementaria)' -- a real
+# operator datum whose wire alphabet is blank or "C". No carrier in this
+# registry can emit it: data_type "boolean" renders the canonical "X" and
+# blank only (_fixed_width_codec._render_boolean), a literal would force "C"
+# onto every filing, and a filler would silently blank a real flag. Authoring
+# it any of those ways would write wrong bytes, so the position is left
+# unwritten and reported instead. Paginas 5 and 7 are the only two pages
+# carrying this flag; every other page declares the position 'En blanco'.
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-07-casilla-adquisiciones-interiores-exentas"
+offset = 13
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.especificas.adquisiciones-interiores-exentas"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-20", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-07-casilla-adquisiciones-intracomunitarias-exentas"
+offset = 30
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.especificas.adquisiciones-intracomunitarias-exentas"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-26", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-07-casilla-importaciones-exentas"
+offset = 47
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.especificas.importaciones-exentas"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-27", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-07-casilla-base-iva-soportado-no-deducible"
+offset = 64
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.especificas.base-iva-soportado-no-deducible"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-95", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-07-casilla-operaciones-derecho-devolucion-mensual"
+offset = 81
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.especificas.operaciones-derecho-devolucion-mensual"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-116", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-07-casilla-entrega-interior-inversion-triangular"
+offset = 98
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.especificas.entrega-interior-inversion-triangular"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-26", "ley-37-1992:art-84", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-07-casilla-servicios-tai-inversion-sujeto-pasivo"
+offset = 115
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.especificas.servicios-tai-inversion-sujeto-pasivo"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-07-casilla-criterio-caja-entregas-base"
+offset = 132
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.especificas.criterio-caja-entregas.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-undecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-07-casilla-criterio-caja-entregas-cuota"
+offset = 149
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.especificas.criterio-caja-entregas.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-163-undecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-07-casilla-criterio-caja-adquisiciones-base"
+offset = 166
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.especificas.criterio-caja-adquisiciones.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-quaterdecies", "ley-37-1992:art-163-terdecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-07-casilla-criterio-caja-adquisiciones-cuota"
+offset = 183
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.especificas.criterio-caja-adquisiciones.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-quaterdecies", "ley-37-1992:art-163-terdecies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".export_layouts.records.fields]]
+id = "modelo-390-page-07-close"
+offset = 765
+length = 12
+kind = "literal"
+literal = "</T39007000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]

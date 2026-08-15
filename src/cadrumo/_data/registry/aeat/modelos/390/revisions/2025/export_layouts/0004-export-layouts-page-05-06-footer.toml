@@ -206,24 +206,3 @@ justification = "none"
 signed = false
 legal_refs = ["orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
-
-[[revisions."2025".export_layouts.records]]
-id = "modelo-390-envelope-footer"
-record_type = "envelope_footer"
-order = 8
-encoding = "latin-1"
-line_ending = "none"
-
-[[revisions."2025".export_layouts.records.fields]]
-id = "modelo-390-envelope-close"
-offset = 1
-length = 18
-kind = "computed"
-computed_key = "envelope_closing_tag"
-data_type = "text"
-required = true
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025"]
