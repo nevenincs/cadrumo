@@ -65763,6 +65763,8 @@ modelo:
               label: A bevallott kedvezményezetti rekordok teljes száma
             x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
               label: A forrásadó vagy adóelőleg teljes összege
+            x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
+              label: A külföldi illetőségű kedvezményezett jogi személyiségének kódja
             x-e1in4opedpkmc:
               label: A kedvezményezett adóazonosító száma
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
