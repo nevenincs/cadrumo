@@ -250,6 +250,17 @@ def _candidate_for_invoice_line(
     line_index: int,
     devengo_date: date,
 ) -> OssIossLedgerCandidate | None:
+    """Project one invoice line into an OSS/IOSS candidate, or ``None`` when not applicable.
+
+    The regime / destination checks mean the line is not an OSS/IOSS
+    operation at all -- correctly silent, nothing to declare. A line that
+    passes both IS a real, declarable OSS/IOSS operation, so a missing
+    rate_kind or a missing euro conversion from that point on REFUSES rather
+    than silently drops it: by operator ruling ("aim for explicit red
+    signals... until schema and api converges"), a would-be-silently-dropped
+    declarable line is a hard stop, not an advisory beside a smaller-but-green
+    figure.
+    """
     if invoice.oss_ioss_regime is None or invoice.oss_transaction_kind is None:
         return None
     destination = invoice.counterparty_eu_member_state
@@ -257,7 +268,35 @@ def _candidate_for_invoice_line(
         return None
     rate_kind = line.oss_rate_kind or iva_rate_kind(line.iva_rate)
     if rate_kind is None:
-        return None
+        raise AggregationValidationError(
+            t("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),
+            context={
+                "invoice_id": invoice.invoice_id,
+                "invoice_number": invoice.invoice_number,
+                "line_index": str(line_index),
+                "iva_rate": str(line.iva_rate.value),
+            },
+        )
+    # OSS/IOSS is cross-border EU B2C by definition, where invoicing in the
+    # destination Member State's own currency (PLN, SEK, DKK, HUF, CZK, RON,
+    # BGN...) is the ORDINARY case, not an edge case. line.subtotal /
+    # line.iva_amount are native to invoice.currency (InvoiceLine carries no
+    # currency of its own); base_amount/iva_amount on the candidate are
+    # documented as EUR, so this converts through the same fx_rate resolution
+    # the invoice-level totals already use (line_amount_eur) rather than the
+    # invoice-line's raw native fields.
+    base_amount_eur = invoice.line_amount_eur(line.subtotal)
+    iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
+    if base_amount_eur is None or iva_amount_eur is None:
+        raise AggregationValidationError(
+            t("aggregation.oss_ioss.errors.invoice_line_currency_unconverted"),
+            context={
+                "invoice_id": invoice.invoice_id,
+                "invoice_number": invoice.invoice_number,
+                "currency": invoice.currency,
+                "line_index": str(line_index),
+            },
+        )
     return OssIossLedgerCandidate(
         ledger_id=f"{invoice.invoice_id}:{line_index}",
         transaction_date=devengo_date,
@@ -266,8 +305,8 @@ def _candidate_for_invoice_line(
         rate_kind=rate_kind,
         invoice_direction=invoice.kind,
         transaction_kind=invoice.oss_transaction_kind,
-        base_amount=line.subtotal,
-        iva_amount=line.iva_amount,
+        base_amount=base_amount_eur,
+        iva_amount=iva_amount_eur,
     )
 
 

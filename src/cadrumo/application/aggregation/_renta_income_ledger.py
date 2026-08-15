@@ -66,7 +66,7 @@ from ...domain.transactions import (
 )
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
-from ._currency_predicates import is_non_eur_without_conversion
+from ._currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
@@ -925,7 +925,11 @@ def _classify_income_transaction(
             reason=reason,
             detail=(f"business classification {transaction.business_classification.value!r} cannot feed Renta income"),
         )
-    gross_amount = abs(transaction.raw.amount) * proportion
+    # Use the EUR projection after rejecting unconverted non-EUR rows above, so a
+    # converted foreign-currency receipt contributes its EUR equivalent while a
+    # domestic row retains its raw amount (mirrors the expense pipeline's
+    # ``effective_eur_amount`` usage in ``_renta_ledger.py``).
+    gross_amount = effective_eur_amount(transaction) * proportion
 
     filing_date = transaction.raw.value_date or transaction.raw.booked_date
     if not (cumulative_start <= filing_date <= cumulative_end):
@@ -947,7 +951,14 @@ def _classify_income_transaction(
     # substrate, with the transaction field as fallback -- the same ordering the
     # expense pipeline uses. A grounded row therefore also stops reporting
     # CASH_FALLBACK below, correctly: the substrate now genuinely exists.
-    declared_base = evidence.taxable_base if evidence.taxable_base is not None else transaction.taxable_base
+    # The transaction fallback goes through the EUR-equivalent accessor:
+    # ``transaction.taxable_base`` is denominated in the row's native
+    # currency (see ``domain.transactions.tests.test_gross_invariant``), so a
+    # converted foreign-currency row needs the same fx_rate projection the
+    # gross amount above already received.
+    declared_base = (
+        evidence.taxable_base if evidence.taxable_base is not None else effective_eur_taxable_base(transaction)
+    )
     # Scaled by the SAME proportion the gross above carries, never a second
     # decision: the two figures describe one receipt, so a rule that divided one
     # and not the other would declare a fraction of the income while the

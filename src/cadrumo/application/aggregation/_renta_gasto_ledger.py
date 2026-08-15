@@ -66,7 +66,11 @@ from ...domain.transactions import (
 )
 from ...domain.user_profile import UserProfileRecord
 from . import _shared_issue_reasons
-from ._currency_predicates import is_non_eur_without_conversion
+from ._currency_predicates import (
+    effective_eur_iva_amount,
+    effective_eur_taxable_base,
+    is_non_eur_without_conversion,
+)
 from ._errors import AggregationValidationError, t
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
@@ -342,9 +346,20 @@ def _classify_gasto_transaction(
     # on the M100 side exactly: only when BOTH iva_amount and the ratio are
     # known, else the historic base-only figure stands. The whole sum is then
     # scaled by the business fraction (1 for BUSINESS, business_pct for MIXED).
-    deductible_base = transaction.taxable_base
-    if transaction.iva_amount is not None and iva_deduction_ratio is not None:
-        deductible_base += transaction.iva_amount * (Decimal("1") - iva_deduction_ratio)
+    #
+    # Both taxable_base and iva_amount are denominated in the row's NATIVE
+    # currency (see domain.transactions.tests.test_gross_invariant), so a
+    # converted foreign-currency row must go through the EUR-equivalent
+    # accessors -- summing them raw would fold a native-currency figure into
+    # a EUR-denominated casilla 02 total.
+    deductible_base = effective_eur_taxable_base(transaction)
+    # taxable_base is non-None here (the MISSING_TAXABLE_BASE guard above
+    # returned for the None case), so the EUR-equivalent accessor cannot
+    # return None either -- it is None only when its input is.
+    assert deductible_base is not None
+    eur_iva_amount = effective_eur_iva_amount(transaction)
+    if eur_iva_amount is not None and iva_deduction_ratio is not None:
+        deductible_base += eur_iva_amount * (Decimal("1") - iva_deduction_ratio)
     deductible_amount = deductible_base * proportion
     return RentaGastoObservation(
         transaction_id=transaction_id,

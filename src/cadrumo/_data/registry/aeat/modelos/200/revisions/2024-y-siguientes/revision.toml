@@ -1,5 +1,11 @@
 [revisions."2024-y-siguientes"]
-valid_from = 2025-01-01
+# valid_from tracks the ejercicio this revision computes (2024), matching the
+# registry-wide convention (holds for 44/52 annual-cadence revisions) and its
+# own sibling M220 (identical orden, byte-identical deadline windows), not
+# the orden's own publication/effective year. The prior 2025-01-01 value
+# self-contradicted the revision's own declared filing_year=2024 deadline
+# window and excluded any 2024-dated `on=` selection with no basis in law.
+valid_from = 2024-01-01
 period_selector = { year_from = 2024, periods = ["0A"] }
 legal_refs = [
     "ley-27-2014:art-40",

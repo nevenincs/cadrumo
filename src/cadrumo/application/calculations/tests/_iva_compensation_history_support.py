@@ -17,8 +17,14 @@ from ....adapters.outbound.aeat.sede import (
     IvaCompensationWalletRow,
     ObservedCasillaValue,
 )
-from ....core import CasillaId, CasillaValueKind, IvaCompensationStateProvenance, Period, validated_casilla_id
-from ....core import RegistryAuthorityGrade
+from ....core import (
+    CasillaId,
+    CasillaValueKind,
+    IvaCompensationStateProvenance,
+    Period,
+    RegistryAuthorityGrade,
+    validated_casilla_id,
+)
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.calculations.registry._loader import load_registry_tree

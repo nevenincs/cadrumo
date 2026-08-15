@@ -349,7 +349,7 @@ def test_modelo_369_official_record_design_workbook_is_parseable() -> None:
 
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        sheets = extract_record_design(bundled_path() / source.corpus_path)
+        sheets = extract_record_design(bundled_path() / source.corpus_path).accept_partial()
     by_name = {sheet.name: sheet for sheet in sheets}
 
     assert len(sheets) == 14

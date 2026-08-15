@@ -91,8 +91,12 @@ def _authority() -> ValidatedRegistryAuthority:
 
 
 def _design_files(modelo_id: str) -> list[Path]:
+    # rglob, not the fixed-depth "files/*.extracted.md": the same directory-shape
+    # assumption already dropped Modelo 210's dr210_2011.pdf from other design
+    # enumerations in this module family. No sidecar sits outside files/ today
+    # (converged pre-emptively, dormant when converged, not a bug fix).
     directory = bundled_path("corpus", "aeat_official", "disenos_registro", f"modelo_{modelo_id}")
-    return sorted(directory.glob("files/*.extracted.md")) if directory.is_dir() else []
+    return sorted(directory.rglob("*.extracted.md")) if directory.is_dir() else []
 
 
 def _rate_specific_boxes(modelo_id: str) -> set[str]:

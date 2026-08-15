@@ -41,7 +41,7 @@ from .....application.flows import (
     page_status,
     start_flow,
 )
-from .....core.config import TuiAppearance, reset_settings_cache
+from .....core.config import TuiAppearance
 from .....core.flows import (
     CheckpointAvailability,
     CopyRefKind,
@@ -50,11 +50,10 @@ from .....core.flows import (
     PageStatus,
 )
 from .....core.i18n import (
-    OUTPUT_LANGUAGE_ENV_VAR,
     SUPPORTED_OUTPUT_LANGUAGES,
-    clear_output_language_cache,
     tr,
 )
+from .....tests.env_scope import activate_output_language, output_language_scope
 from .....tests.locales_root_fixture import locales_root_scope
 from .. import (
     CADRUMO_DARK_THEME_NAME,
@@ -1100,42 +1099,19 @@ async def test_rebuild_for_locale_reassembles_copy_under_the_new_language(
         payload = yaml.safe_dump({"flows": {"test": {"copy": f"{language}-copy"}}}, allow_unicode=True)
         (root / f"{language}.yml").write_text(payload, encoding="utf-8")
 
-    saved = os.environ.get(OUTPUT_LANGUAGE_ENV_VAR)
-    try:
-        os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "en"
-        # ``load_settings()`` holds a process-wide ``Settings`` singleton
-        # cached by the active-profile pointer, not by env var, so a raw
-        # ``os.environ`` mutation is invisible to it once that singleton
-        # exists; ``clear_output_language_cache`` alone only invalidates
-        # the output-language memo layered on top. ``reset_settings_cache``
-        # is the sanctioned way to make a process-environment change
-        # observed (see its docstring), and — unlike ``override_settings``'s
-        # contextvar — it is a plain cache, so it stays valid across the
-        # asyncio Task boundary the Textual pilot's message pump runs on.
-        reset_settings_cache()
-        clear_output_language_cache()
-        with locales_root_scope(root):
-            app = FlowTuiApp(_definition(), mode=FlowMode.MODIFY, registered_values={})
-            async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-                await pilot.pause()
-                assert "en-copy" in str(app.screen.query_one("#page-prompt", Label).render())
+    with output_language_scope("en"), locales_root_scope(root):
+        app = FlowTuiApp(_definition(), mode=FlowMode.MODIFY, registered_values={})
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            assert "en-copy" in str(app.screen.query_one("#page-prompt", Label).render())
 
-                os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "es"
-                reset_settings_cache()
-                clear_output_language_cache()
-                app.rebuild_for_locale()
-                await pilot.pause()
+            activate_output_language("es")
+            app.rebuild_for_locale()
+            await pilot.pause()
 
-                # The engine state is untouched; every zone re-assembles, so the
-                # prompt re-resolves under the newly-activated language.
-                assert "es-copy" in str(app.screen.query_one("#page-prompt", Label).render())
-    finally:
-        if saved is None:
-            os.environ.pop(OUTPUT_LANGUAGE_ENV_VAR, None)
-        else:
-            os.environ[OUTPUT_LANGUAGE_ENV_VAR] = saved
-        reset_settings_cache()
-        clear_output_language_cache()
+            # The engine state is untouched; every zone re-assembles, so the
+            # prompt re-resolves under the newly-activated language.
+            assert "es-copy" in str(app.screen.query_one("#page-prompt", Label).render())
 
 
 @pytest.mark.asyncio
@@ -1168,53 +1144,36 @@ async def test_locale_switch_hook_renders_the_next_page_under_the_new_language(
 
     def _switch_to_spanish(page_key: str, _value: str) -> None:
         if page_key == "p_name":
-            os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "es"
-            # See ``reset_settings_cache`` note in
-            # ``test_rebuild_for_locale_reassembles_copy_under_the_new_language``:
-            # ``override_settings``'s contextvar cannot be entered here and
-            # exited from the test's own coroutine — this hook runs inside
-            # Textual's message-pump Task, a different asyncio Context, and a
-            # contextvar Token cannot be reset outside the Context that
-            # created it. The plain ``reset_settings_cache`` memo has no such
-            # boundary.
-            reset_settings_cache()
-            clear_output_language_cache()
+            # This hook runs inside Textual's message-pump Task, a different
+            # asyncio Context from the test's own coroutine, so an
+            # ``override_settings`` contextvar Token could not be reset from
+            # here. ``activate_output_language`` drops plain caches instead
+            # and has no such boundary; the enclosing scope owns the restore.
+            activate_output_language("es")
             holder["app"].rebuild_for_locale()
 
-    saved = os.environ.get(OUTPUT_LANGUAGE_ENV_VAR)
-    try:
-        os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "en"
-        reset_settings_cache()
-        clear_output_language_cache()
-        with locales_root_scope(root):
-            app = FlowTuiApp(
-                _definition(),
-                mode=FlowMode.MODIFY,
-                registered_values={},
-                on_answer_committed=_switch_to_spanish,
-            )
-            holder["app"] = app
-            async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-                await pilot.pause()
-                assert "en-copy" in str(app.screen.query_one("#page-prompt", Label).render())
+    with output_language_scope("en"), locales_root_scope(root):
+        app = FlowTuiApp(
+            _definition(),
+            mode=FlowMode.MODIFY,
+            registered_values={},
+            on_answer_committed=_switch_to_spanish,
+        )
+        holder["app"] = app
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            assert "en-copy" in str(app.screen.query_one("#page-prompt", Label).render())
 
-                await pilot.press(*"ada")
-                await pilot.click("#btn-next")
-                await pilot.pause()
+            await pilot.press(*"ada")
+            await pilot.click("#btn-next")
+            await pilot.pause()
 
-                # The commit fired the hook (activate Spanish + rebuild); the
-                # walk advanced, and the page now renders under the newly
-                # activated language — the mid-walk language switch the
-                # operator's language-first feature needs.
-                assert app.state.cursor == "p_kind"
-                assert "es-copy" in str(app.screen.query_one("#page-prompt", Label).render())
-    finally:
-        if saved is None:
-            os.environ.pop(OUTPUT_LANGUAGE_ENV_VAR, None)
-        else:
-            os.environ[OUTPUT_LANGUAGE_ENV_VAR] = saved
-        reset_settings_cache()
-        clear_output_language_cache()
+            # The commit fired the hook (activate Spanish + rebuild); the
+            # walk advanced, and the page now renders under the newly
+            # activated language — the mid-walk language switch the
+            # operator's language-first feature needs.
+            assert app.state.cursor == "p_kind"
+            assert "es-copy" in str(app.screen.query_one("#page-prompt", Label).render())
 
 
 @pytest.mark.asyncio

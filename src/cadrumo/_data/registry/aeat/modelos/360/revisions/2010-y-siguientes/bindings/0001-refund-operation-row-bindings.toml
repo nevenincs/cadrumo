@@ -7,7 +7,7 @@
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-360-refund-row-member-state"
 source = "refund_operation"
-selector = { fact = "row_field", row_field = "member_state_code", grouping = "per_refund_operation", record = "operacion" }
+selector = { fact = "row_field", row_field = "member_state_code", grouping = "per_refund_operation", record = "operacion", data_type = "text" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1"]
 source_refs = ["aeat-modelo-360-procedure"]
@@ -19,7 +19,7 @@ required_text = ["devolución del Impuesto sobre el Valor Añadido"]
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-360-refund-row-operation-kind"
 source = "refund_operation"
-selector = { fact = "row_field", row_field = "operation_kind_code", grouping = "per_refund_operation", record = "operacion" }
+selector = { fact = "row_field", row_field = "operation_kind_code", grouping = "per_refund_operation", record = "operacion", data_type = "text" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1"]
 source_refs = ["aeat-modelo-360-procedure"]
@@ -31,7 +31,7 @@ required_text = ["devolución del Impuesto sobre el Valor Añadido"]
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-360-refund-row-operation-date"
 source = "refund_operation"
-selector = { fact = "row_field", row_field = "operation_date", grouping = "per_refund_operation", record = "operacion" }
+selector = { fact = "row_field", row_field = "operation_date", grouping = "per_refund_operation", record = "operacion", data_type = "text" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1"]
 source_refs = ["aeat-modelo-360-procedure"]
@@ -43,7 +43,7 @@ required_text = ["devolución del Impuesto sobre el Valor Añadido"]
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-360-refund-row-supplier-nif"
 source = "refund_operation"
-selector = { fact = "row_field", row_field = "supplier_tax_id", grouping = "per_refund_operation", record = "operacion" }
+selector = { fact = "row_field", row_field = "supplier_tax_id", grouping = "per_refund_operation", record = "operacion", data_type = "text" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1"]
 source_refs = ["aeat-modelo-360-procedure"]
@@ -55,7 +55,7 @@ required_text = ["devolución del Impuesto sobre el Valor Añadido"]
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-360-refund-row-amount"
 source = "refund_operation"
-selector = { fact = "row_field", row_field = "refund_amount", grouping = "per_refund_operation", record = "operacion" }
+selector = { fact = "row_field", row_field = "refund_amount", grouping = "per_refund_operation", record = "operacion", data_type = "money" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1"]
 source_refs = ["aeat-modelo-360-procedure"]

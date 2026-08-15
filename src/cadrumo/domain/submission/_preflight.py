@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from ...core.errors import CadrumoError
+from ...core.errors import BaseSeverity, CadrumoError
 from ...core.i18n import describe_auth_provider_operator_impact
 from ...core.logging import get_logger
 from ._errors import SubmissionPreflightError
@@ -130,7 +130,13 @@ class Preflight:
             )
         _logger.debug("preflight gate-1 ok: draft is approved")
 
-        error_findings = tuple(f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == "error")
+        # Read through the typed ``ModeloFindingLike`` port (``.severity`` is
+        # a REQUIRED field on both real implementations) rather than
+        # ``getattr(f, "severity", None)``: a future rename of the field
+        # must fail loud here, not silently exclude every finding -- error
+        # severity included -- from the gate whose entire job is blocking
+        # submission on them.
+        error_findings = tuple(f for f in draft.findings if f.severity == BaseSeverity.ERROR)
         if error_findings:
             _logger.debug(
                 "preflight gate-2 fail: %d error-severity findings",

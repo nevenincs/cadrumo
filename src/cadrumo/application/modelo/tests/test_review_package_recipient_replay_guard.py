@@ -31,10 +31,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage import DecryptionError
 from ....adapters.persistence.storage import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
 )
+from ....adapters.persistence.storage import DecryptionError
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
 from ....tests.secure_sql import isolated_runtime_profile

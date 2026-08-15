@@ -14,6 +14,19 @@ applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH03.shtml"
 review_status = "reviewed"
 
+[sources."aeat-dr-117-2019"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2019"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_117/files/01-117-ejercicio-2019-y-siguientes.xls"
+sha256 = "ea0c13a8ddf5874a944cc0acc3d26e7f4c85bec50271e734f20e81ecb68f046f"
+bytes = 192512
+retrieved_at = 2026-07-21
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_17/DR117e17v14.xls"
+review_status = "reviewed"
+
 [sources."boe-modelo-117-form-text"]
 evidence_tier = "official_source_guidance"
 authority = "boe"
@@ -53,6 +66,19 @@ applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH06.shtml"
 review_status = "reviewed"
 
+[sources."aeat-dr-126-2020"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2020"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_126/files/01-126-ejercicio-2020-y-siguientes.xlsx"
+sha256 = "50a764a112681bd979a2c76bc0749a2c5f42eb8de577bb5512bdcc6756e06ea3"
+bytes = 113671
+retrieved_at = 2026-07-21
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/126v01e2020_v1.07.xlsx"
+review_status = "reviewed"
+
 [sources."boe-modelo-126-form-text"]
 evidence_tier = "official_source_guidance"
 authority = "boe"
@@ -90,6 +116,19 @@ retrieved_at = 2026-07-01
 published_at = 2026-06-09
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH07.shtml"
+review_status = "reviewed"
+
+[sources."aeat-dr-128-2020"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2020"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_128/files/01-128-ejercicio-2020-y-siguientes.xlsx"
+sha256 = "2cdf1540b2aaca1cd5cf5a19380179ba72271a7656eba8a6dd157833866a5cc0"
+bytes = 112732
+retrieved_at = 2026-07-21
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/128v01e2020_v1.07.xlsx"
 review_status = "reviewed"
 
 [sources."boe-modelo-128-form-text"]

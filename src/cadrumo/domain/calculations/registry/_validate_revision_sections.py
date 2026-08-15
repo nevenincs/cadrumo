@@ -26,7 +26,6 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from ._schema import LegalReference, ModeloDefinition, ModeloRevision, SourceReference
-from ._validate_algorithms import validate_algorithm_binding_section, validate_algorithm_provider_section
 from ._validate_applicability_section import validate_applicability_section
 from ._validate_authority_grade import validate_authority_grade_section
 from ._validate_completeness import emit_completeness_gate_failures as _emit_completeness_gate_failures
@@ -158,26 +157,6 @@ def _validate_revision_surface_sections(
         failures,
         prefix=prefix,
         revision=revision,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
-        evidence=evidence,
-    )
-    validate_algorithm_provider_section(
-        failures,
-        prefix=prefix,
-        revision=revision,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
-        evidence=evidence,
-    )
-    validate_algorithm_binding_section(
-        failures,
-        prefix=prefix,
-        revision=revision,
-        provider_by_id=context.provider_by_id,
-        casillas=context.casillas,
-        resolvable_values=context.resolvable_values,
-        parameters=context.parameters,
         legal_refs=legal_refs,
         source_refs=source_refs,
         evidence=evidence,

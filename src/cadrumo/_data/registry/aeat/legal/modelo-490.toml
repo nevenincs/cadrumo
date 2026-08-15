@@ -61,3 +61,16 @@ published_at = 2021-06-08
 applies_from = 2021-06-09
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-9721"
 review_status = "reviewed"
+
+[sources."aeat-dr-490-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2023"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx"
+sha256 = "f55ecbfff8fb552de76f4e788ff7663269c96b6255b209b5289bf0869de89cb8"
+bytes = 107327
+retrieved_at = 2026-07-21
+applies_from = 2023-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr490e23.xlsx"
+review_status = "reviewed"

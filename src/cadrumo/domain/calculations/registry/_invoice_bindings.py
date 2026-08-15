@@ -14,6 +14,7 @@ from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregatio
 from ....core.identity import TaxIdIdentityToken
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import (
+    BindingExportDataType,
     intracommunity_clave_validator,
     invariant_diagnostics,
     selector_against_model,
@@ -54,6 +55,7 @@ __all__ = [
     "Modelo349OperadorTotalsParity",
     "compute_modelo_349_operador_totals_parity",
     "invoice_binding_requirements",
+    "is_m347_declarante_summary_invoice_binding",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
     "resolve_invoice_family_row_values",
@@ -164,6 +166,14 @@ class _InvoiceSelector(BaseModel):
     row_field: _InvoiceRowField | None = None
     grouping: _InvoiceGrouping | None = None
     record: str | None = Field(default=None, min_length=1, max_length=64)
+    data_type: BindingExportDataType | None = None
+    """Scalar type of the value this row field contributes to the export.
+
+    The same fact ``BindingRowExportSelector.data_type`` carries; declared here
+    so the selector model admits the key, since a source-family selector is
+    validated whole against its own strict model. Optional while the families
+    adopt it.
+    """
 
     @field_validator("claves")
     @classmethod
@@ -183,6 +193,26 @@ def _invoice_selector(binding: DataBindingDefinition) -> _InvoiceSelector:
         return _InvoiceSelector.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed invoice selector") from exc
+
+
+def is_m347_declarante_summary_invoice_binding(binding: DataBindingDefinition) -> bool:
+    """Return whether ``binding`` is the M347 declarante-summary invoice binding.
+
+    The canonical, single-defined predicate over ``_M347_DECLARANTE_SUMMARY_RECORD``,
+    read through the typed :func:`_invoice_selector` rather than a raw
+    ``selector_as_dict(binding).get("record")``: a caller outside this module
+    (``application/invoices/_source_resolver.py``) once carried its own copy of
+    both the literal and a ``.get()`` read, so a rename of the ``record`` field
+    would have silently, permanently misclassified the M347 declarante-summary
+    binding as absent rather than raising.
+
+    ``binding.source`` is checked first because :class:`_InvoiceSelector`
+    validates only invoice-family selectors; a non-invoice binding's selector
+    shape is a different family's concept entirely, never this one's business.
+    """
+    if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
+        return False
+    return _invoice_selector(binding).record == _M347_DECLARANTE_SUMMARY_RECORD
 
 
 def invoice_binding_requirements(

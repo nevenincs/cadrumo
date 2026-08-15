@@ -7,6 +7,7 @@ from typing import Literal, Self
 
 from pydantic import ConfigDict, Field, model_validator
 
+from ._errors import RegistryValidationError
 from ._schema import RegistryModel
 
 __all__ = [
@@ -14,9 +15,11 @@ __all__ = [
     "RecordDesignAuxiliaryEnvelopeHeaderField",
     "RecordDesignAuxiliaryEnvelopeHeaderRole",
     "RecordDesignCompositeRelativeClosing",
+    "RecordDesignExtraction",
     "RecordDesignField",
     "RecordDesignRelativeSuffixMarker",
     "RecordDesignSheet",
+    "RecordDesignSkippedSheet",
     "RecordDesignVariableBodyMarker",
     "RecordDesignVariableEnvelope",
     "RecordDesignVariableTotalMarker",
@@ -28,7 +31,19 @@ class RecordDesignField(RegistryModel):
 
     sheet: str
     row: int
-    ordinal: int
+    #: The ordinal AEAT printed, or ``None`` where the sheet declares none.
+    #:
+    #: ``None`` means the ORDINAL CELL IS EMPTY, never that the parser could not
+    #: read it. AEAT leaves it blank for rows it declines to number -- Modelo 036
+    #: writes a `Fecha de constitución` as three unnumbered rows for día, mes and
+    #: año, sharing one casilla -- and dropping them put their eight bytes into a
+    #: downstream geometry gap that blamed the design.
+    #:
+    #: A row whose ordinal cell is NON-EMPTY but unreadable is still refused. That
+    #: distinction is load-bearing: collapsing it would admit a ``14bis`` row while
+    #: silently discarding the label the authority printed, which represents LESS
+    #: than the source declares.
+    ordinal: int | None = None
     offset: int
     length: int
     type_code: str
@@ -248,7 +263,19 @@ class RecordDesignVariableTotalMarker(RegistryModel):
 
 
 class RecordDesignVariableEnvelope(RegistryModel):
-    """Variable composition wrapper, distinct from a fixed-width record."""
+    """Variable composition wrapper, distinct from a fixed-width record.
+
+    ITS TOTAL EXTENT IS NOT CHECKABLE, and that is a property of the design rather
+    than a gap in the checking. Every one of these sheets declares its total row as
+    ``Variable`` -- the body length varies by construction -- so there is no AEAT
+    figure to compare a computed extent against. What IS asserted is the fixed
+    tail: the closing identifier keeps its declared width and the terminator keeps
+    its two bytes, both carried rather than consumed.
+
+    Stated here because the absence otherwise reads as an oversight. A later
+    reader finding no extent assertion should conclude that AEAT declares no total,
+    not that nobody checked.
+    """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -257,6 +284,23 @@ class RecordDesignVariableEnvelope(RegistryModel):
     prefix_extent: int = Field(gt=0)
     body: RecordDesignVariableBodyMarker
     closing: RecordDesignRelativeSuffixMarker | RecordDesignCompositeRelativeClosing
+    #: The physical end-of-record marker, when the design declares one as its own row.
+    #:
+    #: SEPARATE FROM ``closing`` because it is a different kind of thing. The closing
+    #: is the record's identifier -- ``</T100020150A0000>`` names the modelo, the
+    #: discriminant and the ejercicio. The terminator is two bytes of CRLF that end
+    #: the physical line and identify nothing.
+    #:
+    #: REPRESENTED RATHER THAN PEELED AWAY, and that is the whole reason this field
+    #: exists. Thirty bundled designs across eight modelos declare the terminator as
+    #: a relative-offset row, and the closing recogniser -- which accepted one suffix
+    #: of length 18, or exactly six -- refused every one of them. Simply skipping the
+    #: row would have made all thirty parse, and every emitted record would have been
+    #: two bytes shorter than AEAT declares: a clean-looking parse that is wrong,
+    #: which is worse than the refusal it replaced. Keeping it here means the bytes
+    #: are still accounted for and a consumer computing a record's extent can see
+    #: them.
+    terminator: RecordDesignRelativeSuffixMarker | None = None
     variable_total: RecordDesignVariableTotalMarker
 
 
@@ -285,3 +329,73 @@ class RecordDesignSheet(RegistryModel):
             if self.auxiliary_envelope_header.source_fields != self.fields:
                 raise ValueError("auxiliary envelope header fields must exactly be its parser sheet fields")
         return self
+
+
+class RecordDesignSkippedSheet(RegistryModel):
+    """A sheet the extractor could not read, and the reason it gave.
+
+    Recorded rather than discarded. The extractor used to keep this list only long
+    enough to compose the message for the case where EVERY sheet failed, and threw
+    it away the moment one sheet parsed -- so a design that lost half its records
+    was handed to the caller looking exactly like one that lost none.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    name: str
+    reason: str
+
+
+class RecordDesignExtraction(RegistryModel):
+    """What one design source yielded, INCLUDING what it did not.
+
+    The completeness of a read is a property of the READ, so it belongs in the
+    value the read returns. A bare tuple of sheets cannot express "these are all of
+    them" separately from "these are the ones that worked", which is why a partial
+    extraction was previously indistinguishable from a whole one at every consumer
+    and in every count derived downstream.
+
+    Consumers do not receive sheets without saying what they think about
+    partiality: :meth:`require_complete` refuses an incomplete read, and
+    :meth:`accept_partial` takes it deliberately. There is no accessor that hands
+    over the sheets without that choice being written at the call site, which is
+    the point -- an omission is what produced the original defect, so an omission
+    has to stop being expressible.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    source: str
+    sheets: tuple[RecordDesignSheet, ...]
+    skipped: tuple[RecordDesignSkippedSheet, ...] = ()
+
+    @property
+    def is_complete(self) -> bool:
+        """Whether every sheet of the source was read."""
+        return not self.skipped
+
+    def require_complete(self) -> tuple[RecordDesignSheet, ...]:
+        """Return every sheet, refusing when the source was only partly read.
+
+        Returns:
+            The parsed sheets, when the whole source was read.
+
+        Raises:
+            RegistryValidationError: when any sheet of the source was skipped.
+        """
+        if self.skipped:
+            detail = "; ".join(f"{item.name!r}: {item.reason}" for item in self.skipped)
+            raise RegistryValidationError(
+                f"{self.source}: read {len(self.sheets)} sheet(s) but could not read "
+                f"{len(self.skipped)} more, so this is a PARTIAL design and every count "
+                f"derived from it understates the source -- {detail}",
+            )
+        return self.sheets
+
+    def accept_partial(self) -> tuple[RecordDesignSheet, ...]:
+        """Return the sheets that were read, deliberately tolerating a partial read.
+
+        Returns:
+            The parsed sheets, whether or not the source was read completely.
+        """
+        return self.sheets

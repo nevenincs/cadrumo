@@ -40,8 +40,8 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     RelationId,
     casillas_by_binding,
+    manual_input_record_field_selector,
     relation_source_requirements,
-    selector_as_dict,
 )
 from ...domain.modelos import (
     Modelo349OperadorRow,
@@ -93,11 +93,17 @@ def _m131_objective_estimation_data_base_inputs(
     for binding in revision.bindings:
         if binding.source is not BindingSourceKind.MANUAL_INPUT or binding.id not in binding_values:
             continue
-        selector = selector_as_dict(binding)
-        record = selector.get("record")
-        field = selector.get("field")
-        if not isinstance(record, str) or not isinstance(field, str):
+        # Distinguishes the record-field manual_input shape (what this loop
+        # projects) from the casilla shape (a real, different manual_input
+        # selector this loop is not asked about) via the typed model, rather
+        # than a raw selector.get("record") whose None default cannot tell a
+        # legitimately-absent field from a mistyped one. A malformed selector
+        # raises here instead of being silently treated as casilla-shape.
+        manual_selector = manual_input_record_field_selector(binding)
+        if manual_selector is None:
             continue
+        record = manual_selector.record
+        field = manual_selector.field
         value = binding_values[binding.id]
         if record == "page_1":
             match = _M131_PAGE1_ACTIVITY_FIELD_RE.match(field)

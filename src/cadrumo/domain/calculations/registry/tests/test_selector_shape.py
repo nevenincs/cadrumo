@@ -132,38 +132,32 @@ def _assert_selector_refused_at_construction(
 
 
 def test_binding_selector_registry_covers_typed_sources() -> None:
-    """The discriminator registry must enumerate every map-backed typed selector."""
+    """Every source kind has a typed selector, except the two that carry no selector map.
 
-    expected = {
-        BindingSourceKind.PREVIOUS_FILING,
-        BindingSourceKind.RELATION_PREFILL,
-        # counterpart-aggregation family shares _InvoiceSelector
-        BindingSourceKind.LEDGER_TRANSACTION,
-        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-        BindingSourceKind.PAYABLE_INVOICE,
-        BindingSourceKind.COLLECTIBLE_INVOICE,
-        BindingSourceKind.LEDGER_OSS_AGGREGATION,
-        BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
-        BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-        BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
-        BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
-        BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,
-        BindingSourceKind.RETENCIONES_AGGREGATION,
-        BindingSourceKind.WITHHOLDING,
-        BindingSourceKind.RELATED_PARTY_OPERATION,
-        BindingSourceKind.FOREIGN_ASSET,
-        BindingSourceKind.ATRIBUCION_MEMBER,
-        BindingSourceKind.REFUND_OPERATION,
-        BindingSourceKind.DONATIVO_DONOR,
-        BindingSourceKind.MANUAL_INPUT,
-        BindingSourceKind.PROFILE,
-        BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
-        BindingSourceKind.PRORRATA_REGULARIZACION,
-        BindingSourceKind.BIENES_INVERSION_REGULARIZACION,
-    }
+    Derived from :class:`BindingSourceKind` rather than restated as a member
+    list: a hand-written expected set has to be edited by hand every time a kind
+    is added, and when that edit is missed the gate fails for a bookkeeping
+    reason while reporting a coverage one. This gate went red exactly that way
+    when ``m303_regimen_simplificado_annual_summary`` was registered with a
+    selector and a validator but never added here.
+
+    The two exclusions are stated with their reasons, and each is asserted to be
+    genuinely absent, so an exclusion cannot silently become stale cover for a
+    kind that later grows a selector.
+    """
+    # BORRADOR resolves a whole pre-filled declaration rather than a selected
+    # slice, and IVA_WALLET_DECISION is settled by the wallet decision rather
+    # than by a selector; neither carries a selector map to validate.
+    selectorless = {BindingSourceKind.BORRADOR, BindingSourceKind.IVA_WALLET_DECISION}
+    expected = set(BindingSourceKind) - selectorless
+
     assert set(_BINDING_SELECTOR_REGISTRY) == expected
     assert all(isinstance(source, BindingSourceKind) for source in _BINDING_SELECTOR_REGISTRY)
+    for source in selectorless:
+        assert source not in _BINDING_SELECTOR_REGISTRY, (
+            f"{source!r} is excluded as selectorless but now carries a selector; "
+            "remove it from the exclusion set rather than widening the expectation"
+        )
 
 
 def test_construction_gate_dispatches_through_selector_model_for_source() -> None:

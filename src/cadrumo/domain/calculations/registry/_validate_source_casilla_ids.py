@@ -23,13 +23,10 @@ from ._schema import ModeloRevision
 def revision_output_ids(revision: ModeloRevision) -> set[CasillaId]:
     """Return canonical source ids exposed by one registry revision.
 
-    The returned :class:`~core.CasillaId` set
-    includes declared casillas plus algorithm-binding outputs from the
+    The returned :class:`~core.CasillaId` set is the casillas declared by the
     supplied :class:`~domain.calculations.registry.ModeloRevision`.
     """
-    outputs = set(declared_casilla_ids(revision))
-    outputs.update(output for binding in revision.algorithm_bindings for output in binding.output_casilla_ids.values())
-    return outputs
+    return set(declared_casilla_ids(revision))
 
 
 def source_casilla_id_reference_failure(

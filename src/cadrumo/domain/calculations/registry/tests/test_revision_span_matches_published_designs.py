@@ -70,14 +70,26 @@ the largest designs belong to modelos that do export. The cost buys the offsets
 and the field occupancy the derivatives do not carry, which is what the box and
 retirement signals are made of.
 
-FOUR INDEPENDENT SIGNALS, ONE VERDICT -- and the occupancy one reports two directions.
-This heading has now been wrong twice in the same direction, reading TWO for as long as
-the occupancy signal existed and THREE for as long as the box-SET signal has, which is
-worth stating rather than quietly correcting: a module that miscounts its own
-instruments invites a reader to act on the ones it names and miss the rest. The fourth
-is box-SET membership -- a box added or removed with nothing displaced, which the
-movement check structurally cannot see because it iterates only the boxes both designs
-share.
+SIX INDEPENDENT SIGNALS, ONE VERDICT -- and the occupancy one reports two directions.
+This heading has now been wrong three times in the same direction: TWO for as long as
+the occupancy signal existed, THREE for as long as the box-SET signal has, and FOUR
+for as long as the description-flip signal has, which is worth stating rather than
+quietly correcting: a module that miscounts its own instruments invites a reader to act
+on the ones it names and miss the rest. It compounded, too -- box-SET membership and
+description-flip were both labelled "FOURTH SIGNAL" at their own definitions, an
+internal collision nobody using either docstring alone would notice.
+
+The signals, renumbered here rather than left to drift again: (1) box-offset
+displacement, (2) page-length / record-count, (3) reserved-space occupancy
+retire/revive, (4) box-SET membership -- a box added or removed with nothing
+displaced, which the movement check structurally cannot see because it iterates only
+the boxes both designs share -- (5) unnumbered-slot description flip, including its
+no-separable-leaf branch, and (6) box-FREE position-SET membership -- a field added or
+removed at a fixed offset with no bracketed number to key on at all, which (4)
+structurally cannot see because its key is the box number itself. Measured directly:
+62 of 174 bundled designs carry zero bracketed box numbers anywhere, so (4) never runs
+for them and (6) is not a refinement of it but the only membership signal that exists
+there.
 
 The box-offset diff sees which boxes moved
 but needs bracketed box markers. The page-length diff sees only that a page
@@ -124,17 +136,22 @@ from __future__ import annotations
 import re
 import unicodedata
 from datetime import date
+from functools import lru_cache
 from itertools import combinations, pairwise
 from pathlib import Path
 
 import pytest
 
 from .....core import PeriodKind, registry_period_kind
+from .....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
+from .....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from .....core.resources import bundled_path
 from .. import ModeloDefinition
 from .._authority import ValidatedRegistryAuthority
 from .._loader import load_registry_tree
 from .._record_design import (
+    _clean_pdf_line,
+    _extract_pdf_text_lines,
     extract_record_design_pdf,
     extract_record_design_workbook,
     extract_record_design_xls_workbook,
@@ -185,7 +202,12 @@ _DESIGN_YEAR = re.compile(r"ejercicios?-(\d{4})(?:-(y|a|hasta)-(\d{4}))?")
 #: moved field and invents a boundary that is not there.
 _RESERVED_FIELD = re.compile(r"reservado", re.IGNORECASE)
 #: Design SOURCE suffixes, in preference order for a year bundled more than once.
-_DESIGN_SUFFIXES = (".xlsx", ".xls", ".pdf")
+#:
+#: ``.xlsm`` is accepted because the corpus bundles two Modelo 220 designs in it
+#: (ejercicios 2022 and 2023) and openpyxl reads it exactly as it reads ``.xlsx``.
+#: Omitting it dropped both files from every map here for no reason anyone chose:
+#: a macro-enabled container is a packaging detail, not a different document.
+_DESIGN_SUFFIXES = (".xlsx", ".xlsm", ".xls", ".pdf")
 #: The synthetic single-sheet name the PDF backend falls back to when a document
 #: declares no per-page sections. Its presence means the parse is FLATTENED, so
 #: per-page signals must abstain rather than compare one synthetic page against
@@ -198,6 +220,24 @@ _PDF_FLATTENED_SHEET = "PDF record design"
 # changed, something inside it moved. It reaches designs the box table cannot --
 # the older PDF extractions carry these rows while yielding no bracketed boxes.
 _PAGE_TOTAL = re.compile(r"TOTAL\s*\|?\s*\|?\s*(\d+|variable)\s*\|?\s*POSICIONES", re.IGNORECASE)
+
+#: The ejercicio a design states in its OWN title text. Bounded to a short window
+#: after the word deliberately: "Ejercicio 2023" is a coverage assertion, while
+#: "rendimientos obtenidos en ejercicios iniciados antes de 1999" is prose about
+#: the filer's data, and a greedy gap between the two admits the second.
+_TITLE_EJERCICIO = re.compile(r"(?i)\bejercicio\b[^\n]{0,25}?\b(19[89]\d|20[0-4]\d)\b")
+#: A pago-fraccionado designation: a period token immediately followed by its
+#: ejercicio, optionally naming a second ("3p-2013-y-2014"). Anchored on the
+#: period token so an orden number cannot supply the year -- ``hap-523-2015``
+#: carries no period token and contributes nothing.
+_PERIOD_QUALIFIED_YEAR = re.compile(r"(?<![0-9a-z])\d+[pt]-(\d{4})(?:-y-(\d{4}))?", re.IGNORECASE)
+#: An ``Ejercicio`` slot whose declared value is a CONSTANT year, in either word
+#: order AEAT writes it. The constant is what distinguishes the design fixing a
+#: year from the design reserving a slot for the filer to write one in.
+_CONSTANT_EJERCICIO = re.compile(r"(?i)\bejercicio\b[^|]{0,60}?\bconstante\b[^|]{0,20}?\b(19[89]\d|20[0-4]\d)\b")
+_CONSTANT_EJERCICIO_REVERSED = re.compile(
+    r"(?i)\bconstante\b[^|]{0,40}?\bejercicio\b[^|]{0,30}?\b(19[89]\d|20[0-4]\d)\b"
+)
 
 
 def _authority() -> ValidatedRegistryAuthority:
@@ -214,7 +254,7 @@ def _sources_by_year(modelo_id: str) -> tuple[tuple[int, Path], ...]:
     for path in _design_sources(modelo_id):
         if not _design_sheets(path):
             continue
-        for year in _design_years(path.name):
+        for year in _design_coverage_years(path):
             seen.setdefault(year, path)
     return tuple(sorted(seen.items()))
 
@@ -239,16 +279,176 @@ def _design_years(name: str) -> tuple[int, ...]:
 
     ``y-siguientes`` is still NOT expanded: its span is open-ended, so
     enumerating it would invent years.
+
+    A PERIOD-QUALIFIED ejercicio counts too: AEAT writes a pago-fraccionado
+    design's coverage as ``ejercicio-2p-y-3p-2016``, ``ejercicios-3p-2013-y-2014``
+    or a bare ``1p-2016``, and the year-follows-``ejercicio-`` anchor misses all
+    three because a period token sits between the word and the digits. This is NOT
+    the orden-year anti-pattern relaxed: the year still follows an explicit period
+    designation, which is a coverage statement, and the anchor moves from
+    ``ejercicio-`` to the period token rather than being dropped.
     """
     matched = _DESIGN_YEAR.search(name)
     if matched is None:
-        return ()
+        return _period_qualified_years(name)
     first, connector, second = matched.group(1), matched.group(2), matched.group(3)
     if second is None:
         return (int(first),)
     if connector == "y":
         return (int(first), int(second))
     return tuple(range(int(first), int(second) + 1))
+
+
+def _period_qualified_years(name: str) -> tuple[int, ...]:
+    """Years a period-qualified designation claims, e.g. ``3p-2013-y-2014``."""
+    years: set[int] = set()
+    for matched in _PERIOD_QUALIFIED_YEAR.finditer(name):
+        years.add(int(matched.group(1)))
+        if matched.group(2) is not None:
+            years.add(int(matched.group(2)))
+    return tuple(sorted(years))
+
+
+@lru_cache(maxsize=512)
+def _title_ejercicio_years(path: Path) -> tuple[int, ...]:
+    """Every ejercicio the design's own TITLE TEXT states, or empty.
+
+    AEAT prints ``Ejercicio NNNN`` as a title line on a design's first page. That
+    is the document asserting which ejercicio it governs, and it is a different
+    fact from anything in the filename: measured across the corpus, a filename
+    records when AEAT last touched the published page while the title records the
+    ejercicio the layout is for, and the two diverge by up to SEVEN years --
+    ``03-180-orden-hap-1732-2014-de-24-de-septiembre.pdf`` states ``Ejercicio
+    2021``, and ``01-165-diseno-de-registro-actualizado-en-2023.pdf`` states
+    ``Ejercicio 2026``.
+
+    WHY THIS IS NOT READ FROM THE PARSED FIELDS. Only eight designs in the whole
+    corpus declare an ejercicio as a field constant, so a field-level scan finds
+    almost nothing; the assertion lives in the document's heading, above the
+    column header the extractor starts at.
+
+    Deliberately reads a BOUNDED prefix -- a PDF's first sixty text lines, a
+    workbook's first six rows on its first four sheets -- rather than the whole
+    document. Beyond the heading the same phrase appears inside guidance prose
+    ("para ejercicios anteriores a 1999"), which is a statement about the DATA a
+    filer reports, not about the design's coverage, and admitting it would attribute
+    Modelo 193's designs to 1999.
+    """
+    try:
+        lines = _pdf_title_lines(path) if path.suffix.lower() == _PDF_EXTENSION else _workbook_title_lines(path)
+    except Exception:
+        # An unreadable container attributes nothing, exactly as the sibling parse
+        # helper does: a file this cannot open must not be attributed to a year by
+        # guesswork, and the coverage guard reports it as unattributable instead.
+        return ()
+    joined = "\n".join(lines)
+    return tuple(sorted({int(matched.group(1)) for matched in _TITLE_EJERCICIO.finditer(joined)}))
+
+
+def _pdf_title_lines(path: Path) -> list[str]:
+    lines = _extract_pdf_text_lines(path.read_bytes(), source_label=str(path))
+    return [cleaned for line in lines[:60] if (cleaned := _clean_pdf_line(line))]
+
+
+def _workbook_title_lines(path: Path) -> list[str]:
+    if path.suffix.lower() == _XLS_EXTENSION:
+        import xlrd
+
+        book = xlrd.open_workbook(str(path), on_demand=True)
+        try:
+            return [
+                text
+                for name in book.sheet_names()[:4]
+                for row in range(min(6, book.sheet_by_name(name).nrows))
+                if (
+                    text := " ".join(
+                        str(cell).strip() for cell in book.sheet_by_name(name).row_values(row) if str(cell).strip()
+                    )
+                )
+            ]
+        finally:
+            book.release_resources()
+    from openpyxl import load_workbook
+
+    book = load_workbook(path, read_only=True, data_only=True)
+    try:
+        return [
+            text
+            for worksheet in book.worksheets[:4]
+            for row in worksheet.iter_rows(max_row=6, values_only=True)
+            if (text := " ".join(str(cell).strip() for cell in row if cell is not None and str(cell).strip()))
+        ]
+    finally:
+        book.close()
+
+
+@lru_cache(maxsize=512)
+def _constant_ejercicio_years(path: Path) -> tuple[int, ...]:
+    """Every ejercicio a design declares as a FIXED FIELD VALUE, or empty.
+
+    The second place a design states its own coverage: a slot labelled ``Ejercicio``
+    whose declared content is a CONSTANT rather than something the filer supplies.
+    Modelo 714 writes ``Ejercicio | Constante 2025`` and Modelo 390 writes
+    ``2. Devengo - Ejercicio. | Constante "2016"``.
+
+    ``Constante`` is load-bearing, not decoration. Modelo 303 declares ``Ejercicio de
+    devengo (EEEE)`` at a four-byte slot with no constant, because that is a value the
+    FILER writes; reading it as coverage would attribute every M303 design to whatever
+    year happened to appear beside it. Requiring the constant is what separates "the
+    design fixes this to 2025" from "the design reserves four bytes for a year".
+
+    Rarer than the title assertion -- eight designs corpus-wide -- but better
+    corroborated per instance: seven of the eight also carry a trustworthy filename
+    ejercicio and all seven match it.
+    """
+    years: set[int] = set()
+    for sheet in _design_sheets(path):
+        for parsed_field in sheet.fields:
+            blob = " ".join(
+                text for text in (parsed_field.description, parsed_field.content, parsed_field.validation) if text
+            )
+            for pattern in (_CONSTANT_EJERCICIO, _CONSTANT_EJERCICIO_REVERSED):
+                matched = pattern.search(blob)
+                if matched is not None:
+                    years.add(int(matched.group(1)))
+                    break
+    return tuple(sorted(years))
+
+
+def _content_ejercicio_years(path: Path) -> tuple[int, ...]:
+    """Every ejercicio the DESIGN ITSELF states, from either content signal."""
+    return tuple(sorted(set(_title_ejercicio_years(path)) | set(_constant_ejercicio_years(path))))
+
+
+def _design_coverage_years(path: Path) -> tuple[int, ...]:
+    """Every ejercicio a design covers, from its content and its filename TOGETHER.
+
+    THE UNION, NOT A PRECEDENCE, and that correction is load-bearing. Ranking the
+    content above the filename looks right -- the filename is a publication
+    artefact and the title is the document's own assertion -- but the two do not
+    describe the same shape of fact. **A design's title names a POINT and its
+    filename can name a SPAN.** A design published for ejercicio 2009 and applying
+    through 2014 heads its first page ``Ejercicio 2009`` and is filed as
+    ``ejercicios-2009-a-2014``; preferring the title there discards 2010 to 2014.
+
+    Measured before this was written that way round: four designs would have lost
+    twelve design-years between them, Modelo 130 and Modelo 131 five each. A
+    content signal that can only ADD is safe in a way one that can also REPLACE is
+    not, and the asymmetry matters here because dropping a year is the QUIET
+    failure -- an unattributed design forms no boundary, so the verdict gets
+    shorter and reads as progress.
+
+    The union also means the two signals cannot narrow each other by accident,
+    which leaves genuine contradiction -- disjoint claims -- as the only thing
+    :func:`test_a_design_title_never_contradicts_a_trustworthy_filename_year` has
+    to catch, and it is the only thing that check should be asked to judge.
+
+    Returns empty for a design that states no ejercicio anywhere. That is a real
+    answer rather than a defect -- Modelo 036 is scoped by an in-force DATE and
+    Modelo 210 by a devengo span, neither of which is an ejercicio -- and the
+    coverage guard reports such designs as unattributable rather than guessing.
+    """
+    return tuple(sorted(set(_content_ejercicio_years(path)) | set(_design_years(path.name))))
 
 
 #: AEAT's declared period bound for a design that covers only part of an ejercicio.
@@ -338,7 +538,7 @@ def _designs_in_publication_order(modelo_id: str) -> tuple[tuple[Path, ...], tup
     for path in _design_sources(modelo_id):
         if not _design_sheets(path):
             continue
-        years = _design_years(path.name)
+        years = _design_coverage_years(path)
         if not years:
             continue
         marker = _design_fingerprint(path)
@@ -375,18 +575,26 @@ def _designs_by_year(modelo_id: str) -> dict[int, tuple[Path, ...]]:
     for path in _design_sources(modelo_id):
         if not _design_sheets(path):
             continue
-        for year in _design_years(path.name):
+        for year in _design_coverage_years(path):
             grouped.setdefault(year, []).append(path)
     return {year: tuple(paths) for year, paths in sorted(grouped.items())}
 
 
 def _design_sources(modelo_id: str) -> list[Path]:
-    """Every bundled design SOURCE for one modelo, deterministically ordered."""
+    """Every bundled design SOURCE for one modelo, deterministically ordered.
+
+    Walks the modelo directory RECURSIVELY rather than globbing ``files/*``. Almost
+    every modelo keeps its designs in a ``files`` subdirectory, but Modelo 210
+    keeps ``dr210_2011.pdf`` directly in the modelo directory, and the fixed-depth
+    glob excluded it from every map in this module. Nothing decided that; it is a
+    directory-shape assumption that happened to hold for all but one modelo, which
+    is the shape of assumption that survives longest unnoticed.
+    """
     directory = _design_dir(modelo_id)
     if not directory.is_dir():
         return []
     return sorted(
-        (path for path in directory.glob("files/*") if path.suffix.lower() in _DESIGN_SUFFIXES),
+        (path for path in directory.rglob("*") if path.is_file() and path.suffix.lower() in _DESIGN_SUFFIXES),
         key=lambda path: (path.name, path.suffix.lower()),
     )
 
@@ -408,6 +616,7 @@ def _design_sheets(path: Path) -> tuple[RecordDesignSheet, ...]:
     """
     parsers = {
         ".xlsx": extract_record_design_workbook,
+        ".xlsm": extract_record_design_workbook,
         ".xls": extract_record_design_xls_workbook,
         ".pdf": extract_record_design_pdf,
     }
@@ -415,9 +624,58 @@ def _design_sheets(path: Path) -> tuple[RecordDesignSheet, ...]:
     if parser is None:
         return ()
     try:
-        return parser(path)
+        # ACCEPTS a partial read deliberately. This module compares designs against
+        # each other, and a design read in part still carries real evidence about
+        # the sheets it did read; refusing it here would replace a comparison that
+        # sees most of a boundary with one that sees none of it. The completeness
+        # of each read is reported by the coverage guard rather than resolved here.
+        return parser(path).accept_partial()
     except Exception:
         return ()
+
+
+def _unparseable_design_sources(modelo_id: str) -> tuple[Path, ...]:
+    """Every bundled design file for one modelo whose sheets fail to parse AT ALL.
+
+    A THIRD SHAPE, distinct from the two this instrument otherwise reports. A
+    design that parses (even partially, per :func:`_design_sheets`'s own
+    ``accept_partial`` posture) and states no ejercicio anywhere is a real,
+    legitimate answer -- some modelos are scoped by something other than an
+    ejercicio, and the coverage guard reports that honestly. A year with NO
+    bundled file at all is a genuine acquisition gap -- fetching one from AEAT
+    is the only fix. A file in THIS set is neither: it physically exists in the
+    corpus, so acquisition does nothing, but the parser returns nothing usable
+    for it AT ALL, so whatever ejercicio it might state -- filename or content
+    -- never reaches :func:`_design_coverage_years`. That is an extraction-layer
+    defect, and conflating it with either of the other two shapes sends a
+    fix-owner to acquire a design that is already bundled, or to treat a
+    legitimately non-ejercicio design as if something were missing from it.
+
+    Measured live: Modelo 036 carries three such files
+    (``...-ejercicio-2023-y-siguientes...``, two ``...-ejercicio-2021-y-siguientes...``),
+    each with a real filename-derivable ejercicio year that never reaches any
+    comparison because :func:`_designs_in_publication_order`'s own first filter
+    drops an unparseable design before year-attribution is ever consulted --
+    loud at the extraction layer (the parser genuinely fails), but that loudness
+    does not reach this module, because the design is dropped before it can be
+    reported.
+
+    PROSPECTIVE, NOT SPECULATIVE -- stated because the distinction matters for
+    how dormant code is read. As of this writing no revision's declared span
+    currently overlaps Modelo 036's three unparseable years, so the UNPARSEABLE
+    branch in the two gate failure messages that consult this function is
+    proven by construction (bite-proofed synthetically, see the mutation tests
+    in this module) but currently unexercised by the live corpus -- correct and
+    dormant, not correct and moot. The three unparseable files still exist and
+    a future span change (Modelo 036's own, or a currently-absent modelo
+    gaining a declared revision over years an unparseable file already claims)
+    brings this branch back into range without anyone touching it. A dormant
+    branch is still a rot risk: if this signal's wording or matching logic ever
+    drifts silently, nothing in today's corpus would catch it until a real case
+    arrives. Re-run the synthetic bite proof, not just the live gate, when this
+    function changes.
+    """
+    return tuple(path for path in _design_sources(modelo_id) if not _design_sheets(path))
 
 
 def _parse_extracted(path: Path) -> dict[str, int]:
@@ -535,7 +793,7 @@ def _page_lengths_for(modelo_id: str) -> dict[int, tuple[str, ...]]:
         found = _page_lengths(path)
         if not found:
             continue
-        for year in _design_years(path.name):
+        for year in _design_coverage_years(path):
             lengths.setdefault(year, found)
     return lengths
 
@@ -551,7 +809,7 @@ def _designs_for(modelo_id: str) -> tuple[dict[int, dict[str, int]], dict[int, s
     unreadable: dict[int, str] = {}
     for path in _design_sources(modelo_id):
         table = _parse_design(path)
-        for year in _design_years(path.name):
+        for year in _design_coverage_years(path):
             if table:
                 parsed.setdefault(year, table)
             elif year not in parsed:
@@ -676,9 +934,9 @@ def _designs_claimed_by(modelo_id: str, revision: object) -> tuple[Path, ...]:
     across keys that never met.
     """
     ordered, _unorderable = _designs_in_publication_order(modelo_id)
-    every_year = {year for path in ordered for year in _design_years(path.name)}
+    every_year = {year for path in ordered for year in _design_coverage_years(path)}
     claimed = _claimed_years(revision, every_year)
-    return tuple(path for path in ordered if set(_design_years(path.name)) & claimed)
+    return tuple(path for path in ordered if set(_design_coverage_years(path)) & claimed)
 
 
 def _box_set_evidence(before_boxes: dict[str, int], after_boxes: dict[str, int]) -> str | None:
@@ -749,7 +1007,7 @@ def _position_content(path: Path) -> dict[tuple[str, int, int], str]:
 
 
 def _position_set_evidence(earlier: Path, later: Path) -> str | None:
-    """FIFTH SIGNAL: a field added or removed at a position, independent of box number.
+    """SIXTH SIGNAL: a field added or removed at a position, independent of box number.
 
     Generalises :func:`_box_set_evidence`'s membership idea past its box-number key,
     the same relationship the box-SET signal has to the displacement check: a
@@ -831,7 +1089,7 @@ def _unnumbered_labels(path: Path) -> dict[tuple[str, int, int], str]:
 
 
 def _description_flip_evidence(earlier: Path, later: Path) -> str | None:
-    """FOURTH SIGNAL: an UNNUMBERED slot whose declared meaning changes at a fixed position.
+    """FIFTH SIGNAL: an UNNUMBERED slot whose declared meaning changes at a fixed position.
 
     The box-number key is structurally blind to a slot carrying no bracketed number, and
     two such slots on Modelo 303 do change meaning between the 2024 halves -- a one-byte
@@ -936,7 +1194,7 @@ def _normalised(text: str) -> str:
 
 def _boundary_label(earlier: Path, later: Path) -> tuple[int, int]:
     """``(left year, right year)``; the two are EQUAL for a mid-course split."""
-    return max(_design_years(earlier.name)), min(_design_years(later.name))
+    return max(_design_coverage_years(earlier)), min(_design_coverage_years(later))
 
 
 def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]]:
@@ -1035,6 +1293,10 @@ def _compare_design_pair(earlier: Path, later: Path) -> list[str]:
 
     evidence.extend(_occupancy_evidence(earlier, later))
 
+    # SIXTH SIGNAL: a field added or removed at a position, independent of box number.
+    # See _position_set_evidence's own docstring for the full rationale and the
+    # measured false positive (Modelo 202's reserved-space repartition) its exclusion
+    # closes.
     position_membership = _position_set_evidence(earlier, later)
     if position_membership:
         evidence.append(position_membership)
@@ -1434,7 +1696,12 @@ def test_no_bundled_design_file_disappears_from_the_inventory() -> None:
     design_root = bundled_path(*_DESIGN_ROOT_PARTS)
     for directory in sorted(path for path in design_root.glob("modelo_*") if path.is_dir()):
         modelo_id = directory.name.removeprefix("modelo_")
-        on_disk = {path for path in directory.glob("files/*") if path.suffix.lower() in _DESIGN_SUFFIXES}
+        # Recursive, matching _design_sources. The two derivations stayed independent
+        # in their SET logic while sharing one glob SHAPE, so a design outside
+        # ``files/`` was invisible to the inventory AND to the guard that exists to
+        # catch the inventory dropping a file. Two derivations of one fact protect
+        # nothing where both inherit the same blind spot.
+        on_disk = {path for path in directory.rglob("*") if path.is_file() and path.suffix.lower() in _DESIGN_SUFFIXES}
         if not on_disk:
             continue
         seen_any += len(on_disk)
@@ -1477,11 +1744,11 @@ def test_the_verdict_names_a_mid_course_boundary_where_aeat_split_an_ejercicio()
         # function makes this test notice only that the function changed, so a defect in
         # it would red the vacuity guard and never reach the assertion that matters.
         ordered, _unorderable = _designs_in_publication_order(modelo.id)
-        claimed_years = _claimed_years(revision, {year for path in ordered for year in _design_years(path.name)})
+        claimed_years = _claimed_years(revision, {year for path in ordered for year in _design_coverage_years(path)})
         by_year: dict[int, int] = {}
         for path in ordered:
-            opening = min(_design_years(path.name))
-            if set(_design_years(path.name)) & claimed_years:
+            opening = min(_design_coverage_years(path))
+            if set(_design_coverage_years(path)) & claimed_years:
                 by_year[opening] = by_year.get(opening, 0) + 1
         mid_split_available.extend(
             f"modelo {modelo.id} revision {revision_id!r} ejercicio {year}"
@@ -1523,7 +1790,7 @@ def test_a_mid_split_ejercicio_orders_its_halves_by_declared_coverage_not_by_fil
 
     grouped: dict[int, list[Path]] = {}
     for path in ordered:
-        grouped.setdefault(min(_design_years(path.name)), []).append(path)
+        grouped.setdefault(min(_design_coverage_years(path)), []).append(path)
     multi = {year: paths for year, paths in grouped.items() if len(paths) > 1}
     assert multi, "no ejercicio carries two designs, so this ordering assertion would be vacuous"
 
@@ -1588,12 +1855,12 @@ def test_the_added_boxes_attach_to_the_epoch_that_introduced_them() -> None:
     # does. Re-deriving the order here from the coverage helper would make this test
     # insensitive to the ordering function it exists to guard.
     ordered, _unorderable = _designs_in_publication_order("303")
-    window = [path for path in ordered if min(_design_years(path.name)) >= 2023]
+    window = [path for path in ordered if min(_design_coverage_years(path)) >= 2023]
     assert len(window) >= 3, "fewer than three Modelo 303 designs from 2023 on; this assertion would be vacuous"
 
     introduced: dict[str, set[str]] = {}
     for earlier, later in pairwise(window):
-        left, right = max(_design_years(earlier.name)), min(_design_years(later.name))
+        left, right = max(_design_coverage_years(earlier)), min(_design_coverage_years(later))
         label = f"{left} mid-year" if left == right else f"{left}/{right}"
         introduced[label] = numbered(later) - numbered(earlier)
 
@@ -1645,6 +1912,229 @@ def test_the_plural_and_range_naming_variants_are_read() -> None:
     assert _design_years("01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes.xlsx") == (2019,)
 
 
+def test_a_period_qualified_designation_yields_its_ejercicio() -> None:
+    """A pago-fraccionado design names its coverage by PERIOD, and that is still coverage.
+
+    The year-follows-``ejercicio-`` anchor misses these because a period token sits
+    between the word and the digits, so three Modelo 202 designs enumerated as
+    covering nothing. Widening to the period token is not the orden-year
+    relaxation: the anchor is still an explicit coverage designation, which is why
+    the negative controls below keep passing.
+    """
+    assert _design_years("07-202-orden-hap-1552-2016-ejercicio-2p-y-3p-2016-128-kb-xlsx.xlsx") == (2016,)
+    assert _design_years("09-202-orden-hap-2214-2013-ejercicios-3p-2013-y-2014-46-kb-pdf.pdf") == (2013, 2014)
+    assert _design_years("10-202-orden-hap-523-2015-1p-2016-124-kb-xlsx.xlsx") == (2016,)
+    # An orden number carries no period token, so it still supplies no year, and a
+    # period-scoped span with no year attached still enumerates nothing rather than
+    # borrowing the update year beside it.
+    assert _design_years("14-202-orden-eha-664-2010-adaptada-a-la-ultima-normativa-vigente.pdf") == ()
+    assert _design_years("01-763-desde-2018-4t-y-siguientes-actualizado-en-2023.xlsx") == ()
+
+
+def test_a_design_title_is_read_as_coverage_where_the_filename_states_nothing() -> None:
+    """The design's own title states the ejercicio the filename withholds.
+
+    THE POSITIVE HALF of the attribution bite proof. Modelo 180's 2014-orden design
+    and Modelo 303's 2008-orden design both state their ejercicio in their heading,
+    and neither filename carries one, so before this the pair entered no map at all
+    and their modelo's ``boundaries`` was empty for want of anything to compare
+    rather than for want of a boundary.
+    """
+    m180 = _design_dir("180") / "files" / "03-180-orden-hap-1732-2014-de-24-de-septiembre-105-kb-pdf.pdf"
+    m303 = _design_dir("303") / "files" / "07-303-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf"
+    for path in (m180, m303):
+        assert path.is_file(), f"corpus anchor moved: {path}"
+
+    # The filename rule refuses both, exactly as it should.
+    assert _design_years(m180.name) == ()
+    assert _design_years(m303.name) == ()
+    # The document states what the filename does not, and the orden year is NOT it:
+    # 2014 -> 2021 is a seven-year divergence, which is why the filename cannot be
+    # trusted to supply it by proximity or by sequence.
+    assert _title_ejercicio_years(m180) == (2021,)
+    assert _title_ejercicio_years(m303) == (2009,)
+    assert _design_coverage_years(m180) == (2021,)
+    assert _design_coverage_years(m303) == (2009,)
+
+
+def test_a_filename_carrying_only_an_orden_year_is_still_attributed_nothing() -> None:
+    """THE NEGATIVE HALF: a design whose content is silent stays unattributed.
+
+    The attribution reads the document, so a document that asserts no ejercicio must
+    yield nothing rather than falling back on the orden year the filename carries.
+    Modelo 840's design is the case: its filename offers ``2003`` and its content
+    offers nothing, and inferring 2003 from the orden is the precise regression the
+    filename rule exists to prevent.
+    """
+    m840 = _design_dir("840") / "files" / "01-840-orden-hac-2572-2003-99-kb-pdf.pdf"
+    m720 = _design_dir("720") / "files" / "01-720-599-kb-pdf.pdf"
+    for path in (m840, m720):
+        assert path.is_file(), f"corpus anchor moved: {path}"
+    for path in (m840, m720):
+        assert _design_years(path.name) == ()
+        assert _content_ejercicio_years(path) == ()
+        assert _design_coverage_years(path) == ()
+
+
+def test_a_constant_ejercicio_slot_is_read_and_a_filer_supplied_one_is_not() -> None:
+    """The second content signal, with the discrimination that makes it safe.
+
+    Modelo 714's 2025 design states no ejercicio in its heading and fixes one in a
+    field: ``Ejercicio | Constante 2025``. Reading it recovers a design the title
+    rule alone leaves unattributed.
+
+    The negative control is the point. Modelo 303 declares an ``Ejercicio de devengo``
+    slot on every one of its designs and fixes NONE of them, because that is a value
+    the filer writes. A rule keyed on the word alone would attribute all six M303
+    designs to whatever year sat beside that slot; keyed on the constant, it
+    attributes none of them and their filenames continue to carry the coverage.
+    """
+    m714 = _design_dir("714") / "files" / "DR714_2025.xls"
+    assert m714.is_file(), f"corpus anchor moved: {m714}"
+    assert _design_years(m714.name) == ()
+    assert _title_ejercicio_years(m714) == ()
+    assert _constant_ejercicio_years(m714) == (2025,)
+    assert _design_coverage_years(m714) == (2025,)
+
+    m303 = _design_dir("303") / "files" / "01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
+    assert m303.is_file(), f"corpus anchor moved: {m303}"
+    assert _constant_ejercicio_years(m303) == (), (
+        "Modelo 303's 'Ejercicio de devengo' slot is filled by the FILER, so reading it as "
+        "the design's own coverage would attribute the design to an arbitrary year"
+    )
+    assert _design_coverage_years(m303) == (2026,)
+
+
+def test_a_title_naming_one_ejercicio_does_not_shorten_a_filename_naming_a_span() -> None:
+    """Content ADDS coverage and never removes it -- the regression proof for the union.
+
+    A design published for one ejercicio and applying through several heads its
+    first page with the opening year alone: Modelo 130's
+    ``ejercicios-2009-a-2014`` design states ``Ejercicio 2009`` and nothing more.
+    Reading the title as the design's coverage rather than as one of its years
+    discards 2010 through 2014, and the loss is silent -- those years then form no
+    boundary, and a verdict with fewer boundaries reads as a split having landed.
+
+    Four designs in the corpus have this shape and twelve design-years ride on it.
+    Pinned on the property (nothing is lost) rather than on the year lists, so it
+    survives AEAT republishing any of them.
+    """
+    spans = {
+        "130": "04-130-orden-eha-580-2009-ejercicios-2009-a-2014-36-kb-pdf.pdf",
+        "131": "08-131-orden-eha-580-2009-ejercicios-2009-a-2014-26-kb-pdf.pdf",
+    }
+    checked = 0
+    for modelo_id, filename in spans.items():
+        path = _design_dir(modelo_id) / "files" / filename
+        assert path.is_file(), f"corpus anchor moved: {path}"
+        filename_years = set(_design_years(path.name))
+        content_years = set(_content_ejercicio_years(path))
+        assert len(filename_years) > 1, f"{filename!r} no longer names a span; pick another anchor"
+        assert content_years, f"{filename!r} no longer states an ejercicio in its content; pick another anchor"
+        assert content_years < filename_years, (
+            f"{filename!r} no longer has the shape this guards -- its content used to name FEWER "
+            "years than its filename, which is what makes preferring the content lossy"
+        )
+        assert filename_years <= set(_design_coverage_years(path)), (
+            f"attribution DROPPED years for {filename!r}: filename claims {sorted(filename_years)} "
+            f"but coverage resolved to {list(_design_coverage_years(path))}. A content signal may "
+            "add coverage; it may never take it away."
+        )
+        checked += 1
+    assert checked == len(spans)
+
+
+def test_a_design_title_never_contradicts_a_trustworthy_filename_year() -> None:
+    """Where BOTH signals speak, they must agree -- the title never wins silently.
+
+    This is what makes ranking the title above the filename safe. A bare precedence
+    rule would resolve a conflict by preferring one source and saying nothing, which
+    would bury exactly the divergence that established the precedence in the first
+    place.
+
+    EXERCISED, NOT VACUOUS, and the distinction matters because this module elsewhere
+    refuses to ship a signal with no observations. Seventeen designs carry both a
+    trustworthy ``ejercicio-`` filename token and a title ejercicio, and all
+    seventeen agree; the assertion below runs seventeen real comparisons and finds
+    no conflict. That is a live check with a clean result, not a check with nothing
+    to look at -- so the population itself is asserted non-empty, and a corpus that
+    lost every overlapping design fails here rather than passing by having nothing
+    to compare.
+    """
+    compared = 0
+    conflicts: list[str] = []
+    design_root = bundled_path(*_DESIGN_ROOT_PARTS)
+    for directory in sorted(path for path in design_root.glob("modelo_*") if path.is_dir()):
+        modelo_id = directory.name.removeprefix("modelo_")
+        for path in _design_sources(modelo_id):
+            filename_years = set(_design_years(path.name))
+            content_years = set(_content_ejercicio_years(path))
+            if not filename_years or not content_years:
+                continue
+            compared += 1
+            if not filename_years & content_years:
+                conflicts.append(
+                    f"modelo {modelo_id} design {path.name!r}: filename claims "
+                    f"{sorted(filename_years)} but the design itself states {sorted(content_years)}"
+                )
+    assert compared, (
+        "no bundled design carries BOTH a filename ejercicio and a title ejercicio, so the "
+        "title-over-filename precedence is unchecked. It is ranked higher on the strength of "
+        "this comparison; with nothing to compare, the ranking is an unverified assumption."
+    )
+    assert not conflicts, (
+        "a design's title and its filename disagree about which ejercicio it covers. The title "
+        "is ranked higher, so the coverage maps have silently taken it -- resolve which is right "
+        "rather than letting the precedence decide:\n  " + "\n  ".join(conflicts)
+    )
+
+
+def test_a_bundled_design_whose_coverage_cannot_be_read_is_reported_unmeasured() -> None:
+    """A design nothing can attribute is UNMEASURED, never absorbed under a guess.
+
+    Same discipline this module already applies to a design it cannot PARSE: a file
+    that enters no map is indistinguishable from a file that does not exist, and the
+    verdict getting shorter reads as progress. Attribution is the second way a design
+    can vanish, and until now it vanished without saying so -- twenty modelos have
+    every bundled design named for an orden rather than an ejercicio, so their
+    ``boundaries`` was empty because nothing was ever compared, not because nothing
+    diverged.
+
+    THE TEMPTATION THIS REFUSES. Reading the title recovers most of them, and the
+    near-miss makes the rest look inferrable: an orden-named design plausibly runs
+    from promulgation until superseded, so the sequence could supply what the content
+    withholds. Measured, that inference is wrong --
+    ``03-180-orden-hap-1732-2014-de-24-de-septiembre.pdf`` states ``Ejercicio 2021``,
+    seven years from its orden -- so the remainder is genuinely unknown rather than
+    merely unstated, and a guess here would put a filing year under another year's
+    layout.
+
+    Several of these are not defects at all and are named anyway: Modelo 036 is
+    scoped by an in-force DATE and Modelo 210 by a devengo span, so they have real
+    coverage expressed on an axis that is not an ejercicio. Enumerating those into
+    years would invent years for the same reason ``y-siguientes`` is not expanded.
+    Being visible as unattributed is the correct outcome for them; being silently
+    absent is not.
+    """
+    unattributed: list[str] = []
+    attributed = 0
+    design_root = bundled_path(*_DESIGN_ROOT_PARTS)
+    for directory in sorted(path for path in design_root.glob("modelo_*") if path.is_dir()):
+        modelo_id = directory.name.removeprefix("modelo_")
+        for path in _design_sources(modelo_id):
+            if _design_coverage_years(path):
+                attributed += 1
+                continue
+            unattributed.append(f"modelo {modelo_id} design {path.name!r}")
+    assert attributed, "no bundled design could be attributed to any year at all; attribution has broken"
+    assert not unattributed, (
+        "these bundled designs state no ejercicio in their filename OR their own title, so they "
+        "enter no comparison and this module's silence about the years they cover means nothing. "
+        "They are UNMEASURED, not clean -- attribute them from a source that actually says, or "
+        "record why the design has no ejercicio to state:\n  " + "\n  ".join(unattributed)
+    )
+
+
 def _declared_span_is_single_year(revision) -> bool:
     """Whether this revision's OWN declared span covers exactly one filing year.
 
@@ -1693,6 +2183,67 @@ def _ordered_revisions_by_modelo(
     return {modelo_id: sorted(revisions, key=_sort_key) for modelo_id, revisions in by_modelo.items()}
 
 
+def _distinct_orden_documents(modelo: ModeloDefinition) -> set[str]:
+    """Every distinct BOE orden document this modelo's revisions cite, tree-wide.
+
+    Keyed by the document token BEFORE the first ``:`` (``orden-eha-3434-2007``
+    out of ``orden-eha-3434-2007:art-1``), so two articles of the SAME orden
+    count as one document and only a genuinely DIFFERENT orden -- an amending
+    or superseding instrument -- counts as legal evidence a revision split
+    actually happened. Reads ``orden_aplicabilidad`` AND ``legal_refs`` on
+    every revision this modelo declares, not just the one revision under
+    test: a later revision's citation is evidence the amending orden exists
+    in the catalogue even if it is not (yet) attached to the earlier one.
+
+    This is deliberately NOT a per-revision-span date match. The question
+    here is coarser and prior to that one: does ANY second orden exist in
+    the record for this modelo at all. A modelo with only ever one cited
+    orden, despite corpus-proven design evidence of a relayout, has no
+    legal citation to even attempt dating -- that absence is what
+    :func:`test_every_modelo_revision_span_is_corpus_proven` reports as its
+    own distinct failure reason, never a pass.
+    """
+    documents: set[str] = set()
+    for revision in modelo.revisions.values():
+        for ref in (*revision.orden_aplicabilidad, *revision.legal_refs):
+            if not ref.startswith("orden-"):
+                continue
+            documents.add(ref.split(":", 1)[0])
+    return documents
+
+
+def _signal_label(evidence_item: str) -> str:
+    """Classify one evidence string by which of the six signals produced it.
+
+    LIGHTWEIGHT SUBSTRING CLASSIFICATION, matching this module's own established
+    convention -- the ``_DESCRIPTION_ONLY`` marking already classifies evidence
+    the same way -- rather than a structural refactor of every signal function's
+    return shape to carry a label. Six signals, six distinguishable phrasings.
+
+    Raises rather than falling through to "unknown", deliberately: a seventh
+    signal added later without updating this function must fail LOUDLY here,
+    the same anti-vacuity posture the rest of the module takes toward a
+    detector going quiet without anyone noticing.
+    """
+    if "shared boxes moved" in evidence_item:
+        return "box-displacement"
+    if "box SET changed" in evidence_item:
+        return "box-SET"
+    if "RECORD SET CHANGED" in evidence_item or "page byte-lengths differ" in evidence_item:
+        return "page-length/record-count"
+    if "RETIRED into reserved space" in evidence_item or "REVIVED out of reserved space" in evidence_item:
+        return "occupancy"
+    if "field SET changed at these positions" in evidence_item:
+        return "position-SET"
+    if "unnumbered slot(s) re-described" in evidence_item:
+        return "description-flip"
+    raise AssertionError(
+        f"evidence string matches none of the six known signal phrasings -- either a new signal "
+        f"was added without updating _signal_label, or an existing one's wording changed under it: "
+        f"{evidence_item!r}"
+    )
+
+
 def _neighbour_divergence(
     modelo_id: str,
     revision_id: str,
@@ -1713,17 +2264,42 @@ def _neighbour_divergence(
       LEAST ONE neighbour it has. A real difference at either edge is what
       justifies this revision existing as its own split -- a neighbourless
       edge, or an identical one on the OTHER side, is a separate finding
-      about that other boundary, not evidence against this revision.
+      about that other boundary, not evidence against this revision. ``detail``
+      names WHICH signal(s) carried the proof (:func:`_signal_label`), so a
+      pass resting on exactly one signal is a property of the returned text,
+      not a fact that only exists in whoever ran this by hand -- a real,
+      single-signal difference IS a legitimate proof (no corroboration
+      threshold is imposed here), but a reader must be able to tell it rests
+      on one signal rather than several before trusting it further.
     * ``proven`` is ``False`` either because every available neighbour
       comparison is IDENTICAL (the split introduced no design change and was
       unwarranted) or because no neighbour has a readable design to compare
-      against at all (nothing to prove it with, yet).
+      against at all (nothing to prove it with, yet). When the revision's OWN
+      design is the missing piece, ``detail`` distinguishes ABSENT (no file
+      bundled for this year at all -- an acquisition gap) from UNPARSEABLE (a
+      file IS bundled but :func:`_design_sheets` cannot read it at all -- an
+      extraction-layer defect, never an acquisition gap) via
+      :func:`_unparseable_design_sources`. Conflating the two sends a
+      fix-owner to acquire a design that is already sitting in the corpus.
     """
     index = next(i for i, (rid, _revision) in enumerate(ordered) if rid == revision_id)
     _own_id, own_revision = ordered[index]
     own_designs = _designs_claimed_by(modelo_id, own_revision)
     if not own_designs:
-        return False, "its own design is not readable or attributable to a filing year, so no comparison is possible"
+        own_year = min(_span_years(own_revision)) if _span_years(own_revision) else None
+        matching_unparseable = [
+            path
+            for path in _unparseable_design_sources(modelo_id)
+            if own_year is not None and own_year in _design_years(path.name)
+        ]
+        if matching_unparseable:
+            names = ", ".join(path.name for path in matching_unparseable)
+            return False, (
+                f"a design for {own_year} IS bundled ({names}) but its sheets fail to parse -- "
+                "UNPARSEABLE, not absent: this is an extraction-layer defect, not a corpus gap, "
+                "and acquiring another copy from AEAT would not help"
+            )
+        return False, "no design is bundled for its own filing year at all -- ABSENT, so no comparison is possible"
 
     checks: list[tuple[str, str, list[str]]] = []
     if index > 0:
@@ -1743,7 +2319,12 @@ def _neighbour_divergence(
     diverging = [(direction, neighbour_id, evidence) for direction, neighbour_id, evidence in checks if evidence]
     if diverging:
         direction, neighbour_id, evidence = diverging[0]
-        return True, f"differs from its {direction} {neighbour_id!r} ({' + '.join(evidence)})"
+        labels = sorted({_signal_label(item) for item in evidence})
+        corroboration = "SINGLE SIGNAL, uncorroborated" if len(labels) == 1 else f"{len(labels)} signals agree"
+        return True, (
+            f"differs from its {direction} {neighbour_id!r} via {corroboration} [{', '.join(labels)}]: "
+            f"{' + '.join(evidence)}"
+        )
 
     names = ", ".join(f"{direction} {neighbour_id!r}" for direction, neighbour_id, _evidence in checks)
     return False, f"identical to its {names} -- the split introduces no design change"
@@ -1818,7 +2399,7 @@ def test_every_modelo_revision_span_is_corpus_proven() -> None:
     by counting the absence of a comparison as the success of one. The
     per-revision check this test runs does not make that mistake.
 
-    97 total revisions: 9 fail the relayout crossing, 65 fail on missing
+    97 total revisions: 10 fail the relayout crossing, 64 fail on missing
     corpus for a multi-year span, 11 fail the neighbour-divergence check for a
     single-year span (either no readable neighbour exists yet, or the split
     turned out to introduce no design change), and 12 PASS -- 3 multi-year (131
@@ -1828,15 +2409,31 @@ def test_every_modelo_revision_span_is_corpus_proven() -> None:
     (Modelo 100's six single-year revisions do NOT resolve here -- their own
     designs are unreadable/unattributed, a corpus gap the neighbour check
     cannot paper over any more than the multi-year branch could). 85 of 97
-    fail overall, down from 94 before this branch existed: real corpus
-    evidence closed 9 revisions the prior instrument could never have proven
-    regardless of any acquisition, because it never asked the question a
-    single-year span can actually answer. This number moves as the bundled
+    fail overall, down from 94 before the neighbour-comparison branch existed:
+    real corpus evidence closed 9 revisions the prior instrument could never
+    have proven regardless of any acquisition, because it never asked the
+    question a single-year span can actually answer. Modelo 347's
+    2008-y-siguientes moved from the multi-year branch (misdiagnosed as
+    needing more corpus) to the relayout-crossing branch (its true cause,
+    proven) once the fifth signal stopped discarding evidence it had already
+    computed -- the fail count did not change, its ACCURACY did.
+
+    WHICH INSTRUMENT EACH PASS RESTS ON, stated explicitly because a pass
+    proven by a weaker signal should be legible as such. Of the 9 single-year
+    passes: 5 (131/2024, 303/2023, 390/2022, 390/2023, 390/2024) carry at
+    least one box-KEYED signal (displacement or box-SET); the other 4
+    (131/2025, 131/2026, 303/2025, 390/2025) rest ENTIRELY on box-FREE
+    signals -- occupancy, page-length, position-SET, or description-flip.
+    None of the 9 rests SOLELY on the newest, least-exercised signal
+    (position-SET, added this session) -- every pass position-SET
+    contributes to is independently corroborated by at least one other
+    signal. This number moves as the bundled
     corpus grows; re-run rather than trust a stale figure.
     """
     ordered_by_modelo = _ordered_revisions_by_modelo(_all_declared_revisions())
 
     failures: list[str] = []
+    single_signal_passes: list[str] = []
     for modelo, revision_id, revision in _all_declared_revisions():
         boundaries = _boundaries_for(modelo.id, revision)
         if boundaries:
@@ -1849,28 +2446,94 @@ def test_every_modelo_revision_span_is_corpus_proven() -> None:
                 f"re-layout(s), needs {len(boundaries) + 1} revisions -- {detail} -- FIX: split the "
                 "revision at the named boundary year(s)",
             )
+            orden_documents = _distinct_orden_documents(modelo)
+            if len(orden_documents) <= 1:
+                # A DISTINCT failure reason from the one above, never a substitute for
+                # it and never a path to a pass. The design-evidence failure says WHERE
+                # a split is needed; this one says the legal record offers no citation
+                # to justify or date it -- the founding orden is the only orden this
+                # modelo's entire revision history ever cites, despite corpus evidence
+                # a relayout happened somewhere in this revision's span. Absence of a
+                # second orden citation is not positive evidence of non-revision, it is
+                # evidence the legal catalogue is incomplete -- so this reason can NEVER
+                # be cleared by design evidence, and NEVER becomes a pass condition;
+                # only a positively-cited amending or superseding orden clears it.
+                failures.append(
+                    f"modelo {modelo.id} revision {revision_id!r}: NO LEGAL EVIDENCE OF REVISION "
+                    f"RECORDED -- the design-evidence failure above proves a relayout crosses this "
+                    f"revision's span, but this modelo's entire revision history cites only the "
+                    f"founding orden ({sorted(orden_documents)!r}); no amending or superseding orden "
+                    "is recorded anywhere in the bundled legal catalogue -- FIX: acquire and cite the "
+                    "BOE orden that authorises the later layout; do not attempt to satisfy this with "
+                    "design evidence alone, and do not treat the gap as anything other than a failure",
+                )
             continue
 
         if _declared_span_is_single_year(revision):
             proven, detail = _neighbour_divergence(modelo.id, revision_id, ordered_by_modelo[modelo.id])
             if not proven:
+                # Three distinct remedies for three distinct causes -- naming the wrong one
+                # sends a fix-owner to acquire a design that is already bundled, or to
+                # wait on AEAT for evidence that is actually an in-tree extraction defect.
+                if "UNPARSEABLE, not absent" in detail:
+                    fix = "the design IS bundled but unreadable -- fix the extractor for the named file(s); acquiring another copy from AEAT would not help"
+                elif "ABSENT" in detail:
+                    fix = "no design is bundled for this year at all -- bundle AEAT's published record design for an adjacent ejercicio so the split can be proven"
+                else:
+                    fix = "identical to a neighbour -- merge this revision into it, the split introduced no design change and was unwarranted"
                 failures.append(
-                    f"modelo {modelo.id} revision {revision_id!r}: single-year span, {detail} -- FIX: if "
-                    "identical to a neighbour, merge this revision into it (the split introduced no "
-                    "design change and was unwarranted); if no neighbour has a readable design, bundle "
-                    "AEAT's published record design for an adjacent ejercicio so the split can be proven",
+                    f"modelo {modelo.id} revision {revision_id!r}: single-year span, {detail} -- FIX: {fix}",
                 )
+            elif "SINGLE SIGNAL, uncorroborated" in detail:
+                # A real, legitimate PASS -- no corroboration threshold is imposed here, one
+                # signal finding a genuine difference is proof enough. But a reader of the
+                # verdict alone cannot tell this pass rests on one instrument while its
+                # neighbours rest on several, and the always-visible failure text below is
+                # this gate's only durable output, so recording it there is what makes
+                # thinness a property of the gate rather than a fact only a chat message
+                # carries. Not a failure; do not add to `failures`.
+                single_signal_passes.append(f"modelo {modelo.id} revision {revision_id!r}: PASSES, {detail}")
             continue
 
         design_years, _unreadable = _designs_for(modelo.id)
         claimed = _claimed_years(revision, set(design_years))
         if len(claimed) < 2:
+            # Distinguish ABSENT (no file at all for a needed year -- acquire from AEAT)
+            # from UNPARSEABLE (a file is already bundled for that year but the parser
+            # returns nothing usable -- an extraction-layer defect, never an acquisition
+            # gap) before naming the fix. Conflating the two sends a fix-owner to acquire
+            # a design that is already sitting in the corpus.
+            unparseable = _unparseable_design_sources(modelo.id)
+            unparseable_years = set()
+            unparseable_names: list[str] = []
+            for path in unparseable:
+                matched = _claimed_years(revision, set(_design_years(path.name)))
+                if matched:
+                    unparseable_years |= matched
+                    unparseable_names.append(path.name)
+            note = ""
+            if unparseable_years:
+                note = (
+                    f" -- NOTE: {len(unparseable_years)} of the missing year(s) "
+                    f"({sorted(unparseable_years)}) already have a BUNDLED design file that fails to "
+                    f"parse entirely ({', '.join(unparseable_names)}) -- UNPARSEABLE, not absent: fix "
+                    "the extractor for those files before acquiring anything new for those specific years"
+                )
             failures.append(
                 f"modelo {modelo.id} revision {revision_id!r}: only {len(claimed)} comparable bundled "
                 "design year(s) fall inside its claimed span -- FIX: bundle AEAT's published record "
                 "design for the missing year(s); do not split this revision on today's evidence, and "
-                "do not treat the gap as anything other than a failure",
+                "do not treat the gap as anything other than a failure" + note,
             )
+
+    single_signal_note = (
+        "\n\nSINGLE-SIGNAL PASSES (informational only, NOT failures -- one signal finding a genuine "
+        "difference is a legitimate proof and no corroboration threshold is imposed; recorded here "
+        "so a reader can tell which passes rest on one instrument rather than several before "
+        "trusting them further):\n  " + "\n  ".join(sorted(single_signal_passes))
+        if single_signal_passes
+        else ""
+    )
 
     assert not failures, (
         "every modelo's declared revision span must be corpus-proven before it may pass: zero "
@@ -1880,6 +2543,7 @@ def test_every_modelo_revision_span_is_corpus_proven() -> None:
         "this repository's bundled corpus, never about the world -- it is fixed by bundling the design, "
         "splitting the revision, or merging an unwarranted split, never accepted as a standing state:\n  "
         + "\n  ".join(sorted(failures))
+        + single_signal_note
     )
 
 

@@ -53,9 +53,11 @@ from ._record_design_schema import (
     RecordDesignAuxiliaryEnvelopeHeaderField,
     RecordDesignAuxiliaryEnvelopeHeaderRole,
     RecordDesignCompositeRelativeClosing,
+    RecordDesignExtraction,
     RecordDesignField,
     RecordDesignRelativeSuffixMarker,
     RecordDesignSheet,
+    RecordDesignSkippedSheet,
     RecordDesignVariableBodyMarker,
     RecordDesignVariableEnvelope,
     RecordDesignVariableTotalMarker,
@@ -98,11 +100,12 @@ class _WorkbookSheetRows:
     mixed_total_rows: list[int] = field(default_factory=list)
 
 
-def extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
-    """Return fixed-width field rows from a supported official record-design source.
+def extract_record_design(path: Path) -> RecordDesignExtraction:
+    """Return one official record-design source's parsed sheets AND what it could not read.
 
     Returns:
-        Tuple of :class:`RecordDesignSheet` objects parsed from the source file.
+        The :class:`RecordDesignExtraction` for the source, which names both the
+        sheets that parsed and any the extractor had to skip.
     """
     resolved = path.resolve()
     if not resolved.is_file():
@@ -115,7 +118,7 @@ def _extract_record_design_cached(
     path: str,
     byte_count: int,
     modified_ns: int,
-) -> tuple[RecordDesignSheet, ...]:
+) -> RecordDesignExtraction:
     del byte_count, modified_ns
     source_path = Path(path)
     suffix = source_path.suffix.lower()
@@ -128,19 +131,41 @@ def _extract_record_design_cached(
     raise RegistryValidationError(f"unsupported record-design source extension: {source_path.suffix}")
 
 
-def extract_record_design_workbook(path: Path) -> tuple[RecordDesignSheet, ...]:
-    """Return :class:`RecordDesignSheet` rows described by workbook ``path``."""
+def _extraction(
+    source_path: Path,
+    sheets: list[RecordDesignSheet],
+    skipped: list[RecordDesignSkippedSheet],
+) -> RecordDesignExtraction:
+    """Assemble one source's result, refusing only when NOTHING could be read.
+
+    A source where every sheet failed is still a hard error -- there is no design
+    there to hand back. A source where SOME sheets failed is a partial read, and
+    it is returned rather than raised so a caller can decide: refusing outright
+    would drop Modelo 232, whose ``TABLAS`` tab is a legitimate lookup table and
+    not a record at all. The extractor cannot tell a lookup tab from a lost
+    record body, so it reports both and adjudicates neither.
+    """
+    if not sheets:
+        detail = "; ".join(f"{item.name!r}: {item.reason}" for item in skipped) if skipped else "none"
+        raise RegistryValidationError(
+            f"{source_path}: no record-design sheets found; skipped sheets: {detail}",
+        )
+    return RecordDesignExtraction(source=str(source_path), sheets=tuple(sheets), skipped=tuple(skipped))
+
+
+def extract_record_design_workbook(path: Path) -> RecordDesignExtraction:
+    """Return the :class:`RecordDesignExtraction` workbook ``path`` describes."""
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design workbook not found: {path}")
     return _extract_record_design_workbook_cached(*path_stat_fingerprint(resolved))
 
 
-def extract_record_design_xls_workbook(path: Path) -> tuple[RecordDesignSheet, ...]:
-    """Return official fixed-width field rows from a legacy binary XLS workbook.
+def extract_record_design_xls_workbook(path: Path) -> RecordDesignExtraction:
+    """Return a legacy binary XLS workbook's parsed sheets AND any it could not read.
 
     Returns:
-        Tuple of :class:`RecordDesignSheet` objects parsed from the XLS workbook.
+        The :class:`RecordDesignExtraction` for the workbook.
     """
     resolved = path.resolve()
     if not resolved.is_file():
@@ -153,7 +178,7 @@ def _extract_record_design_workbook_cached(
     path: str,
     byte_count: int,
     modified_ns: int,
-) -> tuple[RecordDesignSheet, ...]:
+) -> RecordDesignExtraction:
     del byte_count, modified_ns
     from openpyxl import load_workbook
 
@@ -162,20 +187,15 @@ def _extract_record_design_workbook_cached(
         workbook = load_workbook(source_path, read_only=True, data_only=True)
         try:
             sheets: list[RecordDesignSheet] = []
-            skipped: list[str] = []
+            skipped: list[RecordDesignSkippedSheet] = []
             for worksheet in workbook.worksheets:
                 try:
                     sheets.append(_extract_sheet(worksheet))
                 except ValueError as exc:
                     if "has no record-design header" not in str(exc):
                         raise
-                    skipped.append(worksheet.title)
-            if not sheets:
-                skipped_sheets = ", ".join(skipped) if skipped else "none"
-                raise RegistryValidationError(
-                    f"{source_path}: no record-design sheets found; skipped sheets: {skipped_sheets}",
-                )
-            return tuple(sheets)
+                    skipped.append(RecordDesignSkippedSheet(name=worksheet.title.strip(), reason=str(exc)))
+            return _extraction(source_path, sheets, skipped)
         finally:
             workbook.close()
 
@@ -185,7 +205,7 @@ def _extract_record_design_xls_workbook_cached(
     path: str,
     byte_count: int,
     modified_ns: int,
-) -> tuple[RecordDesignSheet, ...]:
+) -> RecordDesignExtraction:
     del byte_count, modified_ns
     import xlrd
 
@@ -193,7 +213,7 @@ def _extract_record_design_xls_workbook_cached(
     workbook = xlrd.open_workbook(str(source_path), on_demand=True)
     try:
         sheets: list[RecordDesignSheet] = []
-        skipped: list[str] = []
+        skipped: list[RecordDesignSkippedSheet] = []
         for sheet_name in workbook.sheet_names():
             worksheet = workbook.sheet_by_name(sheet_name)
             try:
@@ -201,13 +221,8 @@ def _extract_record_design_xls_workbook_cached(
             except ValueError as exc:
                 if "has no record-design header" not in str(exc):
                     raise
-                skipped.append(sheet_name)
-        if not sheets:
-            skipped_sheets = ", ".join(skipped) if skipped else "none"
-            raise RegistryValidationError(
-                f"{source_path}: no record-design sheets found; skipped sheets: {skipped_sheets}",
-            )
-        return tuple(sheets)
+                skipped.append(RecordDesignSkippedSheet(name=sheet_name.strip(), reason=str(exc)))
+        return _extraction(source_path, sheets, skipped)
     finally:
         workbook.release_resources()
 
@@ -230,8 +245,8 @@ def _ignore_openpyxl_header_footer_metadata_warnings() -> Generator[None]:
         yield
 
 
-def extract_record_design_pdf(path: Path) -> tuple[RecordDesignSheet, ...]:
-    """Return :class:`RecordDesignSheet` rows extracted from an official AEAT PDF."""
+def extract_record_design_pdf(path: Path) -> RecordDesignExtraction:
+    """Return the :class:`RecordDesignExtraction` read from an official AEAT PDF."""
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design PDF not found: {path}")
@@ -243,7 +258,7 @@ def _extract_record_design_pdf_cached(
     path: str,
     byte_count: int,
     modified_ns: int,
-) -> tuple[RecordDesignSheet, ...]:
+) -> RecordDesignExtraction:
     del byte_count, modified_ns
     source_path = Path(path)
     with source_path.open("rb") as pdf_file:
@@ -254,11 +269,11 @@ def extract_record_design_pdf_bytes(
     pdf_bytes: bytes,
     *,
     source_label: str = "in-memory record-design PDF",
-) -> tuple[RecordDesignSheet, ...]:
-    """Return fixed-width field rows extracted from PDF bytes.
+) -> RecordDesignExtraction:
+    """Return the record design extracted from PDF bytes.
 
     Returns:
-        Tuple of :class:`RecordDesignSheet` objects extracted from the PDF content.
+        The :class:`RecordDesignExtraction` for the PDF content.
     """
     return _extract_record_design_pdf_stream(BytesIO(pdf_bytes), source_label=source_label)
 
@@ -267,7 +282,7 @@ def _extract_record_design_pdf_stream(
     stream: BufferedReader | BytesIO,
     *,
     source_label: str,
-) -> tuple[RecordDesignSheet, ...]:
+) -> RecordDesignExtraction:
     import pdfplumber
 
     pdf_bytes = stream.read()
@@ -296,7 +311,9 @@ def _extract_record_design_pdf_stream(
             ) from pdf_exc
         visual_chart = _extract_visual_record_design_chart(pages, source_label=source_label)
         if visual_chart:
-            return visual_chart
+            # The geometry reader either reconstructs every charted record or
+            # returns nothing, so a result here is complete by construction.
+            return RecordDesignExtraction(source=source_label, sheets=visual_chart)
         raise
 
 
@@ -413,7 +430,12 @@ def _consume_field_row(
     row_number: int,
     values: tuple[object, ...],
 ) -> None:
+    # THE CELL, not the parse result, decides whether a row is numbered. An empty
+    # ordinal cell is AEAT declining to number the row; a non-empty cell the parser
+    # cannot read is a label it does not yet represent. ``_int_or_none`` collapses
+    # both to None, so reading the raw text is what keeps them apart.
     ordinal = _int_or_none(_cell(values, header.ordinal_index))
+    declared_ordinal = _optional_text(_cell(values, header.ordinal_index))
     offset = _int_or_none(_cell(values, header.offset_index))
     length = _int_or_none(_cell(values, header.length_index))
     raw_offset = _optional_text(_cell(values, header.offset_index))
@@ -432,7 +454,11 @@ def _consume_field_row(
                 _relative_suffix_marker(sheet_name, header, row_number, values, ordinal, length),
             )
         return
-    if ordinal is None or offset is None or length is None:
+    if offset is None or length is None:
+        return
+    if ordinal is None and declared_ordinal is not None:
+        # A printed ordinal this parser cannot represent yet. Refused rather than
+        # admitted as unnumbered, because admitting it would discard the label.
         return
     parsed_rows.fields.append(_record_design_field(sheet_name, header, row_number, values, ordinal, offset, length))
 
@@ -442,7 +468,7 @@ def _variable_body_marker(
     header: _WorkbookHeader,
     row_number: int,
     values: tuple[object, ...],
-    ordinal: int,
+    ordinal: int | None,
     offset: int,
 ) -> RecordDesignVariableBodyMarker:
     validation, content, description = _field_texts(sheet_name, header, row_number, values)
@@ -486,7 +512,7 @@ def _record_design_field(
     header: _WorkbookHeader,
     row_number: int,
     values: tuple[object, ...],
-    ordinal: int,
+    ordinal: int | None,
     offset: int,
     length: int,
 ) -> RecordDesignField:
@@ -540,7 +566,8 @@ def _variable_envelope(
         )
     _require_valid_variable_envelope_markers(sheet_name, parsed_rows)
     variable_body = parsed_rows.variable_bodies[0]
-    closing = _relative_closing(sheet_name, parsed_rows.relative_suffixes)
+    closing_suffixes, terminator = _split_record_terminator(parsed_rows.relative_suffixes)
+    closing = _relative_closing(sheet_name, closing_suffixes)
     closing_parts = _relative_closing_parts(closing)
     variable_total = parsed_rows.variable_totals[0]
     if parsed_rows.total_positions is not None or terminal_extent is None:
@@ -559,12 +586,14 @@ def _variable_envelope(
         closing_parts,
         variable_total,
     )
+    _require_terminator_closes_the_record(sheet_name, closing_parts, terminator)
     return RecordDesignVariableEnvelope(
         name=sheet_name,
         prefix_fields=tuple(parsed_rows.fields),
         prefix_extent=terminal_extent,
         body=variable_body,
         closing=closing,
+        terminator=terminator,
         variable_total=variable_total,
     )
 
@@ -629,14 +658,66 @@ def _require_ordered_variable_envelope(
 ) -> None:
     first_closing_part = closing_parts[0]
     last_closing_part = closing_parts[-1]
+    # POSITION IS THE ORDERING AUTHORITY, NOT THE ORDINAL.
+    #
+    # This checked composition order twice, once on source row and once on ordinal,
+    # and the ordinal half asserted nothing the row half did not: both ask whether
+    # the body sits after the fixed prefix and before the closing. Where the two
+    # could disagree, the ordinal is the one that would be wrong, because AEAT's
+    # ordinal is a PRINTED LABEL rather than an arithmetic value -- it publishes
+    # ``14bis`` to insert a field between 14 and 15 without renumbering, exactly as
+    # the law numbers an inserted article. Comparing labels arithmetically assumes a
+    # density AEAT never promised.
+    #
+    # The bytes order themselves and are checked as such elsewhere: the prefix must
+    # be contiguous from offset 1, and the variable body must begin at
+    # ``prefix_extent + 1``. Those are the real geometric assertions; this one is
+    # about which SOURCE ROWS compose the envelope, so it reads rows.
     ordered_rows = max(item.row for item in fields) < variable_body.row < first_closing_part.row
     ordered_rows = ordered_rows and first_closing_part.row <= last_closing_part.row < variable_total.row
-    ordered_ordinals = max(item.ordinal for item in fields) < variable_body.ordinal < first_closing_part.ordinal
-    ordered_ordinals = ordered_ordinals and first_closing_part.ordinal <= last_closing_part.ordinal
-    if not (ordered_rows and ordered_ordinals):
+    if not ordered_rows:
         raise RegistryValidationError(
             f"record-design sheet {sheet_name!r} has misordered variable-envelope composition markers",
         )
+
+
+#: How AEAT NAMES the physical end-of-record row, in the wordings it uses across
+#: both workbook and PDF designs. ONE definition with two consumers: the workbook
+#: closing splitter below, and the PDF compact-row recogniser further down which
+#: composes this into its own line pattern.
+#:
+#: Two independent notions of "what a CRLF row is" is how the two parsers came to
+#: disagree about one domain fact -- the PDF path has recognised the terminator
+#: since it was written, while the workbook path refused thirty designs across
+#: eight modelos for declaring one.
+_RECORD_TERMINATOR_PHRASE = r"fin de registro|salto de l[íi]nea|\bCRLF\b"
+#: Matched on the declared MEANING rather than on width: a two-byte relative
+#: suffix that is not a line terminator is part of the closing identifier and
+#: must not be mistaken for one.
+_RECORD_TERMINATOR = re.compile(_RECORD_TERMINATOR_PHRASE, re.IGNORECASE)
+
+
+def _split_record_terminator(
+    suffixes: list[RecordDesignRelativeSuffixMarker],
+) -> tuple[list[RecordDesignRelativeSuffixMarker], RecordDesignRelativeSuffixMarker | None]:
+    """Separate a trailing physical end-of-record row from the closing identifier.
+
+    The closing identifies the record; the terminator ends the line. AEAT declares
+    them as adjacent relative-offset rows, and the closing recogniser below reads
+    only the first kind, so a design declaring both was refused outright -- thirty
+    of them, across eight modelos, every one well formed.
+
+    Split rather than skipped. The terminator is returned to the caller and stored
+    on the envelope, because its two bytes are part of the record: discarding it
+    would let all thirty parse while every emitted record came out two bytes short,
+    which is a clean-looking wrong answer rather than a refusal.
+    """
+    if not suffixes:
+        return suffixes, None
+    last = suffixes[-1]
+    if last.length == 2 and _RECORD_TERMINATOR.search(last.description):
+        return suffixes[:-1], last
+    return suffixes, None
 
 
 def _relative_closing(
@@ -662,6 +743,35 @@ def _relative_closing(
         raise RegistryValidationError(
             f"record-design sheet {sheet_name!r} has a malformed composite relative closing: {exc}",
         ) from exc
+
+
+def _require_terminator_closes_the_record(
+    sheet_name: str,
+    closing_parts: tuple[RecordDesignRelativeSuffixMarker, ...],
+    terminator: RecordDesignRelativeSuffixMarker | None,
+) -> None:
+    """Refuse a terminator that does not sit last in the record.
+
+    Without this the split would accept a two-byte line-terminator row appearing
+    anywhere among the closing parts and quietly reorder the record's tail. The
+    terminator is the LAST thing in a record by definition, so a design declaring
+    it earlier is either malformed or is something this parser has misread, and
+    both deserve a refusal rather than a rearrangement.
+    """
+    if terminator is None:
+        return
+    last_part = closing_parts[-1]
+    # Reads the SOURCE ROW only. An earlier version of this also compared ordinals,
+    # which was the same mistake the envelope-order check carried: AEAT's ordinal is
+    # a printed label, so ordering by it assumes a density the authority never
+    # promised. It was harmless while every ordinal happened to be an integer and
+    # would have failed the moment a ``bis`` label reached this comparison.
+    if terminator.row <= last_part.row:
+        raise RegistryValidationError(
+            f"record-design sheet {sheet_name!r} declares an end-of-record terminator at row "
+            f"{terminator.row} which does not follow its closing identifier at row "
+            f"{last_part.row}; a terminator that is not last is not a terminator",
+        )
 
 
 def _relative_closing_parts(
@@ -846,10 +956,37 @@ def _header_token(value: str) -> str:
     return value.rstrip(".")
 
 
+def _header_names_one_column(cell: str, expected: str) -> bool:
+    """Whether a header cell names the column ``expected`` names.
+
+    AEAT ABBREVIATES BY TRUNCATION, and inconsistently within a single workbook:
+    the length column is ``Lon`` on one Modelo 115 sheet and ``Lon.`` on the next,
+    and ``Long.`` throughout Modelo 100 and on Modelo 714's header sheet. Matching
+    on truncation-compatibility rather than against an enrolled list of spellings
+    is what stops the next abbreviation needing a code change -- and the enrolled
+    pairs already in this module (``com``/``comp``, ``validacion``/``oblig.``) are
+    that treadmill visible in progress.
+
+    Measured across every bundled workbook design before shipping: 117 sources
+    unchanged, 6 improved, ZERO degraded. Modelo 714's four editions go from a
+    silently dropped sheet to a complete read, and Modelo 100's 2019 design from
+    refusing outright to 41 sheets.
+
+    The three-character floor stops a one- or two-letter cell prefix-matching its
+    way onto a column it does not name; without it a stray ``N`` or ``No`` cell
+    would claim whichever column happened to start with it.
+    """
+    if cell == expected:
+        return True
+    shorter, longer = sorted((cell, expected), key=len)
+    return len(shorter) >= 3 and longer.startswith(shorter)
+
+
 def _optional_header_index(values: tuple[object, ...], *header_names: str) -> int | None:
-    expected = {_header_token(name) for name in header_names}
+    expected = [_header_token(name) for name in header_names]
     for index, value in enumerate(values):
-        if _header_token(_normalise_header_cell(value)) in expected:
+        cell = _header_token(_normalise_header_cell(value))
+        if cell and any(_header_names_one_column(cell, candidate) for candidate in expected):
             return index
     return None
 
@@ -873,9 +1010,14 @@ _COMPACT_PDF_ROW_RE = re.compile(
     r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s+(?P<type>An|Num|N|A)\s+(?P<text>.+)$",
     re.IGNORECASE,
 )
+#: A PDF row declaring the physical end of record. Its DESCRIPTION half composes
+#: the SHARED terminator phrase rather than carrying a second private spelling, so
+#: the workbook splitter and this recogniser cannot drift on what a CRLF row is.
+#: They already had: this one has known the terminator since it was written, while
+#: the workbook path refused every design that declared one.
 _COMPACT_PDF_CRLF_ROW_RE = re.compile(
     r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<type>An|Num|N|A)\s+"
-    r"(?P<text>Salto de l[íi]nea\..*CRLF\.?)$",
+    rf"(?P<text>(?:{_RECORD_TERMINATOR_PHRASE}).*)$",
     re.IGNORECASE,
 )
 _NARRATIVE_PDF_ROW_RE = re.compile(
@@ -1096,13 +1238,31 @@ class _PdfParseState:
         self.pending_name: str | None = None
         self.source_label = source_label
 
-    def finalise(self) -> tuple[RecordDesignSheet, ...]:
+    def finalise(self) -> RecordDesignExtraction:
+        """Return the parsed records, naming any the parser opened and could not fill.
+
+        The empty-sheet filter here is the PDF equivalent of the workbook skip
+        list: a record heading the parser recognised but found no field rows
+        under is a record it did NOT read, and dropping it silently made the
+        document look shorter than it is rather than incompletely read.
+        """
         if self.current is not None:
             self.sheets.append(self.current.finish(source_label=self.source_label))
         non_empty = tuple(sheet for sheet in self.sheets if sheet.fields)
         if not non_empty:
             raise RegistryValidationError("record-design PDF did not contain parseable field rows")
-        return non_empty
+        return RecordDesignExtraction(
+            source=self.source_label,
+            sheets=non_empty,
+            skipped=tuple(
+                RecordDesignSkippedSheet(
+                    name=sheet.name,
+                    reason="record heading recognised but no field rows parsed under it",
+                )
+                for sheet in self.sheets
+                if not sheet.fields
+            ),
+        )
 
     def feed(self, line: str, row_number: int) -> None:
         if not line or _is_pdf_footer(line):
@@ -1172,7 +1332,7 @@ class _PdfParseState:
             self.current.current.append_continuation(line)
 
 
-def _extract_pdf_lines(lines: tuple[str, ...], *, source_label: str) -> tuple[RecordDesignSheet, ...]:
+def _extract_pdf_lines(lines: tuple[str, ...], *, source_label: str) -> RecordDesignExtraction:
     state = _PdfParseState(source_label=source_label)
     for row_number, raw_line in enumerate(lines, start=1):
         state.feed(_clean_pdf_line(raw_line), row_number)
@@ -1619,9 +1779,11 @@ __all__ = [
     "DerivedDisenoCasilla",
     "DisenoCoverageReport",
     "RecordDesignCompositeRelativeClosing",
+    "RecordDesignExtraction",
     "RecordDesignField",
     "RecordDesignRelativeSuffixMarker",
     "RecordDesignSheet",
+    "RecordDesignSkippedSheet",
     "RecordDesignVariableBodyMarker",
     "RecordDesignVariableEnvelope",
     "RecordDesignVariableTotalMarker",

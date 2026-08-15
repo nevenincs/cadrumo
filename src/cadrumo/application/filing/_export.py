@@ -1237,7 +1237,7 @@ def render_m303_filing_envelope(request: M303FilingEnvelopeRenderRequest) -> M30
         period=request.draft.period,
         product_software_identity=request.product_software_identity,
     )
-    closer = _render_m303_envelope_closer(envelope, period=request.draft.period)
+    closer = _render_m303_envelope_closer(period=request.draft.period)
     payload = prefix + b"".join(item.payload for item in occurrences) + closer
     return M303FilingEnvelopeRenderResult(
         draft_id=request.draft.draft_id,
@@ -1347,9 +1347,18 @@ def _render_m303_prefix_field(
     return payload
 
 
-def _render_m303_envelope_closer(envelope: M303FilingEnvelopeDefinition, *, period: Period) -> bytes:
-    if envelope.closer_derivation != "m303-relative-closer-v1":
-        raise FilingExportValidationError("unsupported M303 filing-envelope closer derivation")
+def _render_m303_envelope_closer(*, period: Period) -> bytes:
+    """Render the 18-byte DP30300 closer for one filing period.
+
+    The envelope's ``closer_derivation`` is deliberately not re-checked here.
+    It is a required single-valued ``Literal`` on a frozen model, so pydantic
+    refuses any other value at construction and the value cannot change
+    afterwards; comparing it again at render time tests a condition that was
+    already unconstructible, in a branch that can never be taken.
+
+    The extent check below is a real guard by contrast: the closer is built from
+    the period, so a period that formats to the wrong width is reachable.
+    """
     closer = f"</T{Modelo.M303.value}0{period.filing_year:04d}{period.registry_token}0000>".encode("ascii")
     if len(closer) != 18:
         raise FilingExportValidationError("M303 filing-envelope closer must render to the declared 18-byte extent")

@@ -21,7 +21,7 @@ from .. import (
     project_export_value,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _GROUNDING = {
     "legal_refs": ("ley-27-2014:art-40",),

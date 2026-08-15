@@ -108,12 +108,19 @@ def _invoice(*, category: IvaCategory, kind: InvoiceKind) -> Invoice:
 
 def _resolved_for(invoice: Invoice) -> dict[str, Decimal]:
     """Project the invoice's single line the way the screen does, then resolve."""
+    line = invoice.lines[0]
+    base_amount_eur = invoice.line_amount_eur(line.subtotal)
+    iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
+    assert base_amount_eur is not None
+    assert iva_amount_eur is not None
     observation = _invoice_line_iva_observation(
         invoice=invoice,
-        line=invoice.lines[0],
+        line=line,
         line_index=0,
         devengo_date=_DEVENGO,
         recargo_amount=Decimal("0"),
+        base_amount_eur=base_amount_eur,
+        iva_amount_eur=iva_amount_eur,
     )
     if observation is None:
         return {}

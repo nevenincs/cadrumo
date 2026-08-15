@@ -62,7 +62,7 @@ _RECORD_DESIGN_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro"
 
 @cache
 def _official_record_design_sheets(path: Path) -> tuple[RecordDesignSheet, ...]:
-    return extract_record_design(path)
+    return extract_record_design(path).accept_partial()
 
 
 def _official_record_designs(paths: tuple[Path, ...]) -> dict[Path, tuple[RecordDesignSheet, ...]]:
@@ -139,7 +139,11 @@ def _fixed_export_selectors(
 
 
 def _record_design_pdf_files() -> tuple[Path, ...]:
-    return tuple(sorted(_RECORD_DESIGN_ROOT.glob("modelo_*/files/*.pdf")))
+    # rglob, not the fixed-depth "modelo_*/files/*.pdf": Modelo 210 keeps
+    # dr210_2011.pdf directly in its modelo directory rather than under
+    # files/, and the fixed-depth glob silently dropped it from the corpus
+    # this function's callers assert coverage over.
+    return tuple(sorted(_RECORD_DESIGN_ROOT.rglob("*.pdf")))
 
 
 def _record_design_pdf(*path_parts: str) -> Path:

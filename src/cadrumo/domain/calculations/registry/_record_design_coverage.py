@@ -24,9 +24,25 @@ from ._schema import CasillaDefinition, DataBindingDefinition, ModeloRevision
 
 
 def _extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
+    """Return the sheets a design source yielded, ACCEPTING an incomplete read.
+
+    This coverage derivation tolerates a partial extraction today, and that
+    tolerance is written here rather than left implicit. It is not obviously
+    right: a design whose record body was skipped produces a coverage report
+    that understates the modelo, and nothing downstream can tell. It is
+    preserved because tightening it to
+    :meth:`~._record_design_schema.RecordDesignExtraction.require_complete`
+    changes what the registry can load -- Modelo 232's ``TABLAS`` lookup tab is
+    skipped legitimately and would begin refusing the whole modelo -- and that
+    is a capability decision with its own blast radius, not a side effect of
+    making partiality visible.
+
+    Returns:
+        The parsed sheets, complete or not.
+    """
     from ._record_design import extract_record_design
 
-    return extract_record_design(path)
+    return extract_record_design(path).accept_partial()
 
 
 # ---------------------------------------------------------------------------

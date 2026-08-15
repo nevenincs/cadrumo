@@ -151,8 +151,6 @@ from ._schema_verification import (
 from ._toml_helpers import as_toml_table as _as_toml_table
 
 __all__ = [
-    "AlgorithmBindingDefinition",
-    "AlgorithmProviderDefinition",
     "ApplicationLinkDefinition",
     "BboxAnchorSpec",
     "BindingSelector",
@@ -290,8 +288,6 @@ from ._schema_references import (
     TemporalApplicability,
 )
 from ._schema_surfaces import (
-    AlgorithmBindingDefinition,
-    AlgorithmProviderDefinition,
     CalculationCompletenessCasilla,
     CalculationCompletenessManifest,
     CasillaAlias,
@@ -361,8 +357,6 @@ class ConstructDefinition(RegistryModel):
     formulas: tuple[FormulaId, ...] = ()
     parameters: tuple[ParameterId, ...] = ()
     bindings: tuple[BindingId, ...] = ()
-    algorithm_providers: tuple[str, ...] = ()
-    algorithm_bindings: tuple[str, ...] = ()
     relations: tuple[RelationId, ...] = ()
     export_layouts: tuple[ExportLayoutId, ...] = ()
     extraction_profiles: tuple[ExtractionProfileId, ...] = ()
@@ -390,8 +384,6 @@ class ConstructDefinition(RegistryModel):
         "formulas",
         "parameters",
         "bindings",
-        "algorithm_providers",
-        "algorithm_bindings",
         "relations",
         "export_layouts",
         "extraction_profiles",
@@ -416,8 +408,6 @@ class ConstructDefinition(RegistryModel):
             self.formulas,
             self.parameters,
             self.bindings,
-            self.algorithm_providers,
-            self.algorithm_bindings,
             self.relations,
             self.export_layouts,
             self.extraction_profiles,
@@ -1116,8 +1106,6 @@ class ModeloRevision(RegistryModel):
     casillas: Annotated[tuple[CasillaDefinition, ...], SCHEMA_FAMILY] = ()
     formulas: Annotated[tuple[FormulaDefinition, ...], SCHEMA_FAMILY] = ()
     bindings: Annotated[tuple[DataBindingDefinition, ...], SCHEMA_FAMILY] = ()
-    algorithm_providers: Annotated[tuple[AlgorithmProviderDefinition, ...], SCHEMA_FAMILY] = ()
-    algorithm_bindings: Annotated[tuple[AlgorithmBindingDefinition, ...], SCHEMA_FAMILY] = ()
     relations: Annotated[tuple[RelationDefinition, ...], SCHEMA_FAMILY] = ()
     projection_endpoints: Annotated[tuple[ProjectionEndpointDeclaration, ...], SCHEMA_FAMILY] = ()
     export_layouts: Annotated[tuple[ExportLayoutDefinition, ...], SCHEMA_FAMILY] = ()

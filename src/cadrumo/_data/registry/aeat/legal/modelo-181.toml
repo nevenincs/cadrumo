@@ -63,3 +63,16 @@ published_at = 2009-12-29
 applies_from = 2009-12-30
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-21165"
 review_status = "reviewed"
+
+[sources."aeat-dr-181-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2022"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_181/files/01-181-diseno-de-registro-actualizado-en-2022.pdf"
+sha256 = "4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b"
+bytes = 316409
+retrieved_at = 2026-07-21
+applies_from = 2022-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_22/DR_181_2022.pdf"
+review_status = "reviewed"

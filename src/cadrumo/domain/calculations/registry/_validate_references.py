@@ -24,8 +24,6 @@ from ._validate_cross_domain_snapshot import (
 )
 from ._validate_reference_checker import IdReferenceChecker as _IdReferenceChecker
 from ._validate_reference_sections import (
-    check_algorithm_binding_refs,
-    check_algorithm_provider_refs,
     check_binding_selector_shapes,
     check_construct_refs,
     check_dependency_classification_refs,
@@ -74,8 +72,6 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
     _check_filing_schedule_refs(checker, revision)
     check_construct_refs(checker, revision)
     check_dependency_classification_refs(checker, revision)
-    check_algorithm_provider_refs(checker, revision)
-    check_algorithm_binding_refs(checker, revision)
     check_export_layout_refs(checker, revision)
     check_cross_domain_snapshot_routing(checker, snapshot)
     check_binding_selector_shapes(checker, revision)

@@ -27,8 +27,6 @@ _CONSTRUCT_MEMBER_AXES: tuple[tuple[str, str], ...] = (
     ("formulas", "formula_ids"),
     ("parameters", "parameter_ids"),
     ("bindings", "binding_ids"),
-    ("algorithm_providers", "algorithm_provider_ids"),
-    ("algorithm_bindings", "algorithm_binding_ids"),
     ("relations", "relation_ids"),
     ("export_layouts", "export_layout_ids"),
     ("extraction_profiles", "extraction_profile_ids"),
@@ -69,44 +67,6 @@ def check_dependency_classification_refs(checker: IdReferenceChecker, revision: 
         checker.chk_tuple(f"{dcp}.target_constructs", classification.target_constructs, checker.construct_ids)
         checker.chk_tuple(f"{dcp}.relation_refs", classification.relation_refs, checker.relation_ids)
         checker.chk_legal_source_refs(dcp, classification.legal_refs, classification.source_refs)
-
-
-def check_algorithm_provider_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
-    """Check algorithm-provider legal/source refs for one revision.
-
-    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
-    algorithm-provider declarations, while the checker verifies their legal and
-    source ids against the selected snapshot catalogues.
-    """
-    for provider in revision.algorithm_providers:
-        avp = f"algorithm_provider {provider.id}"
-        checker.chk_legal_source_refs(avp, provider.legal_refs, provider.source_refs)
-
-
-def check_algorithm_binding_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
-    """Check algorithm-binding provider, input, output, and constant refs.
-
-    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
-    algorithm bindings and providers. Binding inputs may resolve through
-    casilla, binding, parameter, or relation ids; outputs and target casillas
-    must resolve through declared casilla ids.
-    """
-    provider_ids = {p.id for p in revision.algorithm_providers}
-    resolvable_ids = checker.casilla_ids | checker.binding_ids | checker.parameter_ids | checker.relation_ids
-    for alg_binding in revision.algorithm_bindings:
-        abp = f"algorithm_binding {alg_binding.id}"
-        if alg_binding.provider not in provider_ids:
-            checker.failures.append(f"{checker.prefix}: {abp}.provider references unknown id {alg_binding.provider!r}")
-        checker.chk(f"{abp}.target_casilla_id", alg_binding.target_casilla_id, checker.casilla_ids)
-        for input_name, input_id in alg_binding.inputs.items():
-            if input_id not in resolvable_ids:
-                checker.failures.append(
-                    f"{checker.prefix}: {abp}.inputs.{input_name} references unknown id {input_id!r}",
-                )
-        for output_name, output_id in alg_binding.output_casilla_ids.items():
-            checker.chk(f"{abp}.output_casilla_ids.{output_name}", output_id, checker.casilla_ids)
-        checker.chk_tuple(f"{abp}.constants", alg_binding.constants, checker.parameter_ids)
-        checker.chk_legal_source_refs(abp, alg_binding.legal_refs, alg_binding.source_refs)
 
 
 def check_export_layout_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:

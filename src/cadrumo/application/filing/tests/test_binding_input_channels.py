@@ -98,7 +98,12 @@ class TestUnknownDataType:
     def test_unknown_data_type_is_refused(self) -> None:
         with pytest.raises(ModeloBuilderError) as excinfo:
             _binding_input("b", "x", _binding("bogus"))
-        assert "unsupported data type" in str(excinfo.value)
+        # Pinned to the translation key, which is the contract, rather than to
+        # English prose: the refusal is localised, so any rendered wording is a
+        # per-locale artefact that this assertion has no business fixing.
+        assert excinfo.value.translated_message == (
+            "application.filing.build_draft.errors.binding_data_type_unsupported"
+        )
 
     def test_undeclared_selector_defaults_to_the_decimal_channel(self) -> None:
         """Documents the surviving default; the row-field gap is tracked separately."""

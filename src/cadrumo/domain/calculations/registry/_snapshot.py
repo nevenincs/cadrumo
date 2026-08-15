@@ -680,8 +680,6 @@ def collect_snapshot_ref_ids(
         revision.parameters,
         revision.bindings,
         revision.relations,
-        revision.algorithm_providers,
-        revision.algorithm_bindings,
         revision.projection_endpoints,
         revision.extraction_profiles,
         revision.live_cross_references,

@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import AfterValidator, AnyHttpUrl, Field, TypeAdapter, field_validator, model_validator
 
-from ....core import REVIEWED_LEGAL_STATUSES, LegalReviewStatus, RegistryPeriodCode, RegistrySelectorPeriodCode
+from ....core import (
+    RECORD_DESIGN_EPOCH_RE,
+    REVIEWED_LEGAL_STATUSES,
+    LegalReviewStatus,
+    RegistryPeriodCode,
+    RegistrySelectorPeriodCode,
+)
 from ....core.external_constants import (
     PDF_EXTENSION,
     XLS_EXTENSION,
@@ -205,6 +211,12 @@ class LegalReference(RegistryModel):
         return self
 
 
+#: The canonical epoch shape, imported rather than restated. A second copy is how
+#: the registry boundary and the filing-evidence boundary drift apart -- and that
+#: drift is what let a value the registry would refuse reach a filed artefact.
+_RECORD_DESIGN_EPOCH: Final = RECORD_DESIGN_EPOCH_RE
+
+
 class SourceReference(RegistryModel):
     """Official-source evidence row with bundled-corpus integrity metadata."""
 
@@ -258,6 +270,18 @@ class SourceReference(RegistryModel):
             raise RegistryValidationError("record_design_epoch is only valid for kind='record_design'")
         if self.record_design_epoch is not None and not self.record_design_epoch.strip():
             raise RegistryValidationError("record_design_epoch must contain non-whitespace text")
+        if self.record_design_epoch is not None and not _RECORD_DESIGN_EPOCH.fullmatch(self.record_design_epoch):
+            raise RegistryValidationError(
+                f"source reference {self.id!r} declares record_design_epoch "
+                f"{self.record_design_epoch!r}, which is not a design EPOCH. An epoch names the "
+                "filing period a design governs -- a four-digit ejercicio, optionally with a "
+                "lower-case sub-year label where AEAT re-laid the form out mid-ejercicio "
+                "('2024-early', '2024-late'). It is NOT the document's version: "
+                "'aeat-dr-111-2019-v18' is epoch '2019', because v18 is which revision of the "
+                "PDF AEAT published and says nothing about which filings it governs. Two "
+                "designs differing only by version are the same epoch and must not both claim "
+                "one; two designs governing different periods are different epochs",
+            )
         return self
 
     @field_validator("sha256")

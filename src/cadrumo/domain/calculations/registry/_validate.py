@@ -42,6 +42,10 @@ from ._validate_cache import (
 )
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
+from ._validate_record_design_epochs import (
+    validate_record_design_epoch_uniqueness,
+    validate_record_design_epoch_window,
+)
 from ._validate_registry_scope import validate_registry_scope
 from ._validate_revision_rules import (
     validate_informative_class_invariant,
@@ -204,6 +208,13 @@ class RegistryValidator:
                 verify_source_catalogue(self._source_root, self._sources)
             except RegistryValidationError as exc:
                 failures.append(str(exc))
+        # Deliberately NOT behind the source-root guard above: epoch uniqueness is a
+        # property of the declarations themselves, so it holds whether or not the
+        # bundled files are reachable for hashing. Gating it on the root would make
+        # the check disappear in exactly the configurations that skip file
+        # verification.
+        failures.extend(validate_record_design_epoch_uniqueness(self._sources))
+        failures.extend(validate_record_design_epoch_window(self._sources))
         self._catalogue_failures = tuple(failures)
         CATALOGUE_FAILURE_CACHE[cache_key] = (self._legal, self._sources, self._catalogue_failures)
         return self._catalogue_failures

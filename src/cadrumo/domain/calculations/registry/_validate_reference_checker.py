@@ -43,8 +43,6 @@ class IdReferenceChecker:
     """
 
     __slots__ = (
-        "algorithm_binding_ids",
-        "algorithm_provider_ids",
         "application_link_ids",
         "binding_ids",
         "casilla_data_types",
@@ -78,8 +76,6 @@ class IdReferenceChecker:
         self.formula_ids = _record_ids(revision.formulas)
         self.parameter_ids = _record_ids(revision.parameters)
         self.binding_ids = _record_ids(revision.bindings)
-        self.algorithm_provider_ids = _record_ids(revision.algorithm_providers)
-        self.algorithm_binding_ids = _record_ids(revision.algorithm_bindings)
         self.relation_ids = _record_ids(revision.relations)
         self.export_layout_ids = _record_ids(revision.export_layouts)
         self.export_field_ids = _export_field_ids(revision)

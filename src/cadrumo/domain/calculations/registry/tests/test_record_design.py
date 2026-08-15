@@ -68,7 +68,7 @@ def test_modelo_200_workbook_recovers_source_declared_totals_and_variable_envelo
     assert formula_anchors["DP200001"] == ("A119", "C119", "=SUM(C6:C118)", 627)
     assert formula_anchors["DP200DID"] == ("A49", "C49", "=SUM(C6:C48)", 774)
 
-    parsed = {sheet.name: sheet for sheet in extract_record_design(workbook_path)}
+    parsed = {sheet.name: sheet for sheet in extract_record_design(workbook_path).accept_partial()}
     assert set(declared_totals) == {name for name, sheet in parsed.items() if sheet.total_positions is not None}
     for name, declared_total in declared_totals.items():
         sheet = parsed[name]
@@ -104,7 +104,7 @@ def test_modelo_303_workbooks_recognise_the_official_variable_envelope_shape(
     _modelo, catalogues = _committed_registry_tree()
     source = catalogues.sources[source_ref]
 
-    parsed = extract_record_design(bundled_path() / source.corpus_path)
+    parsed = extract_record_design(bundled_path() / source.corpus_path).accept_partial()
     fixed = tuple(sheet for sheet in parsed if sheet.variable_envelope is None)
     envelopes = tuple(sheet.variable_envelope for sheet in parsed if sheet.variable_envelope is not None)
 
@@ -152,7 +152,7 @@ def test_modelo_220_workbooks_preserve_the_exact_composite_relative_closing(
         design_epoch=design_epoch,
     )
 
-    parsed = extract_record_design(resolved.path)
+    parsed = extract_record_design(resolved.path).accept_partial()
     envelopes = tuple(sheet.variable_envelope for sheet in parsed if sheet.variable_envelope is not None)
 
     assert resolved.source.sha256 == catalogues.sources[source_ref].sha256
@@ -230,7 +230,7 @@ def test_workbook_total_recovery_accepts_only_official_labels_and_positive_integ
     workbook.save(path)
     workbook.close()
 
-    parsed = {sheet.name: sheet.total_positions for sheet in extract_record_design(path)}
+    parsed = {sheet.name: sheet.total_positions for sheet in extract_record_design(path).accept_partial()}
     assert parsed == {
         "Total": 2,
         "TotalColon": 2,
@@ -464,7 +464,7 @@ def test_closing_and_variable_total_without_a_body_do_not_reclassify_a_fixed_rec
     workbook.save(path)
     workbook.close()
 
-    parsed = extract_record_design(path)
+    parsed = extract_record_design(path).accept_partial()
 
     assert len(parsed) == 1
     assert parsed[0].total_positions == 328
@@ -612,8 +612,8 @@ def test_generated_compact_record_design_pdf_round_trips_from_path_and_bytes(tmp
         ),
     )
 
-    from_path = extract_record_design_pdf(pdf_path)
-    from_bytes = extract_record_design_pdf_bytes(pdf_path.read_bytes(), source_label=pdf_path.name)
+    from_path = extract_record_design_pdf(pdf_path).accept_partial()
+    from_bytes = extract_record_design_pdf_bytes(pdf_path.read_bytes(), source_label=pdf_path.name).accept_partial()
 
     assert from_bytes == from_path
     sheet = from_path[0]
@@ -648,7 +648,7 @@ def test_generated_narrative_record_design_pdf_preserves_content_and_split_title
         ),
     )
 
-    sheet = extract_record_design_pdf(pdf_path)[0]
+    sheet = extract_record_design_pdf(pdf_path).accept_partial()[0]
 
     assert sheet.name == "Tipo 1 - Registro De Declarante"
     assert sheet.total_positions == 500
@@ -905,7 +905,360 @@ def test_a_workbook_mixing_both_header_spellings_yields_every_sheet() -> None:
     design = next(
         path for path in sorted((_RECORD_DESIGN_ROOT / "modelo_115" / "files").glob("*.xlsx")) if path.is_file()
     )
-    sheets = extract_record_design(design)
+    sheets = extract_record_design(design).accept_partial()
 
     assert len(sheets) == 2, [sheet.name for sheet in sheets]
     assert all(sheet.fields for sheet in sheets), {sheet.name: len(sheet.fields) for sheet in sheets}
+
+
+def test_a_design_with_a_dropped_sheet_reports_the_read_as_partial() -> None:
+    """A partial read must SAY it is partial -- the first half of the bite proof.
+
+    Modelo 151 is the live case: nine of its twelve sheets title the description
+    column ``Datos adicionales de las rentas...`` instead of ``Descripción``, so
+    the header probe fails on every one of them and the extractor returns the
+    other three. Before the result carried a completeness notion those three
+    looked exactly like a whole design, and the 108 anchors read from a source
+    carrying roughly 727 propagated into every derived count with nothing able to
+    tell the difference.
+
+    Asserted on the PROPERTY -- some sheets read, some named as skipped, and the
+    two disjoint -- rather than on the counts, which move whenever the header
+    vocabulary widens or AEAT republishes.
+    """
+    design = _RECORD_DESIGN_ROOT / "modelo_151" / "files" / "01-151-ejercicio-2023-y-siguientes.xls"
+    assert design.is_file(), f"corpus anchor moved: {design}"
+
+    extraction = extract_record_design(design)
+
+    assert extraction.skipped, "Modelo 151 drops sheets; a read that reports none is not seeing them"
+    assert extraction.sheets, "some sheets do parse, so this must be a PARTIAL read rather than a refusal"
+    assert extraction.is_complete is False
+    assert not {sheet.name for sheet in extraction.sheets} & {item.name for item in extraction.skipped}
+    assert all(item.reason for item in extraction.skipped), "a skipped sheet must say WHY it was skipped"
+
+    with pytest.raises(RegistryValidationError, match="PARTIAL design"):
+        extraction.require_complete()
+
+
+def test_a_design_read_in_full_reports_complete_and_hands_over_its_sheets() -> None:
+    """The other half, and the one that matters more.
+
+    2,458 of the corpus's 2,803 workbook sheets read cleanly today. If completeness
+    reporting were wrong in the permissive direction it would be caught by the test
+    above; wrong in the strict direction it would make every complete design refuse,
+    which is the more expensive failure and the easier one to ship unnoticed.
+    """
+    design = next(
+        path for path in sorted((_RECORD_DESIGN_ROOT / "modelo_115" / "files").glob("*.xlsx")) if path.is_file()
+    )
+    extraction = extract_record_design(design)
+
+    assert extraction.skipped == ()
+    assert extraction.is_complete is True
+    assert extraction.require_complete() == extraction.sheets
+    assert extraction.require_complete() == extraction.accept_partial()
+
+
+def test_every_sheet_of_a_source_is_either_read_or_named_as_skipped() -> None:
+    """Nothing may fall between the two lists -- the anti-vacuity guard.
+
+    A completeness notion that under-counts the container is worse than none: it
+    reports ``is_complete`` on a design whose sheets it never enumerated. This
+    reads the container's OWN sheet listing, independently of the extractor, and
+    requires every sheet to appear on exactly one side of the result.
+    """
+    from openpyxl import load_workbook
+
+    design = next(
+        path for path in sorted((_RECORD_DESIGN_ROOT / "modelo_232" / "files").glob("*.xlsx")) if path.is_file()
+    )
+    workbook = load_workbook(design, read_only=True, data_only=True)
+    try:
+        present = {worksheet.title.strip() for worksheet in workbook.worksheets}
+    finally:
+        workbook.close()
+
+    extraction = extract_record_design(design)
+    accounted = {sheet.name for sheet in extraction.sheets} | {item.name for item in extraction.skipped}
+
+    assert accounted == present, (
+        "every sheet the container holds must be either read or named as skipped; "
+        f"unaccounted: {sorted(present - accounted)}, invented: {sorted(accounted - present)}"
+    )
+
+
+def test_a_truncated_header_spelling_names_the_same_column() -> None:
+    """``Lon``, ``Lon.``, ``Long.`` and ``Longitud`` are one column, not four.
+
+    The unit half of the truncation rule. Pinned on the RELATION rather than on a
+    list of accepted spellings: a test naming the spellings would be satisfied by
+    an enrolled set, which is the design this replaced and which went silent again
+    the moment AEAT wrote a spelling nobody had enrolled.
+    """
+    for spelling in ("lon", "lon.", "long", "long.", "longitud"):
+        assert record_design_module._optional_header_index((spelling,), "lon") == 0, spelling
+
+    # The floor: a token under three characters may not prefix-match a column.
+    assert record_design_module._optional_header_index(("n",), "no") is None
+    assert record_design_module._optional_header_index(("lo",), "lon") is None
+    # And an unrelated column is still not matched, however long it is.
+    assert record_design_module._optional_header_index(("contenido",), "lon") is None
+    assert record_design_module._optional_header_index(("descripcion",), "tipo") is None
+
+
+def test_the_truncation_rule_recovers_a_sheet_that_was_silently_dropped() -> None:
+    """Modelo 714 spells its length column two ways and lost a sheet to it.
+
+    The corpus half. Eleven body sheets head the column ``Lon`` and the twelfth
+    heads it ``Long.``, so that sheet failed header detection and was dropped --
+    silently, because eleven others survived. This asserts the design now reads
+    COMPLETE, which is the property; the sheet count is checked as "more than the
+    survivors" rather than pinned, so a republished design cannot make it vacuous.
+    """
+    design = _RECORD_DESIGN_ROOT / "modelo_714" / "files" / "DR714_2025.xls"
+    assert design.is_file(), f"corpus anchor moved: {design}"
+
+    extraction = extract_record_design(design)
+
+    assert extraction.is_complete, (
+        f"Modelo 714 still drops {[item.name for item in extraction.skipped]}; the length column "
+        "on its header sheet is spelled 'Long.' where its body sheets spell it 'Lon'"
+    )
+    assert len(extraction.sheets) > 11
+
+
+def test_a_declared_end_of_record_terminator_is_separated_and_kept() -> None:
+    """The closing identifies the record; the CRLF row ends the line.
+
+    Thirty bundled designs across eight modelos declare both as adjacent
+    relative-offset rows, and the closing recogniser -- which accepted one suffix of
+    length 18 or exactly six -- refused every one. They were not exotic: each is the
+    ordinary 18-byte identifier followed by a row AEAT labels ``Fin de Registro.
+    Constante CRLF``.
+
+    The assertion that matters is the second one. Separating the terminator makes
+    them parse; KEEPING it is what stops that being a clean-looking wrong answer,
+    because those two bytes are part of the record and a parse that drops them
+    understates every record built from it.
+    """
+    design = _RECORD_DESIGN_ROOT / "modelo_100" / "files" / "20-100-ejercicio-2015-1-75-mb-xls.xlsx"
+    assert design.is_file(), f"corpus anchor moved: {design}"
+
+    envelopes = [sheet.variable_envelope for sheet in extract_record_design(design).accept_partial()]
+    envelope = next(item for item in envelopes if item is not None)
+
+    assert envelope.closing.length == 18, "the closing identifier must remain the closing identifier"
+    assert envelope.terminator is not None, (
+        "the end-of-record row was consumed instead of kept; its two bytes are part of the record"
+    )
+    assert envelope.terminator.length == 2
+    assert "fin de registro" in envelope.terminator.description.casefold()
+
+
+def test_a_two_byte_closing_part_that_is_not_a_terminator_is_not_peeled() -> None:
+    """The split matches the declared MEANING, never the length alone.
+
+    A two-byte relative suffix is not automatically a line terminator -- the Modelo
+    220 composite closing carries a two-byte ``0A`` part that is genuinely part of
+    the record identifier. Peeling on width would silently truncate that closing and
+    reclassify a real identifier component as physical padding.
+    """
+    from .._record_design import _split_record_terminator
+    from .._record_design_schema import RecordDesignRelativeSuffixMarker
+
+    def suffix(length: int, description: str, ordinal: int) -> RecordDesignRelativeSuffixMarker:
+        return RecordDesignRelativeSuffixMarker(
+            sheet="S",
+            row=ordinal,
+            ordinal=ordinal,
+            offset="***",
+            length=length,
+            type_code="An",
+            description=description,
+        )
+
+    identifier_part = suffix(2, "Periodo. Constante 0A", 2)
+    kept, terminator = _split_record_terminator([suffix(18, "Constante. </T...>", 1), identifier_part])
+    assert terminator is None, "a two-byte identifier component was mistaken for a line terminator"
+    assert len(kept) == 2
+
+    real = suffix(2, "Fin de Registro. Constante CRLF (Hexadecimal 0D0A)", 2)
+    kept, terminator = _split_record_terminator([suffix(18, "Constante. </T...>", 1), real])
+    assert terminator is real
+    assert len(kept) == 1
+
+
+def test_a_terminator_that_does_not_come_last_is_refused() -> None:
+    """A terminator that is not last is not a terminator.
+
+    Without this the split would accept a line-terminator row appearing anywhere in
+    the closing and quietly reorder the record's tail. Refusing is right: a design
+    declaring it early is either malformed or has been misread, and rearranging it
+    would hide both.
+    """
+    from .._record_design import _require_terminator_closes_the_record
+    from .._record_design_schema import RecordDesignRelativeSuffixMarker
+
+    def suffix(ordinal: int, length: int, description: str) -> RecordDesignRelativeSuffixMarker:
+        return RecordDesignRelativeSuffixMarker(
+            sheet="S",
+            row=ordinal,
+            ordinal=ordinal,
+            offset="***",
+            length=length,
+            type_code="An",
+            description=description,
+        )
+
+    closing = (suffix(9, 18, "Constante. </T...>"),)
+    _require_terminator_closes_the_record("S", closing, suffix(10, 2, "Fin de Registro. CRLF"))
+    with pytest.raises(RegistryValidationError, match="not last is not a terminator"):
+        _require_terminator_closes_the_record("S", closing, suffix(8, 2, "Fin de Registro. CRLF"))
+
+
+def test_a_design_declaring_no_terminator_does_not_acquire_one() -> None:
+    """THE INVERSE FALSE GREEN: peeling is conditional on the row being declared.
+
+    A design closing with a bare 18-byte identifier and no CRLF row must parse with
+    no terminator and an unchanged record tail. If the split ever fired on the
+    closing merely LOOKING like it wants a terminator, every such design would
+    silently gain two bytes it does not have -- the same defect as dropping two
+    bytes, with the sign reversed, and equally invisible.
+
+    Modelo 303's current design is the anchor: it declares the same DP30300
+    variable envelope as the older editions that DO carry a terminator, so the two
+    differ in exactly the thing under test.
+    """
+    design = (
+        _RECORD_DESIGN_ROOT
+        / "modelo_303"
+        / "files"
+        / "01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
+    )
+    assert design.is_file(), f"corpus anchor moved: {design}"
+
+    extraction = extract_record_design(design)
+    assert extraction.is_complete
+    envelope = next(sheet.variable_envelope for sheet in extraction.sheets if sheet.variable_envelope is not None)
+
+    assert envelope.terminator is None, (
+        "a design that declares no end-of-record row acquired one; peeling must be conditional "
+        "on the row being present, never inferred from the closing's shape"
+    )
+    assert envelope.closing.length == 18
+
+
+def test_the_workbook_and_pdf_parsers_share_one_notion_of_a_crlf_row() -> None:
+    """One concept, one home -- the two parsers may not drift on the same fact.
+
+    They already had. The PDF compact-row recogniser has known the end-of-record row
+    since it was written; the workbook closing recogniser refused thirty designs
+    across eight modelos for declaring one. Two private spellings of a single domain
+    fact is what let that divergence stand, so the PDF pattern now composes the
+    shared phrase rather than restating it.
+
+    Asserted by composition, not by equality of behaviour: this fails if either side
+    grows its own copy.
+    """
+    assert record_design_module._RECORD_TERMINATOR_PHRASE in record_design_module._COMPACT_PDF_CRLF_ROW_RE.pattern
+    assert record_design_module._RECORD_TERMINATOR.pattern == record_design_module._RECORD_TERMINATOR_PHRASE
+
+    # Every wording the shared phrase claims to cover must actually match, so a
+    # dead alternative cannot hide behind a live one. The bare-CRLF spelling was
+    # dead for exactly this reason before this test existed.
+    for wording in ("Fin de Registro. Constante CRLF", "Salto de linea. CRLF", "Salto de línea. CRLF"):
+        assert record_design_module._RECORD_TERMINATOR.search(wording), wording
+    assert not record_design_module._RECORD_TERMINATOR.search("Periodo. Constante 0A")
+
+
+def test_envelope_composition_order_is_checked_by_source_position_not_by_ordinal() -> None:
+    """Removing the ordinal comparison must not remove the coverage it appeared to give.
+
+    The envelope-order check asserted composition order twice, on source row and on
+    ordinal, and the ordinal half asserted nothing the row half did not. Deleting a
+    redundant assertion is only safe if the survivor still bites, so every
+    misordering the pair used to catch is exercised here against the row check
+    alone.
+
+    Why the ordinal half had to go rather than be made string-safe: AEAT's ordinal
+    is a PRINTED LABEL, not an arithmetic value -- it publishes ``14bis`` to insert
+    a field between 14 and 15 without renumbering. Ordering by it assumes a density
+    the authority never promised, and a string ordering would place ``2`` after
+    ``10`` by construction.
+    """
+    from .._record_design import _require_ordered_variable_envelope
+    from .._record_design_schema import (
+        RecordDesignField,
+        RecordDesignRelativeSuffixMarker,
+        RecordDesignVariableBodyMarker,
+        RecordDesignVariableTotalMarker,
+    )
+
+    def field(row: int) -> RecordDesignField:
+        return RecordDesignField(sheet="S", row=row, ordinal=1, offset=1, length=1, type_code="An", description="d")
+
+    def body(row: int) -> RecordDesignVariableBodyMarker:
+        return RecordDesignVariableBodyMarker(
+            sheet="S", row=row, ordinal=2, offset=2, length="Variable", type_code="An", description="d"
+        )
+
+    def closing(row: int) -> RecordDesignRelativeSuffixMarker:
+        return RecordDesignRelativeSuffixMarker(
+            sheet="S", row=row, ordinal=3, offset="***", length=18, type_code="An", description="d"
+        )
+
+    def total(row: int) -> RecordDesignVariableTotalMarker:
+        return RecordDesignVariableTotalMarker(sheet="S", row=row, label="total", length="Variable")
+
+    _require_ordered_variable_envelope("S", [field(10)], body(11), (closing(12),), total(13))
+
+    for label, args in (
+        ("body before the fixed prefix", ([field(11)], body(10), (closing(12),), total(13))),
+        ("closing before the body", ([field(10)], body(12), (closing(11),), total(13))),
+        ("total before the closing", ([field(10)], body(11), (closing(12),), total(11))),
+    ):
+        with pytest.raises(RegistryValidationError, match="misordered variable-envelope"):
+            _require_ordered_variable_envelope("S", *args)
+            pytest.fail(f"{label} was accepted; the row check does not cover it")
+
+
+def test_an_unnumbered_row_is_admitted_and_a_printed_label_still_refuses() -> None:
+    """The ordinal CELL decides, not the parse result -- both directions.
+
+    AEAT leaves the ordinal blank for rows it declines to number: Modelo 036 writes
+    one `Fecha de constitución` as three unnumbered rows for día, mes and año,
+    sharing casilla ``[C71]``. Dropping them put their eight bytes into a downstream
+    geometry gap whose message blamed the design.
+
+    THE NEGATIVE CONTROL IS THE POINT. ``_int_or_none`` collapses "cell is empty"
+    and "cell says 14bis" to the same ``None``, so accepting every unreadable
+    ordinal would admit a ``14bis`` row while silently discarding the label AEAT
+    printed -- representing LESS than the source declares, which is the same defect
+    class as the dropped terminator. A printed-but-unrepresentable ordinal must keep
+    refusing until the type can hold it.
+    """
+    root = _RECORD_DESIGN_ROOT
+    unnumbered = (
+        root / "modelo_036" / "files" / "04-036-ejercicio-2021-y-siguientes-actualizado-11-04-2023-106-kb-xlsx.xlsx"
+    )
+    printed_label = (
+        root / "modelo_303" / "files" / "12-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2018-292-kb-xlsx.xlsx"
+    )
+    for path in (unnumbered, printed_label):
+        assert path.is_file(), f"corpus anchor moved: {path}"
+
+    extraction = extract_record_design(unnumbered)
+    sheet = next(item for item in extraction.sheets if item.name == "Pag. 2C")
+    unnumbered_fields = [item for item in sheet.fields if item.ordinal is None]
+    assert unnumbered_fields, "the unnumbered rows are still being dropped"
+    assert all("[C71]" in item.description for item in unnumbered_fields), (
+        "the admitted unnumbered fields are not the shared-casilla group this covers"
+    )
+    # Their bytes are now part of the record rather than a phantom gap.
+    assert {item.offset for item in unnumbered_fields} == {1294, 1296, 1298}
+
+    # The other half: a row whose ordinal cell is NON-EMPTY but unreadable keeps
+    # refusing, so `14bis` is not admitted as though AEAT had left it blank.
+    with pytest.raises(RegistryValidationError, match="has a gap"):
+        extract_record_design(printed_label)

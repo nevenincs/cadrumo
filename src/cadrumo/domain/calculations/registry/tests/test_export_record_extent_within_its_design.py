@@ -102,7 +102,7 @@ def _implied_extent(record: ExportRecordDefinition) -> int | None:
 def _declared_totals(design: Path) -> tuple[int, ...]:
     """Every readable ``TOTAL n POSICIONES`` figure the design declares, per sheet."""
     try:
-        sheets = extract_record_design(design)
+        sheets = extract_record_design(design).accept_partial()
     except Exception:  # an unparseable design is reported as unmeasured, never raised
         return ()
     return tuple(sheet.total_positions for sheet in sheets if isinstance(sheet.total_positions, int))

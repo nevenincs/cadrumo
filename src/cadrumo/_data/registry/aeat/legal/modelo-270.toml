@@ -50,8 +50,10 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13228"
 review_status = "reviewed"
 
 # Same bundled orden HTML under layout_authority tier for the per-revision
-# workbook-parity-coverage gate. NOT the authoritative AEAT Diseño de Registros
-# (not bundled); grounds only the static form-approval layout.
+# workbook-parity-coverage gate. This entry is the static BOE form-approval
+# layout, not the AEAT Diseño de Registro itself. The AEAT design IS now
+# bundled and declared separately, below (`aeat-dr-270-2023`,
+# corpus/aeat_official/disenos_registro/modelo_270/files/01-270-diseno-de-registro-actualizado-en-2023.pdf).
 [sources."enrolled-modelo-270-layout"]
 evidence_tier = "layout_authority"
 authority = "boe"
@@ -63,4 +65,17 @@ retrieved_at = 2026-07-04
 published_at = 2013-12-13
 applies_from = 2013-12-14
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13228"
+review_status = "reviewed"
+
+[sources."aeat-dr-270-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2023"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_270/files/01-270-diseno-de-registro-actualizado-en-2023.pdf"
+sha256 = "d845cc47e3b60d01128d27dddcc3cffd2cf64bd6dfb24e0cd0d0467d66f95a92"
+bytes = 111633
+retrieved_at = 2026-07-21
+applies_from = 2023-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos/270_HAP_2368_2013.pdf"
 review_status = "reviewed"

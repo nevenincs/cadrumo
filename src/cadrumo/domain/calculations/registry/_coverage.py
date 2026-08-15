@@ -393,7 +393,7 @@ def _model_law_coverage_findings(
     )
     parity_gaps = (
         (f"modelo {modelo.id} revision {revision.id}: executable_parity_evidence coverage gap",)
-        if gates["executable_parity_evidence"].status == "gap" and (revision.formulas or revision.algorithm_bindings)
+        if gates["executable_parity_evidence"].status == "gap" and revision.formulas
         else ()
     )
     return required_failures, parity_gaps

@@ -66,3 +66,16 @@ published_at = 2013-12-27
 applies_from = 2013-12-28
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13798"
 review_status = "reviewed"
+
+[sources."aeat-dr-165-2026"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2026"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_165/files/01-165-diseno-de-registro-actualizado-en-2023.pdf"
+sha256 = "bcc94b07d695703cfa66a3d8cbbb176841906ebf8cef57e2acd3e3fee452a263"
+bytes = 208095
+retrieved_at = 2026-07-21
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_165_2023.pdf"
+review_status = "reviewed"

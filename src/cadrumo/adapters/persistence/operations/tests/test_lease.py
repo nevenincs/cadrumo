@@ -27,7 +27,7 @@ from ...storage import RepositoryError
 from .._journal import OperationJournalRepository
 from .._lease import OperationLeaseFilesystemRepository, OperationLeaseStorage
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _STARTED = datetime(2026, 8, 14, 9, tzinfo=UTC)
 _OPERATION_ID = "a" * 64

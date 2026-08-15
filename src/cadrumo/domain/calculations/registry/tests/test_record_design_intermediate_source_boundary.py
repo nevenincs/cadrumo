@@ -76,7 +76,7 @@ def test_intermediate_consumes_the_hash_pinned_binary_not_adjacent_derivatives(t
     assert first_intermediate == second_intermediate
     assert "S03-IR-DERIVATIVE-FIRST" not in first_intermediate.model_dump_json()
     assert "S03-IR-DERIVATIVE-SECOND" not in second_intermediate.model_dump_json()
-    _assert_complete_parser_projection(first_intermediate, extract_record_design(first_resolved.path))
+    _assert_complete_parser_projection(first_intermediate, extract_record_design(first_resolved.path).accept_partial())
 
 
 def _copy_verified_binary_with_derivatives(

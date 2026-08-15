@@ -97,12 +97,19 @@ def _invoice(
 
 def _resolved_for(invoice: Invoice) -> dict[str, Decimal]:
     """Project the invoice's single line the way the screen does, then resolve."""
+    line = invoice.lines[0]
+    base_amount_eur = invoice.line_amount_eur(line.subtotal)
+    iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
+    assert base_amount_eur is not None
+    assert iva_amount_eur is not None
     observation = _invoice_line_iva_observation(
         invoice=invoice,
-        line=invoice.lines[0],
+        line=line,
         line_index=0,
         devengo_date=_DEVENGO,
         recargo_amount=Decimal("0"),
+        base_amount_eur=base_amount_eur,
+        iva_amount_eur=iva_amount_eur,
     )
     if observation is None:
         return {}
@@ -250,12 +257,19 @@ def test_an_ordinary_rated_line_still_routes_through_the_standard_path() -> None
             ],
         },
     )
+    rated_line = rated.lines[0]
+    rated_base_amount_eur = rated.line_amount_eur(rated_line.subtotal)
+    rated_iva_amount_eur = rated.line_amount_eur(rated_line.iva_amount)
+    assert rated_base_amount_eur is not None
+    assert rated_iva_amount_eur is not None
     observation = _invoice_line_iva_observation(
         invoice=rated,
-        line=rated.lines[0],
+        line=rated_line,
         line_index=0,
         devengo_date=_DEVENGO,
         recargo_amount=Decimal("0"),
+        base_amount_eur=rated_base_amount_eur,
+        iva_amount_eur=rated_iva_amount_eur,
     )
 
     assert observation is not None

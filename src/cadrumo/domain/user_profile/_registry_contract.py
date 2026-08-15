@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind
 from ...core.errors import BaseSeverity
-from ...domain.calculations.registry import RevisionId
+from ...domain.calculations.registry import ProfileSelector, RevisionId
 
 
 class UserProfileRegistryContractIssue(BaseModel):
@@ -283,9 +283,40 @@ def _export_issues(
 
 
 def profile_binding_selectors(selector: Mapping[str, object] | BaseModel) -> tuple[str, ...]:
+    if isinstance(selector, ProfileSelector):
+        # Every real caller passes the selector of an already-filtered
+        # ``source == BindingSourceKind.PROFILE`` binding, which the
+        # discriminated-union field validator on ``DataBindingDefinition``
+        # (``_coerce_selector`` -> ``ProfileSelector.model_validate``) has
+        # already hydrated into the typed model by construction time. Reading
+        # the typed ATTRIBUTES here -- rather than round-tripping through
+        # ``model_dump()`` into a plain dict and re-reading it with string
+        # literals -- means a field rename on ``ProfileSelector`` (e.g.
+        # ``required_when_profile_key``, declared at ``_bindings.py``) fails
+        # loud (``AttributeError``, and at static analysis time) instead of
+        # the dict-literal read silently and permanently returning ``None``.
+        selectors: list[str] = []
+        profile_key = selector.profile_key
+        if isinstance(profile_key, str):
+            selectors.append(profile_key)
+        selectors.extend(selector.profile_keys)
+        required_when_profile_key = selector.required_when_profile_key
+        if isinstance(required_when_profile_key, str):
+            selectors.append(required_when_profile_key)
+        profile_model = selector.profile_model
+        profile_field = selector.field
+        if isinstance(profile_model, str) and isinstance(profile_field, str):
+            collection = selector.collection
+            if isinstance(collection, str):
+                selectors.append(f"{profile_model}.{collection}.{profile_field}")
+            else:
+                selectors.append(f"{profile_model}.{profile_field}")
+        return tuple(dict.fromkeys(selectors))
     if isinstance(selector, BaseModel):
-        selector = selector.model_dump(exclude={"source"}, exclude_none=True, exclude_unset=True)
-    selectors: list[str] = []
+        # A different binding-source family's typed selector; its shape never
+        # carries a profile key, so no read is needed.
+        return ()
+    selectors = []
     profile_key = selector.get("profile_key")
     if isinstance(profile_key, str):
         selectors.append(profile_key)

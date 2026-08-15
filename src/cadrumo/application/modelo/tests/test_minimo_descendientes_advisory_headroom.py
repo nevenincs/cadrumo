@@ -37,8 +37,9 @@ from decimal import Decimal
 import pytest
 
 from ....core import validated_casilla_id
-from ....core.resources import resources
-from ....domain.calculations.registry import ModeloRevision
+from ....core.resources import bundled_path
+from ....domain.calculations.registry import ModeloRevision, select_revision
+from ....domain.calculations.registry._loader import load_registry_tree
 from ...aggregation import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
 from .._minimo_descendientes_advisory import (
     _count_desync_advisory,
@@ -114,15 +115,15 @@ def _headroom_revision() -> ModeloRevision:
     revision serves; the resident registry authority is real rather than a
     hand-built stub.
 
-    The revision is reached by resolving its id from the filing scope and then
-    reading the declaration, rather than by building a filing-grade snapshot.
-    Measuring an advisory's rendered length is not a filing operation, and a
-    snapshot would additionally demand operator review of a revision these tests
-    never file.
+    Reached through the compiler and the canonical temporal resolver. Measuring
+    an advisory's rendered length is not a filing operation, and every rung above
+    this one -- the validated authority and its inspection projection alike --
+    validates the whole registry first, so either would make a message-length
+    test unobtainable for reasons that have nothing to do with messages.
     """
-    authority = resources().modelos.authority
-    revision_id = authority.inspect_revision("100", filing_year=2024, period="0A").revision_id
-    return authority.modelo("100").revisions[revision_id]
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(candidate for candidate in modelos if candidate.id == "100")
+    return select_revision(modelo, filing_year=2024, period="0A")
 
 
 def _advisory_builders() -> list[tuple[str, Callable[[], CalculationSourceDiagnostic]]]:

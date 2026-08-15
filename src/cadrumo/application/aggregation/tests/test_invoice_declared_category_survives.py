@@ -96,12 +96,19 @@ def _received_reverse_charge(*, slot: IvaRate = IvaRate.EXEMPT, cuota: str = "0.
 
 
 def _observation_for(invoice: Invoice):
+    line = invoice.lines[0]
+    base_amount_eur = invoice.line_amount_eur(line.subtotal)
+    iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
+    assert base_amount_eur is not None
+    assert iva_amount_eur is not None
     return _invoice_line_iva_observation(
         invoice=invoice,
-        line=invoice.lines[0],
+        line=line,
         line_index=0,
         devengo_date=_DAY,
         recargo_amount=Decimal("0"),
+        base_amount_eur=base_amount_eur,
+        iva_amount_eur=iva_amount_eur,
         deduction_authority=_received_reverse_charge_deduction_authority(),
     )
 

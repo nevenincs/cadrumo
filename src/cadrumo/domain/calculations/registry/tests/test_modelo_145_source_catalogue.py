@@ -123,7 +123,7 @@ def test_modelo_145_record_design_source_matches_manifest() -> None:
 def test_modelo_145_record_design_extracts_official_model_marker() -> None:
     catalogues = _catalogues()
     source = catalogues.sources["aeat-dr-145-v20"]
-    sheets = extract_record_design_pdf(bundled_path() / source.corpus_path)
+    sheets = extract_record_design_pdf(bundled_path() / source.corpus_path).accept_partial()
 
     assert len(sheets) == 1
     sheet = sheets[0]

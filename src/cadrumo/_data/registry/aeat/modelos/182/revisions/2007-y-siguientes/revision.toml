@@ -13,4 +13,6 @@ orden_aplicabilidad = [
 source_refs = [
     "enrolled-modelo-182-procedure",
     "enrolled-modelo-182-layout",
+    "aeat-dr-182-2024",
+    "aeat-dr-182-2025",
 ]

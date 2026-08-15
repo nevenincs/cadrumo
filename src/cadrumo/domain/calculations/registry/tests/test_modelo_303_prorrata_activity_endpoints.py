@@ -98,7 +98,7 @@ def test_real_dp30305_binary_and_registry_define_exact_five_by_five_projection_e
         filing_year=filing_year,
         design_epoch=design_epoch,
     )
-    sheet = next(item for item in extract_record_design(resolved.path) if item.name == "DP30305")
+    sheet = next(item for item in extract_record_design(resolved.path).accept_partial() if item.name == "DP30305")
     source_fields = tuple(
         field
         for field in sheet.fields

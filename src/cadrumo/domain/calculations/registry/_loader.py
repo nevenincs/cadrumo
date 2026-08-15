@@ -112,8 +112,6 @@ _CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
         "formulas",
         "parameters",
         "bindings",
-        "algorithm_providers",
-        "algorithm_bindings",
         "relations",
         "export_layouts",
         "extraction_profiles",
@@ -500,8 +498,24 @@ def _revision_section_directories(path: Path) -> tuple[Path, ...]:
 
 
 def _require_revision_section_fragments(section_dirs: tuple[Path, ...]) -> None:
+    """Guard every section directory against emptiness.
+
+    Matches :func:`_revision_section_fragment_paths`'s own one-level ``glob``
+    rather than ``rglob`` -- the collector is what actually defines the
+    registry's content, so the guard must see exactly what the collector
+    sees, never more or less. A one-level-only collector paired with a
+    recursive emptiness check could in principle let a section directory
+    holding ONLY nested fragments pass as "populated" while the collector
+    silently read zero of them; in practice this can never happen, because
+    :func:`_validate_section_fragment_names` (``_loader_cache.py``, run for
+    every section directory before a fragment tree is ever merged) already
+    refuses ANY subdirectory nested inside a section directory outright.
+    This still narrows the check to match the collector exactly, so the two
+    can never textually diverge even if that upstream categorical block ever
+    changed shape.
+    """
     for section_dir in section_dirs:
-        if not any(candidate.is_file() for candidate in section_dir.rglob("*.toml")):
+        if not any(candidate.is_file() for candidate in section_dir.glob("*.toml")):
             raise RegistryLoadError(f"{section_dir}: revision section fragment directory contains no TOML fragments")
 
 

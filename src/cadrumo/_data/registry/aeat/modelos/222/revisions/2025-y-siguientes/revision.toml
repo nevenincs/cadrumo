@@ -6,9 +6,15 @@
 # naturales de los meses de abril, octubre y diciembre). This is a
 # scheduling/applicability-grade revision: it grounds the approval and the
 # filing plazo against the bundled BOE corpus and carries declaration-header
-# casillas only. The money-closure casillas are deferred until an authoritative
-# Modelo 222 diseño de registro is bundled (none exists in the corpus today), so
-# no casilla number is fabricated.
+# casillas only. A Modelo 222 diseño de registro IS now bundled (`aeat-dr-222-2025`,
+# corpus/aeat_official/disenos_registro/modelo_222/files/01-222-ejercicio-2025-y-siguientes.xlsx)
+# and declared as a source above, but the money-closure casillas remain
+# deferred: nobody has yet mapped its box numbers against this revision's
+# schema, so no casilla number is fabricated from it. The corpus also carries
+# a second Modelo 222 design (02-222-ejercicios-2023-y-2024.xlsx, not declared
+# here) whose attributed years fall entirely outside this revision's own
+# span (`year_from = 2025`) — it belongs to a different revision or acquisition
+# question, not to this one.
 valid_from = 2025-01-01
 period_selector = { year_from = 2025, periods = ["1P", "2P", "3P"] }
 orden_aplicabilidad = ["orden-hfp-227-2017:art-2"]
@@ -20,4 +26,5 @@ legal_refs = [
 source_refs = [
     "aeat-modelo-202-instructions",
     "boe-modelo-202-base-order",
+    "aeat-dr-222-2025",
 ]

@@ -26,6 +26,7 @@ See Also:
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import tempfile
 from dataclasses import dataclass
@@ -400,9 +401,33 @@ def is_bundled_registry_path(path: Path) -> bool:
     boundary failure.
     """
     try:
-        return path.is_relative_to(_bundled_registry_root())
+        root, root_prefix = _bundled_root_match()
     except (ImportError, OSError, ValueError):
         return False
+    candidate = os.path.normcase(str(path))
+    return candidate == root or candidate.startswith(root_prefix)
+
+
+@lru_cache(maxsize=1)
+def _bundled_root_match() -> tuple[str, str]:
+    """Return the bundled registry root as ``(normcased, normcased + separator)``.
+
+    Memoised because :func:`is_bundled_registry_path` asks about every registry
+    TOML -- 17k times per fingerprint walk -- and the answer derives from one
+    process-lifetime root. ``maxsize=1`` because the function takes no
+    arguments, so exactly one entry can ever exist; it is the same shape
+    :func:`_bundled_registry_root` above already uses.
+
+    A normcased string pair rather than :meth:`pathlib.PurePath.is_relative_to`,
+    which builds and compares path-part sequences at roughly a quarter of a
+    millisecond per call on Windows -- 4.7s of a 14.7s profiled cache-hit
+    compile. ``os.path.normcase`` reproduces the case folding pathlib applies on
+    Windows and is the identity on POSIX, and the separator in the prefix stops
+    a sibling whose name merely starts with the root's (``aeat-old`` beside
+    ``aeat``) from reading as contained.
+    """
+    root = os.path.normcase(str(_bundled_registry_root()))
+    return root, root + os.sep
 
 
 def toml_file_fingerprint(path: Path) -> tuple[str, int, int, str]:

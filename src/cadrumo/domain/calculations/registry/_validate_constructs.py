@@ -23,14 +23,13 @@ from collections.abc import Mapping
 from ._schema import LegalReference, ModeloRevision, SourceReference
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
+from ._validate_revision_context import ConstructMemberObject
 
 _CONSTRUCT_MEMBER_ATTRS = {
     "casilla": "casilla_ids",
     "formula": "formulas",
     "parameter": "parameters",
     "binding": "bindings",
-    "algorithm provider": "algorithm_providers",
-    "algorithm binding": "algorithm_bindings",
     "relation": "relations",
     "export layout": "export_layouts",
     "extraction profile": "extraction_profiles",
@@ -48,7 +47,7 @@ def validate_construct_closure(
     scope: str,
     revision: ModeloRevision,
     *,
-    member_objects: Mapping[str, Mapping[str, object]],
+    member_objects: Mapping[str, Mapping[str, ConstructMemberObject]],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
@@ -77,14 +76,26 @@ def validate_construct_closure(
                 if member is None:
                     failures.append(f"{scope}: construct {construct.id!r} references unknown {kind} {member_id!r}")
                     continue
-                member_legal_refs = set(getattr(member, "legal_refs", ()))
+                # Every member kind in ``_CONSTRUCT_MEMBER_ATTRS`` declares
+                # ``legal_refs`` and ``source_refs`` (verified across all 14
+                # kinds' classes: casilla, formula, parameter, binding,
+                # relation, export layout,
+                # extraction profile, cross-reference, workbook parity
+                # reference, verification expectation, application link,
+                # deadline window, filing schedule, dependency
+                # classification). Direct attribute access, not a
+                # ``getattr(..., default=())`` reach-around: a member kind
+                # ever added here whose class does NOT declare the field
+                # must fail loud, never silently under-count the construct's
+                # required grounding.
+                member_legal_refs = set(member.legal_refs)
                 missing_legal = sorted(member_legal_refs.difference(construct_legal_refs))
                 if missing_legal:
                     failures.append(
                         f"{scope}: construct {construct.id!r} does not include legal refs "
                         f"{missing_legal!r} required by {kind} {member_id!r}",
                     )
-                member_source_refs = set(getattr(member, "source_refs", ()))
+                member_source_refs = set(member.source_refs)
                 missing_sources = sorted(member_source_refs.difference(construct_source_refs))
                 if missing_sources:
                     failures.append(

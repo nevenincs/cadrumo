@@ -43,7 +43,8 @@ from pydantic import SecretStr
 from pydantic_settings import SettingsConfigDict
 
 from ..core import AuthProviderKind
-from ..core.config import Settings
+from ..core.config import Settings, reset_settings_cache
+from ..core.i18n import OUTPUT_LANGUAGE_ENV_VAR, clear_output_language_cache
 from ._collection_storage_root import SETTINGS_STEM
 
 _SETTINGS_STORAGE_DIRECTORIES: list[TemporaryDirectory[str]] = []
@@ -82,7 +83,9 @@ def release_settings_storage_directories() -> None:
 
 
 __all__ = [
+    "activate_output_language",
     "isolated_aeat_env",
+    "output_language_scope",
     "ready_clave_settings",
     "release_settings_storage_directories",
     "scoped_cwd",
@@ -211,6 +214,66 @@ def scoped_sys_argv(argv: list[str]) -> Iterator[None]:
         yield
     finally:
         sys.argv = saved
+
+
+def activate_output_language(language: str | None) -> None:
+    """Set the output language and make the change observable, without restoring it.
+
+    ``load_settings()`` holds a process-wide :class:`Settings` singleton cached
+    by the active-profile pointer rather than by env var, so a bare
+    ``os.environ`` write is invisible to it once that singleton exists, and
+    :func:`clear_output_language_cache` alone only invalidates the
+    output-language memo layered on top. Both caches are dropped here so the
+    new value is the one production code reads.
+
+    This is the mid-block STIMULUS, not a scope: it never restores. Call it
+    only inside :func:`output_language_scope`, which owns the restore. It
+    exists because the language switch under test sometimes happens inside a
+    Textual message-pump callback, a different asyncio Context from the test's
+    own coroutine — ``override_settings``'s contextvar Token cannot be reset
+    across that boundary, while these plain caches have no such constraint.
+
+    Arguments:
+        language: Output-language token to activate, or ``None`` to unset the
+            variable and fall back to the configured default.
+    """
+    if language is None:
+        os.environ.pop(OUTPUT_LANGUAGE_ENV_VAR, None)
+    else:
+        os.environ[OUTPUT_LANGUAGE_ENV_VAR] = language
+    reset_settings_cache()
+    clear_output_language_cache()
+
+
+@contextmanager
+def output_language_scope(language: str | None) -> Iterator[None]:
+    """Pin the output language for the with-block and restore it on exit.
+
+    Restores the prior value even when the block mutates the variable partway
+    through — via :func:`activate_output_language` or from inside a callback
+    the block cannot lexically wrap — because the restore reads the value
+    captured on entry, not the one left behind. The settings and
+    output-language caches are dropped on both edges, so neither the pinned
+    value nor the restored one is masked by a stale singleton.
+
+    Arguments:
+        language: Output-language token to pin, or ``None`` to ensure the
+            variable is absent for the block.
+
+    Examples:
+        >>> with output_language_scope("en"):
+        ...     assert tr("some.key") == "English copy"
+        ...     activate_output_language("es")
+        ...     assert tr("some.key") == "Spanish copy"
+    """
+    try:
+        with scoped_env_var(OUTPUT_LANGUAGE_ENV_VAR, language):
+            reset_settings_cache()
+            clear_output_language_cache()
+            yield
+    finally:
+        reset_settings_cache()
+        clear_output_language_cache()
 
 
 @contextmanager

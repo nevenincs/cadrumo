@@ -712,6 +712,31 @@ class Invoice(BaseModel):
             return None
         return round_to_cents(amount * self.fx_rate)
 
+    def line_amount_eur(self, amount: Decimal) -> Decimal | None:
+        """Convert a LINE-level native-currency amount to euro, or ``None`` if unconverted.
+
+        :class:`InvoiceLine` carries no currency of its own -- every line on
+        an invoice is denominated in that invoice's own :attr:`currency`
+        (a single document states one currency for all its lines), so a line
+        amount (``line.subtotal``, ``line.iva_amount``) converts through the
+        SAME rate resolution as the invoice-level totals
+        (:attr:`base_total_eur` and siblings), not a separate per-line
+        mechanism. Delegating to :meth:`_in_eur` keeps that arithmetic
+        consistent: summing ``line_amount_eur(line.subtotal)`` over every line
+        equals :attr:`base_total_eur` exactly, the same way summing
+        ``line.subtotal`` natively already equals :attr:`base_total`.
+
+        Args:
+            amount: A native-currency line amount, e.g. ``line.subtotal`` or
+                ``line.iva_amount`` for one of this invoice's own
+                :attr:`lines`.
+
+        Returns:
+            The euro-equivalent amount, or ``None`` when this invoice is
+            foreign-currency with no resolved :attr:`fx_rate`.
+        """
+        return self._in_eur(amount)
+
     @model_validator(mode="before")
     @classmethod
     def _normalise_and_derive_invoice_id(cls, data: object) -> object:

@@ -15,10 +15,12 @@ from __future__ import annotations
 
 import pytest
 
+from .....core.aggregation import BindingSourceKind
 from .._binding_selector_utils import (
     BooleanBindingEncodedValue,
     boolean_binding_encoded_values,
 )
+from .._errors import RegistryValidationError
 from .._schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -94,3 +96,64 @@ def test_non_manual_input_binding_has_no_encoded_values() -> None:
     )
 
     assert boolean_binding_encoded_values(profile) == ()
+
+
+def test_a_misspelled_boolean_encoding_key_is_refused_not_silently_dropped() -> None:
+    """The bite proof: a selector shape the model rejects must raise, not vanish.
+
+    ``DataBindingDefinition.model_validate`` already dispatches through
+    ``_ManualInputSelector`` at construction time, so a genuinely malformed
+    selector cannot reach this function via the normal constructor -- proven
+    by the companion assertion below. The residual risk this fix closes is
+    DRIFT: a raw ``dict.get("true_value")`` reads a string literal with no tie
+    to the model's own field names, so if ``_ManualInputSelector`` ever
+    renamed that field, the model's construction-time validation would keep
+    passing (it would just be validating the NEW name) while a raw-dict
+    reader silently, permanently stopped finding any boolean encoding at all --
+    indistinguishable from "not a boolean binding" for every real one.
+    ``model_construct`` bypasses the constructor's own validators, standing in
+    for that drifted-schema selector so the fixed function's OWN validation
+    (not the constructor's) is what is under test.
+    """
+    with pytest.raises(
+        Exception,
+        match="violates _ManualInputSelector",
+    ) as excinfo:
+        DataBindingDefinition.model_validate(
+            {
+                "id": "renta-2025-modelo-100-estimacion-directa-es-normal",
+                "source": "manual_input",
+                "selector": {
+                    "casilla_id": "0168",
+                    "data_type": "boolean",
+                    "ture_value": "N",  # deliberate typo of true_value
+                    "false_value": "S",
+                },
+                "aggregation": {"op": "copy"},
+                "typed_enum": "EstimacionDirectaModalidad",
+                "legal_refs": ("ley-35-2006:art-30",),
+                "source_refs": ("aeat-dr-100-2025-dictionary",),
+            },
+        )
+    assert "_ManualInputSelector" in str(excinfo.value), (
+        "construction-time gate must be the one refusing the typo -- confirms the "
+        "residual risk this fix closes is drift, not malformed-data construction"
+    )
+
+    drifted = DataBindingDefinition.model_construct(
+        id="renta-2025-modelo-100-estimacion-directa-es-normal",
+        source=BindingSourceKind.MANUAL_INPUT,
+        selector={
+            "casilla_id": "0168",
+            "data_type": "boolean",
+            "ture_value": "N",  # the field _ManualInputSelector no longer names "true_value"
+            "false_value": "S",
+        },
+        aggregation={"op": "copy"},
+        typed_enum="EstimacionDirectaModalidad",
+        legal_refs=("ley-35-2006:art-30",),
+        source_refs=("aeat-dr-100-2025-dictionary",),
+    )
+
+    with pytest.raises(RegistryValidationError, match="malformed manual_input selector"):
+        boolean_binding_encoded_values(drifted)

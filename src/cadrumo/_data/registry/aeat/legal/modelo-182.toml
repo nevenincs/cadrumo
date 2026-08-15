@@ -68,3 +68,29 @@ published_at = 2007-10-11
 applies_from = 2007-10-12
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-18192"
 review_status = "reviewed"
+
+[sources."aeat-dr-182-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2024"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf"
+sha256 = "6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f"
+bytes = 413403
+retrieved_at = 2026-07-21
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_182_2024.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-182-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2025"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf"
+sha256 = "90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831"
+bytes = 276709
+retrieved_at = 2026-07-21
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_182_2025.pdf"
+review_status = "reviewed"

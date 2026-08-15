@@ -346,6 +346,11 @@ if TYPE_CHECKING:
         provenance_stamp_transport,
         provenance_transport_label,
     )
+    from ._record_design_epoch import (
+        RECORD_DESIGN_EPOCH_PATTERN,
+        RECORD_DESIGN_EPOCH_RE,
+        record_design_epoch_year,
+    )
     from ._refund_election import RefundElection
     from ._register_scoping_signal import RegisterScopingSignal
     from ._renta_declaracion_type import RentaDeclaracionType
@@ -528,6 +533,8 @@ __all__: list[str] = [
     "PRODUCT_IDENTITY",
     "PROSE_ELISION_MARKER",
     "QWEN_RESEARCH",
+    "RECORD_DESIGN_EPOCH_PATTERN",
+    "RECORD_DESIGN_EPOCH_RE",
     "RELEASED_FORMAT_FLOORS",
     "REVIEWED_LEGAL_STATUSES",
     "REVIEWED_REVISION_REVIEW_STATUSES",
@@ -781,6 +788,7 @@ __all__: list[str] = [
     "provenance_transport_label",
     "read_pointer",
     "read_toml",
+    "record_design_epoch_year",
     "registry_period_kind",
     "render_corpus_sidecar_text",
     "require_active_bucket_id",
@@ -1030,6 +1038,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProrrataProvisionalProvenance": "._prorrata_register",
     "ProrrataRegisterRegime": "._prorrata_register",
     "QWEN_RESEARCH": "._model_catalogue",
+    "RECORD_DESIGN_EPOCH_PATTERN": "._record_design_epoch",
+    "RECORD_DESIGN_EPOCH_RE": "._record_design_epoch",
     "RELEASED_FORMAT_FLOORS": ".compatibility_lifecycle",
     "REVIEWED_LEGAL_STATUSES": "._legal_review",
     "REVIEWED_REVISION_REVIEW_STATUSES": "._revision_review",
@@ -1075,6 +1085,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "UNDECLARED_REGISTRY_AUTHORITY_GRADE": "._authority_grade",
     "UNMODELED_OBLIGATIONS": "._modelo",
     "UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS": "._schema_family_disposition",
+    "record_design_epoch_year": "._record_design_epoch",
     "accepted_filing_period_codes": "._period",
     "accepted_filing_period_patterns": "._period",
     "accepted_period_codes": "._period",

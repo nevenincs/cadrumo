@@ -35,14 +35,14 @@ from dev.registry.modelo_embed_classification import (
     reconcile,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
 #: The proven embed the classifier was required to reach independently: this
 #: module's ejercicio set, seasonal index coefficients, difficult-justification
 #: percentage and Lorca 2022 reduction are annual-orden content encoded as
 #: Python literals. Anchoring on it keeps a rename or a weakened detector from
 #: letting this gate pass vacuously.
 ANCHOR_EMBED = "src/cadrumo/domain/calculations/registry/_m303_orden_constants.py"
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELO_SPECIFIC_BODIES: dict[str, str] = {
     "module_name": '"""A modelo-named module."""\n\nVALUE = 1\n',

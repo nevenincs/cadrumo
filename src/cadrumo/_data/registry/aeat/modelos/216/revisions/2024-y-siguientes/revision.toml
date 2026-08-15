@@ -14,4 +14,4 @@ legal_refs = [
     "orden-eha-3290-2008:art-4",
     "trlirnr-rdleg-5-2004:art-24",
 ]
-source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout", "aeat-dr-216-2024"]

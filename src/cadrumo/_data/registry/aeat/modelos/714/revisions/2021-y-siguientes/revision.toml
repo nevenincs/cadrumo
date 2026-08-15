@@ -15,4 +15,8 @@ orden_aplicabilidad = [
 source_refs = [
     "aeat-modelo-714-procedure",
     "boe-modelo-714-layout",
+    "aeat-dr-714-2022",
+    "aeat-dr-714-2023",
+    "aeat-dr-714-2024",
+    "aeat-dr-714-2025",
 ]

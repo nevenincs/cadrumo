@@ -32,6 +32,7 @@ from .. import (
     resolve_previous_filing_binding_values,
     same_ejercicio_prior_quarter_anchors,
 )
+from .._bindings_previous_filing import PreviousModeloSelector, is_direct_previous_filing_binding
 from .._errors import RegistryValidationError
 from .._schema import BindingSelectorMap, PeriodSelector
 
@@ -342,3 +343,117 @@ def test_prior_pagos_fraccionados_op_requires_two_source_casilla_ids() -> None:
             ),
             target_period="2T",
         )
+
+
+def test_is_direct_previous_filing_binding_true_for_plural_source_casilla_ids() -> None:
+    """The legitimate path: a real plural-casilla direct selector resolves True."""
+    binding = _span_binding(source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,))
+    assert is_direct_previous_filing_binding(binding)
+
+
+def test_is_direct_previous_filing_binding_true_for_scalar_casilla_with_period() -> None:
+    """The legitimate path: a real scalar-casilla-plus-period selector resolves True."""
+    binding = DataBindingDefinition(
+        id="modelo-130-test-scalar-period-binding",
+        source=BindingSourceKind.PREVIOUS_FILING,
+        selector=cast(
+            BindingSelectorMap,
+            {
+                "source_modelo": "130",
+                "source_casilla_id": _M130_PAGO_FRACCIONADO_CASILLA,
+                "period": "1T",
+            },
+        ),
+        aggregation=BindingAggregation(op=BindingAggregationOp.COPY),
+        legal_refs=(_REFERENCE_LEGAL_ID,),
+        source_refs=(_REFERENCE_SOURCE_ID,),
+    )
+    assert is_direct_previous_filing_binding(binding)
+
+
+def test_previous_modelo_selector_permits_a_period_less_scalar_casilla_and_the_predicate_is_the_only_guard() -> None:
+    """PIN THE COMPENSATION. Do not remove this predicate's scalar branch as
+    apparently-redundant "the model already validates the selector" cleanup --
+    this test is what would catch that regression.
+
+    ``PreviousModeloSelector``'s own build-time invariant
+    (``_missing_period_selector_failure``) checks ``bool(source_casilla_ids)``
+    -- the PLURAL field -- but never references the scalar
+    ``source_casilla_id`` sibling. So a selector declaring a scalar casilla
+    with NO period-selection axis (no ``period``, ``source_periods``,
+    ``source_period_offset_from_target``, or ``prior_quarter_expanding_span``)
+    constructs CLEANLY -- the model does not enforce that this shape needs a
+    period anchor, and this is asserted directly below, not inferred.
+
+    ``is_direct_previous_filing_binding`` is the ONLY thing that still
+    catches it, by independently re-checking the same condition for the
+    scalar case and returning ``False``.
+
+    This is deliberate, not an unfinished fix: closing the gap in the model
+    would narrow what the predicate's ``False`` return means, conflating
+    "lacking a period anchor" with "relation-targeted" (no source casilla at
+    all) -- a distinction its four call sites currently rely on. See the
+    campaign finding classifying this as a compensated latent asymmetry, not
+    a live defect.
+    """
+    selector = PreviousModeloSelector(source_modelo="130", source_casilla_id=_M130_PAGO_FRACCIONADO_CASILLA)
+    assert selector.source_casilla_id == _M130_PAGO_FRACCIONADO_CASILLA
+    assert selector.period is None
+    assert not selector.source_periods
+    assert selector.source_period_offset_from_target is None
+    assert not selector.prior_quarter_expanding_span
+
+    binding = DataBindingDefinition(
+        id="modelo-130-test-unanchored-binding",
+        source=BindingSourceKind.PREVIOUS_FILING,
+        selector=cast(
+            BindingSelectorMap,
+            {"source_modelo": "130", "source_casilla_id": _M130_PAGO_FRACCIONADO_CASILLA},
+        ),
+        aggregation=BindingAggregation(op=BindingAggregationOp.COPY),
+        legal_refs=(_REFERENCE_LEGAL_ID,),
+        source_refs=(_REFERENCE_SOURCE_ID,),
+    )
+    assert not is_direct_previous_filing_binding(binding)
+
+
+def test_a_misspelled_previous_filing_selector_key_is_refused_not_silently_treated_as_indirect() -> None:
+    """The bite proof: a drifted selector must fail loud, never silently
+    register a direct binding as non-direct.
+
+    Before the fix, ``is_direct_previous_filing_binding`` read
+    ``_selector_as_dict(binding).get("source_casilla_id")`` /
+    ``.get("source_casilla_ids")`` by string literal. Every real caller is
+    pre-filtered to ``source == BindingSourceKind.PREVIOUS_FILING``
+    (``previous_filing_observation_requirements``,
+    ``_aggregate_previous_filing_binding``,
+    ``_validate_relation_sources.py``'s slot-source gate), so a field rename
+    on ``PreviousModeloSelector`` would keep passing construction-time
+    validation (the NEW name) while this string-literal read silently,
+    permanently returned False for a binding that IS direct -- and that
+    predicate backs a registry-build REFUSAL (a ``previous_filing`` binding
+    without a direct selector must declare ``relation_prefill`` instead), so
+    a wrongly-False result makes that gate go quiet rather than fire.
+    ``model_construct`` bypasses the constructor's own validator to stand in
+    for that drift, and the fixed read -- through ``_previous_filing_selector``,
+    the exact helper the direct-True paths above already resolve through --
+    fails loud instead via that helper's own ``RegistryValidationError``.
+    Asserted on that helper's own cause-unique message, not a bare
+    "an exception was raised", so a coincidentally-matching different
+    refusal upstream cannot pass this proof for the wrong reason.
+    """
+    drifted = DataBindingDefinition.model_construct(
+        id="modelo-130-test-drift-binding",
+        source=BindingSourceKind.PREVIOUS_FILING,
+        selector={
+            "source_modelo": "130",
+            "source_casill_id": _M130_PAGO_FRACCIONADO_CASILLA,  # deliberate typo of source_casilla_id
+            "period": "1T",
+        },
+        aggregation=BindingAggregation(op=BindingAggregationOp.COPY),
+        legal_refs=(_REFERENCE_LEGAL_ID,),
+        source_refs=(_REFERENCE_SOURCE_ID,),
+    )
+
+    with pytest.raises(RegistryValidationError, match="malformed previous-filing selector"):
+        is_direct_previous_filing_binding(drifted)

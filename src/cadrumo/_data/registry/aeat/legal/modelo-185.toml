@@ -66,3 +66,16 @@ published_at = 2025-10-21
 applies_from = 2025-10-22
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-21726"
 review_status = "reviewed"
+
+[sources."aeat-dr-185-2026"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2026"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf"
+sha256 = "102dc91b4e9484b830c81e790cf08569be95e2854fee1138f63f363d35d2bcae"
+bytes = 185616
+retrieved_at = 2026-07-21
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR185_2025.pdf"
+review_status = "reviewed"

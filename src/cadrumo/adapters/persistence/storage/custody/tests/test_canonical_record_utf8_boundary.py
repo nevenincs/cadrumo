@@ -84,7 +84,7 @@ def test_the_accented_label_is_stored_as_utf8_not_ascii_escapes(tmp_path: Path) 
 
     stored = _write_and_read(tmp_path, record.canonical_json_bytes())
 
-    assert "ñ".encode("utf-8") in stored
+    assert "ñ".encode() in stored
     assert b"\\u00f1" not in stored
     assert stored.decode("utf-8").count("\\u") == 0
     # The same record ASCII-escaped is materially longer, so the two encodings
