@@ -27,7 +27,7 @@ from __future__ import annotations
 from ._ast_scanner import scan_namespace_markers, scan_source_tree
 from ._errors import LocaleError, LocaleWriteConflictError
 from ._fstring_registry import get_registered_keys
-from ._paths import DOCS_SRC_DIR, LOCALES_DIR, SRC_DIR
+from ._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
 from ._status import (
     RESERVED_INTERPOLATION_TOKENS,
@@ -41,6 +41,7 @@ from .manager import LocaleManager, LocaleNode, StrictUniqueKeyLoader
 
 __all__ = [
     "DOCS_SRC_DIR",
+    "HARNESS_SRC_DIR",
     "LOCALES_DIR",
     "RESERVED_INTERPOLATION_TOKENS",
     "SRC_DIR",

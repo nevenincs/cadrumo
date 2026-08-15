@@ -64,9 +64,7 @@ def project_m303_prorrata_activity_rows(
             _validate_projection_refs(projection_refs)
         return ()
     if not register.activity_rows_complete_for(ejercicio):
-        raise RegistryValidationError(
-            f"modelo 303 per-activity prorrata rows are incomplete for ejercicio {ejercicio}",
-        )
+        raise RegistryValidationError.for_prorrata_activity_rows_incomplete(ejercicio=ejercicio)
     refs = _validate_projection_refs(projection_refs)
     return tuple(_project_row(row, refs=refs[row.slot]) for row in register.activity_rows_for_ejercicio(ejercicio))
 

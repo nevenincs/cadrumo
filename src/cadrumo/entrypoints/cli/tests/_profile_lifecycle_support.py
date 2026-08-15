@@ -3,11 +3,20 @@
 Both ``test_profile_lifecycle_verbs`` (record-level show / create / edit /
 switch / repair) and ``test_profile_lifecycle_navigation`` (per-bucket
 rename / import / delete / navigation from a no-active-session state) drive
-the same ``aeat config profile`` surface, so they share one ``seed`` primitive
-and one torn-bucket stager. Keeping those helpers in one module avoids
-duplicating the storage-provisioning subtleties (key material, active-pointer
-clearing) across two test files. The storage fixtures themselves stay local to
-each test module so they cannot leak into the wider CLI test package.
+the same ``aeat config profile`` surface, so they share one ``seed`` primitive.
+Keeping those helpers in one module avoids duplicating the storage-provisioning
+subtleties (key material, active-pointer clearing) across two test files. The
+storage fixtures themselves stay local to each test module so they cannot leak
+into the wider CLI test package.
+
+A prior ``stage_bucket_manifest`` helper staged a retired plaintext
+``manifest.toml`` stub with no committed custody capsule behind it, to
+simulate a ``missing_profile_record`` torn bucket. Listing and every
+resolution path (``list_profile_buckets``, ``resolve_profile_bucket``,
+``login_profile``) now project committed capsules exclusively and never
+read the manifest, so a manifest-only, capsule-less bucket is invisible to
+every operator-facing verb -- unreachable, not merely awkward -- and the
+helper was retired along with the tests it staged for.
 """
 
 from __future__ import annotations
@@ -15,9 +24,7 @@ from __future__ import annotations
 import hashlib
 from uuid import UUID
 
-from ....core.config import load_settings
 from ....core.identity import nif_check_letter
-from ....tests.bucket_layout import provision_bucket_directory
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_cli_profile, register_minimal_profile
 
@@ -27,51 +34,6 @@ def _profile_id_for_label(label: str) -> str:
     digest[6] = (digest[6] & 0x0F) | 0x40
     digest[8] = (digest[8] & 0x3F) | 0x80
     return str(UUID(bytes=bytes(digest)))
-
-
-def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
-    """Stage a ``missing_profile_record`` torn-bucket state under a real key.
-
-    A bucket directory with no encrypted profile-value row is exactly the
-    ``missing_profile_record`` torn state these CLI verbs must detect; this
-    helper materialises that state directly through the bucket-layout
-    primitives, since ``CommittedProfileRepository`` always writes the record
-    alongside. The retired plaintext ``manifest.toml`` is staged as a STUB
-    rather than a real record: the surfaces under test check the member's
-    PRESENCE, never its content, and the model that once parsed it is gone.
-    Reconstructing a schema nothing reads would be dressing up a fossil.
-
-    Unlike the unsecured-backend version, this implementation uses
-    ``open_test_profile_session`` to provision real key material for
-    the bucket so the CLI can open a ``open_test_profile_session`` and
-    reach the point where the missing record is detected. Without key
-    material the session open fails before the torn state is observable.
-    """
-
-    # Provision the master key for the staged bucket so CLI commands can
-    # open a session and reach the profile-record-missing detection point.
-    with open_test_profile_session(bucket_id):
-        pass
-
-    root = load_settings().cadrumo_local_storage_root
-    paths = provision_bucket_directory(root, bucket_id)
-    (paths.bucket_dir / "manifest.toml").write_text(
-        "\n".join(
-            (
-                "# Retired bucket manifest, staged for PRESENCE only.",
-                f'bucket_id = "{bucket_id}"',
-                f'label = "{label}"',
-                "",
-            )
-        ),
-        encoding="utf-8",
-    )
-    # Clear the active-profile pointer after provisioning so the staged
-    # profile is not reported as the active one; the torn-state tests
-    # specifically test non-active torn profiles.
-    from ....application.user_profile import logout_active_profile
-
-    logout_active_profile()
 
 
 def seed(name: str = "default", *, tax_id: str | None = None) -> None:

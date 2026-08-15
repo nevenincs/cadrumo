@@ -70,10 +70,12 @@ if TYPE_CHECKING:
 #: both the class and the constant must exist in the production tree, so a
 #: rename cannot leave this table quietly enforcing nothing.
 VERSIONED_RECORDS: dict[tuple[str, str], str] = {
-    # The two whose field carries NO default, so a caller must supply the
-    # number and can therefore supply a stale one. This is where the drift
-    # that motivated the gate actually happened.
-    ("BucketManifest", "schema_version"): "BUCKET_MANIFEST_SCHEMA_VERSION",
+    # The field carries NO default, so a caller must supply the number and can
+    # therefore supply a stale one. This is where the drift that motivated the
+    # gate actually happened -- the bucket manifest carried the same shape
+    # until the format itself was retired, and its entry retired with it
+    # rather than outliving the class :func:`test_versioned_record_anchors_resolve`
+    # now has nothing to check it against.
     ("PersistedProfileSession", "schema_version"): "PROFILE_SESSION_SCHEMA_VERSION",
     # Enrolled at birth though their fields default to the constant today: a
     # later change that makes the field required would otherwise open the same
@@ -92,10 +94,10 @@ LITERAL_VERSION_EXEMPTIONS: dict[tuple[str, str], str] = {}
 """Empty, and that is the honest state rather than an oversight.
 
 Every off-version write the tree currently needs already derives its number from
-the constant it is testing against -- the manifest lineage probes write
-``BUCKET_MANIFEST_SCHEMA_VERSION + 1`` and ``BUCKET_MANIFEST_DURABILITY_FLOOR - 1``
-rather than hardcoding either, so they track the format exactly as a fixture
-should and need no exemption.
+the constant it is testing against -- lineage probes across the enrolled formats
+write forms like ``PROFILE_SESSION_SCHEMA_VERSION + 1`` rather than hardcoding
+the drifted number, so they track the format exactly as a fixture should and
+need no exemption.
 
 The mechanism ships empty for the case that has not arrived yet: a probe that
 genuinely must name a fixed historical version, where deriving it from the
@@ -261,13 +263,13 @@ def test_every_exemption_names_a_live_site() -> None:
 
 
 _SYNTHETIC_VIOLATOR = """
-def make_manifest():
-    return BucketManifest(bucket_id="b", schema_version=1)
+def make_session():
+    return PersistedProfileSession(bucket_id="b", schema_version=1)
 """
 
 _SYNTHETIC_BOUND = """
-def make_manifest():
-    return BucketManifest(bucket_id="b", schema_version=BUCKET_MANIFEST_SCHEMA_VERSION)
+def make_session():
+    return PersistedProfileSession(bucket_id="b", schema_version=PROFILE_SESSION_SCHEMA_VERSION)
 """
 
 _SYNTHETIC_UNENROLLED = """
@@ -285,7 +287,7 @@ def test_detector_fires_on_a_literal_and_stays_silent_on_the_bound_form() -> Non
     """
     violations = literal_version_sites("synthetic.py", ast.parse(_SYNTHETIC_VIOLATOR))
     assert [(site.class_name, site.field, site.value, site.function) for site in violations] == [
-        ("BucketManifest", "schema_version", 1, "make_manifest")
+        ("PersistedProfileSession", "schema_version", 1, "make_session")
     ]
 
     assert literal_version_sites("synthetic.py", ast.parse(_SYNTHETIC_BOUND)) == []

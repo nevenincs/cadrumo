@@ -24,7 +24,6 @@ Submodules
    cadrumo.application.filing._import
    cadrumo.application.filing._m303_exonerado_390
    cadrumo.application.filing._m303_export_applicability
-   cadrumo.application.filing._m303_prorrata_activity_rows
    cadrumo.application.filing._producer_snapshot
    cadrumo.application.filing._profile_filing_retention
    cadrumo.application.filing._projection

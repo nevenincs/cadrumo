@@ -19,6 +19,7 @@ from ._schema_verification import (
 )
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
+from ._validate_official_source_guidance_content import deadline_window_content_failures
 from ._validate_verification_predicates import (
     _CASILLA_LIST_OPERATORS,
     _advisory_when_ratio_ge_predicate_failures,
@@ -334,6 +335,9 @@ def validate_deadline_window_section(
         failures.extend(_missing_refs(prefix, owner, window.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, window.source_refs, source_refs, "source"))
         failures.extend(evidence.require_source_tier(prefix, owner, window.source_refs, "official_source_guidance"))
+        failures.extend(
+            deadline_window_content_failures(prefix, window, source_refs=source_refs, evidence=evidence),
+        )
         for condition in window.applicability_conditions:
             condition_owner = f"deadline condition for {window.id}"
             failures.extend(_missing_refs(prefix, condition_owner, condition.legal_refs, legal_refs, "legal"))

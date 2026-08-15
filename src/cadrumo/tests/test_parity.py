@@ -5,6 +5,7 @@ import pytest
 import yaml
 from dev.locales import (
     DOCS_SRC_DIR,
+    HARNESS_SRC_DIR,
     LocaleError,
     LocaleManager,
     LocaleNode,
@@ -49,10 +50,11 @@ def _mapping(data: dict[str, LocaleNode], *keys: str) -> dict[str, LocaleNode]:
 def manager():
     locales_dir = Path(__file__).resolve().parents[1] / "locales"
     src_dir = locales_dir.parent
-    # The documentation generators live outside the package but render
-    # taxpayer-facing prose from this same catalogue, so the gate must see
-    # their keys or it reports every one as an extra key with no codebase site.
-    return LocaleManager(src_dir, locales_dir, extra_src_dirs=(DOCS_SRC_DIR,))
+    # The documentation generators and the MCP harness both live outside the
+    # package but render operator-facing prose from this same catalogue, so
+    # the gate must see their keys or it reports every one as an extra key
+    # with no codebase site.
+    return LocaleManager(src_dir, locales_dir, extra_src_dirs=(DOCS_SRC_DIR, HARNESS_SRC_DIR))
 
 
 @pytest.fixture(scope="module")

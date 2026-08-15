@@ -43,6 +43,15 @@ _REQUIRED_EMISSION_SITES: tuple[tuple[BucketEventType, Path, str], ...] = (
         _AEAT_ROOT / "application" / "auth" / "_operator.py",
         "BucketEventType.AUTH_PROVIDER_CONFIGURED",
     ),
+    (
+        BucketEventType.PROFILE_VALUES_UPDATED,
+        _AEAT_ROOT / "application" / "wizard" / "_persistence.py",
+        # The needle names the EMISSION, not the bare symbol. The emitting
+        # module also cross-links this member in prose, and a bare-symbol
+        # needle is satisfied by that prose alone -- so reverting the stamp
+        # to the surface string it used to carry left this gate green.
+        "event_type=BucketEventType.PROFILE_VALUES_UPDATED.value",
+    ),
 )
 
 
@@ -68,18 +77,25 @@ _PRODUCTION_ROOTS: tuple[Path, ...] = (
     _AEAT_ROOT / "domain",
 )
 
-_EVENTS_WITH_NO_PRODUCTION_EMITTER: tuple[BucketEventType, ...] = (BucketEventType.PROFILE_VALUES_UPDATED,)
-"""Catalogue members no production path emits today.
+_EVENTS_WITH_NO_PRODUCTION_EMITTER: tuple[BucketEventType, ...] = ()
+"""Catalogue members no production path emits today. Currently none.
 
-``PROFILE_VALUES_UPDATED`` names the operator action "profile values were
-updated", and the operator-facing edit path does write facts — but it stamps
-its own un-catalogued event-type strings (``profile.wizard.answers.applied``,
-``profile.wizard.patch.applied``) rather than this member, so the catalogued
-event never reaches a bucket. The only writer left is test seeding.
+``PROFILE_VALUES_UPDATED`` was tracked here, on the reading that the wizard
+edit path merely stamped "un-catalogued" event-type strings
+(``profile.wizard.answers.applied``, ``profile.wizard.patch.applied``) instead
+of this member. That reading understated the defect and pointed at the wrong
+repair. The strings were not uncatalogued-but-serviceable: ``BucketEventType``
+is closed, the capsule writer coerces the command's event type through it, and
+a non-member raised — so every wizard fact write refused with an internal
+integrity error and NOTHING was recorded. Cataloguing those strings would have
+enshrined a surface verb in a slot that holds exactly one event per record
+revision and binds the row's lineage witness, which is the data-change slot.
+The wizard now emits this member and carries the surface in a ``door`` payload
+key, so the gap is closed by repair rather than by taxonomy growth.
 
-Asserting the gap rather than deleting the row keeps it visible: the test below
-FAILS the moment a production emitter appears, which is the prompt to promote
-the row back into ``_REQUIRED_EMISSION_SITES`` with its real site.
+The mechanism stays for the next genuine gap: while this tuple is empty the
+loop below is vacuous by design, and the corpus floor is what keeps that
+vacuity honest rather than an artefact of a collapsed scan.
 """
 
 

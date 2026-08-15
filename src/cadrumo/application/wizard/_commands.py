@@ -988,7 +988,12 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     """
     from ...domain.user_profile import UserProfileFact
     from ..user_profile import ProfileRecordRepository, record_to_path_values
-    from ._persistence import apply_wizard_fact_changes, profile_values_from_patch, project_answers
+    from ._persistence import (
+        WizardFactWriteDoor,
+        apply_wizard_fact_changes,
+        profile_values_from_patch,
+        project_answers,
+    )
 
     patched_values = profile_values_from_patch(flow, explicit_flags)
     record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
@@ -1007,7 +1012,7 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     apply_wizard_fact_changes(
         profile_id=profile_id,
         changes=tuple(UserProfileFact(path=path, value=value) for path, value in patched_values.items()),
-        event_type="profile.wizard.patch.applied",
+        door=WizardFactWriteDoor.PATCH,
     )
     return merged_values
 
@@ -1040,7 +1045,12 @@ def _run_full_flow(
     """
     from ...domain.user_profile import UserProfileFact
     from ..user_profile import ProfileRecordRepository, ProfileRegistrationError, record_to_path_values
-    from ._persistence import apply_wizard_fact_changes, project_answers, serialise_answers
+    from ._persistence import (
+        WizardFactWriteDoor,
+        apply_wizard_fact_changes,
+        project_answers,
+        serialise_answers,
+    )
 
     if mode == "create":
         raise ProfileRegistrationError(
@@ -1123,7 +1133,7 @@ def _run_full_flow(
     apply_wizard_fact_changes(
         profile_id=profile_id,
         changes=tuple(UserProfileFact(path=path, value=value) for path, value in profile_values.items() if value),
-        event_type="profile.wizard.answers.applied",
+        door=WizardFactWriteDoor.ANSWERS,
     )
     return values
 

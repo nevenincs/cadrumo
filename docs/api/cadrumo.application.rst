@@ -39,7 +39,6 @@ Subpackages
    cadrumo.application.prorrata_register
    cadrumo.application.registry
    cadrumo.application.review
-   cadrumo.application.setup
    cadrumo.application.storage
    cadrumo.application.storage_management
    cadrumo.application.transactions

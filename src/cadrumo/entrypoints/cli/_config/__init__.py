@@ -193,14 +193,20 @@ def config_list(
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
-    """List every registered profile via the manifest-scan helper.
+    """List every registered profile via the committed-capsule projection.
 
     Replaces the prior behaviour that enumerated only the active
     profile's key values (Axis B / Axis D / dual-persona pain). The
-    canonical source of profile-existence truth is the per-bucket
-    ``manifest.toml`` file written by every profile-creation path;
-    :func:`list_profile_buckets` reads them and returns the full
-    set without unlocking any bucket.
+    canonical source of profile-existence truth is the committed
+    custody capsule set: :func:`list_profile_buckets` projects
+    :class:`CommittedProfileRepository` (itself backed by the custody
+    adapter's current-capsule discovery) and returns the full set
+    without unlocking any bucket. The per-bucket ``manifest.toml``
+    file is retired: nothing in this application writes one, and no
+    listing or resolution path reads it -- check
+    ``PROFILE_CUSTODY_RETIRED_BUCKET_MEMBER_PATHS`` in
+    ``adapters.persistence.storage.custody`` if that ever needs
+    reconfirming.
     """
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.workflow import list_profile_buckets

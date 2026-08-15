@@ -106,3 +106,42 @@ def test_the_parameter_vocabulary_is_deliberately_not_a_scalar_narrowing() -> No
     for member in beyond_scalars:
         with pytest.raises(Exception, match="unsupported registry casilla data type"):
             registry_scalar_value_type(member)
+
+
+def test_parameter_and_casilla_share_identical_spelling_for_overlapping_scalar_tokens() -> None:
+    """The tokens ``ParameterDefinition`` and ``CasillaDefinition`` DO share must be
+    spelled identically; nothing above protects that.
+
+    The exclusion proved above means ``ParameterDefinition`` sits outside every
+    containment check in this module -- deliberately, since its table shapes are
+    not scalars. But most of its members ARE the same scalar concept the casilla
+    vocabulary also names (``decimal``, ``money``, ``integer``, ``ratio``, ...),
+    and nothing checks that a shared concept is spelled the same on both surfaces.
+    A rename on only one side -- ``"decimal"`` becoming ``"Decimal"`` on the
+    parameter model, say -- raises no error anywhere: the two frozensets would
+    simply stop intersecting on that token, and a silently smaller intersection is
+    not an assertion failure.
+
+    The check pins the implication rather than a literal list: casefold both
+    vocabularies and compare the casefolded-matched pairing against the
+    exact-spelling intersection. A token present in both once case is folded but
+    absent from the exact intersection is exactly a spelling drift, and this is
+    the one shape that catches it without hardcoding either vocabulary's members.
+    """
+    parameter_members = _declared_members(ParameterDefinition)
+    casilla_members = _declared_members(CasillaDefinition)
+
+    parameter_by_casefold = {member.casefold(): member for member in parameter_members}
+    casilla_by_casefold = {member.casefold(): member for member in casilla_members}
+    casefolded_overlap = frozenset(parameter_by_casefold) & frozenset(casilla_by_casefold)
+
+    exact_overlap_casefolded = frozenset(member.casefold() for member in parameter_members & casilla_members)
+
+    drifted = casefolded_overlap - exact_overlap_casefolded
+    assert not drifted, (
+        "a parameter data_type token and a casilla data_type token name the same scalar concept "
+        "once case-folded but are spelled differently: "
+        f"{sorted((parameter_by_casefold[fold], casilla_by_casefold[fold]) for fold in drifted)!r}. "
+        "Correct the drifted surface to match the other's spelling rather than treating this as a "
+        "new, deliberately different token."
+    )

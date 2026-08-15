@@ -177,7 +177,7 @@ def persist_descendant_door_answers(answers: Mapping[str, str]) -> WorkflowState
     from ...domain.user_profile import UserProfileFact
     from ..user_profile import ProfileRecordRepository
     from ..workflow import workflow_state_repository
-    from ._persistence import apply_wizard_fact_changes
+    from ._persistence import WizardFactWriteDoor, apply_wizard_fact_changes
 
     profile_id = require_active_bucket_id()
     record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
@@ -186,7 +186,7 @@ def persist_descendant_door_answers(answers: Mapping[str, str]) -> WorkflowState
     apply_wizard_fact_changes(
         profile_id=profile_id,
         changes=(*facts, *clearing),
-        event_type="profile.wizard.descendants.applied",
+        door=WizardFactWriteDoor.DESCENDANTS,
     )
     return workflow_state_repository().load()
 

@@ -15,6 +15,7 @@ of a populated profile to its descriptor defaults.
 from __future__ import annotations
 
 from collections.abc import Collection, Mapping
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, TypedDict
 
@@ -32,6 +33,7 @@ from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ...core.parsing import parse_bool, parse_iso8601_date
 from ...core.setup_answers import register_project_answers as _register_project_answers
 from ...core.time import today_madrid
+from ...domain.buckets import BucketEventType
 from ...domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..workflow import WorkflowInputMismatchError, WorkflowState
 from ._descendant_group import (
@@ -47,11 +49,35 @@ WizardPersistMode = Literal["create", "edit"]
 the create-vs-edit branch; it is never re-derived at runtime."""
 
 
+class WizardFactWriteDoor(StrEnum):
+    """Which wizard surface published a profile-fact change.
+
+    The door is a payload descriptor, never an event type.  A profile-fact
+    write emits exactly one bucket event, that event's id becomes the record
+    row's lineage witness, and the event names the DATA CHANGE:
+    :attr:`~cadrumo.domain.buckets.BucketEventType.PROFILE_VALUES_UPDATED`.
+    Which operator surface collected the answers is a separate axis, so it
+    travels beside the change rather than displacing its identity — a history
+    query asking "when did these values last change" reads the event type,
+    and one asking "which surface changed them" reads this key.
+
+    Encoding the door in the event type instead is what broke the edit path:
+    every wizard write stamped a surface-shaped string that the closed
+    :class:`~cadrumo.domain.buckets.BucketEventType` does not contain, and the
+    capsule writer refused the whole command rather than recording anything.
+    """
+
+    ANSWERS = "wizard.answers"
+    PATCH = "wizard.patch"
+    CHECKPOINT = "wizard.checkpoint"
+    DESCENDANTS = "wizard.descendants"
+
+
 def apply_wizard_fact_changes(
     *,
     profile_id: str,
     changes: tuple[UserProfileFact, ...],
-    event_type: str,
+    door: WizardFactWriteDoor,
 ) -> UserProfileRecord:
     """Publish a wizard-owned exact fact replacement through the active session.
 
@@ -72,6 +98,11 @@ def apply_wizard_fact_changes(
     the manager's edit dialog binds nobody who writes through the wizard, the
     CLI or a later surface, and a stored value at a derived path silently
     displaces the computation that owns it.
+
+    Every door publishes the same lifecycle event -- the write IS a profile
+    value change, whichever surface collected it -- and distinguishes itself
+    through ``door`` in the event payload.  See :class:`WizardFactWriteDoor`
+    for why the surface identity cannot live in the event type.
     """
     from ..user_profile import ProfileRecordRepository, reject_invalid_profile_facts
 
@@ -89,8 +120,8 @@ def apply_wizard_fact_changes(
         facts=next_facts,
         expected_revision=current.record_revision,
         expected_content_digest=current.content_digest,
-        event_type=event_type,
-        event_payload={"changed_fact_count": str(len(changes))},
+        event_type=BucketEventType.PROFILE_VALUES_UPDATED.value,
+        event_payload={"changed_fact_count": str(len(changes)), "door": door.value},
     )
 
 
@@ -200,7 +231,7 @@ def persist_answers(
     apply_wizard_fact_changes(
         profile_id=profile_id,
         changes=facts,
-        event_type="profile.wizard.answers.applied",
+        door=WizardFactWriteDoor.ANSWERS,
     )
     return state
 
@@ -256,7 +287,7 @@ def persist_patch(
     apply_wizard_fact_changes(
         profile_id=require_active_bucket_id(),
         changes=facts,
-        event_type="profile.wizard.patch.applied",
+        door=WizardFactWriteDoor.PATCH,
     )
     return state
 

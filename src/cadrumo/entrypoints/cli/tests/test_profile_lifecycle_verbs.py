@@ -26,7 +26,7 @@ from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.profile_storage_root_fixture import profile_storage_root_fixture
-from ._profile_lifecycle_support import distinct_nif, seed, stage_bucket_manifest
+from ._profile_lifecycle_support import distinct_nif, seed
 
 __all__ = ["profile_storage_root_fixture"]
 
@@ -196,66 +196,6 @@ def test_config_unlock_is_no_longer_a_command() -> None:
     result = _invoke_config(("unlock", "operator"))
     assert result.exit_code != 0
     assert "No such command 'unlock'" in result.output
-
-
-def test_config_login_reports_manifest_without_profile_record_through_lifecycle_boundary() -> None:
-    stage_bucket_manifest("operator", label="operator")
-
-    result = _invoke_config(("login", "operator"))
-
-    assert result.exit_code == 2, result.output
-    assert "Profile record was not found in the active bucket" in result.output
-    assert "unknown profile" not in result.output.lower()
-
-
-def test_config_profile_show_does_not_suggest_retired_activation_for_missing_record() -> None:
-    stage_bucket_manifest("operator", label="operator")
-
-    result = _invoke_profile(("show", "operator"))
-
-    assert result.exit_code == 2, result.output
-    assert "readiness\tmissing_profile_record" in result.output
-    assert "next_action\taeat config repair profile --profile operator" in result.output
-    assert "switch" not in result.output
-
-
-def test_config_profile_create_refuses_manifest_only_profile() -> None:
-    stage_bucket_manifest("operator", label="operator")
-
-    # Invoke through the root CLI so decorate_typer_app's error boundary is active
-    # and CadrumoError exceptions are rendered to output rather than propagating raw.
-    result = _invoke_profile(
-        (
-            "create",
-            "operator",
-            "--quiet",
-            "--accept-defaults",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Operator",
-            "--activity",
-            "design",
-            "--iva-regime",
-            "GENERAL",
-        ),
-    )
-
-    assert result.exit_code != 0
-    assert "already exists" in result.output
-
-
-def test_repair_profile_named_active_clear_active_clears_pointer(_isolated_backend: Path) -> None:
-    from ....core import BucketPointer, read_pointer, write_pointer
-
-    stage_bucket_manifest("operator", label="operator")
-    write_pointer(_isolated_backend, BucketPointer(bucket_id="operator", schema_version=1))
-
-    result = _invoke_repair(("profile", "--profile", "operator", "--clear-active", "--yes"))
-
-    assert result.exit_code == 0, result.output
-    assert "cleared_pointer\tTrue" in result.output
-    assert read_pointer(_isolated_backend) is None
 
 
 def test_config_profile_create_refuses_existing_profile() -> None:

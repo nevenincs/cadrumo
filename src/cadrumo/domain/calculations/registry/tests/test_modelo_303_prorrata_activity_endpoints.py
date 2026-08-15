@@ -12,9 +12,11 @@ from .....core import (
     EstadoCasillaOficial,
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
+    Modelo,
     ProrrataActivityRowType,
     ProrrataRegisterRegime,
 )
+from .....core.i18n import tr
 from .....core.resources import bundled_path
 from .....domain.prorrata_register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
 from .. import (
@@ -379,3 +381,69 @@ def test_typed_register_rows_project_to_only_their_deterministic_fixed_slots() -
             ),
         )
     )
+
+
+def _general_register(ejercicio: int, *, slots: tuple[int, ...]) -> ProrrataRegister:
+    rows = tuple(
+        ProrrataActivityRow(
+            ejercicio=ejercicio,
+            activity_id=f"activity-{slot}",
+            slot=slot,
+            cnae_code=f"{470 + slot}",
+            operaciones_total=Decimal(f"{slot}000.00"),
+            operaciones_con_derecho=Decimal(f"{slot}00.00"),
+            prorrata_type=ProrrataActivityRowType.GENERAL,
+            percentage=Decimal(f"{slot}0.00"),
+            evidence_reference=f"operator-evidence:activity-{slot}",
+        )
+        for slot in slots
+    )
+    return ProrrataRegister(
+        entries=(ProrrataRegisterEntry(ejercicio=ejercicio, regime=ProrrataRegisterRegime.GENERAL, especial_transition=None),),
+        activity_rows=rows,
+    )
+
+
+def test_incomplete_ejercicio_refuses_with_the_typed_localised_operator_facing_refusal() -> None:
+    """A partial DP30305 activity-row collection must fail before it can mask an under-declaration.
+
+    Only 3 of the 5 official slots are recorded for an applicable ejercicio,
+    so the live export-path projector must refuse rather than silently
+    emit a thin endpoint set.
+    """
+    register = _general_register(2025, slots=(1, 2, 3))
+
+    with pytest.raises(RegistryValidationError) as excinfo:
+        project_m303_prorrata_activity_rows(
+            projection_refs=_projection_refs(),
+            register=register,
+            ejercicio=2025,
+        )
+
+    error = excinfo.value
+    assert error.translated_message == "application.filing.m303_prorrata_activity_rows.errors.activity_rows_incomplete"
+    assert error.context == {
+        "modelo": Modelo.M303.value,
+        "filing_year": 2025,
+        "required_slot_first": 1,
+        "required_slot_last": 5,
+    }
+    for locale in ("en", "es", "ca", "hu"):
+        rendered = tr(error.translated_message, locale=locale)
+        assert rendered != error.translated_message, (
+            f"locale key {error.translated_message!r} is absent from the {locale!r} catalogue"
+        )
+        assert rendered
+
+
+def test_complete_ejercicio_is_not_refused_by_the_activity_rows_completeness_gate() -> None:
+    """Five recorded slots project cleanly -- a guard that refuses everything is broken too."""
+    register = _general_register(2025, slots=(1, 2, 3, 4, 5))
+
+    projection = project_m303_prorrata_activity_rows(
+        projection_refs=_projection_refs(),
+        register=register,
+        ejercicio=2025,
+    )
+
+    assert tuple(item.slot for item in projection) == (1, 2, 3, 4, 5)

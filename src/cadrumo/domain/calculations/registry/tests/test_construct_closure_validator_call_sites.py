@@ -63,7 +63,7 @@ def test_a_construct_member_missing_legal_refs_is_refused_not_silently_skipped()
     """The bite proof: a member object that does not carry ``legal_refs`` /
     ``source_refs`` must be refused, not silently treated as requiring none.
 
-    Every one of the sixteen construct-member kinds this validator recognises
+    Every one of the fourteen construct-member kinds this validator recognises
     (``_CONSTRUCT_MEMBER_ATTRS``) declares both fields on its own schema class
     -- confirmed programmatically across casilla, formula, parameter, binding,
     relation, export layout, extraction profile,
