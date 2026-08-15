@@ -1,0 +1,126 @@
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.109-112.actividad-1-epigrafe"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-1-epigrafe", offset = 109, length = 4, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.113-129.actividad-1-rendimiento-neto"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-1-rendimiento-neto", offset = 113, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.130-134.actividad-1-porcentaje"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-1-porcentaje", offset = 130, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.135-151.actividad-1-resultado"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-1-resultado", offset = 135, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.152-155.actividad-2-epigrafe"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-2-epigrafe", offset = 152, length = 4, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.156-172.actividad-2-rendimiento-neto"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-2-rendimiento-neto", offset = 156, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.173-177.actividad-2-porcentaje"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-2-porcentaje", offset = 173, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.178-194.actividad-2-resultado"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-2-resultado", offset = 178, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.195-198.actividad-3-epigrafe"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-3-epigrafe", offset = 195, length = 4, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.199-215.actividad-3-rendimiento-neto"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-3-rendimiento-neto", offset = 199, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.216-220.actividad-3-porcentaje"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-3-porcentaje", offset = 216, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.221-237.actividad-3-resultado"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-3-resultado", offset = 221, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.238-241.actividad-4-epigrafe"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-4-epigrafe", offset = 238, length = 4, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.242-258.actividad-4-rendimiento-neto"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-4-rendimiento-neto", offset = 242, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.259-263.actividad-4-porcentaje"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-4-porcentaje", offset = 259, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.264-280.actividad-4-resultado"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-4-resultado", offset = 264, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.281-284.actividad-5-epigrafe"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-5-epigrafe", offset = 281, length = 4, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.285-301.actividad-5-rendimiento-neto"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-5-rendimiento-neto", offset = 285, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.302-306.actividad-5-porcentaje"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-5-porcentaje", offset = 302, length = 5, data_type = "decimal", decimals = 2 }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.307-323.actividad-5-resultado"
+source = "manual_input"
+selector = { record = "page_1", field = "actividad-5-resultado", offset = 307, length = 17, data_type = "money" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023.page1.614-626.justificante-anterior"
+source = "manual_input"
+selector = { record = "page_1", field = "justificante-anterior", offset = 614, length = 13, data_type = "text" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2019-2023-v101"]
