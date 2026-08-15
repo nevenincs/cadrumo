@@ -43,8 +43,24 @@ class BucketDeleteRefusedError(BucketMaintenanceError):
 
 
 class BucketArchiveRefusedError(BucketMaintenanceError):
-    """Raised when a bucket archive (soft, reversible dormancy) is refused."""
+    """The refusal reserved for a bucket archive (soft, reversible dormancy).
+
+    Nothing raises it: the archive service method was deleted when the custody
+    capsule became the sole profile authority, and this is the typed refusal
+    its verb took rather than a guard on a live path.
+
+    Kept deliberately. The verb's restore-or-retire decision is open, and the
+    orphaned typed contracts around it -- this refusal among them -- are the
+    cheapest specification available to whoever makes it. Deleting them would
+    discard part of the answer before the question is settled.
+    """
 
 
 class BucketRestoreRefusedError(BucketMaintenanceError):
-    """Raised when restoring an archived bucket is refused (e.g. not archived)."""
+    """The refusal reserved for restoring an archived bucket (e.g. not archived).
+
+    Nothing raises it, for the same reason and by the same change as
+    :class:`BucketArchiveRefusedError`: the restore service method was deleted
+    with the archive one, and both refusals were kept as contract rather than
+    retired with their verbs.
+    """
