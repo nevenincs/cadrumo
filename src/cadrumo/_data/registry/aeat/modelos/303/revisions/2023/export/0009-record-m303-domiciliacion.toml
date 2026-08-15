@@ -1,0 +1,200 @@
+[[revisions.2023.export_layouts]]
+id = 'generated-modelo-303-2023-fichero'
+
+[[revisions.2023.export_layouts.records]]
+id = 'm303-domiciliacion'
+record_type = 'domiciliacion'
+order = 5
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm303-2023.dp303did.f001'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm303-2023.dp303did.f002'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '303'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm303-2023.dp303did.f003'
+offset = 6
+length = 5
+kind = 'literal'
+literal = 'DID00'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm303-2023.dp303did.f004'
+offset = 11
+length = 1
+kind = 'literal'
+literal = '>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm303-2023.dp303did.f005'
+offset = 12
+length = 11
+kind = 'header'
+producer_key = 'selected_account.swift_bic'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm303-2023.dp303did.f006'
+offset = 23
+length = 34
+kind = 'header'
+producer_key = 'selected_account.iban'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm303-2023.dp303did.f007'
+offset = 57
+length = 70
+kind = 'header'
+producer_key = 'selected_account.bank_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm303-2023.dp303did.f008'
+offset = 127
+length = 35
+kind = 'header'
+producer_key = 'selected_account.bank_address'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm303-2023.dp303did.f009'
+offset = 162
+length = 30
+kind = 'header'
+producer_key = 'selected_account.bank_city'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm303-2023.dp303did.f010'
+offset = 192
+length = 2
+kind = 'header'
+producer_key = 'selected_account.bank_country_code'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm303-2023.dp303did.f011'
+offset = 194
+length = 1
+kind = 'computed'
+computed_key = 'sepa_marca'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+]
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm303-2023.dp303did.f012'
+offset = 195
+length = 617
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm303-2023.dp303did.f013'
+offset = 812
+length = 12
+kind = 'literal'
+literal = '</T303DID00>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3786-2008:art-1']
+source_refs = ['aeat-dr-303-2023']
+
+[revisions.2023.export_layouts.records.row_field_casilla_ids]

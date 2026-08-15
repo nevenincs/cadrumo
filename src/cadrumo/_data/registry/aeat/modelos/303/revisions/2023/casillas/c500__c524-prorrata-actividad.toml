@@ -14,6 +14,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f006"]
 
 [revisions."2023".casillas.constraints]
 min_length = 3
@@ -31,6 +32,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f007"]
 
 [revisions."2023".casillas.constraints]
 sign = "non_negative"
@@ -48,6 +50,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f008"]
 
 [revisions."2023".casillas.constraints]
 sign = "non_negative"
@@ -65,6 +68,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f009"]
 
 [revisions."2023".casillas.constraints]
 enum = ["G", "E"]
@@ -82,6 +86,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f010"]
 
 [revisions."2023".casillas.constraints]
 sign = "non_negative"
@@ -101,6 +106,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f011"]
 
 [revisions."2023".casillas.constraints]
 min_length = 3
@@ -119,6 +125,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f012"]
 
 [revisions."2023".casillas.constraints]
 sign = "non_negative"
@@ -136,6 +143,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f013"]
 
 [revisions."2023".casillas.constraints]
 sign = "non_negative"
@@ -153,6 +161,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f014"]
 
 [revisions."2023".casillas.constraints]
 enum = ["G", "E"]
@@ -170,6 +179,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f015"]
 
 [revisions."2023".casillas.constraints]
 sign = "non_negative"
@@ -189,6 +199,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f016"]
 
 [revisions."2023".casillas.constraints]
 min_length = 3
@@ -207,6 +218,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f017"]
 
 [revisions."2023".casillas.constraints]
 sign = "non_negative"
@@ -224,6 +236,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f018"]
 
 [revisions."2023".casillas.constraints]
 sign = "non_negative"
@@ -241,6 +254,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f019"]
 
 [revisions."2023".casillas.constraints]
 enum = ["G", "E"]
@@ -258,6 +272,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f020"]
 
 [revisions."2023".casillas.constraints]
 sign = "non_negative"
@@ -277,6 +292,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f021"]
 
 [revisions."2023".casillas.constraints]
 min_length = 3
@@ -295,6 +311,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f022"]
 
 [revisions."2023".casillas.constraints]
 sign = "non_negative"
@@ -312,6 +329,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f023"]
 
 [revisions."2023".casillas.constraints]
 sign = "non_negative"
@@ -329,6 +347,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f024"]
 
 [revisions."2023".casillas.constraints]
 enum = ["G", "E"]
@@ -346,6 +365,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f025"]
 
 [revisions."2023".casillas.constraints]
 sign = "non_negative"
@@ -365,6 +385,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f026"]
 
 [revisions."2023".casillas.constraints]
 min_length = 3
@@ -383,6 +404,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f027"]
 
 [revisions."2023".casillas.constraints]
 sign = "non_negative"
@@ -400,6 +422,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f028"]
 
 [revisions."2023".casillas.constraints]
 sign = "non_negative"
@@ -417,6 +440,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f029"]
 
 [revisions."2023".casillas.constraints]
 enum = ["G", "E"]
@@ -434,6 +458,7 @@ required = false
 input_kind = "projection_only"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure"]
+export_refs = ["m303-2023.dp30305.f030"]
 
 [revisions."2023".casillas.constraints]
 sign = "non_negative"
