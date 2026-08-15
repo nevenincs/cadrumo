@@ -315,7 +315,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".export_layouts.records.fields]]
@@ -328,7 +328,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".export_layouts.records.fields]]
@@ -341,7 +341,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".export_layouts.records.fields]]
@@ -354,7 +354,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".export_layouts.records.fields]]
@@ -367,7 +367,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".export_layouts.records.fields]]
@@ -380,7 +380,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".export_layouts.records.fields]]
@@ -393,7 +393,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".export_layouts.records.fields]]
@@ -406,7 +406,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".export_layouts.records.fields]]
@@ -419,7 +419,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".export_layouts.records.fields]]
@@ -432,7 +432,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".export_layouts.records.fields]]
@@ -445,7 +445,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".export_layouts.records.fields]]
@@ -458,7 +458,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".export_layouts.records.fields]]
@@ -471,7 +471,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".export_layouts.records.fields]]
@@ -484,7 +484,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".export_layouts.records.fields]]
@@ -497,7 +497,7 @@ data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
-signed = false
+signed = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".export_layouts.records.fields]]
