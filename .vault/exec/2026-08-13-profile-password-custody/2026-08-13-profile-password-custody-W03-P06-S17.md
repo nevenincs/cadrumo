@@ -11,9 +11,6 @@ related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
 
-
-
-
 # Have Terra XHigh update root bootstrap, TUI login, locales, and status projection to remove old environment and provider channels
 
 ## Scope
@@ -22,8 +19,6 @@ related:
 
 ## Description
 
-
 ## Outcome
 
 ## Notes
-
