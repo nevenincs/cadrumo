@@ -1,5 +1,4 @@
-"""Non-interactive `config profile create` / `edit` for the INCN and
-new-entity profile facts.
+"""Non-interactive `config profile edit` for the INCN and new-entity facts.
 
 These tests exercise the real CLI surface for the two optional profile
 facts added by the corporate-tax-runtime plan:
@@ -16,6 +15,13 @@ all, so the downstream engine stays at INCOMPLETE (for the modality
 gate) or on the otherwise-applicable rate (for the new-entity
 override) instead of guessing.
 
+Each profile is seeded through the credential registration door and the
+fact under test is then written with the real ``edit --quiet`` patch verb.
+That is a move, not a narrowing: the subject was always the flag-to-fact
+mapping and the three-state absence semantics, and ``edit`` carries the same
+two flags. The wizard ``create`` arm refuses unconditionally, so it can no
+longer carry the seed OR the write.
+
 No mocks: the runner drives the real Typer command, the real wizard
 runtime, and the real encrypted-SQLite profile store.
 """
@@ -29,16 +35,33 @@ from ....tests.secure_sql import isolated_profile_storage
 
 __all__ = ["isolated_profile_storage"]
 from ._profile_cli_support import (
-    create_quiet_profile as _create_profile,
-)
-from ._profile_cli_support import (
     edit_quiet_profile as _edit_profile,
 )
 from ._profile_cli_support import (
     profile_rows as _profile_rows,
 )
+from ._profile_cli_support import (
+    seed_profile as _seed_profile,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_LEGAL_ENTITY_FACTS = {
+    "taxpayer_type.entity_type": "legal_entity",
+    "taxpayer_type.legal_entity_form": "sl",
+    "identity.tax_id": "B66012345",
+    "identity.legal_name": "Test SL",
+    # Blank drops the natural-person placeholders the shared seeding door
+    # applies, which a legal entity has no business carrying.
+    "identity.name": "",
+    "identity.surnames": "",
+    "taxpayer_type.irpf_income_categories": "",
+    "irpf.estimation_regime": "",
+}
+
+
+def _seed_legal_entity(name: str, *, activity: str) -> str:
+    return _seed_profile(name, **_LEGAL_ENTITY_FACTS, **{"activities.description": activity})
 
 
 def test_incn_prior_12_months_flag_stores_the_decimal_fact() -> None:
@@ -47,19 +70,8 @@ def test_incn_prior_12_months_flag_stores_the_decimal_fact() -> None:
     Modelo 202 modality gate (6.000.000 EUR threshold, LIS Art. 40.3)
     can decide without re-parsing."""
 
-    result = _create_profile(
-        "incn-co",
-        "--entity-type",
-        "legal_entity",
-        "--legal-entity-form",
-        "sl",
-        "--tax-id",
-        "B66012345",
-        "--activity",
-        "asesoria",
-        "--incn-prior-12-months",
-        "7500000.00",
-    )
+    _seed_legal_entity("incn-co", activity="asesoria")
+    result = _edit_profile("incn-co", "--incn-prior-12-months", "7500000.00")
 
     assert result.exit_code == 0, result.output
     rows = _profile_rows("incn-co")
@@ -72,19 +84,8 @@ def test_profile_creates_without_incn_flag_leaves_fact_unset() -> None:
     the downstream Modelo 202 modality gate stays at INCOMPLETE rather
     than guessing a modality."""
 
-    result = _create_profile(
-        "no-incn-co",
-        "--entity-type",
-        "legal_entity",
-        "--legal-entity-form",
-        "sl",
-        "--tax-id",
-        "B66012345",
-        "--activity",
-        "comercio",
-    )
+    _seed_legal_entity("no-incn-co", activity="comercio")
 
-    assert result.exit_code == 0, result.output
     rows = _profile_rows("no-incn-co")
     assert "taxpayer_type.incn_prior_12_months" not in rows
 
@@ -129,18 +130,8 @@ def test_new_entity_first_two_profit_periods_flag_stores_the_bool() -> None:
     its own profile fact. A positively-declared True opts the entity
     into the 15 percent new-entity rate override."""
 
-    result = _create_profile(
-        "new-co",
-        "--entity-type",
-        "legal_entity",
-        "--legal-entity-form",
-        "sl",
-        "--tax-id",
-        "B66012345",
-        "--activity",
-        "consultoria",
-        "--new-entity-first-two-profit-periods",
-    )
+    _seed_legal_entity("new-co", activity="consultoria")
+    result = _edit_profile("new-co", "--new-entity-first-two-profit-periods")
 
     assert result.exit_code == 0, result.output
     rows = _profile_rows("new-co")
@@ -160,19 +151,8 @@ def test_profile_creates_without_new_entity_flag_leaves_fact_undeclared() -> Non
     a stored ``"false"``), and the reloaded ``TaxpayerProfile``
     projection reads ``None``."""
 
-    result = _create_profile(
-        "no-new-co",
-        "--entity-type",
-        "legal_entity",
-        "--legal-entity-form",
-        "sl",
-        "--tax-id",
-        "B66012345",
-        "--activity",
-        "asesoria",
-    )
+    _seed_legal_entity("no-new-co", activity="asesoria")
 
-    assert result.exit_code == 0, result.output
     rows = _profile_rows("no-new-co")
     assert "taxpayer_type.new_entity_first_two_profit_periods" not in rows
     profile = _load_active_taxpayer_profile()
@@ -186,18 +166,8 @@ def test_no_new_entity_first_two_profit_periods_flag_records_declared_false() ->
     ``TaxpayerProfile`` projects it to ``False`` — distinct from the
     undeclared three-state ``None``."""
 
-    result = _create_profile(
-        "decline-new-co",
-        "--entity-type",
-        "legal_entity",
-        "--legal-entity-form",
-        "sl",
-        "--tax-id",
-        "B66012345",
-        "--activity",
-        "asesoria",
-        "--no-new-entity-first-two-profit-periods",
-    )
+    _seed_legal_entity("decline-new-co", activity="asesoria")
+    result = _edit_profile("decline-new-co", "--no-new-entity-first-two-profit-periods")
 
     assert result.exit_code == 0, result.output
     rows = _profile_rows("decline-new-co")
@@ -211,18 +181,7 @@ def test_edit_patches_incn_and_new_entity_flags_onto_existing_profile() -> None:
     new-entity state onto an existing profile without disturbing the
     other facts. Patch semantics, not a full rewrite."""
 
-    create = _create_profile(
-        "edit-co",
-        "--entity-type",
-        "legal_entity",
-        "--legal-entity-form",
-        "sl",
-        "--tax-id",
-        "B66012345",
-        "--activity",
-        "asesoria",
-    )
-    assert create.exit_code == 0, create.output
+    _seed_legal_entity("edit-co", activity="asesoria")
 
     edit = _edit_profile(
         "edit-co",
@@ -242,18 +201,7 @@ def test_edit_patches_incn_and_new_entity_flags_onto_existing_profile() -> None:
 
 def test_charge_iban_flag_is_rejected_after_the_profile_export_path_cutover() -> None:
     """The real CLI cannot reintroduce the retired persisted debit path."""
-    create = _create_profile(
-        "charge-account-co",
-        "--entity-type",
-        "legal_entity",
-        "--legal-entity-form",
-        "sl",
-        "--tax-id",
-        "B66012345",
-        "--activity",
-        "asesoria",
-    )
-    assert create.exit_code == 0, create.output
+    _seed_legal_entity("charge-account-co", activity="asesoria")
 
     edit = _edit_profile(
         "charge-account-co",
