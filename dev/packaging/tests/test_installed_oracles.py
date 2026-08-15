@@ -23,7 +23,6 @@ import subprocess
 import sys
 import threading
 import tomllib
-import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import IO, Any, cast
@@ -37,8 +36,10 @@ from dev._paths import REPO_ROOT
 from .._hashing import sha256_path
 from .._smoke_common import (
     build_companion_wheels,
+    build_harness_wheel,
     build_wheel,
     create_pip_venv,
+    extract_source_commit,
     run_checked,
     venv_bin_dir,
     venv_python_path,
@@ -59,7 +60,6 @@ _DISTRIBUTIONS = (
 #: command/data cohort, so it is probed on its own rather than folded into the
 #: one-version cohort assertions below.
 _HARNESS_DISTRIBUTION = "cadrumo-harness"
-_HARNESS_PROJECT_DIR = Path("src") / "cadrumo-harness"
 _HARNESS_WHEEL_GLOB = "cadrumo_harness-*.whl"
 _REQUIREMENT_NAME_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 _COHORT_PROBE = """
@@ -144,41 +144,6 @@ def _write_evidence(path: Path, document: dict[str, Any]) -> None:
     )
 
 
-def _extract_source_commit(repo_root: Path, work_dir: Path, source_commit: str) -> Path:
-    """Extract one immutable source commit rather than resolving a moving HEAD twice."""
-    archive = work_dir / "source-commit.zip"
-    extract_root = work_dir / "source-commit"
-    run_checked(
-        ["git", "archive", "--format=zip", "-o", str(archive), source_commit],
-        cwd=repo_root,
-    )
-    with zipfile.ZipFile(archive) as bundle:
-        bundle.extractall(extract_root)
-    archive.unlink()
-    return extract_root
-
-
-def _build_harness_wheel(work_dir: Path, uv: str, *, build_root: Path) -> Path:
-    """Build the sibling agent-harness wheel from one immutable source tree.
-
-    Mirrors the data companions' build: one ``uv build --project`` per sibling
-    distribution, from the extracted source commit rather than the shared
-    worktree, so the artifact corresponds to a commit. The harness is not a
-    member of the retained three-wheel Python cohort, so it is built into its
-    own output directory and never written beside the cohort manifest.
-    """
-    out_dir = work_dir / "harness-wheel"
-    run_checked(
-        [uv, "build", "--project", str(build_root / _HARNESS_PROJECT_DIR), "--out-dir", str(out_dir)],
-        cwd=build_root,
-    )
-    built = scan_directory(out_dir, pattern=_HARNESS_WHEEL_GLOB)
-    if len(built) != 1:
-        names = [row.name for row in built]
-        raise SystemExit(f"expected one {_HARNESS_DISTRIBUTION} wheel in {out_dir}; got {names!r}")
-    return built[0]
-
-
 @pytest.fixture(scope="module")
 def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohort:
     """Build HEAD once, install one cohort once, and inspect installed metadata."""
@@ -206,18 +171,18 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         if len(prebuilt_harness) == 1:
             harness_wheel = prebuilt_harness[0]
         else:
-            harness_wheel = _build_harness_wheel(
+            harness_wheel = build_harness_wheel(
                 work_dir,
                 uv,
-                build_root=_extract_source_commit(_REPO_ROOT, work_dir, source_commit),
+                build_root=extract_source_commit(_REPO_ROOT, work_dir, source_commit),
             )
     else:
         source_commit_result = run_checked(["git", "rev-parse", "HEAD"], cwd=_REPO_ROOT)
         source_commit = source_commit_result.stdout.strip()
         assert len(source_commit) == 40
-        build_root = _extract_source_commit(_REPO_ROOT, work_dir, source_commit)
+        build_root = extract_source_commit(_REPO_ROOT, work_dir, source_commit)
         root_wheel = build_wheel(_REPO_ROOT, work_dir, uv, build_root=build_root)
-        harness_wheel = _build_harness_wheel(work_dir, uv, build_root=build_root)
+        harness_wheel = build_harness_wheel(work_dir, uv, build_root=build_root)
         built_data_wheels = build_companion_wheels(work_dir, uv, build_root=build_root)
         assert len(built_data_wheels) == 2
         data_wheels = (built_data_wheels[0], built_data_wheels[1])

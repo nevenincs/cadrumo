@@ -7,10 +7,20 @@ row bound to that one cohort. Every OS leg of the packaging-smoke workflow runs
 this against the same downloaded ``cadrumo-release-cohort`` artifact, so all the
 Python rows bind one cohort id (no per-OS rebuild, which would diverge the id).
 
-It installs the cohort's three Python wheels (with the ``[agent]`` extra) into a
-fresh isolated virtualenv, resolves the installed ``aeat`` and ``cadrumo-mcp``
-executables, runs the canonical installed CLI and MCP behaviour oracles against
-them, and emits the record through :func:`~dev.packaging.distribution_evidence_emit.emit_installed_oracle_evidence`.
+It installs the cohort's three digest-pinned Python wheels plus the sibling
+``cadrumo-harness`` wheel into a fresh isolated virtualenv, resolves the
+installed ``aeat`` and ``cadrumo-mcp`` executables, runs the canonical
+installed CLI and MCP behaviour oracles against them, and emits the record
+through :func:`~dev.packaging.distribution_evidence_emit.emit_installed_oracle_evidence`.
+
+The harness is NOT a member of the retained three-wheel Python cohort — it is
+versioned independently (see
+:func:`dev.packaging._acquire_common.harness_version`), mirroring the ruling
+already encoded in the MCPB bundle builder (``packaging/mcpb/build.py``) — so
+the release cohort carries no embedded harness wheel or digest pin for it.
+This builds the harness wheel fresh from the EXACT immutable source commit the
+cohort itself was built from (never the ambient checkout), so the MCP launcher
+proved here corresponds to the same commit as the cohort under proof.
 """
 
 from __future__ import annotations
@@ -21,14 +31,16 @@ import subprocess
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
+from dev._paths import REPO_ROOT, UTF_8
 
 from ._acquire_common import (
+    HARNESS_DISTRIBUTION,
     PYTHON_COHORT_WHEEL_NAMES,
     AcquisitionError,
     run_installed_behavior_oracles,
     venv_executable,
 )
+from ._smoke_common import build_harness_wheel, extract_source_commit
 from .cohort_manifest import load_release_cohort
 from .distribution_evidence_emit import emit_installed_oracle_evidence
 from .evidence import AcquisitionIdentity, DestinationIdentity
@@ -100,6 +112,10 @@ def run_oracle_emit_cohort(
     wheels = {name: python_cohort.sha256[name] for name in PYTHON_COHORT_WHEEL_NAMES}
     root_wheel = python_cohort.root_wheel
     manuals_wheel, official_wheel = python_cohort.companion_wheels
+    # The harness is not a cohort member and has no embedded wheel here; build
+    # it fresh from the exact commit the cohort was built from.
+    harness_build_root = extract_source_commit(REPO_ROOT, work, cohort.manifest.source.commit)
+    harness_wheel = build_harness_wheel(work, str(uv), build_root=harness_build_root)
     install = subprocess.run(  # noqa: S603 - resolved uv executable and cohort file paths
         [
             str(uv),
@@ -107,7 +123,8 @@ def run_oracle_emit_cohort(
             "install",
             "--python",
             str(venv_python),
-            f"cadrumo[agent] @ {root_wheel.resolve().as_uri()}",
+            f"cadrumo @ {root_wheel.resolve().as_uri()}",
+            f"{HARNESS_DISTRIBUTION} @ {harness_wheel.resolve().as_uri()}",
             f"cadrumo-data-manuals @ {manuals_wheel.resolve().as_uri()}",
             f"cadrumo-data-official @ {official_wheel.resolve().as_uri()}",
         ],
@@ -120,7 +137,8 @@ def run_oracle_emit_cohort(
     )
     if install.returncode != 0:
         raise AcquisitionError(
-            f"could not install the immutable cohort ({sorted(wheels)}): {install.stderr.strip()[:200]}"
+            f"could not install the immutable cohort ({sorted(wheels)}) plus the sibling "
+            f"{HARNESS_DISTRIBUTION} wheel: {install.stderr.strip()[:200]}"
         )
 
     aeat = venv_executable(venv, "aeat")
