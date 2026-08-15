@@ -70,13 +70,13 @@ from ..crypto import (
     derive_key,
     encrypt_record,
 )
+from ..custody import zeroise as _zeroise
 from ..errors import (
     EnvelopeVersionError,
 )
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
-from ._zeroise import zeroise as _zeroise
 
 _RECOVERY_KEY_SIZE: Final[int] = 32
 _MNEMONIC_WORD_COUNT: Final[int] = 24

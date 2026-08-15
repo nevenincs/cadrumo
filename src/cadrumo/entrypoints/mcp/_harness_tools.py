@@ -154,7 +154,7 @@ class HarnessFloorPayload(BaseModel):
 def _persona_document_text(persona: AgentPersona) -> str | None:
     """Return the shipped persona document text for ``persona``, or ``None``.
 
-    The persona file stems under ``aeat/_data/agent/personas/`` match the
+    The persona file stems under ``cadrumo/_data/agent/personas/`` match the
     :class:`AgentPersona` values exactly, so ``persona.value + ".md"`` is the
     document name. Reads through the ``iter_personas`` package facade.
     """

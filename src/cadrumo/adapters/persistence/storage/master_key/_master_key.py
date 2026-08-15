@@ -58,6 +58,7 @@ if TYPE_CHECKING:
     from ._bucket_session import BucketSession
 
 from .....core import NIST_PASSPHRASE_MIN_LENGTH, StorageCategory, resolve_active_bucket_id, storage_location
+from .....core.base64_codec import b64_decode, b64_encode
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
@@ -97,8 +98,6 @@ from ._master_key_derivation import (
 from ._master_key_io import (
     PASSPHRASE_ENV_VAR,
     PassphraseCallback,
-    _b64decode,
-    _b64encode,
     _default_passphrase_callback,
     atomic_write_secure_bytes,
 )
@@ -337,7 +336,7 @@ class KeyringMasterKeyProvider:
     def _decode_stored_master_key(stored: str) -> bytes:
         """Decode the base64-encoded master-key string and validate the byte length."""
         try:
-            key = _b64decode(stored)
+            key = b64_decode(stored)
         except (ValueError, binascii.Error) as exc:
             raise KeyringUnavailableError(
                 "OS keychain returned a malformed master-key entry; clear it and re-run.",
@@ -362,7 +361,7 @@ class KeyringMasterKeyProvider:
             raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
         new_key = secrets.token_bytes(KEY_SIZE)
         try:
-            keyring.set_password(self._service, self._username, _b64encode(new_key))
+            keyring.set_password(self._service, self._username, b64_encode(new_key))
         except keyring_error_cls as exc:
             raise KeyringUnavailableError(f"OS keychain refused set_password: {exc}") from exc
         except KeyringUnavailableError:
@@ -622,7 +621,7 @@ class FileFallbackMasterKeyProvider:
             memory_cost=ARGON2_MEMORY_COST_KIB,
             time_cost=ARGON2_TIME_COST,
             parallelism=ARGON2_PARALLELISM,
-            salt_b64=_b64encode(salt),
+            salt_b64=b64_encode(salt),
         )
         kek = self._derive_kek_with_params(passphrase, salt, params)
         master_key = secrets.token_bytes(KEY_SIZE)
@@ -685,7 +684,7 @@ class FileFallbackMasterKeyProvider:
             memory_cost=ARGON2_MEMORY_COST_KIB,
             time_cost=ARGON2_TIME_COST,
             parallelism=ARGON2_PARALLELISM,
-            salt_b64=_b64encode(salt),
+            salt_b64=b64_encode(salt),
         )
         kek = self._derive_kek_with_params(passphrase, salt, params)
         blob = encrypt_record(master_key, key=kek, associated_data=_MASTER_KEY_AAD)

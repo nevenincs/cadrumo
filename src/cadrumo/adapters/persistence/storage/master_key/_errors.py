@@ -9,7 +9,7 @@ import time via the ``__init_subclass__`` hook.
 
 from __future__ import annotations
 
-from ..errors import SecretStoreError, StorageError
+from ..errors import SecretStoreError
 
 
 class MasterKeyReentrantError(SecretStoreError):
@@ -28,13 +28,4 @@ class MasterKeyReentrantError(SecretStoreError):
         self.provider_name = provider_name
 
 
-class MasterKeyTypeError(StorageError, TypeError):
-    """Raised when a master-key operation receives a value of the wrong type.
-
-    Inherits from both :class:`StorageError` and :class:`TypeError` to remain
-    compatible with callers that catch raw :class:`TypeError` while allowing
-    the typed storage-error surface to propagate through domain boundaries.
-    """
-
-
-__all__ = ["MasterKeyReentrantError", "MasterKeyTypeError"]
+__all__ = ["MasterKeyReentrantError"]

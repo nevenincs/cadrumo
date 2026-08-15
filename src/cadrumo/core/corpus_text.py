@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 import json
 import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Final, NamedTuple
 
@@ -295,7 +296,27 @@ def _single_unit_covers_subsection(unit_anchor: str, requested_anchor: str) -> b
 _ARTICLE_PREFIX_RE: Final = re.compile(r"^(?:articulos?|arts?)(?=\d)")
 
 
+@lru_cache(maxsize=32768)
 def _canonical_anchor(value: str) -> str:
+    """Return the comparison key for one anchor or heading.
+
+    Memoised because resolving an anchor canonicalises every unit anchor in the
+    sidecar, and a catalogue verification resolves many anchors against the same
+    few sidecars: one registry load canonicalised 111,088 times over a far
+    smaller set of distinct strings.
+
+    Safe to memoise in a way the file-backed caches around it are not. This is a
+    pure function of one string -- module-level regexes and a constant ordinal
+    table, no filesystem and no state -- so it cannot serve anything stale, and
+    it sees anchors and headings from the bundled BOE corpus, never text from a
+    taxpayer's documents.
+
+    The bound is measured, not guessed. One registry load canonicalises 111,088
+    times over 2,213 distinct strings -- a 98% hit rate -- while the bundled
+    sidecars hold 8,432 distinct anchors and titles in total. The bound clears
+    both, so neither a load nor a caller that walks the whole corpus evicts
+    anything it is about to need again.
+    """
     normalised = _NON_ALNUM_RE.sub("", normalise_corpus_text(value).lstrip("#"))
     for ordinal, number in _SPANISH_ORDINALS.items():
         normalised = normalised.replace(ordinal, number)

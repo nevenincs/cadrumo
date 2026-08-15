@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
-from ..errors import SecretStoreError
+from ..errors import SecretStoreError, StorageError
 
 
 class ProfileCustodyRefusal(StrEnum):
@@ -58,6 +58,18 @@ class ProfileCustodyRefusedError(ProfileCustodyError):
         self.recovery_guidance = recovery_guidance
 
 
+class WipeTypeError(StorageError, TypeError):
+    """Raised when the wipe primitive receives a value it cannot overwrite.
+
+    Zeroisation needs a mutable buffer; handing it an immutable ``bytes`` is a
+    programming error whose damage is silent, because the caller believes key
+    material was wiped when nothing was touched. Inherits from both
+    :class:`StorageError` and :class:`TypeError` so a caller catching raw
+    :class:`TypeError` still sees it while the typed storage surface
+    propagates through domain boundaries.
+    """
+
+
 __all__ = [
     "ProfileCustodyError",
     "ProfileCustodyPasswordError",
@@ -65,4 +77,5 @@ __all__ = [
     "ProfileCustodyRecoveryGuidance",
     "ProfileCustodyRefusal",
     "ProfileCustodyRefusedError",
+    "WipeTypeError",
 ]

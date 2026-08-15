@@ -37,7 +37,6 @@ from ....domain.calculations.registry import (
     load_registry_tree,
     xml_dictionary_entries,
 )
-from ....domain.calculations.registry import bundled_authority as load_bundled_authority
 from .. import (
     RegistryApplicationInputError,
     RegistryConformanceProfile,
@@ -96,12 +95,6 @@ def tree_modelos() -> tuple[ModeloDefinition, ...]:
     """Every compiled modelo in the bundled tree, read without validation."""
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return modelos
-
-
-@pytest.fixture(scope="module")
-def registry_authority() -> ValidatedRegistryAuthority:
-    """The real validated authority used for annual dictionary comparisons."""
-    return load_bundled_authority()
 
 
 def _compose(

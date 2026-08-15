@@ -1,7 +1,7 @@
 """Operator agent-harness: read accessor for the shipped operating layer.
 
 The agent-harness operating layer - operator rules, tax-advisor personas, and
-workflow skills - is reviewed markdown product data under ``aeat/_data/agent/``,
+workflow skills - is reviewed markdown product data under ``cadrumo/_data/agent/``,
 shipped inside the wheel and read here through the bundled-data boundary so it
 resolves identically under an editable install and a built wheel.
 
@@ -43,7 +43,7 @@ if TYPE_CHECKING:
 
 
 def harness_root() -> Traversable:
-    """Return the bundled ``aeat/_data/agent`` harness data root."""
+    """Return the bundled ``cadrumo/_data/agent`` harness data root."""
     return _packaged_data(_AGENT_SUBTREE)
 
 

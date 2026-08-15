@@ -35,11 +35,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
 from ..bucket import BucketLockedError
+from ..custody import zeroise as _zeroise
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
 from ._live_sessions import register_live_session
-from ._zeroise import zeroise as _zeroise
 
 if TYPE_CHECKING:
     from sqlalchemy import Engine

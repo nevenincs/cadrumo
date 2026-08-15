@@ -1,6 +1,6 @@
 """Packaging probe: the operator harness data ships and the accessor reads it.
 
-The harness operating layer is reviewed product data under ``aeat/_data/agent/``.
+The harness operating layer is reviewed product data under ``cadrumo/_data/agent/``.
 It ships in the wheel through the same hatch tracked-file inclusion that ships the
 corpus, registry, and terminology trees, and it is read through the same
 bundled-data boundary (``importlib.resources`` via ``cadrumo.core.resources``). This

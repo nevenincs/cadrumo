@@ -9,6 +9,7 @@ import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import override_settings
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_sessionless_storage_root
 from ....tests.user_profile import register_minimal_profile
@@ -20,14 +21,7 @@ def _isolated_state(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-@pytest.fixture(name="_isolated_backend", autouse=True)
-def active_profile_isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session("11111111-1111-4111-8111-111111111111"),
-    ):
-        register_minimal_profile(profile_id="11111111-1111-4111-8111-111111111111")
-        yield
+active_profile_isolated_backend = active_profile_isolated_backend_fixture()
 
 
 @pytest.fixture(name="_isolated_backend", autouse=True)

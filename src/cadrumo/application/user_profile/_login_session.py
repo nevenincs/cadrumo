@@ -6,8 +6,27 @@ candidate DEK session. It never consults a provider, a shared master key, or
 recovery material. Until candidate authentication, pointer compare-and-swap,
 and local binding have all succeeded, the active profile remains untouched.
 
-The optional keyring-backed session artefact is acceleration only. Its absence
-or failure leaves a valid process-local session; it never changes the outcome
+Three distinct artefacts meet in this module, and reading any of them as
+another has twice produced a wrong conclusion about what the code does. They
+belong to different custody classes with different key requirements:
+
+- the **acceleration receipt** -- keyring key plus a keystore sidecar record,
+  OUTSIDE the encrypted store, wrapping an already-unlocked DEK. Revocable
+  with no unlocked profile, which is why retirement can complete during
+  recovery. Not a session: no counterparty, no protocol.
+- the **live bucket session** -- the in-process
+  :class:`~cadrumo.adapters.persistence.storage.master_key.BucketSession`
+  holding the unlocked DEK. Purely process-local, so it is absent in an
+  ordinary invocation, every one of which is a fresh process.
+- the **AEAT authority session** -- an encrypted row INSIDE the bucket,
+  revocable only with the key. Owned by the auth package; named here only to
+  keep it distinct.
+
+Unqualified "session" in this module means the live bucket session and
+nothing else.
+
+The optional acceleration receipt is exactly that: acceleration. Its absence
+or failure leaves a valid live bucket session; it never changes the outcome
 of password authentication. A prior profile is retired only after B is
 durably selected and locally bound.
 
@@ -16,8 +35,8 @@ SINGLE resume authority: both the login no-op path and the CLI root
 callback call it, so the two surfaces cannot drift.
 
 See Also:
-    :mod:`cadrumo.adapters.persistence.storage.master_key._persisted_session`
-        The split-knowledge session record this module mints and resumes.
+    :mod:`cadrumo.adapters.persistence.storage.custody._acceleration_receipt`
+        The split-knowledge receipt this module mints and resumes.
     :func:`~cadrumo.application.user_profile.logout_active_profile`
         The symmetric strong close, which reuses
         :func:`close_profile_session_artefacts` from here.
@@ -321,7 +340,7 @@ class _CandidatePromotionResult:
     persisted: bool
 
 
-def _session_windows() -> tuple[int, int]:
+def _bucket_session_windows() -> tuple[int, int]:
     """Return the bounded session windows for current capsules.
 
     Current capsules deliberately have no plaintext manifest.  Session
@@ -683,7 +702,7 @@ def resume_active_profile_session(
     """
     instant = _now() if now is None else now
     storage_root = effective_storage_root()
-    outcome, dek = _resume_persisted_session(
+    outcome, dek = _resume_acceleration_receipt(
         storage_root=storage_root,
         bucket_id=bucket_id,
         now=instant,
@@ -694,7 +713,7 @@ def resume_active_profile_session(
     record = outcome.record
     dek_buffer = bytearray(dek)
     try:
-        idle_minutes, _ = _session_windows()
+        idle_minutes, _ = _bucket_session_windows()
         session = profile_bucket_session_open_resumed(
             bucket_id=bucket_id,
             dek=bytes(dek_buffer),
@@ -731,7 +750,7 @@ def _activate_record_authority(*, bucket_id: str, dek: bytes, storage_root: Path
     activate_profile_record_session(ProfileRecordSession.from_envelope(envelope=material.envelope, dek=dek))
 
 
-def _resume_persisted_session(
+def _resume_acceleration_receipt(
     *,
     storage_root: Path,
     bucket_id: str,
@@ -972,7 +991,7 @@ def _resume_for_idempotent_login(
     """
     live = profile_current_bucket_session()
     if profile_session_serves_bucket(live, bucket_id) and live is not None and not live.is_expired(now):
-        peeked, _ = _resume_persisted_session(
+        peeked, _ = _resume_acceleration_receipt(
             storage_root=effective_storage_root(),
             bucket_id=bucket_id,
             now=now,
@@ -980,7 +999,7 @@ def _resume_for_idempotent_login(
         return peeked.record if peeked.resumed else None
     if resume_active_profile_session(bucket_id=bucket_id, now=now) is not None:
         return None
-    peeked, _ = _resume_persisted_session(
+    peeked, _ = _resume_acceleration_receipt(
         storage_root=effective_storage_root(),
         bucket_id=bucket_id,
         now=now,
@@ -1064,7 +1083,7 @@ def _authenticate_candidate_or_record_failure(
 
     dek_buffer = bytearray(unlocked.dek)
     try:
-        idle_minutes, absolute_minutes = _session_windows()
+        idle_minutes, absolute_minutes = _bucket_session_windows()
         absolute_deadline = now + timedelta(minutes=absolute_minutes)
         session = profile_bucket_session_open_resumed(
             bucket_id=bucket_id,
@@ -1101,6 +1120,10 @@ def _promote_candidate_login(
     interrupted_handover: _ProfileLoginHandoverJournal | None,
 ) -> ProfileLoginOutcome:
     """CAS-publish, activate, then retire A through durable phases."""
+    # The live session is ONE of three inputs to the retirement set, never the
+    # gate: it is absent in an ordinary invocation, which is a fresh process.
+    # This binding survives for its own separate job -- closing the in-process
+    # session object by identity, further down in _retire_previous_authorities.
     previous_live = profile_current_bucket_session()
     retired_bucket_ids = _retired_bucket_ids(
         live_bucket_id=_live_bucket_id(previous_live),
@@ -1436,7 +1459,7 @@ def _mint_or_warn(
     for this process; the caller surfaces the warning.
     """
     try:
-        idle_minutes, absolute_minutes = _session_windows()
+        idle_minutes, absolute_minutes = _bucket_session_windows()
         profile_mint_session(
             storage_root=storage_root,
             profile_id=material.envelope.profile_id,

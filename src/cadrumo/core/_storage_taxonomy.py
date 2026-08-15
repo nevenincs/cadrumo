@@ -382,6 +382,10 @@ class StorageCategory(StrEnum):
 
     # ── Fixed layout: per-keystore ──────────────────────────────────────────
     KEYSTORE_BUCKET_DEK = "keystore.bucket-dek"
+    # The value still says "session" while the artefact it locates is the
+    # profile acceleration receipt. The token is an on-disk path segment, so
+    # correcting it moves real directories: it is carried by an authorised
+    # destructive local reset, never by a read-tolerant rename.
     KEYSTORE_PROFILE_SESSION = "keystore.profile-session"
     KEYSTORE_LOGIN_THROTTLE = "keystore.login-throttle"
 

@@ -6,9 +6,14 @@ and carries exactly two subdirectories:
 - ``db/``    relational state (SQLite database files).
 - ``blobs/`` opaque artefact storage (sealed ciphertext blobs).
 
-Provisioning is fail-closed: a re-attempt against an already-provisioned
-bucket id raises rather than silently masking a configuration error. The
-typed :class:`BucketPaths` record carries each resolved subpath so callers
+This module RESOLVES that layout and destroys it; it does not create it. A
+bucket root comes into existence exactly once, by capsule publication's atomic
+no-replace rename, and a second creator here would target the very directory
+that rename must claim -- measured, ``bucket_paths(...).bucket_dir`` and the
+capsule commit marker's parent are the same path. The test-only provisioner
+that used to live here now sits in the wheel-excluded test package.
+
+The typed :class:`BucketPaths` record carries each resolved subpath so callers
 never compose the layout themselves.
 """
 
@@ -26,8 +31,7 @@ from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import StorageCategory, storage_location
 from .....core.identity import BucketId
 from .....core.logging import get_logger
-from .....core.paths import is_windows_long_path_error
-from ._errors import BucketAlreadyPresentError, BucketPathTooLongError, BucketValidationError
+from ._errors import BucketValidationError
 
 _log = get_logger(__name__)
 
@@ -90,41 +94,12 @@ def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
     )
 
 
-def provision_bucket_directory(root: Path, bucket_id: str) -> BucketPaths:
-    """Materialise the ``<root>/buckets/<bucket_id>/{db,blobs}/`` tree.
-
-    Provisioning is fail-closed: if the bucket directory already exists,
-    the function raises rather than reusing the partial state. The parent
-    ``<root>/buckets/`` directory is created lazily.
-
-    Args:
-        root: Cadrumo storage root (the parent of ``buckets/``).
-        bucket_id: The bucket identifier; must be non-empty.
-
-    Returns:
-        A :class:`BucketPaths` record carrying every resolved subpath.
-    """
-    paths = bucket_paths(root, bucket_id)
-    try:
-        paths.bucket_dir.parent.mkdir(parents=True, exist_ok=True)
-        paths.bucket_dir.mkdir(parents=False, exist_ok=False)
-        paths.db_dir.mkdir(parents=False, exist_ok=False)
-        paths.blobs_dir.mkdir(parents=False, exist_ok=False)
-    except FileExistsError as exc:
-        raise BucketAlreadyPresentError(bucket_id=bucket_id) from exc
-    except OSError as exc:
-        if is_windows_long_path_error(exc):
-            raise BucketPathTooLongError(bucket_id=bucket_id, path=str(paths.bucket_dir)) from exc
-        raise
-    return paths
-
-
 def trash_rename_and_remove(
     target: Path,
     *,
     on_trash_cleanup_error: Literal["raise", "ignore"] = "raise",
 ) -> None:
-    """Trash-rename ``target`` then recursively remove it — the destroy sibling of :func:`provision_bucket_directory`.
+    """Trash-rename ``target`` then recursively remove it.
 
     The directory is first renamed to a same-parent ``.trash-<name>-<hex>``
     sibling so a crashed removal leaves a recoverable on-disk trace, then
@@ -181,6 +156,5 @@ def _remove_tree(path: Path, *, on_error: Literal["raise", "ignore"]) -> None:
 __all__ = [
     "BucketPaths",
     "bucket_paths",
-    "provision_bucket_directory",
     "trash_rename_and_remove",
 ]

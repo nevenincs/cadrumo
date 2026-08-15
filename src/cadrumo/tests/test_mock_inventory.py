@@ -44,7 +44,7 @@ import ast
 from collections import Counter
 from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import NamedTuple
+from typing import Final, NamedTuple
 
 import pytest
 
@@ -72,7 +72,29 @@ _FORBIDDEN_SEMANTIC_DOUBLE_DEFINITION_TOKENS = (
     "storedobservation",
     "unavailable",
 )
-_ALLOWED_REAL_BOUNDARY_DEFINITION_NAMES = frozenset({"recordingtelemetryendpoint"})
+#: Class names that MATCH a forbidden token above and are nonetheless real.
+#:
+#: Every token above describes what a test double advertises, so a class that
+#: genuinely delegates to a live boundary and merely observes what crossed it
+#: reads as a double by name while being the opposite by behaviour. Each entry
+#: states why it is real, because a bare name carries no way to tell the two
+#: apart on review, and the liveness check below removes entries whose class or
+#: whose token has gone. Read the class before adding one: the question is
+#: whether every call reaches the real dependency, not whether the name is
+#: inconvenient.
+_ALLOWED_REAL_BOUNDARY_DEFINITION_NAMES: Final[Mapping[str, str]] = {
+    "recordingtelemetryendpoint": ("delegates to the live telemetry endpoint and records what crossed it"),
+    "recordingattachmentstore": (
+        "wraps a concrete AttachmentStore so bytes reach real encrypted custody; "
+        "the recording only observes the port, and put_file raises rather than "
+        "answering, so a filesystem path on that path fails loudly"
+    ),
+    "refusingattachmentstore": (
+        "the recording store above with a real byte-write failure injected, which "
+        "is how the suite asks whether a second custody write path exists; the "
+        "refusal is the behaviour under test, not a stand-in for one"
+    ),
+}
 _PYTEST_MOCK_FIXTURE_NAME = "mocker"
 
 
@@ -288,11 +310,13 @@ def test_every_allowed_real_boundary_name_is_still_live() -> None:
     )
 
     stale: list[str] = []
-    for allowed in sorted(_ALLOWED_REAL_BOUNDARY_DEFINITION_NAMES):
+    for allowed, reason in sorted(_ALLOWED_REAL_BOUNDARY_DEFINITION_NAMES.items()):
         if not any(token in allowed for token in _FORBIDDEN_SEMANTIC_DOUBLE_DEFINITION_TOKENS):
             stale.append(f"{allowed} (matches no forbidden token; the exemption is redundant)")
         if allowed not in defined:
             stale.append(f"{allowed} (no class of this name is defined in the scanned corpus)")
+        if len(reason.split()) < 5:
+            stale.append(f"{allowed} (states no reason worth reading; say why the class is real)")
     assert not stale, "Stale _ALLOWED_REAL_BOUNDARY_DEFINITION_NAMES entries; remove them:\n" + "\n".join(
         f"  {entry}" for entry in stale
     )

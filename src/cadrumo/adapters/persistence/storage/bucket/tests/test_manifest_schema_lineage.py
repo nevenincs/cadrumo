@@ -29,8 +29,8 @@ import pytest
 
 from ......core import COMPATIBILITY_REGIME, RELEASED_FORMAT_FLOORS, expected_floor
 from ......core.external_constants import UTF_8_ENCODING
+from ......tests.bucket_layout import provision_bucket_directory
 from ...errors import StorageValidationError
-from .._layout import provision_bucket_directory
 from .._manifest import (
     BUCKET_MANIFEST_DURABILITY_FLOOR,
     BUCKET_MANIFEST_SCHEMA_VERSION,

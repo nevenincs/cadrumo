@@ -14,6 +14,7 @@ Subpackages
    :maxdepth: 4
 
    cadrumo.core.access_gate
+   cadrumo.core.base64_codec
    cadrumo.core.classification
    cadrumo.core.corpus_manifest
    cadrumo.core.decimal

@@ -3,7 +3,7 @@
 Pydantic v2 strict records, error types, and filesystem primitives that compose
 the multi-bucket on-disk layout. The facade exposes
 :class:`BucketPaths` / :func:`bucket_paths` /
-:func:`provision_bucket_directory` for the ``db/`` and ``blobs/`` tree;
+:func:`bucket_paths` for the ``db/`` and ``blobs/`` tree;
 :class:`BucketManifest`,
 :class:`ManifestKdfParams` and :class:`BucketKeySchedule` for the plaintext
 manifest; and
@@ -51,6 +51,7 @@ from ._errors import (
     BucketBusyError,
     BucketError,
     BucketLockedError,
+    BucketPathTooLongError,
     BucketValidationError,
     NoActiveBucketError,
     RecoveryUnavailableError,
@@ -58,7 +59,7 @@ from ._errors import (
 )
 from ._export_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 from ._keystore_paths import keystore_path, keystore_root, keystore_sidecar_path, validate_keystore_separation
-from ._layout import BucketPaths, bucket_paths, provision_bucket_directory, trash_rename_and_remove
+from ._layout import BucketPaths, bucket_paths, trash_rename_and_remove
 from ._lockfile import acquire_lock, lock_path, release_lock
 from ._manifest import (
     BUCKET_MANIFEST_DURABILITY_FLOOR,
@@ -96,6 +97,7 @@ __all__ = [
     "BucketKeySchedule",
     "BucketLockedError",
     "BucketManifest",
+    "BucketPathTooLongError",
     "BucketPaths",
     "BucketValidationError",
     "ExportArchiveHeader",
@@ -115,7 +117,6 @@ __all__ = [
     "lock_path",
     "manifest_path",
     "normalize_output_language_hint",
-    "provision_bucket_directory",
     "read_bucket_output_language_hint",
     "read_manifest",
     "read_sealed_archive",

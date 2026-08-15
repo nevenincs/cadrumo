@@ -31,20 +31,18 @@ regression fence for the landed FX-conversion surface.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.ledger_cli import list_ledger_rows_via_cli as _list_rows
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ._isolated_profile_storage_fixtures import (  # noqa: F401 - autouse fixture bound by import
+    live_fx_isolated_backend as _isolated_backend,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -56,27 +54,11 @@ def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-
-    dispose_engine()
-    with (
-        # revolut-multi.csv carries GBP/USD rows, so importing it drives the CLI's
-        # live ECB euro reference-rate normalizer; opt in explicitly rather than
-        # relying on the provider's now-guarded default (see fx._ecb_provider).
-        override_settings(
-            cadrumo_local_storage_root=tmp_path,
-            cadrumo_output_language="en",
-            cadrumo_live_tests_enabled="1",
-        ),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session("00000000-0000-4000-8000-000000000000"),
-    ):
-        try:
-            register_minimal_profile(profile_id="00000000-0000-4000-8000-000000000000")
-            yield
-        finally:
-            dispose_engine()
+# Bound from the shared home rather than written out again here. This module
+# needs live tests enabled because revolut-multi.csv carries GBP/USD rows, so
+# importing it drives the CLI's live ECB euro reference-rate normalizer rather
+# than the provider's now-guarded default (see fx._ecb_provider); that is
+# exactly the isolation `live_fx_isolated_backend` already provides.
 
 
 def _oracle_rules() -> list[dict[str, object]]:

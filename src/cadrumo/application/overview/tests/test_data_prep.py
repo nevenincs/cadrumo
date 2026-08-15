@@ -11,7 +11,6 @@ stays independent of any registry-authoring state elsewhere in the tree.
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -19,6 +18,9 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.tests.runtime_profile_fixture import (
+    bucket_scoped_transaction_catalogue_fixture,
+)
 from ....application.ledger import MediaKind, PurchaseInvoiceEvidence, preflight_ledger_tax_readiness
 from ....core import BindingSourceKind, Period
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
@@ -33,7 +35,6 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ....tests.secure_sql import isolated_runtime_profile
 from .._data_prep import (
     DataPrepStepId,
     DataPrepStepState,
@@ -46,10 +47,7 @@ _BUCKET_ID = "44444444-4444-4444-8444-444444444444"
 _PERIOD_1T_2026 = Period.from_year_and_code(2026, "1T")
 
 
-@pytest.fixture
-def _tx_repository(tmp_path: Path) -> Generator[TransactionCatalogueRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        yield TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+_tx_repository = bucket_scoped_transaction_catalogue_fixture(_BUCKET_ID, name="_tx_repository")
 
 
 def _raw(provider_id: str, *, booked_date: date, amount: Decimal = Decimal("100.00")) -> RawTransaction:

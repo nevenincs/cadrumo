@@ -23,15 +23,12 @@ fails these assertions exactly as a leaked credential would.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from pathlib import Path
-
 import pytest
 
 from ....core import ClaveMovilRoute
 from ....core.config import override_settings
 from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.profile_storage_root_fixture import isolated_profile_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from .._sessions import ClaveAuthFacts, _active_profile_auth_facts
 
@@ -43,12 +40,8 @@ _PROFILE_LABEL = "session-bound-operator"
 _TAX_ID = "12345678Z"
 _SOPORTE = "E12345678"
 
-
-@pytest.fixture(autouse=True)
-def _isolated_storage(tmp_path: Path) -> Iterator[None]:
-    """Isolate the storage root without opening any session."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
+#: Isolate the storage root without opening any session.
+_isolated_storage = isolated_profile_storage_fixture()
 
 
 def _seed_profile(bucket_id: str = _BUCKET_ID, *, label: str = _PROFILE_LABEL) -> None:

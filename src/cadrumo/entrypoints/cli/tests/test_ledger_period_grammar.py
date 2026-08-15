@@ -21,7 +21,6 @@ encrypted bucket and the real ledger backend.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from datetime import date
 from pathlib import Path
 
@@ -29,10 +28,8 @@ import pytest
 import typer
 
 from ....core import Period, StandardPeriodCode
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 from .._common import _canonical_period, _filter_canonical_period, _LedgerPeriodRefusal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -236,14 +233,7 @@ def test_filter_clause_refuses_calendar_and_year_qualified() -> None:
 # --- End-to-end: real ledger command takes --period AEAT token + --year -------
 
 
-@pytest.fixture()
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session("11111111-1111-4111-8111-111111111111"),
-    ):
-        register_minimal_profile(profile_id="11111111-1111-4111-8111-111111111111")
-        yield
+_isolated_backend = active_profile_isolated_backend_fixture(autouse=False)
 
 
 def _add_business_row_missing_facts() -> None:

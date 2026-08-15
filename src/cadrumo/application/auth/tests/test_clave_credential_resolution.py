@@ -16,17 +16,13 @@ on an unlocked bucket session.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from pathlib import Path
-
 import pytest
 from pydantic import SecretStr
 
 from ....core import AuthProviderKind, ClaveMovilRoute
 from ....core.config import override_settings
 from ....core.resources import resources
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ...user_profile import build_profile_preflight_requirement
 from .._sessions import (
@@ -37,7 +33,10 @@ from .._sessions import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
+#: This module's OWN bucket. A bucket shared with a sibling module makes
+#: the two suites' isolation fixtures interchangeable and puts both on one
+#: bucket-scoped master-key session in the same run.
+_BUCKET_ID = "c0000002-0000-4000-8000-000000000002"
 _PROFILE_LABEL = "clave-operator"
 _TAX_ID = "12345678Z"
 _OTHER_TAX_ID = "00000001R"
@@ -440,10 +439,4 @@ def test_a_clave_identity_disagreeing_with_the_profile_is_refused_for_every_clav
     )
 
 
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_BUCKET_ID),
-    ):
-        yield
+_isolated_backend = bucket_session_storage_fixture(_BUCKET_ID)

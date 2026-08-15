@@ -1,4 +1,11 @@
-"""Persisted cross-process profile session: session-wrapped DEK custody.
+"""Profile acceleration receipt: cross-process custody of a wrapped bucket DEK.
+
+This is NOT a session. It has no counterparty and no protocol: it is a
+locally held wrap of an already-unlocked DEK, carrying a deadline, that lets a
+later process skip the passphrase. The AEAT authority session -- an encrypted
+row inside the bucket, revocable only with the key -- is the artefact that
+owns the word "session" in this codebase, and conflating the two has produced
+a wrong architectural premise more than once.
 
 The "logged in" state minted by ``aeat config login`` survives across CLI
 processes as two split-knowledge artefacts, either of which is useless
@@ -24,7 +31,7 @@ deleted and refused with a typed
 tolerated. No plaintext KEK, DEK, or session-key byte ever lands on disk.
 
 Zeroisation honesty: the session key and DEK are held in ``bytearray``
-buffers wiped through :func:`~adapters.persistence.storage.master_key._zeroise.zeroise`
+buffers wiped through :func:`~adapters.persistence.storage.custody._zeroise.zeroise`
 on every exit path, but the AEAD primitives and the pydantic boundary
 require transient immutable ``bytes`` views whose lifetime the garbage
 collector owns — the same best-effort contract
@@ -65,6 +72,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import ProfileSessionRefusalReason
+from .....core.base64_codec import b64_decode, b64_encode
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
     canonical_json_bytes,
@@ -75,27 +83,35 @@ from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
 from .._storage_path_definitions import PROFILE_SESSION_FILENAME
 from ..crypto import EncryptedBlob, decrypt_record, encrypt_record
-from ..custody import (
-    ProfileCustodyRecordError,
+from ..errors import (
+    DecryptionError,
+    EncryptionError,
+    KeyringUnavailableError,
+    StorageError,
+    StorageValidationError,
+)
+from ._errors import ProfileCustodyRecordError
+from ._filesystem import (
     compare_and_clear_profile_custody_local_record,
     compare_and_replace_profile_custody_local_record,
     ensure_profile_custody_local_directory,
     profile_custody_local_lock,
     read_optional_profile_custody_local_record,
 )
-from ..errors import (
-    DecryptionError,
-    EncryptionError,
-    KeyringUnavailableError,
-    StorageValidationError,
-)
-from ._master_key_io import _b64decode, _b64encode
 from ._zeroise import zeroise as _zeroise
 
 _log = get_logger(__name__)
 
 PROFILE_SESSION_KEYCHAIN_SERVICE: Final[str] = "cadrumo:profile-session:v2"
-"""OS-keychain service name for current profile-session keys."""
+"""OS-keychain service name for current profile acceleration-receipt keys.
+
+The token deliberately lags the concept name. It addresses entries in the OS
+credential store, OUTSIDE the storage root, so a rename orphans every existing
+entry: deleting the storage root cannot reap them, and code that deleted under
+the old token first would be exactly the migration path this project forbids.
+Permanent credential residue on real machines is the worse outcome, so the
+wire identifier stays fixed while the code name says what the artefact is.
+"""
 
 PROFILE_SESSION_SCHEMA_VERSION: Final[int] = 2
 """Current persisted-session record schema version.
@@ -157,7 +173,7 @@ class PersistedProfileSession(BaseModel):
         return validate_utc_aware(value)
 
 
-class _PersistedSessionDocument(BaseModel):
+class _AccelerationReceiptDocument(BaseModel):
     """On-disk JSON envelope for one persisted profile session."""
 
     model_config = _STRICT_FROZEN
@@ -175,7 +191,7 @@ class _PersistedSessionDocument(BaseModel):
     tag_b64: str = Field(min_length=1)
 
 
-class _PendingSessionRetirementDocument(BaseModel):
+class _PendingReceiptRetirementDocument(BaseModel):
     """Bounded exact-byte receipt for an interrupted session-key rotation.
 
     ``predecessor_b64`` is absent only for the first mint.  Keeping both
@@ -310,7 +326,7 @@ def wrap_profile_session_dek(
     # cryptography library's ciphertext-with-tag) is split into
     # PersistedProfileSession.ciphertext/.tag at the same 32-byte boundary
     # _dek_wrap does, so every previously-wrapped session record remains
-    # readable and the persisted PersistedProfileSession/_PersistedSessionDocument
+    # readable and the persisted PersistedProfileSession/_AccelerationReceiptDocument
     # shapes do not change.
     try:
         blob = encrypt_record(dek, key=session_key, associated_data=aad)
@@ -338,7 +354,7 @@ def wrap_profile_session_dek(
     )
 
 
-def unwrap_profile_session_dek(*, session_key: bytes, record: PersistedProfileSession) -> bytes:
+def unwrap_profile_session_dek(*, session_key: bytes, record: PersistedProfileSession) -> bytearray:
     """Recover the 32-byte DEK from ``record`` under ``session_key``.
 
     The AAD is recomputed from the record's own metadata fields, so any
@@ -350,7 +366,15 @@ def unwrap_profile_session_dek(*, session_key: bytes, record: PersistedProfileSe
         record: The persisted session record to unwrap.
 
     Returns:
-        The 32-byte bucket data-encryption key.
+        The 32-byte bucket data-encryption key, in a mutable buffer the caller
+        can wipe. Handing it back as immutable ``bytes`` put it permanently
+        beyond ``zeroise``, which refuses what it cannot overwrite in place --
+        and a caller who copied it into a ``bytearray`` to wipe it was left
+        with the original still resident and unreachable.
+
+        One immutable copy is irreducible and is NOT wiped by this: the AEAD
+        library returns plaintext as ``bytes``. What the caller receives is
+        wipeable; the library's transient copy is a floor this cannot raise.
 
     Raises:
         EncryptionError: When ``session_key`` has the wrong length.
@@ -370,7 +394,7 @@ def unwrap_profile_session_dek(*, session_key: bytes, record: PersistedProfileSe
     )
     blob = EncryptedBlob(nonce=record.nonce, ciphertext=record.ciphertext + record.tag)
     try:
-        return decrypt_record(blob, key=session_key, associated_data=aad)
+        return bytearray(decrypt_record(blob, key=session_key, associated_data=aad))
     except DecryptionError as exc:
         # Same re-raise-in-place rationale as wrap_profile_session_dek:
         # preserves __cause__ (e.g. the underlying
@@ -405,7 +429,7 @@ def advance_profile_session_idle_deadline(
         EncryptionError: When re-wrapping fails.
     """
     clamped = min(validate_utc_aware(new_idle_deadline), record.absolute_deadline)
-    dek_buffer = bytearray(unwrap_profile_session_dek(session_key=session_key, record=record))
+    dek_buffer = unwrap_profile_session_dek(session_key=session_key, record=record)
     try:
         return wrap_profile_session_dek(
             session_key=session_key,
@@ -465,7 +489,7 @@ def _store_acceleration_secret(*, profile_id: UUID, session_id: UUID, session_ke
         raise StorageValidationError(f"session_key must be exactly {_SESSION_KEY_BYTES} bytes")
     keyring, keyring_error, _password_delete_error = _keyring()
     account = _keychain_account(profile_id=profile_id, session_id=session_id)
-    encoded = _b64encode(session_key)
+    encoded = b64_encode(session_key)
     try:
         keyring.set_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account, encoded)
         roundtrip = keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account)
@@ -495,7 +519,7 @@ def _load_acceleration_secret(*, profile_id: UUID, session_id: UUID) -> bytes | 
     if stored is None:
         return None
     try:
-        key = _b64decode(stored)
+        key = b64_decode(stored)
     except (ValueError, binascii.Error):
         _delete_acceleration_secret(profile_id=profile_id, session_id=session_id, suppress_unavailable=False)
         return None
@@ -613,8 +637,8 @@ def _ensure_profile_session_directory(path: Path) -> None:
     ensure_profile_custody_local_directory(path.parent)
 
 
-def _document_from_record(record: PersistedProfileSession) -> _PersistedSessionDocument:
-    return _PersistedSessionDocument(
+def _document_from_record(record: PersistedProfileSession) -> _AccelerationReceiptDocument:
+    return _AccelerationReceiptDocument(
         schema_version=record.schema_version,
         profile_id=record.profile_id,
         session_id=record.session_id,
@@ -623,13 +647,13 @@ def _document_from_record(record: PersistedProfileSession) -> _PersistedSessionD
         issued_at=record.issued_at.isoformat(),
         idle_deadline=record.idle_deadline.isoformat(),
         absolute_deadline=record.absolute_deadline.isoformat(),
-        nonce_b64=_b64encode(record.nonce),
-        ciphertext_b64=_b64encode(record.ciphertext),
-        tag_b64=_b64encode(record.tag),
+        nonce_b64=b64_encode(record.nonce),
+        ciphertext_b64=b64_encode(record.ciphertext),
+        tag_b64=b64_encode(record.tag),
     )
 
 
-def _record_from_document(document: _PersistedSessionDocument) -> PersistedProfileSession:
+def _record_from_document(document: _AccelerationReceiptDocument) -> PersistedProfileSession:
     """Hydrate the strict record from an on-disk document.
 
     Raises:
@@ -646,9 +670,9 @@ def _record_from_document(document: _PersistedSessionDocument) -> PersistedProfi
         issued_at=validate_utc_aware(datetime.fromisoformat(document.issued_at)),
         idle_deadline=validate_utc_aware(datetime.fromisoformat(document.idle_deadline)),
         absolute_deadline=validate_utc_aware(datetime.fromisoformat(document.absolute_deadline)),
-        nonce=_b64decode(document.nonce_b64),
-        ciphertext=_b64decode(document.ciphertext_b64),
-        tag=_b64decode(document.tag_b64),
+        nonce=b64_decode(document.nonce_b64),
+        ciphertext=b64_decode(document.ciphertext_b64),
+        tag=b64_decode(document.tag_b64),
     )
 
 
@@ -681,7 +705,7 @@ def _receipt_bytes(record: PersistedProfileSession) -> bytes:
 
 
 def _record_from_canonical_receipt(payload: bytes) -> PersistedProfileSession:
-    document = cast(_PersistedSessionDocument, _parse_canonical_document(payload, _PersistedSessionDocument))
+    document = cast(_AccelerationReceiptDocument, _parse_canonical_document(payload, _AccelerationReceiptDocument))
     return _record_from_document(document)
 
 
@@ -733,11 +757,11 @@ def _write_acceleration_receipt(
 def _pending_retirement_bytes(*, profile_id: UUID, predecessor: bytes | None, successor: bytes) -> bytes:
     """Encode the bounded exact-byte retirement decision before publication."""
     return _canonical_document_bytes(
-        _PendingSessionRetirementDocument(
+        _PendingReceiptRetirementDocument(
             schema_version=_PROFILE_SESSION_RETIREMENT_SCHEMA_VERSION,
             profile_id=profile_id,
-            predecessor_b64=None if predecessor is None else _b64encode(predecessor),
-            successor_b64=_b64encode(successor),
+            predecessor_b64=None if predecessor is None else b64_encode(predecessor),
+            successor_b64=b64_encode(successor),
         ),
     )
 
@@ -748,15 +772,15 @@ def _read_pending_retirement(path: Path, *, profile_id: UUID) -> tuple[bytes, by
     if payload is None:
         return None
     document = cast(
-        _PendingSessionRetirementDocument,
-        _parse_canonical_document(payload, _PendingSessionRetirementDocument),
+        _PendingReceiptRetirementDocument,
+        _parse_canonical_document(payload, _PendingReceiptRetirementDocument),
     )
     if document.schema_version != _PROFILE_SESSION_RETIREMENT_SCHEMA_VERSION:
         raise StorageValidationError("profile-session retirement receipt schema is not current")
     if document.profile_id != profile_id:
         raise StorageValidationError("profile-session retirement receipt profile differs")
-    predecessor = None if document.predecessor_b64 is None else _b64decode(document.predecessor_b64)
-    successor = _b64decode(document.successor_b64)
+    predecessor = None if document.predecessor_b64 is None else b64_decode(document.predecessor_b64)
+    successor = b64_decode(document.successor_b64)
     if predecessor is not None:
         prior_record = _record_from_canonical_receipt(predecessor)
         if prior_record.profile_id != profile_id:
@@ -829,8 +853,31 @@ def _discard_known_record(*, path: Path, payload: bytes, record: PersistedProfil
     return _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
 
 
+class AccelerationReceiptRevocationError(StorageError):
+    """Raised when a receipt survived the revocation that was asked to remove it.
+
+    Deliberately NOT a subclass of the custody record error this module already
+    catches and logs, because the point is that it must not be swallowed by the
+    same handler.
+
+    A boolean return would have repeated the defect one level up: the caller
+    that ignored the value is precisely the caller that reports the profile
+    closed. The revocation entry point is the single authority for "this
+    profile is no longer logged in", so when it cannot prove the receipt is
+    gone it must not return as though it had.
+    """
+
+
 def delete_profile_session(*, storage_root: Path, profile_id: UUID) -> None:
-    """Revoke only receipts whose exact bytes/name were safely observed."""
+    """Revoke only receipts whose exact bytes/name were safely observed.
+
+    Raises:
+        AccelerationReceiptRevocationError: The compare-and-clear refused, so
+            the receipt is still on disk. Reached whenever the clear cannot
+            remove the file -- an open handle on Windows is the ordinary case,
+            not only a byte substitution racing the lock -- and previously this
+            returned silently while the receipt survived.
+    """
     path = profile_session_path(storage_root=storage_root, profile_id=profile_id)
     try:
         _ensure_profile_session_directory(path)
@@ -853,7 +900,13 @@ def delete_profile_session(*, storage_root: Path, profile_id: UUID) -> None:
                     session_id=record.session_id,
                     suppress_unavailable=True,
                 )
-            _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
+            if not _clear_captured_receipt(
+                path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES
+            ):
+                raise AccelerationReceiptRevocationError(
+                    translated_message="errors.fail.fail_acceleration_receipt_revocation",
+                    context={"profile_id": str(profile_id)},
+                )
     except ProfileCustodyRecordError as exc:
         _log.debug("profile-session receipt deletion refused error_type=%s", type(exc).__name__)
 
