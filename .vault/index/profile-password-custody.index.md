@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:dcaf778a9c8d15bd9f16d778f6a8dc90bdf8d56c806a944faf5cf16824e1a506'
+body_hash: 'sha256:7180135929ce45f095f9edd7fd3dd5563454f82f5cf05b7d68cc4210079d82a4'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -41,6 +41,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W04-P07-S107]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S115]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S117]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S120]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S19]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S28]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S32]]'
@@ -98,7 +99,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 ### adr
 
 - `2026-08-13-profile-password-custody-rollup-adr` - `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
-- `2026-08-15-profile-password-custody-bucket-key-schedule-custody-mismatch-adr` - `profile-password-custody` adr: `the bucket key schedule must report enrolled custody, not capsule existence` | (**status:** `proposed`)
+- `2026-08-15-profile-password-custody-bucket-key-schedule-custody-mismatch-adr` - `profile-password-custody` adr: `the bucket key schedule must report enrolled custody, not capsule existence` | (**status:** `rejected`)
 
 ### audit
 
@@ -169,6 +170,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W04-P07-S107` - Have Terra XHigh rule whether the master key and derived key encryption key should become wipeable like the two data encryption key unwraps now are, since six provider implementations and the derivation helper all return immutable material, or record why the master key is deliberately out of scope given each provider carries its own lifetime and a mutable buffer changes what every consumer holds
 - `2026-08-13-profile-password-custody-W04-P07-S115` - Have Sol Medium decide whether per-profile session windows survive the cutover as a capsule field or drop to settings only
 - `2026-08-13-profile-password-custody-W04-P07-S117` - Have Terra XHigh remove the bucket manifest reader now that the retirement is ruled, taking its per-bucket session-window override with it
+- `2026-08-13-profile-password-custody-W04-P07-S120` - Have Terra XHigh repair the rotation crash-window test module broken at HEAD, which imports a keystore filename constant whose definition the deletion removed and which it is now the only referent of, this being a collection error that can abort a whole run rather than a single failing test
 - `2026-08-13-profile-password-custody-W04-P07-S19` - Have Terra XHigh dissolve the forwarding port package in five ordered parts
 - `2026-08-13-profile-password-custody-W04-P07-S28` - Have Terra XHigh relocate the surviving per-profile session, wipe and identity residue into the custody package that the accepted decision names as sole authority, in one atomic move, so no surviving primitive is left behind a shared-master name
 - `2026-08-13-profile-password-custody-W04-P07-S39` - Have Terra XHigh delete the re-export bridge module in the custody package and repoint its sole consumer at the two modules it forwards to, in one commit
