@@ -387,13 +387,31 @@ def _load_profile_record_row(
     profile_id: UUID,
     namespace: ProfileCustodySecureObjectNamespace,
 ) -> tuple[ProfileCustodySecureObjectRawRowPort, ProfileCustodySecureObjectRecordPort]:
-    """Load the one exact current-record row and its decrypted payload."""
+    """Load the one exact current-record row and its decrypted payload.
+
+    The admission test is two independent conditions -- how many rows the
+    namespace holds, and whether the single row is addressed to this profile --
+    and they are reported separately because they send a reader to different
+    places. A row count of one with a divergent key is a row that is PRESENT,
+    so a message naming the count sends whoever reads it looking for a missing
+    or duplicated row that does not exist.
+    """
     object_key = profile_record_object_key(profile_id)
     expected_key = profile_custody_secure_object_key_digest(object_key)
     rows = tuple(row for row in objects.iter_all_records_raw() if row.namespace == _RECORD_NAMESPACE)
-    if len(rows) != 1 or rows[0].object_key != expected_key:
-        raise ProfileRecordIntegrityError("profile capsule must contain exactly one current record row")
+    if len(rows) != 1:
+        raise ProfileRecordIntegrityError(
+            f"profile capsule must contain exactly one current record row; it holds {len(rows)}"
+        )
     raw = rows[0]
+    if raw.object_key != expected_key:
+        # The stored key is HMAC(subkey(data key), "user-profile:<uuid>"), so a
+        # divergence names one of exactly two causes and the refusal states both
+        # rather than asserting whichever one the reader happens to expect.
+        raise ProfileRecordIntegrityError(
+            "profile capsule holds one current record row addressed to a different object key than "
+            "this profile derives: the row was written for another profile UUID or under other key material"
+        )
     loaded = objects.load(
         namespace.namespace,
         object_key,

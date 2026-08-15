@@ -1805,28 +1805,11 @@ application:
       censal_read_identity_unset: 'Record your fiscal ID before pulling your census:
         this profile has none yet, so the pull cannot confirm the record AEAT returns
         is yours. Run aeat config profile edit to add it.'
-      lifecycle_profile_already_exists: A profile already exists in the active bucket.
-      lifecycle_profile_not_tombstoned: The profile is not tombstoned; reactivate
-        refuses a live profile.
-      lifecycle_profile_tombstoned_rename: A removed profile cannot be renamed.
       lifecycle_schema_validation_failed: The profile data does not match the user-profile
         schema.
       no_active_profile_selected: No active profile selected.
       profile_already_exists: Profile '%{profile}' already exists; run aeat config
         login NAME to activate it or aeat config profile delete NAME first.
-      profile_bucket_directory_removal_failed: Profile bucket directory could not
-        be removed.
-      profile_create_route_mismatch: Profile create route '%{route}' does not match
-        profile id '%{profile}'.
-      profile_integrity_identity_mismatch: 'Profile storage is inconsistent: physical
-        stores disagree on profile identity.'
-      profile_integrity_label_mismatch: 'Profile storage is inconsistent: the manifest
-        label does not match the secure record.'
-      profile_integrity_status_mismatch: 'Profile storage is inconsistent: the manifest
-        lifecycle status does not match the secure record.'
-      profile_label_blank: Profile label must not be blank.
-      profile_manifest_already_registered: Profile '%{profile}' already has a registered
-        bucket manifest at %{bucket_dir}.
       profile_manifest_missing: Profile '%{profile}' has no registered bucket manifest
         at %{bucket_dir}.
       profile_not_registered: Profile '%{profile}' does not exist; run `aeat config

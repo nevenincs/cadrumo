@@ -1881,28 +1881,11 @@ application:
         a nyilvántartását: ennek a profilnak még nincs, ezért a lekérdezés nem tudja
         megerősíteni, hogy az AEAT által visszaadott rekord az Öné. Futtassa az aeat
         config profile edit parancsot a megadásához.'
-      lifecycle_profile_already_exists: Már létezik profil az aktív bucketben.
-      lifecycle_profile_not_tombstoned: A profil nincs törölve; az újraaktiválás elutasítja
-        az élő profilt.
-      lifecycle_profile_tombstoned_rename: Törölt profil nem nevezhető át.
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
       no_active_profile_selected: Nincs kiválasztva aktív profil.
       profile_already_exists: A(z) %{profile} profil már létezik; futtassa az aeat
         config login NÉV parancsot az aktiváláshoz, vagy az aeat config profile delete
         NÉV parancsot a törléshez.
-      profile_bucket_directory_removal_failed: A profil könyvtára nem távolítható
-        el.
-      profile_create_route_mismatch: A profil létrehozási útvonala ("%{route}") nem
-        egyezik a profil azonosítójával ("%{profile}").
-      profile_integrity_identity_mismatch: 'A profiltárolás inkonzisztens: a fizikai
-        tárolók profilazonossága eltér.'
-      profile_integrity_label_mismatch: 'A profiltárolás inkonzisztens: a manifest
-        felirata nem egyezik a biztonságos rekorddal.'
-      profile_integrity_status_mismatch: 'A profiltárolás inkonzisztens: a manifest
-        életciklus-állapota nem egyezik a biztonságos rekorddal.'
-      profile_label_blank: A profil-felirat nem lehet üres.
-      profile_manifest_already_registered: 'A(z) "%{profile}" profilhoz már regisztrált
-        bucket-manifeszt van itt: %{bucket_dir}.'
       profile_manifest_missing: 'A(z) "%{profile}" profilhoz nincs regisztrált bucket-manifeszt
         itt: %{bucket_dir}.'
       profile_not_registered: A(z) "%{profile}" profil nem létezik; létrehozáshoz

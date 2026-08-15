@@ -193,10 +193,20 @@ def deadline_window_content_failures(
     ]
     if not osg_refs:
         return []
+    any_reachable = False
     for ref in osg_refs:
         text = evidence.source_text(source_refs[ref])
-        if text is not None and _carries_deadline_content(text):
+        if text is None:
+            continue
+        any_reachable = True
+        if _carries_deadline_content(text):
             return []
+    if not any_reachable:
+        # No cited source could be read from this root -- an unreachable
+        # corpus is a different, already-reported failure (verify_source_catalogue
+        # / EvidenceValidator.validate_source_citations own that message), and
+        # this check must not invent a content claim about a file it never saw.
+        return []
     return [
         f"{prefix}: deadline window {window.id!r} cites official_source_guidance source(s) "
         f"{sorted(osg_refs)!r} but none of their bundled text states a filing deadline (no "

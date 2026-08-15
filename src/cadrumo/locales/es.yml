@@ -1983,28 +1983,11 @@ application:
         perfil todavía no tiene ninguno, por lo que la consulta no puede confirmar
         que el registro que devuelve la AEAT sea suyo. Ejecute aeat config profile
         edit para añadirlo.'
-      lifecycle_profile_already_exists: Ya existe un perfil en el bucket activo.
-      lifecycle_profile_not_tombstoned: El perfil no está dado de baja; la reactivación
-        rechaza un perfil activo.
-      lifecycle_profile_tombstoned_rename: No se puede renombrar un perfil eliminado.
       lifecycle_schema_validation_failed: Los datos del perfil no coinciden con el
         esquema de perfil de usuario.
       no_active_profile_selected: No hay un perfil activo seleccionado.
       profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
         login NAME para activarlo o aeat config profile delete NAME primero.
-      profile_bucket_directory_removal_failed: No se pudo eliminar el directorio del
-        perfil.
-      profile_create_route_mismatch: La ruta de creación de perfil '%{route}' no coincide
-        con el id de perfil '%{profile}'.
-      profile_integrity_identity_mismatch: 'El almacenamiento del perfil no es coherente:
-        los almacenes físicos no coinciden en la identidad del perfil.'
-      profile_integrity_label_mismatch: 'El almacenamiento del perfil no es coherente:
-        la etiqueta del manifiesto no coincide con el registro seguro.'
-      profile_integrity_status_mismatch: 'El almacenamiento del perfil no es coherente:
-        el estado de ciclo de vida del manifiesto no coincide con el registro seguro.'
-      profile_label_blank: La etiqueta del perfil no puede estar vacía.
-      profile_manifest_already_registered: El perfil '%{profile}' ya tiene un manifiesto
-        de bucket registrado en %{bucket_dir}.
       profile_manifest_missing: El perfil '%{profile}' no tiene manifiesto de bucket
         registrado en %{bucket_dir}.
       profile_not_registered: El perfil '%{profile}' no existe; ejecuta `aeat config

@@ -1974,29 +1974,11 @@ application:
         cens: aquest perfil encara no en té cap, de manera que la consulta no pot
         confirmar que el registre que retorna l''AEAT sigui vostre. Executeu aeat
         config profile edit per afegir-lo.'
-      lifecycle_profile_not_tombstoned: El perfil no està donat de baixa; la reactivació
-        rebutja un perfil actiu.
-      lifecycle_profile_tombstoned_rename: No es pot canviar el nom d'un perfil eliminat.
       lifecycle_schema_validation_failed: Les dades del perfil no coincideixen amb
         l'esquema de perfil d'usuari.
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
       profile_already_exists: El perfil '%{profile}' ja existeix; executa aeat config
         login NAME per activar-lo o aeat config profile delete NAME primer.
-      profile_bucket_directory_removal_failed: No s'ha pogut eliminar el directori
-        del perfil.
-      profile_create_route_mismatch: La ruta de creació de perfil '%{route}' no coincideix
-        amb l'id de perfil '%{profile}'.
-      profile_integrity_identity_mismatch: 'L''emmagatzematge del perfil no és coherent:
-        els magatzems físics no coincideixen en la identitat del perfil.'
-      profile_integrity_label_mismatch: 'L''emmagatzematge del perfil no és coherent:
-        l''etiqueta del manifest no coincideix amb el registre segur.'
-      profile_integrity_status_mismatch: 'L''emmagatzematge del perfil no és coherent:
-        l''estat de cicle de vida del manifest no coincideix amb el registre segur.'
-      profile_label_blank: L'etiqueta del perfil no pot estar buida.
-      profile_manifest_already_registered: El perfil '%{profile}' ja té un manifest
-        de bucket registrat a %{bucket_dir}.
-      profile_manifest_missing: El perfil '%{profile}' no té cap manifest de bucket
-        registrat a %{bucket_dir}.
       profile_not_registered: El perfil '%{profile}' no existeix; executa `aeat config
         profile create NAME` per crear-lo.
       profile_tombstoned_not_selectable: El perfil '%{profile}' està eliminat i no
