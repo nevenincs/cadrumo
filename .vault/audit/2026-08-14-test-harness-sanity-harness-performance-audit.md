@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:a05a067a6a520ae9242e6f2573ba338c7a1c3ff90ee561888fcf8b2a530cfb28'
+body_hash: 'sha256:462aecb6344737a465b8e40b53d56393f382341fa84e0fe797fe898bd70044d9'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1310,3 +1310,57 @@ Worth stating as a pattern: an uncached-looking helper called from four tests is
 not evidence of four executions. The module total is the cheap check that
 distinguishes them -- four uncached calls here would have produced a ~240s
 module, and it produced 60.30s.
+
+## Round: the KDF lever, followed across the process boundary
+
+The full `src/cadrumo` profile now completes cleanly -- 33:35, no worker
+deaths, durations printed -- which the fail-closed worker policy and an explicit
+private `--basetemp` together made possible. It surfaced a module the earlier
+rankings never reached, and following it exposed that the previous round's fix
+was only half the lever.
+
+### A session default cannot cross a spawn boundary
+
+`register_cli_profile` was fixed last round, but 102 further call sites across
+31 test modules reach `register_profile_with_credentials` DIRECTLY. A
+session-scoped autouse `override_settings` in `cadrumo/conftest.py` now covers
+those, and three properties were checked before adopting something that broad:
+
+- `override_settings` does NOT reach a directly-constructed `Settings`
+  (`load_settings()` reads False under it while `Settings()` still reads True),
+  so the calibration gate, which builds its own, is out of reach.
+- A NESTED `override_settings` setting other fields preserves this value, so
+  the many tests that override a storage root do not silently re-enable
+  measurement.
+- No test outside the gate asserts a measured calibration source. The
+  `"measured"` hits elsewhere are `identity_measurement` in registry
+  conformance -- an unrelated concept, checked rather than pattern-matched.
+
+It then did not work on the module that surfaced it: 48.54s in the table,
+46.90s isolated, and **46.90s still** with the session default in place.
+
+The reason is worth recording as a general limit. Those registrations run in
+processes started with `get_context("spawn")`. A spawned child re-imports and
+rebuilds its configuration from scratch, so no in-process context manager
+survives into it. And the shared `_child_settings` helper passes
+`_env_file=None`, so an environment-variable default -- the usual way to reach a
+child -- would not have worked either, and would additionally have broken the
+calibration gate, whose `Settings(...)` DOES read the environment.
+
+The only thing that reaches such a child is an explicit constructor argument,
+which is what `_child_settings` now passes.
+
+    that test          : 46.90s -> 15.50s
+    the two modules
+    sharing the helper : 292.47s -> 175.68s
+
+with IDENTICAL failure sets by name (10 failed, 23 passed on both sides), and
+the calibration gate still 17/17.
+
+### The shape to carry forward
+
+One lever, three distinct doors: a shared test helper, a session default for
+direct in-process callers, and an explicit argument for spawned children. Each
+was invisible from the others -- the first fix looked complete, and only
+measuring a module that still had not moved showed it was not. A cascade that
+stops at a process boundary looks exactly like a cascade that finished.
