@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:98bc25e8090fc16f5b83073605e62c236525c898bab89c33c2b35de20c7299cb'
+body_hash: 'sha256:4b83f2ecf533f51c3f7cf588067ea52dabdb7033d83606b7a77b51fdebd4f003'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -331,3 +331,21 @@ objects, not a reconstruction. The alternate call form
 `load_registry_tree(bundled_path() / "registry" / "aeat")`, which one migrated
 module used, resolves to the same tree and compares equal, which is what makes
 substituting the accessor there sound rather than merely plausible.
+
+## Ruled out: the disk-cache fingerprint module keeps its direct load
+
+`domain/calculations/registry/tests/test_registry_disk_cache_loader_fingerprint.py:287`
+is the one test-layer bundled-root load left standing, and it stays standing.
+
+`test_every_foreign_type_in_the_compiled_payload_is_covered_by_the_derivation`
+walks the real compiled payload's object graph as the GROUND TRUTH the
+annotation-driven derivation is measured against. Routing that read through a
+test-owned cached accessor would make the oracle depend on the accessor
+continuing to mean "the real bundled tree" -- and if a later change ever pointed
+the accessor elsewhere, the oracle would silently measure the wrong tree while
+still passing. The module also owns the disk-cache poison test, which
+deliberately calls `cache_clear()` and must keep talking to the loader directly.
+
+The saving forgone is one tree walk in one test. Not worth laundering an oracle
+through an indirection whose whole value is that it is shared and therefore
+changeable by someone else.
