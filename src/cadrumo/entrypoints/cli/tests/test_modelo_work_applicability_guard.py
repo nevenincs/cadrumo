@@ -32,6 +32,7 @@ from ....core.resources import resources
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -43,59 +44,53 @@ def _m100_revision_id(*, filing_year: int, period: str) -> str:
 def _create_natural_person() -> None:
     """Create a declared natural-person profile (autónomo)."""
 
-    result = invoke_cached_cli(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--surnames", "Guard",
-            "--activity", "design",
-            "--entity-type", "natural_person",
-            "--irpf-income-categories", "actividad_economica",
-            "--irpf-estimation-regime", "directa_normal",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    register_cli_profile(
+        label='operator',
+        facts={
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Guard',
+            "activities.description": 'design',
+            "taxpayer_type.entity_type": 'natural_person',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "irpf.estimation_regime": 'directa_normal',
+        },
+    )
 
 
 def _create_legal_entity() -> None:
     """Create a declared legal-entity profile (sociedad limitada)."""
 
-    result = invoke_cached_cli(
-        [
-            "config", "profile", "create", "company",
-            "--quiet", "--accept-defaults",
-            "--tax-id", "B12345674",
-            "--name", "Company",
-            "--legal-name", "Company SL",
-            "--activity", "consulting",
-            "--entity-type", "legal_entity",
-            "--legal-entity-form", "sl",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    register_cli_profile(
+        label='company',
+        facts={
+            "identity.tax_id": 'B12345674',
+            "identity.name": 'Company',
+            "identity.legal_name": 'Company SL',
+            "activities.description": 'consulting',
+            "taxpayer_type.entity_type": 'legal_entity',
+            "taxpayer_type.legal_entity_form": 'sl',
+        },
+    )
 
 
 def _create_non_resident_irnr_natural_person() -> None:
     """Create a declared NON_RESIDENT_IRNR natural-person profile."""
 
-    result = invoke_cached_cli(
-        [
-            "config", "profile", "create", "nonresident",
-            "--quiet", "--accept-defaults",
-            "--tax-id", "X1234567L",
-            "--name", "Non Resident",
-            "--surnames", "Guard",
-            "--activity", "design",
-            "--entity-type", "natural_person",
-            "--irpf-income-categories", "actividad_economica",
-            "--irpf-estimation-regime", "directa_normal",
-            "--fiscal-residency", "non_resident_irnr",
-            "--country-of-fiscal-residence", "FR",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    register_cli_profile(
+        label='nonresident',
+        facts={
+            "identity.tax_id": 'X1234567L',
+            "identity.name": 'Non Resident',
+            "identity.surnames": 'Guard',
+            "activities.description": 'design',
+            "taxpayer_type.entity_type": 'natural_person',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "irpf.estimation_regime": 'directa_normal',
+            "fiscal_residency.status": 'non_resident_irnr',
+            "fiscal_residency.country": 'FR',
+        },
+    )
 
 
 def test_work_create_refuses_modelo_202_for_a_natural_person(

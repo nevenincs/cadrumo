@@ -31,6 +31,7 @@ from ....core.resources import bundled_path
 from ....domain.calculations.registry import load_registry_tree, select_revision
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
+from ....tests.user_profile import register_cli_profile
 from ._modelo_work_ux_support import (
     _create_calculable_work_unit,
     _create_gb_non_resident_profile,
@@ -554,19 +555,17 @@ def test_work_dependencies_honours_activity_start_date_pre_activity_scoping(
     from ``evaluate_cross_period_clean_state``, which made the diagnostic
     report a blocker that verify itself suppresses."""
 
-    create = _invoke(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--surnames", "Readiness",
-            "--activity", "design",
-            "--activity-start-date", "2025-01-01",
-        ],
-    )  # fmt: skip
-    assert create.exit_code == 0, create.output
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Readiness',
+            "activities.description": 'design',
+            "censo.activity_start_date": '2025-01-01',
+        },
+    )
 
     result = _invoke(
         [
@@ -722,20 +721,18 @@ def test_work_create_without_revision_uses_registry_revision_for_supplied_year(
 ) -> None:
     """A fresh create without ``--revision`` binds to the law-selected registry revision."""
 
-    created = _invoke(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--irpf-income-categories", "actividad_economica",
-            "--irpf-estimation-regime", "objetiva",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--surnames", "Readiness",
-            "--activity", "objective-estimation activity",
-        ],
-    )  # fmt: skip
-    assert created.exit_code == 0, created.output
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "irpf.estimation_regime": 'objetiva',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Readiness',
+            "activities.description": 'objective-estimation activity',
+        },
+    )
     modelos_131, _catalogues_131 = load_registry_tree(bundled_path("registry", "aeat"))
     modelo_131 = next(candidate for candidate in modelos_131 if candidate.id == "131")
     expected_revision = select_revision(modelo_131, filing_year=2026, period="2T").id
@@ -759,20 +756,18 @@ def test_work_create_without_revision_uses_registry_revision_for_supplied_year(
 def test_m131_modulos_manual_entry_calculates_without_ledger_observations(
     _isolated_cli_backend: Path,
 ) -> None:
-    created = _invoke(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--irpf-income-categories", "actividad_economica",
-            "--irpf-estimation-regime", "objetiva",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--surnames", "Readiness",
-            "--activity", "objective-estimation taxi activity",
-        ],
-    )  # fmt: skip
-    assert created.exit_code == 0, created.output
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "irpf.estimation_regime": 'objetiva',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Readiness',
+            "activities.description": 'objective-estimation taxi activity',
+        },
+    )
 
     created_work = _invoke(
         [
@@ -929,20 +924,18 @@ def test_work_create_rejects_revision_that_does_not_cover_filing_year(
     DANA rules do not apply to a 2024 filing.
     """
 
-    created = _invoke(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--irpf-income-categories", "actividad_economica",
-            "--irpf-estimation-regime", "objetiva",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--surnames", "Readiness",
-            "--activity", "objective-estimation activity",
-        ],
-    )  # fmt: skip
-    assert created.exit_code == 0, created.output
+    register_cli_profile(
+        label='operator',
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "irpf.estimation_regime": 'objetiva',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Readiness',
+            "activities.description": 'objective-estimation activity',
+        },
+    )
     result = _invoke(
         [
             "app", "modelo", "work", "create",

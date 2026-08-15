@@ -11,6 +11,7 @@ from ....core.config import override_settings
 from ....core.resources import resources
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.profile_capsule import open_test_profile_session
+from ....tests.user_profile import register_cli_profile
 from ._modelo_work_ux_support import (
     _PROFILE_ID,
     _attempt_incomplete_profile_create,
@@ -70,19 +71,16 @@ def test_profile_create_refuses_incomplete_profile_before_modelo_work() -> None:
 
 
 def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
-    create = _invoke(
-        [
-            "--format", "json",
-            "config", "profile", "create", _PROFILE_ID,
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--irpf-income-categories", "actividad_economica",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--surnames", "Readiness",
-        ],
-    )  # fmt: skip
-    assert create.exit_code == 0, create.output
+    register_cli_profile(
+        label=_PROFILE_ID,
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "identity.tax_id": '12345678Z',
+            "identity.name": 'Operator',
+            "identity.surnames": 'Readiness',
+        },
+    )
 
     status = _invoke(["--format", "json", "config", "profile", "status"])
     assert status.exit_code == 0, status.output
@@ -200,24 +198,21 @@ def test_m210_engine_live_work_create_refuses_legacy_non_eea_irnr_missing_repres
 
 
 def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile() -> None:
-    create = _invoke(
-        [
-            "--format", "json",
-            "config", "profile", "create", _PROFILE_ID,
-            "--quiet", "--accept-defaults",
-            "--entity-type", "natural_person",
-            "--irpf-income-categories", "actividad_economica",
-            "--irpf-estimation-regime", "directa_normal",
-            "--tax-id", "X1234567L",
-            "--name", "Non Resident",
-            "--surnames", "Readiness",
-            "--activity", "design",
-            "--fiscal-residency", "non_resident_irnr",
-            "--country-of-fiscal-residence", "FR",
-            "--activity-start-date", "2026-07-15",
-        ],
-    )  # fmt: skip
-    assert create.exit_code == 0, create.output
+    register_cli_profile(
+        label=_PROFILE_ID,
+        facts={
+            "taxpayer_type.entity_type": 'natural_person',
+            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "irpf.estimation_regime": 'directa_normal',
+            "identity.tax_id": 'X1234567L',
+            "identity.name": 'Non Resident',
+            "identity.surnames": 'Readiness',
+            "activities.description": 'design',
+            "fiscal_residency.status": 'non_resident_irnr',
+            "fiscal_residency.country": 'FR',
+            "censo.activity_start_date": '2026-07-15',
+        },
+    )
 
     result = _invoke(
         [
