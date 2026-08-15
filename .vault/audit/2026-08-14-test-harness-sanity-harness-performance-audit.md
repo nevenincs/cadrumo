@@ -887,3 +887,68 @@ The `dev` slice therefore remains UNPROFILED, which is a different state from
 "profiled and clean". Recorded so the next pass knows there is no data here yet
 rather than assuming an absent entry means nothing was found. Retry when the box
 is quiet; `dev/locales` is the only part of `dev` this campaign has measured.
+
+## Round: an invocation counter for a contended box, and what it got wrong
+
+With the machine carrying ~190 competing python processes at 99.7% CPU, a
+durations table ranks tests by which were starved. So this round used a
+different instrument: a pytest plugin wrapping the known-expensive primitives
+(`ast.parse`, `scan_directory`, `load_registry_tree`, `yaml.load`,
+`LocaleManager.get_codebase_keys`) and reporting, per primitive, total calls,
+DISTINCT arguments, and therefore REPEATS. A count does not care about load, and
+duplicated work -- the thing this campaign hunts -- is a count.
+
+### Validating it first caught a flaw that would have inverted the result
+
+Run against a gate whose answer was already known (`test_no_broad_exception_raises`,
+which uses the shared session prime and should show almost no repeated parsing),
+the first version reported 127 repeats concentrated in a single `<str>` bucket.
+
+The bucket was the bug. `ast.parse(source, filename)` passes the filename
+POSITIONALLY at many call sites, and the keyer read only the `filename` KEYWORD,
+so every positional call collapsed into one indistinguishable bucket. The
+instrument would have reported "no duplicate file parses" precisely when the
+duplicates were the ones worth finding, and reported a large fake repeat count
+for the collapsed bucket at the same time -- wrong in both directions at once.
+
+Fixed to read the positional argument, the same gate reports 5274 calls, 5221
+DISTINCT, 53 repeats, nearly all synthetic in-memory controls. That matches what
+the shared-prime design predicts, which is what validation against a known
+answer is for.
+
+### The lesson that cost the round its finding: a repeat count is not a cost
+
+The `dev/docs` run reported `scan_directory` at 181 calls, 54 distinct, **127
+repeats** -- the legal directory walked 44 times, `docs` 36 times, the
+terminology concepts 20 times. That reads like a textbook dedup target.
+
+Measuring the unit cost dissolves it:
+
+    legal directory        0.001s x 44 = 0.04s
+    terminology concepts   0.001s x 20 = 0.02s
+    docs                   0.333s x 36 = ~12s   (of a 1189s run)
+
+The two headline repeat counts are worth forty and twenty MILLISECONDS. A
+frequency-ranked instrument promotes whatever is called most often, which
+correlates with cost only when the unit costs are comparable -- and here they
+differ by more than two orders of magnitude. The counter answers "what repeats",
+never "what costs", and the two questions have different answers.
+
+### And the one non-trivial repeat must not be cached anyway
+
+The `docs` walk is the only repeat with real weight (~12s, 41,217 entries). It
+is also a walk over BUILD OUTPUT that the tests themselves produce. Caching it
+would serve a stale listing to a test inspecting a site built after the cache was
+filled -- the exact distinction `tests/_inventory` already draws between its
+cached `python_files_under` and its deliberately UNCACHED `iter_files_under`.
+
+So `dev/docs` yields no actionable duplication. Recorded as measured-and-clean
+rather than unprofiled, which is the opposite of the `dev` entry above.
+
+### Status of the instrument
+
+Kept as a technique, not committed: it is a scratch plugin, and its output needs
+a per-primitive unit cost beside the repeat count before any entry in it should
+be read as a target. Without that column it ranks the cheapest thing in the tree
+first.
+
