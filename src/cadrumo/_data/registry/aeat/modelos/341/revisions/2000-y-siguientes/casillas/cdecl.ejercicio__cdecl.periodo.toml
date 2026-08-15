@@ -1,8 +1,6 @@
-# Modelo 341 declaration-header casillas (scheduling/applicability-grade). Only
-# the declaration header is declared, grounded in orden-min-2000-12-15-m341 art 1. No
-# numbered money-closure casilla is invented — the authoritative Modelo 341
-# diseño de registro IS bundled (aeat-dr-341-2016) but no casilla-to-position
-# mapping has been authored from it yet.
+# Modelo 341 declaration-header casillas, grounded in orden-min-2000-12-15-m341
+# art 1. The numbered money casillas [01]-[10] are no longer absent: they live in
+# c01__c10.toml, transcribed from the bundled diseño de registro aeat-dr-341-2016.
 
 [[revisions."2000-y-siguientes".casillas]]
 id = "decl.ejercicio"
