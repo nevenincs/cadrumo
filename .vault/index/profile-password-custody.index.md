@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:0bdb5092ea30b2eac89f695926d3d951256072eec8b7b37fb4f789c8d188a56b'
+body_hash: 'sha256:6eeb8070104c7f0a309d94951310072d43295e88d1d6f7f6318742f8b4871457'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -80,6 +80,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W04-P07-S87]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S91]]'
   - '[[2026-08-13-profile-password-custody-W05-P08-S134]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S137]]'
   - '[[2026-08-13-profile-password-custody-W05-P08-S138]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -203,6 +204,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W04-P07-S87` - Have Terra XHigh stop the configuration-reset retention decision failing OPEN when no assessment is supplied
 - `2026-08-13-profile-password-custody-W04-P07-S91` - Have Sol Medium rule on the overloaded session vocabulary that caused a wrong architectural premise to survive two rounds of review
 - `2026-08-13-profile-password-custody-W05-P08-S134` - Have Sol Medium rule what the destructive profile deletion surface should be, since both of its primitives have zero definitions anywhere in the tree
+- `2026-08-13-profile-password-custody-W05-P08-S137` - Have Terra XHigh restore the retention detail to the hold projection so the deletion preflight can answer a count and a floor and a safe-erase date rather than two booleans
 - `2026-08-13-profile-password-custody-W05-P08-S138` - Have Terra XHigh make the delete hold guard compare the owner facts its docstring names rather than the whole assessment object
 
 ### plan
