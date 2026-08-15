@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:cbea23a8c2fbe0550a330c657833d25933204dab0605a66c80a926693babaaff'
+body_hash: 'sha256:4555aebeae42ce5d28bd9f465e6e9236584091431007abfcbe84da3276c993e1'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -36,6 +36,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W03-P06-S108]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S42]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S59]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S75]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S88]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S107]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S19]]'
@@ -61,6 +62,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W04-P07-S69]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S70]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S72]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S73]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S80]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S83]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S87]]'
@@ -160,6 +162,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W02-P04-S95` - Have Terra XHigh make the receipt deletion honour the clear outcome it already computes, since the discard helper returns whether the compare-and-clear succeeded and the resume path branches on it, while the revocation entry point calls the same helper bare and returns nothing, so a refused clear is silent and a login can report the prior profile as closed while its acceleration receipt survives on disk, the reachability being narrow because the bytes must change under a held per-profile lock but the reporting value already existing
 - `2026-08-13-profile-password-custody-W03-P06-S108` - Have Terra XHigh re-found the label ambiguity refusal test on the custody label authority rather than retire it, since the refusal itself was restored as real operator-facing work and is live, while only the test's mechanism is stale in manufacturing two casefold-equal labels by rewriting the retired plaintext bucket manifest, and the restored refusal already ships five tests that manufacture the same collision correctly
 - `2026-08-13-profile-password-custody-W03-P06-S59` - Have Sol Medium rule on the seventeen operator command subtrees the capsule cutover left unresolved
+- `2026-08-13-profile-password-custody-W03-P06-S75` - Have Terra XHigh clear the six dead entries in the runtime bootstrap-exempt allowlist that name operator verbs the tree no longer registers, since each entry grants exemption from the active-profile session gate matched by command chain, so a future verb registered under one of those names silently inherits an exemption nobody consciously granted, which matters most for the profile deletion verb, and note one further non-resolving entry is a deliberate exemption for a separate module entrypoint rather than a defect
 - `2026-08-13-profile-password-custody-W03-P06-S88` - Have Terra XHigh resolve the command-line lifecycle module that asserts custody verbs are mounted
 - `2026-08-13-profile-password-custody-W04-P07-S107` - Have Terra XHigh rule whether the master key and derived key encryption key should become wipeable like the two data encryption key unwraps now are, since six provider implementations and the derivation helper all return immutable material, or record why the master key is deliberately out of scope given each provider carries its own lifetime and a mutable buffer changes what every consumer holds
 - `2026-08-13-profile-password-custody-W04-P07-S19` - Have Terra XHigh dissolve the forwarding port package in five ordered parts
@@ -168,6 +171,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W04-P07-S61` - Have Terra XHigh bring the integration test lane under a standing watch
 - `2026-08-13-profile-password-custody-W04-P07-S62` - Have Sol Medium rule which layer owns the bucket manifest
 - `2026-08-13-profile-password-custody-W04-P07-S69` - Have Terra XHigh remove the second bucket-root creator that survives as dead production code
+- `2026-08-13-profile-password-custody-W04-P07-S73` - Have Sol Medium reconcile the two accepted decision records that now assert incompatible things about the bucket manifest
 - `2026-08-13-profile-password-custody-W04-P07-S80` - Have Terra XHigh restore lane reachability for the eight keychain-marked tests placed where no keychain lane names them
 - `2026-08-13-profile-password-custody-W04-P07-S83` - Have Terra XHigh make the session-receipt tamper test actually reach the authenticated-data check it exists to cover
 - `2026-08-13-profile-password-custody-W04-P07-S87` - Have Terra XHigh stop the configuration-reset retention decision failing OPEN when no assessment is supplied
