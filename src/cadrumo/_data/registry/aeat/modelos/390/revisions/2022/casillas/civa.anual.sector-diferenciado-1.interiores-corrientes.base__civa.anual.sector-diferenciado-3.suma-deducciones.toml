@@ -1,0 +1,876 @@
+# Modelo 390 apartado 13, "Regularizacion anual de deducciones por
+# sectores diferenciados" (LIVA art. 101, sectores diferenciados per art.
+# 9.1.c). Three sectores diferenciados, eighteen boxes each; every box
+# number on this page is distinct, so no box is carried across sectors.
+#
+# Every box number, offset and length is transcribed verbatim from this
+# revision's own bundled Diseno de Registros (source aeat-dr-390-2022,
+# sha256 7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe), pagina 8.
+#
+# All are optional operator inputs: a filer with fewer than three sectores
+# diferenciados, or none at all, leaves the unused rungs blank, and a blank
+# slot is a valid zero.
+
+# Box [139] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores - Bienes y servic. - Base imponible [139]' (offset 13, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.interiores-corrientes.base"
+number = "139"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_interiores_corrientes_base"
+continuidad_id = "iva-sector-diferenciado-1-interiores-corrientes-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-interiores-corrientes-base"]
+
+# Box [140] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores - Bienes y servic. - Cuota deducible [140]' (offset 30, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.interiores-corrientes.cuota"
+number = "140"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_interiores_corrientes_cuota"
+continuidad_id = "iva-sector-diferenciado-1-interiores-corrientes-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-interiores-corrientes-cuota"]
+
+# Box [141] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores - Bienes inversión - Base imponible [141]' (offset 47, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.interiores-inversion.base"
+number = "141"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_interiores_inversion_base"
+continuidad_id = "iva-sector-diferenciado-1-interiores-inversion-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-interiores-inversion-base"]
+
+# Box [142] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores - Bienes inversión - Cuota deducible [142]' (offset 64, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.interiores-inversion.cuota"
+number = "142"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_interiores_inversion_cuota"
+continuidad_id = "iva-sector-diferenciado-1-interiores-inversion-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-interiores-inversion-cuota"]
+
+# Box [143] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes corrientes - Base imponible [143]' (offset 81, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.importaciones-corrientes.base"
+number = "143"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_importaciones_corrientes_base"
+continuidad_id = "iva-sector-diferenciado-1-importaciones-corrientes-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-importaciones-corrientes-base"]
+
+# Box [144] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes corrientes - Cuota deducible [144]' (offset 98, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.importaciones-corrientes.cuota"
+number = "144"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_importaciones_corrientes_cuota"
+continuidad_id = "iva-sector-diferenciado-1-importaciones-corrientes-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-importaciones-corrientes-cuota"]
+
+# Box [145] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes inversión - Base imponible [145]' (offset 115, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.importaciones-inversion.base"
+number = "145"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_importaciones_inversion_base"
+continuidad_id = "iva-sector-diferenciado-1-importaciones-inversion-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-importaciones-inversion-base"]
+
+# Box [146] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes inversión - Cuota deducible [146]' (offset 132, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.importaciones-inversion.cuota"
+number = "146"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_importaciones_inversion_cuota"
+continuidad_id = "iva-sector-diferenciado-1-importaciones-inversion-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-importaciones-inversion-cuota"]
+
+# Box [147] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun. - Bienes corrientes - Base imponible [147]' (offset 149, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.aic-corrientes.base"
+number = "147"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_aic_corrientes_base"
+continuidad_id = "iva-sector-diferenciado-1-aic-corrientes-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-aic-corrientes-base"]
+
+# Box [148] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.  - Bienes corrientes - Cuota deducible [148]' (offset 166, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.aic-corrientes.cuota"
+number = "148"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_aic_corrientes_cuota"
+continuidad_id = "iva-sector-diferenciado-1-aic-corrientes-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-aic-corrientes-cuota"]
+
+# Box [149] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun. - Bienes inversión - Base imponible [149]' (offset 183, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.aic-inversion.base"
+number = "149"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_aic_inversion_base"
+continuidad_id = "iva-sector-diferenciado-1-aic-inversion-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-aic-inversion-base"]
+
+# Box [150] - '13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun. - Bienes inversión - Cuota deducible [150]' (offset 200, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.aic-inversion.cuota"
+number = "150"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_aic_inversion_cuota"
+continuidad_id = "iva-sector-diferenciado-1-aic-inversion-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-aic-inversion-cuota"]
+
+# Box [151] - '13. Reg. Deducc. Diferenc.- 1 - Compensac. rég. especial agric./ganad./pesca - Base impon. [151]' (offset 217, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.compensaciones-reagp.base"
+number = "151"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_compensaciones_reagp_base"
+continuidad_id = "iva-sector-diferenciado-1-compensaciones-reagp-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-compensaciones-reagp-base"]
+
+# Box [152] - '13. Reg. Deducc. Diferenc.- 1 - Compensac. rég. especial agric./ganad./pesca - Cuota deduc. [152]' (offset 234, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.compensaciones-reagp.cuota"
+number = "152"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_compensaciones_reagp_cuota"
+continuidad_id = "iva-sector-diferenciado-1-compensaciones-reagp-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-compensaciones-reagp-cuota"]
+
+# Box [640] - '13. Reg. Deducc. Diferenc.- 1 - Rectificación de deducciones - Base impon.  [640]' (offset 251, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.rectificacion.base"
+number = "640"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_rectificacion_base"
+continuidad_id = "iva-sector-diferenciado-1-rectificacion-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-rectificacion-base"]
+
+# Box [153] - '13. Reg. Deducc. Diferenc.- 1 - Rectificación de deducciones - Cuota deduc. [153]' (offset 268, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.rectificacion.cuota"
+number = "153"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_rectificacion_cuota"
+continuidad_id = "iva-sector-diferenciado-1-rectificacion-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-rectificacion-cuota"]
+
+# Box [154] - '13. Reg. Deducc. Diferenc.- 1 - Regularización de inversiones [154]' (offset 285, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.regularizacion-inversiones"
+number = "154"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_regularizacion_inversiones"
+continuidad_id = "iva-sector-diferenciado-1-regularizacion-inversiones"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-regularizacion-inversiones"]
+
+# Box [155] - '13. Reg. Deducc. Diferenc.- 1 - Suma de deducciones [155]' (offset 302, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-1.suma-deducciones"
+number = "155"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_1_suma_deducciones"
+continuidad_id = "iva-sector-diferenciado-1-suma-deducciones"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-1-suma-deducciones"]
+
+# Box [156] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes y servic. - Base imponible [156]' (offset 319, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.interiores-corrientes.base"
+number = "156"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_interiores_corrientes_base"
+continuidad_id = "iva-sector-diferenciado-2-interiores-corrientes-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-interiores-corrientes-base"]
+
+# Box [157] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes y servic. - Cuota deducible [157]' (offset 336, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.interiores-corrientes.cuota"
+number = "157"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_interiores_corrientes_cuota"
+continuidad_id = "iva-sector-diferenciado-2-interiores-corrientes-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-interiores-corrientes-cuota"]
+
+# Box [158] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes inversión - Base imponible [158]' (offset 353, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.interiores-inversion.base"
+number = "158"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_interiores_inversion_base"
+continuidad_id = "iva-sector-diferenciado-2-interiores-inversion-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-interiores-inversion-base"]
+
+# Box [159] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes inversión - Cuota deducible [159]' (offset 370, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.interiores-inversion.cuota"
+number = "159"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_interiores_inversion_cuota"
+continuidad_id = "iva-sector-diferenciado-2-interiores-inversion-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-interiores-inversion-cuota"]
+
+# Box [160] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes corrientes - Base imponible [160]' (offset 387, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.importaciones-corrientes.base"
+number = "160"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_importaciones_corrientes_base"
+continuidad_id = "iva-sector-diferenciado-2-importaciones-corrientes-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-importaciones-corrientes-base"]
+
+# Box [161] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes corrientes - Cuota deducible [161]' (offset 404, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.importaciones-corrientes.cuota"
+number = "161"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_importaciones_corrientes_cuota"
+continuidad_id = "iva-sector-diferenciado-2-importaciones-corrientes-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-importaciones-corrientes-cuota"]
+
+# Box [162] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes inversión - Base imponible [162]' (offset 421, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.importaciones-inversion.base"
+number = "162"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_importaciones_inversion_base"
+continuidad_id = "iva-sector-diferenciado-2-importaciones-inversion-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-importaciones-inversion-base"]
+
+# Box [163] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes inversión - Cuota deducible [163]' (offset 438, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.importaciones-inversion.cuota"
+number = "163"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_importaciones_inversion_cuota"
+continuidad_id = "iva-sector-diferenciado-2-importaciones-inversion-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-importaciones-inversion-cuota"]
+
+# Box [164] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun. - Bienes corrientes - Base imponible [164]' (offset 455, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.aic-corrientes.base"
+number = "164"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_aic_corrientes_base"
+continuidad_id = "iva-sector-diferenciado-2-aic-corrientes-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-aic-corrientes-base"]
+
+# Box [165] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.  - Bienes corrientes - Cuota deducible [165]' (offset 472, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.aic-corrientes.cuota"
+number = "165"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_aic_corrientes_cuota"
+continuidad_id = "iva-sector-diferenciado-2-aic-corrientes-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-aic-corrientes-cuota"]
+
+# Box [166] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun. - Bienes inversión - Base imponible [166]' (offset 489, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.aic-inversion.base"
+number = "166"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_aic_inversion_base"
+continuidad_id = "iva-sector-diferenciado-2-aic-inversion-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-aic-inversion-base"]
+
+# Box [167] - '13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun. - Bienes inversión - Cuota deducible [167]' (offset 506, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.aic-inversion.cuota"
+number = "167"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_aic_inversion_cuota"
+continuidad_id = "iva-sector-diferenciado-2-aic-inversion-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-aic-inversion-cuota"]
+
+# Box [168] - '13. Reg. Deducc. Diferenc.- 2 - Compensac. rég. especial agric./ganad./pesca - Base impon. [168]' (offset 523, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.compensaciones-reagp.base"
+number = "168"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_compensaciones_reagp_base"
+continuidad_id = "iva-sector-diferenciado-2-compensaciones-reagp-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-compensaciones-reagp-base"]
+
+# Box [169] - '13. Reg. Deducc. Diferenc.- 2 - Compensac. rég. especial agric./ganad./pesca - Cuota deduc. [169]' (offset 540, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.compensaciones-reagp.cuota"
+number = "169"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_compensaciones_reagp_cuota"
+continuidad_id = "iva-sector-diferenciado-2-compensaciones-reagp-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-compensaciones-reagp-cuota"]
+
+# Box [641] - '13. Reg. Deducc. Diferenc.- 2 - Rectificación de deducciones - Base impon. [641]' (offset 557, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.rectificacion.base"
+number = "641"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_rectificacion_base"
+continuidad_id = "iva-sector-diferenciado-2-rectificacion-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-rectificacion-base"]
+
+# Box [170] - '13. Reg. Deducc. Diferenc.- 2 - Rectificación de deducciones - Cuota decuc. [170]' (offset 574, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.rectificacion.cuota"
+number = "170"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_rectificacion_cuota"
+continuidad_id = "iva-sector-diferenciado-2-rectificacion-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-rectificacion-cuota"]
+
+# Box [171] - '13. Reg. Deducc. Diferenc.- 2 - Regularización de inversiones [171]' (offset 591, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.regularizacion-inversiones"
+number = "171"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_regularizacion_inversiones"
+continuidad_id = "iva-sector-diferenciado-2-regularizacion-inversiones"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-regularizacion-inversiones"]
+
+# Box [172] - '13. Reg. Deducc. Diferenc.- 2 - Suma de deducciones [172]' (offset 608, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-2.suma-deducciones"
+number = "172"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_2_suma_deducciones"
+continuidad_id = "iva-sector-diferenciado-2-suma-deducciones"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-2-suma-deducciones"]
+
+# Box [173] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Operac. Interiores - Bienes y servic. - Base imponible [173]' (offset 625, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.interiores-corrientes.base"
+number = "173"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_interiores_corrientes_base"
+continuidad_id = "iva-sector-diferenciado-3-interiores-corrientes-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-interiores-corrientes-base"]
+
+# Box [174] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Operac. Interiores - Bienes y servic. - Cuota deducible [174]' (offset 642, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.interiores-corrientes.cuota"
+number = "174"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_interiores_corrientes_cuota"
+continuidad_id = "iva-sector-diferenciado-3-interiores-corrientes-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-interiores-corrientes-cuota"]
+
+# Box [175] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Operac. Interiores - Bienes inversión - Base imponible [175]' (offset 659, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.interiores-inversion.base"
+number = "175"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_interiores_inversion_base"
+continuidad_id = "iva-sector-diferenciado-3-interiores-inversion-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-interiores-inversion-base"]
+
+# Box [176] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Operac. Interiores - Bienes inversión - Cuota deducible [176]' (offset 676, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.interiores-inversion.cuota"
+number = "176"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_interiores_inversion_cuota"
+continuidad_id = "iva-sector-diferenciado-3-interiores-inversion-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-interiores-inversion-cuota"]
+
+# Box [177] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Importaciones - Bienes corrientes - Base imponible [177]' (offset 693, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.importaciones-corrientes.base"
+number = "177"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_importaciones_corrientes_base"
+continuidad_id = "iva-sector-diferenciado-3-importaciones-corrientes-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-importaciones-corrientes-base"]
+
+# Box [178] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Importaciones - Bienes corrientes - Cuota deducible [178]' (offset 710, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.importaciones-corrientes.cuota"
+number = "178"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_importaciones_corrientes_cuota"
+continuidad_id = "iva-sector-diferenciado-3-importaciones-corrientes-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-importaciones-corrientes-cuota"]
+
+# Box [179] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Importaciones - Bienes inversión - Base imponible [179]' (offset 727, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.importaciones-inversion.base"
+number = "179"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_importaciones_inversion_base"
+continuidad_id = "iva-sector-diferenciado-3-importaciones-inversion-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-importaciones-inversion-base"]
+
+# Box [180] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Importaciones - Bienes inversión - Cuota deducible [180]' (offset 744, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.importaciones-inversion.cuota"
+number = "180"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_importaciones_inversion_cuota"
+continuidad_id = "iva-sector-diferenciado-3-importaciones-inversion-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-importaciones-inversion-cuota"]
+
+# Box [181] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Adquisic. intracomun. - Bienes corrientes - Base imponible [181]' (offset 761, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.aic-corrientes.base"
+number = "181"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_aic_corrientes_base"
+continuidad_id = "iva-sector-diferenciado-3-aic-corrientes-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-aic-corrientes-base"]
+
+# Box [182] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Adquisic. intracomun.  - Bienes corrientes - Cuota deducible [182]' (offset 778, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.aic-corrientes.cuota"
+number = "182"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_aic_corrientes_cuota"
+continuidad_id = "iva-sector-diferenciado-3-aic-corrientes-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-aic-corrientes-cuota"]
+
+# Box [183] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Adquisic. intracomun. - Bienes inversión - Base imponible [183]' (offset 795, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.aic-inversion.base"
+number = "183"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_aic_inversion_base"
+continuidad_id = "iva-sector-diferenciado-3-aic-inversion-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-aic-inversion-base"]
+
+# Box [184] - '13. Reg. Deducc. Diferenc.- 3 - IVA ded. Adquisic. intracomun. - Bienes inversión - Cuota deducible [184]' (offset 812, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.aic-inversion.cuota"
+number = "184"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_aic_inversion_cuota"
+continuidad_id = "iva-sector-diferenciado-3-aic-inversion-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-aic-inversion-cuota"]
+
+# Box [185] - '13. Reg. Deducc. Diferenc.- 3 - Compensac. rég. especial agric./ganad./pesca - Base impon. [185]' (offset 829, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.compensaciones-reagp.base"
+number = "185"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_compensaciones_reagp_base"
+continuidad_id = "iva-sector-diferenciado-3-compensaciones-reagp-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-compensaciones-reagp-base"]
+
+# Box [186] - '13. Reg. Deducc. Diferenc.- 3 - Compensac. rég. especial agric./ganad./pesca - Cuota deduc. [186]' (offset 846, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.compensaciones-reagp.cuota"
+number = "186"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_compensaciones_reagp_cuota"
+continuidad_id = "iva-sector-diferenciado-3-compensaciones-reagp-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-compensaciones-reagp-cuota"]
+
+# Box [642] - '13. Reg. Deducc. Diferenc.- 3 - Rectificación de deducciones - Base impon. [642]' (offset 863, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.rectificacion.base"
+number = "642"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_rectificacion_base"
+continuidad_id = "iva-sector-diferenciado-3-rectificacion-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-rectificacion-base"]
+
+# Box [187] - '13. Reg. Deducc. Diferenc.- 3 - Rectificación de deducciones - Cuota deduc. [187]' (offset 880, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.rectificacion.cuota"
+number = "187"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_rectificacion_cuota"
+continuidad_id = "iva-sector-diferenciado-3-rectificacion-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-89", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-rectificacion-cuota"]
+
+# Box [188] - '13. Reg. Deducc. Diferenc.- 3 - Regularización de inversiones [188]' (offset 897, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.regularizacion-inversiones"
+number = "188"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_regularizacion_inversiones"
+continuidad_id = "iva-sector-diferenciado-3-regularizacion-inversiones"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "ley-37-1992:art-9-1-c", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-regularizacion-inversiones"]
+
+# Box [189] - '13. Reg. Deducc. Diferenc.- 3 - Suma de deducciones [189]' (offset 914, length 17).
+[[revisions."2022".casillas]]
+id = "iva.anual.sector-diferenciado-3.suma-deducciones"
+number = "189"
+section = ["iva", "anual", "sectores_diferenciados"]
+data_type = "money"
+semantic_role = "iva_sector_diferenciado_3_suma_deducciones"
+continuidad_id = "iva-sector-diferenciado-3-suma-deducciones"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 13 regularizacion por sectores diferenciados block; each sector carries its own box number."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+export_refs = ["modelo-390-page-08-casilla-sector-3-suma-deducciones"]
