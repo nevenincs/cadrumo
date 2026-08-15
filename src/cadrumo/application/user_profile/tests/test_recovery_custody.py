@@ -387,37 +387,58 @@ def test_password_only_restore_refuses_the_wrong_password(
     assert not (destination / "buckets" / str(enrolled.profile_id)).exists()
 
 
-def test_restore_refuses_a_session_key_the_sentinel_does_not_commit_to(
+def test_restore_refuses_a_database_key_the_committed_sentinel_does_not_commit_to(
     enrolled: _EnrolledProfile,
     tmp_path: Path,
 ) -> None:
-    """A key that does not open this capsule is refused before publication.
+    """A database keyed differently from the password's key is refused.
 
-    Publishing here would produce a capsule that authenticates and then
-    decrypts nothing -- silently, at the one moment the operator believes
-    their records were rescued. The refusal is what makes the sentinel
-    proof in the restore primitive load-bearing rather than decorative.
+    This is the one failure the staged-database authentication cannot see,
+    and it is the expensive one. Every other check passes here: the envelope
+    is this profile's, the session was minted from that exact envelope, and
+    the staged database authenticates perfectly against that session --
+    because the database really was written under the session's key. Only
+    the committed sentinel disagrees, and the sentinel is the record saying
+    which key the PASSWORD produces.
+
+    Publishing it would leave a capsule that accepts the operator's password
+    and then decrypts nothing, discovered on the day they needed it. The
+    divergence is constructed rather than simulated: the source capsule below
+    is genuinely created under the divergent key.
     """
-    wrong_key_session = ProfileRecordSession.from_envelope(
-        envelope=enrolled.envelope,
-        dek=token_bytes(32),
-    )
+    divergent_dek = token_bytes(32)
+    divergent_session = ProfileRecordSession.from_envelope(envelope=enrolled.envelope, dek=divergent_dek)
+    source_root = tmp_path / "divergent-source"
+    target_root = tmp_path / "divergent-target"
     try:
-        with pytest.raises(Exception) as refusal:
-            ProfileCapsuleLifecycle(root=tmp_path / "wrong-key").restore(
-                label="Wrong key",
+        ProfileCapsuleLifecycle(root=source_root).create(
+            label="Divergent key source",
+            profile_id=enrolled.profile_id,
+            password_envelope=enrolled.envelope,
+            sentinel=create_profile_custody_sentinel(envelope=enrolled.envelope, dek=divergent_dek),
+            data_files={},
+            initial_record=UserProfileRecord(
+                profile_id=str(enrolled.profile_id),
+                setup_state=ProfileSetupState.INCOMPLETE,
+            ),
+            record_session=divergent_session,
+        )
+        divergent_database = (source_root / "buckets" / str(enrolled.profile_id) / "db" / "cadrumo.db").read_bytes()
+
+        with pytest.raises(ProfileCustodyRecordError, match="sentinel"):
+            ProfileCapsuleLifecycle(root=target_root).restore(
+                label="Divergent key",
                 password_envelope=enrolled.envelope,
                 sentinel=enrolled.sentinel,
                 data_files={},
-                record_session=wrong_key_session,
-                database_bytes=enrolled.database_bytes,
+                record_session=divergent_session,
+                database_bytes=divergent_database,
                 authority="password",
             )
     finally:
-        wrong_key_session.close()
+        divergent_session.close()
 
-    assert not (tmp_path / "wrong-key" / "buckets" / str(enrolled.profile_id)).exists()
-    assert refusal.type is not ValueError or "sentinel" in str(refusal.value).lower()
+    assert not (target_root / "buckets" / str(enrolled.profile_id)).exists()
 
 
 def test_restore_refuses_a_sentinel_from_a_different_profile(
