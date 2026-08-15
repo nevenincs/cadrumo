@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:cac5076d7c6e7f0eaa0b3ab7708e502de5432bd6e5a5a46866fcd63962cd341a'
+body_hash: 'sha256:b2a98a3f57d1d52f53b9500657bd0c7f79f2b824a8f70e1b001441daca515ef1'
 step_id: 'S163'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -49,13 +49,20 @@ missing row, and neither exists.
 Computing the expected key at all raises an error demanding an active bucket
 session, so the derivation is coupled to session state.
 
-**What this does NOT establish, and must not be read as establishing:**
-whether the key digest actually VARIES between sessions for the same bucket.
-If it does, a record is unreadable by any process except the one that wrote
-it, which is severe. If the derivation merely needs a session in order to be
-computed -- because it descends from the bucket key, which is stable -- the
-mismatch has some other cause. The evidence separates the durability question
-and does not separate this one.
+**The remaining question was whether the key digest VARIES between sessions
+for the same bucket. It does not, and the severe reading is refuted.** The
+subkey derivation states that it depends only on the data key and a stable
+per-consumer context, and the data key belongs to the profile rather than to a
+session. **So a session is needed only to REACH the key, not because the value
+changes** -- a record is not unreadable by every process except its writer.
+
+That was established by reading the derivation rather than by another probe,
+after this step deliberately declined to assert between the two readings. The
+refusal to guess is what made it cheap to settle.
+
+**Both candidate defects are therefore closed: the record is durable, and the
+digest does not drift.** Which makes the observed mismatch harder to explain
+rather than easier, and leaves one hypothesis below.
 
 ## Notes
 
@@ -79,3 +86,29 @@ a retired-artefact refusal that named the member but never the store, and this
 one, which names a row count when the key is at fault. Both are accurate about
 something true and misleading about what to do next, which is the failure mode
 hardest to catch by reading.
+
+**UNTESTED HYPOTHESIS -- labelled as such deliberately, because two readings
+that fit every observation have already been wrong on this question, once for
+each reader.** The custody secure-object repository opens a SHORT-LIVED STAGING
+session before a capsule has been published, falling through to a temporary
+session whenever the active one does not already serve that bucket. If the
+record is written under the staging session's data key and later read under the
+published capsule's, the digest cannot match -- deterministic given the key, and
+the key differs. That fits every observation recorded here: durable bytes,
+exactly one row, a failing key comparison, and a fresh process behaving
+differently from the writer. **It has not been tested.** The direct test is to
+compare the digest the staging path produces against the one the published path
+produces for the same profile and object key.
+
+**Outstanding regardless of how the cause resolves: the refusal message.** The
+condition is a row count OR an object-key comparison, and only the count is
+described. The count clause passes in every case observed here, so the message
+names the half that is not failing. It cost two readers a hypothesis each, and
+correcting it does not depend on diagnosing the mismatch.
+
+**The durable lesson is the shared error rather than either finding.** Both
+readers assumed one side of the boundary was lying -- that the record was never
+written, or that the fresh process was simply wrong. Neither was. The record is
+real AND the fresh process is right to refuse: it detects a genuine mismatch and
+then misdescribes it. A disagreement between two components is not evidence that
+one of them is broken.
