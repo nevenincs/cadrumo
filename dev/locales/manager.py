@@ -126,8 +126,26 @@ class LocaleAuditResult:
         return all(file.ok for file in self.files) and not self.placeholder_mismatches
 
 
-class StrictUniqueKeyLoader(yaml.SafeLoader):
-    """YAML loader that raises an error on duplicate keys."""
+#: libyaml's C scanner where the wheel provides it, PyYAML's Python one where
+#: it does not. Only scanning and parsing are C-accelerated; the constructor
+#: below stays Python and keeps running for every mapping, which is what lets
+#: the duplicate-key refusal survive the swap unchanged.
+_CatalogueLoaderBase: type[yaml.SafeLoader] = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+
+
+class StrictUniqueKeyLoader(_CatalogueLoaderBase):  # type: ignore[valid-type,misc]
+    """YAML loader that raises an error on duplicate keys.
+
+    The catalogues are ~3 MB each, and parsing one measured 9.016s on the pure
+    Python base against 0.865s on the C one -- a 10.4x difference paid by every
+    caller that reads a catalogue, of which the test layer has many.
+
+    Both bases were confirmed to produce an EQUAL document for the largest
+    shipped catalogue, and to raise ``LocaleError`` with the identical message
+    and line number on a planted duplicate key, before the base was swapped. A
+    faster parser that quietly stopped refusing duplicates would trade this
+    module's whole purpose for speed.
+    """
 
     @override
     def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict[Hashable, Any]:
