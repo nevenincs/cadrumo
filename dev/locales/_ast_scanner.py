@@ -322,11 +322,8 @@ def _call_site_key_argument_exprs(node: ast.Call, tr_names: frozenset[str]) -> l
     name = _callee_name(node.func)
     exprs: list[ast.expr] = []
     if name is not None:
-        if name in tr_names and node.args:
-            exprs.append(node.args[0])
-        elif name == "failed" and node.args:
-            exprs.append(node.args[0])
-        elif (name.endswith("Error") or name.endswith("Exception")) and node.args:
+        is_first_arg_sink = name in tr_names or name == "failed" or name.endswith(("Error", "Exception"))
+        if is_first_arg_sink and node.args:
             exprs.append(node.args[0])
         elif name == "build_entry":
             for kw in node.keywords:

@@ -198,8 +198,6 @@ def test_discovery_ignores_a_same_shaped_dict_that_never_reaches_the_translator(
         "    return _RECONCILIATION_ANNUAL_CASILLA_BY_SOURCE.get(source_casilla_id)\n",
     )
 
-    from .._ast_scanner import _extract_locale_constant_keys  # noqa: PLC0415 - internal-only assertion target
-
     assert _extract_locale_constant_keys(tree) == set()
 
 
