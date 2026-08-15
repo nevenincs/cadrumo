@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:95e1249379be0fdebb0a85d959cecb80d8f85a79ddfc65b15b44031176f82eb5'
+body_hash: 'sha256:7e09e7dca5b42954084e40fadb9c1835f16ec5703bcb6d739de65498b0654594'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -124,6 +124,7 @@ Expose canonical profile verbs and secret channels through typed action envelope
 - [x] `W03.P06.S140` - Have Terra XHigh resolve the three creation flags that have no mapped fact path by reading the profile schema rather than inferring one, since each currently blocks a conversion and guessing a path would write a fixture that quietly declares something false about a filer, the flags being the employee indicator the new-entity profit-period exclusion and the marital status; `src/cadrumo/domain/user_profile/ and src/cadrumo/entrypoints/cli/_config/`.
 - [ ] `W03.P06.S146` - Have Terra XHigh read the thirty-six creation call sites that assert no exit code and decide each individually, since they assert on output or on later state rather than on success and therefore cannot be swept, this being a reading job whose size should be stated honestly before it starts rather than a mechanical conversion; `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/entrypoints/cli/_config/tests/`.
 - [ ] `W03.P06.S151` - Have Terra XHigh render the next-action guidance on the surviving registration surfaces, since the projection mapping a non-resident IRNR taxpayer to the modelo describe route is live and reached only from the edit path while the creation path refuses before it, so a newly registered IRNR taxpayer is steered nowhere until they happen to run edit and the registration screens render no next action at all; `src/cadrumo/entrypoints/cli/_config/_registration_screen.py and src/cadrumo/entrypoints/cli/_config/_manager_frontend.py`.
+- [ ] `W03.P06.S152` - Have Terra XHigh repair the profile edit path that crashes with an internal error because two production sites stamp an event-type string the bucket event enum does not contain, noting that a contract test already documents the divergence as a missing catalogued emitter while nobody recorded that the string is rejected at validation, so its own suggested remedy assumes a validity the string does not have; `src/cadrumo/application/wizard/_persistence.py and src/cadrumo/application/wizard/_commands.py`.
 
 ## Wave `W04` - retire superseded custody
 

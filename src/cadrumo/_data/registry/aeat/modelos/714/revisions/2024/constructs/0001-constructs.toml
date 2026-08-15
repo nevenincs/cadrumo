@@ -1,0 +1,99 @@
+# Ejercicio 2024. The art. 30 escala estatal, the art. 28 minimo exento
+# framework and the art. 31 percentages are the same as 2021's because the LAW
+# is the same, not because 2021 was copied. Read from the BOE consolidated text
+# of Ley 19/1991 (BOE-A-1991-14392) on 2026-08-15, per each article's own
+# amendment notes: art. 30 was last amended by art. 66 of Ley 11/2020
+# (BOE-A-2020-17339), effective 1 January 2021, and not since; art. 28 was last
+# amended by Real Decreto-ley 13/2011 (BOE-A-2011-14809); art. 31's current text
+# takes effect 1 January 2021 and has not been amended since. Ley 38/2022, which
+# created the Impuesto Temporal de Solidaridad de las Grandes Fortunas, amends
+# this ley at ARTICLE 5.Uno only (BOE-A-2022-22684) and leaves arts 28, 30 and 31
+# untouched.
+# Modelo 714 (patrimonio) construct.
+#
+# Phase-A landed the manual-casilla surface and official source grounding.
+# Phase-B computes the cuota íntegra (casilla 29) from the Ley 19/1991 art. 30
+# escala estatal and the art. 31 same-year IRPF joint-limit chain through
+# casilla 40. M100 broad bases/quotas enter through same-year relations; art.31
+# exclusion slices that M100 does not expose stay explicit M714 manual inputs.
+# The remaining deduction/bonification result chain (45/55) stays manual pending
+# its own official formula evidence.
+
+# The ejercicio's own orden art. 4 and its bundled Diseno de Registros join the
+# construct's refs because its member casillas now carry them: the box numbering
+# and segmento each member declares are read from that design, and the orden is
+# what approves the form those boxes are printed on.
+[[revisions."2024".constructs]]
+id = "m714-patrimonio-calculation"
+legal_refs = [
+    "ley-19-1991:art-4-9",
+    "ley-19-1991:art-28",
+    "ley-19-1991:art-30",
+    "ley-19-1991:art-31",
+    "ley-35-2006:art-48",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-63",
+    "ley-35-2006:art-74",
+    "orden-hac-242-2025:art-4",
+]
+source_refs = ["aeat-modelo-100-procedure", "aeat-modelo-714-procedure", "boe-modelo-714-layout", "aeat-dr-714-2024"]
+casilla_ids = [
+    "decl.ejercicio",
+    "decl.periodo",
+    "patrimonio.base-imponible",
+    "patrimonio.base-liquidable",
+    "patrimonio.cuota-integra",
+    "patrimonio.irpf-bases-imponibles",
+    "patrimonio.dividendos-no-irpf",
+    "patrimonio.base-ahorro-excluida",
+    "patrimonio.limite-conjunto",
+    "patrimonio.irpf-cuotas-integras",
+    "patrimonio.irpf-cuotas-excluidas-base-ahorro",
+    "patrimonio.cuota-integra-susceptible-limitacion",
+    "patrimonio.suma-cuotas-limite",
+    "patrimonio.exceso-limite-conjunto",
+    "patrimonio.reduccion-limite-80",
+    "patrimonio.total-cuota-integra",
+    "patrimonio.cuota-minorada",
+    "patrimonio.cuota-a-ingresar",
+]
+parameters = [
+    "patrimonio-escala-estatal",
+    "patrimonio-limite-conjunto-porcentaje",
+    "patrimonio-reduccion-maxima-limite-conjunto-porcentaje",
+]
+bindings = [
+    "m714-m100-base-imponible-general",
+    "m714-m100-base-imponible-ahorro",
+    "m714-m100-cuota-integra-estatal",
+    "m714-m100-cuota-integra-autonomica",
+]
+relations = [
+    "m714-rel-100-base-imponible-general",
+    "m714-rel-100-base-imponible-ahorro",
+    "m714-rel-100-cuota-integra-estatal",
+    "m714-rel-100-cuota-integra-autonomica",
+]
+formulas = [
+    "patrimonio-cuota-integra-escala-estatal",
+    "patrimonio-irpf-bases-imponibles-m100",
+    "patrimonio-limite-conjunto-art31",
+    "patrimonio-irpf-cuotas-integras-m100",
+    "patrimonio-suma-cuotas-limite-art31",
+    "patrimonio-exceso-limite-conjunto-art31",
+    "patrimonio-reduccion-limite-80-suelo",
+    "patrimonio-total-cuota-integra-art31",
+]
+dependency_classifications = [
+    "m714-dep-100-limite-conjunto",
+]
+application_links = [
+    "modelo-714-calculation",
+    "modelo-714-filing",
+    "modelo-714-extractor",
+    "modelo-714-review",
+    "modelo-714-approval",
+    "modelo-714-reconciliation",
+    "modelo-714-workflow",
+    "modelo-714-deadline",
+]

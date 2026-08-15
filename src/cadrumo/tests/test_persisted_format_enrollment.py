@@ -22,10 +22,20 @@ that must survive every future version, or operational state the application
 rebuilds on demand. That decision is the whole point: a durability floor is a
 promise to keep reading old bytes, and promising it about a session sidecar is
 an obligation rather than a guarantee.
+
+A format is not always a file. Discovery draws on three sources — the path
+registry's file definitions, the three tier formats with no single path, and
+the secure-object payloads that carry their own version constant. The third
+was added after this gate spent several changes red: every capsule record,
+the profile record and the authority-session metadata were enrolled while
+discovery could see none of them, so each correct declaration read as a stale
+one. The enumerating half and the hand-listed half are marked as such below,
+because they do not offer the same guarantee.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Final
 
 import pytest
@@ -134,17 +144,82 @@ def test_no_declaration_outlives_its_format() -> None:
 
 
 def test_secure_object_namespaces_are_covered_by_the_secure_object_format() -> None:
-    """Every encrypted SQL namespace inherits the secure-object declaration.
+    """Being a namespace earns no entry; carrying your own version does.
 
     The 60-plus namespaces are rows in one persisted format, not formats in
-    their own right: they share one schema-version ceiling and one upgrader
-    registry, and the secure-object lineage gate walks them. Pinning that here
-    keeps a future reader from concluding each namespace needs its own entry.
+    their own right: they share the secure-object envelope's one schema-version
+    ceiling and one upgrader registry, and the secure-object lineage gate walks
+    them. Pinning that here keeps a future reader from concluding each namespace
+    needs its own entry — the hazard is undiminished and this pin still exists
+    for it.
+
+    The wording is narrower than it once was. It previously read as though
+    LIVING IN A NAMESPACE were the disqualifying property, which put it in
+    direct conflict with enrolling a payload that versions itself. The actual
+    discriminator is CARRYING AN INDEPENDENT VERSION: the envelope governs
+    whether the bytes decrypt, a payload's own version governs whether the
+    record inside them can still be read, and a floor on the first does not
+    cover the second. Only a handful of payloads carry one, so narrowing costs
+    this pin nothing it was protecting.
     """
     namespaces = STORAGE_NAMESPACE_REGISTRY.namespaces
     assert namespaces, "storage registry declares no secure-object namespaces"
     assert all(isinstance(definition, SecureObjectNamespaceDefinition) for definition in namespaces)
     assert PERSISTED_FORMATS["secure_object"] is PersistedFormatClass.DURABLE
+
+    backing = {namespace for namespace in _NAMESPACE_PAYLOAD_FORMATS.values()}
+    declared = {definition.key for definition in namespaces}
+    assert backing < declared, (
+        "the independently versioned payloads must be a PROPER subset of the namespaces. "
+        "If they ever coincide, the narrowing above has quietly become 'every namespace is "
+        "a format' -- which is the conclusion this pin exists to prevent"
+    )
+
+
+def test_every_namespace_payload_format_names_a_live_namespace() -> None:
+    """The hand-listed half is checked against production, not merely asserted.
+
+    This map is the weaker half of discovery: the file half enumerates, so a
+    new file format cannot be omitted, while an entry here is written by hand.
+    What keeps it from being a free-text allowlist is that the namespace it
+    names must exist in the registry -- an entry cannot be invented for a key
+    somebody wanted to silence, because there would be no namespace to point
+    at. It does NOT close the omission direction, which the map's own comment
+    states rather than leaving to be discovered.
+    """
+    declared = {definition.key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces}
+    unknown = tuple(
+        sorted(
+            f"{key} -> {namespace}"
+            for key, namespace in _NAMESPACE_PAYLOAD_FORMATS.items()
+            if namespace not in declared
+        )
+    )
+    assert unknown == (), (
+        f"payload format(s) name secure-object namespace(s) the registry does not declare: {unknown}. "
+        "Strike the entry with the namespace it described, or the inventory discovers a format "
+        "whose home no longer exists"
+    )
+
+
+def test_one_namespace_backs_several_independently_versioned_payloads() -> None:
+    """The clearest evidence that a namespace is not a format.
+
+    The three AEAT authority-session metadata records ride one session store
+    and one namespace, and each declares its own metadata version. If a
+    namespace were the unit of format, this arrangement could not exist -- so
+    this is the case that forces the distinction rather than illustrating it,
+    and it fails if someone later collapses the three back into one entry.
+    """
+    per_namespace: dict[str, set[str]] = {}
+    for key, namespace in _NAMESPACE_PAYLOAD_FORMATS.items():
+        per_namespace.setdefault(namespace, set()).add(key)
+    shared = {namespace: keys for namespace, keys in per_namespace.items() if len(keys) > 1}
+    assert shared, (
+        "no namespace backs more than one payload format, so nothing here demonstrates that a "
+        "namespace and a format are different units. Restore the case or this distinction rests "
+        "on argument alone"
+    )
 
 
 def test_application_owned_journal_name_agrees_with_the_registry() -> None:

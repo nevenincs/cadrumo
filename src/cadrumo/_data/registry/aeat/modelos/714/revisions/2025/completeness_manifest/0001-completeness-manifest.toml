@@ -1,0 +1,117 @@
+# Ejercicio 2025. The art. 30 escala estatal, the art. 28 minimo exento
+# framework and the art. 31 percentages are the same as 2021's because the LAW
+# is the same, not because 2021 was copied. Read from the BOE consolidated text
+# of Ley 19/1991 (BOE-A-1991-14392) on 2026-08-15, per each article's own
+# amendment notes: art. 30 was last amended by art. 66 of Ley 11/2020
+# (BOE-A-2020-17339), effective 1 January 2021, and not since; art. 28 was last
+# amended by Real Decreto-ley 13/2011 (BOE-A-2011-14809); art. 31's current text
+# takes effect 1 January 2021 and has not been amended since. Ley 38/2022, which
+# created the Impuesto Temporal de Solidaridad de las Grandes Fortunas, amends
+# this ley at ARTICLE 5.Uno only (BOE-A-2022-22684) and leaves arts 28, 30 and 31
+# untouched.
+# Modelo 714 calculation-completeness manifest.
+#
+# Enumerates the casillas in this revision's calculation closure. Phase-B
+# implements the cuota íntegra (casilla 29) and the Ley 19/1991 art.31
+# same-year joint-limit chain through casilla 40. The closure includes M100-fed
+# computed casillas 30/34, explicit manual exclusion inputs 31/32/35/36, and
+# computed casillas 33/37/38/39/40. The remaining deduction/bonification result
+# chain (45/55) stays a manual foundation until its own formula evidence lands.
+#
+# The manifest's per-casilla metadata is the box number and record segment the
+# ejercicio's own Diseno de Registros prints. Before the per-year split two of
+# these rows carried no box number at all -- base-imponible and base-liquidable
+# repeated their own id in the number field -- and none carried a segmento,
+# because nothing had been read off the design yet. They now name boxes 25 and
+# 27 on record page 714-09, which is where the form prints them.
+
+[revisions."2025".completeness_manifest]
+source_ref = "aeat-modelo-714-procedure"
+legal_refs = [
+    "ley-19-1991:art-28",
+    "ley-19-1991:art-30",
+    "ley-19-1991:art-31",
+    "ley-35-2006:art-48",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-63",
+    "ley-35-2006:art-74",
+]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "patrimonio.base-liquidable"
+number = "27"
+segmento = "714-09"
+segmento = "714-09"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "patrimonio.cuota-integra"
+number = "29"
+segmento = "714-10"
+segmento = "714-10"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "patrimonio.irpf-bases-imponibles"
+number = "30"
+segmento = "714-10"
+segmento = "714-10"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "patrimonio.dividendos-no-irpf"
+number = "31"
+segmento = "714-10"
+segmento = "714-10"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "patrimonio.base-ahorro-excluida"
+number = "32"
+segmento = "714-10"
+segmento = "714-10"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "patrimonio.limite-conjunto"
+number = "33"
+segmento = "714-10"
+segmento = "714-10"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "patrimonio.irpf-cuotas-integras"
+number = "34"
+segmento = "714-10"
+segmento = "714-10"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "patrimonio.irpf-cuotas-excluidas-base-ahorro"
+number = "35"
+segmento = "714-10"
+segmento = "714-10"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "patrimonio.cuota-integra-susceptible-limitacion"
+number = "36"
+segmento = "714-10"
+segmento = "714-10"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "patrimonio.suma-cuotas-limite"
+number = "37"
+segmento = "714-10"
+segmento = "714-10"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "patrimonio.exceso-limite-conjunto"
+number = "38"
+segmento = "714-10"
+segmento = "714-10"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "patrimonio.reduccion-limite-80"
+number = "39"
+segmento = "714-10"
+segmento = "714-10"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "patrimonio.total-cuota-integra"
+number = "40"
+segmento = "714-10"
+segmento = "714-10"

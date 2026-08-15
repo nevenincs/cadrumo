@@ -1,0 +1,122 @@
+# Ejercicio 2023. The art. 30 escala estatal, the art. 28 minimo exento
+# framework and the art. 31 percentages are the same as 2021's because the LAW
+# is the same, not because 2021 was copied. Read from the BOE consolidated text
+# of Ley 19/1991 (BOE-A-1991-14392) on 2026-08-15, per each article's own
+# amendment notes: art. 30 was last amended by art. 66 of Ley 11/2020
+# (BOE-A-2020-17339), effective 1 January 2021, and not since; art. 28 was last
+# amended by Real Decreto-ley 13/2011 (BOE-A-2011-14809); art. 31's current text
+# takes effect 1 January 2021 and has not been amended since. Ley 38/2022, which
+# created the Impuesto Temporal de Solidaridad de las Grandes Fortunas, amends
+# this ley at ARTICLE 5.Uno only (BOE-A-2022-22684) and leaves arts 28, 30 and 31
+# untouched.
+# Modelo 714 Ley 19/1991 art. 31 same-year joint limit.
+#
+# M100 supplies the broad same-year IRPF bases and cuotas. The exclusion slices
+# that art.31 requires but M100 does not expose at filing-grade granularity are
+# explicit M714 inputs: casillas 31, 32, 35 and 36. This avoids deriving the
+# limite conjunto from broad M100 totals alone.
+
+[[revisions."2023".formulas]]
+id = "patrimonio-irpf-bases-imponibles-m100"
+target_casilla_id = "patrimonio.irpf-bases-imponibles"
+expression = { op = "add", args = [
+    { relation = "m714-rel-100-base-imponible-general" },
+    { relation = "m714-rel-100-base-imponible-ahorro" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-48", "ley-35-2006:art-49"]
+source_refs = ["aeat-modelo-100-procedure", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "aeat-modelo-100-procedure"
+required_text = ["Modelo 100", "Impuesto sobre la Renta de las Personas Físicas"]
+
+[[revisions."2023".formulas]]
+id = "patrimonio-limite-conjunto-art31"
+target_casilla_id = "patrimonio.limite-conjunto"
+expression = { op = "percent", args = [
+    { op = "subtract", args = [
+        { op = "add", args = [
+            { casilla_id = "patrimonio.irpf-bases-imponibles" },
+            { casilla_id = "patrimonio.dividendos-no-irpf" },
+        ] },
+        { casilla_id = "patrimonio.base-ahorro-excluida" },
+    ] },
+    { parameter = "patrimonio-limite-conjunto-porcentaje" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-19-1991:art-31"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "aeat-modelo-714-procedure"
+required_text = ["Modelo 714", "Impuesto sobre el Patrimonio"]
+
+[[revisions."2023".formulas]]
+id = "patrimonio-irpf-cuotas-integras-m100"
+target_casilla_id = "patrimonio.irpf-cuotas-integras"
+expression = { op = "add", args = [
+    { relation = "m714-rel-100-cuota-integra-estatal" },
+    { relation = "m714-rel-100-cuota-integra-autonomica" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-63", "ley-35-2006:art-74"]
+source_refs = ["aeat-modelo-100-procedure", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "aeat-modelo-100-procedure"
+required_text = ["Modelo 100", "Impuesto sobre la Renta de las Personas Físicas"]
+
+[[revisions."2023".formulas]]
+id = "patrimonio-suma-cuotas-limite-art31"
+target_casilla_id = "patrimonio.suma-cuotas-limite"
+expression = { op = "add", args = [
+    { op = "subtract", args = [
+        { casilla_id = "patrimonio.irpf-cuotas-integras" },
+        { casilla_id = "patrimonio.irpf-cuotas-excluidas-base-ahorro" },
+    ] },
+    { casilla_id = "patrimonio.cuota-integra-susceptible-limitacion" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-19-1991:art-31"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "aeat-modelo-714-procedure"
+required_text = ["Modelo 714", "Impuesto sobre el Patrimonio"]
+
+[[revisions."2023".formulas]]
+id = "patrimonio-exceso-limite-conjunto-art31"
+target_casilla_id = "patrimonio.exceso-limite-conjunto"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla_id = "patrimonio.suma-cuotas-limite" },
+        { casilla_id = "patrimonio.limite-conjunto" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-19-1991:art-31"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "aeat-modelo-714-procedure"
+required_text = ["Modelo 714", "Impuesto sobre el Patrimonio"]
+
+[[revisions."2023".formulas]]
+id = "patrimonio-total-cuota-integra-art31"
+target_casilla_id = "patrimonio.total-cuota-integra"
+expression = { op = "subtract", args = [
+    { casilla_id = "patrimonio.cuota-integra" },
+    { op = "min", args = [
+        { casilla_id = "patrimonio.exceso-limite-conjunto" },
+        { casilla_id = "patrimonio.reduccion-limite-80" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "aeat-modelo-714-procedure"
+required_text = ["Modelo 714", "Impuesto sobre el Patrimonio"]

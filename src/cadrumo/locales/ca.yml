@@ -49240,12 +49240,8 @@ modelo:
               anexo-transmision-iic:
                 ganancia-patrimonial:
                   label: Guany patrimonial
-                nif-entidad:
-                  label: NIF de la societat o fons d'inversió
                 retencion:
                   label: Retenció o ingrés a compte
-                tipo-renta:
-                  label: Tipus de renda
                 total-ganancias:
                   label: Total de guanys patrimonials
                 total-retenciones:

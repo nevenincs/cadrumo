@@ -1,0 +1,34 @@
+# Ejercicio 2024. The art. 30 escala estatal, the art. 28 minimo exento
+# framework and the art. 31 percentages are the same as 2021's because the LAW
+# is the same, not because 2021 was copied. Read from the BOE consolidated text
+# of Ley 19/1991 (BOE-A-1991-14392) on 2026-08-15, per each article's own
+# amendment notes: art. 30 was last amended by art. 66 of Ley 11/2020
+# (BOE-A-2020-17339), effective 1 January 2021, and not since; art. 28 was last
+# amended by Real Decreto-ley 13/2011 (BOE-A-2011-14809); art. 31's current text
+# takes effect 1 January 2021 and has not been amended since. Ley 38/2022, which
+# created the Impuesto Temporal de Solidaridad de las Grandes Fortunas, amends
+# this ley at ARTICLE 5.Uno only (BOE-A-2022-22684) and leaves arts 28, 30 and 31
+# untouched.
+# Calculation verification for Modelo 714 (Impuesto sobre el Patrimonio,
+# Ley 19/1991). Enrolls the always-present computed final: cuota integra
+# (`patrimonio.cuota-integra`, casilla 29, art. 30), present in every filed
+# declaration, so min_coverage = 1 holds without breaking a legitimate filing.
+# The other computed casilla, `patrimonio.reduccion-limite-80` (casilla 39,
+# art. 31.1.b limite conjunto), is a situational reduction that is not
+# guaranteed present in every extraction, so it is deliberately NOT enrolled at
+# min_coverage = 1 (per the calibrated-enrollment discipline). Grounded in the
+# modelo's own AEAT procedure and BOE layout source_refs.
+[[revisions."2024".verification_expectations]]
+id = "modelo-714-calculation-verification"
+computed_casilla_ids = ["patrimonio.cuota-integra"]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-19-1991:art-30"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]

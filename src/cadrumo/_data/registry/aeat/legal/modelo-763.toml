@@ -49,15 +49,25 @@ applies_from = 2011-07-07
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-11704"
 review_status = "reviewed"
 
+# Re-pointed 2026-08-15: the previous corpus_path (orden-eha-1881-2011.html,
+# 1114 bytes) carries no annex section and no record-layout vocabulary. The
+# real Diseño de Registro (100952 bytes) is bundled and was never cited --
+# verified directly: "N° | Posic. | Lon | Tipo | Comp | Descripción | Oblig.
+# | Contenido", the canonical AEAT layout table header, starting with the
+# "<T" model/page envelope-open literal at position 1. Fields now point at
+# the bundled file, sourced from its manifest.json (real, observed
+# provenance, not re-fetched). record_design_epoch left undeclared (only
+# one design is bundled for this modelo, so no epoch ambiguity to resolve);
+# applies_from set to 2018-01-01, matching the filename's own stated scope
+# ("desde 2018 4T y siguientes").
 [sources."enrolled-modelo-763-layout"]
 evidence_tier = "layout_authority"
-authority = "boe"
-kind = "form_spec"
-corpus_path = "corpus/normatives/html/orden-eha-1881-2011.html"
-sha256 = "f29da809112a6e27bf7b21a4ff34003d7cb9d11983d533f1c810fe0c2cafd437"
-bytes = 1114
-retrieved_at = 2026-07-04
-published_at = 2011-07-06
-applies_from = 2011-07-07
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-11704"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_763/files/01-763-desde-2018-4t-y-siguientes-actualizado-en-2023.xlsx"
+sha256 = "590db67f074251ad1ddfcbebfffbf8d58f6157848b62661fadc334bc5e7af5d4"
+bytes = 100952
+retrieved_at = 2026-07-21
+applies_from = 2018-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR763e18.xlsx"
 review_status = "reviewed"

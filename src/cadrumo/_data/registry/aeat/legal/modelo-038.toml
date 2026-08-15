@@ -54,15 +54,23 @@ review_status = "reviewed"
 # authoritative AEAT Diseño de Registros (fichero-BOE fixed-width layout) — that
 # is not bundled. It grounds only the static form-approval layout, honestly
 # satisfying the parity gate without asserting a verified byte-position design.
+# Re-pointed 2026-08-15: the previous corpus_path (orden-hac-66-2002.html,
+# 1093 bytes) carries no annex section and no record-layout vocabulary --
+# it approves the model but does not contain its positional design. The
+# real Diseño de Registro (94268 bytes, "N.I.F. ... 1 2 3 4 ... 237"
+# position-numbered header row verified directly) is bundled and was never
+# cited. corpus_path/sha256/bytes/source_url/retrieved_at now point at it,
+# sourced from the bundle's own manifest.json (real, observed provenance,
+# not re-fetched). applies_from/record_design_epoch deliberately left
+# undeclared: the file states no ejercicio or effective date of its own
+# ("actualizado 28/06/2024" is an update stamp, not a coverage start).
 [sources."enrolled-modelo-038-layout"]
 evidence_tier = "layout_authority"
-authority = "boe"
-kind = "form_spec"
-corpus_path = "corpus/normatives/html/orden-hac-66-2002.html"
-sha256 = "c123f133bec99b783a698eb3b595f8a5ef580629760e4857f4fc463f0d2adab9"
-bytes = 1093
-retrieved_at = 2026-07-04
-published_at = 2002-01-15
-applies_from = 2002-01-16
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-1041"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_038/files/01-038-diseno-de-registro-actualizado-28-06-2024.pdf"
+sha256 = "f2f713cd60b26548ab9fb57b457f28c5a7841423592f95debdf83a78d9e2f0fe"
+bytes = 94268
+retrieved_at = 2026-07-21
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/dr038_2024.pdf"
 review_status = "reviewed"

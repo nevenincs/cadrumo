@@ -1,0 +1,37 @@
+# Ejercicio 2025. The art. 30 escala estatal, the art. 28 minimo exento
+# framework and the art. 31 percentages are the same as 2021's because the LAW
+# is the same, not because 2021 was copied. Read from the BOE consolidated text
+# of Ley 19/1991 (BOE-A-1991-14392) on 2026-08-15, per each article's own
+# amendment notes: art. 30 was last amended by art. 66 of Ley 11/2020
+# (BOE-A-2020-17339), effective 1 January 2021, and not since; art. 28 was last
+# amended by Real Decreto-ley 13/2011 (BOE-A-2011-14809); art. 31's current text
+# takes effect 1 January 2021 and has not been amended since. Ley 38/2022, which
+# created the Impuesto Temporal de Solidaridad de las Grandes Fortunas, amends
+# this ley at ARTICLE 5.Uno only (BOE-A-2022-22684) and leaves arts 28, 30 and 31
+# untouched.
+# Modelo 714 casilla 39 = 80 % de la cuota íntegra del Impuesto sobre el
+# Patrimonio (suelo de la reducción por el límite conjunto IP+IRPF, Ley 19/1991
+# art. 31). The límite conjunto (art. 31) caps the combined IP+IRPF cuota at 60 %
+# of the computable IRPF bases imponibles, after the article's exclusions, but
+# the IP-cuota reduction may not exceed 80 % of the IP cuota íntegra (so the IP
+# cuota cannot fall below 20 % of its íntegra).
+# Casilla 39 is that 80 %-reference value, computed unconditionally from the
+# cuota íntegra (casilla 29). The "80 por 100" figure is carried as the
+# art.31 parameter `patrimonio-reduccion-maxima-limite-conjunto-porcentaje`
+# and verified against the bundled authoritative corpus
+# `ley-19-1991-art-31.html`.
+
+[[revisions."2025".formulas]]
+id = "patrimonio-reduccion-limite-80-suelo"
+target_casilla_id = "patrimonio.reduccion-limite-80"
+expression = { op = "percent", args = [
+    { casilla_id = "patrimonio.cuota-integra" },
+    { parameter = "patrimonio-reduccion-maxima-limite-conjunto-porcentaje" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-19-1991:art-31"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-modelo-714-procedure"
+required_text = ["patrimonio neto"]

@@ -51515,20 +51515,6 @@ modelo:
       revision:
         2015-y-siguientes:
           casilla:
-            impatriado:
-              anexo-transmision-iic:
-                ganancia-patrimonial:
-                  label: Ganancia patrimonial
-                nif-entidad:
-                  label: NIF de la sociedad o fondo de inversión
-                retencion:
-                  label: Retención o ingreso a cuenta
-                tipo-renta:
-                  label: Tipo de renta
-                total-ganancias:
-                  label: Total ganancias patrimoniales
-                total-retenciones:
-                  label: Total retenciones o ingresos a cuenta
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la declaracion

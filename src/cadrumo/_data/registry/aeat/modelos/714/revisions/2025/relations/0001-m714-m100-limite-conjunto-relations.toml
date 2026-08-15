@@ -1,0 +1,70 @@
+# Ejercicio 2025. The art. 30 escala estatal, the art. 28 minimo exento
+# framework and the art. 31 percentages are the same as 2021's because the LAW
+# is the same, not because 2021 was copied. Read from the BOE consolidated text
+# of Ley 19/1991 (BOE-A-1991-14392) on 2026-08-15, per each article's own
+# amendment notes: art. 30 was last amended by art. 66 of Ley 11/2020
+# (BOE-A-2020-17339), effective 1 January 2021, and not since; art. 28 was last
+# amended by Real Decreto-ley 13/2011 (BOE-A-2011-14809); art. 31's current text
+# takes effect 1 January 2021 and has not been amended since. Ley 38/2022, which
+# created the Impuesto Temporal de Solidaridad de las Grandes Fortunas, amends
+# this ley at ARTICLE 5.Uno only (BOE-A-2022-22684) and leaves arts 28, 30 and 31
+# untouched.
+[[revisions."2025".relations]]
+id = "m714-rel-100-base-imponible-general"
+kind = "cross_model_output"
+dependency_role = "direct_calculation"
+source_modelo = "100"
+source_revision_selector = { year_from = 2021, year_to = 2025 }
+source_casilla_id = "0435"
+target_binding = "m714-m100-base-imponible-general"
+period_alignment = { source_period = "0A", target_period = "0A", filing_year_delta = 0 }
+source_periods = ["0A"]
+target_periods = ["0A"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-48"]
+source_refs = ["aeat-modelo-100-procedure", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2025".relations]]
+id = "m714-rel-100-base-imponible-ahorro"
+kind = "cross_model_output"
+dependency_role = "direct_calculation"
+source_modelo = "100"
+source_revision_selector = { year_from = 2021, year_to = 2025 }
+source_casilla_id = "0460"
+target_binding = "m714-m100-base-imponible-ahorro"
+period_alignment = { source_period = "0A", target_period = "0A", filing_year_delta = 0 }
+source_periods = ["0A"]
+target_periods = ["0A"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-49"]
+source_refs = ["aeat-modelo-100-procedure", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2025".relations]]
+id = "m714-rel-100-cuota-integra-estatal"
+kind = "cross_model_output"
+dependency_role = "direct_calculation"
+source_modelo = "100"
+source_revision_selector = { year_from = 2021, year_to = 2025 }
+source_casilla_id = "0545"
+target_binding = "m714-m100-cuota-integra-estatal"
+period_alignment = { source_period = "0A", target_period = "0A", filing_year_delta = 0 }
+source_periods = ["0A"]
+target_periods = ["0A"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-63"]
+source_refs = ["aeat-modelo-100-procedure", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2025".relations]]
+id = "m714-rel-100-cuota-integra-autonomica"
+kind = "cross_model_output"
+dependency_role = "direct_calculation"
+source_modelo = "100"
+source_revision_selector = { year_from = 2021, year_to = 2025 }
+source_casilla_id = "0546"
+target_binding = "m714-m100-cuota-integra-autonomica"
+period_alignment = { source_period = "0A", target_period = "0A", filing_year_delta = 0 }
+source_periods = ["0A"]
+target_periods = ["0A"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-19-1991:art-31", "ley-35-2006:art-74"]
+source_refs = ["aeat-modelo-100-procedure", "aeat-modelo-714-procedure", "boe-modelo-714-layout"]

@@ -49150,12 +49150,8 @@ modelo:
               anexo-transmision-iic:
                 ganancia-patrimonial:
                   label: Tőkenyereség
-                nif-entidad:
-                  label: A társaság vagy befektetési alap adóazonosító száma (NIF)
                 retencion:
                   label: Forrásadó vagy adóelőleg
-                tipo-renta:
-                  label: Jövedelemtípus
                 total-ganancias:
                   label: Tőkenyereségek összesen
                 total-retenciones:

@@ -19,23 +19,14 @@ to the closure these installers must pin, and a constraints file carrying only
 ``cadrumo``'s closure would let the MCP server's dependencies float.
 
 There is no ``agent`` extra to reach them through any more: it was removed from
-``cadrumo`` when the harness became its own distribution. The harness is a plain
-``[tool.uv.sources]`` path dependency rather than a ``[tool.uv.workspace]``
-member, so ``uv export --package cadrumo-harness`` refuses it ("the workspace
-does not have a member cadrumo-harness") and the harness tree carries no
-lockfile of its own for a second export to run against. Both closures therefore
-reach this export only through the root lockfile's record of the harness inside
-``cadrumo``'s own resolution.
-
-TODO: that record is not durable. ``cadrumo-harness`` sits in the ``dev``
-dependency group, not in ``[project.dependencies]``, so the next ``uv lock``
-moves it out of ``cadrumo``'s runtime resolution and the MCP server's
-dependencies leave this export with it. There is no flag that recovers them:
-promoting ``cadrumo-harness`` to a ``[tool.uv.workspace]`` member, so
-``uv export --package cadrumo-harness`` can address it directly, is the
-lockfile-shape decision that resolves this and it is deliberately not taken
-here. Until it is, :func:`export_runtime_constraints` refuses rather than
-emitting a constraints file the MCP server's dependencies fell out of.
+``cadrumo`` when the harness became its own distribution. ``cadrumo-harness`` is
+a ``[tool.uv.workspace]`` member of this same repo-root ``uv.lock`` (not merely a
+``[tool.uv.sources]`` path override), so ``uv export --package cadrumo-harness``
+addresses it directly. Because the harness itself depends on ``cadrumo``, that
+one export's closure is already the UNION of both distributions' third-party
+requirements — no second export or merge is needed. Local, bundle-local-wheel
+rows (``cadrumo``, ``cadrumo-harness``, and the two data companions) are
+excluded via ``--no-emit-package``; only genuine third-party leaves are pinned.
 """
 
 from __future__ import annotations
@@ -54,13 +45,17 @@ _UTF_8 = UTF_8
 #: harness and both companions install from bundle-local or index-resolved
 #: product wheels, so they are excluded from the pinned third-party constraint
 #: set; only their transitive dependency closure needs pinning.
-_LOCAL_PRODUCT_PACKAGES = ("cadrumo-data-manuals", "cadrumo-data-official", "cadrumo-harness")
+_LOCAL_PRODUCT_PACKAGES = ("cadrumo", "cadrumo-data-manuals", "cadrumo-data-official", "cadrumo-harness")
+#: The distribution whose resolution is exported. Exporting THIS package (not
+#: the workspace root) is what pulls in the MCP SDK / transport stack: the
+#: harness depends on ``cadrumo``, so its closure is the union of both.
+_EXPORTED_PACKAGE = "cadrumo-harness"
 #: Path (relative to the repository root) of the sibling harness distribution
 #: whose runtime requirements must be covered by the exported closure.
 _HARNESS_PYPROJECT = Path("src") / "cadrumo-harness" / "pyproject.toml"
 #: The harness depends on ``cadrumo`` itself; that row is a product row, not a
 #: third-party requirement the constraints file pins.
-_HARNESS_SELF_REFERENCES = frozenset({"cadrumo", *_LOCAL_PRODUCT_PACKAGES})
+_HARNESS_SELF_REFERENCES = frozenset(_LOCAL_PRODUCT_PACKAGES)
 _CONSTRAINTS_HEADER = (
     "# Runtime dependency closure pinned from the tested uv.lock.\n"
     "# Generated at packaging time; do not edit by hand.\n"
@@ -108,8 +103,12 @@ def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
 
     The exported closure must cover the ``cadrumo-harness`` distribution's own
     runtime requirements as well as ``cadrumo``'s, because both installers ship
-    the harness and its ``cadrumo-mcp`` server. Coverage is asserted rather than
-    assumed: see :func:`_assert_harness_closure_present`.
+    the harness and its ``cadrumo-mcp`` server. Exporting ``--package
+    cadrumo-harness`` (a real ``[tool.uv.workspace]`` member) rather than the
+    workspace root gives that union directly — the harness depends on
+    ``cadrumo``, so its resolution transitively carries cadrumo's own closure.
+    Coverage is still asserted, not merely assumed: see
+    :func:`_assert_harness_closure_present`.
     """
     lock = repo_root / "uv.lock"
     if not lock.is_file():
@@ -123,6 +122,8 @@ def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
         "--frozen",
         "--no-dev",
         "--no-default-groups",
+        "--package",
+        _EXPORTED_PACKAGE,
         "--no-hashes",
         "--no-annotate",
         "--no-header",
@@ -159,18 +160,13 @@ def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
 def _assert_harness_closure_present(lines: list[str], *, repo_root: Path) -> None:
     """Refuse a closure the ``cadrumo-harness`` runtime requirements fell out of.
 
-    ``uv export`` reaches the harness only through the root lockfile's record of
-    ``cadrumo``'s resolution. It cannot be asked for directly: the harness is a
-    ``[tool.uv.sources]`` path dependency, not a ``[tool.uv.workspace]`` member,
-    so ``uv export --package cadrumo-harness`` refuses it, and the harness tree
-    carries no lockfile of its own for a second export to run against.
-
-    When the requirement names are absent, the Scoop manifest and the MCPB
-    bundle would install ``cadrumo-harness`` and let the MCP SDK and its
-    transport stack float free of the tested cohort — the exact drift this
-    module exists to prevent. That is a refusal, never a warning: resolving it
-    means promoting ``cadrumo-harness`` to a formal uv workspace member so
-    ``uv export --package`` can address it, which is a lockfile-shape decision.
+    Defense in depth, not the primary guarantee: :func:`export_runtime_constraints`
+    already exports ``--package cadrumo-harness`` directly, so this should always
+    pass. It exists to catch the failure mode where a future change to the
+    harness's ``pyproject.toml`` dependencies, or to how the export is invoked,
+    silently drops one of them from the pinned closure — the Scoop manifest and
+    the MCPB bundle would then let the MCP SDK and its transport stack float free
+    of the tested cohort, the exact drift this module exists to prevent.
     """
     exported = {_normalize(line.split("==", 1)[0]) for line in lines}
     required = _harness_runtime_requirements(repo_root)
@@ -179,12 +175,9 @@ def _assert_harness_closure_present(lines: list[str], *, repo_root: Path) -> Non
         raise SystemExit(
             "uv export omitted the cadrumo-harness runtime closure: "
             f"{', '.join(missing)}. The harness ships in the Scoop manifest and the "
-            "MCPB bundle, so its dependencies must be pinned with cadrumo's. "
-            "uv cannot export a path-sourced non-workspace dependency on its own "
-            "(`uv export --package cadrumo-harness` refuses: the workspace has no "
-            "such member), and src/cadrumo-harness carries no lockfile of its own. "
-            "Promote cadrumo-harness to a [tool.uv.workspace] member and export its "
-            "closure with --package.",
+            "MCPB bundle, so its dependencies must be pinned with cadrumo's. Check "
+            "that src/cadrumo-harness/pyproject.toml's dependencies still resolve "
+            "and that cadrumo-harness is still a [tool.uv.workspace] member.",
         )
 
 

@@ -1,21 +1,77 @@
-# Modelo 714 is an autoliquidacion the taxpayer presents to AEAT, so its
-# application surfaces are the filing lifecycle and the presentation calendar.
-# No export surface is declared here: this revision has no export layout yet,
-# and a link asserting an export consumer would claim a capability the registry
-# does not carry.
+# Ejercicio 2024. The art. 30 escala estatal, the art. 28 minimo exento
+# framework and the art. 31 percentages are the same as 2021's because the LAW
+# is the same, not because 2021 was copied. Read from the BOE consolidated text
+# of Ley 19/1991 (BOE-A-1991-14392) on 2026-08-15, per each article's own
+# amendment notes: art. 30 was last amended by art. 66 of Ley 11/2020
+# (BOE-A-2020-17339), effective 1 January 2021, and not since; art. 28 was last
+# amended by Real Decreto-ley 13/2011 (BOE-A-2011-14809); art. 31's current text
+# takes effect 1 January 2021 and has not been amended since. Ley 38/2022, which
+# created the Impuesto Temporal de Solidaridad de las Grandes Fortunas, amends
+# this ley at ARTICLE 5.Uno only (BOE-A-2022-22684) and leaves arts 28, 30 and 31
+# untouched.
+[[revisions."2024".application_links]]
+id = "modelo-714-calculation"
+surface = "calculation"
+consumer = "cadrumo.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2024".application_links]]
-id = "modelo-714-2024-filing"
+id = "modelo-714-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
-legal_refs = ["orden-hac-242-2025:art-2", "orden-hac-242-2025:art-4"]
-source_refs = ["aeat-modelo-714-procedure"]
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2024".application_links]]
-id = "modelo-714-2024-deadline"
+id = "modelo-714-extractor"
+surface = "extractor"
+consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+requires_snapshot = true
+legal_refs = ["ley-19-1991:art-28"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2024".application_links]]
+id = "modelo-714-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
-legal_refs = ["orden-hac-242-2025:art-8"]
+legal_refs = ["ley-19-1991:art-28"]
+source_refs = ["aeat-modelo-714-procedure"]
+
+# Snapshot-workflow surfaces required once the revision declares a calculation
+# formula: a formula-bearing construct must expose the full calculation /
+# verification / review / approval / reconciliation / workflow surface set.
+[[revisions."2024".application_links]]
+id = "modelo-714-review"
+surface = "review"
+consumer = "cadrumo.application.filing.review"
+requires_snapshot = true
+legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31"]
+source_refs = ["aeat-modelo-714-procedure"]
+
+[[revisions."2024".application_links]]
+id = "modelo-714-approval"
+surface = "approval"
+consumer = "cadrumo.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31"]
+source_refs = ["aeat-modelo-714-procedure"]
+
+[[revisions."2024".application_links]]
+id = "modelo-714-reconciliation"
+surface = "reconciliation"
+consumer = "cadrumo.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31"]
+source_refs = ["aeat-modelo-714-procedure"]
+
+[[revisions."2024".application_links]]
+id = "modelo-714-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
+requires_snapshot = true
+legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31"]
 source_refs = ["aeat-modelo-714-procedure"]

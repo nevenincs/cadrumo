@@ -48486,8 +48486,6 @@ modelo:
                   label: Tax ID of the company or investment fund
                 retencion:
                   label: Withholding or payment on account
-                tipo-renta:
-                  label: Income type
                 total-ganancias:
                   label: Total capital gains
                 total-retenciones:
