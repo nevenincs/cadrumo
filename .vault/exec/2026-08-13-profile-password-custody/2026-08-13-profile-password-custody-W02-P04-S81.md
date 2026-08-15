@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:d83cdc4d50088649260504d9ac12e0d6852e4e54b64200e78fa39ca8b405d2f0'
+body_hash: 'sha256:964809736000c102310e5e8d3c69d7ce00e45a41ed9517bc2c061f5f8f3c04da'
 step_id: 'S81'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -108,4 +108,44 @@ both fixes yields five failures against twenty-three passes, every failure on
 recovered key material, four of five phases leaking and the already-retired phase
 clean. The first injection attempt reddened on the reported outcome rather than
 the material and was reordered so the material is measured first.
+
+
+**The decision record already specified this, so the defect was implementation
+drift from a written contract rather than an unspecified area.** The governing
+rollup record states that success atomically swaps the active reference, promotes
+the incoming session, attempts optional keyring acceleration, cleans candidate
+artefacts, and only then retires the prior profile. It says RETIRE A -- A being
+the profile the handover moved away from -- and never says that identity comes
+from the live session. The live-session-only derivation was the implementation
+drifting away from the contract, not the contract failing to say.
+
+That also settles the standing of the second fix, which the dispatcher's brief
+had not anticipated. The same record assigns stale-session revocation to login's
+mandatory custody-transaction preflight, which is exactly where the
+recovery-time retirement was placed. It is therefore on-contract rather than an
+invention, which could not have been claimed from the code alone.
+
+A third clause is consistent rather than contradictory: custody-generation
+changes revoke sessions, and a handover changes neither generation nor key epoch
+-- which is precisely why the receipt survives and explicit retirement is
+load-bearing.
+
+**The overloaded-vocabulary warning paid off here, and would otherwise have
+prevented the complete fix.** This step touches the profile-session acceleration
+receipt, which lives in the keystore sidecar OUTSIDE the encrypted bucket store,
+so revoking it needs no unlocked profile -- measured, by the recovery-time
+retirement running before any authentication and the previously-leaking phase
+passing. The sibling finding that revocation requires an unlocked profile is
+correct about the OTHER artefact, the authority session held as an encrypted row
+inside the bucket. Carrying that correct finding across the name would have
+concluded that recovery-time retirement was impossible and left the phase
+leaking.
+
+An exhaustive sweep found no third site. All six durable teardowns of
+profile-session material in production now resolve identity from a durable
+source, and every call site of the live-session accessor was read: the
+non-revocation ones are liveness guards for the idempotent-login no-op rather
+than identity derivations, and the one live-session-only revocation is so BY
+DESIGN, because it zeroises this process's key material and must not reach
+another profile.
 
