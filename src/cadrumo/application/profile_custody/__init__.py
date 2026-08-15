@@ -61,10 +61,10 @@ class ProfileRecordCryptoError(CoreError, RuntimeError):
     Roots at :class:`~core.errors.CoreError` so the refusal binds to the error
     registry rather than reaching an operator as an unregistered builtin. The
     port deliberately does not root at the persistence layer's own
-    :class:`~adapters.persistence.storage.EncryptionError`: this package exists
+    :exc:`~adapters.persistence.storage.EncryptionError`: this package exists
     to keep the adapter's crypto types off the application port, and adopting
     that family would make the port's refusal catchable by every storage-family
-    handler — a broadening, not a re-root. :class:`RuntimeError` is retained so
+    handler — a broadening, not a re-root. :exc:`RuntimeError` is retained so
     the ancestry every existing caller was written against is unchanged.
     """
 

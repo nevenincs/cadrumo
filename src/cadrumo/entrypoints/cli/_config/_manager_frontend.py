@@ -103,11 +103,11 @@ def host_can_run_full_screen() -> bool:
 def _profile_next_action_notice(record: UserProfileRecord) -> Notice | None:
     """The next-step advisory for a profile the routing projection singles out.
 
-    Reuses the SAME projection the scripted wizard's own success line
+    Reuses the SAME classification the scripted wizard's own success line
     already renders --
-    :func:`~cadrumo.application.wizard.next_step_command_for_profile_values`
-    -- so the manager and the registration screen it opens onto never grow a
-    second opinion about what a fiscal-residency classification implies.
+    :func:`~cadrumo.application.wizard.profile_next_step_modelo` -- so the
+    manager and the registration screen it opens onto never grow a second
+    opinion about what a fiscal-residency classification implies.
     Registration itself declares no tax facts: a profile is born with only a
     label and a passphrase, so this can only ever fire once the operator has
     answered the fiscal-residency question, whether in the manager session
@@ -115,28 +115,32 @@ def _profile_next_action_notice(record: UserProfileRecord) -> Notice | None:
     separate hook to wire on the registration screen itself, because at that
     moment there is nothing yet to project.
 
-    Silent for the ordinary default: ``aeat app modelo work create`` applies
-    to every profile regardless of its facts and is not a discovery worth a
-    banner, so a profile the projection does not single out renders no
-    notice at all rather than repeating the generic default on every page.
+    Silent for the ordinary default: every profile the projection does not
+    single out is not a discovery worth a banner, so it renders no notice at
+    all rather than repeating a generic default on every page. The message
+    names the routed MODELO rather than the wizard's ready-made CLI command
+    line: the shared :class:`~cadrumo.core.json_contract.Notice` structurally
+    refuses an embedded executable ``aeat ...`` invocation outside its typed
+    ``action`` projection, which resolves against the live operator-surface
+    catalogue this module does not own.
     """
     from ....application.user_profile import record_to_path_values
-    from ....application.wizard import DEFAULT_PROFILE_NEXT_COMMAND, next_step_command_for_profile_values
+    from ....application.wizard import profile_next_step_modelo
     from ....core.i18n import tr
     from ....core.json_contract import Notice, NoticeSeverity
 
-    command = next_step_command_for_profile_values(record_to_path_values(record))
-    if command == DEFAULT_PROFILE_NEXT_COMMAND:
+    modelo = profile_next_step_modelo(record_to_path_values(record))
+    if modelo is None:
         return None
     return Notice(
         severity=NoticeSeverity.INFO,
-        code="config.profile.manager.next_step",
+        code="config.profile.manager.next_step_modelo",
         message=tr(
-            "flows.manager.next_step",
-            default="Next step: run '{command}'.",
-            command=command,
+            "flows.manager.next_step_modelo",
+            default="This profile's declared facts route it to Modelo {modelo}.",
+            modelo=modelo,
         ),
-        context={"command": command},
+        context={"modelo": modelo},
     )
 
 
@@ -346,7 +350,7 @@ def _active_profile_manager_storage(
     )
     from ....application.wizard import WizardFactWriteDoor, apply_wizard_fact_changes
     from ....core import require_active_bucket_id
-    from ....domain.user_profile import UserProfileFact, UserProfileRecord, load_user_profile_schema
+    from ....domain.user_profile import UserProfileFact, load_user_profile_schema
 
     profile_id = require_active_bucket_id()
     schema = load_user_profile_schema()

@@ -49,7 +49,7 @@ class M303RegimenSimplificadoAnnualSummaryHandoffError(CoreValidationError):
     Roots at :class:`~core.errors.CoreValidationError` like every other refusal
     in this package, so the class binds to the error registry and its refusal
     carries a code, a category and locale-resolved text. That base already
-    carries :class:`ValueError`, so the resolver keeps the ancestry its callers
+    carries :exc:`ValueError`, so the resolver keeps the ancestry its callers
     were written against.
     """
 

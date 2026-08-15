@@ -71,7 +71,7 @@ class ProfileRecordConflictError(UserProfileError, ValueError):
 
     Joins the :class:`~domain.user_profile.UserProfileError` family so the
     refusal binds to the error registry and one clause still catches the whole
-    user-profile surface. :class:`ValueError` is retained deliberately: it is
+    user-profile surface. :exc:`ValueError` is retained deliberately: it is
     load-bearing ancestry here, not decoration -- see
     :class:`ProfileRecordIntegrityError`.
     """
@@ -81,7 +81,7 @@ class ProfileRecordIntegrityError(UserProfileError, ValueError):
     """A current-record row or its event witness is malformed or mis-bound.
 
     Joins the :class:`~domain.user_profile.UserProfileError` family so the
-    refusal binds to the error registry. :class:`ValueError` is retained
+    refusal binds to the error registry. :exc:`ValueError` is retained
     because the lifecycle restore path converts a failed authenticated
     validation into its own refusal through a ``ValueError`` arm; dropping the
     builtin ancestry would let the inner refusal escape that conversion and

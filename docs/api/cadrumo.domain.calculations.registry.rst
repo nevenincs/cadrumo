@@ -138,6 +138,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_evidence
    cadrumo.domain.calculations.registry._validate_export_exemption
    cadrumo.domain.calculations.registry._validate_export_field_widths
+   cadrumo.domain.calculations.registry._validate_export_layout_coverage
    cadrumo.domain.calculations.registry._validate_exports
    cadrumo.domain.calculations.registry._validate_extraction_profiles
    cadrumo.domain.calculations.registry._validate_formulas
