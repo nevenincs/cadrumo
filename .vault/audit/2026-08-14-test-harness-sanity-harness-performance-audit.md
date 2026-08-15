@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:4b83f2ecf533f51c3f7cf588067ea52dabdb7033d83606b7a77b51fdebd4f003'
+body_hash: 'sha256:bbbe84b6b55d420480901404f512273182d5161855973570f102de86cff13f1d'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -349,3 +349,75 @@ deliberately calls `cache_clear()` and must keep talking to the loader directly.
 The saving forgone is one tree walk in one test. Not worth laundering an oracle
 through an indirection whose whole value is that it is shared and therefore
 changeable by someone else.
+
+## Round: the `src/cadrumo/tests` durations slice, re-measured
+
+The targets carried forward from the previous round were stale, and re-running
+`--durations` before acting is what caught it:
+
+    recorded          re-measured
+    145.6s   ->       105.84s  test_acceptance_wall_catalogue (setup)
+    120.8s   ->        90.17s  test_wheel_content_boundary (setup)
+    102.3s   ->        57.44s  test_full_corpus_collectability_harness (call)
+
+Acting on the recorded figures would have meant optimising a ranking that no
+longer held. Re-measuring also surfaced a target absent from the carried list
+entirely, and it was second overall: `test_dev_audit_report.py` setup at 91.43s.
+
+### Fixed: the shadowing dimension was scanned three times
+
+`audit_shadowing()` runs the real Family-3 scanner over the live tree. Measured
+standalone at 14.86s and 15.52s across two calls -- it carries no memo.
+`test_dev_audit_report.py` invoked it THREE times: twice standalone
+(`test_audit_shadowing_returns_a_valid_dimension_report` and
+`test_audit_shadowing_red_findings_are_never_in_the_tolerated_baseline`) and once
+more inside `build_report`, which the module-scoped `live_health_report` fixture
+already ran.
+
+Both standalone calls now read the dimension out of the composed report. This is
+sound rather than merely convenient: `build_report` places the
+`audit_shadowing()` return value into its tuple UNCHANGED -- no projection, no
+copy -- so `_dimension(report, "shadowing")` yields the identical object the
+standalone call produced, including `details`, which the baseline test reads.
+That was checked in the source before the edit, not assumed from the shape.
+
+Measured on the whole module, each configuration run twice:
+
+    before : 128.80s, 135.18s
+    after  :  91.51s,  94.27s
+
+Roughly 30% off, and 12 passed in all four runs. The before-figures come from a
+`git archive HEAD` snapshot reached through a confirmed `PYTHONPATH` shadow, so
+both configurations measure the same tree except for the one file.
+
+This is the same lever that previously collapsed the complexity and duplication
+dimensions in this module; shadowing was simply missed at the time because only
+the two dimensions named in the durations table were examined. Worth stating as
+a pattern: when one composed report is already being built, EVERY standalone
+re-derivation of one of its parts is redundant, not just the expensive ones that
+happened to rank.
+
+### Ruled out this round, with the measurement that ruled them out
+
+`test_acceptance_wall_catalogue` (105.84s setup) -- ALREADY optimised. Its 30
+catalogued walls were previously collapsed from ~30 cold pytest boots into ONE
+shared subprocess boot. What remains is the batched subprocess actually
+EXECUTING 30 integration wall tests, which is precisely what the gate exists to
+prove. There is no duplication left to remove; the cost is the evidence.
+
+`test_full_corpus_collectability_harness` (57.44s) -- inherent. It runs a single
+subprocess collecting the entire ~29,600-test corpus. It was checked for the
+obvious defect (one subprocess per root) and does not have it: `collection_report`
+passes every target to one invocation. The second caller of `collection_report`
+is a bounded scratch control, not a second full collection.
+
+`tracked_test_files` -- MEASURED at ~0.08s per call (3216 files via `git
+ls-files`), uncached, with five call sites. Caching it would save well under a
+second while freezing an answer the harness currently re-reads from git on
+purpose. Not worth the staleness surface. Recorded so the "it spawns a
+subprocess, therefore cache it" reflex is not re-chased on the next pass.
+
+`audit_layering` -- MEASURED at 1.51s and 1.25s. Called twice. Left alone; the
+standalone call in `test_audit_layering_evaluates_every_declared_contract` is
+cheap enough that routing it through the fixture buys nothing and costs a
+coupling.
