@@ -96,19 +96,16 @@ signed = false
 legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2022"]
 
-[[revisions."2022".export_layouts.records.fields]]
-id = "modelo-390-page-07-complementaria-indicator"
-offset = 12
-length = 1
-kind = "header"
-producer_key = "amendment_evidence.is_complementaria"
-data_type = "boolean"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
+# NOT AUTHORED, deliberately: indicador de pagina complementaria at
+# offset 12, length 1. AEAT declares its contenido as
+# 'Blanco (No complementaria) o "C" (Complementaria)' -- a real
+# operator datum whose wire alphabet is blank or "C". No carrier in this
+# registry can emit it: data_type "boolean" renders the canonical "X" and
+# blank only (_fixed_width_codec._render_boolean), a literal would force "C"
+# onto every filing, and a filler would silently blank a real flag. Authoring
+# it any of those ways would write wrong bytes, so the position is left
+# unwritten and reported instead. Paginas 5 and 7 are the only two pages
+# carrying this flag; every other page declares the position 'En blanco'.
 
 [[revisions."2022".export_layouts.records.fields]]
 id = "modelo-390-page-07-casilla-adquisiciones-interiores-exentas"
