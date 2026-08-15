@@ -745,11 +745,23 @@ class _ModuleVisitor(ast.NodeVisitor):
         #: Parameter names of the enclosing function, if any. Only these may be
         #: read as deferred-to-call-site; any other non-literal stays a refusal.
         self._enclosing_parameters: tuple[str, ...] = ()
+        #: ``usefixtures`` names marked on the enclosing class chain, which every
+        #: function inside inherits.
+        self._class_usefixtures: tuple[str, ...] = ()
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         self._qualname.append(node.name)
         self._class_depth += 1
+        # A class-level ``usefixtures`` applies to every test the class holds, so
+        # it is a real request from each of them. Reading only function
+        # decorators made those requests invisible and let a fixture reached
+        # ONLY that way report zero consumers -- which reads as dead code and is
+        # the opposite of the truth. Nested classes inherit the outer mark, so
+        # the stack accumulates rather than replaces.
+        inherited = self._class_usefixtures
+        self._class_usefixtures = (*inherited, *_usefixtures(node.decorator_list))
         self.generic_visit(node)
+        self._class_usefixtures = inherited
         self._class_depth -= 1
         self._qualname.pop()
 
@@ -779,7 +791,9 @@ class _ModuleVisitor(ast.NodeVisitor):
         )
         parameters = _parameters(node.args)
         declared_dependencies = tuple(parameter.name for parameter in parameters)
-        usefixtures = _usefixtures(node.decorator_list)
+        usefixtures = tuple(
+            dict.fromkeys((*self._class_usefixtures, *_usefixtures(node.decorator_list))),
+        )
         requested_fixtures, dynamic_requests = _fixture_requests(node, path=relative, qualname=qualname)
         self.dynamic_fixture_requests.extend(dynamic_requests)
         is_fixture = fixture_decorator is not None

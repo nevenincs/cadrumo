@@ -331,6 +331,53 @@ def test_census_records_fixture_identity_constraints_and_topology(tmp_path: Path
     ]
 
 
+def test_class_level_usefixtures_counts_as_a_consumer_of_the_named_fixture(tmp_path: Path) -> None:
+    """A class mark reaches every test it holds, including nested classes.
+
+    Reading only function decorators made these requests invisible, so a
+    fixture requested ONLY through a class mark reported zero consumers. That
+    is not a quiet undercount: zero consumers reads as dead code, and the
+    fixture it was found on is live in two suites. The unmarked function is
+    asserted too, because a walk that attributed the mark to everything in the
+    module would satisfy the first assertion and be just as wrong.
+    """
+    root = tmp_path / "class-usefixtures"
+    _write_source(root, "conftest.py", "pass\n")
+    _write_source(
+        root,
+        "src/cadrumo/test_class_mark.py",
+        """
+        import pytest
+
+        @pytest.fixture
+        def widget():
+            return 1
+
+        @pytest.mark.usefixtures("widget")
+        class TestOuter:
+            def test_inside(self):
+                pass
+
+            class TestInner:
+                def test_nested(self):
+                    pass
+
+        def test_outside():
+            pass
+        """,
+    )
+    (root / "dev").mkdir(parents=True)
+    (root / "packaging").mkdir(parents=True)
+
+    (record,) = census(root).fixtures
+
+    assert {consumer.qualname for consumer in record.consumers} == {
+        "TestOuter.test_inside",
+        "TestOuter.TestInner.test_nested",
+    }
+    assert all(consumer.via == "usefixtures" for consumer in record.consumers)
+
+
 def test_imported_effective_name_fixture_preserves_binding_and_reach(tmp_path: Path) -> None:
     """Imports resolve Python symbols while pytest retains explicit fixture names."""
     root = tmp_path / "effective-name-import"
