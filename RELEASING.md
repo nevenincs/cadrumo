@@ -216,7 +216,7 @@ system that owns each name:
 - **Marketplace:** Record the provider-owned listing or reservation for the exact
   marketplace and plugin identifiers; compare with the generated manifests.
 - **Executables:** Record installed-wheel probes for `aeat --version` and the
-  `cadrumo-mcp` launcher supplied by `cadrumo[agent]`.
+  `cadrumo-mcp` launcher supplied by the sibling `cadrumo-harness` distribution.
 - **Domains:** Record registrar or registry evidence identifying the exact domain and
   controlling account.
 - **Trademarks:** Record the dated Spanish Patent and Trademark Office and European

@@ -147,12 +147,12 @@ def _profile_next_action_notice(record: UserProfileRecord) -> Notice | None:
 def _overview_notices(record: UserProfileRecord) -> tuple[Notice, ...]:
     """Every advisory the manager's landing page reports for one record.
 
-    Composes the shared status/manager advisory set with the routing
-    projection's next-step hint, so both surfaces the manager renders --
-    the read-only status page and the manager itself -- keep reading
+    Starts from
     :func:`~cadrumo.entrypoints.cli._config._status_frontend.build_active_profile_notices`
-    as their one shared advisory authority, with the next-step hint layered
-    on top only where the manager's overview is actually built.
+    -- the one advisory set this surface shares with the read-only status
+    page -- and layers the routing projection's next-step hint on top, scoped
+    to the manager's own overview: the status page is a separate read-only
+    projection this module does not build.
     """
     from ._status_frontend import build_active_profile_notices
 

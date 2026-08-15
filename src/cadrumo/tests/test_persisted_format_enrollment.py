@@ -136,6 +136,12 @@ _UNREGISTERED_FILE_FORMATS: Final[Mapping[str, tuple[StorageCategory, str]]] = {
         "The filing-owner sibling of the legal-hold snapshot, under its own owner subdirectory of "
         "the same registry-declared hold-evidence root.",
     ),
+    "profile_custody_hold_evidence": (
+        StorageCategory.PROFILE_CUSTODY_HOLD_EVIDENCE,
+        "The derived join of the two owner snapshots above, one file per owner under a "
+        "'derived-evidence/<owner>' subdirectory the owning authority joins onto the same "
+        "registry-declared hold-evidence root, so it has no path definition of its own.",
+    ),
 }
 
 

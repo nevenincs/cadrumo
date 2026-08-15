@@ -76,8 +76,7 @@ def build_envelope() -> ProfileCustodyEnvelope:
 
 def publish_capsule_and_pointer(root: Path) -> None:
     """Publish one complete capsule at *root* and point the active selector at it."""
-    from ...user_profile._capsule_record import ProfileRecordSession
-    from ...user_profile._lifecycle import ProfileCapsuleLifecycle
+    from ...user_profile import ProfileCapsuleLifecycle, ProfileRecordSession
 
     envelope = build_envelope()
     session = ProfileRecordSession.from_envelope(envelope=envelope, dek=DEK)

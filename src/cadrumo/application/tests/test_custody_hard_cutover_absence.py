@@ -371,8 +371,8 @@ def _facade_exports(path: Path) -> frozenset[str]:
         if isinstance(node, ast.Assign) and any(
             isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets
         ):
-            return frozenset(ast.literal_eval(node.value))
-    return frozenset()
+            return frozenset(str(exported) for exported in ast.literal_eval(node.value))
+    return frozenset[str]()
 
 
 def _offenders() -> dict[str, set[str]]:

@@ -211,6 +211,7 @@ if TYPE_CHECKING:
     from ._filing_baseline import missing_filing_baseline_flags
     from ._keys_validation import list_profile_key_records, validate_profile_values
     from ._language_resolver import resolve_profile_output_language_hint
+    from ._capsule_record import ProfileRecordSession
     from ._lifecycle import ProfileCapsuleLifecycle
     from ._login_session import (
         ProfileLoginOutcome,
@@ -367,6 +368,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfilePreflightRequirement": "._commands",
     "ProfilePreflightService": "._preflight",
     "ProfileRecordRepository": "._profile_record_repository",
+    "ProfileRecordSession": "._capsule_record",
     "ProfileRegistrationError": "._registration",
     "ProfileRegistrationOutcome": "._registration",
     "ProfileSectionView": "._overview",
@@ -541,6 +543,7 @@ __all__ = [
     "ProfilePreflightRequirement",
     "ProfilePreflightService",
     "ProfileRecordRepository",
+    "ProfileRecordSession",
     "ProfileRegistrationError",
     "ProfileRegistrationOutcome",
     "ProfileSectionView",

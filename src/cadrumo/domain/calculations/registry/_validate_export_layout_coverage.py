@@ -122,6 +122,15 @@ _OBLIGATORIO: Final = re.compile(r"\bOBLIGATORI[OA]\b", re.IGNORECASE)
 
 #: A position AEAT reserves for its own use. The filer must NOT write it, so its
 #: absence from an authored layout is correct rather than a gap.
+#:
+#: Read from the field's DESCRIPTION only -- never from its validation or
+#: contenido prose, which is where the word appears innocently. Modelo 720's
+#: ``TIPO DE DERECHO REAL SOBRE INMUEBLE`` (25 bytes of taxpayer data) explains
+#: itself with "se deberá indicar en el espacio reservado", and scanning that
+#: prose excused a real datum from the check -- a silent pass, which is the one
+#: direction this gate must never fail in. AEAT names an administration slot in
+#: the description itself ("RESERVADO PARA LA A.E.A.T.", "Reservado para la
+#: Administración"), so the description carries every genuine case.
 _ADMINISTRATION_RESERVED: Final = re.compile(r"\breservad[oa]s?\b", re.IGNORECASE)
 
 #: A position AEAT declares as fill rather than as a datum. Anchored to the whole
@@ -160,10 +169,6 @@ class _RequiredPosition:
     obligatorio: bool
 
 
-def _design_text(field: RecordDesignField) -> str:
-    return " ".join(text for text in (field.description, field.validation, field.content) if text)
-
-
 def _omissible_reason(field: RecordDesignField) -> str | None:
     """Return why the DESIGN says this position may go unwritten, else ``None``.
 
@@ -171,10 +176,15 @@ def _omissible_reason(field: RecordDesignField) -> str | None:
     required even when its description also mentions reserved space or fill,
     because the marking is the authority's direct statement about that slot and
     the prose around it is not.
+
+    Every signal is read from the cell that NAMES the field, never from the
+    explanatory prose beside it. An omissibility signal is the only thing here
+    that can turn a real gap into a pass, so it is deliberately the hardest
+    thing to trip.
     """
     if _OBLIGATORIO.search(field.validation or ""):
         return None
-    if _ADMINISTRATION_RESERVED.search(_design_text(field)):
+    if _ADMINISTRATION_RESERVED.search(field.description or ""):
         return "reserved for the Administración"
     for text in (field.description, field.content):
         if text and _DECLARED_FILL.match(text.strip()):
