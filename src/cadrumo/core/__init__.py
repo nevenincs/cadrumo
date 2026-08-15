@@ -332,7 +332,7 @@ if TYPE_CHECKING:
         PreconditionOutcomeInvariant,
     )
     from ._prior_domiciliation_election import PriorDomiciliationElection
-    from ._profile_session import ProfileSessionRefusalReason
+    from ._profile_session import ProfileRecordUnavailability, ProfileSessionRefusalReason
     from ._prorrata_exclusions import (
         ART_104_TRES_AUTO_DERIVED_EXCLUSIONS,
         ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS,
@@ -691,6 +691,7 @@ __all__: list[str] = [
     "PreconditionOutcomeInvariant",
     "PriorDomiciliationElection",
     "ProductIdentity",
+    "ProfileRecordUnavailability",
     "ProfileSessionRefusalReason",
     "ProrrataActivityRowType",
     "ProrrataEspecialTransitionKind",
@@ -1041,6 +1042,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "PreconditionOutcomeInvariant": "._precondition_action_invariants",
     "PriorDomiciliationElection": "._prior_domiciliation_election",
     "ProductIdentity": ".product_identity",
+    "ProfileRecordUnavailability": "._profile_session",
     "ProfileSessionRefusalReason": "._profile_session",
     "ProrrataActivityRowType": "._prorrata_register",
     "ProrrataEspecialTransitionKind": "._prorrata_register",

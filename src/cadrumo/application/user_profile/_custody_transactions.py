@@ -386,7 +386,7 @@ class ProfileCustodyOwnerReceipt(CustodyDigestModel):
     _digest_maximum_bytes = CUSTODY_RECEIPT_MAX_BYTES
     _digest_subject = "custody owner receipt"
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1]
     transaction_id: UUID
     profile_id: UUID
     owner: Literal["process-secret-revocation", "local-session-acceleration"]

@@ -584,6 +584,7 @@ def test_manifest_refuses_child_objects_from_another_namespace() -> None:
 
     with pytest.raises(ValidationError, match="foreign namespaces"):
         RemoteMirrorNamespaceManifest(
+            manifest_schema_version=REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
             namespace="target",
             object_count=1,
             objects=(_entry("foreign"),),
@@ -591,6 +592,7 @@ def test_manifest_refuses_child_objects_from_another_namespace() -> None:
 
     # The matching-namespace manifest is unaffected.
     manifest = RemoteMirrorNamespaceManifest(
+        manifest_schema_version=REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
         namespace="target",
         object_count=1,
         objects=(_entry("target"),),
@@ -615,6 +617,7 @@ def test_manifest_refuses_a_mixed_namespace_object_set() -> None:
 
     with pytest.raises(ValidationError, match="smuggled"):
         RemoteMirrorNamespaceManifest(
+            manifest_schema_version=REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
             namespace="target",
             object_count=2,
             objects=(_entry("target", "a"), _entry("smuggled", "c")),

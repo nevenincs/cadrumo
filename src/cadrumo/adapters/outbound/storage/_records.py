@@ -135,7 +135,7 @@ class RemoteMirrorNamespaceManifest(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    manifest_schema_version: int = Field(default=1, ge=1)
+    manifest_schema_version: int = Field(ge=1)
     namespace: str = Field(min_length=1)
     object_count: int = Field(ge=0)
     latest_revision_id: _StorageRevisionId | None = None

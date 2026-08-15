@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, Literal, cast
+from typing import Any, Final, Literal, cast
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -11,6 +11,14 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.time import validate_utc_aware
 from .._profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
+
+#: Current write version for :class:`ProfileCustodyHoldEvidence`. This format is
+#: REGENERABLE (see the campaign's nested-persisted-format-boundary ADR): its
+#: ``refresh()`` writer unconditionally recomputes and overwrites, and nothing
+#: reads its on-disk file back through the typed model, so no upgrader or
+#: durability floor applies -- naming the constant is the outstanding half of
+#: its classification.
+CUSTODY_HOLD_EVIDENCE_SCHEMA_VERSION: Final[int] = 1
 
 
 class ProfileCustodyHoldAssessment(BaseModel):
@@ -70,7 +78,7 @@ class ProfileCustodyHoldEvidence(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1] = CUSTODY_HOLD_EVIDENCE_SCHEMA_VERSION
     owner: Literal["legal", "filing"]
     profile_id: UUID
     disposition: Literal["cleared", "held"]

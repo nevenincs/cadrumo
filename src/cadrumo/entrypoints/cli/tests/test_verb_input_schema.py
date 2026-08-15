@@ -24,7 +24,9 @@ from .._verb_input_schema import (
     VerbLeafResolutionFailure,
     VerbParamKind,
     _json_safe_default,
+    _naive_cli_path,
     _parameter_from_click,
+    _resolve_command,
     assert_schema_coverage,
     build_verb_input_schemas,
     cli_argv_for,
@@ -266,11 +268,10 @@ def test_argv_maps_option_names_to_cli_flags_and_flags_emit_only_the_token() -> 
 def test_the_declared_unimplemented_surface_names_its_unmet_obligation() -> None:
     """The subject-access surface stays declared, with its reason, or it vanishes.
 
-    This is the only key whose schema outlives its verb. Every other unresolved
-    declaration was deleted as residue of a retirement the tree had already
-    executed; this one was kept because deleting it would retire a
-    data-protection obligation by tidying, and nothing else in the tree records
-    that the obligation is unmet.
+    The register holds every key whose schema outlives its verb. This one is
+    pinned by name because its obligation is legal rather than functional:
+    deleting it would retire a data-protection duty by tidying, and nothing
+    else in the tree records that the duty is unmet.
 
     So the declaration is the record, and a record nothing asserts is deleted by
     the next sweep that finds it unreferenced. The gap must stay stated rather
@@ -281,6 +282,57 @@ def test_the_declared_unimplemented_surface_names_its_unmet_obligation() -> None
     reason = DECLARED_UNIMPLEMENTED_SURFACES["config.profile.subject_access_request"]
     assert "subject-access" in reason.lower()
     assert len(reason.split()) >= 20, "the declaration must state the obligation, not merely name the key"
+
+
+def test_every_declared_unimplemented_key_states_its_reason() -> None:
+    """No entry rides in on the pinned one's coat-tails.
+
+    The check above pins a single key by name, so the other entries were
+    unasserted: a blank or one-line reason on any of them would pass
+    everything. An entry here is a decision about a capability, and a decision
+    nobody wrote down is indistinguishable from a build being made to pass.
+    """
+    thin = {
+        key: reason
+        for key, reason in DECLARED_UNIMPLEMENTED_SURFACES.items()
+        if len(reason.split()) < 20 or not reason.strip()
+    }
+    assert not thin, (
+        f"declared-unimplemented entries must state why the capability is owed, not merely name the key: {sorted(thin)}"
+    )
+
+
+def test_every_declared_unimplemented_key_still_names_an_absent_verb() -> None:
+    """No entry outlives the gap it records.
+
+    The reverse arm, and the register's missing half. Membership here does two
+    things: it exempts the key from the coverage gate, and it makes
+    :func:`is_exposable_command` return False, which withholds the verb from the
+    MCP surface. Both are correct while the verb is genuinely absent and both
+    become defects the moment it lands — a shipped verb would be silently kept
+    off the wire by a note describing a gap that has closed, and the coverage
+    gate would stop watching a key it now could watch.
+
+    The sibling family-level register in the operator-surface manifest already
+    carries this arm: a declared-unimplemented family the live tree reaches is
+    reported stale, with the rule that the note goes in the same change that
+    closes the gap. This register had the exit condition in prose only
+    (``Restoring the verb removes this entry``), which is a request rather than
+    a gate. Derived from the live tree, so it needs no list of its own.
+    """
+    from ... import cli as _cli_package
+
+    root = _typer_get_command(_cli_package.app)
+    resurrected: list[str] = []
+    for key in DECLARED_UNIMPLEMENTED_SURFACES:
+        command, _resolved, _failure = _resolve_command(root, key)
+        if command is not None:
+            resurrected.append(f"{key} (now resolves as `aeat {' '.join(_naive_cli_path(key))}`)")
+    assert not resurrected, (
+        "keys declared unimplemented now resolve in the live CLI; the recorded gap is closed, so "
+        "the entry must go with the change that closed it — while it stays, the verb is withheld "
+        f"from the MCP surface and exempted from the coverage gate: {sorted(resurrected)}"
+    )
 
 
 def test_the_coverage_gate_still_refuses_an_undeclared_missing_verb() -> None:

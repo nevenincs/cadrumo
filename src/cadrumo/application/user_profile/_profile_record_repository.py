@@ -89,8 +89,16 @@ def close_active_profile_record_session() -> None:
     _ACTIVE_RECORD_SESSION.set(None)
 
 
-def require_profile_record_session(profile_id: str | UUID) -> ProfileRecordSession:
-    """Return the record authority that serves this exact UUID.
+def profile_record_session_if_authenticated(profile_id: str | UUID) -> ProfileRecordSession | None:
+    """Return the record authority serving this UUID, or ``None`` when none is live.
+
+    This is the structural answer to "is this profile unlocked?", and callers
+    that need to tell a LOCKED profile from a broken one ask it here rather
+    than inferring the answer from a refusal message.  An absent session is an
+    ordinary, expected state -- the operator has simply not logged in -- so it
+    is reported as an absence rather than raised;
+    :func:`require_profile_record_session` converts it for the callers whose
+    contract is a session or nothing.
 
     The installed authority is process-local, so a second profile becoming
     the live custody session in the same process would otherwise be read
@@ -116,9 +124,13 @@ def require_profile_record_session(profile_id: str | UUID) -> ProfileRecordSessi
 
     A retired authority is therefore treated exactly as an absent one -- it
     carries no authority, so it is re-derived where a live custody session
-    exists and refused cleanly where none does. Nothing is unbound on the
-    refusing path: a read that declines should not mutate process state, and a
+    exists and reported absent where none does. Nothing is unbound on the
+    declining path: a read that declines should not mutate process state, and a
     successful later derivation replaces the dead reference anyway.
+
+    A ``profile_id`` that is not a canonical UUID still raises: that is a
+    caller defect rather than a lock state, and returning ``None`` for it would
+    let a malformed identity read as a merely locked profile.
     """
     try:
         identity = UUID(str(profile_id))
@@ -129,9 +141,26 @@ def require_profile_record_session(profile_id: str | UUID) -> ProfileRecordSessi
         return session
     derived = _record_session_from_live_custody_session(identity)
     if derived is None:
-        raise ProfileNotFoundError("profile facts require an authenticated session for this committed capsule")
+        return None
     activate_profile_record_session(derived)
     return derived
+
+
+def require_profile_record_session(profile_id: str | UUID) -> ProfileRecordSession:
+    """Return the record authority that serves this exact UUID, or refuse.
+
+    The authority resolution itself lives in
+    :func:`profile_record_session_if_authenticated`; this door is for callers
+    whose contract admits no absence.
+
+    Raises:
+        ProfileNotFoundError: When no authenticated session serves this UUID,
+            or when ``profile_id`` is not a canonical UUID.
+    """
+    session = profile_record_session_if_authenticated(profile_id)
+    if session is None:
+        raise ProfileNotFoundError("profile facts require an authenticated session for this committed capsule")
+    return session
 
 
 def _record_session_from_live_custody_session(profile_id: UUID) -> ProfileRecordSession | None:
@@ -316,5 +345,6 @@ __all__ = [
     "bound_profile_record_session",
     "clear_active_profile_record_session_binding",
     "close_active_profile_record_session",
+    "profile_record_session_if_authenticated",
     "require_profile_record_session",
 ]

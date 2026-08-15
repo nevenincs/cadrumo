@@ -245,6 +245,7 @@ if TYPE_CHECKING:
         activate_profile_record_session,
         bound_profile_record_session,
         close_active_profile_record_session,
+        profile_record_session_if_authenticated,
         require_profile_record_session,
     )
     from ._profile_repository import CommittedProfileRepository, ProfileNotFoundError, ProfileSummary
@@ -426,6 +427,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "prepare_profile_export": "._bundle_export",
     "profile_custody_transaction_lock": "._custody_repository",
     "profile_field_choices": "._overview",
+    "profile_record_session_if_authenticated": "._profile_record_repository",
     "profile_section_rows": "._completeness",
     "projection_for_taxpayer": "._projections",
     "publish_prepared_export": "._bundle_export",
@@ -596,6 +598,7 @@ __all__ = [
     "prepare_profile_export",
     "profile_custody_transaction_lock",
     "profile_field_choices",
+    "profile_record_session_if_authenticated",
     "profile_section_rows",
     "projection_for_taxpayer",
     "publish_prepared_export",
