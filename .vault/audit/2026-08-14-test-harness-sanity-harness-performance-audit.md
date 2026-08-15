@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:58c72f1011b498038d332a5bf8dfcb864aa9e09824e3501cc404fa972b4bad49'
+body_hash: 'sha256:21822bf771c390ac609bfefc8b4a7c3ab7db55b9df5fbb17f3e97f361d1dbeb3'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -951,3 +951,91 @@ Kept as a technique, not committed: it is a scratch plugin, and its output needs
 a per-primitive unit cost beside the repeat count before any entry in it should
 be read as a target. Without that column it ranks the cheapest thing in the tree
 first.
+
+## CRITICAL: xdist workers were dying, and the harness absorbed it silently
+
+Profiling the `dev` slice kept failing in a way that was not a slow test. The
+run wedged with no output for thirty minutes -- twice, the second time on an
+otherwise IDLE box -- or ended in an xdist `INTERNALERROR`:
+
+    KeyError: <WorkerController gw6>
+      xdist/scheduler/loadscope.py:275 in _assign_work_unit
+      self.registered_collections[node]
+
+`gw6` is the tell. The repository's own hook resolves `-n auto` to six workers
+(gw0-gw5), confirmed for both the `dev` and `src` paths, so a seventh
+controller can only be xdist REPLACING a node that died. The replacement has no
+registered collection, and the scheduler raises.
+
+### The chain, established rather than inferred
+
+1. `dev/docs/tests/test_sequence_goldens.py::TestCommittedGoldensCleanGate::test_every_committed_golden_matches_live_execution`
+   measures **344s on an idle box** against the repository's **300s** ceiling.
+2. When that ceiling fires, the test's thread is parked in `subprocess.wait()`
+   on eight child interpreters. pytest-timeout falls back to the `thread`
+   method on this platform, and a thread blocked in subprocess I/O is not
+   interruptible.
+3. So the WORKER exits uncleanly -- `[gw3] node down: Not properly terminated`
+   -- rather than the test failing.
+4. xdist replaces the node and re-runs the work. A bounded reproduction
+   (`-n2`, one test id) reported **one test id as THREE failures in 892.65s**.
+   At full width it instead wedged the scheduler.
+
+Each step was reproduced, not reasoned: the crash was named by re-running with
+`--max-worker-restart=0`, the 344s figure came from a serial run, and the
+triple-report came from the bounded `-n2` reproduction.
+
+### Why the existing guard never caught it
+
+`timeout = 300` was added against precisely this symptom -- its comment records
+"the CI unit lane sat 3-5.5h wedged with idle workers on every recent run" --
+and it is the right guard for the wrong failure. It bounds a hung TEST. It
+cannot bound a dead WORKER, and worse, it is what KILLS the worker: the ceiling
+fires on an uninterruptible thread, so the process dies instead of the test.
+Every wedge observed here happened with that setting active.
+
+The other existing mitigation, capping `-n auto` to six workers, reduces how
+often this happens without ever detecting it. Its own docstring names the
+consequence -- "xdist workers crashing mid-run, which corrupts a run's own
+results" -- so the failure mode was known and absorbed rather than surfaced.
+
+### The management principle: a dead worker is terminal, never transient
+
+`--max-worker-restart=0` is now in `addopts`. A worker death stops the session
+and names the test it died on. The two shapes it replaces are both worse than
+stopping: a silent retry corrupts the result set (one id, three verdicts), and
+a wedged scheduler burns a runner to its lane timeout with no output at all.
+
+Absorbing a crash is what turns one broken test into an unreliable suite. The
+setting is pinned by `src/cadrumo/tests/test_xdist_worker_lifecycle_policy.py`,
+which matches the FLAG rather than the option name -- `--max-worker-restart=2`
+is the tolerant setting the gate exists to reject and would satisfy a name-only
+check -- and was proven to red by rebinding its config reader from outside the
+repository, so no tracked file was mutated to prove it.
+
+Alongside it, the two gates that fan out into an 8-wide child pool now carry
+their own generous ceilings, so the default stops firing mid-wait.
+
+### The policy paid for itself immediately
+
+The first full `dev` run after the change COMPLETED -- 985s, with a durations
+table, where the same command had twice produced nothing at all. The
+sequence-goldens gate now appears in that table as an ordinary 97.74s entry.
+
+It also named a SECOND test of the same class, which the silent-restart
+behaviour had been hiding:
+`dev/packaging/tests/test_release_cohort_integration.py::test_real_clean_source_build_is_complete_and_reproducible`,
+which clones the source and builds the twelve-member cohort twice in child
+processes. It has been given its own ceiling too.
+
+That is the argument for failing loudly, made by the change itself: the defect
+had been in the tree long enough to be normalised, and one run of an
+intolerant harness found it.
+
+### Standing shape
+
+Default 300s ceiling for ordinary tests, which never approach it; explicit
+generous ceilings on the handful of gates that legitimately outrun it in child
+processes; and a fail-closed backstop that names any future offender instead of
+absorbing it. The backstop is what makes the exception list maintainable -- a
+new heavy test announces itself once, loudly, rather than degrading the suite.
