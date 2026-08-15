@@ -65849,6 +65849,9 @@ modelo:
             x-e1in4opectin6t3fe8mm6rr2e9ng:
               label: Gestor de cobrament del premi
             x-e1in4oped5mn0rriehiiqs3iclmmiro:
+              help: Part de l'import íntegre del premi dinerari o del valor del premi
+                en espècie que correspon individualment al perceptor. Si en un mateix
+                sorteig va obtenir diversos premis, la suma de tots.
               label: Import íntegre del premi o valor individual del premi en espècie
             x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
               label: Lloc de naixement del perceptor no resident
@@ -73367,17 +73370,7 @@ modelo:
         2021-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
               label: Exercici a què es refereix l'autoliquidació
-            x-chim6r1ee1in4qbfchng:
-              help: null
-              label: Període (mes natural)
-          construct:
-            modelo-604-autoliquidacion:
-              field:
-                title: null
-          field:
-            label: null
         2024-y-siguientes:
           casilla:
             x-c5n6au3f5pn7arb5e9niqqjledq6ipj9cdgmst35:

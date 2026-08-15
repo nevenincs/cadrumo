@@ -65885,6 +65885,8 @@ modelo:
             x-e1in4opecpim6q315ln62or9dlkmarjkds:
               label: A külföldi illetőségű kedvezményezett születési ideje
             x-e1in4opecpim6q315lo62prf:
+              help: Az a nap, amelyen a megnyert nyereményt a kedvezményezett részére
+                kifizették vagy jóváírták.
               label: A nyeremény kifizetésének időpontja
             x-e1in4opecpim6q315lpmusjkclng:
               help: A sorsolás megtartásának napja, illetve annak az eseménynek a
@@ -65893,6 +65895,9 @@ modelo:
             x-e1in4opectin6t3fe8mm6rr2e9ng:
               label: A nyeremény beszedési megbízottja
             x-e1in4oped5mn0rriehiiqs3iclmmiro:
+              help: A pénzbeli nyeremény bruttó összegének, illetve a természetbeni
+                nyeremény értékének a kedvezményezettre egyedileg jutó része. Ha egy
+                sorsoláson több nyereményt is nyert, ezek összege.
               label: A nyeremény bruttó összege vagy a természetbeni nyeremény egyedi
                 értéke
             x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
@@ -73438,11 +73443,9 @@ modelo:
         2021-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
               label: Az önadózás vonatkozási éve
             x-chim6r1ee1in4qbfchng:
               help: null
-              label: Időszak (naptári hónap)
           construct:
             modelo-604-autoliquidacion:
               field:
