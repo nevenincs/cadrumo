@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:5a6f7db25faf8102e6494b6792c122dffec8b0e0664f93a347e727849cfb8a07'
+body_hash: 'sha256:be2790ad3931ffd51ec5809dff5804d62c372d2a805995336e940fd92620f91e'
 step_id: 'S69'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -88,7 +88,6 @@ because the touched set includes peers' substantial in-flight work and a blind
 revert would destroy real edits to undo a lint fix. None are in this commit's
 pathspec.
 
-
 **Correction to the paragraph above, made by its author and adopted.** The
 statement that the wider suites were unquotable BECAUSE of concurrent registry
 writes over-attributes. What was established is narrower: ONE module was observed
@@ -110,4 +109,24 @@ suite reads them.
 
 The verdict on the change is unaffected, resting on the consumer suite and the
 behavioural probe rather than on the unmeasured suites.
+
+
+**Second correction, from the same author a step later.** This record stated that
+publication renames a staged capsule into place and does NOT create the database
+and blob children. A controlled probe run afterwards shows that after registration
+through the production credential path, the bucket directory contains blobs,
+custody, data, db and the commit marker. What was actually measured at the time
+was the END STATE of one path, not which step within it creates those children --
+so the claim was stated more broadly than the evidence supported.
+
+The relocation verdict does not depend on it: that rested on the layering
+argument and on the calling tests never publishing at all, both of which stand.
+But the supporting sentence was overstated, and it had already been repeated in a
+commit message as fact.
+
+That matters beyond this record, because it is the second time in one session that
+an inference stated as a measurement propagated past its author. The rule that
+came out of the first instance applies to this one: mark the boundary between what
+was measured and what was inferred inside the sentence, because that boundary is
+the only part that survives being copied.
 
