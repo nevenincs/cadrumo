@@ -35,11 +35,13 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .. import __version__
-from ..core import PRODUCT_IDENTITY, iter_directory
-from ..core.external_constants import UTF_8_ENCODING as _UTF_8
-from ..core.hashing import sha256_hex
+from cadrumo import __version__
+from cadrumo.core import PRODUCT_IDENTITY, iter_directory
+from cadrumo.core.hashing import sha256_hex
+
 from . import harness_root, iter_operator_rules, iter_personas
+
+_UTF_8 = "utf-8"
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
