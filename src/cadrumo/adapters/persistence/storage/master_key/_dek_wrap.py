@@ -123,7 +123,7 @@ def wrap_dek(*, kek: bytes, dek: bytes, bucket_id: str) -> WrappedDek:
     return WrappedDek(nonce=blob.nonce, ciphertext=ciphertext, tag=tag)
 
 
-def unwrap_dek(*, kek: bytes, wrapped: WrappedDek, bucket_id: str) -> bytes:
+def unwrap_dek(*, kek: bytes, wrapped: WrappedDek, bucket_id: str) -> bytearray:
     """Recover the 32-byte DEK from `wrapped` under `kek` and `bucket_id`.
 
     Args:
@@ -134,7 +134,16 @@ def unwrap_dek(*, kek: bytes, wrapped: WrappedDek, bucket_id: str) -> bytes:
             :data:`~core.identity.BucketId` normalizes to that value.
 
     Returns:
-        The 32-byte data-encryption key.
+        The 32-byte data-encryption key, in a mutable buffer the caller can
+        wipe. Immutable ``bytes`` would be permanently unreachable by
+        ``zeroise``, which refuses anything it cannot overwrite in place, so
+        the key would survive in memory entirely at the collector's
+        discretion.
+
+        One immutable copy is irreducible here and is NOT wiped by this: the
+        AEAD library returns plaintext as ``bytes``, and nothing above it can
+        reach inside that object. What the caller receives is wipeable; the
+        library's transient copy is a floor this boundary cannot raise.
 
     Raises:
         EncryptionError: When ``kek`` is not 32 bytes or ``bucket_id`` is not
@@ -147,7 +156,7 @@ def unwrap_dek(*, kek: bytes, wrapped: WrappedDek, bucket_id: str) -> bytes:
     aad = _associated_data(bucket_id)
     blob = EncryptedBlob(nonce=wrapped.nonce, ciphertext=wrapped.ciphertext + wrapped.tag)
     try:
-        return decrypt_record(blob, key=kek, associated_data=aad)
+        return bytearray(decrypt_record(blob, key=kek, associated_data=aad))
     except DecryptionError as exc:
         # Same re-raise-in-place rationale as wrap_dek: preserves __cause__
         # (e.g. the underlying cryptography.exceptions.InvalidTag) exactly.

@@ -354,7 +354,7 @@ def wrap_profile_session_dek(
     )
 
 
-def unwrap_profile_session_dek(*, session_key: bytes, record: PersistedProfileSession) -> bytes:
+def unwrap_profile_session_dek(*, session_key: bytes, record: PersistedProfileSession) -> bytearray:
     """Recover the 32-byte DEK from ``record`` under ``session_key``.
 
     The AAD is recomputed from the record's own metadata fields, so any
@@ -366,7 +366,15 @@ def unwrap_profile_session_dek(*, session_key: bytes, record: PersistedProfileSe
         record: The persisted session record to unwrap.
 
     Returns:
-        The 32-byte bucket data-encryption key.
+        The 32-byte bucket data-encryption key, in a mutable buffer the caller
+        can wipe. Handing it back as immutable ``bytes`` put it permanently
+        beyond ``zeroise``, which refuses what it cannot overwrite in place --
+        and a caller who copied it into a ``bytearray`` to wipe it was left
+        with the original still resident and unreachable.
+
+        One immutable copy is irreducible and is NOT wiped by this: the AEAD
+        library returns plaintext as ``bytes``. What the caller receives is
+        wipeable; the library's transient copy is a floor this cannot raise.
 
     Raises:
         EncryptionError: When ``session_key`` has the wrong length.
@@ -386,7 +394,7 @@ def unwrap_profile_session_dek(*, session_key: bytes, record: PersistedProfileSe
     )
     blob = EncryptedBlob(nonce=record.nonce, ciphertext=record.ciphertext + record.tag)
     try:
-        return decrypt_record(blob, key=session_key, associated_data=aad)
+        return bytearray(decrypt_record(blob, key=session_key, associated_data=aad))
     except DecryptionError as exc:
         # Same re-raise-in-place rationale as wrap_profile_session_dek:
         # preserves __cause__ (e.g. the underlying
@@ -421,7 +429,7 @@ def advance_profile_session_idle_deadline(
         EncryptionError: When re-wrapping fails.
     """
     clamped = min(validate_utc_aware(new_idle_deadline), record.absolute_deadline)
-    dek_buffer = bytearray(unwrap_profile_session_dek(session_key=session_key, record=record))
+    dek_buffer = unwrap_profile_session_dek(session_key=session_key, record=record)
     try:
         return wrap_profile_session_dek(
             session_key=session_key,
