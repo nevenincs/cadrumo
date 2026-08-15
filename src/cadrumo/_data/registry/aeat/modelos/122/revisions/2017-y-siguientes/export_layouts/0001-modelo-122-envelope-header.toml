@@ -1,0 +1,214 @@
+# Modelo 122 fichero BOE — envelope header (design sheet "Pag. 0"), 328 positions.
+#
+# Transcribed from the bundled AEAT Diseño de Registro aeat-dr-122-2016
+# (corpus/aeat_official/disenos_registro/modelo_122/files/
+# 01-122-ejercicio-2016-y-siguientes.xlsx, sha256
+# 2b7c2bb3472cde1faba997f777aa88290e707a3773a3dc88348f74caeee0a4c7).
+#
+# Sheet "Pag. 0" declares 15 rows, of which 13 carry numeric coordinates and
+# span positions 1-328 (2+3+1+4+2+5+5+70+4+4+9+213+6 = 328). All 13 are
+# declared here. Row 14 is the variable-length "Contenido del fichero" slot the
+# page records below occupy, and row 15 is the 18-byte closing constant
+# "</T1220EEEE0A0000>" at position "***"; neither carries a fixed coordinate,
+# so the design reader emits neither, and the closing tag is declared as this
+# layout's envelope_footer record instead. Same <AUX> wrapper grammar as
+# Modelo 390's envelope.
+
+[[revisions."2017-y-siguientes".export_layouts]]
+id = "modelo-122-fichero-boe"
+
+[[revisions."2017-y-siguientes".export_layouts.records]]
+id = "modelo-122-envelope-header"
+record_type = "envelope_header"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+id = "modelo-122-envelope-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016"]
+
+[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+id = "modelo-122-envelope-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "122"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016"]
+
+[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+id = "modelo-122-envelope-discriminante"
+offset = 6
+length = 1
+kind = "literal"
+literal = "0"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016"]
+
+[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+id = "modelo-122-envelope-year"
+offset = 7
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016"]
+
+[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+id = "modelo-122-envelope-periodo"
+offset = 11
+length = 2
+kind = "draft"
+# The design fixes this slot at "0A" and this revision's period_selector
+# admits only "0A", so the draft period token and the design's constant are
+# the same two characters; taking it from the draft keeps the envelope
+# correct rather than restating a value the draft already carries.
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016"]
+
+[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+id = "modelo-122-envelope-tipo-cierre"
+offset = 13
+length = 5
+kind = "literal"
+literal = "0000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016"]
+
+[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+id = "modelo-122-envelope-aux-open"
+offset = 18
+length = 5
+kind = "literal"
+literal = "<AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016"]
+
+[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+id = "modelo-122-envelope-reservado-pre-version"
+offset = 23
+length = 70
+kind = "filler"
+# "Reservado para la Administración. Rellenar con blancos."
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016"]
+
+[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+id = "modelo-122-envelope-version-programa"
+offset = 93
+length = 4
+kind = "filler"
+# Nota 1: "A cumplimentar por las entidades desarrolladoras (EEDD)" -- the
+# identifier of the developing entity's own software version. Cadrumo declares
+# no EEDD identity, and inventing a version token would assert a registration
+# this application does not hold, so the slot is left blank per the design's
+# alfanumérico rule.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016"]
+
+[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+id = "modelo-122-envelope-reservado-pre-nif-ed"
+offset = 97
+length = 4
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016"]
+
+[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+id = "modelo-122-envelope-nif-empresa-desarrollo"
+offset = 101
+length = 9
+kind = "filler"
+# Nota 1: the NIF of the entidad desarrolladora of the software. Same reason as
+# the versión del programa slot above -- no such identity is declared.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016"]
+
+[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+id = "modelo-122-envelope-reservado-post-nif-ed"
+offset = 110
+length = 213
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016"]
+
+[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+id = "modelo-122-envelope-aux-close"
+offset = 323
+length = 6
+kind = "literal"
+literal = "</AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016"]

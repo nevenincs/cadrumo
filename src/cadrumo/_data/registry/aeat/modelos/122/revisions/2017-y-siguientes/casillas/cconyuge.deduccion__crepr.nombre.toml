@@ -1,0 +1,290 @@
+# Modelo 122 Pág. 1 casillas.
+#
+# Transcribed position-by-position from the bundled AEAT Diseño de Registro
+# aeat-dr-122-2016 (corpus/aeat_official/disenos_registro/modelo_122/files/
+# 01-122-ejercicio-2016-y-siguientes.xlsx, sha256
+# 2b7c2bb3472cde1faba997f777aa88290e707a3773a3dc88348f74caeee0a4c7), sheet
+# "Pag. 1", whose declared TOTAL is 1000 posiciones.
+#
+# `form_number` carries the AEAT box number the design prints in brackets for
+# that campo ([574], [548], …); `number` carries the campo's own inclusive
+# position range, which is how the fichero addresses it.
+#
+# Substantive grounding is LIRPF art 81 bis, which establishes all five
+# deducciones this modelo regularises: descendiente con discapacidad,
+# ascendiente con discapacidad, familia numerosa, ascendiente separado
+# legalmente con dos hijos, and cónyuge con discapacidad.
+#
+# Every casilla is input_kind = "manual". The abono anticipado figures come
+# from AEAT's own advance-payment record and the deducción figures from the
+# taxpayer's entitlement; this application holds neither, so no binding or
+# formula can honestly populate them. See the note on resultado.a-ingresar
+# below for why that box is manual too.
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "conyuge.deduccion"
+number = "238-254"
+form_number = "574"
+section = ["regularizacion", "conyuge-discapacidad"]
+data_type = "money"
+semantic_role = "m122_conyuge_discapacidad_deduccion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-conyuge-deduccion"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "conyuge.abono-anticipado"
+number = "255-271"
+form_number = "575"
+section = ["regularizacion", "conyuge-discapacidad"]
+data_type = "money"
+semantic_role = "m122_conyuge_discapacidad_abono_anticipado"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-conyuge-abono-anticipado"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "descendientes.nif"
+number = "272-280"
+form_number = "548"
+section = ["regularizacion", "descendientes-discapacidad"]
+data_type = "nif"
+semantic_role = "m122_descendiente_discapacidad_nif"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-descendientes-nif"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "descendientes.nombre"
+number = "281-340"
+form_number = "549"
+section = ["regularizacion", "descendientes-discapacidad"]
+data_type = "name"
+semantic_role = "m122_descendiente_discapacidad_nombre"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-descendientes-nombre"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "descendientes.deduccion"
+number = "361-377"
+form_number = "557"
+section = ["regularizacion", "descendientes-discapacidad"]
+data_type = "money"
+semantic_role = "m122_descendiente_discapacidad_deduccion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-descendientes-deduccion"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "descendientes.abono-anticipado"
+number = "378-394"
+form_number = "558"
+section = ["regularizacion", "descendientes-discapacidad"]
+data_type = "money"
+semantic_role = "m122_descendiente_discapacidad_abono_anticipado"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-descendientes-abono-anticipado"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "ascendientes.nif"
+number = "395-403"
+form_number = "561"
+section = ["regularizacion", "ascendientes-discapacidad"]
+data_type = "nif"
+semantic_role = "m122_ascendiente_discapacidad_nif"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-ascendientes-nif"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "ascendientes.nombre"
+number = "404-463"
+form_number = "562"
+section = ["regularizacion", "ascendientes-discapacidad"]
+data_type = "name"
+semantic_role = "m122_ascendiente_discapacidad_nombre"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-ascendientes-nombre"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "ascendientes.deduccion"
+number = "484-500"
+form_number = "572"
+section = ["regularizacion", "ascendientes-discapacidad"]
+data_type = "money"
+semantic_role = "m122_ascendiente_discapacidad_deduccion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-ascendientes-deduccion"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "ascendientes.abono-anticipado"
+number = "501-517"
+form_number = "573"
+section = ["regularizacion", "ascendientes-discapacidad"]
+data_type = "money"
+semantic_role = "m122_ascendiente_discapacidad_abono_anticipado"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-ascendientes-abono-anticipado"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "familia-numerosa.titulo"
+number = "518-547"
+form_number = "576"
+section = ["regularizacion", "familia-numerosa"]
+data_type = "text"
+semantic_role = "m122_familia_numerosa_titulo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-familia-numerosa-titulo"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "familia-numerosa.deduccion"
+number = "548-564"
+form_number = "588"
+section = ["regularizacion", "familia-numerosa"]
+data_type = "money"
+semantic_role = "m122_familia_numerosa_deduccion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-familia-numerosa-deduccion"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "familia-numerosa.abono-anticipado"
+number = "565-581"
+form_number = "589"
+section = ["regularizacion", "familia-numerosa"]
+data_type = "money"
+semantic_role = "m122_familia_numerosa_abono_anticipado"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-familia-numerosa-abono-anticipado"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "ascendiente-dos-hijos.deduccion"
+number = "582-598"
+form_number = "590"
+section = ["regularizacion", "ascendiente-dos-hijos"]
+data_type = "money"
+semantic_role = "m122_ascendiente_dos_hijos_deduccion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-ascendiente-dos-hijos-deduccion"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "ascendiente-dos-hijos.abono-anticipado"
+number = "599-615"
+form_number = "591"
+section = ["regularizacion", "ascendiente-dos-hijos"]
+data_type = "money"
+semantic_role = "m122_ascendiente_dos_hijos_abono_anticipado"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-ascendiente-dos-hijos-abono-anticipado"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
+
+# input_kind is "manual" and NOT computed, deliberately. The design prints its
+# own arithmetic for this box -- "(558-557+573-572+589-588+591-590)" -- and that
+# expression omits the cónyuge pair [574]/[575] that the SAME design declares at
+# positions 238 and 255. Transcribing it verbatim would ship a formula that
+# silently under-declares for a cónyuge-con-discapacidad regularización;
+# "correcting" it to add 575-574 would be fabricating regulatory arithmetic that
+# no AEAT text states. Neither is authorable, so the box takes the operator's
+# own figure and the discrepancy is recorded here rather than resolved.
+[[revisions."2017-y-siguientes".casillas]]
+id = "resultado.a-ingresar"
+number = "616-632"
+form_number = "595"
+section = ["resultado"]
+data_type = "money"
+semantic_role = "m122_resultado_regularizacion_a_ingresar"
+required = true
+input_kind = "manual"
+export_refs = ["modelo-122-p1-resultado-a-ingresar"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"], source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"] }
+
+# Section 6 of the design is the REPRESENTANTE, a different party from the
+# contribuyente whose identity sections 1 fills from the taxpayer producers.
+# There is no producer key for "the person representing this taxpayer", and
+# writing presenter.tax_id here would assert a representative exists on every
+# self-filed return, so these are operator-supplied casillas.
+[[revisions."2017-y-siguientes".casillas]]
+id = "repr.nif"
+number = "681-689"
+section = ["representante"]
+data_type = "nif"
+semantic_role = "m122_representante_nif"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-representante-nif"]
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "repr.apellidos-razon-social"
+number = "690-749"
+section = ["representante"]
+data_type = "name"
+semantic_role = "m122_representante_apellidos_razon_social"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-representante-apellidos"]
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+
+[[revisions."2017-y-siguientes".casillas]]
+id = "repr.nombre"
+number = "750-769"
+section = ["representante"]
+data_type = "name"
+semantic_role = "m122_representante_nombre"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-representante-nombre"]
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]

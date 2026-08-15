@@ -1,7 +1,9 @@
-# Modelo 156 declaration-header casillas (scheduling/applicability-grade). Only
-# the declaration header (ejercicio, tipo de declaración) is declared, grounded in
-# orden-hac-3580-2003 art 1. No numbered form casilla is invented — no
-# authoritative Modelo 156 diseño de registro is bundled.
+# Modelo 156 declaration-header casillas, grounded in orden-hac-3580-2003 art 1.
+# These two carry the declaration header (ejercicio, tipo de declaración) as
+# informational facts; they are not positions of the diseño de registro and are
+# not exported. The record's numbered positions are declared beside this file in
+# cdeclarante-razon-social__ccotizacion-diciembre.toml, transcribed from the
+# bundled ANEXO II of the same orden.
 
 [[revisions."2003-y-siguientes".casillas]]
 id = "decl.ejercicio"
