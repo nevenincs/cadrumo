@@ -5704,7 +5704,6 @@ cli:
         profile_list: Listar los perfiles de contribuyente disponibles.
         profile_login: Inicia sesión en un perfil y lo convierte en el activo.
         profile_logout: Cierra la sesión del perfil activo.
-        profile_sar: Exporta un paquete de datos de acceso del interesado.
         profile_show: Mostrar los datos del perfil activo.
         profile_status: Mostrar el estado del perfil activo.
         reset_resume: Continúa una operación de reinicio incompleta.
@@ -5813,9 +5812,6 @@ cli:
       help: Genera el calendario de plazos para el perfil activo en la ventana de
         fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca
         contacta con AEAT.
-      setup_incomplete_notice: 'Se excluyeron del calendario %{count} perfil(es) que
-        aún están completando la configuración; todavía no están listos para presentar:
-        %{labels}.'
       shift:
         business_day: Día hábil
         calendar_unavailable: Calendario no disponible
@@ -6865,8 +6861,6 @@ errors:
       no válida.
     error_profile_bienes_inversion_record: Un registro de regularización de IVA por
       bienes de inversión no es estructuralmente válido.
-    error_profile_cross_store_drift: Los almacenes físicos de un perfil no coinciden
-      en su identidad. El perfil no es utilizable.
     error_profile_inventory_ledger: Una operación del libro de inventario del perfil
       no es válida.
     error_profile_prorrata_register_record: Un registro de prorrata de IVA entre periodos
@@ -7162,11 +7156,6 @@ errors:
     integrity_repair_integrity: La comprobación de integridad de reparación ha fallado.
     integrity_storage_blob: El hash SHA-256 de un objeto almacenado no coincide con
       el de su manifiesto.
-    integrity_storage_bucket_manifest_version_below_floor: Esta carpeta de perfil
-      es anterior al formato más antiguo que esta versión de Cadrumo puede leer.
-    integrity_storage_bucket_manifest_version_from_future: Esta carpeta de perfil
-      fue escrita por una versión más reciente de Cadrumo. Actualiza Cadrumo para
-      abrirla.
     integrity_storage_bucket_validation: Un parámetro del depósito o campo del manifiesto
       no superó la validación.
     integrity_storage_classification: La clase de sensibilidad declarada de un registro
@@ -7376,8 +7365,6 @@ errors:
       una unidad de trabajo de modelo.
     modelo_work_selector_revision_conflict: La unidad de trabajo de modelo seleccionada
       pertenece a otra revisión.
-    profile_already_registered: Ya existe un perfil con ese nombre. Usa aeat config
-      login NAME para iniciar sesión en él.
     profile_import_collision: El identificador del perfil importado coincide con uno
       que ya existe.
     profile_locked: Esta operación requiere un perfil desbloqueado. Ejecuta `aeat
@@ -7894,9 +7881,6 @@ flows:
     language:
       unavailable: Este perfil no ofrece un ajuste de idioma.
     namespace_detail: detalle {number}
-    recovery_boundary: 'El código de recuperación se crea y se rota solo desde la
-      terminal: aeat config recovery create / aeat config recovery rotate. Las 24
-      palabras se muestran una sola vez y no se pueden volver a mostrar.'
     required_field_unavailable: Campo obligatorio del perfil
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
@@ -8126,9 +8110,6 @@ flows:
         status: Estado
       none: No hay perfiles registrados.
       status:
-        active: activo
-        setup_incomplete: configuración incompleta
-        tombstoned: eliminado
         unknown: desconocido
     section:
       auth: Autenticación

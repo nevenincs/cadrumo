@@ -144,6 +144,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_helpers
    cadrumo.domain.calculations.registry._validate_label_artifacts
    cadrumo.domain.calculations.registry._validate_layout_authority_content
+   cadrumo.domain.calculations.registry._validate_official_source_guidance_content
    cadrumo.domain.calculations.registry._validate_orden_aplicabilidad
    cadrumo.domain.calculations.registry._validate_previous_filing_sources
    cadrumo.domain.calculations.registry._validate_previous_filing_year_coverage

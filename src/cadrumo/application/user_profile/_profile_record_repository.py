@@ -17,6 +17,7 @@ from pathlib import Path
 from uuid import UUID
 
 from ...core.paths import effective_storage_root
+from ...domain.buckets import BucketEventType
 from ...domain.user_profile import ProfileNotFoundError, ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..profile_custody import profile_custody_record_session_material
 from ._capsule_record import (
@@ -227,7 +228,7 @@ class ProfileRecordRepository:
             record_session=self._session,
             replacement=replacement,
             event=ProfileRecordCommandEvent(
-                event_type="profile.setup.completed",
+                event_type=BucketEventType.PROFILE_SETUP_COMPLETED.value,
                 occurred_at=occurred_at.isoformat(),
             ),
             expected_revision=expected_revision,
@@ -242,7 +243,7 @@ class ProfileRecordRepository:
         facts: tuple[UserProfileFact, ...],
         expected_revision: int,
         expected_content_digest: str,
-        event_type: str,
+        event_type: BucketEventType,
         event_payload: Mapping[str, str],
         now: datetime | None = None,
     ) -> UserProfileRecord:
@@ -254,6 +255,15 @@ class ProfileRecordRepository:
         fact as explicit as an added one.  The lifecycle publishes the
         encrypted replacement and its authenticated event in the same capsule
         data-file replacement.
+
+        ``event_type`` is the closed catalogue member, never a free string.
+        The capsule writer coerces whatever reaches it through
+        :class:`~cadrumo.domain.buckets.BucketEventType` and refuses the whole
+        command when the coercion fails, so a caller-invented string does not
+        degrade the record -- it loses it, along with every fact the command
+        carried.  Taking the member here moves that refusal from a runtime
+        integrity error deep inside the writer to the call site, where the
+        caller can see which values exist.
         """
         identity = UUID(str(profile_id))
         if identity != self._session.profile_id:
@@ -283,7 +293,7 @@ class ProfileRecordRepository:
             record_session=self._session,
             replacement=replacement,
             event=ProfileRecordCommandEvent(
-                event_type=event_type,
+                event_type=event_type.value,
                 occurred_at=occurred_at.isoformat(),
                 payload=event_payload,
             ),

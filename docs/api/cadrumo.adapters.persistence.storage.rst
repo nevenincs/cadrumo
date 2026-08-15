@@ -29,7 +29,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.persistence.storage._iva_deduction_schema
-   cadrumo.adapters.persistence.storage._kdf_bounds
    cadrumo.adapters.persistence.storage._kdf_salt
    cadrumo.adapters.persistence.storage._namespace_registry
    cadrumo.adapters.persistence.storage._namespace_taxonomy

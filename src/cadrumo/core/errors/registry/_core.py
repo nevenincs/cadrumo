@@ -158,26 +158,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.errors.FixtureProvisioningError",
-        ErrorCode(
-            code="ERROR_FIXTURE_PROVISIONING",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_fixture_provisioning",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.errors.McpLaunchError",
-        ErrorCode(
-            code="FAIL_MCP_LAUNCH",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_mcp_launch",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.core.errors.SiteHealthError",
         ErrorCode(
             code="FAIL_SITE_HEALTH",

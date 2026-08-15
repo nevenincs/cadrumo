@@ -5377,8 +5377,6 @@ cli:
       help: Render the deadline calendar for the active profile across the supplied
         date window. Applies festivos and business-day shifts. Local-only; never contacts
         AEAT.
-      setup_incomplete_notice: 'Excluded %{count} profile(s) still completing setup
-        from the calendar; they are not yet ready for filing: %{labels}.'
       shift:
         business_day: Business day
         calendar_unavailable: Calendar unavailable
@@ -6376,8 +6374,6 @@ errors:
     error_profile_asset_record: A profile asset record is structurally invalid.
     error_profile_bienes_inversion_record: A capital-goods IVA regularisation record
       is structurally invalid.
-    error_profile_cross_store_drift: A profile's physical stores disagree on its identity.
-      The profile is not usable.
     error_profile_inventory_ledger: A profile inventory ledger operation is not valid.
     error_profile_prorrata_register_record: A cross-period IVA prorrata register record
       is structurally invalid.
@@ -6647,10 +6643,6 @@ errors:
     integrity_repair_integrity: A repair-integrity invariant or decision contract
       was violated.
     integrity_storage_blob: A stored object's SHA-256 hash disagrees with its manifest.
-    integrity_storage_bucket_manifest_version_below_floor: This profile bucket predates
-      the oldest format this version of Cadrumo can read.
-    integrity_storage_bucket_manifest_version_from_future: This profile bucket was
-      written by a newer version of Cadrumo. Update Cadrumo to open it.
     integrity_storage_bucket_validation: A bucket parameter or manifest field failed
       validation.
     integrity_storage_classification: A record's declared sensitivity class is incompatible
@@ -6850,8 +6842,6 @@ errors:
       a modelo work unit.
     modelo_work_selector_revision_conflict: The selected modelo work unit belongs
       to a different revision.
-    profile_already_registered: A profile with that name already exists. Use aeat
-      config login NAME to log in to it.
     profile_import_collision: The imported profile identifier collides with an existing
       one.
     profile_locked: This operation requires an unlocked profile. Run `aeat config
@@ -7340,9 +7330,6 @@ flows:
     language:
       unavailable: This profile does not offer a language setting.
     namespace_detail: detail {number}
-    recovery_boundary: 'Recovery-code creation and rotation are terminal-only: aeat
-      config recovery create / aeat config recovery rotate. The 24 words are shown
-      once and cannot be shown again.'
     required_field_unavailable: Required profile field
     section_title: '{title} - {present}/{total}'
     title: 'Profile: {profile}'
@@ -7572,9 +7559,6 @@ flows:
         status: Status
       none: No registered profiles.
       status:
-        active: active
-        setup_incomplete: setup incomplete
-        tombstoned: deleted
         unknown: Unknown
     section:
       auth: Authentication

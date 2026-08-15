@@ -134,7 +134,7 @@ def apply_wizard_fact_changes(
         facts=next_facts,
         expected_revision=current.record_revision,
         expected_content_digest=current.content_digest,
-        event_type=BucketEventType.PROFILE_VALUES_UPDATED.value,
+        event_type=BucketEventType.PROFILE_VALUES_UPDATED,
         event_payload={"changed_fact_count": str(len(changes)), "door": door.value},
     )
 

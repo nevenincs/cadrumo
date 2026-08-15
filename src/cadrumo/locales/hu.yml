@@ -5578,7 +5578,6 @@ cli:
         profile_list: Profiladatok listázása.
         profile_login: Bejelentkezés egy profilba, és aktívvá tétele.
         profile_logout: Az aktív profil munkamenetének lezárása.
-        profile_sar: Érintetti hozzáférési adatcsomagot exportál.
         profile_show: Egy profil adatainak megjelenítése.
         profile_status: Az aktív profil készültségének megjelenítése.
         reset_resume: Folytat egy befejezetlen visszaállítási műveletet.
@@ -5682,8 +5681,6 @@ cli:
       help: A határidő-naptár megjelenítése az aktív profilhoz a megadott dátumablakon
         belül. Festivos és munkanapszámítás alkalmazásával. Csak helyi; soha nem lép
         kapcsolatba az AEAT-tal.
-      setup_incomplete_notice: '%{count} profil, amely még a beállítást fejezi be,
-        kimaradt a naptárból; még nem áll készen a bevallásra: %{labels}.'
       shift:
         business_day: Munkanap
         calendar_unavailable: Naptár nem elérhető
@@ -6703,8 +6700,6 @@ errors:
     error_profile_asset_record: Egy profil vagyonelem-rekordja szerkezetileg érvénytelen.
     error_profile_bienes_inversion_record: Egy beruházási javak áfa-korrekciós nyilvántartása
       szerkezetileg érvénytelen.
-    error_profile_cross_store_drift: A profil fizikai tárolói eltérnek az azonosságától.
-      A profil nem használható.
     error_profile_inventory_ledger: Egy profil készlet-főkönyvi művelete érvénytelen.
     error_profile_prorrata_register_record: Egy időszakok közötti áfa-arányosítási
       nyilvántartás szerkezetileg érvénytelen.
@@ -6980,10 +6975,6 @@ errors:
     integrity_repair_integrity: Egy javítási-integritási invariáns vagy döntési szerződés
       sérült.
     integrity_storage_blob: Egy tárolt objektum SHA-256 hashje eltér a manifeszttől.
-    integrity_storage_bucket_manifest_version_below_floor: Ez a profilmappa régebbi
-      annál a formátumnál, amelyet a Cadrumo e verziója még olvasni tud.
-    integrity_storage_bucket_manifest_version_from_future: Ezt a profilmappát a Cadrumo
-      újabb verziója írta. Frissítsd a Cadrumót a megnyitásához.
     integrity_storage_bucket_validation: Egy gyűjtőparaméter vagy manifestmező nem
       teljesítette az érvényesítést.
     integrity_storage_classification: Egy rekord deklarált érzékenységi osztálya nem
@@ -7188,8 +7179,6 @@ errors:
       feloldása előtt.
     modelo_work_selector_revision_conflict: A kiválasztott modell munkaegység másik
       revízióhoz tartozik.
-    profile_already_registered: Ilyen nevű profil már létezik. Használja az aeat config
-      login NÉV parancsot a bejelentkezéshez.
     profile_import_collision: Az importált profil azonosítója ütközik egy meglévővel.
     profile_locked: Ehhez a művelethez feloldott profil szükséges. Futtassa az `aeat
       config login NÉV` parancsot, és próbálja újra.
@@ -7685,9 +7674,6 @@ flows:
     language:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
     namespace_detail: '{number}. részlet'
-    recovery_boundary: 'A helyreállítási kód létrehozása és megújítása kizárólag a
-      terminálról történik: aeat config recovery create / aeat config recovery rotate.
-      A 24 szó egyszer jelenik meg, és nem jeleníthető meg újra.'
     required_field_unavailable: Kötelező profilmező
     section_title: '{title} - {present}/{total}'
     title: 'Profil: {profile}'
@@ -7919,9 +7905,6 @@ flows:
         status: Állapot
       none: Nincsenek regisztrált profilok.
       status:
-        active: aktív
-        setup_incomplete: beállítás befejezetlen
-        tombstoned: törölve
         unknown: ismeretlen
     section:
       auth: Hitelesítés

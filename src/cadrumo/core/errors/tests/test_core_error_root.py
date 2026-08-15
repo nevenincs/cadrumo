@@ -84,13 +84,13 @@ def test_core_error_does_not_catch_non_core_cadrumo_error() -> None:
     """CoreError does not catch CadrumoError subclasses from other hierarchies.
 
     Confirms the catch surface is narrowed: a non-CoreError CadrumoError
-    (McpLaunchError inherits CadrumoError directly, not CoreError) raised
-    inside a try block is NOT caught by a CoreError handler.
+    (NoActiveProfileError inherits CadrumoError directly, not CoreError)
+    raised inside a try block is NOT caught by a CoreError handler.
     """
-    from .. import McpLaunchError
+    from .. import NoActiveProfileError
 
-    with pytest.raises(McpLaunchError):
+    with pytest.raises(NoActiveProfileError):
         try:
-            raise McpLaunchError("not a core error")
+            raise NoActiveProfileError("not a core error")
         except CoreError:
             pytest.fail("CoreError should not catch a non-CoreError CadrumoError subclass")

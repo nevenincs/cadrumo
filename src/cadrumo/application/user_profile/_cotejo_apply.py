@@ -37,6 +37,7 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.buckets import BucketEventType
 from ...domain.user_profile import ProfileSetupState, UserProfileFact
 from ._capsule_record import ProfileRecordConflictError
 from ._profile_record_repository import ProfileRecordRepository
@@ -310,7 +311,7 @@ def apply_cotejo(
         facts=next_facts,
         expected_revision=record.record_revision,
         expected_content_digest=record.content_digest,
-        event_type="profile.censo.applied",
+        event_type=BucketEventType.CENSO_APPLIED,
         event_payload={
             "adopted_count": str(len(tuple(adopted))),
             "divergence_count": str(len(divergences)),

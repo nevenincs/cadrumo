@@ -66,3 +66,29 @@ published_at = 2003-03-10
 applies_from = 2003-03-11
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-5304"
 review_status = "reviewed"
+
+# The BOE consolidated text of Orden HAC/539/2003 embeds its Anexo I/II
+# "diseños físicos y lógicos" position tables as scanned PNG images rather
+# than extractable text (verified via BOE's own document viewer, 2026-08-15).
+# This is Anexo I image 1 -- "MODELO 186 (NACIMIENTOS) B.- TIPO DE REGISTRO 1:
+# REGISTRO DE DECLARANTE" -- fetched directly from BOE and read back byte-for-
+# byte before hashing. It carries the real position table this modelo's
+# export layout is grounded against: 1 TIPO DE REGISTRO (constante '1'),
+# 2-4 MODELO DECLARACIÓN (constante 'NAC' for nacimientos), 5-13 N.I.F. DEL
+# DECLARANTE, 14-53 RAZÓN SOCIAL, 54-57 EJERCICIO DE ENVÍO, 58-59 MES DE
+# ENVÍO, 60-69 NÚMERO TOTAL DE REGISTROS, 70-320 BLANCOS. No "declaración
+# complementaria/sustitutiva" field exists in this tipo-1 record (unlike the
+# 100-199 informativa family's usual 121-122 pair), confirmed directly from
+# this image -- not assumed by analogy.
+[sources."boe-modelo-186-anexo-i-tipo1"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_186/files/01-186-anexo-i-tipo1-nacimientos.png"
+sha256 = "662639891a323cd1139fac3c4220a61e87ae1be25b062006ac840f71488273c6"
+bytes = 183396
+retrieved_at = 2026-08-15
+published_at = 2003-03-10
+applies_from = 2003-03-11
+source_url = "https://www.boe.es/datos/imagenes/disp/2003/63/05304_8169760_image1.png"
+review_status = "reviewed"

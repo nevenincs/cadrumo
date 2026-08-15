@@ -227,15 +227,6 @@ class CadrumoObservabilityError(CadrumoError):
     """
 
 
-class FixtureProvisioningError(CadrumoError):
-    """Raised when Google Workspace test-fixture provisioning fails.
-
-    Thrown by the provisioning and teardown scripts under ``scripts/``
-    whenever a Drive / Sheets / Docs call cannot satisfy the catalogued
-    intent (missing parent, quota exhausted, unexpected dedup result, etc).
-    """
-
-
 class SiteHealthError(CadrumoError):
     """Raised when AEAT site-health detection classifies a non-OK state.
 
@@ -278,10 +269,6 @@ class SiteHealthError(CadrumoError):
             context["retry_after_seconds"] = status.retry_after_seconds
         super().__init__(str(state_value), context=context)
         self.status: SiteHealthStatusLike = status
-
-
-class McpLaunchError(CadrumoError):
-    """Raised when a repo-managed MCP process cannot be launched safely."""
 
 
 class ActiveProfilePointerError(CoreError):
@@ -365,8 +352,6 @@ __all__ = [
     "ErrorCategory",
     "ErrorCode",
     "ErrorEnvelope",
-    "FixtureProvisioningError",
-    "McpLaunchError",
     "NoActiveProfileError",
     "ProfileAnswerTypeError",
     "RedactionError",

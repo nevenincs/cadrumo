@@ -189,7 +189,7 @@ def replace_test_profile_record(
     record: UserProfileRecord,
     *,
     root: Path | None = None,
-    event_type: str = BucketEventType.PROFILE_VALUES_UPDATED.value,
+    event_type: BucketEventType = BucketEventType.PROFILE_VALUES_UPDATED,
 ) -> UserProfileRecord:
     """CAS-replace a seeded record through the production capsule writer."""
     identity = UUID(str(record.profile_id))
@@ -241,7 +241,7 @@ def upsert_test_profile_facts(
             facts=tuple(merged.values()),
             expected_revision=current.record_revision,
             expected_content_digest=current.content_digest,
-            event_type=BucketEventType.PROFILE_VALUES_UPDATED.value,
+            event_type=BucketEventType.PROFILE_VALUES_UPDATED,
             event_payload={},
             now=datetime.now(UTC),
         )
@@ -305,7 +305,7 @@ def seed_test_profile_record(
     return replace_test_profile_record(
         record,
         root=storage_root,
-        event_type=BucketEventType.PROFILE_VALUES_UPDATED.value,
+        event_type=BucketEventType.PROFILE_VALUES_UPDATED,
     )
 
 

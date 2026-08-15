@@ -5764,9 +5764,6 @@ cli:
       help: Genera el calendari de terminis per al perfil actiu a la finestra de dates
         indicada. Aplica festius i desplaçaments de dia hàbil. Local; mai contacta
         amb AEAT.
-      setup_incomplete_notice: 'S''han exclòs del calendari %{count} perfil(s) que
-        encara estan completant la configuració; encara no estan preparats per presentar:
-        %{labels}.'
       shift:
         business_day: Dia hàbil
         calendar_unavailable: Calendari no disponible
@@ -6812,8 +6809,6 @@ errors:
       vàlida.
     error_profile_bienes_inversion_record: Un registre de regularització d'IVA per
       béns d'inversió no és estructuralment vàlid.
-    error_profile_cross_store_drift: Els magatzems físics d'un perfil no coincideixen
-      en la seva identitat. El perfil no és utilitzable.
     error_profile_inventory_ledger: Una operació del llibre d'inventari del perfil
       no és vàlida.
     error_profile_prorrata_register_record: Un registre de prorrata d'IVA entre períodes
@@ -7113,11 +7108,6 @@ errors:
     integrity_repair_integrity: La comprovació d'integritat de reparació ha fallat.
     integrity_storage_blob: El resum SHA-256 d'un objecte emmagatzemat no coincideix
       amb el del seu manifest.
-    integrity_storage_bucket_manifest_version_below_floor: Aquesta carpeta de perfil
-      és anterior al format més antic que aquesta versió de Cadrumo pot llegir.
-    integrity_storage_bucket_manifest_version_from_future: Aquesta carpeta de perfil
-      es va escriure amb una versió més recent de Cadrumo. Actualitza Cadrumo per
-      obrir-la.
     integrity_storage_bucket_validation: Un paràmetre del dipòsit o camp del manifest
       no ha superat la validació.
     integrity_storage_classification: La classe de sensibilitat declarada d'un registre
@@ -7327,8 +7317,6 @@ errors:
       una unitat de treball de modelo.
     modelo_work_selector_revision_conflict: La unitat de treball de modelo seleccionada
       pertany a una altra revisió.
-    profile_already_registered: Ja existeix un perfil amb aquest nom. Fes servir aeat
-      config login NAME per iniciar-hi la sessió.
     profile_import_collision: L'identificador del perfil importat coincideix amb un
       que ja existeix.
     profile_locked: Aquesta operació requereix un perfil desbloquejat. Executa `aeat
@@ -7842,9 +7830,6 @@ flows:
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
     namespace_detail: detall {number}
-    recovery_boundary: 'La creació i la rotació del codi de recuperació només es fan
-      des del terminal: aeat config recovery create / aeat config recovery rotate.
-      Les 24 paraules es mostren una sola vegada i no es poden tornar a mostrar.'
     required_field_unavailable: Camp obligatori del perfil
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
@@ -8074,9 +8059,6 @@ flows:
         status: Estat
       none: No hi ha perfils registrats.
       status:
-        active: actiu
-        setup_incomplete: configuració incompleta
-        tombstoned: eliminat
         unknown: desconegut
     section:
       auth: Autenticació
