@@ -5,6 +5,7 @@ tags:
 date: '2026-08-13'
 related:
   - "[[2026-08-13-profile-password-custody-research]]"
+  - '[[2026-06-04-profile-bucket-lifecycle-research]]'
 supersedes:
   - '2026-05-14-profile-bucket-lifecycle-adr'
 modified: '2026-08-14'

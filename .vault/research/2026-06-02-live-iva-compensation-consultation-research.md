@@ -1,10 +1,9 @@
 ---
 tags: ['#research', '#live-iva-compensation-wallet']
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:893c20da124f1e65f87738b77e9f517c8baf64f2e78cc76096beeb73d7d54ef3'
 related:
-  - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
   - '[[2026-06-02-live-iva-persistent-failure-team-brief-audit]]'
 ---
 

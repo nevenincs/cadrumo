@@ -3,13 +3,11 @@ tags:
   - '#adr'
   - '#cli-persona-testimonials'
 date: '2026-06-04'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:623f73b78df6105bc073e413a8f04ea589f24b2024ef13c201bed8ab98da6917'
 related:
-  - "[[2026-05-21-cli-persona-testimonials-plan]]"
-  - "[[2026-05-20-cli-persona-testimonials-research]]"
+  - '[[2026-06-30-cli-persona-testimonials-audit]]'
 ---
-
 # `cli-persona-testimonials` adr: `retrospective authority alignment` | (**status:** `accepted`)
 
 ## Problem Statement

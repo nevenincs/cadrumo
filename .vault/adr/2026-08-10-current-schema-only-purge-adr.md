@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#current-schema-only-purge'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:cfba34b246f1e436853ea031c3daad46124fe78c7bf6e7fdab625514ffeb1a50'
 related:
   - "[[2026-07-09-compatibility-lifecycle-adr]]"
-  - "[[2026-05-06-secure-persistence-enforcement-adr]]"
   - "[[2026-06-10-zero-legacy-purge-research]]"
   - "[[2026-08-10-current-schema-only-purge-plan]]"
 ---

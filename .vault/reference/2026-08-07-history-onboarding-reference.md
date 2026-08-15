@@ -3,14 +3,13 @@ tags:
   - '#reference'
   - '#history-onboarding'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:a44e853ae3baa10219d9f96190b8d00ce3c06d3f3e51e375e365e426482104fe'
 related:
   - '[[2026-08-07-declarations-register-pagination-reference]]'
   - '[[2026-08-07-declarations-register-pagination-adr]]'
   - '[[2026-08-07-dehu-notification-legal-effect-reference]]'
-  - '[[2026-05-04-live-filing-data-capture-adr]]'
   - '[[2026-07-12-justificante-reframing-audit]]'
 ---
 

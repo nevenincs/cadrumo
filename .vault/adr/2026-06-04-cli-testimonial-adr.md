@@ -3,13 +3,9 @@ tags:
   - '#adr'
   - '#cli-testimonial'
 date: '2026-06-04'
-modified: '2026-07-10'
+modified: '2026-08-15'
 body_hash: 'sha256:a2dd1e4ece5c666c0555f4f9ef4f9a3101acc52d735285623750b16fa52b4572'
-related:
-  - "[[2026-05-21-fresh-cli-persona-repair-plan]]"
-  - "[[2026-05-21-fresh-cli-persona-testimonial-wave-plan]]"
-  - "[[2026-05-20-cli-state-architecture-research]]"
-  - "[[2026-05-21-fresh-cli-persona-capability-gap-design-research]]"
+related: []
 ---
 
 # `cli-testimonial` adr: `retrospective authority alignment` | (**status:** `accepted`)

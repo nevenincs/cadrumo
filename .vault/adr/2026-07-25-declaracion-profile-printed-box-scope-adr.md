@@ -3,14 +3,13 @@ tags:
   - '#adr'
   - '#declaracion-profile-printed-box-scope'
 date: '2026-07-25'
-modified: '2026-07-25'
+modified: '2026-08-15'
 body_hash: 'sha256:aad3c3f765612b7ee6cb3b436d4132ba1a95371447135fbfe4570bad27d96091'
 related:
   - "[[2026-07-25-declaracion-profile-printed-box-scope-research]]"
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - "[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]"
   - "[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]"
-  - "[[2026-05-21-declaracion-extraction-architecture-adr]]"
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
 ---
 

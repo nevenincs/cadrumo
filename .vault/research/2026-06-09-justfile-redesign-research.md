@@ -3,10 +3,9 @@ tags:
   - '#research'
   - '#justfile-redesign'
 date: '2026-06-09'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:da959daf9329fbf7148c31f52730ed3278f6708070c6c46033ab13acf662f054'
-related:
-  - '[[2026-04-17-pytest-markers-adr]]'
+related: []
 ---
 
 # `justfile-redesign` research: Quality and Testing Harness

@@ -3,12 +3,11 @@ tags:
   - '#research'
   - '#test-harness-sanity'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:d1fcd1f7bcf75aea3f7eebe12468f49233118d6281b534badc8b626840e95279'
 related:
   - "[[2026-08-14-test-harness-sanity-audit]]"
-  - "[[2026-04-17-pytest-only-testing-adr]]"
   - "[[2026-06-05-test-topology-refactor-adr]]"
   - "[[2026-07-08-test-worker-count-policy-adr]]"
 ---

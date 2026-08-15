@@ -3,13 +3,11 @@ tags:
   - '#adr'
   - '#conformance-cli'
 date: '2026-07-27'
-modified: '2026-07-28'
+modified: '2026-08-15'
 body_hash: 'sha256:7a91184748b949aa53b08d981d32cd0e5d049f904644a5d699e056586194a5ca'
 related:
   - '[[2026-07-27-conformance-cli-research]]'
   - '[[2026-07-01-verification-power-adr]]'
-  - '[[2026-05-04-calculation-authority-evidence-tiering-adr]]'
-  - '[[2026-04-21-casilla-schema-completeness-adr]]'
   - '[[2026-07-02-arch-remediation-registry-format-adr]]'
 ---
 

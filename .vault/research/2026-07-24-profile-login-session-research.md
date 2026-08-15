@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#profile-login-session'
 date: '2026-07-24'
-modified: '2026-07-24'
+modified: '2026-08-15'
 body_hash: 'sha256:3b8e5a1f3d30b4018560b4b17c05c26caa6759ceb8aad3d9ee1946b5d9619ef0'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
-  - "[[2026-05-14-secure-backend-passkey-custody-adr]]"
   - "[[2026-06-10-cli-operator-surface-adr]]"
 ---
 

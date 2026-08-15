@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#counterpart-source-provider'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-08-15'
 body_hash: 'sha256:37a4a077c480344af308fb290b29e627a58f7c50edaca86dd06410517375b1e8'
 related:
   - '[[2026-06-26-binding-resolver-contract-unification-adr]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]'
   - '[[2026-07-02-arch-remediation-source-kind-deferrals-adr]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
-  - '[[2026-05-20-calculation-source-connectivity-plan]]'
 ---
 
 # `counterpart-source-provider` adr: `counterpart source provider design and enrollment` | (**status:** `accepted`)

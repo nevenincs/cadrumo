@@ -3,14 +3,13 @@ tags:
   - '#adr'
   - '#calculation-chain-integrity'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:bc4eef83583b74bdad1f78ac46c1a7df46a104507cb95d822adf4f8f26cf6e56'
 related:
   - "[[2026-08-07-calculation-chain-integrity-adr]]"
-  - "[[2026-05-15-linkage-design-audit-reference]]"
+  - '[[2026-08-07-calculation-chain-integrity-m390-annual-under-modelling-research]]'
 ---
-
 # `calculation-chain-integrity` adr: `Whether a binding selector may declare a match casilla distinct from its output casilla` | (**status:** `proposed`)
 
 ## Problem Statement

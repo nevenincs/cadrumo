@@ -3,10 +3,9 @@ tags:
   - '#research'
   - '#m210-irnr-phase-1'
 date: '2026-06-03'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:0bc9fbe7a6bb6dc90ad4be5487aaaaf5a094d9e7b07dbe62b22d4f13f9b5de9d'
-related:
-  - "[[2026-05-26-cross-domain-continuity-plan]]"
+related: []
 ---
 
 # `m210-irnr-phase-1` research: `M210 IRNR Phase 1 corpus discovery for S393-S396`

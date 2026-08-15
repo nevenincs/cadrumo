@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#release-pipeline-full-automation'
 date: '2026-08-02'
-modified: '2026-08-02'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:e3f10d12cb5499826d4c632f77e5b28b9767c04bc286f45e93b5cfb44f28b34d'
 related:
@@ -15,7 +15,6 @@ related:
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
   - "[[2026-07-20-release-asset-transport-adr]]"
   - "[[2026-07-25-account-distribution-standard-adr]]"
-  - "[[2026-04-12-release-please-adr]]"
   - '[[2026-07-04-release-readiness-gate-adr]]'
 ---
 

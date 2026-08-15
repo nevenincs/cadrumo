@@ -3,11 +3,9 @@ tags:
   - '#adr'
   - '#registry-authority-flow'
 date: '2026-06-01'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:ddb67a28ebb7359220fc656e61b406f103256d43528bd6146f4e4df3f6656807'
-related:
-  - "[[2026-05-20-registry-authority-flow-adr]]"
-  - '[[2026-05-20-registry-authority-flow-research]]'
+related: []
 ---
 # `registry-loader-period-code-hydration` adr: PeriodCode validator is the compiler boundary | (**status:** `accepted`)
 

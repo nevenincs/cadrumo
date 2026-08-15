@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cross-period-filing-clean-state'
 date: '2026-06-05'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:7ed728906f6b5f50c4ff576079f355ecd17b9ab0356480c91f7e8cb3f4c9fef2'
 related:
   - '[[2026-06-05-cross-period-calculation-guards-adr]]'
@@ -11,9 +11,6 @@ related:
   - '[[2026-06-05-cross-period-filing-clean-state-reference]]'
   - '[[2026-06-05-cross-period-calculation-guards-research]]'
   - '[[2026-06-05-cross-period-calculation-guards-reference]]'
-  - '[[2026-05-12-cli-workflow-redesign-verified-complete-adr]]'
-  - '[[2026-05-20-calculation-source-connectivity-adr]]'
-  - '[[2026-05-26-live-iva-remote-evidence-reconciliation-adr]]'
   - '[[2026-06-02-modelo-filing-ledger-snapshot-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-353-grupo-aggregation-adr]]'
   - '[[2026-06-04-calendar-live-filing-integration-adr]]'

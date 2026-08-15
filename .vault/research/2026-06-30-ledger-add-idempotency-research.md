@@ -3,14 +3,12 @@ tags:
   - '#research'
   - '#ledger-add-idempotency'
 date: '2026-06-30'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:6bd7830b8a8443f6afcd0eccba20629bfff95b47017f3a8daca81eeccd42f298'
 related:
   - '[[2026-06-10-ledger-interface-contract-adr]]'
   - '[[2026-06-10-ledger-amount-direction-adr]]'
-  - '[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
-  - '[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]'
 ---
 
 # `ledger-add-idempotency` research: `manual ledger add idempotency and verify-report retry shape`

@@ -3,12 +3,10 @@ tags:
   - '#research'
   - '#casilla-schema'
 date: '2026-08-10'
-modified: '2026-08-11'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:21bbb47f272aded86a64b8daed7cb44c995888761f65e7853bb741dd4ca3dc1f'
-related:
-  - "[[2026-05-21-state-read-projection-adr]]"
-  - "[[2026-04-21-casilla-schema-completeness-research]]"
+related: []
 ---
 
 # `casilla-schema` research: `modelo review projection discovery roll-up`

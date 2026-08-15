@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#arch-remediation-ports-inversion'
 date: '2026-07-02'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:f0ff75a47aa69a5ac8b3c306440cafd64a9d8db13edf10093583007cbfc8246f'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"
   - "[[2026-06-01-domain-boundary-audit-adr]]"
-  - "[[2026-05-31-core-authority-adr]]"
   - '[[2026-07-06-arch-remediation-ports-inversion-research]]'
 ---
 # `arch-remediation-ports-inversion` adr: `domain persistence ports inversion: fincas template as standard` | (**status:** `accepted`)

@@ -3,11 +3,9 @@ tags:
   - '#reference'
   - '#cli-workflow-redesign'
 date: '2026-07-04'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:c68fd792b6adf8e3099b4641fbbef5d95a8c0f19a2c9c3695c8ee25ed01abe09'
-related:
-  - "[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-plan]]"
-  - "[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr]]"
+related: []
 ---
 
 # `cli-workflow-redesign` reference: `Modelo 145 fixed-width export layout ground-truth (dr145 v2.0)`

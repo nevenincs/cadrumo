@@ -3,12 +3,9 @@ tags:
   - '#adr'
   - '#cli-ledger-testimonials'
 date: '2026-06-03'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:9185a676878fa803665de54cd0ed8912341d94b9d02d33df21f63afcce72cb41'
 related:
-  - '[[2026-05-19-profile-lifecycle-disaster-adr]]'
-  - '[[2026-05-26-active-profile-storage-runtime-discovery-audit]]'
-  - '[[2026-05-26-active-profile-storage-runtime-classification-closeout-audit]]'
   - '[[2026-06-03-cli-ledger-testimonials-plan]]'
   - '[[2026-06-04-cli-ledger-testimonials-research]]'
 ---

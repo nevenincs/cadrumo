@@ -3,15 +3,11 @@ tags:
   - '#research'
   - '#cross-period-filing-clean-state'
 date: '2026-06-05'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:83c87c6b10554bd73e4d440deb2050c58472b78955a102f5158b535a3831088e'
 related:
-  - '[[2026-05-20-calculation-source-connectivity-adr]]'
   - '[[2026-06-02-modelo-filing-ledger-snapshot-adr]]'
   - '[[2026-06-04-calendar-live-filing-integration-adr]]'
-  - '[[2026-05-26-live-iva-remote-evidence-reconciliation-adr]]'
-  - '[[2026-05-26-cross-domain-continuity-audit]]'
-  - '[[2026-04-12-modelo-303-390-adr]]'
   - '[[2026-06-05-cross-period-filing-clean-state-reference]]'
 ---
 

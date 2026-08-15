@@ -5,12 +5,9 @@ tags:
 date: '2026-07-09'
 related:
   - "[[2026-06-04-m210-irnr-phase-2-engine-research]]"
-  - "[[2026-05-27-m210-irnr-full-engine-adr]]"
   - "[[2026-06-30-convenio-doble-imposicion-adr]]"
-  - "[[2026-05-27-m210-irnr-phase-2-engine-plan]]"
-  - "[[2026-05-26-cross-domain-continuity-plan]]"
 superseded_by: '2026-07-10-m210-irnr-phase-2-engine-adr'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:eabafc82ac306ef84e1a632038d7ac6b39a825b21792878cc3038076ad425f84'
 ---
 # `m210-irnr-phase-2-engine` adr: `Phase 2 registry design, grounding strategy, and slice decomposition` | (**status:** `superseded`)

@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:9eba1d805535cc0bbcf1f9e342fc32a4b5750f3cab9150271358202445feb29e'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-research]]"
   - "[[2026-07-01-modelo-100-minimo-descendientes-engine-adr]]"
-  - "[[2026-05-27-descendant-profile-axis-adr]]"
   - "[[2026-08-04-profile-derived-selectors-research]]"
   - '[[2026-08-05-minimo-descendientes-eligibility-diagnostic-message-headroom-census-research]]'
 ---

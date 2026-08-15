@@ -8,15 +8,13 @@ related:
   - '[[2026-08-04-modelo-localization-cascade-migration-feasibility-research]]'
   - '[[2026-06-08-registry-localization-backend-adr]]'
   - '[[2026-06-11-modelo-locales-cli-adr]]'
-  - '[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]'
   - '[[2026-07-21-locale-key-resolution-adr]]'
-  - '[[2026-05-08-modelo-directory-segmentation-adr]]'
   - '[[2026-08-05-modelo-localization-cascade-aeip-event-keyed-continuity-research]]'
   - '[[2026-08-05-modelo-localization-cascade-gapped-continuity-chain-notation-research]]'
 supersedes:
   - '2026-06-08-registry-localization-backend-adr'
   - '2026-06-11-modelo-locales-cli-adr'
-modified: '2026-08-05'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:e2f29c73b480d72f9a3a8e1bf85feb1126a698c7feefe02b850feee5fac58da5'
 ---

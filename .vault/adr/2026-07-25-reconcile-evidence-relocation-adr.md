@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#reconcile-evidence-relocation'
 date: '2026-07-25'
-modified: '2026-07-25'
+modified: '2026-08-15'
 body_hash: 'sha256:fc92a7762acad47e502bad42bab1b1eba8432d28543887e8b52d002096986c8c'
 related:
   - "[[2026-07-25-reconcile-evidence-relocation-research]]"
   - "[[2026-07-01-reconcile-value-comparison-adr]]"
-  - "[[2026-05-26-live-iva-remote-evidence-reconciliation-adr]]"
 ---
 
 # `reconcile-evidence-relocation` adr: `where reconcile diff detail persists` | (**status:** `accepted`)

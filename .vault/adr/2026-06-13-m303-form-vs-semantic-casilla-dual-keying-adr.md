@@ -5,7 +5,6 @@ tags:
 date: '2026-06-13'
 related:
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'
-  - '[[2026-04-17-modelo-303-formulas-adr]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
   - '[[2026-06-04-m303-form-vs-semantic-casilla-dual-keying-research]]'
   - '[[2026-06-01-m303-iva-resultado-semantic-casilla-mismatch-research]]'
@@ -16,7 +15,7 @@ related:
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-reference]]'
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s54-sector-source-taxonomy-research]]'
-modified: '2026-08-14'
+modified: '2026-08-15'
 body_hash: 'sha256:e0644992600da466d12d318c2ad000d683c72f8610350629bf8be13f2bcc7133'
 ---
 # `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 semantic homes and exact fixed-slot official projection` | (**status:** `accepted`)

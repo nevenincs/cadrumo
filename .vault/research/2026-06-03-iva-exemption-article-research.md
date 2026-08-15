@@ -3,10 +3,9 @@ tags:
   - '#research'
   - '#iva-exemption-article'
 date: '2026-06-03'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:3794d5f15f9043000e0b0260cd1cd0e1543ff7dbfc6fe37152ca98002fa712a3'
-related:
-  - "[[2026-05-26-cross-domain-continuity-plan]]"
+related: []
 ---
 
 # `iva-exemption-article` research: `IvaExemptionArticle discriminator for domestic_exempt subenumeration (S354)`

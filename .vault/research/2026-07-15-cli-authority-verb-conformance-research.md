@@ -3,13 +3,10 @@ tags:
   - '#research'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-07-15'
+modified: '2026-08-15'
 body_hash: 'sha256:953e306a53e4c9754b2d2fb17422d69a7a0f52ae6fe9a9080010aa2ede6160b6'
 related:
   - "[[2026-06-10-cli-operator-surface-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-config-auth-shape-adr]]"
-  - "[[2026-05-14-secure-backend-passkey-custody-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]"
 ---
 
 # `cli-authority-verb-conformance` research: `CLI authority and verb conformance`

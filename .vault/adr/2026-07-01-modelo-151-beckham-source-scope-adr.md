@@ -3,14 +3,10 @@ tags:
   - '#adr'
   - '#modelo-151-beckham-source-scope'
 date: '2026-07-01'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:93296aab3bd0a9d381e24195b994f968951170fe0c38409fe995cf240afb030d'
 related:
   - '[[2026-06-02-modelo-multiyear-renta-151-beckham-adr]]'
-  - '[[2026-05-27-source-jurisdiction-axis-adr]]'
-  - '[[2026-05-28-source-jurisdiction-axis-research]]'
-  - '[[2026-05-27-non-resident-irnr-axis-adr]]'
-  - '[[2026-05-27-m210-irnr-full-engine-adr]]'
   - '[[2026-07-10-modelo-151-beckham-source-scope-research]]'
 ---
 

@@ -3,13 +3,12 @@ tags:
   - "#research"
   - "#iva-bienes-inversion-regularizacion"
 date: "2026-07-01"
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:4a4f74e99553d0049b52dad3744acecfa774b467b807efd1a104ee7ef58f3550'
 related:
   - "[[2026-06-19-silent-zero-base-aggregation-adr]]"
   - "[[2026-06-21-m390-iva-carry-boxes-adr]]"
   - "[[2026-06-03-m303-cross-period-carry-continuity-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]"
 ---
 
 # `iva-bienes-inversion-regularizacion` research: `IVA regularizacion de deducciones por bienes de inversion (LIVA arts 107-110)`

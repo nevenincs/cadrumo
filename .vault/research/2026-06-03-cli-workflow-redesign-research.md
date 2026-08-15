@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#cli-workflow-redesign'
 date: '2026-06-03'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:b8b529825e2339c69756499f965bb1a20d8921f1fa6a5593e6446cd92e45a11c'
-related:
-  - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
-  - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
+related: []
 ---
 
 # `cli-workflow-redesign` research: `BucketMaintenanceService authority reconciliation`

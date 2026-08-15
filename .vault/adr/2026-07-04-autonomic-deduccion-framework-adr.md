@@ -3,14 +3,12 @@ tags:
   - '#adr'
   - '#autonomic-deduccion-framework'
 date: '2026-07-04'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:8d24bdf3dc5e56bf9226972d7993f3015ce337ad82ba68f5f656b334fbc37237'
 related:
   - "[[2026-07-01-autonomic-deduccion-auto-trigger-adr]]"
   - "[[2026-07-01-autonomic-deduccion-auto-trigger-research]]"
-  - "[[2026-05-08-renta-cuota-integra-autonomic-scale-adr]]"
   - "[[2026-06-19-m100-dependent-modelo-applicability-adr]]"
-  - "[[2026-04-28-ccaa-in-profile-adr]]"
 ---
 
 # `autonomic-deduccion-framework` adr: `per-ccaa autonomic deduccion auto-trigger framework` | (**status:** `proposed`)

@@ -3,15 +3,11 @@ tags:
   - '#research'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:0d2012732c0d60195a6f9fcec22326f8f5d36b759557985757e2aa79646c4125'
 related:
   - "[[2026-06-03-llm-ledger-classification-research]]"
   - "[[2026-06-04-llm-ledger-classification-adr]]"
-  - "[[2026-05-30-purchase-invoice-ocr-extraction-discipline-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr]]"
-  - "[[2026-04-17-attachment-service-adr]]"
-  - "[[2026-05-27-iva-classification-enrichment-adr]]"
 ---
 
 # `llm-evidence-classification` research: `Evidence-aware LLM ledger classification (Stage-3): feeding attached evidence into the classifier`

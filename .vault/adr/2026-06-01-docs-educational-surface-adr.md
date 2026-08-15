@@ -3,11 +3,9 @@ tags:
   - '#adr'
   - '#docs-educational-surface'
 date: '2026-06-01'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:4ad9dd01fc52ab48d6627abec22681c81320b99c32b12bdd00bba9c8c4de5b81'
 related:
-  - '[[2026-05-30-docs-architecture-adr]]'
-  - '[[2026-05-30-docs-architecture-research]]'
   - '[[2026-06-01-docs-cli-buildtime-adr]]'
   - '[[2026-06-04-docs-educational-surface-research]]'
 ---

@@ -3,13 +3,11 @@ tags:
   - '#research'
   - '#cross-period-calculation-guards'
 date: '2026-06-05'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:bb2d4bd20d10ef3d3e05e139ebfc303d187f02df79aeb502f08734351fd003c2'
 related:
   - '[[2026-06-05-cross-period-calculation-guards-reference]]'
-  - '[[2026-05-20-calculation-source-connectivity-adr]]'
   - '[[2026-06-02-modelo-filing-ledger-snapshot-adr]]'
-  - '[[2026-05-26-live-iva-remote-evidence-reconciliation-adr]]'
   - '[[2026-06-04-calendar-live-filing-integration-adr]]'
 ---
 

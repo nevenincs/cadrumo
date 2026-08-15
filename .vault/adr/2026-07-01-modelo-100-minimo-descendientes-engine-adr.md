@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#modelo-100-minimo-descendientes-engine'
 date: '2026-07-01'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:fd6f574dd41f2282b77afa33019ac5164eacb6897dd29ad35c30dc0a9b23aea8'
 related:
   - '[[2026-07-01-modelo-100-trabajo-casilla-compute-adr]]'
   - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'
-  - '[[2026-05-27-descendant-profile-axis-adr]]'
   - '[[2026-07-10-modelo-100-minimo-descendientes-engine-research]]'
 ---
 

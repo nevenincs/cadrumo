@@ -3,15 +3,13 @@ tags:
   - '#research'
   - '#bucket-custody-completeness'
 date: '2026-06-30'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:ccdb8f05a7c34c7489e0dc785b871775abeb64a6556ab357728f580e41441135'
 related:
   - '[[2026-06-30-agent-harness-research]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
-  - '[[2026-05-27-profile-portability-adr]]'
   - '[[2026-06-03-bucket-sealed-archive-adr]]'
   - '[[2026-06-03-cli-workflow-redesign-adr]]'
-  - '[[2026-05-22-secure-storage-production-hardening-architecture-adr]]'
 ---
 
 # `bucket-custody-completeness` research: `per-bucket data-custody completeness`

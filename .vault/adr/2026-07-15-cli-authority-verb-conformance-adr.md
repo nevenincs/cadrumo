@@ -7,13 +7,9 @@ related:
   - "[[2026-07-15-cli-authority-verb-conformance-research]]"
   - "[[2026-07-15-cli-authority-verb-conformance-reference]]"
   - "[[2026-06-10-cli-operator-surface-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-config-auth-shape-adr]]"
-  - "[[2026-05-14-secure-backend-passkey-custody-adr]]"
-  - "[[2026-05-21-profile-state-aggregate-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-evidence-bundle-shape-adr]]"
   - "[[2026-07-24-profile-login-session-adr]]"
 superseded_by: '2026-08-13-cli-action-envelope-successor-adr'
-modified: '2026-08-13'
+modified: '2026-08-15'
 body_hash: 'sha256:3719ec63451cacae223d3b13302c23f6d2316f98dc2a87fe02f4071ea951b4d0'
 ---
 # `cli-authority-verb-conformance` adr: `Single backend authorities and cost-aware CLI verbs` | (**status:** `superseded`)

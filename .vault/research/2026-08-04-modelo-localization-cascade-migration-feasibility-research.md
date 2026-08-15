@@ -3,13 +3,12 @@ tags:
   - '#research'
   - '#modelo-localization-cascade'
 date: '2026-08-04'
-modified: '2026-08-05'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:e10dafc200164c9022283d8157edeebfba9534ff605800c45e25716bd49cb940'
 related:
   - '[[2026-08-04-modelo-localization-cascade-research]]'
   - '[[2026-08-04-modelo-localization-cascade-adr]]'
-  - '[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]'
 ---
 # `modelo-localization-cascade` research: `mechanical migration feasibility`
 

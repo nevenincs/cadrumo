@@ -3,11 +3,9 @@ tags:
   - '#research'
   - '#convenio-doble-imposicion'
 date: '2026-06-30'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:c65b27fa75150df6b52b2a37740796a5d156a639188f499a24d77aba8fe6b76b'
 related:
-  - '[[2026-05-27-m210-irnr-full-engine-adr]]'
-  - '[[2026-05-27-non-resident-irnr-axis-adr]]'
   - '[[2026-06-30-m210-categorical-conditional-predicate-adr]]'
   - '[[2026-06-30-convenio-doble-imposicion-adr]]'
 ---

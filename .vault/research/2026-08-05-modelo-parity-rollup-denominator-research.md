@@ -3,17 +3,15 @@ tags:
   - '#research'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:8c88e58e7d54a78e1e74e34fce41162a5127bc2364d014a18f8a9bfc12fe06c7'
 related:
   - "[[2026-08-04-modelo-100-casilla-implementation-audit]]"
   - "[[2026-07-28-conformance-cli-first-conformance-measurement-audit]]"
-  - "[[2026-05-03-calculation-truth-registry-pending-adr]]"
   - "[[2026-06-03-executable-parity-evidence-tier-contract-adr]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - "[[2026-07-01-modelo-131-eo-modulos-engine-adr]]"
-  - "[[2026-04-21-casilla-schema-completeness-adr]]"
 ---
 
 # `modelo-parity-rollup` research: `Modelo revision parity denominator and bounded campaign`

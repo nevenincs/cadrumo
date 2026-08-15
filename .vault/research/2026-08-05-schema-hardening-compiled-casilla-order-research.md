@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#schema-hardening'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:0cd1b6c3a1f0958368875169a846c78aaa7c3db1a4eac35229984bea683574d8'
-related:
-  - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
+related: []
 ---
 
 # `schema-hardening` research: `Is compiled casilla order load-bearing`

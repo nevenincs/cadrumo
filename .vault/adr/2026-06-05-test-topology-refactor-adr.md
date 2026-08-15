@@ -4,13 +4,11 @@ tags:
   - "#test-topology-refactor"
 date: '2026-06-05'
 related:
-  - "[[2026-04-17-pytest-markers-research]]"
-  - "[[2026-04-21-integration-tests-ci-research]]"
   - "[[2026-06-01-metastate-zero-tolerance-research]]"
   - "[[2026-06-04-module-test-coverage-research]]"
 supersedes:
   - '2026-04-17-pytest-markers-adr'
-modified: '2026-08-02'
+modified: '2026-08-15'
 body_hash: 'sha256:8012d6d099f1ee4b1915e0bc584df99d71be56a4afccca0861241ddba106c19e'
 ---
 # `test-topology-refactor` adr: `hexagonal tests folders with marker-complete metadata-free suites` | (**status:** `accepted`)

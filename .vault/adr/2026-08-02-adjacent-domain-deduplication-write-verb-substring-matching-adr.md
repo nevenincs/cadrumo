@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#adjacent-domain-deduplication'
 date: '2026-08-02'
-modified: '2026-08-02'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:c7a145a2815b5f9a72463dc23752ab0343cc83ac897dca85500336ffb00ff45d'
 related:
-  - "[[2026-04-27-live-submit-permanently-forbidden-adr]]"
   - '[[2026-08-01-adjacent-domain-deduplication-wave-two-audit]]'
 ---
 # `adjacent-domain-deduplication` adr: `AEAT write-verb scan keeps substring matching` | (**status:** `accepted`)

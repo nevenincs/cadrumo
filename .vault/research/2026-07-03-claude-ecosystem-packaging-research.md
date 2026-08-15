@@ -3,12 +3,11 @@ tags:
   - '#research'
   - '#claude-ecosystem-packaging'
 date: '2026-07-03'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:8c6881ce31c198d37107e43ad3799cc3335d1913c9f1ab68c052634f62da7426'
 related:
   - '[[2026-06-28-product-packaging-adr]]'
   - '[[2026-07-02-arch-remediation-data-budget-adr]]'
-  - '[[2026-05-15-corpus-registry-packaging-adr]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
 ---
 

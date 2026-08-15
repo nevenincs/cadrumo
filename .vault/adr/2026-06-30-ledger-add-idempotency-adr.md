@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#ledger-add-idempotency'
 date: '2026-06-30'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:660fb50e5e54a7c7dc7feddc0cf8f71f03b4ad656313166e2a59dac61af85341'
 related:
   - "[[2026-06-30-ledger-add-idempotency-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"
-  - "[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
 ---
 

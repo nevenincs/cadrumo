@@ -3,12 +3,11 @@ tags:
   - '#research'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:24d2d7db0fb3af23d540f1353f7665ba25fb331220858de03647d078fc47eaf3'
 related:
   - "[[2026-07-01-modelo-100-minimo-descendientes-engine-adr]]"
-  - "[[2026-05-27-descendant-profile-axis-adr]]"
 ---
 
 # `minimo-descendientes-eligibility` research: `Art. 58/61 LIRPF eligibility conditions unmodelled in the mínimo por descendientes derivation`

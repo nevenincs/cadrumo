@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#modelo-localization-cascade'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:4b19c888f09e33893a4e191a33f634e497ea2ed2904a8b165b37614d369e0f66'
 related:
@@ -11,8 +11,6 @@ related:
   - "[[2026-06-11-modelo-locales-cli-research]]"
   - "[[2026-06-08-registry-localization-backend-adr]]"
   - "[[2026-06-11-modelo-locales-cli-adr]]"
-  - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
-  - "[[2026-05-08-modelo-directory-segmentation-adr]]"
 ---
 # `modelo-localization-cascade` research: `canonical root-scope schema localization`
 

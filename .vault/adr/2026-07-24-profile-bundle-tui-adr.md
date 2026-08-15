@@ -3,10 +3,9 @@ tags:
   - '#adr'
   - '#profile-bundle-tui'
 date: '2026-07-24'
-modified: '2026-08-13'
+modified: '2026-08-15'
 body_hash: 'sha256:4682ea8bb2d19dcb060c3689e354475f1e3487849e052cc891319103bf4de787'
 related:
-  - '[[2026-05-27-profile-portability-adr]]'
   - '[[2026-07-23-profile-setup-flow-adr]]'
   - '[[2026-07-24-profile-bundle-tui-canonical-bundle-path-reference]]'
   - '[[2026-08-11-tui-architecture-adr]]'

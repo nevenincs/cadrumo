@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#bindings-architecture-unification'
 date: '2026-06-26'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:745760bc17e6211f9dc1d711dd57d251b6d76716d837898d7a235b3656bd946e'
 related:
   - '[[2026-06-26-bindings-architecture-unification-audit]]'
@@ -11,8 +11,6 @@ related:
   - '[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]'
   - '[[2026-06-14-bindings-interface-hardening-adr]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
-  - '[[2026-05-20-calculation-source-connectivity-adr]]'
-  - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-adr]]'
 ---
 
 # `bindings-architecture-unification` adr: `central bindings architecture: one canonical cross-source data-sourcing interface reconciling the source-kind, resolver-contract, fold-in, and carry decisions` | (**status:** `rejected`)

@@ -4,10 +4,8 @@ tags:
   - "#modelo-303-regimen-simplificado"
 date: '2026-07-01'
 related:
-  - "[[2026-05-27-khalid-cli-testimonial-audit]]"
-  - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-07-10-modelo-303-regimen-simplificado-research]]"
-modified: '2026-08-14'
+modified: '2026-08-15'
 body_hash: 'sha256:813e8bafc2d1478c5e9889b4a36f0851b35d75e42881b5ddb11a937c2584bd1d'
 ---
 # `modelo-303-regimen-simplificado` adr: `modulos-based IVA cuota binding set` | (**status:** `accepted`)

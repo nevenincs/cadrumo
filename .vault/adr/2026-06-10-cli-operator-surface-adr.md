@@ -3,18 +3,16 @@ tags:
   - '#adr'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:2383ebb293fce5972fbc3c7c6f4f3c03fac6795efa0f73ce4683f1e2d2040f71'
 related:
   - '[[2026-06-10-cli-operator-surface-research]]'
   - '[[2026-06-10-cli-operator-surface-audit]]'
   - '[[2026-06-10-cli-operator-crud-matrix-audit]]'
   - '[[2026-06-10-aeat-cli-userdocs-hardening-audit]]'
-  - '[[2026-05-14-ledger-transaction-lifecycle-adr]]'
   - '[[2026-06-02-ledger-operator-hardening-adr]]'
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
-  - '[[2026-05-13-cli-workflow-redesign-profile-output-language-adr]]'
   - '[[2026-06-03-modelo-036-census-sync-adr]]'
 ---
 

@@ -3,10 +3,9 @@ tags:
   - '#research'
   - '#semantic-cluster-hardening'
 date: '2026-06-01'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:17040bf2ab8785a33597917dafb0bd7f643cc71c8dd23a517927ddb05f5c3fd7'
-related:
-  - "[[2026-05-31-core-authority-research]]"
+related: []
 ---
 
 # `semantic-cluster-hardening` research: `RAG-driven semantic functionality-cluster audit (7th axis)`

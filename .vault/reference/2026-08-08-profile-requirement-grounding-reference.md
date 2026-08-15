@@ -3,12 +3,11 @@ tags:
   - '#reference'
   - '#profile-requirement-grounding'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:b9cce400b8b5af58085fe78fdca958b094511095af826e302887f5e898590671'
 related:
   - "[[2026-07-23-profile-setup-flow-adr]]"
-  - "[[2026-05-08-aeat-cli-hardening-plan]]"
   - "[[2026-06-10-cli-operator-surface-audit]]"
 ---
 

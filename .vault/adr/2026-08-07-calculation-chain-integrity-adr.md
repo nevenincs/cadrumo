@@ -3,17 +3,16 @@ tags:
   - '#adr'
   - '#calculation-chain-integrity'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:ccce394582de9674b9a6e644db325fdb50923558e0463af49d65bb28f573353b'
 related:
-  - '[[2026-05-15-linkage-design-audit-reference]]'
   - '[[2026-08-07-silent-zero-regression-screen-adr]]'
   - '[[2026-06-19-silent-zero-base-aggregation-adr]]'
   - '[[2026-08-06-llm-invoice-read-reconciliation-adr]]'
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
+  - '[[2026-08-07-calculation-chain-integrity-m390-annual-under-modelling-research]]'
 ---
-
 # `calculation-chain-integrity` adr: `Roll-up sequencing and scope for the silent-zero/silent-overclaim remediation waves` | (**status:** `accepted`)
 
 ## Problem Statement

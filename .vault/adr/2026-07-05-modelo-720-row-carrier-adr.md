@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#modelo-720-prior-year-baseline'
 date: '2026-07-05'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:af9a5df3f1ff3c3246054fe7aeb437e0930ee0ae8afd9e7ca9b3792a6376fc8a'
 related:
   - "[[2026-07-05-modelo-720-prior-year-baseline-plan]]"
   - "[[2026-07-05-modelo-720-prior-year-baseline-adr]]"
-  - "[[2026-05-20-calculation-source-connectivity-adr]]"
   - "[[2026-06-02-modelo-720-prior-year-baseline-research]]"
 ---
 

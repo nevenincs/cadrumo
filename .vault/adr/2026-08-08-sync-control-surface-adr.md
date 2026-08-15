@@ -3,13 +3,11 @@ tags:
   - '#adr'
   - '#sync-control-surface'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:4bbb2d00f5fa368a9b6de5bc71f989b007fd377f832272276e800182906c0238'
 related:
   - '[[2026-08-08-sync-control-surface-reference]]'
-  - '[[2026-04-30-inventory-management-cli-design-adr]]'
-  - '[[2026-05-14-cli-workflow-redesign-list-vs-query-leaf-semantics-adr]]'
   - '[[2026-07-25-censal-profile-autofill-adr]]'
 ---
 

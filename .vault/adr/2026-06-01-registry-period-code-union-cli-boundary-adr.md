@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#registry-period-code-union'
 date: '2026-06-01'
-modified: '2026-08-05'
+modified: '2026-08-15'
 body_hash: 'sha256:4274de2543f2be8a565880bdf9a1ed8d2325f0994e8741702efc47820b7fdda4'
 related:
-  - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
-  - "[[2026-05-22-schema-hardening-adr]]"
   - '[[2026-06-04-registry-period-code-union-research]]'
 ---
 

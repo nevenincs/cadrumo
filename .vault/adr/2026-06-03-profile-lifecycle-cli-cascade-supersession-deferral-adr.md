@@ -3,10 +3,9 @@ tags:
   - '#adr'
   - '#profile-lifecycle-cli-supersession'
 date: '2026-06-03'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:b2bd93062347282c8f63084673c6675d91822d69d91502bda174dbe98244c31f'
 related:
-  - '[[2026-05-16-profile-lifecycle-cli-plan]]'
   - '[[2026-06-03-profile-lifecycle-cli-cascade-supersession-adr]]'
   - '[[2026-06-04-profile-lifecycle-cli-supersession-research]]'
 ---

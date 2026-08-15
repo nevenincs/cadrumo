@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#silent-zero-regression-screen'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:2b6c6f49c68809ec4741e8d2c3f13c4e18bd80cf1455921dab1f5e6f388dfc11'
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
-  - '[[2026-05-26-modelo-130-relation-regression-adr]]'
 ---
 
 # `calculation-chain-integrity` adr: `Remediation shape for the silent-zero and silent-overclaim class` | (**status:** `accepted`)

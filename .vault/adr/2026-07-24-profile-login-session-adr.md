@@ -5,11 +5,10 @@ tags:
 date: '2026-07-24'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
-  - "[[2026-05-14-secure-backend-passkey-custody-adr]]"
   - "[[2026-06-10-cli-operator-surface-adr]]"
   - "[[2026-07-24-profile-login-session-research]]"
 superseded_by: '2026-08-13-profile-session-lifecycle-successor-adr'
-modified: '2026-08-13'
+modified: '2026-08-15'
 body_hash: 'sha256:df885f5ad1e1ad16a96658ad88274364af9400cedb2f595ce828faae84062c1c'
 ---
 # `profile-login-session` adr: `canonical profile login/logout with persisted session custody` | (**status:** `superseded`)

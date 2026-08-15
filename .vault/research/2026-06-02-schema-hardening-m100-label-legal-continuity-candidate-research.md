@@ -3,12 +3,10 @@ tags:
   - '#research'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:c6008243380ae2b2f4ce55fd0bae9ab2a7a9c4571ba71ea2cd96d76ce5e0b74b'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
-  - '[[2026-05-28-schema-hardening-m100-continuity-inventory-research]]'
-  - '[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]'
 ---
 
 # `schema-hardening` research: `m100 label-and-legal-reference continuity candidate`

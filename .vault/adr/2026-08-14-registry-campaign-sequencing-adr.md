@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#registry-campaign-sequencing'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:cdd56cfd070161ee652d3df7e7ba2aeb427ab6e1922fc55a0a95199b8aa39b49'
 related:
   - "[[2026-08-14-registry-campaign-sequencing-audit]]"
   - "[[2026-08-14-registry-campaign-sequencing-operator-attestation-ledger-audit]]"
-  - "[[2026-04-22-aeat-fichero-boe-export-adr]]"
 ---
 
 # `registry-campaign-sequencing` adr: `export layout withdrawal is deleted; registry build refuses any revision with no export layout` | (**status:** `accepted`)

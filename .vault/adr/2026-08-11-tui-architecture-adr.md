@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:ff3c08207c6716b6f43904092680cf4f4cc672ab4253fb16d8e296854647e144'
 related:
@@ -13,7 +13,6 @@ related:
   - "[[2026-07-23-tui-wizard-substrate-adr]]"
   - "[[2026-08-09-cli-action-envelope-hardening-adr]]"
   - "[[2026-07-24-profile-bundle-tui-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr]]"
   - "[[2026-07-25-censal-profile-autofill-adr]]"
   - "[[2026-08-08-sync-control-surface-adr]]"
 ---

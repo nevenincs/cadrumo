@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#justificante-identity-matching'
 date: '2026-08-07'
-modified: '2026-08-08'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:3db455d979f5f04b4f4ddc8609b0ae32f5f4f66dfd65e793b213db3e47d69add'
 related:
   - "[[2026-08-07-justificante-identity-matching-reference]]"
   - "[[2026-06-10-live-justificante-reconcile-adr]]"
-  - "[[2026-05-04-live-filing-data-capture-adr]]"
 ---
 
 # `justificante-identity-matching` adr: `Justificante presentation_id namespace correction` | (**status:** `accepted`)

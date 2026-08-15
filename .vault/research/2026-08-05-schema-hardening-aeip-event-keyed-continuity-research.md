@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#schema-hardening'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:b3728196967dd61d952297a6f74cb203adce2c9e5dd81a9b9c068f4b1b6cc774'
-related:
-  - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
+related: []
 ---
 
 # `schema-hardening` research: `AEIP anexo-A event-keyed continuity`

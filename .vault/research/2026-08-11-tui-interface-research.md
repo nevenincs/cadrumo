@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#tui-interface'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:4c1dc9b172e91774b894da1429aa26775201b0f2e17b2c64d727573b94134355'
 related:
@@ -14,8 +14,6 @@ related:
   - "[[2026-07-23-tui-wizard-substrate-adr]]"
   - "[[2026-07-23-profile-setup-flow-adr]]"
   - "[[2026-07-24-profile-bundle-tui-adr]]"
-  - '[[2026-05-12-cli-workflow-redesign-inventory-placement-adr]]'
-  - '[[2026-04-30-aeat-restructure-adr]]'
   - '[[2026-06-01-domain-boundary-audit-adr]]'
   - '[[2026-08-10-casilla-schema-research]]'
   - '[[2026-08-10-casilla-schema-read-model-adr]]'

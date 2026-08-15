@@ -3,13 +3,12 @@ tags:
   - '#research'
   - '#decimal-notation-under-declaration'
 date: '2026-08-04'
-modified: '2026-08-05'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:cb2aa77c3782f416a78236318311660406f8895e3d78e130e09b47efa48e948e'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-adr]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-audit]]"
-  - "[[2026-07-30-open-work-consolidation-plan]]"
 ---
 
 # `decimal-notation-under-declaration` research: Spanish thousands separator silently misread as a decimal point

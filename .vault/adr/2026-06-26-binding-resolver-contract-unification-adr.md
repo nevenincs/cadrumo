@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:1efc539e5edbe2a14c3595482d67d926d21a7af7ae285cc113dcbe9693364559'
 related:
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
   - "[[2026-06-26-bindings-architecture-unification-research]]"
   - "[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]"
-  - "[[2026-05-20-calculation-source-connectivity-adr]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - '[[2026-06-26-binding-resolver-contract-unification-research]]'
 ---

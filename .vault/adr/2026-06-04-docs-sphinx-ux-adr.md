@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#docs-sphinx-ux'
 date: '2026-06-04'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:2a08f42d1817af4e3d0fb0336617c8db66c4c82f4814930b2da71d11868b2fe7'
 related:
   - '[[2026-06-04-docs-sphinx-ux-research]]'
-  - '[[2026-05-30-docs-architecture-adr]]'
-  - '[[2026-05-30-docs-sphinx-build-adr]]'
   - '[[2026-06-01-docs-cli-buildtime-research]]'
   - '[[2026-06-01-docs-educational-surface-adr]]'
 ---

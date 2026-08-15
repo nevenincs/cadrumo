@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#m303-prorrata-grounding'
 date: '2026-07-28'
-modified: '2026-07-28'
+modified: '2026-08-15'
 body_hash: 'sha256:387c6775d98b7c8660b93f84cdd722d5dde9532883ade23694ff64dbfe32ba6e'
 related:
   - "[[2026-07-27-conformance-cli-plan]]"
@@ -19,7 +19,6 @@ related:
   - "[[2026-07-27-conformance-cli-P05-S52]]"
   - "[[2026-07-27-conformance-cli-P05-S60]]"
   - '[[2026-07-06-cross-period-prorrata-reference]]'
-  - '[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-research]]'
   - '[[2026-07-07-prorrata-especial-adr]]'
   - '[[2026-07-08-iva-prorrata-complexity-adr]]'
   - '[[2026-07-05-cross-period-prorrata-adr]]'

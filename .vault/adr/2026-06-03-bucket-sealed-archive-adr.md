@@ -5,10 +5,9 @@ tags:
 date: '2026-06-03'
 related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
   - "[[2026-06-04-bucket-sealed-archive-research]]"
 superseded_by: '2026-08-13-sealed-archive-transport-successor-adr'
-modified: '2026-08-13'
+modified: '2026-08-15'
 body_hash: 'sha256:096d06abe0ff20ae6f8dcfa7413d6bc3ba006d5487f9916f6f9460e80fda002c'
 ---
 # `bucket-sealed-archive` adr: `Sealed-archive format for bucket export/import` | (**status:** `superseded`)

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-08-12'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:8b6ff95a7f5fc7e74e239d3d080faaaff225e115befd0b29ec5dd1b3e1b3964e'
 related:
@@ -15,7 +15,6 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-06-10-llm-evidence-classification-adr]]'
   - '[[2026-06-13-llm-evidence-classification-adr]]'
-  - '[[2026-05-30-purchase-invoice-ocr-extraction-discipline-adr]]'
 ---
 
 # `unstructured-document-ingestion` adr: `Unstructured document ingestion: a transcription-anchored semantic pipeline` | (**status:** `proposed`)

@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#semantic-cluster-hardening'
 date: '2026-06-01'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:87e0ac079072ccb9736f3ddbde87e10489a035489b7c759418218f8e2693009c'
 related:
   - "[[2026-06-01-semantic-cluster-hardening-research]]"
-  - "[[2026-05-31-core-authority-adr]]"
 ---
 
 # `semantic-cluster-hardening` adr: `RAG-driven re-audit: Axis 7 + canonical enrollment waves` | (**status:** `accepted`)

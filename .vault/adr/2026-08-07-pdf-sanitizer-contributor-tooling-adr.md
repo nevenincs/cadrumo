@@ -4,12 +4,10 @@ tags:
   - "#pdf-sanitizer"
 date: '2026-08-07'
 related:
-  - "[[2026-04-25-pdf-sanitizer-adr]]"
   - "[[2026-07-27-justificante-privacy-purge-audit]]"
-  - "[[2026-04-21-real-pdf-fixture-corpus-adr]]"
 supersedes:
   - '2026-04-25-pdf-sanitizer-adr'
-modified: '2026-08-07'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:8dc0a6d37c0be386a73ffa6f9bf35f2c820e21b302b0b6cf8ce6758fee940e1f'
 ---

@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#prorrata-sectores-diferenciados'
 date: '2026-07-07'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:0bb3cb7bf5d4ab98873b2f3e52536e7cf889189ceeb8bbac839639c0f3130b00'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]"
   - '[[2026-07-10-prorrata-sectores-diferenciados-research]]'
 ---
 

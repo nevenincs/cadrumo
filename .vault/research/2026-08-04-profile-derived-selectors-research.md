@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#profile-derived-selectors'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:e66e5de794ffec26abf5a240637b03680603424c5d2044427c8ad5acd83cf22f'
 related:
-  - "[[2026-05-07-user-profile-backend-schema-adr]]"
   - "[[2026-07-25-censal-profile-autofill-adr]]"
   - "[[2026-07-01-modelo-100-minimo-descendientes-engine-adr]]"
 ---

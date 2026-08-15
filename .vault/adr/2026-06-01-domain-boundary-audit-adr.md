@@ -3,10 +3,9 @@ tags:
   - '#adr'
   - '#domain-boundary-audit'
 date: '2026-06-01'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:58ba071ec0752db7574a1677d0d878b8119c2033eb5db67f6c64db4b381a6d0f'
 related:
-  - '[[2026-04-30-aeat-restructure-research]]'
   - '[[2026-06-01-domain-boundary-audit-audit]]'
   - '[[2026-06-04-domain-boundary-audit-research]]'
 ---

@@ -3,10 +3,9 @@ tags:
   - '#research'
   - '#pareja-de-hecho-civil-status'
 date: '2026-06-03'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:5373b310d2fbcd2ad43a9db3ad6c7d5fd46fab25fb9a39a8cb9566d0427c9270'
-related:
-  - "[[2026-05-26-cross-domain-continuity-plan]]"
+related: []
 ---
 
 # `pareja-de-hecho-civil-status` research: `Pareja de hecho CCAA-aware schema design`

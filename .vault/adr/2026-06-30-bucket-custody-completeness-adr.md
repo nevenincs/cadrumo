@@ -5,13 +5,11 @@ tags:
 date: '2026-06-30'
 related:
   - "[[2026-06-30-bucket-custody-completeness-research]]"
-  - "[[2026-05-27-profile-portability-adr]]"
   - "[[2026-06-03-bucket-sealed-archive-adr]]"
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
-  - "[[2026-05-22-secure-storage-production-hardening-architecture-adr]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
 superseded_by: '2026-08-13-secure-storage-hardening-successor-adr'
-modified: '2026-08-13'
+modified: '2026-08-15'
 body_hash: 'sha256:c9efa12a2f869fae5edfe341808ecc4f7245f3b6ef69ec7b25660722735522ea'
 ---
 # `bucket-custody-completeness` adr: `full per-bucket export/import custody` | (**status:** `superseded`)

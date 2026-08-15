@@ -13,10 +13,9 @@ related:
   - "[[2026-06-26-binding-vocabulary-cli-cohesion-adr]]"
   - "[[2026-06-03-modelo-export-workbook-parity-adr]]"
   - "[[2026-07-04-google-sa-impersonation-adr]]"
-  - "[[2026-05-14-ledger-transaction-lifecycle-adr]]"
 supersedes:
   - '2026-06-04-ledger-google-live-export-adr'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:5b7bc6c874b88b838fed87a77edd851036cc5c452da85a728cf7e62cb91b29c7'
 ---
 # `google-optional-adapter-boundary` adr: `Google integration authority boundary and legacy-scope reconciliation` | (**status:** `accepted`)

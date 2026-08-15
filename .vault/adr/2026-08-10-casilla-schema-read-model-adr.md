@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#casilla-schema'
 date: '2026-08-10'
-modified: '2026-08-13'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:7f10dd6ecbde0a95b5bb61dfb3c9001395420a1716fb75543a4539d9605eda7a'
 related:
   - "[[2026-08-10-casilla-schema-research]]"
-  - "[[2026-05-21-state-read-projection-adr]]"
   - "[[2026-06-10-cli-envelope-notice-standardisation-adr]]"
 ---
 

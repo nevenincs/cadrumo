@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#iva-prorrata-complexity'
 date: '2026-07-08'
-modified: '2026-07-28'
+modified: '2026-08-15'
 body_hash: 'sha256:24e4c9f6f36bd0a010b0e501a19110fb6ba0b799fc0413b40886d1dd884db5d6'
 related:
   - '[[2026-07-08-iva-prorrata-complexity-audit]]'
   - '[[2026-07-07-prorrata-especial-adr]]'
   - '[[2026-07-05-cross-period-prorrata-adr]]'
-  - '[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-research]]'
   - '[[2026-07-06-cross-period-prorrata-research]]'
 ---
 

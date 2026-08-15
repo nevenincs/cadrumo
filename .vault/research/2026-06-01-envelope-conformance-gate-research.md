@@ -3,10 +3,9 @@ tags:
   - '#research'
   - '#envelope-conformance-gate'
 date: '2026-06-01'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:0d648c089fdbdfa901a36d04690e34f461d50f3185357e38edbdabd64807bbe7'
-related:
-  - "[[2026-05-31-coverage-canonicalisation-audit]]"
+related: []
 ---
 
 # `envelope-conformance-gate` research: allowlist vs symmetric-diff for cli json schema coverage

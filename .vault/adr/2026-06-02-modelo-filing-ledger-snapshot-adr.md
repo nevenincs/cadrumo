@@ -3,12 +3,10 @@ tags:
   - '#adr'
   - '#modelo-filing-ledger-snapshot'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:47d9da7beae9498386bafc5096b68737aab91345bdcd8e6211ca9a98557880d6'
 related:
   - "[[2026-06-02-ledger-operator-hardening-adr]]"
-  - "[[2026-05-08-ledger-renta-pipeline-adr]]"
-  - "[[2026-05-14-ledger-transaction-lifecycle-adr]]"
   - '[[2026-06-04-modelo-filing-ledger-snapshot-research]]'
 ---
 

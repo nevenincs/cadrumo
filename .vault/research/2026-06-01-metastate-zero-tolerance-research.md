@@ -3,10 +3,9 @@ tags:
   - '#research'
   - '#metastate-zero-tolerance'
 date: '2026-06-01'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:5987d4e684283244dfc38df17571c5cd73f422650aa8282cd08ccc7d3e029207'
-related:
-  - "[[2026-05-31-coverage-canonicalisation-audit]]"
+related: []
 ---
 
 # `metastate-zero-tolerance` research: where migration-progress lists accreted in production code

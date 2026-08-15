@@ -3,14 +3,11 @@ tags:
   - '#adr'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-08-08'
+modified: '2026-08-15'
 body_hash: 'sha256:9933216766f8786e986004f47d5430b4bf33ef655ba25b95254a70efc4bd3a96'
 related:
   - "[[2026-06-10-llm-evidence-classification-research]]"
   - "[[2026-06-04-llm-ledger-classification-adr]]"
-  - "[[2026-05-30-purchase-invoice-ocr-extraction-discipline-adr]]"
-  - "[[2026-05-27-iva-classification-enrichment-adr]]"
-  - "[[2026-04-17-attachment-service-adr]]"
 ---
 
 # `llm-evidence-classification` adr: `Evidence-aware LLM ledger classification (Stage-3): on-host/local-first reading; cloud only behind a consent gate; splitting in scope` | (**status:** `accepted`)

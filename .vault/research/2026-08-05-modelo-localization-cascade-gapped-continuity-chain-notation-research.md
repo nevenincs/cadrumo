@@ -3,11 +3,10 @@ tags:
   - '#research'
   - '#modelo-localization-cascade'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:54db6facc4f102b63df73c585699a2a4b335bac220fdcf810770d2bec778dbd6'
 related:
-  - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
   - "[[2026-08-04-modelo-localization-cascade-adr]]"
 ---
 # `modelo-localization-cascade` research: `gapped continuity chain notation`

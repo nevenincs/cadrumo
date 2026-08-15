@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#autonomic-deduccion-auto-trigger'
 date: '2026-07-01'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:671814ddb07f5f7e99e16ca8ac7b983529febc00e82f00ffff81f0a99d1ddde2'
 related:
   - "[[2026-07-01-autonomic-deduccion-auto-trigger-research]]"
   - "[[2026-06-19-m100-dependent-modelo-applicability-adr]]"
-  - "[[2026-05-08-renta-cuota-integra-autonomic-scale-adr]]"
 ---
 
 # `autonomic-deduccion-auto-trigger` adr: `autonomic deduccion auto-trigger framework, madrid nacimiento adopcion first slice` | (**status:** `accepted`)
