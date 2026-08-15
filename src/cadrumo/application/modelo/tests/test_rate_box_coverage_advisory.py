@@ -21,10 +21,8 @@ in ``domain/calculations/registry/tests/test_rate_box_partition.py``.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -37,9 +35,7 @@ from ....domain.calculations.registry import (
     PeriodSelector,
 )
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
-from ....tests.profile_capsule import open_test_profile_session
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ...aggregation import CalculationSourceDiagnostic
 from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from .._rate_box_advisory import collect_rate_box_coverage_diagnostics
@@ -61,15 +57,7 @@ _TOTAL_CASILLA: CasillaId = validated_casilla_id(
 _BOX_4PCT: CasillaId = validated_casilla_id("02", surface="test.rate_box.box")
 
 
-@pytest.fixture(autouse=True)
-def _bucket(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
-        # Seeded through a detached WorkflowState, never a repository read:
-        # the capsule publishes by an atomic no-replace rename onto
-        # ``buckets/<profile-id>``, which a workflow-state repository
-        # construction would otherwise materialise first and collide with.
-        register_minimal_profile(profile_id=_BUCKET_ID)
-        yield
+_bucket = active_profile_isolated_backend_fixture(bucket_id=_BUCKET_ID, name="_bucket")
 
 
 def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> DataBindingDefinition:
