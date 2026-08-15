@@ -65368,6 +65368,9 @@ modelo:
                 payee records, in euros.
               label: Total amount of withholding or payment on account
             x-e1in4opec9gn6p9de9in8pbecdkmurg:
+              help: Withholding or payment-on-account base determined under paragraphs
+                3 and 6 of the thirty-third additional provision of Law 35/2006 governing
+                personal income tax.
               label: Base for withholding or payment on account
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
               help: 'Completed only where the payee type is code 5: F if the payee

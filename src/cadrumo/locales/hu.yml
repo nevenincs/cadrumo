@@ -65877,6 +65877,9 @@ modelo:
                 összege euróban.
               label: A forrásadó vagy adóelőleg teljes összege
             x-e1in4opec9gn6p9de9in8pbecdkmurg:
+              help: A személyi jövedelemadóról szóló 35/2006. sz. törvény harmincharmadik
+                kiegészítő rendelkezésének 3. és 6. bekezdése szerint megállapított
+                forrásadó- vagy adóelőleg-alap.
               label: A forrásadó vagy adóelőleg alapja
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
               help: 'Csak akkor kell kitölteni, ha a kedvezményezett típusa 5-ös kód:
@@ -73446,12 +73449,6 @@ modelo:
               label: Az önadózás vonatkozási éve
             x-chim6r1ee1in4qbfchng:
               help: null
-          construct:
-            modelo-604-autoliquidacion:
-              field:
-                title: null
-          field:
-            label: null
         2024-y-siguientes:
           casilla:
             x-c5n6au3f5pn7arb5e9niqqjledq6ipj9cdgmst35:

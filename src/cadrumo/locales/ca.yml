@@ -65831,6 +65831,9 @@ modelo:
                 registres de perceptor, en euros.
               label: Total import de la retenció o ingrés a compte
             x-e1in4opec9gn6p9de9in8pbecdkmurg:
+              help: Base de retenció o ingrés a compte determinada conforme als apartats
+                3 i 6 de la disposició addicional trenta-tresena de la Llei 35/2006,
+                reguladora de l'IRPF.
               label: Base de retenció o ingrés a compte
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
               help: 'Només s''emplena quan el tipus de perceptor és la clau 5: F si
