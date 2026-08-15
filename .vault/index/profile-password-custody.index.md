@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:6eeb8070104c7f0a309d94951310072d43295e88d1d6f7f6318742f8b4871457'
+body_hash: 'sha256:f9cd4d7fe2c05991c09a8f7827fa19a6d403fd3acfb4f80eba9f3a1df7656b87'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -75,6 +75,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W04-P07-S70]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S72]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S73]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S77]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S80]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S83]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S87]]'
@@ -199,6 +200,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W04-P07-S62` - Have Sol Medium rule which layer owns the bucket manifest
 - `2026-08-13-profile-password-custody-W04-P07-S69` - Have Terra XHigh remove the second bucket-root creator that survives as dead production code
 - `2026-08-13-profile-password-custody-W04-P07-S73` - Have Sol Medium reconcile the two accepted decision records that now assert incompatible things about the bucket manifest
+- `2026-08-13-profile-password-custody-W04-P07-S77` - Have Sol Medium rule on the four error classes that are defined, exported and registered but never raised anywhere in production, taking the retention-floor refusal FIRST and separately
 - `2026-08-13-profile-password-custody-W04-P07-S80` - Have Terra XHigh restore lane reachability for the eight keychain-marked tests placed where no keychain lane names them
 - `2026-08-13-profile-password-custody-W04-P07-S83` - Have Terra XHigh make the session-receipt tamper test actually reach the authenticated-data check it exists to cover
 - `2026-08-13-profile-password-custody-W04-P07-S87` - Have Terra XHigh stop the configuration-reset retention decision failing OPEN when no assessment is supplied
