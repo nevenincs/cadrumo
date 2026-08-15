@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:92bce2443c06e3db5f44aedcda263ab25bcd308680684862d3d389eb18ee77a5'
+body_hash: 'sha256:2a1eb932de18a3233e412e69f15ca2918f3a0fc5312cd6a8c16465d6fbaf595f'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -41,6 +41,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W04-P07-S35]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S37]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S38]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S39]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S40]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S41]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S44]]'
@@ -155,6 +156,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W03-P06-S88` - Have Terra XHigh resolve the command-line lifecycle module that asserts custody verbs are mounted
 - `2026-08-13-profile-password-custody-W04-P07-S19` - Have Terra XHigh dissolve the forwarding port package in five ordered parts
 - `2026-08-13-profile-password-custody-W04-P07-S28` - Have Terra XHigh relocate the surviving per-profile session, wipe and identity residue into the custody package that the accepted decision names as sole authority, in one atomic move, so no surviving primitive is left behind a shared-master name
+- `2026-08-13-profile-password-custody-W04-P07-S39` - Have Terra XHigh delete the re-export bridge module in the custody package and repoint its sole consumer at the two modules it forwards to, in one commit
 - `2026-08-13-profile-password-custody-W04-P07-S61` - Have Terra XHigh bring the integration test lane under a standing watch
 - `2026-08-13-profile-password-custody-W04-P07-S62` - Have Sol Medium rule which layer owns the bucket manifest
 - `2026-08-13-profile-password-custody-W04-P07-S69` - Have Terra XHigh remove the second bucket-root creator that survives as dead production code

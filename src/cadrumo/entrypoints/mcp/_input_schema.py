@@ -540,6 +540,17 @@ DECLARED_UNIMPLEMENTED_SURFACES: Final[Mapping[str, str]] = {
         "one would retire a legal obligation by tidying, and the absence would stop being "
         "visible anywhere. Restoring the verb removes this entry."
     ),
+    "config.profile.export": (
+        "Profile bundle transfer. Held rather than deleted because whether this capability "
+        "returns is an open question about the bundle transfer surface, not residue of a "
+        "retirement already executed, and deleting the declaration would answer that "
+        "question by making it invisible. Restoring the verb removes this entry."
+    ),
+    "config.profile.import": (
+        "Profile bundle transfer, the inbound half of config.profile.export and held on the "
+        "same grounds: the capability question is open, so the declaration stays until it is "
+        "answered rather than being settled by deletion."
+    ),
 }
 """Command keys whose schema is declared while the verb is knowingly absent.
 
@@ -657,7 +668,13 @@ def resolve_mcp_action_capabilities(
             raise ValueError(f"duplicate MCP result-schema identity: {schema_ref.command}")
         schema_ref_by_key[schema_ref.command] = schema_ref
 
-    result_keys = frozenset(schema_ref_by_key)
+    # A declared-unimplemented surface has a result schema and, by construction,
+    # no input schema: there is no verb to read parameters from. Excluding it
+    # here is the same declaration honoured a second time rather than a second
+    # exemption -- were it demanded, the build would still fail on the very keys
+    # the declaration exists to hold open, and the gap would have to be hidden
+    # by deleting the result schema, which is the outcome it prevents.
+    result_keys = frozenset(schema_ref_by_key) - frozenset(DECLARED_UNIMPLEMENTED_SURFACES)
     input_keys = frozenset(verb_schemas)
     if result_keys != input_keys:
         missing_input = tuple(sorted(result_keys - input_keys))

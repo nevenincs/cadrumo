@@ -49,6 +49,7 @@ from ._validate_revision_closure import validate_revision_closure_sections as _v
 from ._validate_revision_closure import validate_revision_reference_surfaces as _validate_revision_reference_surfaces
 from ._validate_revision_context import RevisionValidationContext, build_revision_validation_context
 from ._validate_revision_id_window_agreement import validate_revision_id_window_agreement
+from ._validate_valid_from_ejercicio_convention import validate_valid_from_ejercicio_convention
 from ._validate_revision_identity import (
     emit_revision_payload_failures as _emit_revision_payload_failures,
 )
@@ -174,6 +175,7 @@ def _validate_revision_surface_sections(
     )
     validate_export_exemption_declarations(failures, prefix=prefix, modelo_id=modelo_id, revision=revision)
     validate_revision_id_window_agreement(failures, prefix=prefix, revision=revision)
+    validate_valid_from_ejercicio_convention(failures, prefix=prefix, revision=revision)
     validate_extraction_profile_section(
         failures,
         prefix=prefix,

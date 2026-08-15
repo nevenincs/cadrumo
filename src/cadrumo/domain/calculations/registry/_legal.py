@@ -6,6 +6,7 @@ import hashlib
 import re
 from collections.abc import Iterable, Mapping
 from pathlib import Path
+from typing import Final
 
 from ....core import (
     CorpusAnchorResolutionError,
@@ -144,6 +145,61 @@ def _validate_dispositive_content(reference: LegalReference, source_root: Path) 
         )
 
 
+#: Below this, tonight's measured population is exclusively provision-suffixed
+#: excerpts or bare-named files that are candidates for the risk tier; at or
+#: above it, every bare-named file checked was a genuine full consolidated
+#: text (98 files, 5KB to 3.07MB). Not a guessed number -- the corpus's own
+#: observed shape, re-measured rather than assumed each time this module is
+#: touched.
+_FULL_CONSOLIDATED_SIZE_FLOOR: Final = 5000
+
+#: A provision-scoped filename names its own single provision -- the same
+#: convention 326 excerpt files in the bundled corpus already follow.
+_PROVISION_SUFFIXED_FILENAME = re.compile(r"-(art|apartado|anexo|da|dt|df|se|pr|ar|redacciones)[-.]")
+
+
+def _validate_corpus_tier_declaration(reference: LegalReference, source_root: Path) -> None:
+    """Verify a DECLARED ``corpus_tier`` against the bundled file, when present.
+
+    Purely additive: nothing in the committed catalogue declares
+    ``corpus_tier`` today, so this can never fire against the existing tree.
+    It exists so a FUTURE declaration is checked rather than trusted --
+    verified against the file, never merely typed.
+    """
+    if reference.corpus_tier is None:
+        return
+    path_text = reference.corpus_ref.split("#", 1)[0]
+    path = (source_root / path_text).resolve()
+    if not path.is_file():
+        return  # a missing file is reported by the existing corpus-file checks, not duplicated here
+    filename = path.name
+    size = path.stat().st_size
+    is_provision_suffixed = bool(_PROVISION_SUFFIXED_FILENAME.search(filename))
+
+    if reference.corpus_tier == "full_consolidated":
+        if is_provision_suffixed or size < _FULL_CONSOLIDATED_SIZE_FLOOR:
+            raise RegistryValidationError(
+                f"legal reference {reference.id!r} declares corpus_tier='full_consolidated' but "
+                f"{filename!r} ({size} bytes) does not match the corpus's own observed full-text shape "
+                f"(a bare, non-provision-suffixed filename of at least {_FULL_CONSOLIDATED_SIZE_FLOOR} "
+                "bytes) -- reclassify as 'provision_excerpt', or confirm this really is the full "
+                "consolidated instrument and not a thin paraphrase",
+            )
+    elif reference.corpus_tier == "provision_excerpt":
+        if is_provision_suffixed:
+            return
+        # A bare-named file can still legitimately be a short excerpt (M216's shape:
+        # several real articles in one small file). The dispositive-content signal,
+        # not the filename, is the honest test for that case.
+        corpus_text = _legal_corpus_text(source_root, reference)
+        if not _DISPOSITIVE_CONTENT_SIGNAL.search(corpus_text):
+            raise RegistryValidationError(
+                f"legal reference {reference.id!r} declares corpus_tier='provision_excerpt' but its "
+                f"corpus text carries no dispositive article or disposición of its own -- a stub is "
+                "never a declarable tier; either bundle the real text or remove the corpus_tier claim",
+            )
+
+
 def _validate_known_bad_citation(reference: LegalReference) -> None:
     if reference.article is None:
         return
@@ -209,6 +265,7 @@ def verify_legal_reference_grounding(
         _validate_legal_corpus_clauses(reference, source_root)
     if source_root is not None:
         _validate_dispositive_content(reference, source_root)
+        _validate_corpus_tier_declaration(reference, source_root)
     _validate_known_bad_citation(reference)
 
 

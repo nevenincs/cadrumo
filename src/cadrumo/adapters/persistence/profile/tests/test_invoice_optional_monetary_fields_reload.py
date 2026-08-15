@@ -70,7 +70,7 @@ def _invoice_with_every_optional_monetary_field_populated() -> Invoice:
                 ),
             ),
             "payment_status": PaymentStatus.PAID,
-            "retention_rate": Decimal("15.00"),
+            "retention_rate": Decimal("0.15"),
             "retention_amount": Decimal("75.00"),
             "recargo_amount": Decimal("5.20"),
             "suplido_amount": Decimal("12.34"),
@@ -93,7 +93,7 @@ def test_every_optional_monetary_field_survives_the_encrypted_roundtrip(tmp_path
 
         assert loaded == original
         loaded_invoice = loaded.invoices[invoice.invoice_id]
-        assert loaded_invoice.retention_rate == Decimal("15.00")
+        assert loaded_invoice.retention_rate == Decimal("0.15")
         assert loaded_invoice.retention_amount == Decimal("75.00")
         assert loaded_invoice.recargo_amount == Decimal("5.20")
         assert loaded_invoice.suplido_amount == Decimal("12.34")
@@ -155,22 +155,24 @@ def test_an_unset_optional_monetary_field_survives_the_encrypted_roundtrip_as_no
         assert loaded_invoice.suplido_amount is None
 
 
-def test_deleting_a_populated_optional_field_from_disk_surfaces_as_inequality(tmp_path: Path) -> None:
+def test_deleting_a_populated_optional_field_from_disk_surfaces_as_refusal(tmp_path: Path) -> None:
     """Anti-tautology proof: a field silently dropped on disk must NOT reload as if nothing changed.
 
-    Saves an invoice with a real, non-default ``fx_rate``, then reaches into
-    the persisted envelope and deletes the ``fx_rate`` key entirely (not
-    nulls it -- an ABSENT key is exactly the shape ``_normalise_invoice_monetary_fields``
-    treats as "no value", by design). Reload must not silently re-default
-    ``fx_rate`` to ``None`` and report success as if the persisted figure
-    survived: the cause-unique marker is that the RELOADED invoice's
-    ``fx_rate`` is ``None`` while the ORIGINAL's is a real Decimal, not a bare
-    "the objects differ" assertion.
+    Saves an invoice with real, non-default ``fx_rate``/``fx_rate_date``/
+    ``fx_rate_source``, then reaches into the persisted envelope and deletes
+    the ``fx_rate`` key entirely (not nulls it -- an ABSENT key is exactly
+    the shape ``_normalise_invoice_monetary_fields`` treats as "no value",
+    by design). Reload must not silently re-default ``fx_rate`` to ``None``
+    and report success as if the persisted figure survived.
 
-    If this test passed with the deleted field silently reappearing as
-    ``None`` and no strict-equality gap, the roundtrip's own equality gate
-    would be tautological -- proving nothing about whether a dropped field is
-    ever caught.
+    The model's OWN "fx_rate, fx_rate_date and fx_rate_source must be set
+    together" cross-field guard fires first here (``fx_rate_date`` and
+    ``fx_rate_source`` are still on disk, so the trio is now incomplete) --
+    a SEPARATE, independent catch of the same dropped field, and the
+    cause-unique marker this test asserts on. If this test passed with the
+    deleted field silently reappearing as ``None`` and a clean reload, BOTH
+    of the roundtrip's independent guards against a dropped field would be
+    tautological.
     """
     from sqlalchemy import select
 
@@ -184,7 +186,7 @@ def test_deleting_a_populated_optional_field_from_disk_surfaces_as_inequality(tm
 
         stmt = select(SecureObjectRow).where(SecureObjectRow.namespace == _INVOICE_NAMESPACE)
 
-        def mutate(envelope: dict) -> None:
+        def mutate(envelope):
             invoice_dict = envelope["payload"]["invoices"][invoice.invoice_id]
             assert invoice_dict["fx_rate"] == "0.8623", (
                 "fixture must serialise a real fx_rate for this proof test to be meaningful"
@@ -193,12 +195,8 @@ def test_deleting_a_populated_optional_field_from_disk_surfaces_as_inequality(tm
 
         mutate_encrypted_secure_object_json(profile.repository._engine, row_statement=stmt, mutate=mutate)
 
-        loaded = repo.load()
-        loaded_invoice = loaded.invoices[invoice.invoice_id]
-
-        assert loaded != original
-        assert loaded_invoice.fx_rate is None
-        assert original.invoices[invoice.invoice_id].fx_rate == Decimal("0.8623")
+        with pytest.raises(ValidationError, match="fx_rate, fx_rate_date and fx_rate_source must be set together"):
+            repo.load()
 
 
 def test_a_genuinely_unparseable_optional_field_still_refuses(tmp_path: Path) -> None:
@@ -224,7 +222,7 @@ def test_a_genuinely_unparseable_optional_field_still_refuses(tmp_path: Path) ->
 
         stmt = select(SecureObjectRow).where(SecureObjectRow.namespace == _INVOICE_NAMESPACE)
 
-        def mutate(envelope: dict) -> None:
+        def mutate(envelope):
             invoice_dict = envelope["payload"]["invoices"][invoice.invoice_id]
             invoice_dict["fx_rate"] = "not-a-number"
 

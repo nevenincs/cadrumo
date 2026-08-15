@@ -191,6 +191,20 @@ class LegalReference(RegistryModel):
     notes: str | None = None
     required_text: tuple[str, ...] = Field(min_length=1)
     forbidden_text: tuple[str, ...] = ()
+    corpus_tier: Literal["full_consolidated", "provision_excerpt"] | None = None
+    """Which kind of corpus evidence ``corpus_ref`` resolves to, when declared.
+
+    Deliberately optional and deliberately two-valued. Optional: nothing in
+    the committed catalogue declares it today, so adding the field cannot
+    itself introduce a new refusal -- authoring it is opt-in, verified only
+    when present. Two-valued: a paraphrase with no operative text of its own
+    must never become a *declarable* tier (a stub calling itself an
+    excerpt would pass silently); that shape stays a build-time refusal via
+    the dispositive-content check, never a legal state this field can assert.
+    Verified against the bundled corpus file, not merely typed, by
+    ``_legal.py``'s grounding check -- this field states a claim; the
+    verifier is what makes the claim mean something.
+    """
     """Phrases the cited corpus document must NOT contain.
 
     ``required_text`` alone cannot express "this repealed clause must be

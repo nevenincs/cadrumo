@@ -172,7 +172,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "_schema_scalars",
             "_schema_surfaces",
             "_schema_verification",
-            "_validate_algorithms",
             "_validate_application_links",
             "_validate_completeness",
             "_validate_constructs",
