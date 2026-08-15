@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:d31583bef80d7722b721c5132b9a6b22f3d09a65ad3bef047b576f126b621266'
+body_hash: 'sha256:8c9c48011b99dee7f92dac2bff99a3555bc75aa4a758b698f31e5aa4485aa78e'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -238,3 +238,5 @@ Exercise the actual local system and read-only DEHu path, then complete an indep
 - [x] `W05.P08.S138` - Have Terra XHigh make the delete hold guard compare the owner facts its docstring names rather than the whole assessment object, since the assessment re-projects its observation instant and the digest attesting it on every call, so the equality check fails whenever preflight and execution happen at different instants which is always because the operator must echo a confirmation between them, leaving no profile deletable in production and blocking the campaign's closing destructive reset outright; `src/cadrumo/application/user_profile/_custody_service.py`.
 - [x] `W05.P08.S147` - Have Terra XHigh retire the manifest digest field from the bucket deletion contract and complete the retirement half of the deletion supersession, since the field has no production producer anywhere and its only constructions are hand-built fixtures while its subject retired with the plaintext manifest, this being the single unanswered item on the coverage checklist that blocked the retirement; `src/cadrumo/application/_bucket_deletion_contracts.py and src/cadrumo/application/config_reset.py`.
 - [ ] `W05.P08.S154` - Have Terra XHigh wire the filing retention assessment into the deletion preflight, since the contract is now fully answerable but the producer still refuses every existing target for want of an authenticated retention assessment, which is the sole cause of fifteen failing reset recovery and concurrency modules; `src/cadrumo/application/bucket_maintenance/_service.py`.
+- [ ] `W05.P08.S155` - Have Terra XHigh have the deletion preflight refresh the filing retention snapshot from the profile's own modelo records before assessing, since that owner's facts are derivable from state the application already holds and reading a snapshot nobody writes is what blocks every deletion today, while leaving the legal hold owner untouched; `src/cadrumo/application/user_profile/_custody_service.py and src/cadrumo/application/filing/`.
+- [ ] `W05.P08.S156` - Have Sol Medium rule how open legal cases reach the application, since the legal hold recorder takes case identifiers supplied from outside rather than anything the application holds, so an absent snapshot means nobody has been asked rather than no holds exist, and defaulting it to empty would fail open on the erasure of taxpayer data; `src/cadrumo/application/evidence/_profile_legal_hold.py and src/cadrumo/entrypoints/cli/`.

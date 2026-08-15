@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:ff46a7517f9849ebcaff22c9e9115bb9490dad53be74cc82b44b84b733c75197'
+body_hash: 'sha256:4572ab4b2699cf27579dd5205532bcb9669ed0d532d7b08cf3a4a0b7841df6b3'
 related: []
 ---
 
@@ -366,3 +366,46 @@ while the search it had just run returned two hits in that very file, and caught
 it by reading the output rather than its own summary of the output. Had the
 label been trusted, this audit would have gained a false escalation -- that
 operators cannot create a profile at all -- about a shipped product.
+
+### The deletion chain is blocked at its input, and a legal-hold gap sits behind it
+
+Profile deletion cannot run on any real profile, and the reason is one level
+below every previous diagnosis in this chain.
+
+The custody deletion preflight assesses two owners -- filing retention and legal
+holds -- and both read persisted snapshots. **Nothing in production writes
+either snapshot.** Both recorders have exactly one reference each in the whole
+tree: their own definitions, plus test modules. Measured on a profile whose
+owner facts were never recorded, which is every profile, all four entry points
+refuse on an absent snapshot.
+
+So the earlier finding that the deletion preflight refuses for want of an
+authenticated retention assessment was accurate and incomplete: wiring the
+assessment in would trade one refusal for another, and the fifteen failing
+modules would stay red with a different message.
+
+**The two owners are NOT symmetric, and treating them alike would be a safety
+defect rather than a wrong count.** Their recorders' signatures decide it. The
+filing recorder takes the application's own modelo records, so that owner's
+facts are derivable from state the application already holds. The legal-hold
+recorder takes case identifiers supplied from OUTSIDE; nothing the application
+owns can produce that list.
+
+Filing is therefore a missing producer, and the preflight refreshing the
+snapshot from the profile's own records is the fix -- rowed, and available now.
+
+**Legal holds are fail-closed by design, and correctly so.** An absent
+legal-case snapshot means nobody has been asked, which is not the same as no
+holds existing, and no refresh can close that gap because the answer lives
+outside the system. Defaulting it to empty would permit erasing a profile under
+an open legal case because the application had never been told. That is rowed as
+an operator-surface question -- how open cases reach the application at all --
+rather than as wiring.
+
+**The subsystem's tests pass only by supplying what production cannot.** The
+deletion fixture writes both snapshots itself before every delete test. That is
+the second such case found in this one subsystem, after a test that pinned a
+clock the public facade cannot pin -- which had concealed a guard that refused
+every deletion. One instance is a fixture; two is a pattern, and it explains why
+this area has read as healthier than it is. Both were found the same way: by
+removing something the test supplied and watching the production path fail.
