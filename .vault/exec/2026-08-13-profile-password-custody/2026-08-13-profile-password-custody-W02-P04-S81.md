@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:19db0c77aade3e4d70c70b55d7488ceefb0278e50f21b9f698ea61fcfb4232f1'
+body_hash: 'sha256:d83cdc4d50088649260504d9ac12e0d6852e4e54b64200e78fa39ca8b405d2f0'
 step_id: 'S81'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -68,3 +68,44 @@ Two traps were marked in advance and neither was rediscovered: the handover
 journal's stored identity is populated from the same live-session value and is
 therefore empty in exactly the failing cases, and the change-of-bucket guard had
 to survive the widening of its input.
+
+
+Three further facts arrived after this record was first written, none of which
+the dispatcher's brief had anticipated.
+
+**The activated crash phase does not pass through promotion at all.** Recovery
+classifies an activated handover as complete, clears the journal, and the next
+login takes the idempotent no-op and returns BEFORE promotion runs -- so no
+widening of the promotion path could reach it, and it continued to leak after the
+union fix. Retiring there is a pure durable delete needing no authentication, and
+it is now completed at recovery classification, routed through the same single
+revocation authority rather than a second one. Measured: without it, that phase
+still leaked.
+
+**The handover journal becomes a valid source only once the retirement identity
+is fixed.** The dispatcher marked the journal unusable because it was populated
+from the same live-session value and was therefore empty in exactly the failing
+cases. That was true of the journal AS IT STOOD and stops being true once the
+identity is corrected, so the implementation also populates it from the same
+durable-first union -- without which a crash in a fresh process leaves the replay
+path with no source at all.
+
+**The union fold is SHARED with logout rather than mirrored.** Logout now calls
+the same fold, replacing its inline construction over the same two values, so no
+second revocation path exists.
+
+The finding recorded against the crash parametrisation as merely flaky was closed
+and proved worse than flaky. At one phase the receipt was already gone, meaning
+the watcher had observed the phase but the handover ran to COMPLETION before the
+process exit landed -- the window being the watcher's own write of the observed
+phase, a filesystem write on this share. That case was intermittently a test
+named for a crash that never happened, with the retirement silently running and
+the test passing for the wrong reason. The observation now rides on the exit
+status and the process dies on the instruction after the comparison.
+
+The bite proof reproduces the independent review's measurement exactly: reverting
+both fixes yields five failures against twenty-three passes, every failure on
+recovered key material, four of five phases leaking and the already-retired phase
+clean. The first injection attempt reddened on the reported outcome rather than
+the material and was reordered so the material is measured first.
+

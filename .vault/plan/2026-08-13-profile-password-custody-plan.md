@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:b440451eb329f2b572f865cc8f926dd0712cf30658ca8d24e11a6e738a9bbfca'
+body_hash: 'sha256:d6b06557b4f70e42a170463088fef08181239f7ccc789611efb063803d0113dd'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -77,6 +77,7 @@ Authenticate a candidate profile without disturbing the active one, then publish
 - [x] `W02.P04.S82` - Have Terra XHigh re-site the non-resurrection proof across SEPARATE PROCESSES and extend it over the crash parametrisation, since the current test runs both logins in one process, which is the single configuration in which the revocation works, so it verifies the property only where its precondition holds and cannot fail on the defect it exists to refuse; `src/cadrumo/application/user_profile/tests/test_login_handover.py`.
 - [x] `W02.P04.S89` - Have Terra XHigh make the operator status projection report a verdict for an unregistered pointer instead of raising a raw storage error from the engine guard before any verdict is produced, since the health assessment it is built on declares a dangling-pointer status precisely for that state, so a projection that raises defeats the assessment and the operator meets it as the status verb refusing to run exactly when their profile is broken; `src/cadrumo/application/auth/_operator.py and src/cadrumo/application/user_profile/`.
 - [x] `W02.P04.S90` - Have Terra XHigh make the cold-pointer logout refusal name what it could not do and re-author the nine tests around the enforced contract, since revoking the authority browser session genuinely requires the key because that session is an encrypted secure-object row inside the bucket, so deleting it means opening the bucket, and only lock-clearing is key-free while clearing a lock revokes nothing, meaning a split logout would report success to the operator while leaving the session row intact on disk, and the refusal must therefore say the session could not be revoked because it is stored encrypted under the profile and that unlocking the profile is what revokes it, rather than reporting a generic custody refusal that reads as a permissions problem; `src/cadrumo/application/auth/_operator.py and src/cadrumo/application/auth/_operator_cleanup.py and src/cadrumo/application/auth/tests/test_operator_storage_session.py`.
+- [ ] `W02.P04.S92` - Have Terra XHigh restore dedicated coverage for the strong logout close and for session-artefact reaping on profile destruction, since both test modules exist now only as stale compiled artefacts after their sources were deleted in a committed change, leaving the strong close with no dedicated module in its owning package and the deletion invisible to anyone reading the directory; `src/cadrumo/application/user_profile/tests/`.
 
 ## Wave `W03` - restorative transport and operator surfaces
 
