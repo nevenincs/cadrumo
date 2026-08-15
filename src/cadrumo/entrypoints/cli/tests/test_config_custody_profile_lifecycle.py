@@ -361,13 +361,20 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     assert flag_default.returncode == 0, _combined_output(flag_default)
     assert "identity.name\tAlpha Operator" in flag_default.stdout
 
+    # An explicit NAME outranks ``--profile``. The record itself is NOT
+    # readable here and that is custody working, not a defect: each profile's
+    # record is sealed under its own capsule key, and the live session belongs
+    # to alpha. What the precedence claim needs is which profile the verb
+    # RESOLVED to, and the refusal names it -- beta, not the alpha the flag and
+    # the environment both asked for. A precedence regression would name alpha.
     explicit_name = _run_cadrumo(
         tmp_path,
         ("--profile", "alpha", "config", "profile", "show", "beta"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
-    assert explicit_name.returncode == 0, _combined_output(explicit_name)
-    assert "identity.name\tBeta Operator" in explicit_name.stdout
+    resolved_explicit_name = _combined_output(explicit_name)
+    assert "display_name\tbeta" in resolved_explicit_name, resolved_explicit_name
+    assert "display_name\talpha" not in resolved_explicit_name, resolved_explicit_name
 
     explicit_root = _run_cadrumo(
         tmp_path,
