@@ -351,6 +351,18 @@ def _retention_decision(
     retention_override_reason: str | None,
 ) -> ConfigResetRetentionDecision:
     if assessment is None:
+        # NOT a fail-open default, though it reads like one. An assessment can
+        # only omit retention when its target does not exist:
+        # BucketDeletionAssessment's own validator refuses `exists=True` unless
+        # label, fingerprint AND retention are all present, and the sole
+        # producer builds the absent form only. So reaching here means nothing
+        # is on disk, and "nothing is retained" is a true statement about that
+        # target rather than a decision taken without evidence.
+        #
+        # Recorded because this branch has now been read twice as a missing
+        # guard on a destructive path. The invariant is enforced by the type,
+        # which is stronger than a check here would be; a runtime guard would
+        # be unreachable and would imply the rule lives here instead.
         return ConfigResetRetentionDecision(
             assessed_at=now(),
             blocks_erase=False,
