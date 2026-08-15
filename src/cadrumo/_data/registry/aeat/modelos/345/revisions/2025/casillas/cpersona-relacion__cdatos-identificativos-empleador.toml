@@ -1,0 +1,102 @@
+# Modelo 345, ejercicio 2025 -- the official record-design positions that had no
+# casilla. Transcribed from the bundled Diseno de Registro
+# (source aeat-dr-345-2025, corpus/aeat_official/disenos_registro/modelo_345/
+# files/01-345-ejercicio-2025.pdf, sha256
+# fb0faaf68f8b0de29316bdc65eaeb3ba0dcb8a441eea4d5415d0cb4517c287fd).
+#
+# Every id, span and label below is the design's own; nothing is inferred.
+
+# Registro de tipo 1, campo 7. Positions 59-107, alfanumerico de 49 posiciones.
+# The design subdivides the slot (59-67 TELEFONO, 68-107 APELLIDOS Y NOMBRE) but
+# declares ONE top-level campo of 49 bytes, which is the extent declared here.
+[[revisions."2025".casillas]]
+id = "persona-relacion"
+number = "tipo1.59-107"
+section = ["registro_declarante", "identificacion"]
+data_type = "text"
+semantic_role = "m345_persona_relacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-345-t1-persona-relacion"]
+legal_refs = ["orden-hfp-823-2022:art-1"]
+source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+
+# Registro de tipo 1, campo 8. Positions 108-120, numerico de 13 posiciones.
+# "El numero identificativo que habra de figurar, sera un numero secuencial cuyos
+# tres primeros digitos se correspondan con el codigo 345."
+[[revisions."2025".casillas]]
+id = "numero-identificativo-declaracion"
+number = "tipo1.108-120"
+section = ["registro_declarante", "identificacion"]
+data_type = "integer"
+semantic_role = "m345_numero_identificativo_declaracion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-345-t1-numero-identificativo"]
+legal_refs = ["orden-hfp-823-2022:art-1"]
+source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+
+# Registro de tipo 1, campo 9. Positions 121-122, alfabetico de 2 posiciones:
+# 121 declaracion complementaria ("C"), 122 declaracion sustitutiva ("S").
+[[revisions."2025".casillas]]
+id = "declaracion-complementaria-sustitutiva"
+number = "tipo1.121-122"
+section = ["registro_declarante", "identificacion"]
+data_type = "text"
+semantic_role = "m345_declaracion_complementaria_sustitutiva"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-345-t1-complementaria-sustitutiva"]
+legal_refs = ["orden-hfp-823-2022:art-1"]
+source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+
+# Registro de tipo 1, campo 10. Positions 123-135, numerico de 13 posiciones.
+# Only carries content when campo 9 declares "C" or "S".
+[[revisions."2025".casillas]]
+id = "numero-identificativo-anterior"
+number = "tipo1.123-135"
+section = ["registro_declarante", "identificacion"]
+data_type = "integer"
+semantic_role = "m345_numero_identificativo_anterior"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-345-t1-numero-identificativo-anterior"]
+legal_refs = ["orden-hfp-823-2022:art-1"]
+source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+
+# Registro de tipo 2, campo 6. Positions 27-35, alfanumerico de 9 posiciones.
+# "Si el declarado es menor de 14 anos, se consignara en este campo el numero de
+# identificacion fiscal de su representante legal (padre, madre o tutor). En
+# cualquier otro caso el contenido de este campo se rellenara a espacios."
+[[revisions."2025".casillas]]
+id = "representante-legal-nif"
+number = "tipo2.27-35"
+section = ["registro_declarado", "identificacion"]
+data_type = "nif"
+semantic_role = "m345_representante_legal_nif"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-345-t2-representante-legal-nif"]
+legal_refs = ["orden-hfp-823-2022:art-3"]
+source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
+
+# Registro de tipo 2, campo 19. Positions 272-320, alfanumerico de 49 posiciones,
+# "DATOS IDENTIFICATIVOS DEL EMPLEADOR QUE SEA PROMOTOR O TOMADOR DEL SISTEMA DE
+# PREVISION SOCIAL". The design subdivides the slot (272-280 N.I.F. DEL EMPLEADOR,
+# 281-320 APELLIDOS Y NOMBRE O RAZON SOCIAL DEL EMPLEADOR) and declares ONE
+# top-level campo of 49 bytes. This revision already carries the two subdivisions
+# as `empleador-nif` and `empleador-nombre`; this casilla is the design's own
+# parent span, declared the same way this revision already declares the parent
+# spans of campos 14, 16 and 17 (`datos-adicionales-claves-abc`,
+# `datos-adicionales-clave-i`, `datos-adicionales-clave-m`), and it is the span
+# the fichero record writes.
+[[revisions."2025".casillas]]
+id = "datos-identificativos-empleador"
+number = "tipo2.272-320"
+section = ["registro_declarado", "empleador"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-345-t2-datos-empleador"]
+legal_refs = ["orden-hfp-528-2023:art-unico"]
+source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
