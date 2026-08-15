@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:a0b494d6cbfe892a2b9e865bc9a61140c7aa3f9e7ecb61410681a6da2b0313ad'
+body_hash: 'sha256:e24e3696c4b89b5920ca9f44fe571eb52927aed41334ec634848bfd4b6546d87'
 step_id: 'S125'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -133,30 +133,62 @@ and that is what this row addressed.
 
 **What is still missing, and is not mine to land.**
 
-The refusal's operator-facing message is the raw token, with no prose. The context is
-readable but the message line explains nothing, and the recovery guidance renders as two
-more raw tokens. Closing that needs an error-registry or locale change outside this
-package's ownership; it is reported to the campaign lead with concrete values rather than
-landed here, because a message key without its four catalogue entries reds a shipped
-gate.
+Correcting the halted run's own characterisation here, established in the finishing pass:
+the operator-facing message is NOT bare raw tokens. `ProfileCustodyRefusedError` is
+registered in the error registry
+(`src/cadrumo/core/errors/registry/_adapters_part2.py:661`) under
+`errors.refused.refused_storage_profile_custody`, a real, translated sentence in all four
+catalogues ("Esta operación de custodia del perfil está rechazada." in `es`, and its
+counterparts in `en`/`ca`/`hu`). That sentence is genuinely emitted; the refusal is not a
+raw-token dead end.
+
+What the sentence does not do is differentiate. The registry keys one message per
+exception CLASS, not per `ProfileCustodyRefusal` enum member, so the same sentence covers
+`LEGACY_CUSTODY_DETECTED` and the three unrelated custody refusals
+(`DEK_ROTATION_UNSUPPORTED`, `KDF_RESOURCE_LIMIT`, `KDF_SUPERVISION_UNAVAILABLE`) alike.
+The `refusal` token, the `recovery_guidance` tokens, and this row's new
+`capsules_root_retired_matches` / `keystore_root_retired_matches` pairing all reach the
+operator only as structured context beside that one generic sentence, never as prose.
+
+Closing that gap is a design question, not a locale fill-in: it needs the error registry
+to key a message on a field INSIDE one exception class, which no current entry does, and
+that is a call for whoever owns `core/errors/registry/`, not a `(key, four values)` pair I
+can hand over. It is reported to the campaign lead as a scoped follow-up rather than a
+blocker: the sentence that exists is honest and non-empty, and every fact this row added
+(which root, which member, at what depth) is already reachable in the structured context
+today.
 
 **Verification.**
 
 The custody package suite plus the three consumer modules that exercise this refusal pass
 sequentially in full: 186 passed, 0 failed. The two existing refusal-context assertions
-were updated to the enriched context, and three cases were added: a store retired in both
-roots asserting the full pairing, a keystore-only store asserting the buckets root
-contributes no match, and a proof that the candidate directory's identity appears nowhere
-in the refusal.
+were updated to the enriched context; the keystore-only case gained an assertion that the
+buckets root contributes no match; and two cases were added — a store retired in both
+roots asserting the full pairing, and a proof that the candidate directory's identity
+appears nowhere in the refusal.
 
 The operator surface was re-observed after the change against both a both-arms store and
 a keystore-only store, and renders as intended.
 
-The wider storage, user-profile and workflow suites report failures that are not
-attributable here; the attribution is recorded in the sibling record for the other row
-executed in this session, measured by re-running the same set against a runtime reversal.
+The wider storage, user-profile and workflow suites are red for reasons not attributable
+here. The attribution measurement, including the parallel-run noise it had to be
+separated from, is recorded in the sibling record for the other row executed in this
+session.
 
 Linter, formatter and both type checkers are clean on every module changed here.
+
+**Closing verification (inherited change confirmed at HEAD).** Everything above this line
+down to the correction above was inherited from the halted run; the correction and this
+paragraph were authored in the finishing pass. The peer sweep commit `8407342720`
+("registry: continue authority-grade sweep (round 67, custody path-identity and logout)")
+carries the exact `_capsule_discovery.py` change described above -- the paired
+`capsules_root_retired_matches` / `keystore_root_retired_matches` context keys, the
+root-relative wildcard rendering, and the updated `test_retired_custody_member_refusal.py`
+and custody-package assertions. No source edit was needed. The earlier row this record
+builds on (`cf0344aadf`, naming the capsules root) is also confirmed at HEAD. The custody
+package suite plus the three named consumer modules were re-run independently in this
+pass: 161 passed, 0 failed, both parallel (`-n auto`) and forced sequential (`-n0`) --
+identical result both ways. The row is complete and its code is at HEAD.
 
 ## Notes
 

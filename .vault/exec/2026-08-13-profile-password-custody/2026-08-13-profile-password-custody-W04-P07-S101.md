@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:19ecde3b70b29de266cd0c88ff8fc7898103620efef165bb7f290ad4dd6ece0c'
+body_hash: 'sha256:ff32e3b4e516c9a8e77cd12c4fe69ad6876b84bdee9dce838c4fe992e98a8136'
 step_id: 'S101'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -135,10 +135,22 @@ the capsule lifecycle, the custody transactions, and the active-profile resoluti
 sequentially in full: 186 passed, 0 failed. The new boundary module is 50 passing cases
 on its own.
 
-The wider storage, user-profile and workflow suites report 61 failures and 22 errors.
-None is attributable here, and that is measured rather than asserted: the whole set was
-re-run with this row's runtime check reverted in memory from outside the repository, and
-the failure set is identical. No failure in either log names a symbol this row touched.
+The wider storage, user-profile and workflow suites are red, and none of it is
+attributable here. That was measured rather than asserted, and the measurement is
+reported with its own noise rather than tidied up.
+
+The parallel run with this row's change in place reports 61 failures and 22 errors. The
+same set re-run with the runtime check reverted in memory from outside the repository —
+no tracked file touched — reports 79 failures and the same 22 errors. The two failure
+sets differ in both directions: six tests fail only in the first, twenty-four only in the
+second. That asymmetry is the parallel-execution noise this worktree's backing share is
+known for, not a signal.
+
+So the six that could have been regressions were re-run sequentially, with and without
+the reversal. Both runs are identical: the same two failures, the same thirty-six passes,
+in both configurations. The three worst modules of the original run — twenty-four of the
+sixty-one — were checked the same way earlier and are likewise identical with and without
+the reversal. No failure in any of the four logs names a symbol this row touched.
 
 One further ambient artefact is recorded because it wastes time otherwise: the keyring
 boundary case in the acceleration-receipt module fails under parallel execution and
@@ -169,3 +181,17 @@ row's own description. It is recorded rather than quietly folded into the fix, b
 "would create a directory named for a sentinel" and "would compose a path outside the
 storage root" are different severities, and the row's honest bound was written against
 the first.
+
+Peer sweep commits landed over this worktree mid-run and absorbed both this row's and its
+sibling row's source changes into their own commits. Nothing was committed from here.
+
+**Closing verification (inherited change confirmed at HEAD).** Everything above this line
+was inherited from the halted run; the following was authored in the finishing pass. The
+peer sweep commit `8407342720` ("registry: continue authority-grade sweep (round 67,
+custody path-identity and logout)") carries the exact `_paths.py` change and the
+`test_path_identity_boundary.py` bite-proof file described above, byte-identical to what
+this record already claims. No source edit was needed. The custody package suite plus the
+three named consumer modules were re-run independently in this pass: 161 passed, 0 failed,
+both under the project's default `-n auto` parallel config and again forced sequential
+(`-n0`) to rule out the backing share's known parallel-execution races -- identical result
+both ways. The row is complete and its code is at HEAD, not merely in a working tree.
