@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:2e3f73c9738f1c84716f81d9ccce21ed82e13133c75de1f1c3c6e02efce9edfa'
+body_hash: 'sha256:61c5d2885b9b37274f47effd729fff69cf363e4a2b8c71eaced30251291641ba'
 step_id: 'S173'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -122,14 +122,13 @@ entry points now carry their own assertion rather than one standing in for the
 pair.
 
 **Every downstream reader of the status set was audited, not just the one
-already noted.** Four production surfaces branch on the record-failure
-statuses. Three of them -- the auth operator's configure path and the
-certificate-source gate -- open the encrypted workflow state BEFORE they
-consult the health verdict, so a locked profile is refused by that load and
-never reaches their branches at all; their behaviour is unchanged by this row
-and needs nothing. The diagnostics readiness row is the sole genuine
-fall-through, because it is the one surface reached with a health verdict and
-no loaded state.
+already noted.** Two auth surfaces branch on the record-failure statuses -- the
+operator's configure path and the certificate-source gate -- and both open the
+encrypted workflow state BEFORE they consult the health verdict, so a locked
+profile is refused by that load and never reaches their branches at all; their
+behaviour is unchanged by this row and needs nothing. The diagnostics readiness
+rows are the sole genuine fall-through, because they are the one place reached
+with a health verdict and no loaded state.
 
 **The CLI status surface was measured, not assumed, and it did not regress.**
 Run against a locked capsule, it refuses before reaching the projection's
