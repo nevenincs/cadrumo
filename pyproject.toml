@@ -28,7 +28,6 @@ dependencies = [
   # and MCP server cannot perform grounded tax work without both corpus slices.
   "cadrumo-data-manuals==0.2.2",
   "cadrumo-data-official==0.2.2",
-  "cadrumo-harness==0.1.0",
   # Capability-gated integrations live in [project.optional-dependencies].
   # `anthropic` (Anthropic-API LLM provider), the `google-*` stack
   # (Drive/Sheets export), and `playwright*` (live AEAT browser) are lazily
