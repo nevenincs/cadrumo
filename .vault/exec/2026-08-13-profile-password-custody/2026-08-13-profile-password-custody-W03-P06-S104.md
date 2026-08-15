@@ -5,44 +5,11 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:131f3252684ea05b5b6d200398ba5627872be6ffc33f869e6cf5443a77057575'
+body_hash: 'sha256:1c8eadea3518fcbba2619f2b970324d0747ec5ab8905a6c886e1154603ec3da0'
 step_id: 'S104'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace profile-password-custody with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S104 and 2026-08-13-profile-password-custody-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Have Sol Medium rule per family whether the capabilities the capsule cutover removed should be restored, the sandbox and archive families being wiring rather than building because their application layer survived, the four single profile verbs being unassessed, and the subject-access-request surface being recoverable from history rather than greenfield since its test module still asserts a working implementation and the cutover commit is what deleted it and ## Scope
-
-- `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/entrypoints/cli/_config/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Have Sol Medium rule per family whether the capabilities the capsule cutover removed should be restored, the sandbox and archive families being wiring rather than building because their application layer survived, the four single profile verbs being unassessed, and the subject-access-request surface being recoverable from history rather than greenfield since its test module still asserts a working implementation and the cutover commit is what deleted it
 
@@ -74,6 +41,13 @@ related:
   ruling), `W05.P08.S134`/`S154` (the deletion-surface ruling and its
   retention-producer precondition), `W03.P06.S66` (the bundle-transfer
   ruling), and the standing capabilities-removed-without-a-decision audit.
+- Received a parallel per-verb assessment from a peer session (referred to
+  here as "S34") covering the same four verbs, and verified its four claims
+  directly against source rather than accepting them on report: the
+  retention-floor guard function, the live `--help` refusal for `rename`/
+  `delete`/`archive`, the `_profile_inspect.py` docstring citing a deleted
+  sibling module, and the orphaned `RenameBucketCommand` import. All four
+  confirmed as stated; incorporated below with attribution.
 
 ## Outcome
 
@@ -103,10 +77,14 @@ models as residue.
 ### Archive family — RETIRE, and it is BUILDING too, for a sharper reason
 
 Also framed by the row as wiring; also does not hold, and the evidence is
-stronger here than for sandbox. `bucket_maintenance/__init__.py`'s own
-current docstring states directly: "bucket archive (reversible dormancy),
+stronger here than for sandbox — and specifically for archive INSPECT,
+independently corroborated by "S34"'s parallel assessment: `ProfileCapsuleLifecycle`
+has no inspect or soft-tombstone method, the still-live `_sealed_archive_reader.py`
+adapter has zero production callers, and `entrypoints/cli/tests/test_profile_archive_roundtrip.py`
+is six of seven tests red against the removed surface. `bucket_maintenance/__init__.py`'s
+own current docstring states directly: "bucket archive (reversible dormancy),
 bucket restore, sealed-archive export/import/inspect... have no successor
-primitive at all." That is corroborated independently: the cutover commit's
+primitive at all." That is corroborated a third way: the cutover commit's
 own message states `UserProfileStatus` and its tombstone/reactivate arms
 gave way to `ProfileSetupState`, which today carries exactly two members
 (`INCOMPLETE`, `COMPLETE`) — there is no ARCHIVED or DORMANT state left on
@@ -114,16 +92,35 @@ the domain record to restore "reversible dormancy" onto. Restoring bucket
 archive is not wiring a surviving implementation to a verb; it is
 reintroducing a status axis that was deliberately eliminated in the same
 architectural simplification this whole campaign is built on, which is a
-domain-model change, not a CLI-exposure change. Recommend RETIRE formally.
-The replacement route for "I no longer need this profile but might later":
-keep it as-is (a complete, unlisted profile costs nothing extra to retain)
-or delete it outright once `W05.P08.S154` lands; there is no operator need
-this specifically serves that `list`/`delete` cannot. Residue to delete once
-retirement is ratified: any orphaned `archive`/`restore`/`inspect` payload
-schema entries and error-registry rows the same shape `W03.P06.S59` already
-found for the sixteen residue verbs (not enumerated exhaustively here —
-scope was `bucket_maintenance/` and `_config/`, not the payload/error-registry
-sweep `S59` already owns the pattern for).
+domain-model change, not a CLI-exposure change. **Recommend RETIRE formally,
+with the honest note that this is a decision to make (there is genuinely no
+route to name today), not a fact this record is merely recording.** The
+replacement route for "I no longer need this profile but might later": keep
+it as-is (a complete, unlisted profile costs nothing extra to retain) or
+delete it outright once `W05.P08.S154` lands; there is no operator need this
+specifically serves that `list`/`delete` cannot.
+
+**Residue: already cleaned inside `bucket_maintenance` itself, still live
+outside it.** "S34"'s parallel pass already deleted the fourteen producerless
+Rename/Delete/Archive/Restore/Export/Import/Inspect pydantic Command/Result
+classes from `bucket_maintenance/_contracts.py` and corrected a stale module
+docstring describing the removed sandbox lifecycle as live — verified: the
+package's `_contracts.py` (143 lines) and `__init__.py` (68 lines) carry none
+of that residue today. Do not re-nominate it. What remains live and orphaned
+is OUTSIDE `bucket_maintenance`, in this row's other scoped directory:
+`entrypoints/cli/_config/_profile_bundle_flow.py` (dead export/import
+wizard-flow code with zero callers — this is `W03.P06.S66`'s subject, not
+re-decided here), `entrypoints/cli/_config/_profile_inspect.py` (its
+docstring still names `._bucket_archive` as a sibling module, confirmed at
+line 10, though `_bucket_archive.py` was deleted whole by the cutover
+commit), and `application/tests/test_config_reset_concurrency.py` (imports
+`RenameBucketCommand`, confirmed absent from source — only stale `.pyc`
+cache files reference it, alongside two rename-service test modules also
+already deleted from source). Any orphaned `archive`/`restore`/`inspect`
+payload-schema or error-registry entries in `_config_payloads.py` follow the
+same shape `W03.P06.S59` already resolved for its sixteen residue verbs —
+not re-swept here since this row's scope was `bucket_maintenance/` and
+`_config/`, and `S59` already owns that specific sweep pattern.
 
 **Note:** sealed-archive export/import/inspect (a backup-file transport, the
 `_bucket_archive.py` verbs) is a DIFFERENT capability from the per-profile
@@ -138,27 +135,40 @@ concept.
 
 Not uniformly unassessed, contrary to the row's framing; disposition per verb:
 
-- **rename — WIRING, genuinely trivial.**
+- **rename — WIRING, genuinely trivial, ZERO CLI callers confirmed live.**
   `ProfileCapsuleLifecycle.rename_label(*, profile_id, label,
   expected_label_revision, expected_content_digest)` is a complete,
   already-used primitive (the label-authority CAS path the commit message
   describes: "renames advance it under root-then-profile locking, and a
   same-UUID substitution is refused"). Every argument is resolvable from a
-  loaded record. Exposing `config profile rename` is a Typer wrapper over an
-  existing call, sized identically to the other single-verb work `W03.P06.S16`
-  already scopes.
-- **delete — WIRING, already ruled, NOT newly unassessed.** `W05.P08.S134`
-  already established this is deliberate replacement (not collateral loss):
-  the old primitives are gone on purpose, `ProfileCapsuleLifecycle.prepare_delete`/
-  `confirm_delete`/`delete` is the re-pointed, journalled, crash-resumable
-  successor, and the re-pointing has landed. What blocks a genuine
-  single-target `config profile delete` verb is a single named precondition —
-  `W05.P08.S154`, "wire the filing retention assessment into the deletion
-  preflight" — already rowed with its direction already set (grow the
-  retention contract; do not narrow the legally-grounded refusal message).
-  `W03.P06.S16` is already the row that exposes this verb once `S154` lands.
-  This ruling does not re-decide `S134`; it confirms `S104` should not
-  re-litigate a verb another row already ruled.
+  loaded record. `aeat config profile rename --help` returns
+  `Error: No such command 'rename'.`, run live and confirmed. Exposing
+  `config profile rename` is a Typer wrapper over an existing call, sized
+  identically to the other single-verb work `W03.P06.S16` already scopes.
+- **delete — WIRING, already ruled, NOT newly unassessed, and the blocking
+  guard is a LIVE deliberate protection, not a stray refusal.**
+  `W05.P08.S134` already established this is deliberate replacement (not
+  collateral loss): the old primitives are gone on purpose,
+  `ProfileCapsuleLifecycle.prepare_delete`/`confirm_delete`/`delete` is the
+  re-pointed, journalled, crash-resumable successor, and the re-pointing has
+  landed. `aeat config profile delete --help` returns
+  `Error: No such command 'delete'.`, confirmed live — there is no
+  single-target delete CLI verb anywhere; the sole production caller of the
+  delete primitives is the all-profile `config reset start --yes` flow. What
+  blocks a genuine single-target verb is `_refuse_erase_inside_the_retention_floor`
+  in `application/config_reset.py:688`, fed by the retention-snapshot chain
+  from closed rows `S137`/`S155`/`S157` — a LIVE guard, not a retired one,
+  and it is the direct, confirmed cause of six failing tests in
+  `application/tests/test_config_reset.py`. Its named successor owner is the
+  already-open `W05.P08.S154`, direction already set (grow the retention
+  contract; do not narrow the legally-grounded refusal message).
+  `W03.P06.S16` is already the row that exposes a single-target verb once
+  `S154` lands, and that verb deserves its own single-target safety argument
+  when it is built — deleting one profile is a different blast radius from
+  deleting all of them, and S16 should say so rather than assume the
+  all-profile guard transfers unchanged. This ruling does not re-decide
+  `S134`; it confirms `S104` should not re-litigate a verb another row
+  already ruled.
 - **duplicate — near-wiring, small composition, no primitive of its own.**
   No `duplicate`/`clone` primitive exists anywhere in the tree (checked
   `application/user_profile`; every hit is unrelated label-collision

@@ -7568,6 +7568,8 @@ flows:
         status: Status
       none: No registered profiles.
       status:
+        complete: Complete
+        incomplete: Incomplete
         unknown: Unknown
     section:
       auth: Authentication

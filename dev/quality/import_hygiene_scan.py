@@ -1505,6 +1505,28 @@ def first_party_census_files(*, repo_root: Path = REPO_ROOT) -> list[tuple[Path,
     return census
 
 
+def _named_by_any_string(path: Path, mod: str, rel: str, string_pool: Iterable[str]) -> bool:
+    """True if some string constant in the tree names this module.
+
+    Four shapes were observed reaching a real module through a string the
+    import graph cannot follow, and all four must count or a live module reads
+    as orphaned: the full dotted name (a subprocess ``-m`` target), the
+    repo-relative path, the relative registration suffix ``.<stem>`` (the lazy
+    CLI command table), and the bare filename (a path-assembling probe that
+    joins directory parts and ends in ``"<stem>.py"``).
+
+    The bias is deliberate and one-directional. Counting a coincidental string
+    as reach costs a missed orphan; MISSING a real reach reports a live module
+    as dead, and that is the verdict somebody acts on by deleting it.
+    """
+    suffix = f".{path.stem}"
+    filename = path.name
+    return any(
+        text == mod or text == rel or text == filename or text.endswith(suffix) or text.endswith(f"/{filename}")
+        for text in string_pool
+    )
+
+
 def find_orphaned_modules(
     package_files: Iterable[Path],
     census_files: Iterable[tuple[Path, Path]],
@@ -1555,8 +1577,7 @@ def find_orphaned_modules(
         if mod in reached:
             continue
         rel = str(path.relative_to(repo_root)).replace("\\", "/")
-        leaf = f".{path.stem}"
-        if any(text == mod or text == rel or text.endswith(leaf) for text in string_pool):
+        if _named_by_any_string(path, mod, rel, string_pool):
             continue
         orphans.append(
             OrphanedModule(

@@ -8068,6 +8068,8 @@ flows:
         status: Estat
       none: No hi ha perfils registrats.
       status:
+        complete: complet
+        incomplete: incomplet
         unknown: desconegut
     section:
       auth: Autenticació

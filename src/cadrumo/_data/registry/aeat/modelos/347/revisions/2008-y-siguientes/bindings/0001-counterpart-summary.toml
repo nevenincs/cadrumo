@@ -8,7 +8,7 @@
 [[revisions."2008-y-siguientes".bindings]]
 id = "modelo-347-declarante-numero-personas-entidades"
 source = "collectible_invoice"
-selector = { fact = "operator_count", record = "m347_declarante_summary", rectification_scope = "any", offset = 136, length = 9, data_type = "integer" }
+selector = { fact = "operator_count", record = "m347_declarante_summary", rectification_scope = "any" }
 aggregation = { op = "count_distinct" }
 legal_refs = [
     "orden-eha-3012-2008:art-1",

@@ -212,19 +212,18 @@ def test_mounted_command_families_are_backend_owned_and_service_backed() -> None
     assert by_domain[MountedCommandDomain.PROFILE].root is RootSurfaceName.CONFIG
     assert by_domain[MountedCommandDomain.PROFILE].child == "profile"
     assert by_domain[MountedCommandDomain.PROFILE].service_owner == "cadrumo.application.user_profile"
-    assert {"create", "edit", "show", "delete", "status"}.issubset(by_domain[MountedCommandDomain.PROFILE].commands)
-    custody_commands = {
-        command
-        for family in contract.command_families
-        if family.domain is MountedCommandDomain.CUSTODY
-        for command in family.commands
+    # Which verbs a family contains is not asserted here, and cannot be: the
+    # contract declares no command inventory, so the live tree is the only
+    # answer and this unit module does not resolve it. Membership is proven
+    # against the materialised tree in `test_contract_live`.
+    custody_children = {
+        family.child for family in contract.command_families if family.domain is MountedCommandDomain.CUSTODY
     }
-    assert {"login", "logout", "change", "recover", "status", "create", "rotate", "verify"} == custody_commands
+    assert custody_children == {"login", "logout"}
     # The append-only event-history verb merged into the `config profile` group
     # as `config profile history` (D1 family rename); the standalone
     # `config bucket` group was retired, so there is no BUCKET family.
     assert MountedCommandDomain.BUCKET not in by_domain
-    assert "history" in by_domain[MountedCommandDomain.PROFILE].commands
     assert by_domain[MountedCommandDomain.OVERVIEW].mutability is OperatorMutability.READ_ONLY
     assert by_domain[MountedCommandDomain.LEDGER].service_owner == "cadrumo.application.transactions"
     assert by_domain[MountedCommandDomain.REVIEW].service_owner == "cadrumo.application.review"
@@ -492,13 +491,19 @@ def test_root_landing_report_reads_profile_state_input_only() -> None:
 
 
 def test_filing_status_filed_is_sole_source_for_filed_token() -> None:
-    """FilingStatus.FILED is the token exposed by the LIVE command family."""
+    """FilingStatus.FILED is the token the LIVE command family mounts.
+
+    The membership half of this claim moved to ``test_contract_live``: the
+    contract no longer restates a family's verbs, so whether ``app live``
+    mounts a ``filed`` subgroup is a question only the materialised tree can
+    answer. What stays here is the token identity itself.
+    """
     assert FilingStatus.FILED == "filed"
     assert str(FilingStatus.FILED) == "filed"
 
     contract = get_operator_surface_contract()
     live_family = next(f for f in contract.command_families if f.domain is MountedCommandDomain.LIVE)
-    assert FilingStatus.FILED in live_family.commands
+    assert live_family.child == "live"
 
 
 def test_filing_status_has_no_token_shim_module() -> None:

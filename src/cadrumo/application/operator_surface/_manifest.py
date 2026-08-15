@@ -25,7 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from ..operator_actions import ActionCatalogue, ActionCatalogueEntry
 from ._contract import get_operator_surface_contract
 from ._errors import OperatorSurfaceContractError
-from ._models import ManifestActionProfile, OperatorSurfaceContract
+from ._models import ManifestActionProfile, MountedCommandFamily, OperatorSurfaceContract
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -251,6 +251,34 @@ class OperatorSurfaceReconciliation(BaseModel):
     model_config = _STRICT_FROZEN
 
     leaves: tuple[ReconciledOperatorLeaf, ...]
+
+    def commands_for_family(self, family: MountedCommandFamily) -> tuple[str, ...]:
+        """Return ``family``'s command inventory, derived from the live tree.
+
+        Membership is read off the reconciled canonical CLI paths, which are the
+        authority for what exists, rather than declared alongside them where the
+        two could disagree. It is deliberately NOT derived from the schema-key
+        spelling: that namespace drops the ``app`` root segment for some families
+        and keeps it for others, so a prefix match would silently report an empty
+        family. A family mounted as one leaf command (``config login``) yields
+        the degenerate self-reference ``(child,)``, matching how the live tree
+        presents it.
+
+        Args:
+            family: One declared family of the operator-surface contract.
+
+        Returns:
+            The family's command tokens, sorted, each token dotted for a nested
+            subgroup (``descendiente.add``).
+        """
+        identity = (family.root.value, family.child)
+        commands: set[str] = set()
+        for leaf in self.leaves:
+            path = leaf.live_leaf.canonical_cli_path
+            if len(path) < 2 or (path[0], path[1]) != identity:
+                continue
+            commands.add(".".join(path[2:]) if len(path) > 2 else family.child)
+        return tuple(sorted(commands))
 
 
 class ResolvedCatalogueAction(BaseModel):
@@ -663,34 +691,49 @@ def reconcile_operator_surface_inventory(
     rows are joined here so a missing row, orphan, duplicate, path ambiguity,
     silent omission, or policy/exposure conflict is a hard failure rather than
     a hand-maintained hint.
+
+    Every disagreement found is accumulated and reported together through one
+    :class:`~application.operator_surface.OperatorSurfaceContractError`, so the
+    reader of a failed reconciliation sees the whole census rather than
+    whichever item the iteration order happened to reach first.
     """
-    live_by_subject = _index_live_leaves(live_leaves)
+    diagnostics: list[str] = []
+    live_by_subject = _index_live_leaves(live_leaves, diagnostics=diagnostics)
     live_subjects = frozenset(live_by_subject)
     result_by_subject = _index_subject_rows(
         result_schemas,
         source=ReconciliationSurface.RESULT_SCHEMA,
         live_subjects=live_subjects,
+        diagnostics=diagnostics,
     )
     input_by_subject = _index_subject_rows(
         input_schemas,
         source=ReconciliationSurface.INPUT_SCHEMA,
         live_subjects=live_subjects,
+        diagnostics=diagnostics,
     )
     policy_by_subject = _index_subject_rows(
         profile_policies,
         source=ReconciliationSurface.PROFILE_POLICY,
         live_subjects=live_subjects,
+        diagnostics=diagnostics,
     )
     mcp_by_subject = _index_subject_rows(
         mcp_exposures,
         source=ReconciliationSurface.MCP_EXPOSURE,
         live_subjects=live_subjects,
+        diagnostics=diagnostics,
     )
-    family_by_identity = _index_families(mounted_families)
-    exclusions_by_subject_surface = _index_exclusions(exclusions, live_subjects=live_subjects)
-    _require_reached_mounted_families(
+    family_by_identity = _index_families(mounted_families, diagnostics=diagnostics)
+    exclusions_by_subject_surface = _index_exclusions(
+        exclusions,
+        live_subjects=live_subjects,
+        diagnostics=diagnostics,
+    )
+    _reconcile_mounted_families(
         live_by_subject=live_by_subject,
         family_by_identity=family_by_identity,
+        diagnostics=diagnostics,
     )
     reconciled = tuple(
         _reconcile_live_leaf(
@@ -702,9 +745,11 @@ def reconcile_operator_surface_inventory(
             policy_by_subject=policy_by_subject,
             mcp_by_subject=mcp_by_subject,
             exclusions=exclusions_by_subject_surface,
+            diagnostics=diagnostics,
         )
         for subject_leaf_key, live_leaf in sorted(live_by_subject.items())
     )
+    _refuse("operator_surface_reconciliation", diagnostics)
     return OperatorSurfaceReconciliation(leaves=reconciled)
 
 
@@ -712,26 +757,30 @@ def _index_reconciled_leaves(
     reconciliation: OperatorSurfaceReconciliation,
 ) -> dict[str, ReconciledOperatorLeaf]:
     """Index reconciled leaves while rechecking identity and path uniqueness."""
+    diagnostics: list[str] = []
     indexed: dict[str, ReconciledOperatorLeaf] = {}
     path_owners: dict[tuple[str, ...], str] = {}
     for leaf in reconciliation.leaves:
         key = leaf.live_leaf.subject_leaf_key
         if key in indexed:
-            raise ValueError(f"duplicate reconciled live leaf identity: {key}")
+            diagnostics.append(f"duplicate reconciled live leaf identity: {key}")
+            continue
         for path in (leaf.live_leaf.canonical_cli_path, *leaf.live_leaf.alias_cli_paths):
             previous = path_owners.get(path)
             if previous is not None:
-                raise ValueError(f"ambiguous reconciled CLI path {' '.join(path)}: {previous} and {key}")
+                diagnostics.append(f"ambiguous reconciled CLI path {' '.join(path)}: {previous} and {key}")
+                continue
             path_owners[path] = key
         for surface, schema_key in (
             ("result_schema", leaf.result_schema.subject_leaf_key if leaf.result_schema is not None else None),
             ("input_schema", leaf.input_schema.subject_leaf_key if leaf.input_schema is not None else None),
         ):
             if schema_key is not None and schema_key != key:
-                raise ValueError(f"reconciled {surface} identity mismatch for {key}: observed {schema_key}")
+                diagnostics.append(f"reconciled {surface} identity mismatch for {key}: observed {schema_key}")
         indexed[key] = leaf
     if not indexed:
-        raise ValueError("operator-surface reconciliation must not be empty")
+        diagnostics.append("operator-surface reconciliation must not be empty")
+    _refuse("operator_surface_reconciliation", diagnostics)
     return indexed
 
 
@@ -750,19 +799,22 @@ def resolve_action_catalogue(
     of optional parameter names and this layer cannot soundly reject them.
     """
     live_by_key = _index_reconciled_leaves(reconciliation)
+    diagnostics: list[str] = []
     resolved: list[ResolvedCatalogueAction] = []
     for declaration in catalogue.entries:
         target_leaf = live_by_key.get(declaration.target_command_key)
         if target_leaf is None:
-            raise ValueError(
+            diagnostics.append(
                 f"orphan action target command identity: {declaration.action_id} -> {declaration.target_command_key}"
             )
+            continue
         resolved.append(
             ResolvedCatalogueAction(
                 declaration=declaration,
                 target_leaf=target_leaf,
             )
         )
+    _refuse("operator_action_catalogue", diagnostics)
     return tuple(sorted(resolved, key=lambda action: action.action_id))
 
 
@@ -779,25 +831,29 @@ def resolve_manifest_action_profiles(
         reconciliation=reconciliation,
     )
     action_by_id = {action.action_id: action for action in catalogue_actions}
+    diagnostics: list[str] = []
     seen_profile_identities: set[tuple[str, str, str]] = set()
     resolved_profiles: list[ResolvedManifestActionProfile] = []
     for profile in profiles:
         if profile.identity in seen_profile_identities:
-            raise ValueError(
+            diagnostics.append(
                 "duplicate manifest action-profile identity: "
                 f"{profile.subject_leaf_key} / {profile.condition_id} / {profile.scenario_id}"
             )
+            continue
         seen_profile_identities.add(profile.identity)
 
         subject_leaf = live_by_key.get(profile.subject_leaf_key)
         if subject_leaf is None:
-            raise ValueError(f"orphan manifest action-profile subject identity: {profile.subject_leaf_key}")
+            diagnostics.append(f"orphan manifest action-profile subject identity: {profile.subject_leaf_key}")
+            continue
 
         resolved_action: ResolvedCatalogueAction | None = None
         if profile.action is not None:
             resolved_action = action_by_id.get(profile.action.action_id)
             if resolved_action is None:
-                raise ValueError(f"unknown manifest action-profile action identity: {profile.action.action_id}")
+                diagnostics.append(f"unknown manifest action-profile action identity: {profile.action.action_id}")
+                continue
         resolved_profiles.append(
             ResolvedManifestActionProfile(
                 declaration=profile,
@@ -805,6 +861,7 @@ def resolve_manifest_action_profiles(
                 resolved_action=resolved_action,
             )
         )
+    _refuse("manifest_action_profiles", diagnostics)
     return ManifestActionResolution(
         catalogue_actions=catalogue_actions,
         profiles=tuple(resolved_profiles),
@@ -835,6 +892,13 @@ class OperatorSurfaceManifest(BaseModel):
     references. An LLM operator reads one manifest to discover what the CLI can
     do, which verbs mutate state, and where each command's result schema lives,
     instead of scraping ``--help``.
+
+    ``command_schemas`` is the sole inventory of which commands exist: it is
+    projected from the live command tree, and the contract's families carry no
+    parallel command list to disagree with it. Per-family membership is derived
+    from the live CLI paths by
+    :meth:`OperatorSurfaceReconciliation.commands_for_family`, never from the
+    schema-key spelling, whose root segment is not uniform across the two roots.
     """
 
     model_config = _STRICT_FROZEN

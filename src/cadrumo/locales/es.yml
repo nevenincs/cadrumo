@@ -8118,6 +8118,8 @@ flows:
         status: Estado
       none: No hay perfiles registrados.
       status:
+        complete: completo
+        incomplete: incompleto
         unknown: desconocido
     section:
       auth: Autenticación

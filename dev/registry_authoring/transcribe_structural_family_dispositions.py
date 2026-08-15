@@ -28,9 +28,29 @@ research required:
     ``FilingProjectionRef`` (:mod:`cadrumo.core`) is a closed discriminated
     union of seven ``m303_*`` members only; ``ProjectionEndpointDeclaration
     .projection_ref`` accepts nothing else, so no modelo but 303 can ever
-    populate this family. Every other modelo's repeating detail rows, if it
-    has any, are served instead by the independent
-    ``ExportRecordDefinition.repeat == "binding_rows"`` mechanism.
+    populate this family. That closed-union fact holds unconditionally, but
+    the STRONGER claim a not_applicable reason would otherwise imply -- that
+    a repeating-row need this modelo actually has is already served by some
+    other mechanism -- is not unconditional, so this script declares ONLY
+    where that is an OBSERVED, POSITIVE fact of the candidate revision's own
+    ``export_layouts``: at least one authored ``ExportRecordDefinition``
+    already declares ``repeat == "binding_rows"``.
+
+    An earlier draft of this script also auto-declared whenever every
+    authored record left ``repeat`` unset, reading that as "no repeating
+    record structure at all". A primary-source check against modelo 347's
+    own bundled AEAT record-design corpus
+    (``corpus/aeat_official/disenos_registro/modelo_347``) falsified that for
+    the concrete case it was about to fire on: the official design declares
+    a "REGISTRO DE TIPO 2" (repeating per third party / per property), and
+    the revision's authored ``export_layouts`` simply had not modeled that
+    record YET -- absence of an authored repeat was proof of an unfinished
+    layout, not proof of a flat one. That branch is deliberately NOT
+    implemented: a revision whose export_layouts shows no ``binding_rows``
+    record is left BLOCKED -- reported as ``held``, never declared.
+    Declaring it would assert an unverified prediction about a mechanism
+    nobody has authored yet, which is exactly the kind of exception this
+    script must not grant.
 
 ``export_layouts`` is NEVER a candidate here: ``_validate_export_exemption.py``
 refuses a layout-less revision unconditionally and consults no disposition --
@@ -49,10 +69,11 @@ Usage::
 
     python -m dev.registry_authoring.transcribe_structural_family_dispositions [--apply] [--json OUT.json]
 
-Default is a dry run: prints what would be written, writes nothing.
-``--apply`` performs the writes, then reloads the whole registry tree through
-the same production loader and proves every intended declaration now reads
-back as the exact reason/refs this script wrote.
+Default is a dry run: prints what would be written (and what is held back for
+lack of evidence), writes nothing. ``--apply`` performs the writes, then
+reloads the whole registry tree through the same production loader and proves
+every intended declaration now reads back as the exact reason/refs this
+script wrote.
 """
 
 from __future__ import annotations
@@ -91,6 +112,23 @@ class Disposition:
     source_refs: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class HeldCandidate:
+    """A blocked, structurally-eligible cell this script deliberately does NOT declare.
+
+    Only ``projection_endpoints`` ever produces these: the closed-union
+    discriminator holds for every non-303 modelo, but this script requires
+    per-revision OBSERVED evidence of which mechanism actually serves the
+    modelo's repeating rows before it will write a declaration, and a
+    revision with no ``export_layouts`` yet carries none.
+    """
+
+    modelo: str
+    revision: str
+    family: str
+    reason: str
+
+
 def is_blocked(revision: ModeloRevision, family: str) -> bool:
     """Mirror the coverage projection's blocked test without a private import.
 
@@ -108,6 +146,28 @@ def has_no_earlier_sibling(modelo: ModeloDefinition, revision: ModeloRevision) -
     return not any(
         other.id != revision.id and other.valid_from < revision.valid_from for other in modelo.revisions.values()
     )
+
+
+def projection_endpoints_evidence(revision: ModeloRevision) -> str | None:
+    """Classify the OBSERVED evidence this revision's own export_layouts carry.
+
+    Returns ``"binding_rows"`` when at least one authored
+    ``ExportRecordDefinition`` already declares ``repeat == "binding_rows"``
+    -- a positive, unambiguous fact: this modelo's repeating rows, if it has
+    any, are demonstrably served by that mechanism today. Returns ``None``
+    for everything else, INCLUDING a revision whose export_layouts is
+    non-empty but declares no ``binding_rows`` record: absence of an
+    authored repeat is not proof of a flat record design, only proof that
+    nobody has authored the repeating record (yet, or ever) -- see the
+    module docstring's modelo-347 counter-example. ``None`` always means
+    "hold", never "declare".
+    """
+    if not revision.export_layouts:
+        return None
+    repeats = {record.repeat for layout in revision.export_layouts for record in layout.records}
+    if "binding_rows" in repeats:
+        return "binding_rows"
+    return None
 
 
 def _reason_continuidad(modelo: ModeloDefinition, revision: ModeloRevision) -> str:
@@ -140,16 +200,39 @@ def _reason_projection_endpoints(modelo: ModeloDefinition) -> str:
         "engine-computed IVA facts; ProjectionEndpointDeclaration.projection_ref accepts only "
         f"that union, so no declaration naming modelo {modelo.id}'s own casillas can validate. "
         f"Modelo {modelo.id} is not modelo 303, so the projection_endpoints family cannot be "
-        "populated by construction. Any repeating detail rows this modelo's export requires are "
-        'addressed instead by the independent ExportRecordDefinition.repeat == "binding_rows" '
-        "mechanism, which materializes repeating rows from binding values rather than from a "
-        "projection_endpoints declaration."
+        "populated by construction. This revision's own export_layouts already demonstrate the "
+        "mechanism that serves its repeating rows: at least one authored ExportRecordDefinition "
+        'declares repeat == "binding_rows", materializing repeating rows from binding values '
+        "rather than from a projection_endpoints declaration."
     )
 
 
-def compute_dispositions(modelos: tuple[ModeloDefinition, ...]) -> tuple[Disposition, ...]:
-    """Re-derive every grounded not_applicable candidate live from the loaded tree."""
+def _held_reason_projection_endpoints(modelo: ModeloDefinition, revision: ModeloRevision) -> str:
+    if not revision.export_layouts:
+        observed = f"revision {revision.id!r} declares no export_layouts yet"
+    else:
+        observed = (
+            f"revision {revision.id!r} declares export_layouts, but no authored "
+            'ExportRecordDefinition in them declares repeat == "binding_rows" -- an absent '
+            "repeat is not proof the modelo's official record design has no repeating detail "
+            "rows, only proof that this layout has not (yet) authored one"
+        )
+    return (
+        f"Modelo {modelo.id} is not modelo 303, so FilingProjectionRef's closed m303_* union "
+        "still means projection_endpoints itself cannot be populated for this modelo. But "
+        f"{observed}, so there is no observed evidence of which mechanism -- if any -- actually "
+        "serves this revision's repeating rows. Declaring not_applicable here would assert an "
+        "unverified prediction rather than a fact this revision's own declarations establish; "
+        "held pending the export_layouts authoring that resolves it."
+    )
+
+
+def compute_dispositions(
+    modelos: tuple[ModeloDefinition, ...],
+) -> tuple[tuple[Disposition, ...], tuple[HeldCandidate, ...]]:
+    """Re-derive every grounded not_applicable candidate, and every held one, live from the tree."""
     out: list[Disposition] = []
+    held: list[HeldCandidate] = []
     for modelo in modelos:
         is_informative = modelo.calculation_class == "informative"
         is_m303 = Modelo(modelo.id) == Modelo.M303
@@ -179,18 +262,30 @@ def compute_dispositions(modelos: tuple[ModeloDefinition, ...]) -> tuple[Disposi
                     ),
                 )
             if is_blocked(revision, PROJECTION_ENDPOINTS_FAMILY) and not is_m303:
-                out.append(
-                    Disposition(
-                        modelo=modelo.id,
-                        revision=revision.id,
-                        family=PROJECTION_ENDPOINTS_FAMILY,
-                        reason=_reason_projection_endpoints(modelo),
-                        legal_refs=legal_refs,
-                        source_refs=source_refs,
-                    ),
-                )
+                evidence = projection_endpoints_evidence(revision)
+                if evidence is None:
+                    held.append(
+                        HeldCandidate(
+                            modelo=modelo.id,
+                            revision=revision.id,
+                            family=PROJECTION_ENDPOINTS_FAMILY,
+                            reason=_held_reason_projection_endpoints(modelo, revision),
+                        ),
+                    )
+                else:
+                    out.append(
+                        Disposition(
+                            modelo=modelo.id,
+                            revision=revision.id,
+                            family=PROJECTION_ENDPOINTS_FAMILY,
+                            reason=_reason_projection_endpoints(modelo),
+                            legal_refs=legal_refs,
+                            source_refs=source_refs,
+                        ),
+                    )
     out.sort(key=lambda d: (d.modelo, d.revision, _FAMILY_WRITE_ORDER.index(d.family)))
-    return tuple(out)
+    held.sort(key=lambda h: (h.modelo, h.revision))
+    return tuple(out), tuple(held)
 
 
 def _quote(value: str) -> str:
@@ -289,7 +384,7 @@ def main() -> int:
     args = parser.parse_args()
 
     modelos, _catalogues = load_registry_tree(REGISTRY_ROOT)
-    dispositions = compute_dispositions(modelos)
+    dispositions, held = compute_dispositions(modelos)
 
     by_family: dict[str, int] = {}
     for disposition in dispositions:
@@ -301,10 +396,20 @@ def main() -> int:
     print(f"total candidates: {len(dispositions)} across {revisions_touched} revision(s)")
     for family in _FAMILY_WRITE_ORDER:
         print(f"  {family}: {by_family.get(family, 0)}")
+    print(f"held (blocked, structurally eligible, but no observed evidence yet): {len(held)}")
+    for item in held:
+        print(f"    HOLD {item.modelo}/{item.revision}/{item.family}")
 
     if args.json:
         args.json.write_text(
-            json.dumps([asdict(d) for d in dispositions], indent=2, ensure_ascii=False),
+            json.dumps(
+                {
+                    "dispositions": [asdict(d) for d in dispositions],
+                    "held": [asdict(h) for h in held],
+                },
+                indent=2,
+                ensure_ascii=False,
+            ),
             encoding="utf-8",
             newline="\n",
         )

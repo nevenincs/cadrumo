@@ -73,28 +73,31 @@ def test_no_exempt_prefix_reaches_a_login_gated_verb(gated: LoginGatedVerb) -> N
 
 
 @pytest.mark.parametrize("gated", LOGIN_GATED_VERB_PATHS, ids=lambda g: g.verb_path)
-def test_a_login_gated_verb_names_a_command_the_contract_declares(gated: LoginGatedVerb) -> None:
+def test_a_login_gated_verb_names_a_family_the_contract_declares(gated: LoginGatedVerb) -> None:
     """The refusal must track the surface it governs, not drift off it.
 
-    A refusal naming a command the operator-surface contract does not declare
+    A refusal hung off a family the operator-surface contract does not declare
     is inert: whatever the surface is really called, this record no longer
-    governs it. Anchoring to the declared family turns a rename into a red gate
-    that names the refusal to re-derive.
+    governs it. Anchoring to the declared family turns a family rename into a
+    red gate that names the refusal to re-derive.
+
+    The anchor stops at the family. A family deliberately declares no command
+    inventory — which verbs it contains is established solely by the live
+    command tree — so a refusal naming a verb that has not been built yet, which
+    is the case this registry exists to cover, cannot be anchored any deeper.
+    A rename of the leaf itself is therefore still the hand sweep every verb
+    rename in this tree already owes the exemption list.
     """
     tokens = gated.verb_path.split()
     assert len(tokens) >= 3, f"a login-gated path must name a root, a family and a command: {gated.verb_path!r}"
-    root, child, command = tokens[0], tokens[1], tokens[2]
+    root, child = tokens[0], tokens[1]
     family = next(
         (fam for fam in MOUNTED_COMMAND_FAMILIES if fam.root.value == root and fam.child == child),
         None,
     )
     assert family is not None, (
         f"{gated.verb_path!r} names no operator-surface family {root}.{child}. Re-derive the refusal "
-        "against the surface as it is now named."
-    )
-    assert command in family.commands, (
-        f"{gated.verb_path!r} names {command!r}, which the {root}.{child} family no longer declares. "
-        f"The refusal has drifted off the surface it governs: {gated.reason}"
+        f"against the surface as it is now named: {gated.reason}"
     )
 
 

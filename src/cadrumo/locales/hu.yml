@@ -7913,6 +7913,8 @@ flows:
         status: Állapot
       none: Nincsenek regisztrált profilok.
       status:
+        complete: kész
+        incomplete: hiányos
         unknown: ismeretlen
     section:
       auth: Hitelesítés

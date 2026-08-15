@@ -742,10 +742,12 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
 
     The catalog mirrors the Typer command registry for repair,
     recovery, import, export, and bucket-history surfaces. It is used
-    as an executable drift gate: adding a new command in those families requires
-    a policy row here, and secure-object rows must derive their metadata from the
-    central namespace registry. Each row also carries decision links for
-    :class:`RepairRemediationDecision` governance.
+    as an executable drift gate in both directions: adding a new command in
+    those families requires a policy row here, and every ``command_path`` must
+    resolve to a command the live CLI actually registers, so a row cannot
+    outlive the verb it governs. Secure-object rows must derive their metadata
+    from the central namespace registry. Each row also carries decision links
+    for :class:`RepairRemediationDecision` governance.
 
     See Also:
         :data:`~cadrumo.adapters.persistence.storage.STORAGE_NAMESPACE_REGISTRY`
@@ -788,48 +790,6 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
         ),
         _surface("config repair integrity registry", command_family="repair", owner_domains=("registry",)),
         _surface("config repair connectivity", command_family="repair", owner_domains=("remote_connectivity",)),
-        _surface(
-            "config profile import",
-            command_family="recovery",
-            owner_domains=("profile_lifecycle",),
-            namespace_policies=(_PROFILE_BUNDLE_POLICY,),
-        ),
-        _surface(
-            "config profile export",
-            command_family="recovery",
-            owner_domains=("profile_lifecycle",),
-            namespace_policies=(_PROFILE_BUNDLE_POLICY,),
-        ),
-        _surface(
-            "config recover",
-            command_family="recovery",
-            owner_domains=("secure_storage",),
-        ),
-        _surface(
-            "config passphrase change",
-            command_family="passphrase",
-            owner_domains=("secure_storage",),
-        ),
-        _surface(
-            "config recovery status",
-            command_family="recovery",
-            owner_domains=("secure_storage",),
-        ),
-        _surface(
-            "config recovery create",
-            command_family="recovery",
-            owner_domains=("secure_storage",),
-        ),
-        _surface(
-            "config recovery rotate",
-            command_family="recovery",
-            owner_domains=("secure_storage",),
-        ),
-        _surface(
-            "config recovery verify",
-            command_family="recovery",
-            owner_domains=("secure_storage",),
-        ),
         _surface("config profile history", command_family="audit", owner_domains=("bucket_lifecycle",)),
         _surface(
             "app ledger import",
