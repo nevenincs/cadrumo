@@ -61,33 +61,31 @@ def _ejercicio_start(revision: ModeloRevision) -> date | None:
 
 
 def validate_valid_from_ejercicio_convention(
-    failures: list[str],
     *,
     prefix: str,
     revision: ModeloRevision,
-) -> None:
-    """Append a failure when an annual-cadence revision's ``valid_from`` misdates its own ejercicio.
+) -> list[str]:
+    """Return a failure when an annual-cadence revision's ``valid_from`` misdates its own ejercicio.
 
     Args:
-        failures: Accumulator the registry validator drains; never raises.
         prefix: Caller-supplied ``modelo N revision R`` diagnostic prefix.
         revision: The :class:`ModeloRevision` under validation.
     """
     if not revision_declares_single_annual_period(revision):
-        return
+        return []
     expected = _ejercicio_start(revision)
     if expected is None:
-        return
+        return []
     if revision.valid_from == expected:
-        return
-    failures.append(
+        return []
+    return [
         f"{prefix}: valid_from ({revision.valid_from.isoformat()}) does not equal January 1 of this "
         f"annual revision's own declared ejercicio ({expected.isoformat()}). valid_from describes "
         "COVERAGE -- the only thing select_revision uses it for -- never the date the approving orden "
         "happened to take legal effect; that fact already has its home on the citing LegalReference's "
         "effective_from. FIX: set valid_from to the ejercicio start; do not widen the check to accept "
         "an orden-effective-date reading, and do not duplicate the orden's date here instead of fixing it",
-    )
+    ]
 
 
 __all__ = [

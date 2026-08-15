@@ -82,24 +82,22 @@ def revision_window_closures(revision: ModeloRevision) -> tuple[str, ...]:
 
 
 def validate_revision_id_window_agreement(
-    failures: list[str],
     *,
     prefix: str,
     revision: ModeloRevision,
-) -> None:
-    """Append a failure when a revision's id claims a window its data closes.
+) -> list[str]:
+    """Return a failure when a revision's id claims a window its data closes.
 
     Args:
-        failures: Accumulator the registry validator drains; never raises.
         prefix: Caller-supplied ``modelo N revision R`` diagnostic prefix.
         revision: The :class:`ModeloRevision` under validation.
     """
     if not revision_id_claims_open_window(str(revision.id)):
-        return
+        return []
     closures = revision_window_closures(revision)
     if not closures:
-        return
-    failures.append(
+        return []
+    return [
         f"{prefix}: the revision id claims an open-ended window ('y siguientes') but its own "
         f"declarations close it ({'; '.join(closures)}). One of the two is wrong and a reader "
         "meets the name first, so the disagreement is not cosmetic. Establish which is wrong "
@@ -107,7 +105,7 @@ def validate_revision_id_window_agreement(
         "years it covers. Do NOT widen the window to silence this refusal -- reopening asserts "
         "coverage over years nobody holds evidence for, which is a larger defect than the "
         "misleading name.",
-    )
+    ]
 
 
 __all__ = [

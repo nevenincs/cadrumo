@@ -202,6 +202,40 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     # to a version mismatch, which is exactly what the class means -- and it is
     # the one format here whose class is a finding rather than a formality.
     "participation_index": PersistedFormatClass.REGENERABLE,
+    # The active-profile pointer. Classed on which response to an unreadable
+    # one is CORRECT, not on how easily an operator clicks again: a pointer we
+    # cannot fully read must be discarded, because tolerating a doubtful one
+    # routes the next operation at the wrong taxpayer's bucket. Read-tolerance
+    # is the hazard here, and REGENERABLE is the class whose contract is
+    # delete-and-refuse.
+    #
+    # It is worth being explicit that this does NOT rest on "the operator can
+    # re-select": recoverable by the operator is not regenerable by the
+    # application, and the application genuinely cannot derive this fact --
+    # resolution has exactly two rungs, an in-process override and this file,
+    # and the pointer exists precisely because the answer cannot be read out of
+    # encrypted state without already knowing it. The class is right for a
+    # different reason than the easy one.
+    "active_profile_pointer": PersistedFormatClass.REGENERABLE,
+    # The three AEAT authority-session records, each argued rather than classed
+    # as a block -- they sit inside one encrypted container and share a shape,
+    # which is exactly the proximity that assigns a wrong class.
+    #
+    # Certificate session metadata: binds a captured browser storage state to a
+    # storage-state fingerprint, idle deadline, certificate thumbprint and
+    # subject, all of which exist to be REVALIDATED before a resume. Unreadable,
+    # the resume cannot be validated, and resuming unvalidated is the thing the
+    # record exists to prevent. Re-authentication reconstructs every field.
+    "aeat_certificate_session_metadata": PersistedFormatClass.REGENERABLE,
+    # Cl@ve Movil: the same binding for a human-in-the-loop flow, and the one
+    # whose re-establishment costs the operator most -- a phone and a fresh
+    # verification code. Cost of redoing it is not the test; whether the
+    # application should read a doubtful one is, and it must not.
+    "aeat_clave_movil_session_metadata": PersistedFormatClass.REGENERABLE,
+    # Cl@ve Permanente: the same binding for the headless credential flow.
+    # Nothing here is unreconstructable -- identity, landing URL and deadline
+    # are all observed again on the next login.
+    "aeat_clave_permanente_session_metadata": PersistedFormatClass.REGENERABLE,
 }
 
 

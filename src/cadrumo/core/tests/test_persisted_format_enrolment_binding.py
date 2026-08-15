@@ -61,6 +61,10 @@ VERSIONED_FORMAT_IMPLEMENTATIONS: Final[Mapping[str, str]] = {
     "config_reset_journal": "CONFIG_RESET_SCHEMA_VERSION",
     "profile_record": "PROFILE_RECORD_SCHEMA_VERSION",
     "participation_index": "PARTICIPATION_INDEX_SCHEMA_VERSION",
+    "active_profile_pointer": "POINTER_SCHEMA_VERSION",
+    "aeat_certificate_session_metadata": "AEAT_STORAGE_STATE_SCHEMA_VERSION",
+    "aeat_clave_movil_session_metadata": "AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION",
+    "aeat_clave_permanente_session_metadata": "AEAT_CLAVE_PERMANENTE_METADATA_SCHEMA_VERSION",
 }
 """Inventory key -> the module-level version constant that declares its format.
 
@@ -132,14 +136,6 @@ CONSTANTS_AWAITING_CLASSIFICATION: Final[Mapping[str, str]] = {
     "REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION": "Remote mirror manifest; written to an operator's own remote mirror.",
     "ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION": "The envelope around an encrypted bundle, distinct from the bundle payload.",
     "DIAGNOSTIC_SCHEMA_VERSION": "Auth diagnostic record; persisted for later operator inspection.",
-    "AEAT_STORAGE_STATE_SCHEMA_VERSION": "AEAT authority session state; the artefact on the far side of the session-vocabulary split.",
-    "AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION": "Cl@ve Movil session metadata; classed with the auth trio, not as a block.",
-    "AEAT_CLAVE_PERMANENTE_METADATA_SCHEMA_VERSION": "Cl@ve Permanente session metadata; classed with the auth trio, not as a block.",
-    "POINTER_SCHEMA_VERSION": (
-        "Active-profile pointer. Turns on whether operator re-selection counts as regeneration: it "
-        "supplies knowledge the application does not hold, and REGENERABLE means the application "
-        "rebuilds it."
-    ),
     "ASSETS_SCHEMA_VERSION": (
         "Taxpayer asset register. Moved here from the exclusions: it was excused as a shape living "
         "inside a secure object, and being inside an enrolled container does not put a record's own "
@@ -302,9 +298,9 @@ def test_the_unclassified_gap_is_a_number_a_reader_can_see() -> None:
     Raise it only when a genuinely new format arrives unclassified; lower it as
     each one is argued. Never adjust it to make a run pass.
     """
-    assert len(CONSTANTS_AWAITING_CLASSIFICATION) == 18, (
+    assert len(CONSTANTS_AWAITING_CLASSIFICATION) == 14, (
         f"{len(CONSTANTS_AWAITING_CLASSIFICATION)} persisted formats await a durability class, not "
-        "the 18 recorded here. If one has been argued, remove it from "
+        "the 14 recorded here. If one has been argued, remove it from "
         "CONSTANTS_AWAITING_CLASSIFICATION and lower this number in the same change; if a new "
         "format arrived unclassified, raise it deliberately rather than to restore green."
     )

@@ -2370,12 +2370,6 @@ categories:
       label: Transport de viatge
       notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, altres serveis exteriors).
 cli:
-  agent:
-    materialise:
-      plugin_summary: 'Plugin de Claude escrit a {path}: {skills} habilitats, {agents}
-        agents ({name} v{version}).'
-      summary: 'Espai de treball de l''operador escrit a {path}: {rules} regles, {personas}
-        persones, {skills} habilitats.'
   app:
     ledger:
       bienes_inversion:
@@ -4881,18 +4875,6 @@ cli:
       help: Eliminar el valor assignat a una clau de configuració
       key_help: Clau a netejar
     workflow_help: Mostrar ajuda del flux de configuració
-  contract:
-    app_help: 'Emet el manifest de capacitats de l''operador: arrels, families d''ordres,
-      cicle de vida i esquemes de resultat.'
-    schema_module_load_failed: 'Superfície de capacitats degradada: el mòdul d''esquema
-      de resultats ''{module}'' no s''ha pogut carregar ({error}); les ordres que
-      registra no apareixen en aquest manifest. Sol ser un canvi de codi en curs no
-      relacionat, no un problema de dades.'
-    summary_commands: 'Ordres registrades: {count}'
-    summary_families: 'Families d''ordres: {count}'
-    summary_heading: Manifest de la superfície de l'operador
-    summary_lifecycle: 'Cicle de vida del model: {steps}'
-    summary_roots: 'Arrels: {roots}'
   diagnostics:
     app_help: Diagnòstic local de l'estat de les execucions i de la sessió.
     browser:

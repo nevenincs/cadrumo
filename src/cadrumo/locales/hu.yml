@@ -2281,18 +2281,6 @@ categories:
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
         szolgáltatások).
 cli:
-  agent:
-    app_help: Az operátor ügynök keretrendszerének (szabályok, perszónák, készségek)
-      materializálása Claude-natív .claude munkaterületként egy ügynök futtatókörnyezethez.
-    materialise:
-      layout_help: 'Materializálási elrendezés: „workspace” a Claude-natív .claude
-        munkaterülethez, vagy „plugin” egy egykattintásos Claude bővítményhez.'
-      output_help: Az a könyvtár, ahová a Claude-natív operátor munkaterületet (.claude/
-        és egy CLAUDE.md) írja.
-      plugin_summary: 'Claude bővítmény kiírva ide: {path}: {skills} készség, {agents}
-        ügynök ({name} v{version}).'
-      summary: 'Operátor munkaterület kiírva: {path}: {rules} szabály, {personas}
-        persona, {skills} készség.'
   app:
     ledger:
       bienes_inversion:
@@ -4804,18 +4792,6 @@ cli:
       help: Egy konfigurációs kulcs értékének törlése.
       key_help: A törlendő kulcs.
     workflow_help: Konfiguráció-munkafolyamat súgó megjelenítése.
-  contract:
-    app_help: 'Kibocsátja az operátor képesség-jegyzéket: gyökerek, parancscsaládok,
-      életciklus és eredménysémák.'
-    schema_module_load_failed: 'A képességfelület korlátozott: a(z) ''{module}'' eredményséma-modul
-      betöltése sikertelen ({error}); az általa regisztrált parancsok hiányoznak ebből
-      a jegyzékből. Ezt általában egy nem kapcsolódó, folyamatban lévő kódmódosítás
-      okozza, nem adathiba.'
-    summary_commands: 'Regisztrált parancsok: {count}'
-    summary_families: 'Parancscsaládok: {count}'
-    summary_heading: Operátorfelület-jegyzék
-    summary_lifecycle: 'Modelo életciklus: {steps}'
-    summary_roots: 'Gyökerek: {roots}'
   diagnostics:
     app_help: Helyi futásállapot- és munkamenet-diagnosztika.
     browser:

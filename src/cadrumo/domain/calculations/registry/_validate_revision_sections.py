@@ -183,8 +183,8 @@ def _validate_revision_surface_sections(
         ),
     )
     failures.extend(validate_export_exemption_declarations(prefix=prefix, modelo_id=modelo_id, revision=revision))
-    validate_revision_id_window_agreement(failures, prefix=prefix, revision=revision)
-    validate_valid_from_ejercicio_convention(failures, prefix=prefix, revision=revision)
+    failures.extend(validate_revision_id_window_agreement(prefix=prefix, revision=revision))
+    failures.extend(validate_valid_from_ejercicio_convention(prefix=prefix, revision=revision))
     failures.extend(
         validate_extraction_profile_section(
             prefix=prefix,
@@ -198,45 +198,50 @@ def _validate_revision_surface_sections(
             corpus_root=justificante_corpus_root,
         ),
     )
-    validate_cross_reference_section(
-        failures,
-        prefix=prefix,
-        revision=revision,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
-        evidence=evidence,
+    failures.extend(
+        validate_cross_reference_section(
+            prefix=prefix,
+            revision=revision,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            evidence=evidence,
+        ),
     )
-    validate_workbook_parity_section(
-        failures,
-        prefix=prefix,
-        revision=revision,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
+    failures.extend(
+        validate_workbook_parity_section(
+            prefix=prefix,
+            revision=revision,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+        ),
     )
-    validate_verification_expectation_section(
-        failures,
-        prefix=prefix,
-        revision=revision,
-        casillas=context.casillas,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
-        evidence=evidence,
+    failures.extend(
+        validate_verification_expectation_section(
+            prefix=prefix,
+            revision=revision,
+            casillas=context.casillas,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            evidence=evidence,
+        ),
     )
-    validate_application_link_section(
-        failures,
-        prefix=prefix,
-        revision=revision,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
-        evidence=evidence,
+    failures.extend(
+        validate_application_link_section(
+            prefix=prefix,
+            revision=revision,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            evidence=evidence,
+        ),
     )
-    validate_deadline_window_section(
-        failures,
-        prefix=prefix,
-        revision=revision,
-        legal_refs=legal_refs,
-        source_refs=source_refs,
-        evidence=evidence,
+    failures.extend(
+        validate_deadline_window_section(
+            prefix=prefix,
+            revision=revision,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            evidence=evidence,
+        ),
     )
 
 

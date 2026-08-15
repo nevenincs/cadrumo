@@ -106,7 +106,7 @@ def test_an_uninformative_id_is_neither_refused_nor_cleared() -> None:
     failures: list[str] = []
     for modelo_id, revision in _committed_revisions():
         if str(revision.id) == "2025" and revision.valid_to is not None:
-            validate_revision_id_window_agreement(failures, prefix=f"modelo {modelo_id}", revision=revision)
+            failures.extend(validate_revision_id_window_agreement(prefix=f"modelo {modelo_id}", revision=revision))
     assert failures == []
 
 
@@ -135,13 +135,11 @@ def test_the_gate_refuses_a_constructed_contradiction_and_passes_its_open_twin()
         if revision_id_claims_open_window(str(revision.id)) and not revision_window_closures(revision)
     )
 
-    passing: list[str] = []
-    validate_revision_id_window_agreement(passing, prefix="modelo TEST", revision=genuinely_open)
+    passing = validate_revision_id_window_agreement(prefix="modelo TEST", revision=genuinely_open)
     assert passing == [], f"a genuinely open-ended revision was refused: {genuinely_open.id}"
 
     closed = genuinely_open.model_copy(update={"valid_to": date(2025, 12, 31)})
-    refusing: list[str] = []
-    validate_revision_id_window_agreement(refusing, prefix="modelo TEST", revision=closed)
+    refusing = validate_revision_id_window_agreement(prefix="modelo TEST", revision=closed)
 
     assert len(refusing) == 1
     # Keyed on the two facts the refusal must carry -- which axis closed the window

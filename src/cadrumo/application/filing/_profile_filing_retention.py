@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator, model_v
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.time import validate_utc_aware
 from ...domain.modelos import ModeloRecord
-from ...domain.retention import assess_retention_floor
+from ...domain.retention import RetentionFloorAssessment, assess_retention_floor
 from .._profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
 from ..profile_custody import (
     ProfileCustodyLocalRecordStore,
@@ -168,9 +168,50 @@ class FilingRetentionAuthority:
             )
         return snapshot
 
+    def assess(self, profile_id: UUID, *, now: datetime) -> RetentionFloorAssessment:
+        """Return the FULL retention position for one profile's filed records.
+
+        The same computation :meth:`project` performs, returned whole instead of
+        reduced to a blocking flag. Two consumers want different halves of one
+        answer: the custody deletion gate needs only "may I erase", while the
+        operator-facing refusal must say how many records are retained, against
+        what floor, and when erasure becomes safe -- a message that cites Ley
+        58/2003 (LGT) arts. 66 and 70 and is worthless if it cannot name them.
+        Exposing the assessment keeps :func:`assess_retention_floor` the single
+        source for both rather than growing a second retention path.
+
+        There is deliberately NO empty-assessment fallback. An absent or
+        unreadable snapshot raises, exactly as it does for :meth:`project`,
+        because an assessment defaulted to zero retained records is
+        indistinguishable from a genuine "nothing is retained" and would read as
+        permission to erase.
+
+        Raises:
+            FileNotFoundError: The canonical filing snapshot is absent.
+            ValueError: The snapshot is invalid, or its identity or bytes
+                disagree with its path.
+        """
+        return assess_retention_floor(
+            self._verified_snapshot(profile_id).filing_records,
+            as_of=now.astimezone(UTC),
+        )
+
     def project(self, profile_id: UUID, *, now: datetime) -> ProfileDeletionHoldOwnerProjection:
         """Evaluate persisted filing facts using the domain retention authority."""
         validate_utc_aware(now)
+        snapshot = self._verified_snapshot(profile_id)
+        assessment = assess_retention_floor(snapshot.filing_records, as_of=now.astimezone(UTC))
+        return ProfileDeletionHoldOwnerProjection(
+            owner="filing",
+            profile_id=profile_id,
+            blocks_local_deletion=assessment.blocks_erase,
+            source_record_id=f"filing-retention-snapshot-{profile_id}",
+            source_record_digest=snapshot.self_digest,
+            assessed_at=now.astimezone(UTC),
+        )
+
+    def _verified_snapshot(self, profile_id: UUID) -> FilingRetentionSnapshot:
+        """Load one profile's filing snapshot, proving its identity and bytes."""
         path = self.path(profile_id)
         if not os.path.lexists(path):
             raise FileNotFoundError("canonical filing retention snapshot is absent")
@@ -181,15 +222,7 @@ class FilingRetentionAuthority:
             raise ValueError("canonical filing retention snapshot is invalid") from exc
         if snapshot.profile_id != profile_id or snapshot.canonical_json_bytes() != payload:
             raise ValueError("canonical filing retention snapshot identity or bytes differ from its path")
-        assessment = assess_retention_floor(snapshot.filing_records, as_of=now.astimezone(UTC))
-        return ProfileDeletionHoldOwnerProjection(
-            owner="filing",
-            profile_id=profile_id,
-            blocks_local_deletion=assessment.blocks_erase,
-            source_record_id=f"filing-retention-snapshot-{profile_id}",
-            source_record_digest=snapshot.self_digest,
-            assessed_at=now.astimezone(UTC),
-        )
+        return snapshot
 
     def path(self, profile_id: UUID) -> Path:
         return self._root / f"{profile_id}.json"
