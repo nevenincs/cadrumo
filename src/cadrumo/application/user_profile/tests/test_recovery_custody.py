@@ -103,14 +103,32 @@ class _EnrolledProfile:
         )
 
 
-@pytest.fixture
-def enrolled(tmp_path: Path):
-    """Create one profile under an isolated storage root outside the export dir."""
-    root = tmp_path / "store"
-    root.mkdir()
-    (tmp_path / "exports").mkdir()
+@pytest.fixture(scope="module")
+def _enrolled_once(tmp_path_factory: pytest.TempPathFactory):
+    """Create the subject profile once, with the real KDF, for the module.
+
+    The Argon2id calibration is deliberately not substituted, and it is the
+    dominant cost here: repeating it per test spent ten minutes proving the
+    same enrollment sixteen times. One enrollment is shared because nothing
+    below mutates it -- every restore publishes into its own fresh root and
+    every export writes its own per-test destination -- so the tests stay
+    independent while the honest KDF is paid for once.
+    """
+    root = tmp_path_factory.mktemp("recovery-store")
     with override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=None):
         yield _EnrolledProfile(root)
+
+
+@pytest.fixture
+def enrolled(_enrolled_once: _EnrolledProfile, tmp_path: Path):
+    """Bind the shared profile's storage root for the duration of one test.
+
+    The destination guard resolves the storage root at export time, so the
+    override has to be live inside the test and not merely at creation.
+    """
+    (tmp_path / "exports").mkdir()
+    with override_settings(cadrumo_local_storage_root=_enrolled_once.root, cadrumo_active_profile=None):
+        yield _enrolled_once
 
 
 def test_enrollment_wraps_the_profiles_own_key_under_a_minted_mnemonic(enrolled: _EnrolledProfile) -> None:

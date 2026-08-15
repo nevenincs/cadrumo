@@ -24,7 +24,10 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.custody import recognize_current_profile_capsule
+from ....adapters.persistence.storage.custody import (
+    inventory_committed_profile_custody_capsule,
+    recognize_current_profile_capsule,
+)
 from ....application.profile_custody import profile_close_bucket_session, profile_current_bucket_session
 from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -93,6 +96,22 @@ def _capsule_of(root: Path, profile_id: UUID) -> Path:
     return capsule
 
 
+def _assert_content_covered(root: Path, profile_id: UUID, relative_path: str) -> None:
+    """Refuse to let a negative case pass vacuously.
+
+    A "still refuses when custody content changed" proof means nothing if the
+    file it mutates is one the digest deliberately stopped covering. The
+    database and its sidecars are exactly such files now, so every negative
+    case below states which member it perturbs and this checks that the digest
+    really does answer for that member's CONTENT.
+    """
+    inventory = inventory_committed_profile_custody_capsule(profile_id, root=root)
+    covered = {entry.relative_path for entry in inventory.digest_entries}
+    assert relative_path in covered, (
+        f"{relative_path} is not content-covered by the inventory digest, so mutating it proves nothing"
+    )
+
+
 def test_a_profile_the_operator_is_signed_into_can_be_deleted(tmp_path: Path) -> None:
     """The blocking defect, driven through the public lifecycle end to end.
 
@@ -127,11 +146,15 @@ def test_a_changed_custody_record_still_refuses_the_prepared_deletion(tmp_path: 
     production custody-transaction writer. The operator confirmed a specific
     inventory; the capsule is no longer that inventory, so the deletion must
     refuse rather than destroy what it was not shown.
+
+    The label projection is a content-covered member, checked rather than
+    assumed, so this cannot pass by mutating something the digest ignores.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
             profile_id = _register_and_sign_in(storage_root)
             _authorise_clear_hold(storage_root, profile_id)
+            _assert_content_covered(storage_root, profile_id, _LABEL_RECORD_RELATIVE_PATH)
             lifecycle = ProfileCapsuleLifecycle(root=storage_root)
             journal = lifecycle.prepare_delete(profile_id=profile_id)
             confirmation = lifecycle.confirm_delete(journal)
@@ -160,11 +183,16 @@ def test_the_marker_still_bites_after_the_deletion_revokes_its_own_session(tmp_p
     custody record altered underneath it, must still refuse. Driving the
     transaction step by step is what puts the assertions on either side of the
     revocation, which no public entry point can do.
+
+    The record it perturbs is confirmed content-covered first, so the refusal
+    below cannot be an artefact of touching a member the digest still watches
+    by accident.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
             profile_id = _register_and_sign_in(storage_root)
             _authorise_clear_hold(storage_root, profile_id)
+            _assert_content_covered(storage_root, profile_id, _LABEL_RECORD_RELATIVE_PATH)
             capsule = _capsule_of(storage_root, profile_id)
             service = ProfileCustodyTransactionService(root=storage_root)
 
