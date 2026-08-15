@@ -35,6 +35,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
 from ._ledger_ux_support import _add_evidence, _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -229,4 +230,4 @@ def test_extract_never_writes_a_file_to_disk(tmp_path_factory: pytest.TempPathFa
         ["--format", "json", "app", "ledger", "evidence", "extract", "--evidence-id", evidence_id],
     )
     assert extracted.exit_code == 0, extracted.output
-    assert list(empty_dir.iterdir()) == []
+    assert scan_directory(empty_dir) == ()

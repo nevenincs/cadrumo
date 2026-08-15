@@ -125,7 +125,9 @@ _FASE_1_CASES = [
 #: for the subset of epígrafes that also carried a hand-forked fase_4 clone.
 _FASE_4_CASES = [
     pytest.param(
-        "972.1", {1: Decimal("2"), 2: Decimal("1"), 3: Decimal("50"), 4: Decimal("30")}, id="972.1-peluqueria",
+        "972.1",
+        {1: Decimal("2"), 2: Decimal("1"), 3: Decimal("50"), 4: Decimal("30")},
+        id="972.1-peluqueria",
     ),
     pytest.param("721.2", {1: Decimal("0"), 2: Decimal("1"), 3: Decimal("40")}, id="721.2-autotaxis"),
     pytest.param(

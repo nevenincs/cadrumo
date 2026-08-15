@@ -31,6 +31,8 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 #: The ``src/cadrumo`` package root, which the declared keys are relative to.
@@ -95,7 +97,7 @@ def _intersection(root: Path) -> dict[str, tuple[bool, bool]]:
     real package and against a planted tree in the anti-tautology proof.
     """
     found: dict[str, tuple[bool, bool]] = {}
-    for path in sorted(root.rglob("*.py")):
+    for path in scan_directory(root, pattern="*.py", recursive=True):
         if "tests" in path.parts:
             continue
         reads, writes = _module_symbols(path)

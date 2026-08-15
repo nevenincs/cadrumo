@@ -43,7 +43,7 @@ from ..adapters.persistence.storage.master_key import (
 )
 from ..adapters.persistence.storage.sql import SecureObjectRow
 from ..adapters.persistence.storage.sql.session import session_scope
-from ..core import StorageCategory
+from ..core import DirectoryEntryKind, StorageCategory, scan_directory
 from ..core.config import Settings, load_settings, override_settings
 from ..core.errors import CadrumoError
 from ..tests.bucket_layout import provision_bucket_directory
@@ -85,10 +85,10 @@ def reap_profile_session_keys(storage_root: Path) -> None:
     bucket_ids: set[str] = set()
     for parent in (storage_root / BUCKETS_DIRNAME, storage_root / KEYSTORE_DIRNAME):
         try:
-            entries = list(parent.iterdir())
+            entries = scan_directory(parent, select=DirectoryEntryKind.DIRECTORIES, require_root=True)
         except OSError:
             continue
-        bucket_ids.update(entry.name for entry in entries if entry.is_dir())
+        bucket_ids.update(entry.name for entry in entries)
     for bucket_id in bucket_ids:
         try:
             delete_profile_session(storage_root=storage_root, profile_id=UUID(bucket_id))

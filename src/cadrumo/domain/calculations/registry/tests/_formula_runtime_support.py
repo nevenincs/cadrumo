@@ -51,6 +51,7 @@ def _evaluate(
         unresolved_casilla_ids=set(),
     )
 
+
 _PREVIOUS_YEAR_NET_INCOME_BINDING = "irpf.previous_year_economic_activity_net_income"
 _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING = "modelo-130-resultados-negativos-anteriores"
 

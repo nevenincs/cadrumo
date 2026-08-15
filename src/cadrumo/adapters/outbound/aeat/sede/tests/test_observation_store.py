@@ -11,7 +11,7 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ......adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ......core import CasillaId, CasillaValueKind, Period, scan_directory, validated_casilla_id
+from ......core import CasillaId, CasillaValueKind, DirectoryEntryKind, Period, scan_directory, validated_casilla_id
 from ......core.config import Settings
 from ......tests.secure_sql import TestRuntimeProfile
 from .._errors import SedeValidationError
@@ -74,7 +74,7 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
     assert store.load_artefact(stored.storage_ref) == body
     assert store.load_observation(manifest_path) == observation
     persisted_bytes = b"\n".join(
-        path.read_bytes() for path in scan_directory(root, pattern="*", recursive=True) if path.is_file()
+        path.read_bytes() for path in scan_directory(root, recursive=True, select=DirectoryEntryKind.FILES)
     )
     assert body not in persisted_bytes
     assert b"12345678Z" not in persisted_bytes

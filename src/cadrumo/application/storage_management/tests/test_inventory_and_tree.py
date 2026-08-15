@@ -18,6 +18,7 @@ from ....core import (
     StorageCategory,
     StorageNodeKind,
     StorageScope,
+    scan_directory,
     storage_path,
 )
 from ....core.config import STORAGE_ROOT_MODE, ensure_storage_tree, load_settings, override_settings
@@ -163,7 +164,7 @@ class TestTreeCheckReportsWithoutRepairing:
         with override_settings(cadrumo_local_storage_root=tmp_path):
             ensure_storage_tree(load_settings())
             target = storage_path(StorageCategory.LOGS)
-            for entry in target.iterdir():  # pragma: no cover - freshly materialised
+            for entry in scan_directory(target):  # pragma: no cover - freshly materialised
                 entry.unlink()
             target.rmdir()
             target.write_bytes(b"not a directory")

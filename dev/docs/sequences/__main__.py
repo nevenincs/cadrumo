@@ -484,7 +484,7 @@ def _run_check_child(command: list[str], *, timeout: float) -> tuple[str, ...]:
         try:
             result = subprocess.run(  # noqa: S603 - fixed interpreter and module entrypoint.
                 command,
-                cwd = REPO_ROOT,
+                cwd=REPO_ROOT,
                 env=environment,
                 capture_output=True,
                 text=True,

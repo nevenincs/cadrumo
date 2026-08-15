@@ -299,9 +299,7 @@ def test_bare_unsuffixed_epigrafe_collision_code_stays_untabled(epigrafe: str) -
     # either collision activity's coefficients — a lookup on the unsuffixed
     # code would silently misattribute one activity's figures to the other.
     # It stays untabled behind the advisory guard.
-    previo, minorado, modulos, actividad = _run_modulos_engine(
-        epigrafe, modulo_1=Decimal("1"), modulo_2=Decimal("1")
-    )
+    previo, minorado, modulos, actividad = _run_modulos_engine(epigrafe, modulo_1=Decimal("1"), modulo_2=Decimal("1"))
     assert previo == Decimal("0")
     assert minorado == Decimal("0")
     assert modulos == Decimal("0")

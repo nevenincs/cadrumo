@@ -508,7 +508,14 @@ def _consume_field_row(
     if offset is None or length is None:
         return
     field, applied_correction = _record_design_field(
-        sheet_name, header, row_number, values, ordinal_text, offset, length, corrections,
+        sheet_name,
+        header,
+        row_number,
+        values,
+        ordinal_text,
+        offset,
+        length,
+        corrections,
     )
     if applied_correction is not None:
         parsed_rows.corrections_applied.append(applied_correction)
@@ -608,7 +615,10 @@ def _record_design_field(
 ) -> tuple[RecordDesignField, RecordDesignFieldTypeCorrection | None]:
     validation, content, description = _field_texts(sheet_name, header, row_number, values)
     type_code, applied_correction = _required_type_code(
-        _cell(values, header.type_index), sheet_name, row_number, corrections,
+        _cell(values, header.type_index),
+        sheet_name,
+        row_number,
+        corrections,
     )
     return (
         RecordDesignField(

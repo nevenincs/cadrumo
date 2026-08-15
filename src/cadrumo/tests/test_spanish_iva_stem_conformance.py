@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ..core import scan_directory
+from ..core import DirectoryEntryKind, scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -72,10 +72,11 @@ def _source_files() -> tuple[Path, ...]:
 
 def _package_files() -> tuple[Path, ...]:
     return tuple(
-        sorted(
-            path
-            for path in scan_directory(_PACKAGE_ROOT, pattern="*", recursive=True)
-            if path.is_file() and "__pycache__" not in path.parts
+        scan_directory(
+            _PACKAGE_ROOT,
+            recursive=True,
+            select=DirectoryEntryKind.FILES,
+            prune_directories=("__pycache__",),
         )
     )
 

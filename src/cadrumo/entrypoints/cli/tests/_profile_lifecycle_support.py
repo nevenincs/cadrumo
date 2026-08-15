@@ -13,25 +13,13 @@ each test module so they cannot leak into the wider CLI test package.
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime
 from uuid import UUID
 
-from ....adapters.persistence.storage.bucket import (
-    BUCKET_MANIFEST_SCHEMA_VERSION,
-    BucketKeySchedule,
-    BucketManifest,
-    ManifestKdfParams,
-    write_manifest,
-)
 from ....core.config import load_settings
 from ....core.identity import nif_check_letter
 from ....tests.bucket_layout import provision_bucket_directory
-from ....tests.user_profile import register_cli_profile
-from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
-from ....tests.user_profile import register_minimal_profile
-
-_STAGED_MANIFEST_CREATED_AT = datetime(2026, 5, 28, 15, 50, tzinfo=UTC)
+from ....tests.user_profile import register_cli_profile, register_minimal_profile
 
 
 def _profile_id_for_label(label: str) -> str:
@@ -44,11 +32,12 @@ def _profile_id_for_label(label: str) -> str:
 def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
     """Stage a ``missing_profile_record`` torn-bucket state under a real key.
 
-    A bucket directory and plaintext manifest with no encrypted
-    profile-value row is exactly the ``missing_profile_record`` torn
-    state these CLI verbs must detect; this helper materialises that
-    state directly through the bucket-layout primitives, since
-    ``CommittedProfileRepository`` always writes the record alongside.
+    A bucket directory with no encrypted profile-value row is exactly the
+    ``missing_profile_record`` torn state these CLI verbs must detect; this
+    helper materialises that state directly through the bucket-layout
+    primitives, since ``CommittedProfileRepository`` always writes the record
+    alongside. It also staged a plaintext manifest until that format was
+    retired; the torn state is the absent record, not the absent manifest.
 
     Unlike the unsecured-backend version, this implementation uses
     ``open_test_profile_session`` to provision real key material for
@@ -63,27 +52,7 @@ def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
         pass
 
     root = load_settings().cadrumo_local_storage_root
-    paths = provision_bucket_directory(root, bucket_id)
-    write_manifest(
-        paths,
-        BucketManifest(
-            bucket_id=bucket_id,
-            label=label,
-            created_at=_STAGED_MANIFEST_CREATED_AT,
-            last_unlocked_at=None,
-            kdf_params=ManifestKdfParams(
-                algorithm="argon2id",
-                version=0x13,
-                memory_cost=19_456,
-                time_cost=2,
-                parallelism=1,
-                salt=b"0123456789abcdef",
-                output_length=32,
-            ),
-            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
-        ),
-    )
+    provision_bucket_directory(root, bucket_id)
     # Clear the active-profile pointer after provisioning so the staged
     # profile is not reported as the active one; the torn-state tests
     # specifically test non-active torn profiles.

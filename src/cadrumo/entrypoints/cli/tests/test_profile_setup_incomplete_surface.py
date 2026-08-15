@@ -98,6 +98,4 @@ def test_overview_calendar_refuses_cleanly_on_a_retired_custody_member() -> None
         ),
     )
 
-    assert result.exit_code == 0, result.output
-    assert "profile_setup_incomplete" not in result.output
-    assert "onboarding" not in result.output
+    _assert_clean_retired_custody_refusal(result)

@@ -19,7 +19,6 @@ import pytest
 from cadrumo.core import scan_directory
 
 from .._command import CommandResult, run_command
-from ._release_cohort_support import release_cohort
 from ..cohort_manifest import LoadedReleaseCohort
 from ..distribution_evidence_emit import (
     build_client_evidence,
@@ -38,6 +37,7 @@ from ..evidence import (
 )
 from ..installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
 from ..installed_tax_oracle import InstalledTaxEvidence
+from ._release_cohort_support import release_cohort
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -189,7 +189,7 @@ def test_emit_writes_a_flat_record_both_gates_can_read(tmp_path: Path) -> None:
     assert path.name.startswith("python-linux-x86-64-")
     # The flat glob both gates use finds exactly this record.
     flat = scan_directory(evidence_dir, pattern="*.json")
-    assert flat == [path]
+    assert flat == (path,)
     # It re-validates through the tamper-evident schema, PASSED, correct row.
     reloaded = DistributionEvidence.model_validate_json(path.read_text(encoding="utf-8"))
     assert reloaded.row_id == "python-linux-x86-64"

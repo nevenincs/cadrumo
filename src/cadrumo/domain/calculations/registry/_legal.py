@@ -67,8 +67,16 @@ def _validate_legal_corpus_clauses(reference: LegalReference, source_root: Path)
 #: A reference of one of these kinds is expected to resolve to text a real
 #: orden/ley/reglamento actually WROTE, not a paraphrase of one.
 _DISPOSITIVE_KINDS = frozenset(
-    {"ley", "real_decreto", "real_decreto_legislativo", "real_decreto_ley", "orden", "reglamento",
-     "acuerdo_internacional", "directiva"},
+    {
+        "ley",
+        "real_decreto",
+        "real_decreto_legislativo",
+        "real_decreto_ley",
+        "orden",
+        "reglamento",
+        "acuerdo_internacional",
+        "directiva",
+    },
 )
 
 #: Calibrated against what :func:`_legal_corpus_text` actually RETURNS, not

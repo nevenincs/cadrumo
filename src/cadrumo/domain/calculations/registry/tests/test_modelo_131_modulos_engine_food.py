@@ -267,5 +267,3 @@ class TestCasquerias6426EstimacionObjetiva:
             modulo_2=Decimal("1"),
             modulo_4=Decimal("30"),
         )
-
-

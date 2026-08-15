@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-15'
-body_hash: 'sha256:008c797f3d8a1cade3ae7c885a1ed4bc973cd01f41ac8f60ff18ad028729d45e'
+body_hash: 'sha256:c51da0c35fb6c9ae76a4a22a188ed242d21913b1ecd9682e55e81625ad64df99'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -209,7 +209,7 @@ The classes the name-keyed census cannot reach. Drift is scored by structural si
 - [x] `W09.P30.S122` - Adjudicate every drifted cluster above the similarity threshold as real drift, deliberate variant, or false positive before any edit; `src/cadrumo, dev`.
 - [x] `W09.P30.S123` - Migrate the under-adopted canonical locale and loader-directory fixture homes onto their existing owners rather than creating new ones; `src/cadrumo/domain/calculations/registry/tests`.
 - [x] `W09.P30.S124` - Sweep the corpus by meaning for reimplementations sharing neither name nor structure and record which could not have been reached by name or grep; `src/cadrumo, dev`.
-- [ ] `W09.P30.S125` - Re-key the duplication gate on body rather than name so a renamed twin cannot sit outside its own comparison; `dev/quality`.
+- [x] `W09.P30.S125` - Re-key the duplication gate on body rather than name so a renamed twin cannot sit outside its own comparison; `dev/quality`.
 - [ ] `W09.P30.S126` - Sweep the thirty-seven pre-provisioned-bucket isolated-backend fixtures onto the canonical factory after extending it with settings and profile override passthroughs; `src/cadrumo/tests/active_profile_isolated_backend_fixture.py, src/cadrumo/entrypoints/cli/tests`.
 - [ ] `W09.P30.S127` - Converge the two independently written synthetic text-layer PDF builders and the four differently-named twins onto the canonical fixture; `src/cadrumo/tests/pdf_fixtures.py, src/cadrumo/application/live/tests/_notification_document_support.py`.
 - [x] `W09.P30.S128` - Fold the four differently-named review-package builders onto a path-returning sibling of the canonical bytes builder; `src/cadrumo/application/modelo/tests, src/cadrumo/entrypoints/cli/tests`.

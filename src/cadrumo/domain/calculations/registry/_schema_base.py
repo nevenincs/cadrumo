@@ -152,8 +152,7 @@ def coerce_enum_tuple(enum_cls: type) -> Callable[[object], object]:
         if not isinstance(value, (tuple, list)):
             return value
         return tuple(
-            item if isinstance(item, enum_cls) else enum_cls(item) if isinstance(item, str) else item
-            for item in value
+            item if isinstance(item, enum_cls) else enum_cls(item) if isinstance(item, str) else item for item in value
         )
 
     return _coerce
@@ -173,8 +172,7 @@ def coerce_decimal_tuple(value: object) -> object:
     if not isinstance(value, (tuple, list)):
         return value
     return tuple(
-        item if isinstance(item, Decimal) else Decimal(item) if isinstance(item, (str, int)) else item
-        for item in value
+        item if isinstance(item, Decimal) else Decimal(item) if isinstance(item, (str, int)) else item for item in value
     )
 
 

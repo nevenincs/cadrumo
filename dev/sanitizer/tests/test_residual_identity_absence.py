@@ -81,6 +81,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.core import scan_directory
 from cadrumo.tests import SRC_CADRUMO
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
@@ -166,7 +167,7 @@ def _real_corpus_fixtures() -> list[tuple[Path, Path]]:
     """
     pairs: list[tuple[Path, Path]] = []
     seen: set[Path] = set()
-    for sidecar_path in sorted(SRC_CADRUMO.rglob("*.json")):
+    for sidecar_path in scan_directory(SRC_CADRUMO, pattern="*.json", recursive=True):
         if "__pycache__" in sidecar_path.parts:
             continue
         name = sidecar_path.name

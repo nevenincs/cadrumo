@@ -85,9 +85,7 @@ def _leak_sweep(args: argparse.Namespace) -> int:
         raise EvidenceLeakSweepError(
             "publication leak sweep failed:\n" + "\n".join(f"  - {leak}" for leak in leaks),
         )
-    files = sum(
-        1 for directory in directories for path in iter_directory(directory, recursive=True) if path.is_file()
-    )
+    files = sum(1 for directory in directories for path in iter_directory(directory, recursive=True) if path.is_file())
     print(f"leak sweep clean: {files} file(s) under {len(directories)} directory(ies)")
     return 0
 

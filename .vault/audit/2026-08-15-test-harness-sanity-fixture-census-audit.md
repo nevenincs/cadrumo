@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:6806ea40feb3d0f0536f93fb1733a8b19dd5aa73fd00a2ee751e8adbf00642a7'
+body_hash: 'sha256:fc309b78dffa685d343c00d320fa6b32138e413dc8b5d7b8636e9ba11121ecce'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
   - "[[2026-08-14-test-harness-sanity-successor-adr]]"

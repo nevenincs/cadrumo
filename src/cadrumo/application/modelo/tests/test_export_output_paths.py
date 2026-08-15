@@ -580,7 +580,9 @@ def test_export_refuses_existing_directory_output_and_leaves_no_tmp_orphan(
 
     assert existing_dir.is_dir()
     assert not tmp_sibling.exists(), "orphaned .tmp with cleartext financial bytes must not remain"
-    assert not any(p.suffix == ".tmp" for p in iter_directory(tmp_path, recursive=True)), "no .tmp orphan anywhere under output root"
+    assert not any(p.suffix == ".tmp" for p in iter_directory(tmp_path, recursive=True)), (
+        "no .tmp orphan anywhere under output root"
+    )
 
 
 def test_export_refuses_empty_output_path(

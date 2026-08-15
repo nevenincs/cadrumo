@@ -250,7 +250,9 @@ def test_occupancy_counts_only_running_jobs() -> None:
 
 
 def _workflow_documents() -> list[tuple[Path, dict[str, Any]]]:
-    paths = sorted({*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")})
+    paths = sorted(
+        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
+    )
     assert paths, f"no workflows found to gate under {_WORKFLOWS_DIR}"
     return [(path, yaml.safe_load(path.read_text(encoding="utf-8"))) for path in paths]
 

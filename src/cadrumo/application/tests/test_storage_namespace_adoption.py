@@ -59,6 +59,7 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
+from ...core import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -107,7 +108,7 @@ def _production_modules() -> Iterator[tuple[str, ast.Module]]:
     not consumers, the second is the metadata authority the gate protects.
     """
     root = _package_root()
-    for path in sorted(root.rglob("*.py")):
+    for path in scan_directory(root, pattern="*.py", recursive=True):
         if _is_test_path(path, root):
             continue
         if path.name == _REGISTRY_AUTHORING_MODULE:

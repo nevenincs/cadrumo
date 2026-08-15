@@ -20,6 +20,8 @@ _UTF_8: Final[str] = "utf-8"
 _ROOT = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
+if not __package__:
+    __package__ = "dev.corpus"
 
 from cadrumo.core import iter_directory, scan_directory  # noqa: E402
 

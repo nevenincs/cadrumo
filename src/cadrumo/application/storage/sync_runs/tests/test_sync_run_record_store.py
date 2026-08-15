@@ -35,7 +35,7 @@ from pydantic import ValidationError
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from .....adapters.persistence.storage import SYNC_RUN_RECORDS_NAMESPACE
-from .....core import SyncSurface
+from .....core import SyncSurface, scan_directory
 from .....domain.buckets import BucketEventType
 from .....tests.profile_capsule import open_test_profile_session
 from .....tests.secure_sql import isolated_profile_storage_root
@@ -330,7 +330,7 @@ def test_every_production_run_record_derives_its_coverage_from_a_source() -> Non
     offenders: list[str] = []
     call_sites: list[str] = []
 
-    for module in package_root.rglob("*.py"):
+    for module in scan_directory(package_root, pattern="*.py", recursive=True):
         if "tests" in module.parts:
             continue
         tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))

@@ -25,6 +25,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import iter_directory, scan_directory
 from dev._paths import REPO_ROOT as _REPO_ROOT
 
 from ..campaign import _LANES
@@ -37,7 +38,7 @@ _WORKFLOWS = _REPO_ROOT / ".github" / "workflows"
 
 def _lane_module_stems() -> frozenset[str]:
     """Return the stem of every packaging smoke-lane module in the tree."""
-    return frozenset(path.stem for path in _PACKAGING.glob("smoke_*.py"))
+    return frozenset(path.stem for path in iter_directory(_PACKAGING, pattern="smoke_*.py"))
 
 
 def _dispatch_sources() -> dict[str, str]:
@@ -48,7 +49,7 @@ def _dispatch_sources() -> dict[str, str]:
     the module is NAMED somewhere a runner will execute.
     """
     sources = {"justfile": (_REPO_ROOT / "justfile").read_text(encoding="utf-8")}
-    for workflow in sorted(_WORKFLOWS.glob("*.yml")):
+    for workflow in scan_directory(_WORKFLOWS, pattern="*.yml"):
         sources[f"workflow:{workflow.name}"] = workflow.read_text(encoding="utf-8")
     return sources
 

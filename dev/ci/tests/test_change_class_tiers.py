@@ -228,7 +228,9 @@ def test_no_workflow_installs_python_dependencies_unfrozen() -> None:
     land hardest.
     """
     offending: list[str] = []
-    for path in sorted({*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}):
+    for path in sorted(
+        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
+    ):
         document = _document(path)
         for job_name, job in (document.get("jobs") or {}).items():
             for step in job.get("steps") or []:
@@ -244,7 +246,9 @@ def test_every_pull_request_workflow_guards_every_job_against_fork_heads() -> No
 
     Fork pull-request head code must never execute on the self-hosted fleet.
     """
-    for path in sorted({*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}):
+    for path in sorted(
+        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
+    ):
         document = _document(path)
         if "pull_request" not in set(_triggers(document)):
             continue
@@ -258,7 +262,9 @@ def test_no_workflow_anywhere_uses_actions_artifact_storage() -> None:
     Evidence rides draft releases; diagnostics live in job logs.
     """
     offending: list[str] = []
-    for path in sorted({*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}):
+    for path in sorted(
+        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
+    ):
         document = _document(path)
         for job_name, job in (document.get("jobs") or {}).items():
             for step in job.get("steps") or []:
@@ -275,13 +281,17 @@ def test_no_workflow_carries_a_schedule_trigger() -> None:
     push-, or pull-request-triggered; a schedule trigger anywhere is creeping standing
     compute this gate refuses.
     """
-    for path in sorted({*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}):
+    for path in sorted(
+        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
+    ):
         assert "schedule" not in set(_triggers(_document(path))), path.name
 
 
 def test_every_workflow_name_carries_the_product_identity() -> None:
     """Naming convention: kebab-case filenames, `name:` contains "Cadrumo"."""
-    for path in sorted({*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}):
+    for path in sorted(
+        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
+    ):
         document = _document(path)
         assert "Cadrumo" in document["name"], path.name
         assert path.stem == path.stem.lower(), path.name

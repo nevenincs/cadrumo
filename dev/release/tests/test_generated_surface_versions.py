@@ -16,6 +16,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import iter_directory
+
 from ..readiness import check_generated_surface_versions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -95,12 +97,12 @@ def _replace_generated_json_surface(cohort: Path, *, surface: str, payload: obje
         (cohort / "scoop" / "cadrumo.json").write_text(encoded, encoding="utf-8")
         return "scoop manifest unreadable"
     if surface == "marketplace":
-        bundle = next((cohort / "claude").glob("cadrumo-marketplace-*.zip"))
+        bundle = next(iter_directory(cohort / "claude", pattern="cadrumo-marketplace-*.zip"))
         with zipfile.ZipFile(bundle, "w") as archive:
             archive.writestr("plugins/cadrumo/.claude-plugin/plugin.json", encoded)
         return "marketplace plugin manifest unreadable"
     if surface == "mcpb":
-        bundle = next((cohort / "mcpb").glob("cadrumo-*.mcpb"))
+        bundle = next(iter_directory(cohort / "mcpb", pattern="cadrumo-*.mcpb"))
         with zipfile.ZipFile(bundle, "w") as archive:
             archive.writestr("manifest.json", encoded)
         return "mcpb bundle manifest unreadable"

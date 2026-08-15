@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 
 from .....core import scan_directory
-
 from .. import RegistryRevisionInspection, bundled_revision_inspection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -21,7 +21,6 @@ from pathlib import Path
 import pytest
 
 from .....core import scan_directory
-
 from .._validate_evidence import _read_manual_pdf_sidecar, _validated_sidecar_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

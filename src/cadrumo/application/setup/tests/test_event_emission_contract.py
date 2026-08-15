@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import scan_directory
 from ....domain.buckets import BucketEventType
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -83,7 +84,12 @@ the row back into ``_REQUIRED_EMISSION_SITES`` with its real site.
 
 
 def _production_files() -> tuple[Path, ...]:
-    return tuple(path for root in _PRODUCTION_ROOTS for path in root.rglob("*.py") if "tests" not in path.parts)
+    return tuple(
+        path
+        for root in _PRODUCTION_ROOTS
+        for path in scan_directory(root, pattern="*.py", recursive=True)
+        if "tests" not in path.parts
+    )
 
 
 def test_events_with_no_production_emitter_are_still_unemitted() -> None:

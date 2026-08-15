@@ -49,7 +49,6 @@ from ._validate_revision_closure import validate_revision_closure_sections as _v
 from ._validate_revision_closure import validate_revision_reference_surfaces as _validate_revision_reference_surfaces
 from ._validate_revision_context import RevisionValidationContext, build_revision_validation_context
 from ._validate_revision_id_window_agreement import validate_revision_id_window_agreement
-from ._validate_valid_from_ejercicio_convention import validate_valid_from_ejercicio_convention
 from ._validate_revision_identity import (
     emit_revision_payload_failures as _emit_revision_payload_failures,
 )
@@ -63,6 +62,7 @@ from ._validate_surfaces import (
     validate_verification_expectation_section,
     validate_workbook_parity_section,
 )
+from ._validate_valid_from_ejercicio_convention import validate_valid_from_ejercicio_convention
 
 _REVISION_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 

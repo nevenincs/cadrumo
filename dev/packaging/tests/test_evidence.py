@@ -18,7 +18,6 @@ from .._command import run_command
 from .._hashing import sha256_path
 from .._proof_ledger import record_proof, reset_proof_ledger
 from .._smoke_common import write_smoke_manifest
-from ._release_cohort_support import release_cohort
 from ..cohort_manifest import load_release_cohort
 from ..evidence import (
     AcquisitionIdentity,
@@ -36,6 +35,7 @@ from ..evidence import (
     load_distribution_evidence,
     write_distribution_evidence,
 )
+from ._release_cohort_support import release_cohort
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

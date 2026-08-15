@@ -443,9 +443,7 @@ class UnexpectedFailureExecutor:
 
 def _assert_sensitive_detail_absent_from_operation_bytes(storage_root: Path) -> None:
     forbidden = _SENSITIVE_EXCEPTION_DETAIL.encode("utf-8")
-    persisted = b"".join(
-        path.read_bytes() for path in scan_directory(storage_root, recursive=True) if path.is_file()
-    )
+    persisted = b"".join(path.read_bytes() for path in scan_directory(storage_root, recursive=True) if path.is_file())
     assert forbidden not in persisted
 
 
@@ -742,7 +740,9 @@ def _repositories(
     return (
         OperationJournalRepository(storage_root=storage_root),
         OperationLeaseFilesystemRepository(storage_root=storage_root),
-        OperationSecureReferenceRepository(objects=_registered_objects(profile_objects, _NAMESPACE), namespace=_NAMESPACE),
+        OperationSecureReferenceRepository(
+            objects=_registered_objects(profile_objects, _NAMESPACE), namespace=_NAMESPACE
+        ),
     )
 
 

@@ -42,6 +42,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import scan_directory
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -126,7 +127,9 @@ def _top_level_imports(path: Path) -> Iterator[str]:
 
 
 def _shipped_modules() -> list[Path]:
-    return [path for path in sorted(_SHIPPED_ROOT.rglob("*.py")) if not _is_test_surface(path)]
+    return [
+        path for path in scan_directory(_SHIPPED_ROOT, pattern="*.py", recursive=True) if not _is_test_surface(path)
+    ]
 
 
 def test_no_shipped_module_imports_a_development_only_dependency() -> None:

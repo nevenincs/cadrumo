@@ -79,7 +79,9 @@ def test_every_bundled_record_design_file_is_registered_by_a_source() -> None:
     root = bundled_path(*_DESIGN_ROOT_PARTS)
     registered = _registered_corpus_paths()
     unregistered = [
-        path.relative_to(bundled_path()).as_posix() for path in _bundled_design_files() if path.relative_to(bundled_path()).as_posix() not in registered
+        path.relative_to(bundled_path()).as_posix()
+        for path in _bundled_design_files()
+        if path.relative_to(bundled_path()).as_posix() not in registered
     ]
     assert not unregistered, (
         f"{len(unregistered)} of {len(_bundled_design_files())} bundled record-design files under "

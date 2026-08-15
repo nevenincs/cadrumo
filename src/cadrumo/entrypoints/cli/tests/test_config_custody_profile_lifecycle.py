@@ -21,7 +21,7 @@ from typing import Final
 import pytest
 
 from ....adapters.persistence.storage import BUCKET_MANIFEST_FILENAME
-from ....core import scan_directory
+from ....core import DirectoryEntryKind, scan_directory
 from ....core.config import load_settings
 from ....tests import REPO_ROOT
 from ....tests.subprocess_cli import run_cadrumo_subprocess
@@ -352,7 +352,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     )
     assert second.returncode == 0, _combined_output(second)
 
-    bucket_dirs = sorted(path for path in (tmp_path / "buckets").iterdir() if path.is_dir())
+    bucket_dirs = scan_directory(tmp_path / "buckets", select=DirectoryEntryKind.DIRECTORIES)
     labels_by_id: dict[str, str] = {}
     for bucket_dir in bucket_dirs:
         manifest = tomllib.loads((bucket_dir / BUCKET_MANIFEST_FILENAME).read_text(encoding="utf-8"))

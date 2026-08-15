@@ -57,7 +57,9 @@ def _runner_targets(job: dict[str, Any]) -> list[object]:
 
 def _collect_violations(workflows_dir: Path) -> list[tuple[str, str, object]]:
     """Return every (workflow, job, target) whose runner is not self-hosted."""
-    workflows = sorted({*scan_directory(workflows_dir, pattern="*.yml"), *scan_directory(workflows_dir, pattern="*.yaml")})
+    workflows = sorted(
+        {*scan_directory(workflows_dir, pattern="*.yml"), *scan_directory(workflows_dir, pattern="*.yaml")}
+    )
     assert workflows, f"no workflows found to gate under {workflows_dir}"
     violations: list[tuple[str, str, object]] = []
     for workflow in workflows:

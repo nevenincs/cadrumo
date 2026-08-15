@@ -12,6 +12,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
+from ...core import scan_directory
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..diagnostics_run_health import (
     ErrorsBreakdownReport,
@@ -504,7 +505,7 @@ def test_llm_provider_metric_authorities_have_no_retired_or_split_public_identit
     }
     retired_public_name = "LlmUsage" + "ProviderMetrics"
     declarations: dict[str, set[Path]] = {name: set() for name in owners}
-    for source_path in source_root.rglob("*.py"):
+    for source_path in scan_directory(source_root, pattern="*.py", recursive=True):
         source = source_path.read_text(encoding="utf-8")
         assert retired_public_name not in source
         for node in ast.walk(ast.parse(source, filename=str(source_path))):

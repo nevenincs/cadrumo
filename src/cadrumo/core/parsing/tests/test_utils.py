@@ -43,6 +43,7 @@ class _NumericTier(Enum):
 
     THREE = 3
 
+
 _RECOGNIZED_TOKENS: tuple[tuple[str, bool], ...] = (
     ("true", True),
     ("True", True),
