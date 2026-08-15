@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:47104af978b0695b4618476cda05c21e34257ca6fa2e739284642e0a00502777'
+body_hash: 'sha256:4ba5a49b54b9255c77e9a34af65b32ad1c000c5080ab24860d99c9dfc9efebe3'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -114,6 +114,7 @@ Expose canonical profile verbs and secret channels through typed action envelope
 - [ ] `W03.P06.S104` - Have Sol Medium rule per family whether the capabilities the capsule cutover removed should be restored, the sandbox and archive families being wiring rather than building because their application layer survived, the four single profile verbs being unassessed, and the subject-access-request surface being recoverable from history rather than greenfield since its test module still asserts a working implementation and the cutover commit is what deleted it; `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/entrypoints/cli/_config/`.
 - [x] `W03.P06.S108` - Have Terra XHigh re-found the label ambiguity refusal test on the custody label authority rather than retire it, since the refusal itself was restored as real operator-facing work and is live, while only the test's mechanism is stale in manufacturing two casefold-equal labels by rewriting the retired plaintext bucket manifest, and the restored refusal already ships five tests that manufacture the same collision correctly; `src/cadrumo/entrypoints/cli/_config/tests/test_profile_label_ambiguity_refusal.py`.
 - [ ] `W03.P06.S113` - Have Terra XHigh carry the login-gating principle recovered from a deleted allowlist comment into the archive export restore work, that a verb whose output leaves the encrypted store must stay login-gated because a target-scoped unlock does not establish recency, the principle having been justified by a cited test that does not exist and now being recorded nowhere else; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
+- [ ] `W03.P06.S122` - Have Terra XHigh re-found the setup-incomplete surface tests on the current custody authority, since they manufacture a bucket without a committed capsule by writing the retired plaintext manifest and the system now refuses that artefact by name, noting the collision fixture built for the label-ambiguity module does not fit because this one wants an uncommitted bucket rather than two colliding labels; `src/cadrumo/entrypoints/cli/_config/tests/test_profile_setup_incomplete_surface.py`.
 
 ## Wave `W04` - retire superseded custody
 
@@ -189,6 +190,8 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S116` - Have Terra XHigh delete the bucket manifest digest and deletion fingerprint helpers, exported from the maintenance package with zero production callers, being dead capacity rather than a dependency; `src/cadrumo/application/bucket_maintenance/_manifest_digest.py`.
 - [x] `W04.P07.S117` - Have Terra XHigh remove the bucket manifest reader and its two session-window consumers now that the amended decision records the manifest as retired but present, sequencing behind the per-profile session-window ruling because removing the reader IS that behaviour change rather than a precondition for it, and coordinating with the keystore work that is deleting from the same data-key module so the two do not collide on one file; `src/cadrumo/adapters/persistence/storage/bucket/_manifest_io.py and src/cadrumo/adapters/persistence/storage/master_key/_master_key_bucket_dek.py`.
 - [ ] `W04.P07.S118` - Have Terra XHigh re-derive every stated reason in the runtime bootstrap-exempt allowlist against the tree, since two of its justifications were found false in one day, one citing a test that was never written and one asserting a manifest read that no longer happens, and the entries were correct in both cases so the defect is that a reader inherits a false reason rather than re-deriving it, which is worse than a file carrying no comments at all; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
+- [ ] `W04.P07.S120` - Have Terra XHigh repair the rotation crash-window test module broken at HEAD, which imports a keystore filename constant whose definition the deletion removed and which it is now the only referent of, this being a collection error that can abort a whole run rather than a single failing test; `src/cadrumo/adapters/persistence/storage/tests/test_rotation_crash_windows.py`.
+- [ ] `W04.P07.S121` - Have Sol Medium rule on the bucket deletion assessment contract, since the fingerprint type is now producerless and its only consumer is the populated branch requiring label and fingerprint and retention together, a branch already unreachable because the assessment either reports a missing bucket or raises and never constructs that shape, so a validated contract stands for a state nothing can produce; `src/cadrumo/application/config_reset.py and src/cadrumo/application/bucket_maintenance/`.
 
 ## Wave `W05` - end-to-end proof
 
