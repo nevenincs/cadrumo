@@ -32,7 +32,6 @@ from ..adapters.persistence.storage import (
 )
 from ..adapters.persistence.storage.bucket import (
     BucketPaths,
-    provision_bucket_directory,
 )
 from ..adapters.persistence.storage.crypto import (
     decrypt_secure_object_payload,
@@ -51,6 +50,7 @@ from ..adapters.persistence.storage.sql.session import session_scope
 from ..core import StorageCategory
 from ..core.config import Settings, load_settings, override_settings
 from ..core.errors import CadrumoError
+from ..tests.bucket_layout import provision_bucket_directory
 from .master_key import EphemeralMasterKeyProvider
 from .storage_scope import storage_overrides
 

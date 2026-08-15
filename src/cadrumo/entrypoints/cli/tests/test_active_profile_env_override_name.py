@@ -26,6 +26,7 @@ from ._modelo_empty_profile_fixture import _isolated_backend
 __all__ = ["_isolated_backend"]
 
 from ....core.config import override_settings
+from ....tests.bucket_layout import provision_bucket_directory
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from .._common import cli_policy_refusal_projection
 from .._errors import CliRefusedBoundaryError, error_boundary_under_test
@@ -125,7 +126,6 @@ def _write_second_live_bucket_sharing_label(label: str) -> None:
         BucketKeySchedule,
         BucketManifest,
         bucket_paths,
-        provision_bucket_directory,
         write_manifest,
     )
     from ....adapters.persistence.storage.master_key import KdfParams

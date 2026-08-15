@@ -21,11 +21,11 @@ from ....adapters.persistence.storage.bucket import (
     BucketKeySchedule,
     BucketManifest,
     ManifestKdfParams,
-    provision_bucket_directory,
     write_manifest,
 )
 from ....core.config import load_settings
 from ....core.identity import nif_check_letter
+from ....tests.bucket_layout import provision_bucket_directory
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile

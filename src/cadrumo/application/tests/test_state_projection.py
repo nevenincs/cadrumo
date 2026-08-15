@@ -34,7 +34,6 @@ from ...adapters.persistence.storage.bucket import (
     BucketKeySchedule,
     BucketManifest,
     ManifestKdfParams,
-    provision_bucket_directory,
     write_manifest,
 )
 from ...adapters.persistence.storage.custody import load_committed_profile_password_material, unlock_profile_custody
@@ -43,6 +42,7 @@ from ...core import Period
 from ...core.config import SecretStoreBackend, Settings, override_settings
 from ...domain.categories import SpendingCategory
 from ...domain.transactions import BusinessClassification, TransactionDirection
+from ...tests.bucket_layout import provision_bucket_directory
 from ...tests.registry_revision import active_registry_revision_id
 from ...tests.user_profile import register_minimal_profile
 from ..auth import inspect_operator_auth

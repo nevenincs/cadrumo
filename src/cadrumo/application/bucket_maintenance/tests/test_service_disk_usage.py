@@ -35,7 +35,8 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path, provision_bucket_directory
+from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
+from ....tests.bucket_layout import provision_bucket_directory
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import BucketMaintenanceService, DiskUsageBucketCommand
 

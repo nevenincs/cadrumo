@@ -11,8 +11,9 @@ from pydantic import ValidationError
 
 from ......core.errors import build_error_envelope
 from ......core.external_constants import UTF_8_ENCODING
+from ......tests.bucket_layout import provision_bucket_directory
 from ...errors import StorageValidationError
-from .._layout import BucketPaths, bucket_paths, provision_bucket_directory
+from .._layout import BucketPaths, bucket_paths
 from .._manifest import (
     BUCKET_MANIFEST_SCHEMA_VERSION,
     BucketKeySchedule,

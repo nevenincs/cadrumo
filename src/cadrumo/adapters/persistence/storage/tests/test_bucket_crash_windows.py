@@ -13,11 +13,11 @@ from .....adapters.persistence.storage.bucket import (
     BucketManifest,
     ManifestKdfParams,
     manifest_path,
-    provision_bucket_directory,
     read_manifest,
     write_manifest,
 )
 from .....core.errors import CadrumoError
+from .....tests.bucket_layout import provision_bucket_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

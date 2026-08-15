@@ -22,10 +22,10 @@ import pytest
 
 from ......core.errors import build_error_envelope
 from ......core.external_constants import UTF_8_ENCODING
+from ......tests.bucket_layout import provision_bucket_directory
 from .._errors import BucketBusyError, BucketValidationError
 from .._layout import (
     bucket_paths,
-    provision_bucket_directory,
 )
 from .._lockfile import (
     acquire_lock,
