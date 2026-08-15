@@ -93,11 +93,9 @@ def test_the_three_database_paths_are_named_from_the_storage_taxonomy() -> None:
     stops a rename of the database directory or filename from silently
     emptying the exclusion and reinstating the defect.
     """
-    assert DATABASE_REPRESENTATION_RELATIVE_PATHS == {
-        "db/cadrumo.db",
-        "db/cadrumo.db-wal",
-        "db/cadrumo.db-shm",
-    }
+    expected = frozenset({"db/cadrumo.db", "db/cadrumo.db-wal", "db/cadrumo.db-shm"})
+
+    assert expected == DATABASE_REPRESENTATION_RELATIVE_PATHS
 
 
 def test_a_checkpoint_leaves_the_inventory_digest_unmoved(tmp_path: Path) -> None:
