@@ -388,6 +388,16 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile._custody_service.ProfileCustodyDisplacedSessionRetirementError",
+        ErrorCode(
+            code="REFUSED_PROFILE_CUSTODY_DISPLACED_SESSION_RETIREMENT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_profile_custody",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile._custody_transactions.ProfileCustodyTransactionRefusalError",
         ErrorCode(
             code="REFUSED_PROFILE_CUSTODY_TRANSACTION",
