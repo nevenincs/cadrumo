@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:15398d5aecdbbc36d2186465ff1dd4200be5b612ec80bc5df4e3c32467716340'
+body_hash: 'sha256:33642067871374ac85489aafec37e1d82c20d2725a858e753114e314f71324fd'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -34,6 +34,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W02-P04-S95]]'
   - '[[2026-08-13-profile-password-custody-W03-P05-S13]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S108]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S135]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S42]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S59]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S75]]'
@@ -45,6 +46,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W04-P07-S123]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S124]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S126]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S133]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S19]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S28]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S32]]'
@@ -167,6 +169,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W02-P04-S90` - Have Terra XHigh make the cold-pointer logout refusal name what it could not do and re-author the nine tests
 - `2026-08-13-profile-password-custody-W02-P04-S95` - Have Terra XHigh make the receipt deletion honour the clear outcome it already computes, since the discard helper returns whether the compare-and-clear succeeded and the resume path branches on it, while the revocation entry point calls the same helper bare and returns nothing, so a refused clear is silent and a login can report the prior profile as closed while its acceleration receipt survives on disk, the reachability being narrow because the bytes must change under a held per-profile lock but the reporting value already existing
 - `2026-08-13-profile-password-custody-W03-P06-S108` - Have Terra XHigh re-found the label ambiguity refusal test on the custody label authority rather than retire it, since the refusal itself was restored as real operator-facing work and is live, while only the test's mechanism is stale in manufacturing two casefold-equal labels by rewriting the retired plaintext bucket manifest, and the restored refusal already ships five tests that manufacture the same collision correctly
+- `2026-08-13-profile-password-custody-W03-P06-S135` - Have Terra XHigh name the capsules root path in the retired-custody refusal
 - `2026-08-13-profile-password-custody-W03-P06-S59` - Have Sol Medium rule on the seventeen operator command subtrees the capsule cutover left unresolved
 - `2026-08-13-profile-password-custody-W03-P06-S75` - Have Terra XHigh clear the six dead entries in the runtime bootstrap-exempt allowlist that name operator verbs the tree no longer registers, since each entry grants exemption from the active-profile session gate matched by command chain, so a future verb registered under one of those names silently inherits an exemption nobody consciously granted, which matters most for the profile deletion verb, and note one further non-resolving entry is a deliberate exemption for a separate module entrypoint rather than a defect
 - `2026-08-13-profile-password-custody-W03-P06-S88` - Have Terra XHigh resolve the command-line lifecycle module that asserts custody verbs are mounted
@@ -177,6 +180,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W04-P07-S123` - Have Terra XHigh make the persisted-format inventory detect an enrolled format whose code no longer exists
 - `2026-08-13-profile-password-custody-W04-P07-S124` - Have Terra XHigh reconstruct the rotation crash-window coverage against the two surviving stores after the module was deleted whole to unblock collection
 - `2026-08-13-profile-password-custody-W04-P07-S126` - Have Sol Medium enrol the custody capsule formats in the governed persisted-format inventory
+- `2026-08-13-profile-password-custody-W04-P07-S133` - Have Sol Medium classify the roughly one dozen genuine persisted formats the binding gate found unbound
 - `2026-08-13-profile-password-custody-W04-P07-S19` - Have Terra XHigh dissolve the forwarding port package in five ordered parts
 - `2026-08-13-profile-password-custody-W04-P07-S28` - Have Terra XHigh relocate the surviving per-profile session, wipe and identity residue into the custody package that the accepted decision names as sole authority, in one atomic move, so no surviving primitive is left behind a shared-master name
 - `2026-08-13-profile-password-custody-W04-P07-S39` - Have Terra XHigh delete the re-export bridge module in the custody package and repoint its sole consumer at the two modules it forwards to, in one commit
