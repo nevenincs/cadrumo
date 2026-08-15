@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:32af769c34149fe0b4b6bca72cc545fd4fc5ca2b303dbe8fe4d42dc52b61b0a4'
+body_hash: 'sha256:d235b6c37575200c111cd62fa09dbe7f75643c9370331a9a4b60f41d77626e66'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -177,7 +177,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S100` - Have Terra XHigh name the profile-to-bucket identity conversion once in the identity package and route the twenty-eight bare string coercions through it, then settle whether the custody capsule records should carry the canonical profile identifier string or whether that identifier needs a documented object form, since three identifier shapes exist where the rules assume two and the bridge between them is currently an unnamed coercion the grounding rule already classes as a boundary leak; `src/cadrumo/core/identity/ and src/cadrumo/adapters/persistence/storage/custody/_capsule_records.py`.
 - [ ] `W04.P07.S101` - Have Sol Medium close the custody path builder's runtime validation gap, which accepts a profile identifier only by type annotation and would silently create a custody directory named for a system sentinel if one reached it, the honest bound being that the boundary is type-blocked rather than runtime-blocked with no live path found and none exhaustively searched for; `src/cadrumo/adapters/persistence/storage/custody/_paths.py`.
 - [ ] `W04.P07.S106` - Have Terra XHigh close the under-declaration in the minimal profile registration helper whose signature accepts a plain string identifier while it builds a record whose identifier is UUID-constrained, so every caller passing a readable identifier fails at construction rather than at the boundary that declared the looser type, this being the same defect reached independently from two directions tonight; `src/cadrumo/tests/ and src/cadrumo/application/user_profile/`.
-- [ ] `W04.P07.S107` - Have Terra XHigh rule whether the master key and derived key encryption key should become wipeable like the two data encryption key unwraps now are, since six provider implementations and the derivation helper all return immutable material, or record why the master key is deliberately out of scope given each provider carries its own lifetime and a mutable buffer changes what every consumer holds; `src/cadrumo/adapters/persistence/storage/master_key/`.
+- [x] `W04.P07.S107` - Have Terra XHigh rule whether the master key and derived key encryption key should become wipeable like the two data encryption key unwraps now are, since six provider implementations and the derivation helper all return immutable material, or record why the master key is deliberately out of scope given each provider carries its own lifetime and a mutable buffer changes what every consumer holds; `src/cadrumo/adapters/persistence/storage/master_key/`.
 - [ ] `W04.P07.S109` - Have Terra XHigh extend the re-export bridge and orphan detector to walk the test tree, since it currently skips it entirely and a whole class of orphaned export module is therefore invisible, which is how an adapter export survived its only consumer's deletion with zero importers anywhere; `dev/import_hygiene_scan.py`.
 
 ## Wave `W05` - end-to-end proof

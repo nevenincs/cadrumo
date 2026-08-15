@@ -81,6 +81,7 @@ from .._multi_year import (
     assert_two_ejercicio_round_trip,
 )
 from .._observations_repository import CalculationObservationRepository
+from ._observation_lookup_support import find_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -158,20 +159,6 @@ _M720_CASILLA_LEGAL_REFS = {
     _VALORES_VALORACION_CASILLA: _M720_VALORES_LEGAL_REFS,
     _INMUEBLES_VALORACION_CASILLA: _M720_INMUEBLES_LEGAL_REFS,
 }
-
-
-def _find_observation(
-    repo: CalculationObservationRepository,
-    *,
-    filing_year: int,
-    period: str,
-):
-    """Scan iter_modelo and return the envelope matching (filing_year, period) or None."""
-    for payload in repo.iter_modelo(_MODELO):
-        obs = payload.observation
-        if obs.filing_year == filing_year and obs.period == period:
-            return payload
-    return None
 
 
 def _advisory_observation(
@@ -452,8 +439,8 @@ def test_asset_identifier_identity_persists_across_both_annual_cycles(tmp_path: 
         repo = CalculationObservationRepository()
         repo.save(repo.prepare_observation_envelope(obs_n, source_kind="app_filing", captured_at=_CLOCK_N))
         repo.save(repo.prepare_observation_envelope(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1))
-        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period="0A")
-        loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period="0A")
+        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
+        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
 
         assert loaded_n is not None
         assert loaded_n1 is not None
@@ -486,7 +473,7 @@ def test_both_year_n_valuations_exceed_initial_threshold(tmp_path: Path) -> None
         repo.save(
             repo.prepare_observation_envelope(_year_n_observation(), source_kind="app_filing", captured_at=_CLOCK_N)
         )
-        loaded = _find_observation(repo, filing_year=_YEAR_N, period="0A")
+        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
 
         assert loaded is not None
         vals = loaded.observation.casilla_values
@@ -525,8 +512,8 @@ def test_year_n_plus_1_cuentas_delta_exceeds_redeclaration_threshold(tmp_path: P
         repo = CalculationObservationRepository()
         repo.save(repo.prepare_observation_envelope(obs_n, source_kind="app_filing", captured_at=_CLOCK_N))
         repo.save(repo.prepare_observation_envelope(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1))
-        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period="0A")
-        loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period="0A")
+        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
+        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
 
         assert loaded_n is not None
         assert loaded_n1 is not None
@@ -703,7 +690,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         repo.save(repo.prepare_observation_envelope(obs_n, source_kind="app_filing", captured_at=_CLOCK_N))
-        loaded = _find_observation(repo, filing_year=_YEAR_N, period="0A")
+        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
 
         assert loaded is not None
         assert loaded.observation != obs_n_no_val, (
@@ -757,14 +744,14 @@ def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_ma
         repo = CalculationObservationRepository()
         # --- Year N -------------------------------------------------------
         repo.save(repo.prepare_observation_envelope(obs_n, source_kind="app_filing", captured_at=_CLOCK_N))
-        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period="0A")
+        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
         assert loaded_n is not None
         assert loaded_n.observation == obs_n
         _count_n = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N)
 
         # --- Year N+1 -----------------------------------------------------
         repo.save(repo.prepare_observation_envelope(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1))
-        loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period="0A")
+        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
         assert loaded_n1 is not None
         assert loaded_n1.observation == obs_n1
         _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)

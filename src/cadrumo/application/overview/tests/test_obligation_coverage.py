@@ -19,7 +19,6 @@ same failure mode for any applicable obligation omitted from the surfaced set.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from contextlib import contextmanager
 from datetime import date
 
 import pytest
@@ -39,6 +38,7 @@ from ....domain.deadlines import (
     TaxpayerProfile,
 )
 from ...modelo import registry_modelo_codes
+from ....tests.attribute_scope import scoped_attribute
 from .. import _coverage
 from .._agenda import build_overview_agenda
 from .._backlog import build_overview_backlog
@@ -47,17 +47,6 @@ from .._calendar_models import OverviewCalendarRange
 from .._coverage import CoverageAdviceReason, ObligationCoverageReport, build_obligation_coverage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@contextmanager
-def _replacing(target: object, name: str, value: object):
-    """Replace ``target.name`` for the scope, restoring the original on exit."""
-    original = getattr(target, name)
-    setattr(target, name, value)
-    try:
-        yield
-    finally:
-        setattr(target, name, original)
 
 
 _TODAY = date(2026, 7, 1)

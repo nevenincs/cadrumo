@@ -430,37 +430,73 @@ def _consume_field_row(
     row_number: int,
     values: tuple[object, ...],
 ) -> None:
-    # THE CELL, not the parse result, decides whether a row is numbered. An empty
-    # ordinal cell is AEAT declining to number the row; a non-empty cell the parser
-    # cannot read is a label it does not yet represent. ``_int_or_none`` collapses
-    # both to None, so reading the raw text is what keeps them apart.
-    ordinal = _int_or_none(_cell(values, header.ordinal_index))
-    declared_ordinal = _optional_text(_cell(values, header.ordinal_index))
+    # ``RecordDesignField.ordinal`` is the printed LABEL (``ordinal_text``), never
+    # an arithmetic value -- it is now representable verbatim, so there is no more
+    # "printed but unreadable" case to refuse for it. The two MARKER rows below
+    # (variable-body, relative-suffix) are unrelated types whose own ``ordinal``
+    # field is still a plain sequential ``int``, so they keep reading the
+    # int-or-None form.
+    ordinal_int = _int_or_none(_cell(values, header.ordinal_index))
+    ordinal_text = _ordinal_text(_cell(values, header.ordinal_index))
     offset = _int_or_none(_cell(values, header.offset_index))
     length = _int_or_none(_cell(values, header.length_index))
     raw_offset = _optional_text(_cell(values, header.offset_index))
     raw_length = _optional_text(_cell(values, header.length_index))
     if raw_length == "Variable":
         parsed_rows.variable_body_marker_rows.append(row_number)
-        if ordinal is not None and offset is not None:
+        if ordinal_int is not None and offset is not None:
             parsed_rows.variable_bodies.append(
-                _variable_body_marker(sheet_name, header, row_number, values, ordinal, offset),
+                _variable_body_marker(sheet_name, header, row_number, values, ordinal_int, offset),
             )
         return
     if raw_offset == "***":
         parsed_rows.relative_suffix_marker_rows.append(row_number)
-        if ordinal is not None and length is not None:
+        if ordinal_int is not None and length is not None:
             parsed_rows.relative_suffixes.append(
-                _relative_suffix_marker(sheet_name, header, row_number, values, ordinal, length),
+                _relative_suffix_marker(sheet_name, header, row_number, values, ordinal_int, length),
             )
         return
     if offset is None or length is None:
         return
-    if ordinal is None and declared_ordinal is not None:
-        # A printed ordinal this parser cannot represent yet. Refused rather than
-        # admitted as unnumbered, because admitting it would discard the label.
+    field = _record_design_field(sheet_name, header, row_number, values, ordinal_text, offset, length)
+    parent_index = _matching_component_parent_index(parsed_rows.fields, ordinal_text, offset, length)
+    if parent_index is not None:
+        parent = parsed_rows.fields[parent_index]
+        parsed_rows.fields[parent_index] = parent.model_copy(update={"components": (*parent.components, field)})
         return
-    parsed_rows.fields.append(_record_design_field(sheet_name, header, row_number, values, ordinal, offset, length))
+    parsed_rows.fields.append(field)
+
+
+def _matching_component_parent_index(
+    fields: list[RecordDesignField],
+    ordinal_text: str | None,
+    offset: int,
+    length: int,
+) -> int | None:
+    """Return the index of the field ``ordinal_text``/``offset``/``length`` desglosa from.
+
+    AEAT prints a component with a DOTTED ordinal (``19.1`` under parent ``19``),
+    never a bare one -- Modelo 303's ``14bis`` has no dot and is a genuine peer,
+    not a component of ``14``, and this is the discriminator that keeps them
+    apart. The dotted integer prefix alone is not enough on its own -- an
+    unrelated field elsewhere in the same sheet could coincidentally share an
+    ordinal -- so BOTH conditions are required together: the immediately
+    preceding field's ordinal is the exact dotted prefix, AND this row's byte
+    span falls entirely inside that field's own already-declared span. Checked
+    against only the immediately preceding field, matching every component's
+    observed source position directly beneath its parent, never a scan of the
+    whole sheet.
+    """
+    if ordinal_text is None or "." not in ordinal_text or not fields:
+        return None
+    prefix = ordinal_text.split(".", 1)[0]
+    parent_index = len(fields) - 1
+    parent = fields[parent_index]
+    if parent.ordinal != prefix:
+        return None
+    if offset < parent.offset or offset + length > parent.offset + parent.length:
+        return None
+    return parent_index
 
 
 def _variable_body_marker(
@@ -512,7 +548,7 @@ def _record_design_field(
     header: _WorkbookHeader,
     row_number: int,
     values: tuple[object, ...],
-    ordinal: int | None,
+    ordinal: str | None,
     offset: int,
     length: int,
 ) -> RecordDesignField:
@@ -880,6 +916,19 @@ def _optional_text(value: object | None) -> str | None:
     return cleaned or None
 
 
+def _ordinal_text(value: object | None) -> str | None:
+    """Render a printed ordinal cell verbatim, including a non-numeric label.
+
+    ``integral_floats_as_int=True`` because openpyxl hands back a whole-number
+    ordinal cell as a ``float`` (``19.0``); rendering that as ``"19.0"`` would
+    break BOTH the M390 auxiliary-header ordinal sequence (which compares
+    against plain ``"1"``..``"13"``) and the dotted-component prefix match
+    (``"19.1"``'s prefix must equal parent ``"19"``, not ``"19.0"``).
+    """
+    cleaned = coerce_cell_text(value, integral_floats_as_int=True)
+    return cleaned or None
+
+
 def _optional_header_text(values: tuple[object, ...], index: int | None) -> str | None:
     if index is None:
         return None
@@ -1045,7 +1094,7 @@ _PDF_RECORD_HEADING_REVERSED_RE = re.compile(
 class _PdfFieldDraft:
     sheet: str
     row: int
-    ordinal: int
+    ordinal: str | None
     offset: int
     length: int
     type_code: str
@@ -1087,7 +1136,7 @@ class _PdfSheetDraft:
         self.current = _PdfFieldDraft(
             sheet=self.name,
             row=row.source_row,
-            ordinal=row.ordinal or len(self.fields) + 1,
+            ordinal=row.ordinal if row.ordinal is not None else str(len(self.fields) + 1),
             offset=row.offset,
             length=row.length,
             type_code=row.type_code,
@@ -1111,7 +1160,7 @@ class _PdfSheetDraft:
 @dataclass(frozen=True)
 class _PdfRow:
     source_row: int
-    ordinal: int | None
+    ordinal: str | None
     offset: int
     length: int
     type_code: str
@@ -1371,7 +1420,7 @@ def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
     if compact is not None:
         return _PdfRow(
             source_row=source_row,
-            ordinal=int(compact.group("ordinal")),
+            ordinal=compact.group("ordinal"),
             offset=int(compact.group("offset")),
             length=int(compact.group("length")),
             type_code=compact.group("type"),
@@ -1382,7 +1431,7 @@ def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
     if crlf is not None:
         return _PdfRow(
             source_row=source_row,
-            ordinal=int(crlf.group("ordinal")),
+            ordinal=crlf.group("ordinal"),
             offset=int(crlf.group("offset")),
             length=2,
             type_code=crlf.group("type"),
@@ -1540,7 +1589,7 @@ def _extract_visual_chart_sheet(
         RecordDesignField(
             sheet=name,
             row=ordinal,
-            ordinal=ordinal,
+            ordinal=str(ordinal),
             offset=fragment.start,
             length=fragment.end - fragment.start + 1,
             type_code=_VISUAL_CHART_TYPE_CODE,

@@ -49,6 +49,7 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
+from ._observation_lookup_support import find_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -79,20 +80,6 @@ _VIGENCIA = Decimal("20250203")
 
 # NIF encoded as numeric part (test fixture: NIF "22222222B" → 22222222).
 _NIF = Decimal("22222222")
-
-
-def _find_observation(
-    repo: CalculationObservationRepository,
-    *,
-    filing_year: int,
-    period: str,
-):
-    """Scan iter_modelo and return the envelope matching (filing_year, period) or None."""
-    for payload in repo.iter_modelo(_MODELO):
-        obs = payload.observation
-        if obs.filing_year == filing_year and obs.period == period:
-            return payload
-    return None
 
 
 def _alta_observation() -> RegistryModeloObservation:
@@ -156,7 +143,7 @@ def test_alta_observation_persists_and_reloads_strictly(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         repo.save(repo.prepare_observation_envelope(obs, source_kind="app_filing", captured_at=_CLOCK_N))
-        loaded = _find_observation(repo, filing_year=_YEAR_N, period=_ALTA_PERIOD)
+        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_ALTA_PERIOD)
 
         assert loaded is not None, (
             f"alta observation not found for ({_MODELO!r}, {_YEAR_N}, {_ALTA_PERIOD!r}) after save"
@@ -175,7 +162,7 @@ def test_modificacion_observation_persists_and_reloads_strictly(tmp_path: Path) 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         repo.save(repo.prepare_observation_envelope(obs, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1))
-        loaded = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period=_MODIFICACION_PERIOD)
+        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period=_MODIFICACION_PERIOD)
 
         assert loaded is not None
         assert loaded.observation == obs
@@ -203,8 +190,8 @@ def test_alta_and_modificacion_are_independently_retrievable(tmp_path: Path) -> 
         repo = CalculationObservationRepository()
         repo.save(repo.prepare_observation_envelope(obs_n, source_kind="app_filing", captured_at=_CLOCK_N))
         repo.save(repo.prepare_observation_envelope(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1))
-        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period=_ALTA_PERIOD)
-        loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period=_MODIFICACION_PERIOD)
+        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_ALTA_PERIOD)
+        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period=_MODIFICACION_PERIOD)
 
         assert loaded_n is not None
         assert loaded_n1 is not None
@@ -236,8 +223,8 @@ def test_vigencia_normativa_is_identical_in_both_annual_contexts(tmp_path: Path)
         repo = CalculationObservationRepository()
         repo.save(repo.prepare_observation_envelope(obs_n, source_kind="app_filing", captured_at=_CLOCK_N))
         repo.save(repo.prepare_observation_envelope(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1))
-        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period=_ALTA_PERIOD)
-        loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period=_MODIFICACION_PERIOD)
+        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_ALTA_PERIOD)
+        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period=_MODIFICACION_PERIOD)
 
         assert loaded_n is not None
         assert loaded_n1 is not None
@@ -273,7 +260,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         repo.save(repo.prepare_observation_envelope(obs_n, source_kind="app_filing", captured_at=_CLOCK_N))
-        loaded = _find_observation(repo, filing_year=_YEAR_N, period=_ALTA_PERIOD)
+        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_ALTA_PERIOD)
 
         assert loaded is not None
         assert loaded.observation != obs_n_no_event_kind, (
@@ -304,14 +291,14 @@ def test_enrollment_recorder_evidences_two_distinct_annual_contexts_and_matches_
         repo = CalculationObservationRepository()
         # --- Year N: alta -----------------------------------------------
         repo.save(repo.prepare_observation_envelope(obs_n, source_kind="app_filing", captured_at=_CLOCK_N))
-        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period=_ALTA_PERIOD)
+        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_ALTA_PERIOD)
         assert loaded_n is not None
         assert loaded_n.observation == obs_n
         _count_n = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N)
 
         # --- Year N+1: modificacion -------------------------------------
         repo.save(repo.prepare_observation_envelope(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1))
-        loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period=_MODIFICACION_PERIOD)
+        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period=_MODIFICACION_PERIOD)
         assert loaded_n1 is not None
         assert loaded_n1.observation == obs_n1
         _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)

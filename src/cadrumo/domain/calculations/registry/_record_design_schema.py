@@ -31,7 +31,8 @@ class RecordDesignField(RegistryModel):
 
     sheet: str
     row: int
-    #: The ordinal AEAT printed, or ``None`` where the sheet declares none.
+    #: The ordinal AEAT printed, verbatim, or ``None`` where the sheet declares
+    #: none.
     #:
     #: ``None`` means the ORDINAL CELL IS EMPTY, never that the parser could not
     #: read it. AEAT leaves it blank for rows it declines to number -- Modelo 036
@@ -39,11 +40,12 @@ class RecordDesignField(RegistryModel):
     #: año, sharing one casilla -- and dropping them put their eight bytes into a
     #: downstream geometry gap that blamed the design.
     #:
-    #: A row whose ordinal cell is NON-EMPTY but unreadable is still refused. That
-    #: distinction is load-bearing: collapsing it would admit a ``14bis`` row while
-    #: silently discarding the label the authority printed, which represents LESS
-    #: than the source declares.
-    ordinal: int | None = None
+    #: A ``str`` rather than an ``int`` because AEAT's ordinal is a PRINTED LABEL,
+    #: not an arithmetic value: Modelo 303 prints ``14bis`` beside its ``14`` and
+    #: Modelo 576 desglosa a field's ordinal into ``19.1``..``19.8``. Never
+    #: synthesised -- a fabricated ordinal indistinguishable from a printed one is
+    #: the false-green shape this field exists to avoid.
+    ordinal: str | None = None
     offset: int
     length: int
     type_code: str
@@ -51,6 +53,18 @@ class RecordDesignField(RegistryModel):
     description: str
     validation: str | None = None
     content: str | None = None
+    #: Sub-fields AEAT desglosa (breaks out) from this field's own printed span,
+    #: e.g. Modelo 576's ``19.1``..``19.8`` under parent ordinal ``19``.
+    #:
+    #: ADDITIVE ONLY. This field's own ``offset``/``length`` continue to span the
+    #: WHOLE group exactly as they did before components existed, so every
+    #: consumer computing geometry from ``offset``/``length`` alone -- the
+    #: contiguity check, the IR projection, the export-tree join -- sees exactly
+    #: what it saw before. A component is detail a consumer may ignore, never a
+    #: replacement for the parent's own span. A component's own ``components``
+    #: tuple is always empty; nothing in the corpus nests two levels deep, and
+    #: this field does not assert that it could.
+    components: tuple[RecordDesignField, ...] = ()
 
 
 class RecordDesignAuxiliaryEnvelopeHeaderRole(StrEnum):
@@ -91,7 +105,7 @@ _M390_AUXILIARY_HEADER_CONTENT: tuple[str | None, ...] = (
     '"</AUX>"',
 )
 _M390_AUXILIARY_HEADER_ROWS: tuple[int, ...] = tuple(range(6, 19))
-_M390_AUXILIARY_HEADER_ORDINALS: tuple[int, ...] = tuple(range(1, 14))
+_M390_AUXILIARY_HEADER_ORDINALS: tuple[str, ...] = tuple(str(i) for i in range(1, 14))
 
 
 class RecordDesignAuxiliaryEnvelopeHeaderField(RegistryModel):

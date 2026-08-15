@@ -18,7 +18,6 @@ from __future__ import annotations
 import hashlib
 import inspect
 import json
-from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
 
@@ -34,6 +33,7 @@ from ....core import (
 )
 from ....core.config import load_settings
 from ....llm import LLMProviderError, ground_extracted_fields, parse_invoice_extraction_response
+from ....tests.attribute_scope import scoped_attribute
 from .. import _evidence_draft as _router_module
 from .._document_transcription import DocumentTranscription, TranscriberIdentity
 from .._evidence import PurchaseInvoiceEvidenceInputError
@@ -50,17 +50,6 @@ from .._identity_roles import IdentityCandidate, resolve_counterparty_identity
 from .._preconditions import LedgerPreconditionCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@contextmanager
-def _replacing(target: object, name: str, value: object):
-    """Replace ``target.name`` for the scope, restoring the original on exit."""
-    original = getattr(target, name)
-    setattr(target, name, value)
-    try:
-        yield
-    finally:
-        setattr(target, name, original)
 
 
 _DOCUMENT_TEXT = (
@@ -413,7 +402,7 @@ def test_a_missing_reader_does_not_fall_through_to_the_vision_engine() -> None:
         raise LLMProviderError("Ollama is not reachable")
 
     with (
-        _replacing(llm_module, "extract_invoice_fields_from_text", unavailable),
+        scoped_attribute(llm_module, "extract_invoice_fields_from_text", unavailable),
         pytest.raises(PurchaseInvoiceEvidenceInputError) as raised,
     ):
         _read_transcription_semantically(

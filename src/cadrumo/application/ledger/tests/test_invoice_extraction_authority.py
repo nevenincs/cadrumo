@@ -23,7 +23,6 @@ cannot tell a wired call from an inert one -- together they cover both.
 
 from __future__ import annotations
 
-from contextlib import contextmanager
 from decimal import Decimal
 
 import pytest
@@ -31,6 +30,7 @@ import pytest
 from ....core import Period
 from ....domain import iva as _iva_module
 from ....domain.iva import EUMemberState, IvaCategory, load_iva_rate_table
+from ....tests.attribute_scope import scoped_attribute
 from .._invoice_extraction_authority import (
     InvoiceExtractionAuthorityValues,
     default_invoice_extraction_period,
@@ -38,18 +38,6 @@ from .._invoice_extraction_authority import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-@contextmanager
-def _replacing(target: object, name: str, value: object):
-    """Replace ``target.name`` for the scope, restoring the original on exit."""
-    original = getattr(target, name)
-    setattr(target, name, value)
-    try:
-        yield
-    finally:
-        setattr(target, name, original)
-
 
 _ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
 
@@ -93,7 +81,7 @@ class TestTheResolverFollowsTheRateAuthority:
                 "effective_until": None,
             },
         )
-        with _replacing(
+        with scoped_attribute(
             _iva_module,
             "load_iva_rate_table",
             lambda: dict(real_table) | {EUMemberState.ES: (*spain, planted)},
