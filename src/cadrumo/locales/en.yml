@@ -72037,6 +72037,12 @@ modelo:
             identificacion-8:
               help: null
               label: Autonomous Community or City of residence in 2020
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Tax year the return relates to
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (annual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Assessment - Gross tax liability limit - Portion of the personal
@@ -72097,77 +72103,12 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Assessment - Total gross tax liability - Total gross tax liability
-          field:
-            label: Wealth Tax 2021
-        2021-y-siguientes:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: Tax year the return relates to
-            x-chim6r1ee1in4qbfchng:
-              help: null
-              label: Period (annual, 0A)
-            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
-              help: null
-              label: Settlement - Part of the IRPF savings taxable base excluded from
-                the combined limit
-            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
-              help: null
-              label: Taxable base (net wealth)
-            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
-              help: null
-              label: Assessable base (taxable base less reductions, art. 28)
-            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
-              help: null
-              label: Settlement - Tax payable
-            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
-              help: null
-              label: Settlement - Gross tax liability (scale, art. 30)
-            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
-              help: null
-              label: Settlement - Part of the Wealth Tax gross tax liability subject
-                to the limit
-            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
-              help: null
-              label: Settlement - Reduced tax liability
-            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
-              help: null
-              label: Settlement - Dividends and profit-sharing not incorporated into
-                IRPF
-            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
-              help: null
-              label: Settlement - Excess over the combined limit
-            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
-              help: null
-              label: Settlement - Sum of IRPF taxable bases
-            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
-              help: null
-              label: Settlement - Part of the IRPF gross tax liabilities corresponding
-                to the excluded savings base
-            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
-              help: null
-              label: Settlement - IRPF gross tax liabilities
-            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
-              help: null
-              label: Settlement - Combined limit of Wealth Tax and IRPF liabilities
-                (60%, art. 31)
-            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
-              help: null
-              label: Settlement - 80% of the Wealth Tax gross tax liability (reduction
-                floor, art. 31)
-            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
-              help: null
-              label: Settlement - Sum of tax liabilities for the purposes of the combined
-                limit
-            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
-              help: null
-              label: Settlement - Total gross tax liability
           construct:
             m714-patrimonio-calculation:
               field:
-                title: null
+                title: Form 714 Wealth Tax liability
           field:
-            label: null
+            label: Wealth Tax 2021
         '2022':
           casilla:
             declaracion-01:
@@ -72415,6 +72356,12 @@ modelo:
             identificacion-8:
               help: null
               label: Autonomous Community or City of residence in 2022
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Tax year the return relates to
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (annual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Assessment - Gross tax liability limit - Portion of the personal
@@ -72475,6 +72422,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Assessment - Total gross tax liability - Total gross tax liability
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Form 714 Wealth Tax liability
           field:
             label: Wealth Tax 2022
         '2023':
@@ -72724,6 +72675,12 @@ modelo:
             identificacion-8:
               help: null
               label: Autonomous Community or City of residence in 2023
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Tax year the return relates to
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (annual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Assessment - Gross tax liability limit - Portion of the personal
@@ -72784,6 +72741,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Assessment - Total gross tax liability - Total gross tax liability
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Form 714 Wealth Tax liability
           field:
             label: Wealth Tax 2023
         '2024':
@@ -73033,6 +72994,12 @@ modelo:
             identificacion-8:
               help: null
               label: Autonomous Community or City of residence in 2024
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Tax year the return relates to
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (annual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Assessment - Gross tax liability limit - Portion of the personal
@@ -73093,6 +73060,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Assessment - Total gross tax liability - Total gross tax liability
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Form 714 Wealth Tax liability
           field:
             label: Wealth Tax 2024
         '2025':
@@ -73342,6 +73313,12 @@ modelo:
             identificacion-8:
               help: null
               label: Autonomous Community or City of residence in 2025
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Tax year the return relates to
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (annual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Assessment - Gross tax liability limit - Portion of the personal
@@ -73402,6 +73379,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Assessment - Total gross tax liability - Total gross tax liability
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Form 714 Wealth Tax liability
           field:
             label: Wealth Tax 2025
     '720':

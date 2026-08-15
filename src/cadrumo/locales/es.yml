@@ -75136,6 +75136,12 @@ modelo:
             identificacion-8:
               help: null
               label: Comunidad o Ciudad Autónoma de residencia en 2020
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaracion
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (anual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidación - Límite cuota íntegra - Parte de la base imponible
@@ -75192,77 +75198,12 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidación - Total cuota íntegra - Total cuota íntegra
-          field:
-            label: Impuesto sobre el Patrimonio 2021
-        2021-y-siguientes:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: Ejercicio al que se refiere la declaracion
-            x-chim6r1ee1in4qbfchng:
-              help: null
-              label: Periodo (anual, 0A)
-            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
-              help: null
-              label: Liquidacion - Parte de la base imponible del ahorro del IRPF
-                excluida del limite conjunto
-            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
-              help: null
-              label: Base imponible (patrimonio neto)
-            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
-              help: null
-              label: Base liquidable (base imponible menos reducciones, art. 28)
-            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
-              help: null
-              label: Liquidacion - Cuota a ingresar
-            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
-              help: null
-              label: Liquidacion - Cuota integra (escala art. 30)
-            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
-              help: null
-              label: Liquidacion - Parte de la cuota integra del Impuesto sobre el
-                Patrimonio susceptible de limitacion
-            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
-              help: null
-              label: Liquidacion - Cuota minorada
-            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
-              help: null
-              label: Liquidacion - Dividendos y participaciones en beneficios no integrados
-                en el IRPF
-            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
-              help: null
-              label: Liquidacion - Exceso del limite conjunto
-            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
-              help: null
-              label: Liquidacion - Suma de las bases imponibles del IRPF
-            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
-              help: null
-              label: Liquidacion - Parte de las cuotas integras del IRPF correspondiente
-                a la base del ahorro excluida
-            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
-              help: null
-              label: Liquidacion - Cuotas integras del IRPF
-            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
-              help: null
-              label: Liquidacion - Limite conjunto de cuotas del IP y del IRPF (60%,
-                art. 31)
-            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
-              help: null
-              label: Liquidacion - 80% de la cuota integra del Impuesto sobre el Patrimonio
-                (suelo reduccion, art. 31)
-            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
-              help: null
-              label: Liquidacion - Suma de cuotas a efectos del limite conjunto
-            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
-              help: null
-              label: Liquidacion - Total cuota integra
           construct:
             m714-patrimonio-calculation:
               field:
                 title: Modelo 714 Impuesto sobre el Patrimonio cuota
           field:
-            label: Modelo 714 ejercicios 2021-2025 (Orden HAC/1023/2021; art. 31 M100
-              same-year coverage)
+            label: Impuesto sobre el Patrimonio 2021
         '2022':
           casilla:
             declaracion-01:
@@ -75517,6 +75458,12 @@ modelo:
             identificacion-8:
               help: null
               label: Comunidad o Ciudad Autónoma de residencia en 2022
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaracion
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (anual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidación - Límite cuota íntegra - Parte de la base imponible
@@ -75573,6 +75520,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidación - Total cuota íntegra - Total cuota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Modelo 714 Impuesto sobre el Patrimonio cuota
           field:
             label: Impuesto sobre el Patrimonio 2022
         '2023':
@@ -75829,6 +75780,12 @@ modelo:
             identificacion-8:
               help: null
               label: Comunidad o Ciudad Autónoma de residencia en 2023
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaracion
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (anual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidación - Límite cuota íntegra - Parte de la base imponible
@@ -75885,6 +75842,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidación - Total cuota íntegra - Total cuota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Modelo 714 Impuesto sobre el Patrimonio cuota
           field:
             label: Impuesto sobre el Patrimonio 2023
         '2024':
@@ -76141,6 +76102,12 @@ modelo:
             identificacion-8:
               help: null
               label: Comunidad o Ciudad Autónoma de residencia en 2024
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaracion
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (anual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidación - Límite cuota íntegra - Parte de la base imponible
@@ -76197,6 +76164,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidación - Total cuota íntegra - Total cuota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Modelo 714 Impuesto sobre el Patrimonio cuota
           field:
             label: Impuesto sobre el Patrimonio 2024
         '2025':
@@ -76453,6 +76424,12 @@ modelo:
             identificacion-8:
               help: null
               label: Comunidad o Ciudad Autónoma de residencia en 2025
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaracion
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (anual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidación - Límite cuota íntegra - Parte de la base imponible
@@ -76509,6 +76486,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidación - Total cuota íntegra - Total cuota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Modelo 714 Impuesto sobre el Patrimonio cuota
           field:
             label: Impuesto sobre el Patrimonio 2025
     '720':

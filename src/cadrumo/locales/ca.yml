@@ -72530,6 +72530,12 @@ modelo:
             identificacion-8:
               help: null
               label: Comunitat o Ciutat Autònoma de residència el 2020
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (anual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidació - Límit de la quota íntegra - Part de la base imposable
@@ -72586,6 +72592,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidació - Total de la quota íntegra - Total de la quota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Model 714 Impost sobre el Patrimoni quota
           field:
             label: Impost sobre el Patrimoni 2021
         2021-y-siguientes:
@@ -72908,6 +72918,12 @@ modelo:
             identificacion-8:
               help: null
               label: Comunitat o Ciutat Autònoma de residència el 2022
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (anual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidació - Límit de la quota íntegra - Part de la base imposable
@@ -72964,6 +72980,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidació - Total de la quota íntegra - Total de la quota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Model 714 Impost sobre el Patrimoni quota
           field:
             label: Impost sobre el Patrimoni 2022
         '2023':
@@ -73218,6 +73238,12 @@ modelo:
             identificacion-8:
               help: null
               label: Comunitat o Ciutat Autònoma de residència el 2023
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (anual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidació - Límit de la quota íntegra - Part de la base imposable
@@ -73274,6 +73300,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidació - Total de la quota íntegra - Total de la quota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Model 714 Impost sobre el Patrimoni quota
           field:
             label: Impost sobre el Patrimoni 2023
         '2024':
@@ -73528,6 +73558,12 @@ modelo:
             identificacion-8:
               help: null
               label: Comunitat o Ciutat Autònoma de residència el 2024
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (anual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidació - Límit de la quota íntegra - Part de la base imposable
@@ -73584,6 +73620,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidació - Total de la quota íntegra - Total de la quota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Model 714 Impost sobre el Patrimoni quota
           field:
             label: Impost sobre el Patrimoni 2024
         '2025':
@@ -73838,6 +73878,12 @@ modelo:
             identificacion-8:
               help: null
               label: Comunitat o Ciutat Autònoma de residència el 2025
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (anual, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Liquidació - Límit de la quota íntegra - Part de la base imposable
@@ -73894,6 +73940,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidació - Total de la quota íntegra - Total de la quota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Model 714 Impost sobre el Patrimoni quota
           field:
             label: Impost sobre el Patrimoni 2025
     '720':

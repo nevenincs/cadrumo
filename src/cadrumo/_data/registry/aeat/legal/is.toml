@@ -1375,8 +1375,15 @@ applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2025.pdf"
 review_status = "reviewed"
 
+# Retiered 2026-08-15: this 2308-byte orden excerpt carries no annex section
+# and no record-layout vocabulary, so it was never layout authority for either
+# Modelo 200 or Modelo 220. Real Diseños de Registro are bundled and
+# registered for both (aeat-dr-200-2024/2025, aeat-dr-220-2022/2023/2024/2025).
+# This excerpt remains a genuine official_source_guidance citation (the orden
+# covering the IS declaration models' filing window), just not the layout's
+# home.
 [sources."boe-modelo-200-2025-form"]
-evidence_tier = "layout_authority"
+evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-657-2025.html"

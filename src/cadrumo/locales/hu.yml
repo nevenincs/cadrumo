@@ -72602,6 +72602,12 @@ modelo:
             identificacion-8:
               help: null
               label: 2020. évi lakóhely szerinti autonóm közösség vagy város
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: A bevallás adóéve
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Időszak (éves, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
@@ -72660,6 +72666,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Adómegállapítás - Bruttó adó összesen - Bruttó adó összesen
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: 714-es nyomtatvány vagyonadó-kötelezettség
           field:
             label: 2021. évi vagyonadó
         2021-y-siguientes:
@@ -72985,6 +72995,12 @@ modelo:
             identificacion-8:
               help: null
               label: 2022. évi lakóhely szerinti autonóm közösség vagy város
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: A bevallás adóéve
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Időszak (éves, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
@@ -73043,6 +73059,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Adómegállapítás - Bruttó adó összesen - Bruttó adó összesen
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: 714-es nyomtatvány vagyonadó-kötelezettség
           field:
             label: 2022. évi vagyonadó
         '2023':
@@ -73301,6 +73321,12 @@ modelo:
             identificacion-8:
               help: null
               label: 2023. évi lakóhely szerinti autonóm közösség vagy város
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: A bevallás adóéve
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Időszak (éves, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
@@ -73359,6 +73385,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Adómegállapítás - Bruttó adó összesen - Bruttó adó összesen
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: 714-es nyomtatvány vagyonadó-kötelezettség
           field:
             label: 2023. évi vagyonadó
         '2024':
@@ -73617,6 +73647,12 @@ modelo:
             identificacion-8:
               help: null
               label: 2024. évi lakóhely szerinti autonóm közösség vagy város
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: A bevallás adóéve
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Időszak (éves, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
@@ -73675,6 +73711,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Adómegállapítás - Bruttó adó összesen - Bruttó adó összesen
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: 714-es nyomtatvány vagyonadó-kötelezettség
           field:
             label: 2024. évi vagyonadó
         '2025':
@@ -73934,6 +73974,12 @@ modelo:
             identificacion-8:
               help: null
               label: 2025. évi lakóhely szerinti autonóm közösség vagy város
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: A bevallás adóéve
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Időszak (éves, 0A)
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
               help: null
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
@@ -73992,6 +74038,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Adómegállapítás - Bruttó adó összesen - Bruttó adó összesen
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: 714-es nyomtatvány vagyonadó-kötelezettség
           field:
             label: 2025. évi vagyonadó
     '720':

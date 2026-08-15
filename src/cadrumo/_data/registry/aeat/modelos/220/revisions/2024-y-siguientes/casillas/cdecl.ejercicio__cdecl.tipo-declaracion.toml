@@ -2,8 +2,17 @@
 # applicability-grade: it declares only the declaration header (ejercicio, tipo
 # de declaración) grounded in the Orden HAC/657/2025 art 3 coverage of Modelo 220
 # and the art. 124 LIS declaration framework. The numbered money-closure casillas
-# of the group declaration record design are NOT declared here — no authoritative
-# Modelo 220 diseño de registro is bundled — so no casilla number is invented.
+# of the group declaration record design are NOT declared here (the comment
+# formerly here said no authoritative Modelo 220 diseño de registro was bundled;
+# aeat-dr-220-2022/2023/2024/2025 are now registered, but no casilla-to-position
+# mapping has been authored from them yet, so a casilla number is still not
+# invented here).
+#
+# source_refs corrected 2026-08-15: boe-modelo-200-2025-form (a 2308-byte orden
+# excerpt) was found to carry no layout content and retiered to
+# official_source_guidance -- it remains a genuine citation (the orden covering
+# Modelo 220), but these two casillas cited it alone, so aeat-dr-220-2024 (the
+# real, era-matching bundled Diseño de Registro) is added rather than swapped.
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "decl.ejercicio"
@@ -14,7 +23,7 @@ semantic_role = "filing_year"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["boe-modelo-200-2025-form"]
+source_refs = ["boe-modelo-200-2025-form", "aeat-dr-220-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
@@ -25,4 +34,4 @@ semantic_role = "tipo_declaracion"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["boe-modelo-200-2025-form"]
+source_refs = ["boe-modelo-200-2025-form", "aeat-dr-220-2024"]

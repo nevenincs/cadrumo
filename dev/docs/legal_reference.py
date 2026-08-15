@@ -26,6 +26,7 @@ from typing import Final, cast
 from urllib.parse import urlsplit
 
 from cadrumo.core import scan_directory
+from cadrumo.domain.calculations.registry import LegalReference
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import UTF_8
 
@@ -71,27 +72,20 @@ _DATE_FIELDS: Final[tuple[str, ...]] = (
     "reviewed_at",
 )
 
-_LEGAL_TABLE_FIELDS: Final[frozenset[str]] = frozenset(
-    {
-        "kind",
-        "document_id",
-        "corpus_ref",
-        "permalink",
-        "authority",
-        "evidence_tier",
-        "article",
-        "section",
-        "published_at",
-        "effective_from",
-        "effective_to",
-        "consolidated_as_of",
-        "review_status",
-        "reviewed_at",
-        "reviewed_by",
-        "notes",
-        "required_text",
-    },
-)
+_LEGAL_TABLE_FIELDS: Final[frozenset[str]] = frozenset(LegalReference.model_fields) - {"id"}
+"""Every field a ``[legal."..."]`` table body may declare.
+
+Derived from :class:`LegalReference` rather than hand-listed, so it is complete
+by construction and cannot drift from the model it validates against. The
+hand-written set it replaces had fallen two fields behind -- ``corpus_tier``
+and ``forbidden_text`` -- and the first of those crashed ``dev.locales
+scaffold`` tree-wide the moment a catalogue entry used it, blocking every
+locale operation for reasons unrelated to locales.
+
+``id`` is excluded because it is the TOML table KEY, not a body field: a legal
+entry is written ``[legal."ley-58-2003:art-29"]`` and never carries ``id =``
+inside its own table.
+"""
 _RENDERED_TEXT_FIELDS: Final[tuple[str, ...]] = (
     "legal_id",
     "kind",
