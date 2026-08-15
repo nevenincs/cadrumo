@@ -971,12 +971,28 @@ reportUnnecessaryTypeIgnoreComment = "error"
 testpaths = ["src/cadrumo", "src/cadrumo-harness", "dev/packaging/tests/test_installed_oracles.py"]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
-addopts = "-n auto --dist=loadfile --tb=short -m 'unit and not external_tool and not os_keychain' --strict-markers"
+addopts = "-n auto --dist=loadfile --tb=short -m 'unit and not external_tool and not os_keychain' --strict-markers --max-worker-restart=0"
 # Per-test wall ceiling: a deadlocked test fails in minutes with a stack dump
 # instead of wedging the whole run for hours (the CI unit lane sat 3-5.5h
 # wedged with idle workers on every recent run). pytest-timeout picks the
 # signal method where available (Linux) and falls back to thread elsewhere.
 # 300 s is a ceiling, not a target; no legitimate unit test approaches it.
+#
+# The ceiling above bounds a hung TEST. It cannot bound a dead WORKER, and that
+# is the failure this repository actually kept hitting: a test whose thread is
+# blocked in `subprocess.wait()` is not interruptible by the thread timeout
+# method, so the worker exits uncleanly rather than reporting. xdist then
+# replaces the node, and the run either re-runs the test on the replacement --
+# observed reporting ONE test id as three separate failures -- or wedges the
+# loadscope scheduler outright (`KeyError: <WorkerController gw6>` in
+# `_assign_work_unit`, because a replacement node has no registered
+# collection). Both were reproduced here; the wedge sat 30 minutes with no
+# output on an otherwise idle box before it was killed.
+#
+# `--max-worker-restart=0` makes a worker death terminal and LOUD: the session
+# stops and names the test the worker died on, instead of silently retrying it
+# or hanging. A crashed worker is a defect to fix, never a transient to absorb
+# -- absorbing it is what turns one broken test into a corrupted result set.
 timeout = 300
 # Drop a test's `tmp_path` as soon as that test PASSES; keep it when it fails.
 # Measured on this box: `pytest-of-hello` reached 39.1 GB across 101 retained
