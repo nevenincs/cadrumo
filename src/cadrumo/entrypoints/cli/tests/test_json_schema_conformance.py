@@ -446,8 +446,9 @@ def test_error_document_shares_the_success_spine() -> None:
 def test_profile_bound_command_populates_active_profile_label(tmp_path: Path) -> None:
     """A real profile-bound command stamps the active profile's LABEL on the spine.
 
-    Drives the real ``config profile create`` flow to mint a profile with a
-    known display label, then runs a profile-bound non-wizard command
+    Mints a profile with a known display label through the credential
+    registration door -- the only creation door -- then runs a profile-bound
+    non-wizard command
     (``app ledger list``, which funnels through ``_emit_envelope`` — never
     the wizard emit path) under ``--format json`` with that profile active.
     The outer envelope's ``active_profile`` must carry the human LABEL — the
@@ -465,34 +466,24 @@ def test_profile_bound_command_populates_active_profile_label(tmp_path: Path) ->
     from ....core.config import override_settings
     from ....tests.cli_runner import invoke_cached_cli
     from ....tests.secure_sql import isolated_profile_storage_root
+    from ....tests.user_profile import register_cli_profile
 
     label = "Erika"
     dispose_engine()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         try:
-            created = invoke_cached_cli(
-                [
-                    "config",
-                    "profile",
-                    "create",
-                    label,
-                    "--quiet",
-                    "--accept-defaults",
-                    "--tax-id",
-                    "12345678Z",
-                    "--entity-type",
-                    "natural_person",
-                    "--name",
-                    "Erika",
-                    "--surnames",
-                    "Identity",
-                    "--activity",
-                    "design",
-                ],
+            register_cli_profile(
+                label=label,
+                facts={
+                    "identity.tax_id": "12345678Z",
+                    "taxpayer_type.entity_type": "natural_person",
+                    "identity.name": "Erika",
+                    "identity.surnames": "Identity",
+                    "activities.description": "design",
+                },
             )
-            assert created.exit_code == 0, created.output
             pointer = read_profile_bucket(label)
-            assert pointer is not None, "the created profile must resolve by its label"
+            assert pointer is not None, "the registered profile must resolve by its label"
             uuid = pointer.bucket_id
             assert uuid != label, "the bucket id must be a minted UUID, not the label"
 

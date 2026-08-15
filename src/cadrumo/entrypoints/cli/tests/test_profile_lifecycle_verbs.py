@@ -13,10 +13,9 @@ that drove it were retired with this change; each is named below with what,
 if anything, answers it now, so a later reader does not read the deletions as
 lost coverage:
 
-- create_second_profile_uses_requested_identity_while_first_is_active: the
-  subject was scripted creation of a second profile. No successor: two
-  in-process registrations in one process are blocked by a separate open
-  handover defect, so the intent cannot be re-founded honestly today.
+- create_second_profile_uses_requested_identity_while_first_is_active: not
+  retired. Its subject -- a second profile must not reuse the first's bucket
+  -- is re-founded below against the registration door.
 - create_bare_name_refusal_names_both_recovery_paths,
   create_quiet_without_flags_names_the_missing_flags,
   create_error_language siblings: the missing-required-flags refusal is
@@ -80,6 +79,68 @@ def _invoke_profile(args: Sequence[str]) -> Result:
 
 def _invoke_profile_app(args: Sequence[str]) -> Result:
     return _invoke_profile(args)
+
+
+def test_registering_a_second_profile_uses_its_own_identity_while_the_first_is_active() -> None:
+    """Registering beta in alpha's live root must not reuse alpha's bucket.
+
+    Two profiles registered back to back in one process must land on two
+    distinct buckets, each addressable by its own label, with neither one's
+    facts visible through the other. This was previously driven through
+    scripted ``profile create``; the door moved to credential registration
+    and the invariant did not.
+    """
+    from ....application.workflow import read_profile_bucket
+
+    register_cli_profile(
+        label="alpha",
+        facts={
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Alpha",
+            "identity.surnames": "Operator",
+            "activities.description": "alpha-design",
+            "iva.regime": "GENERAL",
+        },
+    )
+    register_cli_profile(
+        label="beta",
+        facts={
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Beta",
+            "identity.surnames": "Operator",
+            "activities.description": "beta-consulting",
+            "iva.regime": "GENERAL",
+        },
+    )
+
+    alpha_pointer = read_profile_bucket("alpha")
+    beta_pointer = read_profile_bucket("beta")
+    assert alpha_pointer is not None
+    assert beta_pointer is not None
+    assert alpha_pointer.bucket_id != beta_pointer.bucket_id
+
+    listing = _invoke_profile(("list",))
+    assert listing.exit_code == 0, listing.output
+    assert "active_profile	beta" in listing.output
+    assert " 	alpha" in listing.output
+    assert "*	beta" in listing.output
+
+    alpha_show = invoke_cached_cli(("--profile", "alpha", "config", "profile", "show"))
+    beta_show = invoke_cached_cli(("--profile", "beta", "config", "profile", "show"))
+    assert alpha_show.exit_code == 0, alpha_show.output
+    assert beta_show.exit_code == 0, beta_show.output
+
+    assert "display_name	alpha" in alpha_show.output
+    assert "identity.name	Alpha" in alpha_show.output
+    assert "activities.description	alpha-design" in alpha_show.output
+    assert "display_name	beta" not in alpha_show.output
+    assert "activities.description	beta-consulting" not in alpha_show.output
+
+    assert "display_name	beta" in beta_show.output
+    assert "identity.name	Beta" in beta_show.output
+    assert "activities.description	beta-consulting" in beta_show.output
+    assert "display_name	alpha" not in beta_show.output
+    assert "activities.description	alpha-design" not in beta_show.output
 
 
 def test_config_login_activates_existing_profile() -> None:
