@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#declaracion-profile-printed-box-scope'
 date: '2026-07-25'
-modified: '2026-07-25'
+modified: '2026-08-15'
 body_hash: 'sha256:1cd1ef8b239bbcd9660364e734c214ad02c94abb1e6ecea7c97a9768f6761d98'
 related:
   - '[[2026-07-25-declaracion-profile-printed-box-scope-adr]]'
   - '[[2026-07-25-declaracion-profile-printed-box-scope-research]]'
   - '[[2026-06-02-m303-parser-engine-totals-impedance-adr]]'
   - '[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]'
-  - '[[2026-05-21-declaracion-extraction-architecture-adr]]'
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]'
 ---
 

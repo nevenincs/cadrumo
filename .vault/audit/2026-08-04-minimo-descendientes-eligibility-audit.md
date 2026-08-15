@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
-modified: '2026-08-05'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:9da14c0ebb30974636650cf6363016bb3cea693750e965ffb02df479e48d660e'
 related:
@@ -11,7 +11,6 @@ related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-research]]"
   - "[[2026-08-04-profile-derived-selectors-audit]]"
-  - "[[2026-07-30-open-work-consolidation-plan]]"
 ---
 
 # `minimo-descendientes-eligibility` audit: closing honesty review

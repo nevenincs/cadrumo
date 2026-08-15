@@ -3,13 +3,9 @@ tags:
   - '#audit'
   - '#aeat-cli-gap-closure'
 date: '2026-07-12'
-modified: '2026-07-12'
+modified: '2026-08-15'
 body_hash: 'sha256:b95f12a175c69b7d4fe911bd81663ef03330c9da261413f730ffda139395b2c6'
 related:
-  - "[[2026-05-08-aeat-cli-gap-closure-plan]]"
-  - "[[2026-05-08-aeat-cli-gap-closure-adr]]"
-  - "[[2026-05-08-aeat-cli-gap-discovery-audit]]"
-  - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-06-12-residual-cli-hardening-triage-audit]]"
 ---
 

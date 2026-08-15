@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#honest-all-green'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:a292d408c89126c0c6302974d6eb2e201d2bafc35cfec65c72977f6a18ebc2d7'
 related:
-  - "[[2026-07-14-honest-all-green-plan]]"
   - "[[2026-07-14-honest-all-green-adr]]"
 ---
 

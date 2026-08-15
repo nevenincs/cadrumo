@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#live-iva-compensation-wallet'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:aff22fc0719cbc1576999a8a35361138015f1210fba55da6e80438e1ade4e1fc'
 related:
-  - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
-  - '[[2026-05-28-live-iva-read-only-auth-success-surface-failures-audit]]'
   - '[[2026-06-02-live-iva-surface-diagnostics-review-audit]]'
 ---
 

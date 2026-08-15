@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#cli-root-help-profile-identity'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:e6f8bcbe671d7d0cef950cf67289f7c5ea2bafc66f7877e0e3c9b3f47969b098'
 related:
-  - "[[2026-05-28-centralized-output-redaction-adr]]"
   - "[[2026-06-03-cli-ledger-testimonials-adr]]"
 ---
 

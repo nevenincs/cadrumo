@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:ef9d1feb5c13c4e9da5a453fc1c66f12cddc3874dc035d6a1911b313b4696b1e'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-02-registry-hardening-fragment-headroom-audit]]'
-  - '[[2026-05-19-modelo-registry-fragment-architecture-adr]]'
 ---
 
 # M303 Fragment Pressure Audit

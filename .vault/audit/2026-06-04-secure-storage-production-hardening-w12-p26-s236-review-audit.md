@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-04'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:517cb73c0346e10ee71d857fd7907d8b84d252e99688468fdcab997d9e05cfdc'
 related:
-  - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S236]]'
   - '[[2026-06-03-modelo-export-evidence-parity-adr]]'
   - '[[2026-06-03-modelo-export-workbook-parity-adr]]'
   - '[[2026-06-03-modelo-export-visual-design-adr]]'

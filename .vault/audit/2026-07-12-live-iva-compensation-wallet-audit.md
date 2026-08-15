@@ -3,13 +3,10 @@ tags:
   - '#audit'
   - '#live-iva-compensation-wallet'
 date: '2026-07-12'
-modified: '2026-07-12'
+modified: '2026-08-15'
 body_hash: 'sha256:9043521e2d467c0c025a31d966704b2009893e047729a23935aa5dd4a1aa5ed7'
 related:
-  - "[[2026-05-19-live-iva-compensation-wallet-plan]]"
-  - "[[2026-05-19-live-iva-compensation-wallet-adr]]"
   - "[[2026-06-03-live-iva-compensation-wallet-code-review-audit]]"
-  - "[[2026-05-26-live-iva-auth-read-acquisition-adr]]"
   - "[[2026-07-10-iva-compensation-chain-audit]]"
 ---
 

@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:83b6995993de553596f47503bbdc0d76d65f367a9aa6ee428f3bf74175e4c6ea'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-02-registry-hardening-fragment-headroom-audit]]'
-  - '[[2026-05-19-modelo-registry-fragment-architecture-adr]]'
 ---
 
 # M200 Export Fragment Pressure Audit

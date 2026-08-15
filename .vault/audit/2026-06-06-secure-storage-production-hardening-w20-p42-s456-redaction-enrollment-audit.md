@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-06'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:29d224d207e90f1fcb2885ea9147c108d2d0a5a7dad50b3f1060684025cc4edb'
 related:
-  - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-05-28-centralized-output-redaction-adr]]'
   - '[[2026-06-02-centralized-output-redaction-audit]]'
 ---
 

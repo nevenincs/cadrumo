@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#current-schema-only-purge'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:0fa79da90165319492b3c997cfc8e85834e0fb5b405ad5ff7f6dae4af209af7a'
 related:
   - "[[2026-08-10-current-schema-only-purge-plan]]"
-  - "[[2026-05-19-live-iva-compensation-wallet-adr]]"
   - "[[2026-06-13-first-filer-attestation-adr]]"
 ---
 # `current-schema-only-purge` audit: `S36 activity-start UNCONTRASTED closeout review`

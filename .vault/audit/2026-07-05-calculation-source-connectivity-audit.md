@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#calculation-source-connectivity'
 date: '2026-07-05'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:3851231d7fe91609d42923b5456126d292387143224f5ac9981848f577a20ca2'
-related:
-  - "[[2026-05-20-calculation-source-connectivity-plan]]"
+related: []
 ---
 # `calculation-source-connectivity` audit: `exec record reconciliation review`
 

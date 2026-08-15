@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#calculation-truth-registry'
 date: '2026-07-14'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:029cc94a70f766e4e73cf018c4ee310907a3b56015319cb3923511dd35627355'
 related:
   - "[[2026-07-12-calculation-truth-registry-plan]]"
   - "[[2026-07-12-calculation-truth-registry-reference]]"
-  - "[[2026-05-03-calculation-truth-registry-rebuild-plan]]"
   - "[[2026-07-14-calculation-export-import-adjudication-plan]]"
 ---
 

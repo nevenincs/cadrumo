@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-07-10'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:659999e883d6fa3a3540c2a396a72aa526a7649161c683d2f6f90e47bc85e47a'
-related:
-  - "[[2026-05-22-secure-storage-production-hardening-refactor-plan]]"
+related: []
 ---
 
 # `secure-storage-production-hardening` audit: `W22 no-deferral closure`

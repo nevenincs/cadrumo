@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#secure-backend-passkey-safety'
 date: '2026-07-10'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:0f021e2136f1ff96c527aea6125faa4941fd00b379cc17d5d91e160c2cebf230'
-related:
-  - "[[2026-05-14-secure-backend-passkey-custody-adr]]"
-  - "[[2026-05-22-secure-storage-production-hardening-architecture-adr]]"
+related: []
 ---
 
 # `secure-backend-passkey-safety` audit: `passkey plan HEAD reconciliation: superseded by production-hardening`

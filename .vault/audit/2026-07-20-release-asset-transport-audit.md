@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#release-asset-transport'
 date: '2026-07-20'
-modified: '2026-08-07'
+modified: '2026-08-15'
 body_hash: 'sha256:32bcd097db3c6d9abdba7a972e2be8cceaca2bc9d6104f4e0fa77a7e7b1ddecb'
 related:
   - "[[2026-07-20-release-asset-transport-adr]]"
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
   - "[[2026-07-04-release-readiness-gate-adr]]"
-  - "[[2026-04-12-release-please-adr]]"
 ---
 
 # `release-asset-transport` audit: `release corpus curation`

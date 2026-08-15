@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#session-rollout-2026-06-03'
 date: '2026-06-03'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:327e7c6ed228ede8780ef488db4be56050edf79b8bb20c5af5a16fa9a05783ce'
 related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
@@ -11,7 +11,6 @@ related:
   - "[[2026-06-03-iva-exemption-article-adr]]"
   - "[[2026-06-03-pareja-de-hecho-civil-status-adr]]"
   - "[[2026-06-03-multi-bucket-test-fixture-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
 ---
 
 # `session-rollout-2026-06-03` audit: `Continuous-rollout session inventory (53 commits, 12 plans/domains)`

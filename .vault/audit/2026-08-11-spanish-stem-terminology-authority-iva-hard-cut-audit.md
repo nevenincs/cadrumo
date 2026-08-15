@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#spanish-stem-terminology-authority'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:5d1400704e60571e20ca8a63c10e9f4a3d60b23c81ea0fcb1fbe4ebdb4911988'
 related:
-  - "[[2026-05-19-spanish-stem-terminology-authority-adr]]"
   - "[[2026-08-11-aeat-export-fragment-generator-authority-s61-dp30300-envelope-authority-research]]"
 ---
 # `spanish-stem-terminology-authority` audit: `IVA hard-cut campaign`

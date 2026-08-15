@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:76dbdcdf303bb6874efcf3e1887e95587b99ae1def6065dd8ab70ff5066dcd39'
+body_hash: 'sha256:f8c2f2e37bf49859bd836d3d55457645b9cb935ef239ebb4ecd629d53ecd3908'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
 ---
@@ -96,11 +96,56 @@ the silent path closed only by the accident of nothing surviving.
 Two consequences for the campaign's numbers. First, no design declared by a
 worklist revision and present on disk loses a sheet, so the worklist size
 distribution derived from read anchor counts is unaffected and needs no
-restatement. Second, the affected designs sit in the not-yet-enrolled tranche,
-where a read count would be taken at face value the first time one is enrolled;
-Modelo 151's would be wrong by a factor of seven.
+restatement. Second, the affected designs sit in the not-yet-enrolled tranche --
+the twenty-nine whose design binary is bundled but never declared as a registry
+source, as distinct from the seventeen genuinely awaiting acquisition. A read
+count taken at face value the first time one of those is enrolled would be
+wrong, and Modelo 151's would be wrong by a factor of seven: it reads 108
+anchors from a design carrying roughly 727. Anyone sizing that tranche from
+these counts should read this paragraph first.
 
 That distribution of shapes is itself the argument against the incremental fix.
 Recognising `Long.` alongside `Lon` is one more enrolment; `Datos Adicionales de
 la Declaración` is reachable by no spelling normalisation at all. Only making
 partiality explicit in the result covers the spelling nobody has seen yet.
+
+## The vocabulary behind the skips, and why the two fixes are ordered
+
+A follow-up pass reproduced the header probe against every sheet of every
+workbook design, mirroring the real search rather than stopping at the first
+candidate row. Of 2803 sheets, 2458 find a header and 345 do not, and the
+failures are far less varied than the two observed instances suggest: 330 of the
+345 are one spelling, a length column titled `Long.` where the probe accepts only
+`Lon`. Four sheets carry no length column at all, which no token rule reaches.
+Nine are Modelo 151's differently-titled description column. Two are a Modelo 232
+lookup tab that is correctly skipped.
+
+Only fifteen of those 345 are silent drops today. The other 330 sit inside
+Modelo 100 designs for ejercicios 2015 through 2019 that already refuse for
+independent reasons, so their sheets are lost loudly rather than quietly.
+
+## Correction: the predicted Modelo 100 hazard does not occur
+
+This section argued that widening the length-column spelling first would take
+those Modelo 100 designs from refusing outright to returning a partial result
+with no signal, trading a loud failure for a silent one. **Measured, it does
+not.** The prediction was stated before it was run and the run contradicts it.
+
+Patched from outside the repository across every bundled workbook design: eight
+Modelo 100 files (ejercicios 2015 to 2018, in both container formats) move from
+one hard refusal to a DIFFERENT hard refusal -- their newly readable sheets fail
+the variable-envelope geometry check rather than returning quietly. Two more
+(ejercicio 2019) go from refusing outright to reading 41 sheets complete. None
+of them becomes a silent partial in either order.
+
+The ordering conclusion survives, on the other case rather than that one. Modelo
+714's four editions were a genuine silent partial before the spelling widened --
+eleven sheets returned, a twelfth dropped, and no way for a caller to know. Under
+the old return type that recovery would have been invisible in both directions:
+nobody could have shown the sheet had been missing, nor that widening the rule
+recovered it. Partiality-first is what makes the spelling fix PROVABLE, which is
+a weaker claim than the one made above and the one the evidence supports.
+
+The general point stands unchanged and is the durable half: a spelling nobody
+has seen yet is silent under any enrolment, and only a result that reports its
+own completeness makes the next one loud.

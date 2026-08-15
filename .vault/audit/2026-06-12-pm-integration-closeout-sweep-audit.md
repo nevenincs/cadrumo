@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#pm-integration-closeout'
 date: '2026-06-12'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:b28f9781c9488a276dc83938d4957510901bca23f02798c653b8e11c342759a6'
 related:
   - '[[2026-06-10-ledger-amount-direction-plan]]'
   - '[[2026-06-11-period-grammar-standardisation-plan]]'
-  - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-06-10-cli-operator-surface-plan]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-plan]]'
   - '[[2026-06-12-live-pull-verification-sweep-plan]]'

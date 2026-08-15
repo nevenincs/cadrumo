@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:b4bcee8fd3e76daec7027f0e46b015dd5dbbf6be85712cf365c7ec38c86eb61b'
-related:
-  - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S343]]'
+related: []
 ---
 
 # `secure-storage-production-hardening` `W12.P26.S343` Review

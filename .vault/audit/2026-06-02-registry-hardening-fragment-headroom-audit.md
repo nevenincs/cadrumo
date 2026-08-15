@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:4edd84427588dd3547df5d59da59251ac70ffa32729cd8ecbe55bc210330050b'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-02-registry-hardening-next-work-health-audit]]'
-  - '[[2026-05-19-modelo-registry-fragment-architecture-adr]]'
 ---
 
 # Registry Hardening Fragment Headroom Audit

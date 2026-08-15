@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#profile-lifecycle-disaster'
 date: '2026-06-01'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:8e1cbf5e9e36987a6430d36b24a01c99ed217014486b964498d4456e253515f9'
-related:
-  - "[[2026-05-19-profile-lifecycle-disaster-plan]]"
+related: []
 ---
 
 # `profile-lifecycle-disaster` audit: P06.S42 operator-blind-newcomer retest disposition

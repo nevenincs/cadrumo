@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#modelo-100-casilla'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:21d3a86337d6fef0070c51a4678579b5891e826dafda86005947886260aa00df'
-related:
-  - "[[2026-05-27-schema-hardening-m100-revision-drift-research]]"
-  - "[[2026-04-21-casilla-schema-completeness-adr]]"
+related: []
 ---
 
 # "modelo-100-casilla" audit: "Modelo 100 casilla implementation audit closure"

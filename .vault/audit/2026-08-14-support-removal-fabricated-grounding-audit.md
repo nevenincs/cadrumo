@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#support-removal-fabricated-grounding'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:53ae8de6bfdceab67b1446e49fb31a000e97fbfa70dc24f360eaa6b66685a7cf'
 related:
-  - "[[2026-04-22-aeat-fichero-boe-export-adr]]"
   - "[[2026-08-14-registry-campaign-sequencing-audit]]"
 ---
 

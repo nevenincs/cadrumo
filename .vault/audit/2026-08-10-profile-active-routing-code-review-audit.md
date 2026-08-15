@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-active-routing'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:2045737dba68dc78776f4ca042efeecae125047c2562096c030ac778bf56cf5e'
-related:
-  - "[[2026-05-12-cli-workflow-redesign-adr]]"
+related: []
 ---
 
 # `profile-active-routing` audit: `Profile active routing code review`

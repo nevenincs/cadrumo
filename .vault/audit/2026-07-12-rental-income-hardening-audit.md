@@ -3,14 +3,9 @@ tags:
   - '#audit'
   - '#rental-income-hardening'
 date: '2026-07-12'
-modified: '2026-07-12'
+modified: '2026-08-15'
 body_hash: 'sha256:fe9de7d2afcbd3dd9041dca13341ee3a6e1db3e9c2d61a99344144282cae9ae1'
-related:
-  - "[[2026-04-29-rental-income-hardening-plan]]"
-  - "[[2026-04-29-rental-income-hardening-adr]]"
-  - "[[2026-04-29-rental-income-hardening-audit]]"
-  - "[[2026-05-12-cli-workflow-redesign-domain-harvest-rental-adr]]"
-  - "[[2026-05-19-spanish-stem-terminology-authority-adr]]"
+related: []
 ---
 
 # `rental-income-hardening` audit: `legacy plan supersession reconciliation`

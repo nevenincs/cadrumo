@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:11e910f656b43bc79e8e2ed0321ee1ace16a832dc6edecf905b690bcafb957a1'
-related:
-  - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
-  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-application-ledger-fixture-slice-exec]]'
+related: []
 ---
 
 # `secure-storage-production-hardening` `W12.P23.S93` Application Ledger Fixture Slice Review

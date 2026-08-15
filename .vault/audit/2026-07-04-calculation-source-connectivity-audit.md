@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#calculation-source-connectivity'
 date: '2026-07-04'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:0eca90f721b8bb4ee34cfb3347e3945620615cec1466df63716f2b0c54740c6a'
-related:
-  - "[[2026-05-20-calculation-source-connectivity-plan]]"
+related: []
 ---
 
 # `calculation-source-connectivity` audit: `campaign closeout`

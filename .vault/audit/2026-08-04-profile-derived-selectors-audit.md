@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#profile-derived-selectors'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:89959abef3206d5315c647c1971f57aa3c00afc3cb104417ad334c1f5d5140d1'
 related:
   - "[[2026-08-04-profile-derived-selectors-adr]]"
   - "[[2026-08-04-profile-derived-selectors-plan]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-adr]]"
-  - "[[2026-05-07-user-profile-backend-schema-adr]]"
 ---
 
 # `profile-derived-selectors` audit: `Closing audit: what the derived-selector campaign knowingly accepts and what it hands on`

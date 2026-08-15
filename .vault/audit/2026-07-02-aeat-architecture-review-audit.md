@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-architecture-review'
 date: '2026-07-02'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:b8ef50531ef4ca902ff379511d329d51f4078fc0ff28f2b3e30dc65e78a6ba68'
 related:
   - '[[2026-06-04-full-repo-health-diagnostics-audit]]'
-  - '[[2026-05-16-corpus-registry-packaging-audit]]'
   - '[[2026-07-02-arch-remediation-program-adr]]'
   - '[[2026-07-02-arch-remediation-modelo-surface-adr]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-adr]]'

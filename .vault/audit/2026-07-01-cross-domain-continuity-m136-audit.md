@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#cross-domain-continuity-m136'
 date: '2026-07-01'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:d936e496ebb9690c7585ae37277143b88dd156afc3d78cfee775db7b9ecd2899'
-related:
-  - "[[2026-05-26-cross-domain-continuity-plan]]"
+related: []
 ---
 
 # `cross-domain-continuity-m136` audit: `Modelo 136 Registry Grounding Review`
