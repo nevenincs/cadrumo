@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:8b025f22bd6121e394433edc2b83148275abc5464c7b3c78be429569cdde7963'
+body_hash: 'sha256:fd5c064aedfa259252aae3a949cfcbb477b7da18dc776bb7ae3ee160dadf74c2'
 step_id: 'S98'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
@@ -28,21 +28,48 @@ related:
 ## Outcome
 
 **Eight of the nine criteria are satisfied with current evidence. One is not,
-and one more is satisfied in substance but not currently reproducible.** The
-campaign is therefore complete except for two named items, both recorded below
-with their cause, their owner and their remedy. Neither is narrowed to fit.
+and it is formally deferred with a reference rather than carried as a checked
+row: `2026-08-15-test-harness-sanity-monkeypatch-criterion-deferral-audit`.**
+
+This record was first written naming TWO open items. The second turned out to
+be closable and has been closed; correcting it is the more useful half of this
+row and is described under criterion 1.
 
 **1 — census coverage, no unclassified record, no substitutable duplicate.**
 Coverage is proven by reading the walk rather than the output: `iter_source_files`
 seeds its universe with the repository-root `conftest.py` and REFUSES if it or
 any of `src`, `dev`, `packaging` is absent, so the four required trees cannot be
-silently dropped. Today: 5601 source files, 499 fixtures, 43 factory-bound, 0
-aliased behaviours. The root contributes no fixture rows because it declares no
+silently dropped. Today: 5601 source files and 0 aliased behaviours; the
+manifest's own inventory, generated after the duplicate removals below, is 540
+fixtures. The root contributes no fixture rows because it declares no
 fixture — an empty result that had to be distinguished from an unscanned root,
 and was.
 
-The unclassified and substitutable-duplicate halves are **satisfied in substance
-but not reproducible today** — see the deferred items.
+The unclassified and substitutable-duplicate halves are **now satisfied and
+reproduced**, and the way they were reached corrects this row's first reading.
+
+They had been recorded as blocked by the generator's fail-closed guard against
+a moving tree. That was true and it was not the whole reason. Running the
+generator against an immovable snapshot -- `git archive HEAD | tar -x` into a
+scratch directory -- turned the refusal into a readable verdict, and the verdict
+was that FIVE substitutable duplicate groups existed. The artefact could not
+have been written however quiet the tree became. "The tree keeps moving" was a
+real obstacle standing in front of a second one nobody had looked behind, and
+the first reading of this row stopped at the first obstacle.
+
+Two of the five were introduced by this campaign's own preceding Step: giving
+the bundled-authority factory one home closed the aliasing check and opened the
+duplication check, because two modules then bound the same factory under the
+same name. The other three were pre-existing. All five are closed, each on its
+own terms rather than by relaxing anything, and the generator now completes
+against the LIVE tree on the first attempt:
+
+    fixture_count = 540   (the committed inventory had claimed 559)
+    substitutable_duplicate_count = 0
+    retained_divergent_count = 283
+
+The census gate is green at 36 passed, including the completeness and
+no-substitutable-duplicate check that had been failing throughout the campaign.
 
 **2 — migrated clusters pass real-behaviour tests from each former consumer
 subtree plus a collection proof.** Carried by the per-Step records. The last
@@ -55,7 +82,8 @@ collection count alone does not give.
 relevant module.** Carried by the single lane authority under `W07.P24.S99`.
 
 **4 — no-monkeypatch inventory and its discriminating controls pass with no
-allowlist, suppression or renamed equivalent. NOT SATISFIED.** See below.
+allowlist, suppression or renamed equivalent. NOT SATISFIED**, and deferred with
+a reference. See below.
 
 **5 — routine unit execution launches no nested xdist probe or full-corpus
 recursive collector; the dedicated harness verdict runs both proofs and fails on
@@ -85,64 +113,67 @@ waived.
 
 ## Deferred, with what the goal still asks for
 
-**A — the monkeypatch criterion fails on one live site, and it is not this
-campaign's to fix alone.** `domain/calculations/registry/tests/test_read_parameter_authority_invalidation.py`
-monkeypatches `bundled_path` at lines 115 and 138. It landed on 2026-08-14 in
-commit `6d80634e6b`, mid-campaign and from the registry lane — so it is a
-regression against a criterion this plan owns, not pre-existing debt, and it is
-recorded as such rather than absorbed silently.
+**The monkeypatch criterion fails on one live site, and it is deferred with a
+reference:** `2026-08-15-test-harness-sanity-monkeypatch-criterion-deferral-audit`.
+`domain/calculations/registry/tests/test_read_parameter_authority_invalidation.py:115,138`
+monkeypatches `bundled_path`. It landed on 2026-08-14 in commit `6d80634e6b`,
+mid-campaign and from the registry lane, so it is a regression against a
+criterion this plan owns rather than pre-existing debt.
 
-It is reported rather than removed because removing it needs a production change
-in another lane's domain. The test exercises the DEFAULT-root branch, and
-`_bundled_registry_root` is an `lru_cache` over `bundled_path("registry", "aeat")`
-with no injection point, so the only alternatives are editing the shipped
-registry tree or adding a production override for the bundled registry root.
-Adding that override unilaterally, to satisfy a test-honesty gate, would put a
-real root-redirection capability into production on a test's authority. That is
-the registry lane's call.
+The audit carries the full argument. The load-bearing part, and the part that
+changed during this row, is WHY it cannot simply be rewritten against
+`read_parameter`'s explicit-root argument. Reading `read_parameter` alone, the
+two branches converge on one identical `ValidatedRegistryAuthority.load(...)`
+call and the redirection looks gratuitous. They diverge a layer down:
+`_loader.py:1224` enables the fingerprint-keyed on-disk compile cache only when
+`is_bundled_registry_root(resolved)` holds, so an explicit temp root skips the
+very cache the test exists to exercise. A proof through the explicit branch
+would prove nothing about the branch production takes.
 
 **What the standing goal still asks for:** the criterion says this inventory
-passes with no allowlist, suppression or renamed equivalent. It does not
-currently pass. Note the shape of the escape that is NOT taken here: the
-monkeypatch gate carries no allowlist at all, so the cheap close would be to add
-one, and an allowlist added to make a gate green is the gate being switched off.
+passes with no allowlist, suppression or renamed equivalent. It does not pass.
+The gate carries no allowlist at all, so the cheap close is to add one — and a
+first allowlist entry created to clear a criterion that names allowlists as the
+thing to avoid is the gate being switched off. It stays red.
 
-The other half of this criterion WAS closed today. Two classes landed on
-2026-08-13 that the semantic double detector flagged and should not have —
+The other half of this criterion WAS closed. Two classes landed on 2026-08-13
+that the semantic double detector flagged and should not have —
 `_RecordingAttachmentStore` and `_RefusingAttachmentStore`, both of which
 delegate every call to a concrete `AttachmentStore` and are the opposite of a
-stand-in. The existing exemption was a bare set of names; it is now a mapping
-where each entry states why its class is real, and the liveness check fails an
-entry whose reason is too short to read, whose class has vanished, or whose name
-matches no forbidden token. Mutation-proven from outside the repository: the
-unmutated table passes and all three failure modes are detected.
+stand-in. That exemption already existed as a bare set of names; it is now a
+mapping where each entry states why its class is real, and the liveness check
+fails an entry whose reason is too short to read, whose class has vanished, or
+whose name matches no forbidden token. Mutation-proven from outside the
+repository: the unmutated table passes and all three failure modes are detected.
 
-**B — the ownership manifest's verdict is real but not reproducible today.** The
-generator is fail-closed against a moving source universe and refused twice
-this session, naming different peer-edited files each time. The aliasing verdict
-above does not depend on it; the unclassified and substitutable-duplicate
-verdicts do. `W08.P26.S88` recorded those as zero when generation last
-completed, and the committed artefact carries the correct verdict over a stale
-inventory of 559 against a live population of 499.
-
-**What the standing goal still asks for:** one clean regeneration in a quiet
-tree, after which the artefact's inventory matches the live population. That is
-a mechanical step behind an external blocker, not an open question about whether
-duplicates exist.
+An allowlist that records a judgement and an allowlist that launders a failure
+are different instruments. The criterion rules out the second; the first was
+available for the mock gate and is not available for the monkeypatch gate,
+because there is no list there to record a judgement in.
 
 ## Notes
 
-**The two deferred items share a cause worth stating once.** Both are the tree
-moving under this campaign rather than anything inside it: one is a peer
-landing a monkeypatch through a gate this plan owns, the other is peers editing
-files while a fail-closed generator tries to photograph them. A campaign running
-concurrently with five others cannot hold the tree still, and a close that
-reported these as done would be claiming an authority over the tree that this
-campaign does not have.
+**Method note, because it changed this row's answer twice.**
 
-**Method note, because it changed an answer today.** The coverage criterion was
-nearly recorded as a gap. The census emits no fixture rows for the repository
-root, which reads as an unscanned root; reading `iter_source_files` showed the
-root `conftest.py` is not merely included but REQUIRED, and the absence of rows
-is the true fact that it declares no fixtures. An empty result cannot tell clean
-from unscanned, and only the code settles which one it is.
+First: the coverage criterion was nearly recorded as a gap. The census emits no
+rows for the repository root, which reads as an unscanned root. Reading
+`iter_source_files` showed the root `conftest.py` is REQUIRED, not merely
+included, and the absence of rows is the true fact that it declares no fixtures.
+An empty result cannot tell clean from unscanned, and only the code settles it.
+
+Second, and larger: this row originally closed the ownership-manifest criterion
+as blocked, on a true observation — the generator kept refusing because peers
+kept editing. The refusal message names the moving files, so it answers the
+question "why did this run fail" and silently does not answer "would it succeed
+on a still tree". Giving it a tree that could not move answered the second
+question, and the answer was five real duplicate groups. A fail-closed guard
+firing for a real reason is exactly the shape that stops an investigation one
+step early, because there is nothing obviously wrong with where you stopped.
+
+**On the remaining item's cost.** The audit records a second remedy that needs no
+production change: run the test in a subprocess against a PYTHONPATH-shadowed
+package whose own bundled registry is the temp tree, so `bundled_path` resolves
+naturally and the disk cache is genuinely exercised. It is not taken here
+because it buys a subprocess test and a package copy in a campaign whose subject
+is suite runtime. That trade is stated rather than left implicit, so the lane
+that owns it can weigh it rather than rediscover it.
