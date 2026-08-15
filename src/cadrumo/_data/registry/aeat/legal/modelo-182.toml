@@ -78,6 +78,13 @@ sha256 = "6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f"
 bytes = 413403
 retrieved_at = 2026-07-21
 applies_from = 2024-01-01
+# Closed at the day before "aeat-dr-182-2025" opens. Both editions previously
+# declared applies_from with no applies_to, so both asserted authority over
+# 2025 onward and revision resolution had no single answer. AEAT itself files
+# this edition under "ejercicios anteriores" while the 2025 edition sits on the
+# current disenos-de-registro page, so the supersession is the authority's own
+# classification and the close date is derived from the successor, not chosen.
+applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_182_2024.pdf"
 review_status = "reviewed"
 

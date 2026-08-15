@@ -39,6 +39,13 @@ sha256 = "83cd9a332e0016607e87332bea8c3e5d33f0b0f8373ec56f820d82414ca76a7b"
 bytes = 148101
 retrieved_at = 2026-07-21
 applies_from = 2023-01-01
+# Closed at the day before "aeat-dr-194-2024" opens. Both editions previously
+# declared applies_from with no applies_to, so both asserted authority over
+# 2024 onward and revision resolution had no single answer. AEAT itself files
+# this edition under "ejercicios anteriores" while the 2024 edition sits on the
+# current disenos-de-registro page, so the supersession is the authority's own
+# classification and the close date is derived from the successor, not chosen.
+applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR_Mod_194-2023.pdf"
 review_status = "reviewed"
 
