@@ -3,18 +3,16 @@ tags:
   - '#plan'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:693a7d7adc3e2a1d77f0f0d7b6f58e944124dcf990f43f2c44d6de49b402e764'
 tier: L3
 related:
   - '[[2026-06-02-registry-hardening-next-work-health-audit]]'
-  - '[[2026-05-28-schema-hardening-continuity-conformance-plan]]'
-  - '[[2026-05-19-modelo-registry-fragment-architecture-adr]]'
-  - '[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]'
-  - '[[2026-05-28-schema-hardening-m100-continuity-inventory-research]]'
-  - '[[2026-05-19-schema-hardening-role-taxonomy-reference]]'
+  - '[[2026-06-02-schema-hardening-m100-label-legal-continuity-candidate-research]]'
+  - '[[2026-06-02-schema-hardening-m100-legal-ref-continuity-candidate-research]]'
+  - '[[2026-08-05-schema-hardening-aeip-event-keyed-continuity-research]]'
+  - '[[2026-08-05-schema-hardening-compiled-casilla-order-research]]'
 ---
-
 # `schema-hardening` `registry hardening next work` plan
 
 ## Wave `W01` - reviewability and continuity stabilization

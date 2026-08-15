@@ -3,11 +3,10 @@ tags:
   - '#exec'
   - '#modelo-100-renta-full-calc'
 date: '2026-05-20'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:8a948d0a9b147965497aea3b606c4b012191bd3608192fcf7f3ab574dbb94b5f'
 step_id: 'S01'
-related:
-  - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"
+related: []
 ---
 
 # `modelo-100-renta-full-calc` `S01`

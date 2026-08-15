@@ -3,11 +3,9 @@ tags:
   - '#exec'
   - '#calculation-truth-registry'
 date: '2026-05-05'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:c50c290310b52209606d18d2a88b4bcf5c926bf17a8c5fe7ec4394f2053ef942'
-related:
-  - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
-  - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
+related: []
 ---
 
 # `calculation-truth-registry` `scenario-parity-harness`

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#release-pipeline-full-automation'
 date: '2026-08-02'
-modified: '2026-08-02'
+modified: '2026-08-15'
 body_hash: 'sha256:6a03959f28aee1d08c9c35988709373e88c3665f115c301a7ba4c33b08cc66e5'
 tier: L3
 related:
@@ -12,7 +12,6 @@ related:
   - '[[2026-07-27-publication-lane-consolidation-adr]]'
   - '[[2026-07-27-pipeline-config-topology-adr]]'
   - '[[2026-07-04-release-readiness-gate-adr]]'
-  - '[[2026-04-12-release-please-adr]]'
   - '[[2026-07-27-canonical-release-pipeline-plan]]'
   - '[[2026-07-27-canonical-release-pipeline-research]]'
 ---

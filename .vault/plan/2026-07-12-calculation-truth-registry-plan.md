@@ -3,13 +3,10 @@ tags:
   - '#plan'
   - '#calculation-truth-registry'
 date: '2026-07-12'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:95e42849893eeff919146516dda85fcbbeffaf6af7659e3b8437e69c8037ec5e'
 tier: L2
 related:
-  - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
-  - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
-  - '[[2026-05-03-calculation-truth-inventory-research]]'
   - '[[2026-07-12-calculation-truth-registry-audit]]'
   - '[[2026-07-12-calculation-truth-registry-reference]]'
 ---

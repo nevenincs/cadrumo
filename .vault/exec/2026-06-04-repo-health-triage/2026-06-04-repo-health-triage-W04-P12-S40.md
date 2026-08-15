@@ -3,13 +3,12 @@ tags:
   - '#exec'
   - '#repo-health-triage'
 date: '2026-06-04'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:d00d82c8adcfd66d67a8e438b8448c56f15aef879971b18f9067efe487239a13'
 step_id: 'S40'
 related:
   - '[[2026-06-04-repo-health-triage-plan]]'
   - '[[2026-06-04-full-repo-health-diagnostics-audit]]'
-  - '[[2026-05-30-security-supply-chain-2026-05-30-audit]]'
 ---
 
 # W04.P12.S40 - Decide torch runtime optional or stale ownership

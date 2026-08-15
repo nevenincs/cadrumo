@@ -3,11 +3,10 @@ tags:
   - '#plan'
   - '#module-test-coverage'
 date: '2026-06-01'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:e9bb67c49e10f6bbf4016fefcba3e6fb74094e0c055f2a3f395dbf2011eb21a4'
 tier: L1
 related:
-  - "[[2026-05-31-coverage-canonicalisation-audit]]"
   - "[[2026-06-01-envelope-conformance-gate-adr]]"
   - "[[2026-06-01-metastate-zero-tolerance-adr]]"
   - '[[2026-06-04-module-test-coverage-adr]]'

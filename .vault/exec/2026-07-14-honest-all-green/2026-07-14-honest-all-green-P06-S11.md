@@ -3,11 +3,10 @@ tags:
   - '#exec'
   - '#honest-all-green'
 date: '2026-07-14'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:3d8a38e25be2c2da74fcbdd274efc0613c7a19aa98effeea10d76df34e7fab4f'
 step_id: 'S11'
-related:
-  - "[[2026-07-14-honest-all-green-plan]]"
+related: []
 ---
 
 # Run the full suite to genuinely green in parallel and sequential modes and record the closing evidence

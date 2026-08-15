@@ -3,12 +3,9 @@ tags:
   - '#exec'
   - '#calculation-truth-registry'
 date: '2026-05-05'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:63217304a1e7296934b9c560dffd06d54db141a7e5a198ebdd4d957b17c7a8b7'
-related:
-  - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
-  - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
-  - '[[2026-05-04-calculation-authority-evidence-tiering-adr]]'
+related: []
 ---
 
 # `calculation-truth-registry` `phase-4r` `renta-parity-tape`

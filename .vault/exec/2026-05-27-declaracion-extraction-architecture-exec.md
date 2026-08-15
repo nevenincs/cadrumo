@@ -3,11 +3,10 @@ tags:
   - '#exec'
   - '#declaracion-extraction-architecture'
 date: '2026-05-27'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:696ce7448efebbda61f4e74e7fb9b0a7af85be7c58f520662a931f789a1bbc4b'
 step_id: 'S176'
-related:
-  - "[[2026-05-21-declaracion-extraction-architecture-plan]]"
+related: []
 ---
 
 # `declaracion-extraction-architecture` `W07.P32.S176`

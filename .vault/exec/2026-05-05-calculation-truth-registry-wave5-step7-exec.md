@@ -3,10 +3,9 @@ tags:
   - '#exec'
   - '#calculation-truth-registry'
 date: '2026-05-05'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:5e5ff9fcf37464dbc5c4c5e417ec0a1224906357a855b81045a8144ec4392bbc'
-related:
-  - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
+related: []
 ---
 
 # `calculation-truth-registry` `wave5` `step7`

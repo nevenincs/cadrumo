@@ -3,11 +3,10 @@ tags:
   - '#plan'
   - '#hexagonal-port-wiring'
 date: '2026-06-01'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:b199cc955ddd898997fe393d10173729d1e9d6184f6d45f95be049ccaf4e32d5'
 tier: L2
 related:
-  - '[[2026-05-31-hexagonal-port-necessity-audit]]'
   - '[[2026-06-01-domain-boundary-audit-adr]]'
   - '[[2026-06-04-hexagonal-port-wiring-adr]]'
   - '[[2026-06-04-hexagonal-port-wiring-research]]'

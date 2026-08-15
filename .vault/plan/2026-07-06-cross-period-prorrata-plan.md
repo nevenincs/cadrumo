@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cross-period-prorrata'
 date: '2026-07-06'
-modified: '2026-07-15'
+modified: '2026-08-15'
 body_hash: 'sha256:8437727cd2a27b96722b2ed77ac941a4373e87498c4a8a2d6b992f3790a3ce66'
 tier: L3
 related:
@@ -11,7 +11,6 @@ related:
   - '[[2026-07-01-iva-complexity-hardening-scope-adr]]'
   - '[[2026-06-19-silent-zero-base-aggregation-plan]]'
   - '[[2026-07-05-silent-zero-base-aggregation-audit]]'
-  - '[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]'
   - '[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]'
   - '[[2026-07-06-cross-period-prorrata-research]]'
 ---

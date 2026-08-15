@@ -1,15 +1,13 @@
 ---
 tags: ['#exec', '#live-pull-verification-sweep']
 date: '2026-06-12'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:e370a27c0e9897a51df24e3cc5366fc56665f2c8b15f6dd572ac01cea880b453'
 step_id: 'S03'
 related:
   - '[[2026-06-12-live-pull-verification-sweep-plan]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-plan]]'
   - '[[2026-06-10-live-justificante-reconcile-plan]]'
-  - '[[2026-05-26-no-synthetic-sede-live-surfaces-plan]]'
-  - '[[2026-04-27-live-submit-permanently-forbidden-plan]]'
 ---
 
 # W01.P01.S03 - Predecessor gap cross-link

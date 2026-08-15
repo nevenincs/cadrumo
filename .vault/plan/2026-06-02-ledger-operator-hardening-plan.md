@@ -3,13 +3,11 @@ tags:
   - '#plan'
   - '#ledger-operator-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:f6ccbfa81766f374876810c26d06bd2d7b2bec865b1344654c94ca46e22f5a6e'
 tier: L3
 related:
   - '[[2026-06-02-ledger-operator-hardening-adr]]'
-  - '[[2026-05-08-ledger-renta-pipeline-adr]]'
-  - '[[2026-05-14-ledger-transaction-lifecycle-adr]]'
   - '[[2026-06-04-ledger-operator-hardening-research]]'
 ---
 

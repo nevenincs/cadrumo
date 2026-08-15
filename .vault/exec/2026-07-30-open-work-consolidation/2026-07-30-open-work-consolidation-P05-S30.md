@@ -3,12 +3,11 @@ tags:
   - '#exec'
   - '#open-work-consolidation'
 date: '2026-07-31'
-modified: '2026-07-31'
+modified: '2026-08-15'
 body_schema: 'body-v1'
 body_hash: 'sha256:a01389cad501472ab5da50fdef027c32cd553477ecd85c6b0a76a3f351d69d3e'
 step_id: 'S30'
-related:
-  - "[[2026-07-30-open-work-consolidation-plan]]"
+related: []
 ---
 
 # Rerun the twelve semantic duplication probes and record the delta against the baseline they check for recurrence of, closing the residue of a row that was superseded rather than satisfied

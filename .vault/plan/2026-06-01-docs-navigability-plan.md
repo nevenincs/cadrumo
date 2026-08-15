@@ -3,12 +3,10 @@ tags:
   - '#plan'
   - '#docs-navigability'
 date: '2026-06-01'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:3ffdf7d791c6124a777b97c65ed76956fe33adc76d7c4479bb1abd2b63a43887'
 tier: L3
 related:
-  - '[[2026-05-30-docs-architecture-plan]]'
-  - '[[2026-05-30-docs-architecture-research]]'
   - '[[2026-06-01-docs-educational-surface-adr]]'
   - '[[2026-06-04-docs-navigability-adr]]'
   - '[[2026-06-04-docs-navigability-research]]'

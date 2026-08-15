@@ -3,16 +3,14 @@ tags:
   - '#plan'
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:7120008bd5c557de917dc7b6edc434297e18a78f2b390d78eff2cbc19eb26801'
 tier: L2
 related:
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-adr]]'
   - '[[2026-06-13-first-filer-attestation-adr]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
-  - '[[2026-05-19-modelo-130-relation-regression-adr]]'
   - '[[2026-06-04-m130-casilla-15-override-adr]]'
-  - '[[2026-04-27-modelo-130-calc-verify-adr]]'
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-research]]'
 ---
 # `modelo-130-pagos-fraccionados-carry` `casilla 05 cumulative pagos-fraccionados carry (target-relative same-ejercicio expanding span)` plan

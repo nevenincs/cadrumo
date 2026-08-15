@@ -3,12 +3,9 @@ tags:
   - '#exec'
   - '#aeat-verify'
 date: '2026-04-25'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:26d2b4fa8b281075830394fe175a064bd183ba95f63cf9567fe75c3b98cc0e81'
-related:
-  - "[[2026-04-25-aeat-verify-audit]]"
-  - "[[2026-04-24-aeat-verify-reference]]"
-  - "[[2026-04-24-aeat-verify-adr]]"
+related: []
 ---
 
 # `aeat-verify` `discovery-driven-rewrite` `summary`

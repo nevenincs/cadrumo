@@ -3,13 +3,12 @@ tags:
   - '#exec'
   - '#repo-health-triage'
 date: '2026-06-04'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:85f4b401ba1d18b206e735461aee115dd6a4b37aa2d8064132cc592970e89731'
 step_id: 'S41'
 related:
   - '[[2026-06-04-repo-health-triage-plan]]'
   - '[[2026-06-04-full-repo-health-diagnostics-audit]]'
-  - '[[2026-04-12-playwright-anti-bot-adr]]'
 ---
 
 # W04.P12.S41 - Declare or optionalize playwright-stealth consistently

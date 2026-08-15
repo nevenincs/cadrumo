@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#google-optional-adapter-boundary'
 date: '2026-07-14'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:be18f812f2a8cebd1c417044988462094b8eb3d88af3437706259e66e73f0f6a'
 tier: L1
 related:
@@ -11,9 +11,6 @@ related:
   - '[[2026-07-14-google-optional-adapter-boundary-research]]'
   - '[[2026-07-14-google-optional-adapter-boundary-reference]]'
   - '[[2026-07-14-google-oauth-audit]]'
-  - '[[2026-06-04-ledger-google-live-export-adr]]'
-  - '[[2026-06-04-ledger-google-live-export-research]]'
-  - '[[2026-06-03-ledger-google-live-export-plan]]'
 ---
 
 # `google-optional-adapter-boundary` plan

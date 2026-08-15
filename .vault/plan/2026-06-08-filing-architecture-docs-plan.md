@@ -3,14 +3,13 @@ tags:
   - '#plan'
   - '#filing-architecture-docs'
 date: '2026-06-08'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:bcbfd4b4255e9415dfc46e21faf04d8cacf4012b5c89595da21052a4fd356be3'
 tier: L3
 related:
   - '[[2026-06-08-filing-architecture-docs-research]]'
   - '[[2026-06-01-docs-educational-surface-adr]]'
   - '[[2026-06-02-docs-educational-surface-audit]]'
-  - '[[2026-05-30-docs-architecture-adr]]'
 ---
 
 # `filing-architecture-docs` `Filing Architecture Documentation` plan

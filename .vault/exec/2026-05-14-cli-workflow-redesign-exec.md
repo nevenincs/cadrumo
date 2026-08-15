@@ -3,11 +3,10 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-05-14'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:1ae8001ba087a6baf8f88b730fe3d6a1bb8e88f9dd1f4a9184de9264a74b3205'
 step_id: 'W48.P236.S1411'
-related:
-  - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
+related: []
 ---
 
 # `cli-workflow-redesign` `W48.P236.S1411` / `W48.P236.S1412` / `W48.P236.S1413` / `W48.P236.S1414` / `W48.P236.S1415` / `W48.P236.S1416`

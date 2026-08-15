@@ -3,14 +3,9 @@ tags:
   - '#exec'
   - '#calculation-truth-registry'
 date: '2026-05-05'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:ea06da94094532add67ec87b1008a7c31c5affe08ae5ae059564797c271ea5dd'
-related:
-  - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
-  - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
-  - '[[2026-05-05-modelo-100-renta-source-dependency-reference]]'
-  - '[[2026-05-05-modelo-100-renta-aggregation-audit]]'
-  - '[[2026-05-05-calculation-truth-registry-phase4r-renta-direct-estimation-review-audit]]'
+related: []
 ---
 
 # `calculation-truth-registry` `Phase 4R` `modelo-100-scaffold`

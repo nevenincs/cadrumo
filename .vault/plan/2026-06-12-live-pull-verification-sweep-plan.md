@@ -3,20 +3,15 @@ tags:
   - '#plan'
   - '#live-pull-verification-sweep'
 date: '2026-06-12'
-modified: '2026-07-15'
+modified: '2026-08-15'
 body_hash: 'sha256:ef702defd1b78ad9c9fd07f71508da48d1620d56817f344f02ce35cc27f268dc'
 tier: L4
 related:
   - '[[2026-06-05-live-censo-calendar-reconciliation-plan]]'
   - '[[2026-06-10-live-justificante-reconcile-plan]]'
-  - '[[2026-04-27-live-submit-permanently-forbidden-plan]]'
-  - '[[2026-04-27-live-submit-permanently-forbidden-adr]]'
-  - '[[2026-05-26-no-synthetic-sede-live-surfaces-adr]]'
-  - '[[2026-05-26-no-synthetic-sede-live-surfaces-research]]'
-  - '[[2026-04-27-live-submit-permanently-forbidden-research]]'
   - '[[2026-06-05-live-auth-decomposition-research]]'
+  - '[[2026-06-12-live-pull-verification-sweep-adr]]'
 ---
-
 # `live-pull-verification-sweep` `authenticated pull-only live verification sweep` plan
 
 ## Epic intent

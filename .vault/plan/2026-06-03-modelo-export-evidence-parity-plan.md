@@ -3,14 +3,13 @@ tags:
   - '#plan'
   - '#modelo-export-evidence-parity'
 date: '2026-06-03'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:0fd490bb7bb713d69bced0a58118168b6730fb5134a709eeb57c31f4f7e8517a'
 tier: L3
 related:
   - '[[2026-06-03-modelo-export-evidence-parity-adr]]'
   - '[[2026-06-03-modelo-export-workbook-parity-adr]]'
   - '[[2026-06-03-modelo-export-evidence-parity-research]]'
-  - '[[2026-06-03-ledger-google-live-export-plan]]'
 ---
 
 # `modelo-export-evidence-parity` `ledger-evidence-bundled modelo calculation + export parity` plan

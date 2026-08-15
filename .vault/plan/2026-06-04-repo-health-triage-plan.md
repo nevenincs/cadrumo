@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#repo-health-triage'
 date: '2026-06-04'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:ee2eb3e49dd9d43e4e401c339c2693c36f000bc1e1fa44361356523633c52554'
 tier: L3
 related:
@@ -12,7 +12,6 @@ related:
   - '[[2026-06-04-repo-health-triage-adr]]'
   - '[[2026-06-04-full-repo-health-diagnostics-audit]]'
   - '[[2026-06-04-uv-venv-lock-workaround-audit]]'
-  - '[[2026-05-26-secure-storage-test-hygiene-audit]]'
 ---
 
 # `repo-health-triage` `diagnostic remediation` plan

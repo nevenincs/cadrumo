@@ -3,12 +3,11 @@ tags:
   - '#plan'
   - '#current-schema-only-purge'
 date: '2026-08-10'
-modified: '2026-08-12'
+modified: '2026-08-15'
 body_hash: 'sha256:73dbee3cb6eac3deab5cfa5fb47dd5db0f7411ffc2c0cfd60854b352d4cc2aa6'
 tier: L3
 related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
-  - '[[2026-05-06-secure-persistence-enforcement-adr]]'
   - '[[2026-06-10-zero-legacy-purge-research]]'
 ---
 

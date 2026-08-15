@@ -3,13 +3,12 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-06-03'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:b71d6dd0c840e88ebb394d29e350d45b1beea7b82c8766989fd0d001814ccd3e'
 step_id: 'W77.P370.S2131'
 related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
   - "[[2026-06-03-cli-workflow-redesign-research]]"
-  - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
 ---
 
 # `cli-workflow-redesign` exec: `W77.P370 bucket-maintenance composition partial landing (rename + delete + browse)`

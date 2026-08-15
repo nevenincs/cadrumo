@@ -3,14 +3,10 @@ tags:
   - '#plan'
   - '#suite-redgreen-2026-06-02'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:b8fe1cb297f9d93b52ce38745df3bb3bcc5dfb19a036c98d1132a7347a892ecf'
 tier: L2
 related:
-  - '[[2026-04-21-calc-verification-adr]]'
-  - '[[2026-05-19-modelo-registry-fragment-architecture-adr]]'
-  - '[[2026-05-20-registry-authority-flow-adr]]'
-  - '[[2026-05-27-m210-irnr-full-engine-adr]]'
   - '[[2026-06-04-suite-redgreen-2026-06-02-adr]]'
   - '[[2026-06-04-suite-redgreen-2026-06-02-research]]'
 ---

@@ -3,11 +3,10 @@ tags:
   - '#exec'
   - '#honest-all-green'
 date: '2026-07-14'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:51b4ee7260c603c050b03cc58d3409467e1e5922bf453b12f0d2030c0dd8cab7'
 step_id: 'S04'
-related:
-  - "[[2026-07-14-honest-all-green-plan]]"
+related: []
 ---
 
 # Register or rehome the FormerProduct exception classes so the exception-base-hygiene gate passes without allowlist mutes

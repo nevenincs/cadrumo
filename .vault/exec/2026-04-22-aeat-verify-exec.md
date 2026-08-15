@@ -3,12 +3,10 @@ tags:
   - '#exec'
   - '#aeat-verify'
 date: '2026-04-22'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:4ab804a893e5cedf1bb5eaeab93c5d9ea254c8f5be507b5e2bd8035bf3a916ea'
 related:
-  - "[[2026-04-24-aeat-verify-plan]]"
   - "[[2026-04-25-aeat-verify-exec]]"
-  - "[[2026-04-25-aeat-verify-audit]]"
 ---
 
 # `aeat-verify` `cleanup` `manuals-stub-cleanup`

@@ -3,14 +3,12 @@ tags:
   - '#plan'
   - '#registry-reviewability-pressure'
 date: '2026-06-04'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:9bf06c84fcfe094358a6cb3e2c2c9ca98e1101cb56e4d112ea9b632e669e0708'
 tier: L2
 related:
   - '[[2026-06-04-registry-generic-fragmentation-contract-audit]]'
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
-  - '[[2026-05-20-registry-authority-flow-adr]]'
-  - '[[2026-05-20-registry-authority-flow-research]]'
   - '[[2026-06-04-registry-reviewability-pressure-adr]]'
   - '[[2026-06-04-registry-reviewability-pressure-research]]'
 ---

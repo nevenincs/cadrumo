@@ -3,16 +3,14 @@ tags:
   - '#plan'
   - '#aeat-cli-userdocs-hardening'
 date: '2026-06-04'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:608d94be3370d6320d530f7dbe58dae9a182f931a5baebfc4fc620bc9a3012a5'
 tier: L3
 related:
   - '[[2026-07-21-aeat-cli-userdocs-hardening-adr]]'
   - '[[2026-06-01-docs-educational-surface-adr]]'
   - '[[2026-06-02-docs-educational-surface-audit]]'
-  - '[[2026-05-30-docs-architecture-adr]]'
   - '[[2026-06-01-docs-cli-buildtime-adr]]'
-  - '[[2026-05-20-testimonial-driven-cli-verification-playbook-reference]]'
   - '[[2026-07-13-docs-cli-sequences-adr]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-research]]'
 ---

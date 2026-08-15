@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#binding-fold-in-carry-unification'
 date: '2026-06-26'
-modified: '2026-07-17'
+modified: '2026-08-15'
 body_hash: 'sha256:cbedd9fe017175be0ae768972e17c23a20def9af3636d6dc85f49cce8c7e1e85'
 tier: L2
 related:
   - '[[2026-06-26-binding-fold-in-carry-unification-adr]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
-  - '[[2026-05-19-live-iva-compensation-wallet-adr]]'
   - '[[2026-06-10-period-revision-resolution-adr]]'
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
   - '[[2026-06-21-m390-iva-carry-boxes-adr]]'
