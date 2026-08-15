@@ -10,6 +10,7 @@ from hashlib import sha256
 from pathlib import Path
 from uuid import UUID
 
+from .....core import iter_directory
 from .....core.hashing import CONTENT_DIGEST_PREFIX, canonical_json_bytes, prefixed_digest
 from ._errors import ProfileCustodyRecordError
 from ._filesystem import (
@@ -185,7 +186,7 @@ def _inventory_windows_directory(
     with ExitStack() as anchors:
         anchor_directory(anchors, path, final_access=0x80000000)
         try:
-            children = sorted(path.iterdir(), key=lambda child: child.name)
+            children = sorted(iter_directory(path, require_root=True), key=lambda child: child.name)
         except OSError as exc:
             raise ProfileCustodyRecordError("profile custody inventory directory cannot be read") from exc
         for child in children:

@@ -389,8 +389,15 @@ def test_a_relative_root_is_scanned_and_kept_relative(tree: Path) -> None:
 
 
 def test_the_primitive_is_reachable_through_the_core_facade() -> None:
-    """Consumers import from ``cadrumo.core``, never from the private module."""
-    from cadrumo import core
+    """Consumers import from ``cadrumo.core``, never from the private module.
+
+    Spelled relatively because the relative-imports gate forbids an absolute
+    ``cadrumo.*`` self-import inside the package. Both spellings resolve to the
+    same :mod:`sys.modules` entry, so the facade assertions below are unchanged
+    by it -- what is under test is that the names are re-exported and declared
+    in ``__all__``, not how this module happens to reach them.
+    """
+    from ... import core
 
     assert core.scan_directory is scan_directory
     assert core.iter_directory is iter_directory

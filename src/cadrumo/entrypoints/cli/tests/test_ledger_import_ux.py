@@ -9,6 +9,7 @@ import pytest
 
 from ....application.ledger import LedgerProviderID
 from ....core import STR_KEYED_MAPPING_ADAPTER
+from ._cli_json_support import _json_object
 from ._ledger_ux_support import (
     _FOUR_ROW_CSV,
     _FOUR_ROW_OFX,
@@ -23,12 +24,6 @@ __all__ = ["_open_bucket_session"]
 
 def _json_document(output: str) -> dict[str, object]:
     return STR_KEYED_MAPPING_ADAPTER.validate_json(output)
-
-
-def _json_object(value: object) -> dict[str, object]:
-    """Narrow one decoded JSON value before typed subscripting."""
-
-    return STR_KEYED_MAPPING_ADAPTER.validate_python(value)
 
 
 def _notice_projection(document: dict[str, object], code: str) -> dict[str, object]:

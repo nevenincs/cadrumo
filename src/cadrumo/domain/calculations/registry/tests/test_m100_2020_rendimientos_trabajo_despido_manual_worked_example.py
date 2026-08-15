@@ -137,7 +137,7 @@ from .....core.resources import bundled_path
 from .. import (
     ValidatedRegistryAuthority,
 )
-from ._manual_oracle_support import read_manual_worked_example
+from ._manual_oracle_support import oracle_declared_figures
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -182,30 +182,21 @@ _REL_2020 = {
 # Raw ingresos/gastos/reducciones inputs quoted from the manual; see the
 # module docstring for the per-box mapping and its cross-validation against
 # the manual's own stated subtotals.
+#
+# The four figures ``oracle_declared_figures`` returns for this payload are
+# stated in the example's SOLUCION rather than in its opening facts: the
+# certificate prints retribuciones, indemnizacion and cotizaciones, and the
+# manual then works them into the rendimientos integros, the art. 18.2
+# reduccion, the deducible Seguridad Social and the two art. 19.2.f)
+# reducciones the scenario actually consumes. Each locator points at the
+# line stating the figure the scenario uses, not at the raw fact it was
+# derived from -- a locator that points at 10.100 for an input of 20.300
+# would assert a reviewability it does not have.
 _ORACLE_PAYLOAD_NAME = "modelo-100-2020-rendimientos-trabajo-despido-improcedente.json"
 
 
-def _declared_trabajo_inputs() -> dict[CasillaId, Decimal]:
-    """The manual's own figures for this case, read FROM the oracle rather than retyped.
-
-    These four are stated in the example's SOLUCION rather than in its opening facts:
-    the certificate prints retribuciones, indemnizacion and cotizaciones, and the
-    manual then works them into the rendimientos integros, the art. 18.2 reduccion,
-    the deducible Seguridad Social and the two art. 19.2.f) reducciones that the
-    scenario actually consumes. Each locator points at the line stating the figure the
-    scenario uses, not at the raw fact it was derived from -- a locator that points
-    at 10.100 for an input of 20.300 would assert a reviewability it does not have.
-    """
-    declared = read_manual_worked_example(_ORACLE_PAYLOAD_NAME).declared_inputs
-    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
-    return {
-        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
-        for casilla_id, value in declared.by_casilla_id.items()
-    }
-
-
 def _scenario(*, reduccion_art_20: Decimal, expected_0025: Decimal, scenario_id: str) -> RegistryCalculationScenario:
-    inputs = _declared_trabajo_inputs()
+    inputs = oracle_declared_figures(_ORACLE_PAYLOAD_NAME)
     inputs[validated_casilla_id("0023", surface="0023")] = reduccion_art_20
     return RegistryCalculationScenario(
         id=scenario_id,

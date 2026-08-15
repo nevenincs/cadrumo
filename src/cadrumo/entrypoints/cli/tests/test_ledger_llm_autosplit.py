@@ -15,7 +15,6 @@ import pytest
 from click.testing import Result
 
 from ....application.ledger import reject_llm_suggestion
-from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.json_contract import NoticeSeverity
 from ....domain.categories import SpendingCategory
 from ....domain.transactions import BusinessClassification
@@ -24,6 +23,7 @@ from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli
 from .._ledger_llm_cli import split_recommendation_notice
+from ._cli_json_support import _json_object
 from ._isolated_profile_storage_fixtures import llm_profile_isolated_backend
 from ._ledger_llm_support import _import_one_transaction as _shared_import_one_transaction
 
@@ -33,10 +33,6 @@ __all__ = ["llm_profile_isolated_backend"]
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-def _json_object(value: object) -> dict[str, object]:
-    return STR_KEYED_MAPPING_ADAPTER.validate_python(value)
 
 
 def _import_one_transaction(tmp_path: Path) -> str:

@@ -19,10 +19,10 @@ from typing import Any, cast
 
 import pytest
 
-from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.config import override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
+from ._cli_json_support import _json_object
 from ._cli_surface_support import (
     _active_bucket_id,
     _invoke,
@@ -110,12 +110,6 @@ def _run_ledger_cli_json(args: list[str]) -> dict[str, Any]:
     result = _invoke(["--format", "json", *args])
     assert result.exit_code == 0, result.output
     return _json(result)
-
-
-def _json_object(value: object) -> dict[str, object]:
-    """Narrow one CLI payload before returning it from a typed helper."""
-
-    return STR_KEYED_MAPPING_ADAPTER.validate_python(value)
 
 
 def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, Any]:

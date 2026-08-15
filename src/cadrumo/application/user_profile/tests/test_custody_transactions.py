@@ -323,6 +323,63 @@ def test_confirmed_local_delete_is_atomic_receipted_and_idempotent(tmp_path: Pat
     assert service._repository.load_receipt(journal.transaction_id) == receipt
 
 
+def test_delete_completes_when_preflight_and_execution_fall_at_different_instants(tmp_path: Path) -> None:
+    """The reproduction: a real delete takes time between confirm and execute.
+
+    Deliberately passes NO ``now`` to any hop, so each call reads the wall
+    clock exactly as the public facade and the destructive reset do. That is
+    the configuration every production deletion runs in, and it used to refuse:
+    the hold assessment carries ``assessed_at`` and a digest computed over it,
+    so re-assessing unchanged owner facts produced an unequal object and the
+    whole-object comparison read "evidence changed" from the clock alone.
+
+    The sleep is the point rather than incidental slowness -- without a
+    measurable gap between preflight and execution the two assessments can
+    share a timestamp and the bug hides.
+    """
+    import time
+
+    capsule = _committed_capsule(tmp_path)
+    restore_pointer(tmp_path, BucketPointer(bucket_id=str(_PROFILE_ID), schema_version=1).to_toml().encode("utf-8"))
+    service = ProfileCustodyTransactionService(root=tmp_path)
+    _authorise_clear_hold(service)
+
+    journal = service.prepare_delete(profile_id=_PROFILE_ID)
+    confirmation = service.confirmation_for(journal)
+    time.sleep(1.1)
+    receipt = service.execute_delete(confirmation)
+
+    assert not capsule.exists()
+    assert receipt.transaction_id == journal.transaction_id
+
+
+def test_delete_still_refuses_when_a_hold_is_taken_between_preflight_and_execution(tmp_path: Path) -> None:
+    """The property the guard exists for must survive the narrowing.
+
+    A legal case opening AFTER the preflight authorised deletion is the
+    time-of-check/time-of-use case. Narrowing the comparison from the whole
+    assessment to the dispositions must not trade the false positive above for
+    a false negative here, so this drives the real owner authority rather than
+    editing the journal.
+    """
+    _committed_capsule(tmp_path)
+    restore_pointer(tmp_path, BucketPointer(bucket_id=str(_PROFILE_ID), schema_version=1).to_toml().encode("utf-8"))
+    service = ProfileCustodyTransactionService(root=tmp_path)
+    _authorise_clear_hold(service)
+
+    journal = service.prepare_delete(profile_id=_PROFILE_ID, now=_INSTANT)
+    confirmation = service.confirmation_for(journal)
+
+    LegalHoldCaseAuthority(root=tmp_path).record_open_case_snapshot(
+        profile_id=_PROFILE_ID,
+        open_case_ids=("legal-case-opened-after-preflight",),
+        observed_at=_INSTANT + timedelta(seconds=1),
+    )
+
+    with pytest.raises(ProfileCustodyTransactionRefusalError, match="changed after delete preflight"):
+        service.execute_delete(confirmation, now=_INSTANT + timedelta(seconds=2))
+
+
 def test_delete_refuses_hold_and_never_creates_a_journal(tmp_path: Path) -> None:
     capsule = _committed_capsule(tmp_path)
     service = ProfileCustodyTransactionService(root=tmp_path)

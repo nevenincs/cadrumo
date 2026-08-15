@@ -49,7 +49,7 @@ from ._iva_ledger import (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _IvaTransactionOutcome:
     """Per-transaction outcome carrying the typed sinks the orchestrator drains.
 
@@ -68,7 +68,7 @@ class _IvaTransactionOutcome:
     prorrata_issue: IvaLedgerAggregationIssue | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _IvaTransactionContext:
     transaction_id: str
     operation_date: date
@@ -77,7 +77,7 @@ class _IvaTransactionContext:
     proportionality: Decimal
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _IvaTransactionAmounts:
     rate_kind: IvaRateKind
     base_amount: Decimal
@@ -85,7 +85,7 @@ class _IvaTransactionAmounts:
     recargo_amount: Decimal
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _IvaTransactionClassification:
     category: IvaCategory
     flow_direction: IvaFlowDirection

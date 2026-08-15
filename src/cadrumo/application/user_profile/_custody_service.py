@@ -578,14 +578,49 @@ class _ProfileCustodyTransactionCapability:
     ) -> None:
         """Require the original hold assessment to remain current at execution.
 
-        A changed legal or filing owner fact invalidates the old confirmation,
-        even when the old assessment had permitted deletion.  This closes the
-        time-of-check/time-of-use gap between preflight and execution.
+        A changed legal or filing owner DISPOSITION invalidates the old
+        confirmation, even when the old assessment had permitted deletion. This
+        closes the time-of-check/time-of-use gap between preflight and
+        execution.
+
+        Compared on the dispositions rather than on the whole assessment, and
+        the distinction is the difference between a guard and a wall. An
+        assessment carries ``assessed_at`` and an ``evidence_digest`` computed
+        over it, so re-assessing unchanged owner facts one second later yields
+        an unequal object. Whole-object equality therefore refused EVERY
+        deletion whose preflight and execution fell at different instants --
+        which is every real one, because the operator echoes a confirmation
+        between them. The criterion the paragraph above states is owner facts;
+        the observation instant is when we looked, not what we found.
+
+        What still invalidates a confirmation: either owner flipping between
+        cleared and held, in either direction, and any state in which the
+        current assessment does not permit deletion. The dangerous transition
+        -- cleared at preflight, held at execution -- is refused by both the
+        disposition comparison and the permission check independently.
+
+        What no longer invalidates it: a re-observation of unchanged
+        dispositions. One residual gap is worth naming rather than leaving for
+        someone to discover: a change of SOURCE RECORD under an unchanged
+        disposition -- one legal case closing as another opens, both held --
+        is not detected here, because the assessment carries only the
+        dispositions and a time-varying digest, not the source-record
+        identities. Closing that needs the per-owner ``source_record_digest``
+        carried in the journal, which is a persisted-shape change and is not
+        made here. It is not a safety hole at present: an unchanged ``held``
+        still refuses, and an unchanged ``cleared`` is a state deletion is
+        legitimately permitted in.
         """
         if journal.hold_assessment is None or not journal.hold_assessment.permits_local_deletion:
             raise ProfileCustodyTransactionRefusalError("a legal or filing hold blocks local profile deletion")
         current_hold = self._holds.assess(journal.profile_id, now=instant)
-        if current_hold != journal.hold_assessment or not current_hold.permits_local_deletion:
+        recorded = journal.hold_assessment
+        dispositions_changed = (
+            current_hold.profile_id != recorded.profile_id
+            or current_hold.legal_hold != recorded.legal_hold
+            or current_hold.filing_hold != recorded.filing_hold
+        )
+        if dispositions_changed or not current_hold.permits_local_deletion:
             raise ProfileCustodyTransactionRefusalError(
                 "canonical legal or filing hold evidence changed after delete preflight"
             )

@@ -64,12 +64,9 @@ from .. import (
     aggregate_renta_ledger_expenses_from_repositories,
 )
 from .._renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
+from ._renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-def _period(year: int, code: str) -> Period:
-    return Period.from_year_and_code(year, code)
 
 
 def _m100_renta_expense_binding(binding_id: str, casilla_id: str) -> DataBindingDefinition:

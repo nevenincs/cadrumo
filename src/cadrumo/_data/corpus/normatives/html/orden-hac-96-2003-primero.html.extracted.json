@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-96-2003-primero.html",
+  "source_sha256": "a2be57a981ccad5d9642fcda32218a54253219daba6dcbb89724be85708b59c5",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Se aprueban los diseños físicos y lógicos, modelo 185, que figuran en el anexo I de esta Orden, a los que deberá ajustarse la información mensual que, de acuerdo con lo dispuesto en los apartados 6 y 8 del artículo 66 del Reglamento del Impuesto sobre la Renta de las Personas Físicas, los órganos y entidades gestores de la Seguridad Social y Mutualidades deben suministrar a la Agencia Estatal de Administración Tributaria mediante soporte directamente legible por ordenador o de forma telemática por teleproceso.",
+      "title": "Primero. Aprobación de los diseños físicos y lógicos, modelo 185, para el suministro de información mensual por los órganos y entidades gestores de la Seguridad Social y las Mutualidades mediante soporte directamente legible por ordenador o de forma telemática por teleproceso.",
+      "section": "Primero. Aprobación de los diseños físicos y lógicos, modelo 185, para el suministro de información mensual por los órganos y entidades gestores de la Seguridad Social y las Mutualidades mediante soporte directamente legible por ordenador o de forma telemática por teleproceso.",
+      "anchor": null
+    }
+  ]
+}

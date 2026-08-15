@@ -112,7 +112,7 @@ the same columns.
 """
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class DerivedDisenoCasilla:
     """One casilla derived from a registry closure or AEAT Diseño workbook.
 

@@ -59,6 +59,28 @@ required_text = [
     "71.880",
 ]
 
+[legal."ley-35-2006:art-93-ahorro-2023"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-93-2023.html#a93"
+document_id = "BOE-A-2022-22128"
+article = "93"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-22128#a6-5"
+published_at = 2022-12-23
+effective_from = 2023-01-01
+effective_to = 2024-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-15
+reviewed_by = "agent-review"
+corpus_tier = "provision_excerpt"
+notes = "LIRPF Art. 93.2.e).2.º — escala del ahorro del régimen de impatriados, redacción vigente 2023-01-01 a 2024-12-21 (fecha_vigencia per the legislacion-consolidada open-data API), fijada por el art. 63.3 de la Ley 31/2022, de 23 de diciembre (BOE-A-2022-22128), que modifica el apartado 2.e).2.º con efectos 1-1-2023. Un segundo modificador con el MISMO efecto 1-1-2023, la disposición final 3.5 de la Ley 28/2022 de 21 de diciembre (BOE-A-2022-21739), se publicó DOS DÍAS ANTES -- Ley 31/2022 es el texto final para esa fecha. Confirmado por triple cruce: (1) la nota a pie del art. 93 vigente cita expresamente 'el apartado 2.e).2.º' para BOE-A-2022-22128 pero no para BOE-A-2022-21739; (2) act.php?id=BOE-A-2006-20764&p=20230601 sirve los mismos tramos/cuotas acumuladas (0/1.140/10.380/44.880) que esta redacción; (3) el mismo patrón (Ley 31/2022 art. 63.2 gana sobre Ley 28/2022 en la misma fecha) ya está establecido para la escala general del ahorro hermana en ley-35-2006-art-76-2023.html. Cinco tramos: 19% hasta 6.000, 21% hasta 50.000 (1.140), 23% hasta 200.000 (10.380), 27% hasta 300.000 (44.880), 28% en adelante (71.880) -- idéntico a la redacción 2025 salvo el tipo del último tramo (28% frente a 30% desde Ley 7/2024)."
+required_text = [
+    "apartado 2.e).2º por el art. 63.3 de la Ley 31/2022",
+    "44.880",
+    "71.880",
+]
+
 [legal."rd-439-2007:art-113"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -162,7 +184,7 @@ review_status = "reviewed"
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hap-2783-2015.html#textoxslt"
+corpus_ref = "corpus/normatives/html/orden-hap-2783-2015.html#a1"
 document_id = "BOE-A-2015-14021"
 article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-14021"
@@ -182,7 +204,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hfp-1338-2023.html#textoxslt"
+corpus_ref = "corpus/normatives/html/orden-hfp-1338-2023.html#a1"
 document_id = "BOE-A-2023-25416"
 article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-25416"

@@ -109,14 +109,14 @@ _AnchorAttribute = Literal["casilla_id", "computed_key", "producer_key", "kind",
 #: activity markers are structural, so an epoch that moved one would be
 #: reporting a re-layout rather than a re-vocabulary.
 _SHARED_ANCHOR_FACTS: Final[tuple[tuple[str, int, _AnchorAttribute, object], ...]] = (
-    ("DP30303", 20, "casilla_id", "iva.compensacion-pendiente-periodos-anteriores"),
-    ("DP30303", 22, "casilla_id", "iva.compensacion-pendiente-periodos-posteriores"),
-    ("DP30301", 5, "literal", ""),
-    ("DP30301", 5, "computed_key", None),
-    ("DP30304", 5, "literal", ""),
-    ("DP30304", 5, "computed_key", None),
-    ("DP30302", 5, "computed_key", ExportComputedKey.M303_COMPLEMENTARIA_PAGE_MARKER),
-    ("DP30305", 5, "computed_key", ExportComputedKey.M303_COMPLEMENTARIA_PAGE_MARKER),
+    ("DP30303", "20", "casilla_id", "iva.compensacion-pendiente-periodos-anteriores"),
+    ("DP30303", "22", "casilla_id", "iva.compensacion-pendiente-periodos-posteriores"),
+    ("DP30301", "5", "literal", ""),
+    ("DP30301", "5", "computed_key", None),
+    ("DP30304", "5", "literal", ""),
+    ("DP30304", "5", "computed_key", None),
+    ("DP30302", "5", "computed_key", ExportComputedKey.M303_COMPLEMENTARIA_PAGE_MARKER),
+    ("DP30305", "5", "computed_key", ExportComputedKey.M303_COMPLEMENTARIA_PAGE_MARKER),
 )
 
 
@@ -127,7 +127,7 @@ class _EpochSurfaceExpectation:
     #: The DP30303 amendment-evidence block.  The 2024-late orden replaced a
     #: single complementaria marker with an itemised rectificativa block, so
     #: this is genuinely per-epoch vocabulary rather than a re-layout.
-    amendment_evidence: tuple[tuple[str, int, _AnchorAttribute, object], ...]
+    amendment_evidence: tuple[tuple[str, str, _AnchorAttribute, object], ...]
     #: The closed wire domain the design states for the DP30301 general-rate
     #: slot.  The 2024-late design replaced its quoted enumeration with note
     #: references, so that slot states no closed domain and its value is
@@ -137,7 +137,7 @@ class _EpochSurfaceExpectation:
     #: 2023 through 2025 and was a shared fact until the 2026 design inserted
     #: box [112] ahead of it, which is a re-layout rather than a re-vocabulary
     #: and so is stated per epoch instead of assumed constant.
-    no_activity_marker_ordinal: int
+    no_activity_marker_ordinal: str
     #: The epoch this design re-lays out, or ``None`` for the earliest reviewed
     #: design.  Exactly one epoch may be the root, and every other predecessor
     #: must itself be a discovered epoch, so an added epoch cannot opt out of
@@ -153,8 +153,8 @@ class _EpochSurfaceExpectation:
     #: identical.  Homes are compared by their fully-qualified identity and NOT
     #: by ordinal, so a pure offset shift is correctly silent here while a
     #: slot-for-slot or cohort-for-cohort swap is not.
-    introduced_homes: tuple[tuple[str, int, str], ...]
-    retired_homes: tuple[tuple[str, int, str], ...]
+    introduced_homes: tuple[tuple[str, str, str], ...]
+    retired_homes: tuple[tuple[str, str, str], ...]
 
 
 #: The simplified-regime facts the 2024-late orden adds, as
@@ -199,15 +199,15 @@ _M303_2025_SUPERFICIE_ADDITIONS: Final[tuple[tuple[int, str, str, int, int], ...
 #: hand-reviewed per epoch rather than inherited by silence, and naming the
 #: shared tuple keeps that assertion honest without re-transcribing it.
 _M303_RECTIFICATIVA_EVIDENCE: Final[tuple[tuple[str, int, _AnchorAttribute, object], ...]] = (
-    ("DP30303", 29, "producer_key", "amendment_evidence.is_rectificativa"),
-    ("DP30303", 30, "producer_key", "amendment_evidence.original_aeat_receipt"),
-    ("DP30303", 31, "producer_key", "prior_domiciliation.action"),
-    ("DP30303", 32, "casilla_id", "108"),
-    ("DP30303", 33, "casilla_id", "111"),
-    ("DP30303", 34, "kind", "filler"),
-    ("DP30303", 35, "producer_key", "amendment_evidence.m303_motive.rectificaciones"),
-    ("DP30303", 36, "producer_key", "amendment_evidence.m303_motive.discrepancia_criterio_administrativo"),
-    ("DP30303", 37, "kind", "filler"),
+    ("DP30303", "29", "producer_key", "amendment_evidence.is_rectificativa"),
+    ("DP30303", "30", "producer_key", "amendment_evidence.original_aeat_receipt"),
+    ("DP30303", "31", "producer_key", "prior_domiciliation.action"),
+    ("DP30303", "32", "casilla_id", "108"),
+    ("DP30303", "33", "casilla_id", "111"),
+    ("DP30303", "34", "kind", "filler"),
+    ("DP30303", "35", "producer_key", "amendment_evidence.m303_motive.rectificaciones"),
+    ("DP30303", "36", "producer_key", "amendment_evidence.m303_motive.discrepancia_criterio_administrativo"),
+    ("DP30303", "37", "kind", "filler"),
 )
 
 
@@ -226,16 +226,16 @@ def _simplified_fact_home(cohort: str, fact: str, slot: int, sub_index: int | No
 
 _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
     "2023": _EpochSurfaceExpectation(
-        no_activity_marker_ordinal=28,
-        amendment_evidence=(("DP30303", 29, "computed_key", ExportComputedKey.M303_COMPLEMENTARIA_MARKER),),
+        no_activity_marker_ordinal="28",
+        amendment_evidence=(("DP30303", "29", "computed_key", ExportComputedKey.M303_COMPLEMENTARIA_MARKER),),
         general_rate_allowed_values=("0", "50", "62"),
         predecessor=None,
         introduced_homes=(),
         retired_homes=(),
     ),
     "2024-early": _EpochSurfaceExpectation(
-        no_activity_marker_ordinal=28,
-        amendment_evidence=(("DP30303", 29, "computed_key", ExportComputedKey.M303_COMPLEMENTARIA_MARKER),),
+        no_activity_marker_ordinal="28",
+        amendment_evidence=(("DP30303", "29", "computed_key", ExportComputedKey.M303_COMPLEMENTARIA_MARKER),),
         general_rate_allowed_values=("0", "50", "62"),
         predecessor="2023",
         # The 2024-early design is anchor-identical to 2023 and introduces no
@@ -243,14 +243,14 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
         # 2023 design carried as payload.
         introduced_homes=(),
         retired_homes=(
-            ("DP30302", 92, _simplified_fact_home("no_agricola", "empleados_inicio_ejercicio", 1)),
-            ("DP30302", 94, _simplified_fact_home("no_agricola", "max_asalariados_simultaneos", 1)),
-            ("DP30302", 120, _simplified_fact_home("no_agricola", "empleados_inicio_ejercicio_actual", 2)),
-            ("DP30302", 122, _simplified_fact_home("no_agricola", "max_asalariados_simultaneos", 2)),
+            ("DP30302", "92", _simplified_fact_home("no_agricola", "empleados_inicio_ejercicio", 1)),
+            ("DP30302", "94", _simplified_fact_home("no_agricola", "max_asalariados_simultaneos", 1)),
+            ("DP30302", "120", _simplified_fact_home("no_agricola", "empleados_inicio_ejercicio_actual", 2)),
+            ("DP30302", "122", _simplified_fact_home("no_agricola", "max_asalariados_simultaneos", 2)),
         ),
     ),
     "2024-late": _EpochSurfaceExpectation(
-        no_activity_marker_ordinal=28,
+        no_activity_marker_ordinal="28",
         amendment_evidence=_M303_RECTIFICATIVA_EVIDENCE,
         general_rate_allowed_values=None,
         predecessor="2024-early",
@@ -259,26 +259,29 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
             # tipo and cuota -- and its recargo de equivalencia companion. The
             # design gives each of the six its own official box, so each is one
             # casilla rather than a shared rung.
-            *(("DP30301", ordinal, f"casilla:{casilla}") for ordinal, casilla in enumerate(range(165, 171), start=80)),
             *(
-                ("DP30302", ordinal, _simplified_fact_home(cohort, fact, slot))
+                ("DP30301", str(ordinal), f"casilla:{casilla}")
+                for ordinal, casilla in enumerate(range(165, 171), start=80)
+            ),
+            *(
+                ("DP30302", str(ordinal), _simplified_fact_home(cohort, fact, slot))
                 for ordinal, cohort, fact, slot in _M303_2024_LATE_SIMPLIFIED_ADDITIONS
             ),
             # DP30303: the amendment-evidence region the epoch rows require be
             # hand-reviewed rather than inherited. Ordinal 29 stops being a
             # complementaria marker and becomes the rectificativa flag, which
             # moves the home between two producers rather than shifting it.
-            ("DP30303", 29, "producer:amendment_evidence.is_rectificativa"),
-            ("DP30303", 31, "producer:prior_domiciliation.action"),
-            ("DP30303", 32, "casilla:108"),
-            ("DP30303", 33, "casilla:111"),
-            ("DP30303", 35, "producer:amendment_evidence.m303_motive.rectificaciones"),
-            ("DP30303", 36, "producer:amendment_evidence.m303_motive.discrepancia_criterio_administrativo"),
+            ("DP30303", "29", "producer:amendment_evidence.is_rectificativa"),
+            ("DP30303", "31", "producer:prior_domiciliation.action"),
+            ("DP30303", "32", "casilla:108"),
+            ("DP30303", "33", "casilla:111"),
+            ("DP30303", "35", "producer:amendment_evidence.m303_motive.rectificaciones"),
+            ("DP30303", "36", "producer:amendment_evidence.m303_motive.discrepancia_criterio_administrativo"),
         ),
-        retired_homes=(("DP30303", 29, "computed:m303_complementaria_marker"),),
+        retired_homes=(("DP30303", "29", "computed:m303_complementaria_marker"),),
     ),
     "2025": _EpochSurfaceExpectation(
-        no_activity_marker_ordinal=28,
+        no_activity_marker_ordinal="28",
         # DP30303 is anchor-identical to 2024-late and every one of its homes
         # carries over, so the rectificativa block is re-asserted here rather
         # than inherited by silence.
@@ -288,7 +291,7 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
         general_rate_allowed_values=None,
         predecessor="2024-late",
         introduced_homes=tuple(
-            ("DP30302", ordinal, _simplified_fact_home(cohort, fact, slot, sub_index))
+            ("DP30302", str(ordinal), _simplified_fact_home(cohort, fact, slot, sub_index))
             for ordinal, cohort, fact, slot, sub_index in _M303_2025_SUPERFICIE_ADDITIONS
         ),
         retired_homes=(
@@ -299,26 +302,26 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
             # homes precisely because they DO have one. Same design shape, two
             # homes, decided by whether an authority exists rather than by how
             # the slot reads.
-            ("DP30301", 50, "casilla:17"),
+            ("DP30301", "50", "casilla:17"),
             # The DANA relief of RD-ley 6/2024 and 7/2024 was a 2024-only
             # measure; the 2025 design reclaims its slots as reserved space
             # and drops the Lorca eligibility flags with it.
-            ("DP30302", 95, _simplified_fact_home("no_agricola", "dana_elegible", 1)),
-            ("DP30302", 96, _simplified_fact_home("no_agricola", "lorca_elegible", 1)),
-            ("DP30302", 124, _simplified_fact_home("no_agricola", "dana_elegible", 2)),
-            ("DP30302", 125, _simplified_fact_home("no_agricola", "lorca_elegible", 2)),
-            ("DP30302", 154, _simplified_fact_home("agricola", "dana_elegible", 1)),
-            ("DP30302", 155, _simplified_fact_home("agricola", "reduccion_dana", 1)),
-            ("DP30302", 156, _simplified_fact_home("agricola", "dana_elegible", 2)),
-            ("DP30302", 157, _simplified_fact_home("agricola", "reduccion_dana", 2)),
-            ("DP30302", 158, _simplified_fact_home("no_agricola", "reduccion_lorca", 1)),
-            ("DP30302", 159, _simplified_fact_home("no_agricola", "reduccion_dana", 1)),
-            ("DP30302", 160, _simplified_fact_home("no_agricola", "reduccion_lorca", 2)),
-            ("DP30302", 161, _simplified_fact_home("no_agricola", "reduccion_dana", 2)),
+            ("DP30302", "95", _simplified_fact_home("no_agricola", "dana_elegible", 1)),
+            ("DP30302", "96", _simplified_fact_home("no_agricola", "lorca_elegible", 1)),
+            ("DP30302", "124", _simplified_fact_home("no_agricola", "dana_elegible", 2)),
+            ("DP30302", "125", _simplified_fact_home("no_agricola", "lorca_elegible", 2)),
+            ("DP30302", "154", _simplified_fact_home("agricola", "dana_elegible", 1)),
+            ("DP30302", "155", _simplified_fact_home("agricola", "reduccion_dana", 1)),
+            ("DP30302", "156", _simplified_fact_home("agricola", "dana_elegible", 2)),
+            ("DP30302", "157", _simplified_fact_home("agricola", "reduccion_dana", 2)),
+            ("DP30302", "158", _simplified_fact_home("no_agricola", "reduccion_lorca", 1)),
+            ("DP30302", "159", _simplified_fact_home("no_agricola", "reduccion_dana", 1)),
+            ("DP30302", "160", _simplified_fact_home("no_agricola", "reduccion_lorca", 2)),
+            ("DP30302", "161", _simplified_fact_home("no_agricola", "reduccion_dana", 2)),
             # The single Superficie de horno day count per activity is replaced
             # by the four sub-indexed pairs introduced above.
-            ("DP30302", 152, _simplified_fact_home("no_agricola", "superficie_horno_dias_cuarto_trimestre", 1)),
-            ("DP30302", 153, _simplified_fact_home("no_agricola", "superficie_horno_dias_cuarto_trimestre", 2)),
+            ("DP30302", "152", _simplified_fact_home("no_agricola", "superficie_horno_dias_cuarto_trimestre", 1)),
+            ("DP30302", "153", _simplified_fact_home("no_agricola", "superficie_horno_dias_cuarto_trimestre", 2)),
         ),
     ),
     "2026": _EpochSurfaceExpectation(
@@ -328,27 +331,27 @@ _EPOCH_SURFACES: Final[Mapping[str, _EpochSurfaceExpectation]] = {
         # design rather than carried across, which is why the ordinals differ
         # from every earlier epoch while the homes do not.
         amendment_evidence=(
-            ("DP30303", 24, "casilla_id", "108"),
-            ("DP30303", 31, "producer_key", "amendment_evidence.is_rectificativa"),
-            ("DP30303", 32, "producer_key", "amendment_evidence.original_aeat_receipt"),
-            ("DP30303", 33, "producer_key", "prior_domiciliation.action"),
-            ("DP30303", 34, "casilla_id", "111"),
-            ("DP30303", 35, "producer_key", "amendment_evidence.m303_motive.rectificaciones"),
-            ("DP30303", 36, "producer_key", "amendment_evidence.m303_motive.discrepancia_criterio_administrativo"),
-            ("DP30303", 37, "kind", "filler"),
+            ("DP30303", "24", "casilla_id", "108"),
+            ("DP30303", "31", "producer_key", "amendment_evidence.is_rectificativa"),
+            ("DP30303", "32", "producer_key", "amendment_evidence.original_aeat_receipt"),
+            ("DP30303", "33", "producer_key", "prior_domiciliation.action"),
+            ("DP30303", "34", "casilla_id", "111"),
+            ("DP30303", "35", "producer_key", "amendment_evidence.m303_motive.rectificaciones"),
+            ("DP30303", "36", "producer_key", "amendment_evidence.m303_motive.discrepancia_criterio_administrativo"),
+            ("DP30303", "37", "kind", "filler"),
         ),
         general_rate_allowed_values=None,
-        no_activity_marker_ordinal=30,
+        no_activity_marker_ordinal="30",
         predecessor="2025",
         introduced_homes=(
             # Entitlement to deduct the advance payment on fuel deliveries
             # after the non-customs deposit regime ends. The producer key was
             # already in the closed filing vocabulary and had no anchor until
             # this design declared one.
-            ("DP30301", 25, "producer:m303.hydrocarbon_deposit_advance_payment_deduction_entitled"),
+            ("DP30301", "25", "producer:m303.hydrocarbon_deposit_advance_payment_deduction_entitled"),
             # The matching resultado box, summed from the modelo 319 filings
             # the autoliquidación covers, which also enters [71]'s formula.
-            ("DP30303", 28, "casilla:112"),
+            ("DP30303", "28", "casilla:112"),
         ),
         retired_homes=(),
     ),
@@ -635,7 +638,8 @@ def test_simplified_projections_cover_exactly_the_s63_declaration_index(epoch: _
 
     assert simplified == set(expectation.simplified_anchors)
     assert all(
-        by_anchor[("DP30302", ordinal)].kind.value == "filler" for ordinal in expectation.simplified_filler_ordinals
+        by_anchor[("DP30302", str(ordinal))].kind.value == "filler"
+        for ordinal in expectation.simplified_filler_ordinals
     )
 
 

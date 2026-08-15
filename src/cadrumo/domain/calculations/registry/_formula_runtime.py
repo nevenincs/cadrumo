@@ -626,6 +626,16 @@ def _evaluate_expression(
     text_values: Mapping[CasillaId, str] | None = None,
     convenio: ConvenioAuthority | None = None,
 ) -> Decimal:
+    """Build the shared :class:`_EvalContext` for one formula tree and evaluate it.
+
+    The entry point from loose arguments: it normalises the optional channels
+    and constructs the context once. Recursive re-entry goes through
+    :func:`_evaluate_with_ctx`, which carries that same context object forward
+    instead of rebuilding it.
+
+    Returns:
+        The evaluated :class:`~decimal.Decimal` value of ``expression``.
+    """
     resolved_enum_bindings: Mapping[BindingId, str] = enum_binding_values or {}
     resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or {}
     resolved_text_values: Mapping[CasillaId, str] = text_values or {}
@@ -648,25 +658,21 @@ def _evaluate_expression(
         text_values=resolved_text_values,
         convenio=resolved_convenio,
     )
-    if expression.op is None:
-        return _evaluate_leaf(expression, ctx)
-    op = expression.op
-    require_formula_operator_arity(op, len(expression.args))
-    evaluator = _SPECIALIZED_EXPRESSION_EVALUATORS.get(op)
-    if evaluator is not None:
-        return evaluator(expression, ctx)
-    args = [_evaluate_with_ctx(arg, ctx) for arg in expression.args]
-    return _evaluate_args_op(op, args)
+    return _evaluate_with_ctx(expression, ctx)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class _EvalContext:
     """Bundles the runtime sinks + maps threaded through every recursive call.
 
-    Kept frozen and slot-equivalent so the dispatcher can hand the same
-    context to every per-op evaluator without copying. The three list
-    sinks (operand_refs, operand_casilla_refs, operand_values) ARE mutated in place — they
-    accumulate evaluation provenance for the explainability surface.
+    Frozen and slotted. Exactly one instance is built per formula tree, by
+    :func:`_evaluate_expression`, and handed by reference to every per-op
+    evaluator and every recursive re-entry through
+    :func:`_evaluate_with_ctx`; the tree is walked without rebuilding it.
+    The three list sinks (operand_refs, operand_casilla_refs, operand_values)
+    ARE mutated in place — they accumulate evaluation provenance for the
+    explainability surface, and passing the one context object by reference is
+    what keeps every node of the tree appending to those same three lists.
     """
 
     values: Mapping[CasillaId, Decimal]
@@ -688,26 +694,22 @@ class _EvalContext:
 
 
 def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
-    """Convenience: re-enter the dispatcher carrying every context field forward."""
-    return _evaluate_expression(
-        expression,
-        values=ctx.values,
-        binding_values=ctx.binding_values,
-        parameters=ctx.parameters,
-        date_context=ctx.date_context,
-        relation_values=ctx.relation_values,
-        unresolved_relation_ids=ctx.unresolved_relation_ids,
-        unresolved_binding_ids=ctx.unresolved_binding_ids,
-        unresolved_casilla_ids=ctx.unresolved_casilla_ids,
-        operand_refs=ctx.operand_refs,
-        operand_casilla_refs=ctx.operand_casilla_refs,
-        operand_values=ctx.operand_values,
-        enum_binding_values=ctx.enum_binding_values,
-        date_binding_values=ctx.date_binding_values,
-        filing_year=ctx.filing_year,
-        text_values=ctx.text_values,
-        convenio=ctx.convenio,
-    )
+    """Evaluate one expression node against ``ctx``, recursing into its args.
+
+    The dispatcher proper: leaf, specialised per-op evaluator, or generic
+    arg-folding op. ``ctx`` is passed through by reference rather than
+    destructured and rebuilt, so the whole tree shares one context object and
+    one set of provenance sinks.
+    """
+    if expression.op is None:
+        return _evaluate_leaf(expression, ctx)
+    op = expression.op
+    require_formula_operator_arity(op, len(expression.args))
+    evaluator = _SPECIALIZED_EXPRESSION_EVALUATORS.get(op)
+    if evaluator is not None:
+        return evaluator(expression, ctx)
+    args = [_evaluate_with_ctx(arg, ctx) for arg in expression.args]
+    return _evaluate_args_op(op, args)
 
 
 def _evaluate_lookup_bracket(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:

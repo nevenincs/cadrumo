@@ -500,8 +500,14 @@ def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -
 
 
 def _revision_section_directories(path: Path) -> tuple[Path, ...]:
+    # require_root: the caller has already resolved this revision fragment
+    # directory and read its revision.toml, so an unreadable path here is a
+    # broken tree, not an empty revision. Silently returning no sections would
+    # compile a revision with none of its casillas.
     return tuple(
-        entry for entry in scan_directory(path, select=DirectoryEntryKind.DIRECTORIES) if entry.name != "locales"
+        entry
+        for entry in scan_directory(path, select=DirectoryEntryKind.DIRECTORIES, require_root=True)
+        if entry.name != "locales"
     )
 
 

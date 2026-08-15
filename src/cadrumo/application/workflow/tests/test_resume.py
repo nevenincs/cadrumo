@@ -122,12 +122,8 @@ def _patch_secure_backend(tmp_path: Path) -> Iterator[None]:
 _RESUME_CASILLA: CasillaId = validated_casilla_id("01")
 
 
-def _period(year: int, code: str) -> Period:
-    return Period.from_year_and_code(year, code)
-
-
 def _obligation(modelo: str = "130", period: Period | None = None) -> WorkflowObligationFacts:
-    period = period or _period(2026, "1T")
+    period = period or Period.from_year_and_code(2026, "1T")
     return WorkflowObligationFacts(
         modelo=Modelo(modelo),
         period=period,
@@ -516,12 +512,12 @@ def test_find_latest_run_for_period_returns_newest_match(tmp_path: Path) -> None
     earlier = _aborted_result(
         run_id="a" * 16,
         reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        obligation=_obligation("130", _period(2026, "1T")),
+        obligation=_obligation("130", Period.from_year_and_code(2026, "1T")),
     ).model_copy(update={"started_at": datetime(2026, 4, 10, 9, 0, tzinfo=UTC)})
     later = _aborted_result(
         run_id="b" * 16,
         reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        obligation=_obligation("130", _period(2026, "1T")),
+        obligation=_obligation("130", Period.from_year_and_code(2026, "1T")),
     ).model_copy(update={"started_at": datetime(2026, 4, 12, 9, 0, tzinfo=UTC)})
     save_run(earlier)
     save_run(later)
@@ -538,7 +534,7 @@ def test_find_latest_run_for_period_ignores_other_periods(tmp_path: Path) -> Non
         _aborted_result(
             run_id="a" * 16,
             reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-            obligation=_obligation("303", _period(2026, "2T")),
+            obligation=_obligation("303", Period.from_year_and_code(2026, "2T")),
         ),
     )
     with pytest.raises(WorkflowError) as raised:
@@ -554,7 +550,7 @@ def test_find_latest_run_for_period_resolves_id_for_resume(tmp_path: Path) -> No
     run = _aborted_result(
         run_id="e" * 16,
         reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        obligation=_obligation("130", _period(2026, "1T")),
+        obligation=_obligation("130", Period.from_year_and_code(2026, "1T")),
     )
     save_run(run)
 
@@ -569,7 +565,7 @@ def test_find_unique_run_for_period_returns_single_match(tmp_path: Path) -> None
     run = _aborted_result(
         run_id="a" * 16,
         reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        obligation=_obligation("130", _period(2026, "1T")),
+        obligation=_obligation("130", Period.from_year_and_code(2026, "1T")),
     )
     save_run(run)
 
@@ -582,12 +578,12 @@ def test_find_unique_run_for_period_refuses_multiple_matches_with_candidate_guid
     earlier = _aborted_result(
         run_id="a" * 16,
         reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        obligation=_obligation("130", _period(2026, "1T")),
+        obligation=_obligation("130", Period.from_year_and_code(2026, "1T")),
     ).model_copy(update={"started_at": datetime(2026, 4, 10, 9, 0, tzinfo=UTC)})
     later = _aborted_result(
         run_id="b" * 16,
         reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        obligation=_obligation("130", _period(2026, "1T")),
+        obligation=_obligation("130", Period.from_year_and_code(2026, "1T")),
     ).model_copy(update={"started_at": datetime(2026, 4, 12, 9, 0, tzinfo=UTC)})
     save_run(earlier)
     save_run(later)

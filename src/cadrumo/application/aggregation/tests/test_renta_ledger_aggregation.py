@@ -26,7 +26,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.categories import SpendingCategory
 from ....domain.renta import (
@@ -38,6 +38,7 @@ from ....domain.renta import (
     evaluate_renta_deductibility,
 )
 from .._renta_ledger import _casilla_aggregation
+from ._renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -64,10 +65,6 @@ def _observation(
         RentaDeductibilityContext(profile_year=2025),
     )
     return build_renta_deductible_expense_observation(fact, result, tax_year=2025)
-
-
-def _period(year: int, code: str) -> Period:
-    return Period.from_year_and_code(year, code)
 
 
 _PERIOD_2025 = _period(2025, "0A")

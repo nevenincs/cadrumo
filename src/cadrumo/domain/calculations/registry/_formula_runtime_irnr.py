@@ -5,7 +5,7 @@ keep that module under its size budget (`aeat-architecture-boundaries`,
 `aeat-architecture-boundaries`). Holds the two IRNR-specific formula
 ops -- ``irnr_resolve_tipo_gravamen`` and ``m210_resolve_base_imponible`` --
 and their private argument-resolution and rate-computation helpers. Dispatch
-still lives in :func:`~domain.calculations.registry._formula_runtime._evaluate_expression`,
+still lives in :func:`~domain.calculations.registry._formula_runtime._evaluate_with_ctx`,
 which imports this module at package level and calls
 :func:`evaluate_irnr_resolve_tipo_gravamen` /
 :func:`evaluate_m210_resolve_base_imponible` exactly as it calls the sibling

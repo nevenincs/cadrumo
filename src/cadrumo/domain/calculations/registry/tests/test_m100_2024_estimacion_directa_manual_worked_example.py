@@ -164,7 +164,7 @@ from .....core.resources import bundled_path
 from .. import (
     ValidatedRegistryAuthority,
 )
-from ._manual_oracle_support import read_manual_worked_example
+from ._manual_oracle_support import oracle_declared_figures
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -210,33 +210,23 @@ _BASE_BINDINGS_2024 = {
     "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
 }
 
+# The raw ingresos/gastos ``oracle_declared_figures`` returns for this payload
+# were a hand-written literal block until the payload learned to declare its
+# own inputs. Building them from the declaration is the point: a fixture and a
+# payload that state the scenario separately can drift, and a fixture that
+# drifts into reaching the printed figure by another route is precisely the
+# failure this corpus exists to prevent. Sourced from one place, they cannot
+# disagree.
+#
+# The declaration is not self-certifying — it does not prove these are the
+# manual's numbers, only that one reviewable place claims they are, with a
+# per-input line reference (``locator_by_casilla_id``) pointing at the page to
+# check it against. The per-box mapping and its cross-validation against the
+# manual's own "Total ingresos" / "Total gastos" subtotals are in the module
+# docstring.
 _ORACLE_PAYLOAD_NAME = "modelo-100-2024-estimacion-directa-simplificada.json"
 
-
-def _declared_actividad_inputs() -> dict[CasillaId, Decimal]:
-    """The manual's raw ingresos/gastos, read FROM the oracle rather than retyped here.
-
-    These were a hand-written literal block until the payload learned to declare its
-    own inputs. Building them from the declaration is the point: a fixture and a
-    payload that state the scenario separately can drift, and a fixture that drifts
-    into reaching the printed figure by another route is precisely the failure this
-    corpus exists to prevent. Sourced from one place, they cannot disagree.
-
-    The declaration is not self-certifying — it does not prove these are the manual's
-    numbers, only that one reviewable place claims they are, with a per-input line
-    reference (``locator_by_casilla_id``) pointing at the page to check it against.
-    The per-box mapping and its cross-validation against the manual's own "Total
-    ingresos" / "Total gastos" subtotals are in the module docstring.
-    """
-    declared = read_manual_worked_example(_ORACLE_PAYLOAD_NAME).declared_inputs
-    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
-    return {
-        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
-        for casilla_id, value in declared.by_casilla_id.items()
-    }
-
-
-_ACTIVIDAD_INPUTS: dict[CasillaId, Decimal] = _declared_actividad_inputs()
+_ACTIVIDAD_INPUTS: dict[CasillaId, Decimal] = oracle_declared_figures(_ORACLE_PAYLOAD_NAME)
 
 
 # Nine of the inputs above are casillas the registry declares

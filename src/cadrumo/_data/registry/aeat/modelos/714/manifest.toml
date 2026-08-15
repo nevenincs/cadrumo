@@ -4,12 +4,19 @@ tax_domain = "patrimonio"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
 output_sensitivity = "financial"
+# orden-hac-1023-2021:modelo-714 (formerly cited here) resolved to an
+# unrelated municipal resolution when checked against live BOE -- see the
+# per-revision comments under revisions/*/revision.toml. Each revision now
+# carries its own year-specific joint IRPF+Patrimonio orden via
+# orden_aplicabilidad; this modelo-level entry cites the earliest of that
+# real family (ejercicio 2021's) rather than a year-specific orden that
+# would misrepresent every other revision, or a fabricated stand-in.
 legal_refs = [
     "ley-19-1991:art-28",
     "ley-19-1991:art-30",
     "ley-19-1991:art-31",
     "ley-19-1991:art-4-9",
-    "orden-hac-1023-2021:modelo-714",
+    "orden-hfp-207-2022:art-4",
 ]
 source_refs = [
     "aeat-modelo-714-procedure",

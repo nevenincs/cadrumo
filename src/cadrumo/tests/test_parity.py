@@ -446,7 +446,8 @@ def test_canonicalize_product_identity_cli_rejects_invalid_locale_without_writin
 
     assert result.exit_code != 0
     assert "Invalid value" in result.output
-    assert {path.name: path.read_bytes() for path in scan_directory(locales_dir, pattern="*.yml")} == before
+    after = {path.name: path.read_bytes() for path in scan_directory(locales_dir, pattern="*.yml")}
+    assert after == before
 
 
 def test_canonicalize_product_identity_cli_omission_updates_every_catalogue(tmp_path: Path) -> None:

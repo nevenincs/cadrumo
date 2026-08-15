@@ -287,7 +287,8 @@ def test_the_sweep_is_safe_to_run_concurrently(tmp_path: Path) -> None:
         worker.join(timeout=_SUBPROCESS_TIMEOUT_SECONDS)
 
     assert not failures, f"concurrent sweeps raised: {failures}"
-    assert not [path for path in scan_directory(tmp_path, pattern=f"{_STEM}*") if path != live]
+    survivors = scan_directory(tmp_path, pattern=f"{_STEM}*")
+    assert not [path for path in survivors if path != live]
     assert (live / "cadrumo.db").read_text(encoding="utf-8") == "held throughout"
 
 

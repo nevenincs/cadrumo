@@ -2,7 +2,9 @@
 #
 # Ley 19/1991 establishes the annual Impuesto sobre el Patrimonio (IP), a
 # tax on the net wealth of resident individuals and Spanish-sited wealth of
-# non-residents. The declaration is Modelo 714 (Orden HAC/1023/2021).
+# non-residents. The declaration is Modelo 714, approved each year by the
+# joint IRPF+Patrimonio orden published the following March (e.g. ejercicio
+# 2021 by Orden HFP/207/2022).
 # The obligation threshold is €700.000 net wealth nationally (Art. 28 Ley 19/1991),
 # with autonomic-community variation: Comunitat Valenciana €600.000, some CCAAs
 # €700.000 or €1.000.000. The 714 registry currently grounds the base, art. 30
@@ -88,26 +90,17 @@ required_text = [
     "300.000 euros",
 ]
 
-[legal."orden-hac-1023-2021:modelo-714"]
-evidence_tier = "legal_authority"
-authority = "boe"
-kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hac-1023-2021-modelo-714.html#modelo-714"
-document_id = "BOE-A-2021-7593"
-article = "modelo 714"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-7593"
-published_at = 2021-09-28
-effective_from = 2021-09-28
-review_status = "agent_reviewed"
-reviewed_at = 2026-06-29
-reviewed_by = "agent-review"
-notes = "Orden HAC/1023/2021: aprueba los modelos de declaracion del Impuesto sobre el Patrimonio, ejercicio 2021 y siguientes, incluido el Modelo 714."
-required_text = [
-    "se aprueban los modelos de declaración",
-    "ejercicio 2021 y siguientes",
-    "aprueba el Modelo 714",
-    "Impuesto sobre el Patrimonio",
-]
+# orden-hac-1023-2021:modelo-714 (removed 2026-08-15): document_id
+# BOE-A-2021-7593 was fetched live and resolves to an unrelated municipal
+# job-posting resolution (Ayuntamiento de Benetússer), not any Patrimonio
+# orden -- the whole entry, including its required_text phrases, was
+# fabricated rather than acquired. No Orden "HAC/1023/2021" approving M714
+# was found searching live BOE; the real governing instrument for ejercicio
+# 2021 is the joint IRPF+Patrimonio Orden HFP/207/2022 (BOE-A-2022-4296,
+# already grounded above as orden-hfp-207-2022:art-2 / art-4), which the
+# per-year 714 revisions already cite. The fabricated stub file
+# (orden-hac-1023-2021-modelo-714.html) is deleted; boe-modelo-714-layout
+# below now points at the real bundled orden-hfp-207-2022.html.
 
 [sources."aeat-modelo-714-procedure"]
 evidence_tier = "official_source_guidance"
@@ -125,13 +118,31 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "boe"
 kind = "form_spec"
-corpus_path = "corpus/normatives/html/orden-hac-1023-2021-modelo-714.html"
-sha256 = "d82448c53ad5aad75fc3c59616864356378b980443853942ebcf62971aa73a8d"
-bytes = 859
-retrieved_at = 2026-05-27
-published_at = 2021-09-28
+corpus_path = "corpus/normatives/html/orden-hfp-207-2022.html"
+sha256 = "34094524e4bf0a0dfd0c6308edbbceb6d92fcfd6f101ee41f43513d771fac78b"
+bytes = 156334
+retrieved_at = 2026-08-15
+published_at = 2022-03-18
 applies_from = 2021-01-01
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-7593"
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-4296"
+review_status = "reviewed"
+
+# Acquired 2026-08-15 from the AEAT "ejercicios anteriores - resto modelos"
+# index, which lists it as "714 - Ejercicio 2021. Actualizacion 29/04/2022";
+# the served Last-Modified header (Fri, 29 Apr 2022 09:05:01 GMT) agrees with
+# that stated update date. The earlier corpus harvest omitted it under a blanket
+# support-year window, not on any judgement about this file.
+[sources."aeat-dr-714-2021"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2021"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_714/files/DR714_2021.xls"
+sha256 = "4c8409b0a213bc2c450428939c60eb0791fba40de70ebc82d4cb3c07c43faf4f"
+bytes = 756224
+retrieved_at = 2026-08-15
+applies_from = 2021-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR714_2021.xls"
 review_status = "reviewed"
 
 [sources."aeat-dr-714-2022"]

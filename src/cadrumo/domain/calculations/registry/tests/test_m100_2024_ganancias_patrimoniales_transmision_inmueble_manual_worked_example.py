@@ -104,7 +104,7 @@ from .....core.resources import bundled_path
 from .. import (
     ValidatedRegistryAuthority,
 )
-from ._manual_oracle_support import read_manual_worked_example
+from ._manual_oracle_support import oracle_declared_figures
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -158,25 +158,15 @@ _BASE_BINDINGS_2024 = {
 # Raw importe/gasto/reducción inputs quoted from the manual; see the module
 # docstring for the per-box mapping and its cross-validation against the
 # manual's own stated subtotals.
+#
+# Two figures are worth a reader's attention. Casilla 1915, the
+# amortizaciones deducted from the acquisition value, is printed only inside
+# the arithmetic of the total (``90.000+8.000-1.620``), so it cites that line
+# AND the nota that establishes how 1.620 arose. Casilla 1839 is the
+# abatimiento reducción the manual works out in its solución rather than a
+# fact from the case statement: the engine consumes it, the example states
+# it, and it is cited where it is stated.
 _ORACLE_PAYLOAD_NAME = "modelo-100-2024-ganancias-patrimoniales-transmision-inmueble.json"
-
-
-def _declared_inmueble_inputs() -> dict[CasillaId, Decimal]:
-    """The manual's own transmisión figures, read FROM the oracle rather than retyped.
-
-    Two are worth a reader's attention. Casilla 1915, the amortizaciones deducted from
-    the acquisition value, is printed only inside the arithmetic of the total
-    (``90.000+8.000-1.620``), so it cites that line AND the nota that establishes how
-    1.620 arose. Casilla 1839 is the abatimiento reducción the manual works out in its
-    solución rather than a fact from the case statement: the engine consumes it, the
-    example states it, and it is cited where it is stated.
-    """
-    declared = read_manual_worked_example(_ORACLE_PAYLOAD_NAME).declared_inputs
-    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
-    return {
-        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
-        for casilla_id, value in declared.by_casilla_id.items()
-    }
 
 
 def _scenario(
@@ -242,7 +232,7 @@ def test_1840_manual_worked_example_transmision_inmueble_abatimiento() -> None:
     from the manual; see the module docstring for the full per-box trace.
     """
     scenario = _scenario(
-        inputs=_declared_inmueble_inputs(),
+        inputs=oracle_declared_figures(_ORACLE_PAYLOAD_NAME),
         expected_1826=Decimal("148100.00"),
         expected_1830=Decimal("96380.00"),
         expected_1836=Decimal("51720.00"),
@@ -266,7 +256,7 @@ def test_1826_anti_tautology_gastos_transmision_change_changes_value() -> None:
     would fail this check.
     """
     grounded = _scenario(
-        inputs=_declared_inmueble_inputs(),
+        inputs=oracle_declared_figures(_ORACLE_PAYLOAD_NAME),
         expected_1826=Decimal("148100.00"),
         expected_1830=Decimal("96380.00"),
         expected_1836=Decimal("51720.00"),
@@ -283,7 +273,7 @@ def test_1826_anti_tautology_gastos_transmision_change_changes_value() -> None:
     # is never called on it); only its divergence from the grounded scenario is
     # checked below. The placeholder values are structurally required by
     # RegistryScenarioExpectedOutput but are not consulted.
-    perturbed_inputs = _declared_inmueble_inputs()
+    perturbed_inputs = oracle_declared_figures(_ORACLE_PAYLOAD_NAME)
     perturbed_inputs[validated_casilla_id("1912", surface="1912")] = Decimal("900.00")
     perturbed = _scenario(
         inputs=perturbed_inputs,

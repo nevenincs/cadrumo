@@ -18,8 +18,6 @@ Submodules
    cadrumo.adapters.persistence.storage.bucket._keystore_paths
    cadrumo.adapters.persistence.storage.bucket._layout
    cadrumo.adapters.persistence.storage.bucket._lockfile
-   cadrumo.adapters.persistence.storage.bucket._manifest
-   cadrumo.adapters.persistence.storage.bucket._manifest_io
    cadrumo.adapters.persistence.storage.bucket._output_language_hint
    cadrumo.adapters.persistence.storage.bucket._sealed_archive_errors
    cadrumo.adapters.persistence.storage.bucket._sealed_archive_reader

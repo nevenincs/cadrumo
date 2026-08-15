@@ -12,6 +12,7 @@ import pytest
 from click.testing import Result
 
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER
+from ._cli_json_support import _json_object
 from ._cli_surface_support import (
     _active_bucket_id,
     _invoke,
@@ -23,13 +24,6 @@ from ._strict_cli_fixture_support import cli_surface_isolated_backend
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 __all__ = ["cli_surface_isolated_backend"]
-
-
-def _json_object(value: object) -> dict[str, object]:
-    """Narrow a JSON value to a string-keyed object for typed subscripting."""
-
-    assert isinstance(value, dict), f"expected a JSON object, got {type(value).__name__}"
-    return {str(key): item for key, item in value.items()}
 
 
 def _exit_code(result: Result) -> int:

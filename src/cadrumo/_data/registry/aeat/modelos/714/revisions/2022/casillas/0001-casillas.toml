@@ -1,0 +1,976 @@
+# Modelo 714 casillas for ejercicio 2022, derived row by row from the
+# bundled Diseno de Registros (01-714-ejercicio-2022.xls). The `number` is the box number
+# the design prints in square brackets; `segmento` is the record page on which
+# the box is defined. Boxes reprinted on the resumen or ingreso pages are the
+# same box carried forward, not a second casilla.
+#
+# Two independent box-number series share this form: the identification page's
+# domicilio and modalidad boxes, and the declaration's [01]-[63]. They collide
+# on 15-28 and 35-42, which is why every casilla here declares a segmento.
+
+[[revisions."2022".casillas]]
+id = "declaracion-01"
+number = "01"
+segmento = "714-02"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-02"
+number = "02"
+segmento = "714-02"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-03"
+number = "03"
+segmento = "714-03"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-04"
+number = "04"
+segmento = "714-03"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-05"
+number = "05"
+segmento = "714-04"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-06"
+number = "06"
+segmento = "714-04"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-07"
+number = "07"
+segmento = "714-04"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-08"
+number = "08"
+segmento = "714-05"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-09"
+number = "09"
+segmento = "714-05"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-10"
+number = "10"
+segmento = "714-05"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-11"
+number = "11"
+segmento = "714-05"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-12"
+number = "12"
+segmento = "714-06"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-13"
+number = "13"
+segmento = "714-06"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-14"
+number = "14"
+segmento = "714-06"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-15"
+number = "15"
+segmento = "714-06"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-16"
+number = "16"
+segmento = "714-07"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-17"
+number = "17"
+segmento = "714-07"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-18"
+number = "18"
+segmento = "714-07"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-19"
+number = "19"
+segmento = "714-07"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-20"
+number = "20"
+segmento = "714-08"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-21"
+number = "21"
+segmento = "714-08"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-22"
+number = "22"
+segmento = "714-08"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-23"
+number = "23"
+segmento = "714-09"
+section = ["resumen-patrimonio-neto"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-Ingreso
+
+[[revisions."2022".casillas]]
+id = "declaracion-24"
+number = "24"
+segmento = "714-08"
+section = ["deudas-deducibles"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "patrimonio.base-imponible"
+number = "25"
+segmento = "714-09"
+section = ["resumen-patrimonio-neto"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-Ingreso
+
+[[revisions."2022".casillas]]
+id = "declaracion-26"
+number = "26"
+segmento = "714-09"
+section = ["resumen-patrimonio-neto"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-28", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "patrimonio.base-liquidable"
+number = "27"
+segmento = "714-09"
+section = ["resumen-patrimonio-neto"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-28", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-Ingreso
+
+[[revisions."2022".casillas]]
+id = "declaracion-28"
+number = "28"
+segmento = "714-09"
+section = ["patrimonio-exento-con-progresividad"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "patrimonio.cuota-integra"
+number = "29"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-30", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-Ingreso
+
+[[revisions."2022".casillas]]
+id = "patrimonio.irpf-bases-imponibles"
+number = "30"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "patrimonio.dividendos-no-irpf"
+number = "31"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "patrimonio.base-ahorro-excluida"
+number = "32"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "patrimonio.limite-conjunto"
+number = "33"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "patrimonio.irpf-cuotas-integras"
+number = "34"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "patrimonio.irpf-cuotas-excluidas-base-ahorro"
+number = "35"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "patrimonio.cuota-integra-susceptible-limitacion"
+number = "36"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "patrimonio.suma-cuotas-limite"
+number = "37"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "patrimonio.exceso-limite-conjunto"
+number = "38"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "patrimonio.reduccion-limite-80"
+number = "39"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-31", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "patrimonio.total-cuota-integra"
+number = "40"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "declaracion-41"
+number = "41"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "declaracion-42"
+number = "42"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "declaracion-43"
+number = "43"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "declaracion-44"
+number = "44"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "patrimonio.cuota-minorada"
+number = "45"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "declaracion-46"
+number = "46"
+segmento = "714-08"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-48"
+number = "48"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "declaracion-49"
+number = "49"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "declaracion-50"
+number = "50"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "patrimonio.cuota-a-ingresar"
+number = "55"
+segmento = "714-10"
+section = ["liquidacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-Ingreso
+
+[[revisions."2022".casillas]]
+id = "declaracion-56"
+number = "56"
+segmento = "714-10"
+section = ["regularizacion-declaracion-complementaria"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "declaracion-57"
+number = "57"
+segmento = "714-10"
+section = ["regularizacion-declaracion-complementaria"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-Ingreso
+
+[[revisions."2022".casillas]]
+id = "declaracion-60"
+number = "60"
+segmento = "714-02"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-4-9", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-61"
+number = "61"
+segmento = "714-02"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-4-9", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+# also printed on 714-09
+
+[[revisions."2022".casillas]]
+id = "declaracion-62"
+number = "62"
+segmento = "714-02"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-4-9", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "declaracion-63"
+number = "63"
+segmento = "714-02"
+section = ["bienes-y-derechos"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-1"
+number = "1"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-2"
+number = "2"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-3"
+number = "3"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "ccaa_code"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-4"
+number = "4"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-2", "orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-8"
+number = "8"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "ccaa_code"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-10"
+number = "10"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-12"
+number = "12"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-15"
+number = "15"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-16"
+number = "16"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-17"
+number = "17"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-18"
+number = "18"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-19"
+number = "19"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-20"
+number = "20"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-21"
+number = "21"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-22"
+number = "22"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-23"
+number = "23"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-24"
+number = "24"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-25"
+number = "25"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-26"
+number = "26"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-27"
+number = "27"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "postal_code"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-28"
+number = "28"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-29"
+number = "29"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-35"
+number = "35"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-36"
+number = "36"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-37"
+number = "37"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-39"
+number = "39"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-40"
+number = "40"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-41"
+number = "41"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-42"
+number = "42"
+segmento = "714-01"
+section = ["identificacion"]
+data_type = "country_code"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-310-2023:art-4"]
+source_refs = ["aeat-dr-714-2022"]

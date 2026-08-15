@@ -1,0 +1,8 @@
+{
+  "declared_non_record_sheets": [
+    {
+      "sheet": "TABLAS",
+      "reason": "Read directly, not inferred: this tab carries no 'Posic.'/'Lon'/'Tipo'/'Contenido' columns anywhere -- it is not a record-design sheet and never will be. It holds two lookup tables: 'TABLA DE TIPOS DE VINCULACION (Tabla A)', mapping single-letter codes A-H to the related-party relationship types of LIS art. 18.3, and 'TABLA DE METODOS DE VALORACION (Tabla B)', mapping codes 1A-1E to the transfer-pricing valuation methods of LIS art. 18.4. Both bundled Modelo 232 editions (2016-y-siguientes and 2016-2017) carry this identical tab -- one judgement, recorded once, covering both."
+    }
+  ]
+}

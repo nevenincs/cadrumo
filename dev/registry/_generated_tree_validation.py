@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path, PurePosixPath
 
-from cadrumo.core import scan_directory
+from cadrumo.core import iter_directory
 from cadrumo.domain.calculations.registry import (
     ExportLayoutDefinition,
     RegistrySnapshot,
@@ -280,7 +280,7 @@ def _require_existing_non_link(path: Path, *, subject: str) -> None:
 
 
 def _children_without_links(directory: Path, *, subject: str) -> tuple[Path, ...]:
-    children = tuple(sorted(scan_directory(directory), key=lambda path: path.name))
+    children = tuple(sorted(iter_directory(directory), key=lambda path: path.name))
     for child in children:
         if child.is_symlink() or child.is_junction():
             raise RegistryValidationError(f"{subject} contains a linked member: {child}")

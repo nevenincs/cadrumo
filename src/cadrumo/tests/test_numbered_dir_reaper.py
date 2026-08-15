@@ -332,7 +332,8 @@ def test_the_reap_is_safe_to_run_concurrently(tmp_path: Path) -> None:
         worker.join(timeout=_SUBPROCESS_TIMEOUT_SECONDS)
 
     assert not failures, f"concurrent reaps raised: {failures}"
-    assert {path.name for path in scan_directory(root, pattern="pytest-*")} == {live.name}
+    survivors = scan_directory(root, pattern="pytest-*")
+    assert {path.name for path in survivors} == {live.name}
     assert (live / "payload-0").read_text(encoding="utf-8") == "x" * 512
 
 

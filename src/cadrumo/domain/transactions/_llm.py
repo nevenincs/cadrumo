@@ -240,7 +240,7 @@ class LLMSplitProposer(Protocol):
 # ── parametric prompt builder ─────────────────────────────────────
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ClassificationChoice:
     """One allowed :class:`BusinessClassification` paired with an LLM-facing hint."""
 
@@ -248,7 +248,7 @@ class ClassificationChoice:
     hint: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class CategoryChoice:
     """One allowed :class:`SpendingCategory` paired with an LLM-facing hint."""
 
@@ -256,7 +256,7 @@ class CategoryChoice:
     hint: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class IvaCategoryChoice:
     """One allowed :class:`cadrumo.domain.iva.IvaCategory` paired with an LLM-facing hint."""
 

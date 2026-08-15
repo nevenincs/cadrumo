@@ -15,7 +15,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
-from cadrumo.core import FilingProducerKey, compile_filing_projection_ref, freeze_toml, read_toml, scan_directory
+from cadrumo.core import FilingProducerKey, compile_filing_projection_ref, freeze_toml, iter_directory, read_toml
 from cadrumo.domain.calculations.registry import (
     ExportComputedKey,
     ExportDraftAttribute,
@@ -82,7 +82,7 @@ def _semantic_map_fragment_paths(fragment_directory: Path) -> tuple[Path, ...]:
             f"semantic-map path must be a real directory: {fragment_directory}",
         )
     try:
-        paths = tuple(sorted(scan_directory(fragment_directory, require_root=True), key=lambda path: path.name))
+        paths = tuple(sorted(iter_directory(fragment_directory, require_root=True), key=lambda path: path.name))
     except OSError as exc:
         raise RegistryValidationError(
             f"cannot inspect semantic-map directory: {fragment_directory}",

@@ -1,6 +1,7 @@
 {
   "corrections": [
     {
+      "kind": "field_type",
       "sheet": "T22014A00",
       "source_row": 104,
       "corrected_type": "Num",
@@ -13,6 +14,7 @@
       ]
     },
     {
+      "kind": "field_type",
       "sheet": "T22014A00",
       "source_row": 105,
       "corrected_type": "Num",
@@ -25,6 +27,7 @@
       ]
     },
     {
+      "kind": "field_type",
       "sheet": "T22014A00",
       "source_row": 106,
       "corrected_type": "Num",

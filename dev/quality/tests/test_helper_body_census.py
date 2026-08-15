@@ -296,6 +296,264 @@ def test_non_underscore_export_from_a_private_support_module_is_a_candidate(tmp_
     assert behaviour.function_names == ("_declared_thing", "declared_thing")
 
 
+def test_closed_over_module_constant_is_labeled_and_still_reported(tmp_path: Path) -> None:
+    """A body-identical group that closes over a same-named constant is FLAGGED, not silenced.
+
+    W09.P30.S141's real-world proof: `_READY_PROFILE_FACTS` carried a
+    different taxpayer surname per file, and `_WORKFLOW` pointed at a
+    different CI YAML file per file, while both functions' bodies were
+    genuinely identical. This is that shape in miniature -- two files declare
+    a DIFFERENT `_SUBJECT` constant and a body-identical function that reads
+    it. The group must still be reported (the shape really is duplicated),
+    but labeled so a reviewer parameterises rather than deletes.
+    """
+    _scaffold(tmp_path)
+    _write_source(
+        tmp_path,
+        "src/cadrumo/tests/test_one.py",
+        """
+        _SUBJECT = "alpha"
+
+        def _describe():
+            return {"subject": _SUBJECT, "kind": "fixed"}
+        """,
+    )
+    _write_source(
+        tmp_path,
+        "src/cadrumo/tests/test_two.py",
+        """
+        _SUBJECT = "beta"
+
+        def _narrate():
+            return {"subject": _SUBJECT, "kind": "fixed"}
+        """,
+    )
+
+    result = census(tmp_path)
+
+    assert result.aliased_behaviour_count == 1
+    (behaviour,) = result.aliased_behaviours
+    assert behaviour.function_names == ("_describe", "_narrate")
+    assert behaviour.is_constant_dependent
+    assert behaviour.closed_over_constants == ("_SUBJECT",)
+
+
+def test_literal_only_duplicate_is_not_labeled_constant_dependent(tmp_path: Path) -> None:
+    """A duplicate with no free module-level name is plain TRUE-DUPLICATION, not flagged."""
+    _scaffold(tmp_path)
+    _write_source(
+        tmp_path,
+        "src/cadrumo/tests/test_one.py",
+        """
+        def _tax_id():
+            return "X1234567L"
+        """,
+    )
+    _write_source(
+        tmp_path,
+        "src/cadrumo/tests/test_two.py",
+        """
+        def _identifier():
+            return "X1234567L"
+        """,
+    )
+
+    result = census(tmp_path)
+
+    assert result.aliased_behaviour_count == 1
+    (behaviour,) = result.aliased_behaviours
+    assert not behaviour.is_constant_dependent
+    assert behaviour.closed_over_constants == ()
+
+
+def test_a_local_variable_shadowing_a_module_constant_is_not_flagged(tmp_path: Path) -> None:
+    """A same-named local variable shadows the module constant -- not a real reference.
+
+    Without this, a module constant `_SUBJECT` sitting anywhere in the file
+    would poison every unrelated helper that merely happens to assign a
+    same-named local of its own.
+    """
+    _scaffold(tmp_path)
+    _write_source(
+        tmp_path,
+        "src/cadrumo/tests/test_one.py",
+        """
+        _SUBJECT = "unused-by-either-function"
+
+        def _via_local_one():
+            _SUBJECT = "irrelevant"
+            return {"subject": _SUBJECT}
+        """,
+    )
+    _write_source(
+        tmp_path,
+        "src/cadrumo/tests/test_two.py",
+        """
+        def _via_local_two():
+            _SUBJECT = "irrelevant"
+            return {"subject": _SUBJECT}
+        """,
+    )
+
+    result = census(tmp_path)
+
+    assert result.aliased_behaviour_count == 1
+    (behaviour,) = result.aliased_behaviours
+    assert not behaviour.is_constant_dependent
+    assert behaviour.closed_over_constants == ()
+
+
+def test_a_parameter_shadowing_a_module_constant_is_not_flagged(tmp_path: Path) -> None:
+    """A same-named parameter shadows the module constant -- not a real reference."""
+    _scaffold(tmp_path)
+    _write_source(
+        tmp_path,
+        "src/cadrumo/tests/test_one.py",
+        """
+        _SUBJECT = "unused-by-either-function"
+
+        def _via_parameter_one(_SUBJECT):
+            return {"subject": _SUBJECT}
+        """,
+    )
+    _write_source(
+        tmp_path,
+        "src/cadrumo/tests/test_two.py",
+        """
+        def _via_parameter_two(_SUBJECT):
+            return {"subject": _SUBJECT}
+        """,
+    )
+
+    result = census(tmp_path)
+
+    assert result.aliased_behaviour_count == 1
+    (behaviour,) = result.aliased_behaviours
+    assert not behaviour.is_constant_dependent
+    assert behaviour.closed_over_constants == ()
+
+
+def test_delegating_wrapper_closing_over_a_constant_is_not_counted_as_duplication(tmp_path: Path) -> None:
+    """W09.P30.S141's real-tree finding, in miniature: a thin per-file wrapper is the SOLUTION.
+
+    `_write_modelo`/`_load_revision` in `domain/calculations/registry/tests/`
+    were reported as CONSTANT-DEPENDENT duplication until this test's
+    counterpart shipped -- each was a one-line forward of its own per-file
+    constant into a single shared implementation, which is composition, not
+    debt. Two files here do the same shape: call a function imported from a
+    real shared module, passing along a per-file constant.
+    """
+    _scaffold(tmp_path)
+    _write_source(
+        tmp_path,
+        "src/cadrumo/tests/_shared_writer.py",
+        """
+        def write_record(value):
+            return {"value": value}
+        """,
+    )
+    _write_source(
+        tmp_path,
+        "src/cadrumo/tests/test_one.py",
+        """
+        from ._shared_writer import write_record
+
+        _VALUE = "alpha"
+
+        def _write():
+            return write_record(_VALUE)
+        """,
+    )
+    _write_source(
+        tmp_path,
+        "src/cadrumo/tests/test_two.py",
+        """
+        from ._shared_writer import write_record
+
+        _VALUE = "beta"
+
+        def _write():
+            return write_record(_VALUE)
+        """,
+    )
+
+    result = census(tmp_path)
+
+    assert result.aliased_behaviour_count == 0
+    assert result.delegating_wrapper_count == 2
+    delegates_to = {record.delegates_to for record in result.delegating_wrappers}
+    assert delegates_to == {"cadrumo.tests._shared_writer.write_record"}
+
+
+def test_real_work_closing_over_a_constant_still_counts_as_duplication(tmp_path: Path) -> None:
+    """A body that does more than forward one call stays in the duplicate bucket.
+
+    Contrast with the delegating-wrapper case above: this body constructs a
+    dict of two entries itself rather than handing everything to one
+    imported call, so it is real duplicated logic, not composition, and must
+    still be reported (and still labeled CONSTANT-DEPENDENT).
+    """
+    _scaffold(tmp_path)
+    _write_source(
+        tmp_path,
+        "src/cadrumo/tests/test_one.py",
+        """
+        _VALUE = "alpha"
+
+        def _build():
+            return {"value": _VALUE, "kind": "fixed"}
+        """,
+    )
+    _write_source(
+        tmp_path,
+        "src/cadrumo/tests/test_two.py",
+        """
+        _VALUE = "beta"
+
+        def _assemble():
+            return {"value": _VALUE, "kind": "fixed"}
+        """,
+    )
+
+    result = census(tmp_path)
+
+    assert result.delegating_wrapper_count == 0
+    assert result.aliased_behaviour_count == 1
+    (behaviour,) = result.aliased_behaviours
+    assert behaviour.is_constant_dependent
+    assert behaviour.closed_over_constants == ("_VALUE",)
+
+
+def test_a_call_reached_through_attribute_access_is_not_guessed_as_a_wrapper(tmp_path: Path) -> None:
+    """The callee must be a bare imported NAME -- an attribute call is left alone, never guessed at."""
+    _scaffold(tmp_path)
+    _write_source(
+        tmp_path,
+        "src/cadrumo/tests/test_one.py",
+        """
+        import subprocess
+
+        def _run():
+            return subprocess.run(["true"])
+        """,
+    )
+    _write_source(
+        tmp_path,
+        "src/cadrumo/tests/test_two.py",
+        """
+        import subprocess
+
+        def _execute():
+            return subprocess.run(["true"])
+        """,
+    )
+
+    result = census(tmp_path)
+
+    assert result.delegating_wrapper_count == 0
+    assert result.aliased_behaviour_count == 1
+
+
 # --------------------------------------------------------------------------
 # Regression pin: the real canonical homes this session's burndown built
 # --------------------------------------------------------------------------

@@ -174,7 +174,7 @@ from .....core.resources import bundled_path
 from .. import (
     ValidatedRegistryAuthority,
 )
-from ._manual_oracle_support import read_manual_worked_example
+from ._manual_oracle_support import oracle_declared_figures
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -209,23 +209,13 @@ _REL_2020 = {
 }
 
 
+# The raw ingresos/gastos ``oracle_declared_figures`` returns for this payload
+# are the manual's own printed page: the test and the payload used to be two
+# independent transcriptions of the same figures, neither reading the other.
+# Sourced from one place they cannot disagree; the declaration carries a
+# per-input line reference so a reviewer can check it against the page,
+# which is the claim it makes and the only one it makes.
 _ORACLE_PAYLOAD_NAME = "modelo-100-2020-estimacion-directa-simplificada.json"
-
-
-def _declared_actividad_inputs() -> dict[CasillaId, Decimal]:
-    """The manual's raw ingresos/gastos, read FROM the oracle rather than retyped here.
-
-    The test and the payload were two independent transcriptions of one printed page,
-    neither reading the other. Sourced from one place they cannot disagree; the
-    declaration carries a per-input line reference so a reviewer can check it against
-    the page, which is the claim it makes and the only one it makes.
-    """
-    declared = read_manual_worked_example(_ORACLE_PAYLOAD_NAME).declared_inputs
-    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
-    return {
-        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
-        for casilla_id, value in declared.by_casilla_id.items()
-    }
 
 
 def _scenario(*, es_normal: Decimal, expected_0226: Decimal, scenario_id: str) -> RegistryCalculationScenario:
@@ -235,7 +225,7 @@ def _scenario(*, es_normal: Decimal, expected_0226: Decimal, scenario_id: str) -
         revision="2020",
         filing_year=2020,
         period="0A",
-        inputs=_declared_actividad_inputs(),
+        inputs=oracle_declared_figures(_ORACLE_PAYLOAD_NAME),
         binding_values={
             "renta-2020-modelo-100-estimacion-directa-es-normal": es_normal,
         },

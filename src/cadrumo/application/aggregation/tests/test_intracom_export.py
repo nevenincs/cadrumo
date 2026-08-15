@@ -31,7 +31,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
@@ -51,6 +51,7 @@ from ....domain.transactions import (
 from .. import IvaLedgerAggregationIssueReason
 from .._iva_ledger import IvaLedgerAggregation
 from ._iva_authority_support import aggregate_iva_ledger_observations
+from ._renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -75,10 +76,6 @@ def _casilla_base(aggregation: IvaLedgerAggregation, casilla_id: CasillaId) -> D
     """Resolve a casilla base imponible via the registry binding from an aggregation."""
     resolved = resolve_ledger_iva_aggregation_binding_values(_modelo_303_revision(), aggregation.observations)
     return resolved.get(_CASILLA_BASE_BINDING[casilla_id], Decimal("0"))
-
-
-def _period(year: int, code: str) -> Period:
-    return Period.from_year_and_code(year, code)
 
 
 _PERIOD = _period(2026, "2T")

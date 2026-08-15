@@ -490,12 +490,20 @@ def directory_byte_total(
             absence when ``entries`` is not supplied; the actual walk reads
             ``entries`` (or a fresh recursive scan of ``directory``).
         tolerate_errors: When ``False`` (the default), an ``OSError`` raised
-            while statting a candidate (or while advancing the recursive
-            walk itself, e.g. a permission error on a subdirectory)
-            propagates. When ``True``, the failing candidate — or the rest
-            of an interrupted walk — is skipped and the total reflects only
-            what was successfully stat'd, so a blob write racing this read
-            never crashes the caller.
+            while statting a candidate propagates, as does one raised while
+            advancing a caller-supplied ``entries`` iterator. When ``True``,
+            the failing candidate — or the rest of an interrupted walk — is
+            skipped and the total reflects only what was successfully
+            stat'd, so a blob write racing this read never crashes the
+            caller.
+
+            The flag does not reach the internal scan's own descent: an
+            unreadable subdirectory is skipped silently whatever it is set
+            to, the scan reporting what it could read rather than raising
+            from beneath the root. That predates the move off
+            ``Path.rglob``, which swallowed the same errors — so an
+            injected ``entries`` is the only walk advance this flag
+            governs.
         entries: Pre-enumerated candidates to sum instead of a fresh
             recursive scan of ``directory``. Injectable so a caller that already
             holds an enumeration can reuse it, and so a test can reproduce a

@@ -6,8 +6,20 @@
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "artefact_count": 4,
+  "artefact_count": 5,
   "artefacts": [
+    {
+      "modelo": "714",
+      "title": "714 - Ejercicio 2021. Actualizacion 29/04/2022",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR714_2021.xls",
+      "stored_path": "files/DR714_2021.xls",
+      "original_filename": "DR714_2021.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 756224,
+      "sha256": "4c8409b0a213bc2c450428939c60eb0791fba40de70ebc82d4cb3c07c43faf4f",
+      "retrieved_at": "2026-08-15"
+    },
     {
       "modelo": "714",
       "title": "714 - Ejercicio 2025 (820 KB - xls)",

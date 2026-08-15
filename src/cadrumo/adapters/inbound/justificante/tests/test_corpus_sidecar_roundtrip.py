@@ -172,7 +172,7 @@ def _load_ground_truth(sidecar_path: Path, modelo: str, stem: str) -> _SidecarGr
 def _collect_sidecar_pairs() -> list[tuple[Path, _SidecarGroundTruth]]:
     """Walk the justificantes fixture tree and collect every valid PDF+sidecar pair."""
     pairs: list[tuple[Path, _SidecarGroundTruth]] = []
-    for modelo_dir in sorted(p for p in scan_directory(_JUSTIFICANTES_DIR) if p.is_dir()):
+    for modelo_dir in sorted(p for p in scan_directory(_JUSTIFICANTES_DIR, require_root=True) if p.is_dir()):
         modelo = modelo_dir.name
         for pdf in scan_directory(modelo_dir, pattern="*.pdf"):
             sidecar = pdf.with_suffix(".json")

@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....domain.iva import IvaCategory, IvaDeductionClassificationProvenance
 from ....domain.transactions import (
     BusinessClassification,
@@ -28,15 +28,11 @@ from ....domain.transactions import (
 )
 from .. import IvaLedgerAggregationIssueReason
 from ._iva_authority_support import aggregate_iva_ledger_observations
+from ._renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
-
-
-def _period(year: int, code: str) -> Period:
-    return Period.from_year_and_code(year, code)
-
 
 _Q2_2026 = _period(2026, "2T")
 

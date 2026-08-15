@@ -7,13 +7,13 @@ from dataclasses import dataclass
 from ...domain.calculations.registry import BindingId, FilingProjectionRef, RecordId
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class RecordRenderRow:
     row_index: int | None
     active_binding_ids: frozenset[BindingId]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class RenderedRecordOccurrence:
     """One canonical resolver-produced fixed-width record occurrence."""
 
