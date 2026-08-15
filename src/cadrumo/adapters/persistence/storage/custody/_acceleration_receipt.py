@@ -79,7 +79,7 @@ from .....core.hashing import (
 )
 from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
-from .._storage_path_definitions import PROFILE_SESSION_FILENAME
+from .._storage_path_definitions import PROFILE_SESSION_FILENAME, PROFILE_SESSION_RETIREMENT_FILENAME
 from ..crypto import EncryptedBlob, decrypt_record, encrypt_record
 from ..errors import (
     DecryptionError,
@@ -128,7 +128,6 @@ _AAD_PREFIX: Final[str] = "cadrumo.profile-session.v2"
 PROFILE_SESSION_RECORD_MAX_BYTES: Final[int] = 8 * 1024
 """Strict ceiling for one canonical ``session.v2.json`` receipt."""
 
-_PROFILE_SESSION_RETIREMENT_FILENAME: Final[str] = "session.v2.retirement.json"
 _PROFILE_SESSION_RETIREMENT_MAX_BYTES: Final[int] = 24 * 1024
 _PROFILE_SESSION_RETIREMENT_SCHEMA_VERSION: Final[int] = 1
 
@@ -611,7 +610,7 @@ def profile_session_path(*, storage_root: Path, profile_id: UUID) -> Path:
 def _profile_session_retirement_path(*, storage_root: Path, profile_id: UUID) -> Path:
     """Return the bounded local receipt for one interrupted session-key swap."""
     return profile_session_path(storage_root=storage_root, profile_id=profile_id).with_name(
-        _PROFILE_SESSION_RETIREMENT_FILENAME,
+        PROFILE_SESSION_RETIREMENT_FILENAME,
     )
 
 
