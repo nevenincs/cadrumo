@@ -1,12 +1,6 @@
-from collections.abc import Iterator
-from pathlib import Path
+from ....adapters.persistence.tests import default_bucket_runtime_profile_fixture
 
-import pytest
-
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-
-
-@pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        yield profile
+#: Explicitly requested, never autouse: only three of this directory's test
+#: modules want a runtime, and a conftest fixture made autouse would install one
+#: for every test beside them. The body is shared; the reach stays declared here.
+secure_engine = default_bucket_runtime_profile_fixture(autouse=False, name="secure_engine")

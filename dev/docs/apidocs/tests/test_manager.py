@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..manager import ApiStubManager, DriftResult, ScaffoldResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -15,9 +17,8 @@ def test_scaffold_produces_conformant_tree(tmp_path: pytest.TempPathFactory) -> 
     A freshly scaffolded tree must be immediately conformant: every
     source module has a stub and no stubs are orphaned.
     """
-    from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[4]
+    repo_root = REPO_ROOT
     src_cadrumo = repo_root / "src" / "cadrumo"
     docs_api = tmp_path / "api"
 
@@ -40,9 +41,8 @@ def test_check_detects_missing_stub(tmp_path: pytest.TempPathFactory) -> None:
     After scaffolding, deleting one stub file causes check() to report
     that module in missing_stubs.
     """
-    from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[4]
+    repo_root = REPO_ROOT
     src_cadrumo = repo_root / "src" / "cadrumo"
     docs_api = tmp_path / "api"
 
@@ -65,9 +65,8 @@ def test_check_detects_orphan_stub(tmp_path: pytest.TempPathFactory) -> None:
     Injecting a stub for a non-existent module causes check() to list it
     in orphan_stubs.
     """
-    from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[4]
+    repo_root = REPO_ROOT
     src_cadrumo = repo_root / "src" / "cadrumo"
     docs_api = tmp_path / "api"
 
@@ -84,9 +83,8 @@ def test_check_detects_orphan_stub(tmp_path: pytest.TempPathFactory) -> None:
 
 def test_check_detects_stale_stub_content(tmp_path: pytest.TempPathFactory) -> None:
     """check() reports a generated stub whose content was hand-edited."""
-    from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[4]
+    repo_root = REPO_ROOT
     src_cadrumo = repo_root / "src" / "cadrumo"
     docs_api = tmp_path / "api"
 
@@ -112,9 +110,8 @@ def test_check_detects_a_terminator_translated_stub(tmp_path: pytest.TempPathFac
     side, so the same file shows no diff. The stale verdict at the end is
     therefore the only reader in the system that can see this drift at all.
     """
-    from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[4]
+    repo_root = REPO_ROOT
     src_cadrumo = repo_root / "src" / "cadrumo"
     docs_api = tmp_path / "api"
 
@@ -145,9 +142,8 @@ def test_scaffold_writes_line_feed_terminators(tmp_path: pytest.TempPathFactory)
     a check that reads through the same translation came to be blind to its
     own output.
     """
-    from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[4]
+    repo_root = REPO_ROOT
     src_cadrumo = repo_root / "src" / "cadrumo"
     docs_api = tmp_path / "api"
 
@@ -168,9 +164,8 @@ def test_scaffold_rewrites_a_terminator_translated_stub(tmp_path: pytest.TempPat
     comparison would have skipped this file forever and left the drift on disk
     permanently.
     """
-    from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[4]
+    repo_root = REPO_ROOT
     src_cadrumo = repo_root / "src" / "cadrumo"
     docs_api = tmp_path / "api"
 
@@ -193,9 +188,8 @@ def test_scaffold_removes_stale_stub(tmp_path: pytest.TempPathFactory) -> None:
     A pre-existing stub for a phantom module is deleted on the next scaffold
     run and the removal is reported in ScaffoldResult.removed_names.
     """
-    from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[4]
+    repo_root = REPO_ROOT
     src_cadrumo = repo_root / "src" / "cadrumo"
     docs_api = tmp_path / "api"
     docs_api.mkdir(parents=True)
@@ -212,9 +206,8 @@ def test_scaffold_removes_stale_stub(tmp_path: pytest.TempPathFactory) -> None:
 
 def test_scaffold_leaves_unchanged_stubs_untouched(tmp_path: pytest.TempPathFactory) -> None:
     """A second scaffold run writes no files when the tree is already current."""
-    from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[4]
+    repo_root = REPO_ROOT
     src_cadrumo = repo_root / "src" / "cadrumo"
     docs_api = tmp_path / "api"
 
@@ -229,9 +222,8 @@ def test_scaffold_leaves_unchanged_stubs_untouched(tmp_path: pytest.TempPathFact
 
 def test_audit_returns_conformant_message_after_scaffold(tmp_path: pytest.TempPathFactory) -> None:
     """audit() includes a conformant message after a successful scaffold."""
-    from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[4]
+    repo_root = REPO_ROOT
     src_cadrumo = repo_root / "src" / "cadrumo"
     docs_api = tmp_path / "api"
 

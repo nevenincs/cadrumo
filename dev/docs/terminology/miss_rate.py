@@ -22,9 +22,11 @@ from typing import Annotated, Final
 
 import typer
 
+from dev._paths import UTF_8
+
 from ._miss_rate import evaluate_held_out_miss_rate
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 

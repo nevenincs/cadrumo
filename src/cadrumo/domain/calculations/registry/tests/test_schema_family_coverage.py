@@ -140,8 +140,11 @@ def test_a_collection_added_without_the_marker_reds_the_enrollment_check() -> No
     failures = schema_family_enrollment_failures(_UnmarkedCollectionRevision)
 
     assert len(failures) == 1
-    assert "casilla_annexes" in failures[0]
-    assert "not marked SCHEMA_FAMILY" in failures[0]
+    # Keyed on the field and the marker it lacks, not on the sentence joining them.
+    # The diagnosis may be reworded; a refusal that stops naming either leaves a
+    # reader knowing something is wrong without knowing what to add or where.
+    assert "casilla_annexes" in failures[0], "the refusal does not name the unenrolled field"
+    assert "SCHEMA_FAMILY" in failures[0], "the refusal does not name the marker the field is missing"
 
 
 def test_marking_the_same_field_clears_the_enrollment_check() -> None:
@@ -171,8 +174,14 @@ def test_marking_a_field_that_is_not_a_collection_also_reds() -> None:
     failures = schema_family_enrollment_failures(_MarkedScalarRevision)
 
     assert len(failures) == 1
-    assert "annex_note" in failures[0]
-    assert "is not a collection of schema models" in failures[0]
+    # Same shape: the field, and the structural property it fails, rather than the
+    # sentence. A marked scalar is enrolled but uncollectable, and a reader needs
+    # both halves to know the fix is the shape and not the marker.
+    assert "annex_note" in failures[0], "the refusal does not name the offending field"
+    assert "collection" in failures[0], (
+        "the refusal no longer says the field fails because it is not a collection, so a reader "
+        "cannot tell an enrolment problem from a shape problem"
+    )
 
 
 def test_family_enrolment_and_manifest_placement_are_disjoint_concepts() -> None:

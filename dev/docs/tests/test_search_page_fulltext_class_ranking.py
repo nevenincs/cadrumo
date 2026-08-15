@@ -41,6 +41,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
+from dev._paths import REPO_ROOT
 
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records, _Materialised
@@ -55,7 +56,7 @@ from ..terminology import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _DOCS = _REPO_ROOT / "docs"
 
 # A made-up token present ONLY in the two full-text pages, so the query returns

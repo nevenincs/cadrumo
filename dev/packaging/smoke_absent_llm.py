@@ -35,6 +35,8 @@ from typing import Final
 
 from packaging.requirements import Requirement
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from ._distribution_names import normalise_distribution_name
 from ._smoke_common import (
     assert_cadrumo_version_output,
@@ -60,7 +62,7 @@ from .python_cohort import (
     load_python_cohort,
 )
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _EXTRA: Final[str] = "llm"
 _EXPECTED_EXTRA: Final[str] = "llm"
 
@@ -661,7 +663,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = REPO_ROOT
     require_executable("uv")
     work_dir = resolve_work_dir(repo_root, args.work_dir, prefix="absent-llm")
     print(f"absent-llm packaging smoke work dir: {work_dir}", flush=True)

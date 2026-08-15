@@ -28,6 +28,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, NoReturn
 
+from dev._paths import UTF_8
+
 from ._hashing import sha256_path
 from .cohort_manifest import LoadedReleaseCohort
 from .evidence import CommandTranscript
@@ -37,7 +39,7 @@ if TYPE_CHECKING:
     from .installed_mcp_oracle import InstalledMcpEvidence
     from .installed_tax_oracle import InstalledTaxEvidence
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 # The distributions the promoted Python cohort carries as installable wheels,
 # each keyed by the exact ``python-cohort.json`` digest name. A public

@@ -20,12 +20,14 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..pagefind_index import SearchIndexResult, build_search_index
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 # dev/docs/tests/test_pagefind_index.py -> parents[3] is the repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _DOCS = _REPO_ROOT / "docs"
 
 _FIXTURE_PAGE = """<!DOCTYPE html>

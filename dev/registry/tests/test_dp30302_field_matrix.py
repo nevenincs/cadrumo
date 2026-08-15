@@ -13,6 +13,7 @@ from cadrumo.domain.calculations.registry import (
     RegistryValidationError,
     bundled_authority,
 )
+from dev._paths import REPO_ROOT
 
 from .. import _dp30302_field_matrix
 from .._dp30302_field_matrix import (
@@ -157,7 +158,7 @@ def test_real_dp30302_anchors_keep_other_countries_refund_distinct_from_quarterl
     assert any("Cuotas soportadas - 4T" in item for item in descriptions)
 
     endpoint_path = (
-        Path(__file__).resolve().parents[3]
+        REPO_ROOT
         / "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/projection_endpoints"
         / "0001-projection-endpoints.toml"
     )
@@ -179,7 +180,7 @@ def test_real_dp30302_anchors_keep_other_countries_refund_distinct_from_quarterl
 
 def test_real_dp30302_declarations_keep_the_reviewed_epoch_multiplicity() -> None:
     """The hash-pinned designs, rather than a generated count, govern every repeated fact."""
-    root = Path(__file__).resolve().parents[3] / "src/cadrumo/_data/registry/aeat/modelos/303/revisions"
+    root = REPO_ROOT / "src/cadrumo/_data/registry/aeat/modelos/303/revisions"
     expected = {
         "2023": (208, 134, {"superficie_horno_dias_cuarto_trimestre": {None}}),
         "2024-hasta-08-y-2t": (204, 130, {"superficie_horno_dias_cuarto_trimestre": {None}}),

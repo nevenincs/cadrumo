@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
 from .._smoke_common import (
     _CORPUS_SOURCE_PREFIX,
@@ -30,7 +32,7 @@ from ..smoke_sdist_core import _assert_sdist_contains_expected_data
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _REVIEW_FOUND_PATHS = {
     "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_349/files/"
     "02-349-orden-eha-769-2010-modificada-por-orden-eha-1721-2011-43-9-kb-docx.docx",

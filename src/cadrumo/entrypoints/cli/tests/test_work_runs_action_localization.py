@@ -27,7 +27,6 @@ from ....application.workflow import (
     WorkflowResult,
     WorkflowSiteHealthFacts,
     WorkflowStage,
-    WorkflowState,
     WorkflowStep,
     save_run,
 )
@@ -83,7 +82,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_PROFILE_ID),
     ):
-        register_minimal_profile(WorkflowState(), profile_id=_PROFILE_ID, display_name=_PROFILE_LABEL)
+        register_minimal_profile(profile_id=_PROFILE_ID, display_name=_PROFILE_LABEL)
         seed_test_profile_record(
             UserProfileRecord(
                 profile_id=_PROFILE_ID,

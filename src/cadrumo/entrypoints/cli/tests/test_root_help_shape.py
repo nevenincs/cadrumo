@@ -30,7 +30,6 @@ __all__ = ["isolated_profile_storage"]
 
 from .... import __version__
 from ....application.operator_surface import build_help_document
-from ....application.workflow import WorkflowState
 from ....core import PRODUCT_IDENTITY, BucketPointer, write_pointer
 from ....core.config import SecretStoreBackend, Settings, load_settings
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
@@ -499,9 +498,7 @@ class TestBareInvocationWithActiveProfile:
     def test_bare_invocation_reports_profile_state_without_cli_only_storage(self) -> None:
         missing = _invoke([])
         with open_test_profile_session("11111111-1111-4111-8111-111111111111"):
-            register_minimal_profile(
-                WorkflowState(), profile_id="11111111-1111-4111-8111-111111111111", display_name="operator"
-            )
+            register_minimal_profile(profile_id="11111111-1111-4111-8111-111111111111", display_name="operator")
         active = _invoke([])
         overview = _invoke(["app", "overview", "status"])
 
@@ -527,9 +524,7 @@ class TestBareInvocationWithActiveProfile:
         """A registered profile without a selection is a login state, not first run."""
 
         with open_test_profile_session("11111111-1111-4111-8111-111111111111"):
-            register_minimal_profile(
-                WorkflowState(), profile_id="11111111-1111-4111-8111-111111111111", display_name="operator"
-            )
+            register_minimal_profile(profile_id="11111111-1111-4111-8111-111111111111", display_name="operator")
         logged_out = _invoke(["config", "logout"])
         landing = _invoke([])
 
@@ -549,9 +544,7 @@ class TestBareInvocationWithActiveProfile:
         assert help_payload["heading"]  # locale-driven; presence is the structural assertion
 
         with open_test_profile_session("11111111-1111-4111-8111-111111111111"):
-            register_minimal_profile(
-                WorkflowState(), profile_id="11111111-1111-4111-8111-111111111111", display_name="operator"
-            )
+            register_minimal_profile(profile_id="11111111-1111-4111-8111-111111111111", display_name="operator")
         active = _invoke(["--format", "json"])
 
         assert active.exit_code == 0, active.output

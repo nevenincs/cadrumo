@@ -10,6 +10,8 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Final
 
+from dev._paths import UTF_8
+
 from .docs_static_site import (
     _CI_MARKERS,
     CANONICAL_DOCS_BASE_URL,
@@ -28,7 +30,7 @@ from .docs_static_site import (
     _verify_distribution_alias,
 )
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 CANONICAL_SITE_URL = f"https://{CANONICAL_SITE_DOMAIN}"
 _PAGE_CACHE_CONTROL = "public, max-age=300, must-revalidate"
 # Vite content-hashes everything under assets/, so those objects never change

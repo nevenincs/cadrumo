@@ -20,9 +20,18 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import CasillaId, CasillaValueKind, ObservedHeaderFact, Period, validated_casilla_id
+from ....core import (
+    CasillaId,
+    CasillaValueKind,
+    ObservedHeaderFact,
+    Period,
+    RegistryAuthorityGrade,
+    validated_casilla_id,
+)
 from ....core.external_constants import load_external_constants
-from ....core.resources import resources
+from ....core.resources import bundled_path
+from ....domain.calculations.registry import load_registry_tree
+from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.modelos import (
     ExternalEvidence,
     ModeloCode,
@@ -38,7 +47,7 @@ from ....tests import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import WorkflowState, workflow_state_repository
+from ...workflow import workflow_state_repository
 
 _CAPTURED_AT = datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC)
 #: A checksum-valid synthetic NIF. This value reaches
@@ -81,7 +90,25 @@ _M303_DECLARATION_TYPE_I = ObservedHeaderFact(
 
 @cache
 def _registry_snapshot(modelo: str, filing_year: int, period: str):
-    return resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+    """Build a real snapshot without the tree-wide ``ValidatedRegistryAuthority`` load.
+
+    ``load_registry_tree`` compiles the tree without validating it; ``build_snapshot``
+    then validates only the requested modelo's own revisions -- unlike
+    ``resources().modelos.authority``, whose ``.load()`` validates the entire registry
+    tree (including every OTHER modelo's export layouts) and currently refuses
+    unconditionally as a result. A modelo whose OWN revisions lack an export layout
+    still refuses here, honestly, on its own missing capability.
+    """
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
+    return build_snapshot(
+        modelo_definition,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=filing_year,
+        period=period,
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
 
 
 @cache
@@ -138,7 +165,6 @@ def _profile_backend(tmp_path: Path, *, tax_id: str):
         # ``buckets/<profile-id>``, which a workflow-state repository
         # construction would otherwise materialise first and collide with.
         register_minimal_profile(
-            WorkflowState(),
             profile_id="11111111-1111-4111-8111-111111111111",
             overrides={"identity.tax_id": tax_id},
         )

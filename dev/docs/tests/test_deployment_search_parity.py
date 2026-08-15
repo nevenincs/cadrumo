@@ -55,6 +55,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
+from dev._paths import REPO_ROOT
 
 from ...deploy.docs_static_site import (
     CANONICAL_DOCS_BASE_URL,
@@ -73,7 +74,7 @@ from ..pagefind_inject import InjectionStats
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 # dev/docs/tests -> parents[3] is the repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _BUILT_HTML = _REPO_ROOT / "docs" / "_build" / "html"
 _PAGEFIND_YML = _REPO_ROOT / "docs" / "pagefind.yml"
 

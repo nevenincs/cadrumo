@@ -36,11 +36,9 @@ def _create_profile(
     tax_id: str,
 ) -> None:
     from ...tests.user_profile import register_minimal_profile
-    from ..workflow import WorkflowState
 
     with open_test_profile_session(profile_id):
         register_minimal_profile(
-            WorkflowState(),
             profile_id=profile_id,
             display_name=label,
             overrides={"identity.tax_id": tax_id, "identity.name": label},

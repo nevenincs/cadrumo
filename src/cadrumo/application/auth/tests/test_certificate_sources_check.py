@@ -29,7 +29,7 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
 from ...state_projection import build_operator_state_projection
-from ...workflow import WorkflowState, workflow_state_repository
+from ...workflow import workflow_state_repository
 from .. import (
     AuthLoginPreconditionError,
     AuthOperationRequiresCustodySessionError,
@@ -102,7 +102,6 @@ def _register_operator_profile() -> None:
     first; the helper only passes that argument back to its caller.
     """
     register_minimal_profile(
-        WorkflowState(),
         profile_id=_BUCKET_ID,
         display_name=_PROFILE_LABEL,
     )
@@ -694,7 +693,6 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
         open_test_profile_session(_BUCKET_B),
     ):
         register_minimal_profile(
-            WorkflowState(),
             profile_id=_BUCKET_B,
             display_name="gestor-route-b",
         )
@@ -857,7 +855,6 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
 
     with open_test_profile_session(_BUCKET_B):
         register_minimal_profile(
-            WorkflowState(),
             profile_id=_BUCKET_B,
             display_name="gestor-retained-state-b",
         )
@@ -982,7 +979,6 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
 
     with open_test_profile_session(_BUCKET_B):
         register_minimal_profile(
-            WorkflowState(),
             profile_id=_BUCKET_B,
             display_name=_PROFILE_LABEL_B,
         )
@@ -1110,7 +1106,6 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
 
     with open_test_profile_session(_BUCKET_B):
         register_minimal_profile(
-            WorkflowState(),
             profile_id=_BUCKET_B,
             display_name="gestor-cert-b",
         )

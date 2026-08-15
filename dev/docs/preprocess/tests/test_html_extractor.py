@@ -21,6 +21,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from .._html import (
     HTML_EXTRACTOR_ID,
     build_outputs,
@@ -41,7 +43,7 @@ from .._sidecar import (
 pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
 
 # dev/docs/preprocess/tests/test_html_extractor.py -> parents[4] is repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[4]
+_REPO_ROOT = REPO_ROOT
 _NORMATIVES = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus" / "normatives"
 
 # A real multi-article consolidated law (IVA) with a TOC link farm, bloque

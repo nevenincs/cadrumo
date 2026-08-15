@@ -11,11 +11,13 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from dev._paths import UTF_8
+
 from ._errors import SequenceEngineError
 
 __all__ = ["read_sequence_contract", "sequence_contract_path"]
 
-_UTF_8 = "utf-8"
+_UTF_8 = UTF_8
 _OPTION_RE = re.compile(r"^:(?P<key>[a-z][a-z0-9-]*):\s*(?P<value>.*)$")
 _SEQUENCE_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 _PRIVATE_OPTION_KEYS = frozenset({"seed", "shells"})

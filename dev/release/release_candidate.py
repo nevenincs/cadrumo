@@ -41,6 +41,8 @@ from typing import Final
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from dev._paths import UTF_8
+
 from ._asset_transport import (
     download_release_assets,
     list_releases,
@@ -48,7 +50,7 @@ from ._asset_transport import (
     run_gh_with_retry,
 )
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 _COMMIT_PATTERN: Final[str] = r"^[0-9a-f]{40}$"
 _RUN_ID_PATTERN: Final[str] = r"^[1-9][0-9]*$"

@@ -25,6 +25,7 @@ from typing import IO, Any, cast
 import pytest
 
 from cadrumo.agent import materialise_marketplace
+from dev._paths import REPO_ROOT
 
 from .._smoke_common import (
     build_companion_wheels,
@@ -40,7 +41,7 @@ from ..python_cohort import PythonCohort, load_python_cohort
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _DISTRIBUTIONS = (
     "cadrumo",
     "cadrumo-data-manuals",

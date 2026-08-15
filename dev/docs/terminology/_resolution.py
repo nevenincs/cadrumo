@@ -43,13 +43,14 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import StrEnum
-from pathlib import Path, PurePosixPath
+from pathlib import PurePosixPath
 from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
+from dev._paths import REPO_ROOT, UTF_8
 
 from ._casilla_projection import project_casilla_search_records
 from ._concept_cards import ConceptCardRecord
@@ -63,7 +64,7 @@ if TYPE_CHECKING:
 # Dev tooling runs from a source checkout by definition, so it owns its own
 # repo-root anchor. Production code has no repository concept and must never
 # export one (see cadrumo.core._config_state_root for the runtime data root).
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 __all__ = [
     "ChunkHit",
@@ -77,7 +78,7 @@ __all__ = [
 ]
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 
 class GroundingSurface(StrEnum):

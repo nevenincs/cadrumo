@@ -18,6 +18,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from dev._paths import REPO_ROOT
+
 from .. import release_candidate
 from ..release_candidate import (
     ReleaseCandidate,
@@ -34,7 +36,7 @@ from ..release_candidate import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _COHORT = "a" * 64
 _COMMIT = "b" * 40
 _OPENED = datetime(2026, 8, 2, 12, 0, tzinfo=UTC)

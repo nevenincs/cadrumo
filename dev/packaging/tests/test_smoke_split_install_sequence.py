@@ -10,6 +10,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from .._smoke_common import (
     build_companion_wheels,
     build_wheel,
@@ -24,7 +26,7 @@ from ..smoke_split_install import _COHORT_PROBE, _install_cohort_with_pip
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 
 def test_three_wheel_cohort_installs_only_aeat_human_script(tmp_path: Path) -> None:

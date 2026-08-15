@@ -23,6 +23,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ...docs.pagefind_index import build_search_index
 from ..docs_static_site import (
     _assert_served_index_matches_build,
@@ -37,7 +39,7 @@ from ..frontend_static_site import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 # dev/deploy/tests -> parents[3] is the repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _BUILT_HTML = _REPO_ROOT / "docs" / "_build" / "html"
 _PAGEFIND_YML = _REPO_ROOT / "docs" / "pagefind.yml"
 _PAGES = 2

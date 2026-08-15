@@ -27,6 +27,8 @@ from mcp.client.stdio import stdio_client
 from mcp.types import CallToolResult, TextResourceContents
 from pydantic import AnyUrl
 
+from dev._paths import UTF_8
+
 from .installed_tax_oracle import (
     BINDINGS,
     CASILLAS,
@@ -47,7 +49,7 @@ from .installed_tax_oracle import (
     isolated_product_environment,
 )
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 _REVISION_ID = re.compile(r"^[0-9a-f]{64}$")
 _EXECUTE_TOOL = "execute"

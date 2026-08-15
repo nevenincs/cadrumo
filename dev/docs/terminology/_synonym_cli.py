@@ -8,6 +8,8 @@ from typing import Annotated, Final
 
 import typer
 
+from dev._paths import UTF_8
+
 from ..terminology_handbook import TerminologyLoadError
 from ._synonym_mining import (
     SynonymCandidateObservation,
@@ -18,7 +20,7 @@ from ._synonym_mining import (
 )
 
 _DEFAULT_QUEUE_PATH = synonym_ratification_queue_path()
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 app = typer.Typer(
     name="synonyms",

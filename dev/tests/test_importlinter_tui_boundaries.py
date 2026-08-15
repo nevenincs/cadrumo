@@ -11,9 +11,10 @@ from pathlib import Path
 import pytest
 from importlinter.cli import lint_imports
 
+from dev._paths import REPO_ROOT
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
 IMPORTLINTER_CONFIG = REPO_ROOT / ".importlinter"
 CONTRACTS = (
     "tui-backend-prohibition",

@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 #: A real nitpicky whole-tree Sphinx build is minutes of work, not seconds, so
 #: the project-wide 300 s per-test ceiling (``pyproject.toml``) cannot hold it.
 #: That ceiling exists to fail a DEADLOCKED test in minutes instead of wedging
@@ -38,7 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs, pytest.m
 #: dumping a stack with no indication of which build hung.
 _SUBPROCESS_TIMEOUT_S = 1200
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _DOCS = _REPO_ROOT / "docs"
 _DOCS_BUILD = _DOCS / "_build"
 _CANONICAL_BUILD_ROOT = "html"

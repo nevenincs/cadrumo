@@ -60,6 +60,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Final, cast
 
+from dev._paths import UTF_8
+
 from ..ci.perf_measurement import timed_subprocess
 from .installed_tax_oracle import (
     isolated_product_environment,
@@ -68,7 +70,7 @@ from .installed_tax_oracle import (
     work_create_arguments,
 )
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _SCHEMA_VERSION: Final[int] = 2
 _ENVIRONMENT_IDENTITY: Final[str] = "editable-tree"
 

@@ -829,10 +829,27 @@ def _required_header_index(values: tuple[object, ...], header_name: str) -> int:
     return index
 
 
+def _header_token(value: str) -> str:
+    """Return a header cell's identity, ignoring AEAT's abbreviating full stop.
+
+    AEAT abbreviates header labels inconsistently WITHIN one workbook: Modelo
+    115 writes ``Lon`` on its first sheet and ``Lon.`` on its second. Exact
+    membership therefore matched one sheet and missed the other, and because a
+    sheet failing header detection is skipped, the entire record body was
+    dropped while the file looked healthy.
+
+    The stop is typography, not identity, so it is ignored on BOTH sides rather
+    than by enrolling each spelling separately -- which is what the accepted set
+    already does ad hoc for ``posic.`` and ``oblig.``, and what would have to be
+    remembered again for every future label.
+    """
+    return value.rstrip(".")
+
+
 def _optional_header_index(values: tuple[object, ...], *header_names: str) -> int | None:
-    expected = set(header_names)
+    expected = {_header_token(name) for name in header_names}
     for index, value in enumerate(values):
-        if _normalise_header_cell(value) in expected:
+        if _header_token(_normalise_header_cell(value)) in expected:
             return index
     return None
 

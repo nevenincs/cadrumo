@@ -38,7 +38,8 @@ from decimal import Decimal
 import pytest
 
 from ....core import validated_casilla_id
-from ....core.resources import resources
+from ....core.resources import bundled_path
+from ....domain.calculations.registry import load_registry_tree, select_revision
 from ....domain.deadlines import EntityType, IVARegime, TaxpayerProfile
 from .._verification_predicates import _evaluate_predicate_expression, evaluate_advisory_predicate_fires
 
@@ -68,7 +69,9 @@ def _profile() -> TaxpayerProfile:
 
 def _predicate(year: int):
     """Return the registry's own declared predicate, not a hand-written expression."""
-    revision = resources().modelos.authority.snapshot("131", filing_year=year, period="1T").revision
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(candidate for candidate in modelos if candidate.id == "131")
+    revision = select_revision(modelo, filing_year=year, period="1T")
     for predicate in revision.verification_predicates or ():
         if predicate.predicate_id == _predicate_id(year):
             return predicate

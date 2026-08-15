@@ -72,7 +72,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import REPO_ROOT, UTF_8
+
+_UTF_8: Final[str] = UTF_8
 _ANSI: Final = re.compile(r"\x1b\[[0-9;]*m")
 _FOUND: Final = re.compile(r"Found (\d+) clones?")
 _TABLE_PCT: Final = re.compile(r"\((\d+(?:\.\d+)?)%\)")
@@ -366,7 +368,7 @@ def main() -> int:
     Always exits 0: duplication is advisory debt, not a gate. An unavailable
     scan still says so out loud rather than posing as a clean run.
     """
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = REPO_ROOT
     print(render_console_report(run_duplication_scan(repo_root)))
     return 0
 

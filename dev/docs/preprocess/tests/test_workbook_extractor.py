@@ -21,6 +21,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from .._parts import split_units_by_budget
 from .._schema import (
     ExtractionStatus,
@@ -44,7 +46,7 @@ from .._workbook import (
 pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
 
 # dev/docs/preprocess/tests/test_workbook_extractor.py -> parents[4] is repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[4]
+_REPO_ROOT = REPO_ROOT
 _DISENOS = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus" / "aeat_official" / "disenos_registro"
 
 # A real modern .xlsx Modelo 303 design (openpyxl path) and a real legacy

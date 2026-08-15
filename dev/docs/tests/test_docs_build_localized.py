@@ -19,6 +19,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..i18n import TARGET_LANGUAGES
 from ._sphinx_build_harness import (
     copy_docs_source,
@@ -57,7 +59,7 @@ def test_localized_user_scope_build_is_nitpicky_clean(tmp_path: Path, language: 
 
 
 #: The repository root, three levels up from ``dev/docs/tests``.
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 #: One localized build line in the ``docs-langs`` recipe: the catalogue it
 #: selects and the root it renders into, captured separately so the gate below

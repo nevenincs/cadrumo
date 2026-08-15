@@ -41,6 +41,7 @@ if not __package__:
     __package__ = "dev.docs"
 
 from cadrumo.core.external_constants import OutputLanguage
+from dev._paths import REPO_ROOT
 
 from .build import docs_build_jobs, ensure_isolated_storage_root
 
@@ -139,7 +140,7 @@ DEFAULT_SOURCE_LANGUAGE: Final[str] = OutputLanguage.EN.value
 
 def _repo_root() -> Path:
     """Return the repository root for this module."""
-    return Path(__file__).resolve().parents[2]
+    return REPO_ROOT
 
 
 def user_scope_source_pages(docs_root: Path) -> list[str]:

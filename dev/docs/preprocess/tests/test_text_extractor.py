@@ -19,6 +19,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from .._schema import (
     ExtractionStatus,
     PreprocessOutput,
@@ -40,7 +42,7 @@ from .._text import (
 pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
 
 # dev/docs/preprocess/tests/test_text_extractor.py -> parents[4] is repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[4]
+_REPO_ROOT = REPO_ROOT
 _CORPUS = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 
 # A real Modelo 100 .properties diccionario (cp1252) with a catalogued

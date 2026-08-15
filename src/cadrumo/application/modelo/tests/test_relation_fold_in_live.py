@@ -42,14 +42,17 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import AggregationCaptureKind, CasillaId, Period, validated_casilla_id
+from ....core import AggregationCaptureKind, CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
-from ....core.resources import resources
+from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     RegistryModeloObservation,
     calculate_registry_snapshot,
+    load_registry_tree,
     resolve_available_bound_inputs_by_casilla_id,
+    select_revision,
 )
+from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
@@ -232,13 +235,15 @@ def test_modelo_180_115_fold_in_fires_on_live_calculate(secure_objects: SecureOb
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot_180 = resources().modelos.authority.snapshot("180", filing_year=_YEAR, period="0A")
+    modelos_180, _catalogues_180 = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo_180 = next(candidate for candidate in modelos_180 if candidate.id == "180")
+    revision_180 = select_revision(modelo_180, filing_year=_YEAR, period="0A")
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="180",
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, "0A"),
-        revision_id=snapshot_180.revision.id,
+        revision_id=revision_180.id,
         repository=wu_repo,
         clock=_T0,
     )
@@ -287,7 +292,16 @@ def test_relation_target_collision_refused_by_mesh_guard(secure_objects: SecureO
     obs_repo = CalculationObservationRepository()
     _seed_115_quarters(obs_repo=obs_repo)
 
-    snapshot_180 = resources().modelos.authority.snapshot("180", filing_year=_YEAR, period="0A")
+    modelos_180, catalogues_180 = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo_180 = next(candidate for candidate in modelos_180 if candidate.id == "180")
+    snapshot_180 = build_snapshot(
+        modelo_180,
+        catalogues_180,
+        source_root=bundled_path(),
+        filing_year=_YEAR,
+        period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
     context = CalculationSourceContext(
         bucket_id=_BUCKET_ID,
         modelo="180",

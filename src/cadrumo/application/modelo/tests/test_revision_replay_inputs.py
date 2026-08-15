@@ -7,8 +7,8 @@ import pytest
 
 from ....application.filing import ModeloOperatorProfile, build_draft, build_runtime_schema_provider
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
-from ....domain.calculations.registry import InputKind
+from ....core.resources import bundled_path
+from ....domain.calculations.registry import InputKind, load_registry_tree, select_revision
 from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,
@@ -45,22 +45,28 @@ _M100_SALARY_CERT_RETENCIONES_BINDING = "renta-2024-certificado-trabajo-retencio
 _M100_M111_RETENCIONES_BINDING = "renta-2024-modelo-111-retenciones-periodicas"
 
 
+def _resolved_revision(*, modelo: str, filing_year: int, period_code: str):
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
+    return select_revision(modelo_definition, filing_year=filing_year, period=period_code)
+
+
 def _work_unit(*, modelo: str, filing_year: int, period_code: str) -> WorkUnit:
     period = Period.from_year_and_code(filing_year, period_code)
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period_code)
+    revision = _resolved_revision(modelo=modelo, filing_year=filing_year, period_code=period_code)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
             modelo=modelo,
             filing_year=filing_year,
             period=period,
-            revision_id=snapshot.revision.id,
+            revision_id=revision.id,
         ),
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode(modelo),
         filing_year=filing_year,
         period=period,
-        revision_id=snapshot.revision.id,
+        revision_id=revision.id,
         name=f"{modelo}-{filing_year}-{period_code}",
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -134,9 +140,9 @@ def test_revision_replay_inputs_include_calculated_informational_casillas() -> N
 
 def test_revision_replay_inputs_do_not_replay_required_manual_defaults() -> None:
     work_unit = _work_unit(modelo="180", filing_year=2024, period_code="0A")
-    snapshot = resources().modelos.authority.snapshot("180", filing_year=2024, period="0A")
+    revision = _resolved_revision(modelo="180", filing_year=2024, period_code="0A")
     manual_required = next(
-        casilla for casilla in snapshot.revision.casillas if casilla.required and casilla.input_kind == InputKind.MANUAL
+        casilla for casilla in revision.casillas if casilla.required and casilla.input_kind == InputKind.MANUAL
     )
     revision = _revision(
         work_unit,
@@ -396,8 +402,8 @@ def test_m232_replay_keys_are_declared_casillas_of_the_resolved_revision() -> No
     """
     work_unit = _work_unit(modelo="232", filing_year=2025, period_code="0A")
     revision = _revision(work_unit, detail_rows=(_m232_row(1),))
-    snapshot = resources().modelos.authority.snapshot("232", filing_year=2025, period="0A")
-    declared = {casilla.id for casilla in snapshot.revision.casillas}
+    resolved_revision = _resolved_revision(modelo="232", filing_year=2025, period_code="0A")
+    declared = {casilla.id for casilla in resolved_revision.casillas}
 
     replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
 

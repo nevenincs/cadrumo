@@ -41,6 +41,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
+from dev._paths import REPO_ROOT
 
 from ..terminology_handbook import TerminologyHandbook, load_terminology_handbook
 from ..terminology_handbook._enums import TermStatus
@@ -56,7 +57,7 @@ if TYPE_CHECKING:
 # Dev tooling runs from a source checkout by definition, so it owns its own
 # repo-root anchor. Production code has no repository concept and must never
 # export one (see cadrumo.core._config_state_root for the runtime data root).
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 __all__ = [
     "RagSearchClient",

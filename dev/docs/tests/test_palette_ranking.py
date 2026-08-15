@@ -36,6 +36,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
+from dev._paths import REPO_ROOT
 
 from ..glossary_reference import generate_glossary_reference
 from ..pagefind_index import build_search_index
@@ -52,7 +53,7 @@ from ..terminology._unified_record import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _DOCS = _REPO_ROOT / "docs"
 
 # A page carrying the palette trigger + the real palette JS, dropped at the

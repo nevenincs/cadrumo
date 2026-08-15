@@ -29,7 +29,6 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...user_profile import build_profile_preflight_requirement
-from ...workflow import WorkflowState
 from .._sessions import (
     AuthProfileIdentityMismatchError,
     ClaveCredentialsIncompleteError,
@@ -53,7 +52,6 @@ def _register_profile(**overrides: str) -> None:
     # atomic no-replace rename onto ``buckets/<profile-id>``, and the workflow
     # repository materialises that same directory on first access.
     register_minimal_profile(
-        WorkflowState(),
         profile_id=_BUCKET_ID,
         display_name=_PROFILE_LABEL,
         overrides=facts,

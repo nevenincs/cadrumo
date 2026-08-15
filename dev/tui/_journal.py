@@ -16,8 +16,10 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from dev._paths import UTF_8
+
 _STRICT = ConfigDict(frozen=True, extra="forbid")
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 
 class Press(BaseModel):

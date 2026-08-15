@@ -18,6 +18,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from ._parser import _FrameBuilder, parse_frame_lines
 from ._schema import FrameKind
 
@@ -25,7 +27,7 @@ __all__ = ["SEED_SUFFIX", "default_seeds_root", "load_seed_frames"]
 
 #: File extension of a committed seed recipe.
 SEED_SUFFIX: str = ".seq"
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 
 def default_seeds_root() -> Path:
@@ -34,7 +36,7 @@ def default_seeds_root() -> Path:
     Resolved relative to this module so the engine finds recipes regardless of
     the process working directory.
     """
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = REPO_ROOT
     return repo_root / "docs" / "_sequences" / "seeds"
 
 

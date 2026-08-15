@@ -46,7 +46,9 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Final
 
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import UTF_8
+
+_UTF_8: Final[str] = UTF_8
 
 #: The committed ledger, beside this module so the data and its reader move
 #: together and neither can be deployed without the other.

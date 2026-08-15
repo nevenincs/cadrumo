@@ -18,12 +18,14 @@ from typing import Any, Final
 import pytest
 import yaml
 
+from dev._paths import REPO_ROOT
+
 from .. import alerting
 from ..alerting import AlertError, ReleaseAlert, alert_payload, emit_alert
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
+_REPO_ROOT: Final[Path] = REPO_ROOT
 _WORKFLOW_DIR: Final[Path] = _REPO_ROOT / ".github" / "workflows"
 
 

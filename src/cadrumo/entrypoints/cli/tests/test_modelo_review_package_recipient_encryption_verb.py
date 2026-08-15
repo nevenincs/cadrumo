@@ -56,7 +56,6 @@ from ....application.modelo import (
     ensure_recipient_encryption_keypair,
     recipient_encryption_public_key,
 )
-from ....application.workflow import WorkflowState
 from ....core import CasillaId, validated_casilla_id
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
@@ -83,7 +82,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         open_test_profile_session(_BUCKET_ID),
     ):
         try:
-            register_minimal_profile(WorkflowState(), profile_id=_BUCKET_ID)
+            register_minimal_profile(profile_id=_BUCKET_ID)
             yield
         finally:
             dispose_engine()

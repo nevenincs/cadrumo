@@ -19,9 +19,10 @@ from __future__ import annotations
 
 import tomllib
 from importlib.metadata import packages_distributions
-from pathlib import Path
 
 import pytest
+
+from dev._paths import REPO_ROOT
 
 from .._distribution_names import normalise_distribution_name
 from .._smoke_common import optional_extra_registry
@@ -29,7 +30,7 @@ from ..smoke_absent_llm import _EXPECTED_EXTRA, _INFERENCE_SURFACES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 
 def _core_requirement_names() -> set[str]:

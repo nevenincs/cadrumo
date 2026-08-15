@@ -9,6 +9,8 @@ from typing import Final
 
 import pytest
 
+from dev._paths import UTF_8
+
 from ..proof_cache import (
     PROOF_SCOPE_PATHS,
     environment_fingerprint,
@@ -19,7 +21,7 @@ from ..proof_cache import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 
 def _git(repo: Path, *args: str) -> None:

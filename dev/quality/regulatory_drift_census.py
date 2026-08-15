@@ -76,7 +76,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+from dev._paths import REPO_ROOT
+
 SOURCE_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo"
 DEV_ROOT: Final[Path] = REPO_ROOT / "dev"
 DISPOSITIONS_PATH: Final[Path] = Path(__file__).with_name("regulatory_drift_dispositions.toml")

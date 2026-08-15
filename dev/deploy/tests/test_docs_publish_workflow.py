@@ -15,18 +15,19 @@ into the release.
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 import pytest
 import yaml
 
+from dev._paths import REPO_ROOT
+
 from ...deploy import docs_static_site
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_WORKFLOW = Path(__file__).resolve().parents[3] / ".github" / "workflows" / "docs-publish.yml"
-_PUBLICATION = Path(__file__).resolve().parents[3] / ".github" / "workflows" / "publish-release.yml"
+_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "docs-publish.yml"
+_PUBLICATION = REPO_ROOT / ".github" / "workflows" / "publish-release.yml"
 
 
 def _document() -> dict[str, Any]:

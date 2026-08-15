@@ -26,9 +26,11 @@ import json
 from pathlib import Path
 from typing import Final
 
+from dev._paths import UTF_8
+
 from ._schema import PreprocessOutput
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 #: Suffix of the indexable rendered-text sidecar (walker indexes ``.md``).
 EXTRACTED_TEXT_SUFFIX = ".extracted.md"

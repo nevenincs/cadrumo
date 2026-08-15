@@ -17,7 +17,9 @@ import shutil
 import subprocess
 from pathlib import Path
 
-_UTF_8 = "utf-8"
+from dev._paths import UTF_8
+
+_UTF_8 = UTF_8
 #: The runtime install closure is ``cadrumo[agent]`` plus the two data
 #: companions. The project itself and both companions ship as bundle-local
 #: wheels, so they are excluded from the pinned third-party constraint set; only

@@ -12,6 +12,8 @@ from typing import Final
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from .._hashing import sha256_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -60,7 +62,7 @@ def _streams_sha256(function: ast.FunctionDef) -> bool:
 @pytest.mark.parametrize("relative_path", _REHOMED_STREAMED_DIGEST_SITES)
 def test_rehomed_digest_site_declares_no_private_digest_helper(relative_path: str) -> None:
     """Every production streamed-file digest resolves through the one owner."""
-    repository_root = Path(__file__).resolve().parents[3]
+    repository_root = REPO_ROOT
     tree = ast.parse((repository_root / relative_path).read_text(encoding="utf-8"))
 
     streaming_helpers = [
@@ -84,7 +86,7 @@ def test_rehomed_digest_module_uses_the_canonical_helper(module_name: str) -> No
 )
 def test_standalone_digest_entrypoint_starts_from_a_bare_script_path(relative_path: str) -> None:
     """Standalone lanes load the canonical owner without package invocation."""
-    repository_root = Path(__file__).resolve().parents[3]
+    repository_root = REPO_ROOT
     completed = subprocess.run(  # noqa: S603 - fixed repository script paths exercised with --help.
         [sys.executable, str(repository_root / relative_path), "--help"],
         cwd=repository_root,

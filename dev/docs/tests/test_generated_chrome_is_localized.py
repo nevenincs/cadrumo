@@ -25,6 +25,7 @@ import pytest
 from cadrumo.core import BindingSourceKind, Modelo
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry import InputKind
+from dev._paths import REPO_ROOT
 
 from .._locale_chrome import docs_chrome
 from ..casilla_reference import (
@@ -41,7 +42,7 @@ from ..terminology_handbook import load_terminology_handbook
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _GENERATORS = (
     "legal_reference.py",
     "glossary_reference.py",

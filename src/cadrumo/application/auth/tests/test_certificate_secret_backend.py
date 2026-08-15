@@ -45,7 +45,6 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ... import auth as _auth_facade
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
-from ...workflow import WorkflowState
 from .. import (
     CertificateSourceNotFoundError,
     register_operator_certificate_source,
@@ -73,7 +72,6 @@ _PROFILE_LABEL = "gestor-cert-secret"
 
 def _register_operator_profile() -> None:
     register_minimal_profile(
-        WorkflowState(),
         profile_id=_BUCKET_ID,
         display_name=_PROFILE_LABEL,
     )

@@ -356,3 +356,85 @@ def test_snapshot_object_keys_use_the_current_profile_and_snapshot_id() -> None:
     assert user_profile_snapshot_object_key(profile_id, "snap:2026") == (
         f"user-profile-snapshot:{profile_id}:snap:2026"
     )
+
+
+def test_record_authority_re_derives_after_its_latched_session_is_retired(tmp_path: Path) -> None:
+    """A retired latched authority is replaced, not handed back.
+
+    Retirement zeroises the key in place and leaves the object latched, so the
+    identity check alone cannot tell a retired authority from a working one.
+    Before liveness was checked the caller got the UUID-matching corpse back
+    and the failure surfaced as an integrity error from inside the decrypt,
+    blaming the read for a decision made when the session was reused.
+
+    The custody session is still live here, so the correct outcome is a fresh
+    derivation and a successful read -- not merely a tidier refusal.
+    """
+    facts = (UserProfileFact(path="identity.tax_id", value="12345678Z"),)
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        with open_test_profile_session(_FIRST_SWITCH_PROFILE_ID):
+            seed_test_profile_record(
+                UserProfileRecord(profile_id=_FIRST_SWITCH_PROFILE_ID, facts=facts),
+                root=storage_root,
+                label="Retired authority subject",
+            )
+
+        provider = get_master_key_provider()
+        try:
+            with (
+                override_settings(cadrumo_active_profile=_FIRST_SWITCH_PROFILE_ID),
+                activate_master_key_provider(
+                    provider,
+                    fallback_bucket_id=_FIRST_SWITCH_PROFILE_ID,
+                    allow_bucket_dek_enrollment=True,
+                ),
+            ):
+                latched = require_profile_record_session(_FIRST_SWITCH_PROFILE_ID)
+                assert not latched.closed
+
+                latched.close()
+                assert latched.closed, "the subject of this test is a session retired in place"
+
+                replacement = require_profile_record_session(_FIRST_SWITCH_PROFILE_ID)
+                assert replacement is not latched, "a retired authority must not be handed back"
+                assert not replacement.closed
+                assert replacement.profile_id == UUID(_FIRST_SWITCH_PROFILE_ID)
+
+                repository = ProfileRecordRepository.for_current_session(
+                    _FIRST_SWITCH_PROFILE_ID,
+                    root=storage_root,
+                )
+                assert repository.load(_FIRST_SWITCH_PROFILE_ID).facts == facts
+        finally:
+            close_active_profile_record_session()
+
+
+def test_a_live_latched_authority_is_reused_rather_than_re_derived(tmp_path: Path) -> None:
+    """Liveness must gate reuse without abolishing it.
+
+    A guard that re-derived on every call would satisfy the retirement test
+    above while quietly discarding the latch, so this pins the other side: a
+    live authority is returned as the same object.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        with open_test_profile_session(_FIRST_SWITCH_PROFILE_ID):
+            seed_test_profile_record(
+                UserProfileRecord(profile_id=_FIRST_SWITCH_PROFILE_ID),
+                root=storage_root,
+                label="Live authority subject",
+            )
+
+        provider = get_master_key_provider()
+        try:
+            with (
+                override_settings(cadrumo_active_profile=_FIRST_SWITCH_PROFILE_ID),
+                activate_master_key_provider(
+                    provider,
+                    fallback_bucket_id=_FIRST_SWITCH_PROFILE_ID,
+                    allow_bucket_dek_enrollment=True,
+                ),
+            ):
+                first = require_profile_record_session(_FIRST_SWITCH_PROFILE_ID)
+                assert require_profile_record_session(_FIRST_SWITCH_PROFILE_ID) is first
+        finally:
+            close_active_profile_record_session()

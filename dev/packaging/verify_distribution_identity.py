@@ -34,8 +34,9 @@ from cadrumo.agent import (
     parse_skill_metadata,
 )
 from cadrumo.core import PRODUCT_IDENTITY
+from dev._paths import REPO_ROOT, UTF_8
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _REQUIRED_HARNESS_PREFIX: Final[str] = "cadrumo-"
 _MARKDOWN_SUFFIX: Final[str] = ".md"
 _EXPECTED_PRODUCT_IDENTITY: Final[dict[str, str]] = {
@@ -1541,7 +1542,7 @@ def _model_facing_failure_lines(check: ModelFacingDescriptionCheck) -> tuple[str
 
 def verify_distribution_identity(repo_root: Path | None = None) -> DistributionIdentityReport:
     """Inventory and verify the current distribution identity without mutation."""
-    root = (repo_root or Path(__file__).resolve().parents[2]).resolve(strict=True)
+    root = (repo_root or REPO_ROOT).resolve(strict=True)
     imported_root = Path(cadrumo.__file__).resolve(strict=True).parents[2]
     if root != imported_root:
         raise ValueError(

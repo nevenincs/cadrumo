@@ -21,7 +21,9 @@ from typing import Final
 
 import pytest
 
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import UTF_8
+
+_UTF_8: Final[str] = UTF_8
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

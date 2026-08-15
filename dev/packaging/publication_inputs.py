@@ -44,9 +44,11 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
+from dev._paths import UTF_8
+
 from ..docs.download_matrix import ChannelTier, DownloadDescriptor, claimed_channels, load_descriptor
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 #: The local capture verb that mints one of the four required ``claude-*``
 #: real-client rows. Named verbatim in :func:`host_extension_precondition_refusal`

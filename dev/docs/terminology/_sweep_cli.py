@@ -20,6 +20,8 @@ from typing import Annotated, Final
 
 import typer
 
+from dev._paths import UTF_8
+
 from ._query_aliases import load_query_alias_authority
 from ._sweep import (
     DEFAULT_MAX_RESULTS,
@@ -29,7 +31,7 @@ from ._sweep import (
 )
 from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 app = typer.Typer(
     name="sweep",

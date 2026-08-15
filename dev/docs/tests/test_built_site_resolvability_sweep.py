@@ -55,6 +55,8 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 
+from dev._paths import REPO_ROOT
+
 from ..pagefind_inject import _materialise_records
 
 pytestmark = [
@@ -71,7 +73,7 @@ pytestmark = [
 ]
 
 # dev/docs/tests/test_built_site_resolvability_sweep.py -> parents[3] is the repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _DOCS = _REPO_ROOT / "docs"
 
 

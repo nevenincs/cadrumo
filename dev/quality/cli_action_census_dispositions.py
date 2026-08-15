@@ -22,6 +22,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, cast
 
+from dev._paths import UTF_8
+
 from .cli_action_census import REPO_ROOT, SOURCE_ROOT, CandidateRecord, census
 
 __all__ = [
@@ -42,7 +44,7 @@ __all__ = [
 ]
 
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _SCHEMA_VERSION: Final[int] = 2
 _TOP_LEVEL_FIELDS: Final[frozenset[str]] = frozenset({"meta", "disposition"})
 _META_FIELDS: Final[frozenset[str]] = frozenset({"schema_version"})

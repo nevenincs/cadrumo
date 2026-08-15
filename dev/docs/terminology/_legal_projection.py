@@ -12,6 +12,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from cadrumo.core.external_constants import OutputLanguage
+from dev._paths import REPO_ROOT
 
 from ..legal_reference import (
     LegalProvisionRecord,
@@ -23,7 +24,7 @@ from ._search_record import LegalSearchRecord
 
 __all__ = ["LegalSearchRecord", "legal_target_record_id", "project_legal_search_records"]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _LEGAL_RECORD_ID_PREFIX = "legal:"
 
 

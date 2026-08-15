@@ -24,6 +24,8 @@ from typing import Final
 import httpx
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
     assert_boe_holds_no_consolidated_text,
@@ -36,7 +38,7 @@ from ..corpus.fetch_boe_normative import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_CORPUS: Final[Path] = Path(__file__).resolve().parents[2] / "src/cadrumo/_data/corpus/normatives/html"
+_CORPUS: Final[Path] = REPO_ROOT / "src/cadrumo/_data/corpus/normatives/html"
 _SINGLE_BLOCK: Final[str] = "ley-37-1992-art-90.html"
 _MULTI_BLOCK: Final[str] = "boe-a-2024-12944-rdl-4-2024-iva-alimentos.html"
 #: The as-published shape: BOE holds no consolidated text for a corrección

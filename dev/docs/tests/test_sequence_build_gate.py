@@ -24,6 +24,7 @@ import pytest
 from sphinx.application import Sphinx
 
 from cadrumo.tests.env_scope import scoped_env_var
+from dev._paths import REPO_ROOT
 
 from ..cli_tree import default_cli_tree_path
 from ..sequence_build_gate import (
@@ -35,7 +36,7 @@ from ..sequence_build_gate import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 #: A captured package version in a golden. Value-shaped, not a bare number:
 #: it must match the product banner form so an unrelated numeric in captured

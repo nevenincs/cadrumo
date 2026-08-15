@@ -54,11 +54,29 @@ _ROW_WRITTEN_AT = datetime(2026, 5, 28, 13, 5, 0, tzinfo=UTC)
 _BOOTSTRAP_WRITTEN_AT = datetime(2026, 5, 28, 13, 10, 0, tzinfo=UTC)
 
 
+@pytest.fixture
+def own_bucket_runtime() -> None:
+    """Opt out of this module's explicit-database binding.
+
+    Requested by a test that drives a real bucket runtime and therefore routes
+    its own database.  Requesting the fixture IS the opt-out signal that
+    :func:`isolated_default_secure_sql` reads.
+    """
+    return None
+
+
 @pytest.fixture(autouse=True)
 def isolated_default_secure_sql(tmp_path: Path, request: pytest.FixtureRequest) -> Iterator[None]:
-    """Bind each repair integrity test to one explicit database through settings."""
+    """Bind each repair integrity test to one explicit database through settings.
 
-    if request.node.name == "test_list_opens_active_bucket_session_for_bootstrap_exempt_repair":
+    The opt-out is a requested fixture rather than a test name.  This fixture
+    once matched one hardcoded node name, so renaming that test silently
+    re-armed the override -- and the damage landed inside the bucket runtime's
+    own setup, nowhere near the rename that caused it.  A fixture name is
+    checked by pytest and survives a rename.
+    """
+
+    if "own_bucket_runtime" in request.fixturenames:
         yield
         return
     db_path = tmp_path / "repair-integrity.db"
@@ -207,6 +225,7 @@ class TestBuildListReport:
     def test_list_refuses_without_a_session_instead_of_listing_a_sound_row_as_unreadable(
         self,
         tmp_path: Path,
+        own_bucket_runtime: None,
     ) -> None:
         """The list surface opens no session of its own, so it refuses without one.
 

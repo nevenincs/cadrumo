@@ -19,7 +19,6 @@ from datetime import date
 
 import pytest
 
-from ....application.workflow import WorkflowState
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
@@ -169,7 +168,7 @@ def _partial_m100_profile() -> Iterator[None]:
     a mock or a placeholder.
     """
     with open_test_profile_session("22222222-2222-4222-8222-222222222222"):
-        register_minimal_profile(WorkflowState(), profile_id="22222222-2222-4222-8222-222222222222")
+        register_minimal_profile(profile_id="22222222-2222-4222-8222-222222222222")
         set_active_test_profile_facts(
             (
                 UserProfileFact(path="tax_residence.ccaa", value="cataluna"),

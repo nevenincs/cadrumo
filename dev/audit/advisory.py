@@ -56,12 +56,14 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from .checkout_drift import growth_against_ceiling, load_ceiling, measure
 from .dead_code import DeadCodeOutcome, run_dead_code_scan
 from .report import DimensionReport, Status, audit_complexity, audit_duplication
 from .security import SecurityOutcome, run_security_scan
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _TEXT_CAP: Final[int] = 8
 _RUN_DIR_NAME: Final[str] = ".runs"
 
@@ -378,7 +380,7 @@ def main() -> int:
     parser.add_argument("--full", action="store_true", help="List every detail line (uncapped) in text mode.")
     args = parser.parse_args()
 
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = REPO_ROOT
     dimensions = build_advisory_report(repo_root)
     overall = _overall(dimensions)
 

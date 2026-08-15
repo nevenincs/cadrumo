@@ -31,11 +31,13 @@ import subprocess
 from pathlib import Path
 from typing import Final
 
+from dev._paths import UTF_8
+
 #: Default port of the resident vaultspec-rag service (the single-writer
 #: store). Every reindex/search routes here so jobs serialise through the
 #: service rather than competing for the Qdrant lock.
 RAG_SERVICE_PORT = 8766
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 #: Path, relative to the repo root, of the code index content-hash metadata
 #: the walker writes after each index run.

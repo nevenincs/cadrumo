@@ -64,8 +64,9 @@ from __future__ import annotations
 
 import re
 import sys
-from pathlib import Path
 from typing import Final, NamedTuple
+
+from dev._paths import REPO_ROOT
 
 from .legal_catalogue import load_legal_entries, required_text_by_entry
 
@@ -180,7 +181,7 @@ def main() -> int:
     which is indistinguishable from a clean one. "Always exits 0" described the
     worklist and read as a promise about the process.
     """
-    root = Path(__file__).resolve().parents[2]
+    root = REPO_ROOT
     entries = required_text_by_entry(load_legal_entries(root))
     if not entries:
         raise SystemExit("read zero legal entries; the result would be meaningless")

@@ -50,6 +50,7 @@ from cadrumo.domain.calculations.registry import (
     ValidatedRegistryAuthority,
     bundled_authority,
 )
+from dev._paths import UTF_8
 
 from ._casilla_projection import project_casilla_search_records
 from ._cli_projection import CliOptionRecord, CliSurfaceRecord, project_cli_search_records
@@ -75,7 +76,7 @@ __all__ = [
 ]
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _NON_SPANISH_LOCALES: Final[tuple[str, ...]] = ("en", "ca", "hu")
 
 

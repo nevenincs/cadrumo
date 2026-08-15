@@ -33,7 +33,6 @@ from ....core.config import override_settings
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import WorkflowState
 from .._sessions import ClaveAuthFacts, _active_profile_auth_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -56,7 +55,6 @@ def _seed_profile(bucket_id: str = _BUCKET_ID, *, label: str = _PROFILE_LABEL) -
     """Write one real encrypted profile record carrying Cl@ve credentials."""
     with open_test_profile_session(bucket_id):
         register_minimal_profile(
-            WorkflowState(),
             profile_id=bucket_id,
             display_name=label,
             overrides={

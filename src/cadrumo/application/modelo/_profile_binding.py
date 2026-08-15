@@ -57,6 +57,7 @@ from ...domain.calculations.registry import (
     expression_binding_refs,
     expression_date_binding_refs,
     resolve_parameter,
+    selector_as_dict,
 )
 from ...domain.contribuyente import (
     CCAA,
@@ -1551,7 +1552,13 @@ def _resolve_one(
     # across the whole registry: 12 gated bindings, all Modelo 100, every one
     # declaring a real profile_key/profile_keys, so skipping the gate here
     # can never leave a binding with nothing to resolve from.
-    gate_selector = getattr(binding.selector, "required_when_profile_key", None)
+    # Read through the registry's own selector normaliser rather than getattr.
+    # ``selector`` is legally ``BindingSelector | Mapping``, and on the Mapping
+    # shape a getattr returns None, which does not weaken this gate -- it deletes
+    # it, silently, and reinstates exactly the regression described above. The
+    # accessor answers both shapes, so the gate cannot be defeated by an input
+    # shape the type already permits.
+    gate_selector = selector_as_dict(binding).get("required_when_profile_key")
     for selector in profile_binding_selectors(binding.selector):
         if gate_selector is not None and selector == gate_selector:
             continue

@@ -15,12 +15,14 @@ from typing import Any, Final
 
 from packaging.requirements import Requirement
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
 from ._hashing import sha256_path
 from ._proof_ledger import record_proof
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _MANIFEST_NAME: Final[str] = "python-cohort.json"
 
 # ``uv build --out-dir`` writes a one-byte ``.gitignore`` (containing ``*``) into
@@ -655,7 +657,7 @@ def main() -> int:
     """Build or verify one immutable Python cohort."""
     args = _parser().parse_args()
     if args.command == "build":
-        cohort = build_python_cohort(Path(__file__).resolve().parents[2], args.output)
+        cohort = build_python_cohort(REPO_ROOT, args.output)
     else:
         cohort = load_python_cohort(args.cohort_dir)
     print(

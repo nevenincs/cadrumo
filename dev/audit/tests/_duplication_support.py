@@ -12,13 +12,14 @@ import re
 import tomllib
 from collections import Counter
 from collections.abc import Sequence
-from pathlib import Path
+
+from dev._paths import REPO_ROOT
 
 from ..duplication import (
     CloneGroup,
 )
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 
 _WHERE_PATH = re.compile(r"^-?\s*(.+?\.py) \[")

@@ -20,7 +20,6 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.workflow import WorkflowState
 from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
 from ....tests.cli_runner import invoke_cached_cli
@@ -51,7 +50,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _register(*, profile_id: str, label: str) -> None:
-    register_minimal_profile(WorkflowState(), profile_id=profile_id, display_name=label)
+    register_minimal_profile(profile_id=profile_id, display_name=label)
 
 
 def _import(csv_path: Path) -> None:

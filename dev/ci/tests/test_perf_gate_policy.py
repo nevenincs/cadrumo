@@ -10,14 +10,15 @@ minutes burn the ten-minute wall.
 from __future__ import annotations
 
 import re
-from pathlib import Path
 from typing import Final
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_REPO_ROOT: Final = Path(__file__).resolve().parents[3]
+_REPO_ROOT: Final = REPO_ROOT
 _WORKFLOWS: Final = _REPO_ROOT / ".github" / "workflows"
 _BENCHMARK_TEST: Final = _REPO_ROOT / "dev" / "packaging" / "tests" / "test_serving_path_benchmark.py"
 

@@ -38,6 +38,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..glossary_reference import (
     GlossaryResult,
     generate_glossary_reference,
@@ -47,7 +49,7 @@ from ..glossary_reference import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 # dev/docs/tests/test_glossary_reference.py -> parents[3] is the repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 
 def _load_handbook():

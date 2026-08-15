@@ -47,7 +47,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
 
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import UTF_8
+
+_UTF_8: Final[str] = UTF_8
 
 #: Measured SMT/cache-contention inflation of CPU-time on the shared
 #: workstation (3.23 CPU-s loaded against 1.97 CPU-s quiet for one

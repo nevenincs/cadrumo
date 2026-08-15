@@ -23,15 +23,15 @@ and adopting it is what must never be claimed.
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 import pytest
 
 from cadrumo.application.user_profile import CENSAL_ADOPTABLE_PATHS
+from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
-_GUIDE = Path(__file__).resolve().parents[3] / "docs" / "how-to" / "censo-update.md"
+_GUIDE = REPO_ROOT / "docs" / "how-to" / "censo-update.md"
 
 #: How the page names each adoptable path in prose. Keyed by the schema path so
 #: a tuple change surfaces here as a missing key rather than as silent drift.

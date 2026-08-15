@@ -12,6 +12,7 @@ from pydantic import AnyHttpUrl, ValidationError
 
 from ...adapters.persistence.storage import (
     SECURE_OBJECT_WORKFLOW_STATE_KEY,
+    StorageValidationError,
     activate_session,
     has_active_bucket_session,
     suspend_active_session,
@@ -432,14 +433,13 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
     """
     from ...tests.profile_capsule import open_test_profile_session
     from ..auth import update_auth
-    from ..workflow import WorkflowState, workflow_state_repository
+    from ..workflow import workflow_state_repository
 
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session("11111111-1111-4111-8111-111111111111"),
     ):
         base = register_minimal_profile(
-            WorkflowState(),
             profile_id="11111111-1111-4111-8111-111111111111",
             overrides={
                 "identity.tax_id": "00000000T",
@@ -614,9 +614,14 @@ def test_a_sessionless_quarantine_moves_nothing(tmp_path: Path) -> None:
     """The mutating verb is where a keyless probe would do real damage.
 
     ``quarantine`` moves exactly the rows the probe calls unreadable, so a
-    keyless run would archive every row of a sound bucket.  The proof is the
-    read taken afterwards under the real session: the row is still live and
-    still decrypts, so nothing was moved out from under it.
+    keyless run would archive every row of a sound bucket.  It refuses instead
+    of reporting an empty result, which is the right shape for a verb that
+    mutates: the preview may answer "nothing to show", but the commit must not
+    silently do nothing when the operator asked it to act.
+
+    The read taken afterwards under the real session is the safety proof: the
+    row is still live and still decrypts, so nothing was moved out from under
+    it.
     """
     namespace = "cadrumo.workflow"
     with isolated_runtime_profile(tmp_path=tmp_path):
@@ -630,10 +635,11 @@ def test_a_sessionless_quarantine_moves_nothing(tmp_path: Path) -> None:
         )
         with suspend_active_session():
             assert not has_active_bucket_session()
-            sessionless = quarantine_unreadable_secure_objects()
+            with pytest.raises(StorageValidationError) as refusal:
+                quarantine_unreadable_secure_objects()
         survived = preview_quarantine_unreadable_secure_objects()
 
-    assert sessionless.namespaces == ()
+    assert refusal.value.translated_message == "errors.storage.runtime.not_ready"
     assert any(item.namespace == namespace for item in survived.namespaces)
     assert survived.unreadable_total == 0
 

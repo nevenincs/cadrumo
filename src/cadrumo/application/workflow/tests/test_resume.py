@@ -106,7 +106,9 @@ def _seed_ready_profile_record(bucket_id: str) -> None:
             created_at=_T,
             updated_at=_T,
         ),
-        label=bucket_id,
+        # Derived, never the bare id: a capsule label may not be UUID-shaped,
+        # so an operator label can never be read as a machine id.
+        label=f"profile-{bucket_id}",
     )
 
 

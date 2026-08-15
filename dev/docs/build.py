@@ -23,6 +23,7 @@ if not __package__:
     __package__ = "dev.docs"
 
 from cadrumo.core.external_constants import OutputLanguage
+from dev._paths import REPO_ROOT
 
 from .apidocs import ApiStubManager
 from .cli_reference import generate_cli_reference
@@ -50,7 +51,7 @@ class DocBuildPlan:
 
 def _repo_root() -> Path:
     """Return the repository root for this script."""
-    return Path(__file__).resolve().parents[2]
+    return REPO_ROOT
 
 
 def _executable(name: str) -> str:

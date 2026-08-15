@@ -25,7 +25,6 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
-from ...workflow import WorkflowState
 from .. import (
     AuthOperationRequiresCustodySessionError,
     build_live_auth_preflight_report,
@@ -53,7 +52,6 @@ def bucket_a_session(tmp_path: Path) -> Iterator[Path]:
         # atomic no-replace rename onto ``buckets/<profile-id>``, which the
         # workflow repository materialises on first access.
         register_minimal_profile(
-            WorkflowState(),
             profile_id=_BUCKET_A,
             display_name="custody-guard-a",
         )

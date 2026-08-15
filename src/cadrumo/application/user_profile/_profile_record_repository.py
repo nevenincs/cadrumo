@@ -103,13 +103,28 @@ def require_profile_record_session(profile_id: str | UUID) -> ProfileRecordSessi
     unauthenticated profile remains unreadable, and installing the derived
     authority retires the one it replaces so a switch cannot leave facts
     decryptable through a prior session.
+
+    A latched authority must be LIVE as well as correctly addressed. Retirement
+    zeroises the key in place and leaves the object latched, so the identity
+    check alone cannot tell a retired authority from a working one: a span that
+    binds a session, has it retired under it, and then restores its own prior
+    binding on exit hands the next caller a UUID-matching authority with no key
+    behind it. That reached the caller as an integrity error from deep inside
+    the decrypt, blaming the read for a decision made when the session was
+    reused.
+
+    A retired authority is therefore treated exactly as an absent one -- it
+    carries no authority, so it is re-derived where a live custody session
+    exists and refused cleanly where none does. Nothing is unbound on the
+    refusing path: a read that declines should not mutate process state, and a
+    successful later derivation replaces the dead reference anyway.
     """
     try:
         identity = UUID(str(profile_id))
     except ValueError as exc:
         raise ProfileNotFoundError("profile identity is not a canonical UUID") from exc
     session = _ACTIVE_RECORD_SESSION.get()
-    if session is not None and session.profile_id == identity:
+    if session is not None and session.profile_id == identity and not session.closed:
         return session
     derived = _record_session_from_live_custody_session(identity)
     if derived is None:

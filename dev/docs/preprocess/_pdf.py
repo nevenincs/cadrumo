@@ -32,13 +32,15 @@ import json
 from pathlib import Path
 from typing import Final, cast
 
+from dev._paths import UTF_8
+
 from ._parts import (
     split_units_by_budget,
     stamp_part_anchors,
     write_part_sidecars,
 )
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 from ._schema import (
     ExtractionStatus,
     PreprocessOutput,

@@ -19,7 +19,7 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.config import Settings
-from ....core.resources import resources
+from ....core.resources import bundled_path
 from ....domain.buckets import (
     BucketEventObjectType as BucketEventObjectType,
 )
@@ -29,8 +29,10 @@ from ....domain.buckets import (
 from ....domain.calculations.registry import (
     InputKind,
     RegistryModeloObservation,
+    load_registry_tree,
     previous_filing_observation_requirements,
     relation_source_requirements,
+    select_revision,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
@@ -196,6 +198,20 @@ _READY_PROFILE_FACTS = (
 )
 
 
+def _resolved_revision(*, modelo: str, filing_year: int, period: str):
+    """Resolve a law-determined revision without touching the tree-wide authority.
+
+    ``load_registry_tree`` compiles the tree without validating it, and
+    ``select_revision`` is a pure function with no validation of its own -- this
+    works for any modelo, layout-bearing or not, unlike
+    ``resources().modelos.authority``, whose ``.load()`` validates the entire
+    registry tree and currently refuses unconditionally as a result.
+    """
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
+    return select_revision(modelo_definition, filing_year=filing_year, period=period)
+
+
 def _registry_required_manual_casillas() -> tuple[CasillaId, ...]:
     """Return required numeric manual casillas for M180 calculate-input fixtures.
 
@@ -204,17 +220,15 @@ def _registry_required_manual_casillas() -> tuple[CasillaId, ...]:
     before verification.
     """
 
-    snapshot = resources().modelos.authority.snapshot(_VERIFY_MODELO, filing_year=_VERIFY_YEAR, period=_VERIFY_PERIOD)
+    revision = _resolved_revision(modelo=_VERIFY_MODELO, filing_year=_VERIFY_YEAR, period=_VERIFY_PERIOD)
     return tuple(
-        c.id
-        for c in snapshot.revision.casillas
-        if c.required and c.input_kind == InputKind.MANUAL and c.data_type == "money"
+        c.id for c in revision.casillas if c.required and c.input_kind == InputKind.MANUAL and c.data_type == "money"
     )
 
 
 def _registry_required_manual_casillas_for(*, modelo: str, filing_year: int, period: str) -> tuple[CasillaId, ...]:
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
-    return tuple(c.id for c in snapshot.revision.casillas if c.required and c.input_kind == InputKind.MANUAL)
+    revision = _resolved_revision(modelo=modelo, filing_year=filing_year, period=period)
+    return tuple(c.id for c in revision.casillas if c.required and c.input_kind == InputKind.MANUAL)
 
 
 _DEFAULT_180_RELATION_VALUES: dict[str, Decimal] = {
@@ -375,14 +389,14 @@ def _workflow_profile() -> TaxpayerProfile:
 
 
 def _cross_period_source_groups(work_unit: WorkUnit) -> dict[tuple[str, int, str], set[CasillaId]]:
-    snapshot = resources().modelos.authority.snapshot(
-        work_unit.modelo,
+    revision = _resolved_revision(
+        modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
     )
     groups: dict[tuple[str, int, str], set[CasillaId]] = {}
     for requirement in previous_filing_observation_requirements(
-        snapshot.revision,
+        revision,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
     ):
@@ -391,7 +405,7 @@ def _cross_period_source_groups(work_unit: WorkUnit) -> dict[tuple[str, int, str
             set(),
         ).update(requirement.source_casilla_ids)
     for requirement in relation_source_requirements(
-        snapshot.revision,
+        revision,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
     ):
@@ -422,11 +436,7 @@ def _seed_clean_cross_period_sources(
     filing_catalogue = filing_repository.load()
     for (source_modelo, filing_year, period), source_casilla_ids in sorted(groups.items()):
         source_period = Period.from_year_and_code(filing_year, period)
-        source_snapshot = resources().modelos.authority.snapshot(
-            source_modelo,
-            filing_year=filing_year,
-            period=period,
-        )
+        source_revision = _resolved_revision(modelo=source_modelo, filing_year=filing_year, period=period)
         values = _source_casilla_values(source_casilla_ids)
         current = filing_catalogue.current_for(
             bucket_id=work_unit.bucket_id,
@@ -448,7 +458,7 @@ def _seed_clean_cross_period_sources(
                 modelo=source_modelo,
                 filing_year=filing_year,
                 period=source_period,
-                revision_id=source_snapshot.revision.id,
+                revision_id=source_revision.id,
                 repository=work_unit_repository,
                 clock=_T0,
             )
@@ -481,7 +491,7 @@ def _seed_clean_cross_period_sources(
                 ),
                 source_kind="aeat_sede_justificante",
                 captured_at=_T0,
-                stamped_revision_id=source_snapshot.revision.id,
+                stamped_revision_id=source_revision.id,
                 source_metadata={
                     "aeat_register_status": "ALTA",
                     "aeat_expediente_id": f"EXP-{source_modelo}-{filing_year}-{period}",

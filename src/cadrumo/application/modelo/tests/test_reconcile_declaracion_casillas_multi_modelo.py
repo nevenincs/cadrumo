@@ -263,26 +263,64 @@ def test_modelo_100_pagos_fraccionados_mismatch_is_caught_as_typed_casilla_diff(
     assert "aeat-dr-100-2024-dictionary" in diff.source_refs
 
 
-# --- Modelo 303 (IVA autoliquidación): compound iva.* casilla ids -----------
+# --- Cross-modelo matching declaración reconciles clean (303/390/190) -------
+#
+# One shared body across modelos with genuinely different casilla-id shapes:
+# 303/390 use compound ``iva.*`` primitive/result ids, 190 uses compound
+# ``decl.*`` summary ids. Each row's vocabulary is preserved verbatim as
+# distinct parameter data — that shape difference IS the coverage.
 
 
-def test_modelo_303_matching_declaracion_reconciles_clean() -> None:
-    work_unit = _seed_work_unit(modelo="303", filing_year=2026, period="1T")
-    _persist_filed_revision(
-        work_unit,
-        casilla_values={"27": Decimal("1000.00"), "45": Decimal("400.00"), "iva.resultado": Decimal("600.00")},
-    )
-
-    report = _reconcile(
-        work_unit,
-        _synthetic_declaracion(
-            work_unit,
-            values={"27": Decimal("1000.00"), "45": Decimal("400.00"), "iva.resultado": Decimal("600.00")},
+@pytest.mark.parametrize(
+    ("modelo", "filing_year", "period", "casilla_values"),
+    [
+        pytest.param(
+            "303",
+            2026,
+            "1T",
+            {"27": Decimal("1000.00"), "45": Decimal("400.00"), "iva.resultado": Decimal("600.00")},
+            id="303",
         ),
-    )
+        pytest.param(
+            "390",
+            2025,
+            "0A",
+            {
+                "iva.anual.cuota-devengada-total": Decimal("88416.00"),
+                "iva.anual.cuota-deducible-total": Decimal("68202.00"),
+                "iva.anual.resultado-regimen-general": Decimal("20214.00"),
+            },
+            id="390",
+        ),
+        pytest.param(
+            "190",
+            2025,
+            "0A",
+            {
+                "decl.total-percepciones": Decimal("12.00"),
+                "decl.percepciones-total": Decimal("48000.00"),
+                "decl.retenciones-total": Decimal("7200.00"),
+            },
+            id="190",
+        ),
+    ],
+)
+def test_matching_declaracion_reconciles_clean(
+    modelo: str,
+    filing_year: int,
+    period: str,
+    casilla_values: dict[str, Decimal],
+) -> None:
+    work_unit = _seed_work_unit(modelo=modelo, filing_year=filing_year, period=period)
+    _persist_filed_revision(work_unit, casilla_values=casilla_values)
+
+    report = _reconcile(work_unit, _synthetic_declaracion(work_unit, values=casilla_values))
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
     assert not report.diffs
+
+
+# --- Modelo 303 (IVA autoliquidación): compound iva.* casilla ids -----------
 
 
 def test_modelo_303_value_mismatch_is_caught_as_typed_casilla_diff() -> None:
@@ -316,33 +354,6 @@ def test_modelo_303_value_mismatch_is_caught_as_typed_casilla_diff() -> None:
 
 
 # --- Modelo 390 (IVA resumen anual): compound iva.anual.* casilla ids -------
-
-
-def test_modelo_390_matching_declaracion_reconciles_clean() -> None:
-    work_unit = _seed_work_unit(modelo="390", filing_year=2025, period="0A")
-    _persist_filed_revision(
-        work_unit,
-        casilla_values={
-            "iva.anual.cuota-devengada-total": Decimal("88416.00"),
-            "iva.anual.cuota-deducible-total": Decimal("68202.00"),
-            "iva.anual.resultado-regimen-general": Decimal("20214.00"),
-        },
-    )
-
-    report = _reconcile(
-        work_unit,
-        _synthetic_declaracion(
-            work_unit,
-            values={
-                "iva.anual.cuota-devengada-total": Decimal("88416.00"),
-                "iva.anual.cuota-deducible-total": Decimal("68202.00"),
-                "iva.anual.resultado-regimen-general": Decimal("20214.00"),
-            },
-        ),
-    )
-
-    assert report.verdict is ModeloReconciliationVerdict.MATCHES
-    assert not report.diffs
 
 
 def test_modelo_390_missing_casilla_is_caught_as_typed_casilla_diff() -> None:
@@ -415,33 +426,6 @@ def test_modelo_111_value_mismatch_is_caught_as_typed_casilla_diff() -> None:
 
 
 # --- Modelo 190 (resumen anual de retenciones): compound decl.* ids --------
-
-
-def test_modelo_190_matching_declaracion_reconciles_clean() -> None:
-    work_unit = _seed_work_unit(modelo="190", filing_year=2025, period="0A")
-    _persist_filed_revision(
-        work_unit,
-        casilla_values={
-            "decl.total-percepciones": Decimal("12.00"),
-            "decl.percepciones-total": Decimal("48000.00"),
-            "decl.retenciones-total": Decimal("7200.00"),
-        },
-    )
-
-    report = _reconcile(
-        work_unit,
-        _synthetic_declaracion(
-            work_unit,
-            values={
-                "decl.total-percepciones": Decimal("12.00"),
-                "decl.percepciones-total": Decimal("48000.00"),
-                "decl.retenciones-total": Decimal("7200.00"),
-            },
-        ),
-    )
-
-    assert report.verdict is ModeloReconciliationVerdict.MATCHES
-    assert not report.diffs
 
 
 def test_modelo_190_value_mismatch_is_caught_as_typed_casilla_diff() -> None:

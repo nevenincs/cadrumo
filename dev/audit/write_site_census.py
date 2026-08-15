@@ -176,8 +176,9 @@ from functools import cache
 from pathlib import Path, PurePosixPath
 from typing import Final
 
-REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import REPO_ROOT, UTF_8
+
+_UTF_8: Final[str] = UTF_8
 
 #: The written path is the RECEIVER: ``path.write_text(...)``, ``path.mkdir()``.
 RECEIVER_PRIMITIVES: Final[frozenset[str]] = frozenset(

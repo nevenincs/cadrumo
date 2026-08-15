@@ -18,6 +18,8 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Final
 
+from dev._paths import REPO_ROOT
+
 from .fixture_census import (
     FactoryFixtureCandidate,
     FixtureCensus,
@@ -871,7 +873,7 @@ def _main(argv: list[str] | None = None) -> int:
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument("--check", action="store_true", help="check the committed manifest")
     action.add_argument("--write", action="store_true", help="write a stable generated manifest")
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument("--root", type=Path, default=REPO_ROOT)
     parser.add_argument("--manifest", type=Path, default=MANIFEST_PATH)
     arguments = parser.parse_args(argv)
     try:

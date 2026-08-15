@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
 from decimal import Decimal
+from functools import cache
 
-from .....core import CasillaId, validated_casilla_id, validated_casilla_id_map
-from .....core.resources import resources
+from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id, validated_casilla_id_map
+from .....core.resources import bundled_path
+from .. import load_registry_tree
 from .._bindings import CasillaObservation, RegistryModeloObservation
 from .._errors import NoRevisionForPeriodError
 from .._relations import RegistryFoldRequirement
 from .._schema import ModeloRevision
+from .._snapshot import build_snapshot
 
 _M202_CUOTA_BASE_CASILLA: CasillaId = validated_casilla_id("01", surface="_M202_CUOTA_BASE_CASILLA")
 _M200_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id(
@@ -52,6 +55,11 @@ def _observations_from_requirements(
     )
 
 
+@cache
+def _cross_dependency_registry_tree():
+    return load_registry_tree(bundled_path("registry", "aeat"))
+
+
 def _grounded_observations(
     *,
     modelo: str,
@@ -61,9 +69,25 @@ def _grounded_observations(
     target_modelo: str | None = None,
     fallback_revision: ModeloRevision | None = None,
 ) -> tuple[CasillaObservation, ...]:
+    """Ground observations in the selected snapshot, scoped to ``modelo`` alone.
+
+    Built from the compile-only registry tree at calculation grade -- these
+    fixtures assert cross-model relation folding, never a filing claim --
+    rather than through ``resources().modelos.authority``, whose ``.load()``
+    validates every modelo in the bundled tree before returning anything.
+    """
     source = f"{modelo}/{filing_year}/{period}"
     try:
-        snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+        modelos, catalogues = _cross_dependency_registry_tree()
+        modelo_definition = next(item for item in modelos if item.id == modelo)
+        snapshot = build_snapshot(
+            modelo_definition,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=filing_year,
+            period=period,
+            grade=RegistryAuthorityGrade.CALCULATION,
+        )
         source = f"{modelo}/{snapshot.revision.id}/{filing_year}/{period}"
         casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     except NoRevisionForPeriodError:

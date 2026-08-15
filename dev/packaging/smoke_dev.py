@@ -7,6 +7,8 @@ import os
 import sys
 from pathlib import Path
 
+from dev._paths import REPO_ROOT
+
 from ._smoke_common import (
     assert_cadrumo_version_output,
     assert_installed_data,
@@ -128,7 +130,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--work-dir", help="Empty directory for the isolated development environment.")
     args = parser.parse_args(argv)
 
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = REPO_ROOT
     uv = require_executable("uv")
     work_dir = resolve_work_dir(repo_root, args.work_dir, prefix="dev")
     print(f"dev packaging smoke work dir: {work_dir}", flush=True)

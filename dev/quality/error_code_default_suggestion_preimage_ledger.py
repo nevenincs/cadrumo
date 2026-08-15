@@ -22,6 +22,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, cast
 
+from dev._paths import REPO_ROOT, UTF_8
+
 __all__ = [
     "DEFAULT_PREIMAGE_LEDGER_PATH",
     "SOURCE_COMMIT",
@@ -34,13 +36,12 @@ __all__ = [
     "validate_preimage_ledger",
 ]
 
-REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 DEFAULT_PREIMAGE_LEDGER_PATH: Final[Path] = (
     REPO_ROOT / "dev" / "quality" / "error_code_default_suggestion_preimage.json"
 )
 SOURCE_COMMIT: Final[str] = "930ef9f4017a23cccaf4990d287beb014fc9723c"
 _SCHEMA_VERSION: Final[int] = 1
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _RECORD_FIELDS: Final[tuple[str, ...]] = (
     "source_commit",
     "error_code",

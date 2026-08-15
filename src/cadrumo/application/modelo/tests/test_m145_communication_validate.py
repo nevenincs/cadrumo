@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core.resources import resources
-from ....domain.calculations.registry import CasillaDefinition, casillas_by_id
+from ....core.resources import bundled_path
+from ....domain.calculations.registry import CasillaDefinition, casillas_by_id, load_registry_tree, select_revision
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     M145CommunicationCreateCommand,
@@ -42,9 +42,14 @@ def _field_values() -> dict[str, str]:
     }
 
 
+def _m145_revision():
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(candidate for candidate in modelos if candidate.id == "145")
+    return select_revision(modelo, filing_year=2026, period="comunicacion")
+
+
 def _snapshot_casillas() -> dict[str, CasillaDefinition]:
-    snapshot = resources().modelos.authority.snapshot("145", filing_year=2026, period="comunicacion")
-    return casillas_by_id(snapshot.revision)
+    return casillas_by_id(_m145_revision())
 
 
 def _casilla_for_data_type(data_type: str) -> CasillaDefinition:
@@ -55,7 +60,7 @@ def _casilla_for_data_type(data_type: str) -> CasillaDefinition:
 
 
 def test_validate_m145_communication_record_accepts_registry_backed_required_fields(tmp_path: Path) -> None:
-    snapshot = resources().modelos.authority.snapshot("145", filing_year=2026, period="comunicacion")
+    revision = _m145_revision()
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         record = create_m145_communication_record(
@@ -68,9 +73,9 @@ def test_validate_m145_communication_record_accepts_registry_backed_required_fie
     assert result.issue_count == 0
     assert result.issues == ()
     assert result.communication_record_id == record.communication_record_id
-    assert result.revision_id == snapshot.revision.id
-    assert result.legal_refs == tuple(sorted(str(ref) for ref in snapshot.revision.legal_refs))
-    assert result.source_refs == tuple(sorted(str(ref) for ref in snapshot.revision.source_refs))
+    assert result.revision_id == revision.id
+    assert result.legal_refs == tuple(sorted(str(ref) for ref in revision.legal_refs))
+    assert result.source_refs == tuple(sorted(str(ref) for ref in revision.source_refs))
 
 
 def test_validate_m145_communication_record_reports_missing_required_casilla_with_registry_refs(

@@ -24,15 +24,18 @@ from __future__ import annotations
 
 import hashlib
 from decimal import Decimal
+from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
 
 from ....core import BindingSourceKind, NoRecoveryOutcome, Period
 from ....core.errors import get_registered_error_code
-from ....core.resources import resources
+from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
+    load_registry_tree,
     resolve_foreign_asset_binding_row_values,
+    select_revision,
 )
 from .. import (
     ACCEPTED_SOURCE_KINDS,
@@ -339,7 +342,9 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
             foreign_asset_observations=observations,
         ),
     )
-    snapshot = resources().modelos.authority.snapshot("720", filing_year=2025, period="0A")
+    _modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _modelo_720 = next(candidate for candidate in _modelos if candidate.id == "720")
+    snapshot = SimpleNamespace(revision=select_revision(_modelo_720, filing_year=2025, period="0A"))
     context = CalculationSourceContext(
         bucket_id="operator",
         modelo="720",
@@ -408,7 +413,9 @@ def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenanc
             foreign_asset_observations=observations,
         ),
     )
-    snapshot = resources().modelos.authority.snapshot("720", filing_year=2025, period="0A")
+    _modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    _modelo_720 = next(candidate for candidate in _modelos if candidate.id == "720")
+    snapshot = SimpleNamespace(revision=select_revision(_modelo_720, filing_year=2025, period="0A"))
     context = CalculationSourceContext(
         bucket_id="operator",
         modelo="720",

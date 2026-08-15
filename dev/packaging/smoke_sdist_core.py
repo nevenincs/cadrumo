@@ -7,6 +7,8 @@ import sys
 import tarfile
 from pathlib import Path
 
+from dev._paths import REPO_ROOT
+
 from ._smoke_common import (
     assert_attachment_and_llm_surfaces,
     assert_cli_smoke,
@@ -78,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = REPO_ROOT
     uv = require_executable("uv")
     work_dir = resolve_work_dir(repo_root, args.work_dir, prefix="sdist-core")
     print(f"sdist packaging smoke work dir: {work_dir}", flush=True)

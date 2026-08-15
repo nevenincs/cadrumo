@@ -34,6 +34,8 @@ from typing import TYPE_CHECKING, Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from dev._paths import UTF_8
+
 from ._command import CommandResult
 from ._hashing import sha256_path
 from .cohort_manifest import LoadedReleaseCohort
@@ -59,7 +61,7 @@ if TYPE_CHECKING:
 
 _CLI_EXECUTABLE_NAME: Final[str] = "aeat"
 _MCP_EXECUTABLE_NAME: Final[str] = "cadrumo-mcp"
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 # The client identity an acquire lane declares when it drives the published
 # artifact through the MCP SDK over ``uv``/``uvx`` rather than a real Claude

@@ -36,9 +36,10 @@ from typing import Final, cast
 import yaml
 from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
-REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+from dev._paths import REPO_ROOT, UTF_8
+
 SOURCE_ROOT: Final[str] = "src/cadrumo"
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 # This is the mechanically grounded starting vocabulary, not the claimed
 # fixed point.  ``recovery_hint`` was discovered by the pre-plan semantic pass

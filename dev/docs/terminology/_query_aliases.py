@@ -27,6 +27,7 @@ from pydantic import BaseModel, ConfigDict, Field, PositiveInt, StringConstraint
 from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.resources import bundled_path
+from dev._paths import REPO_ROOT, UTF_8
 
 from ..terminology_handbook import TerminologyHandbook
 from ..terminology_handbook._errors import TerminologyLoadError
@@ -54,8 +55,8 @@ QUERY_ALIAS_AUTHORITY_RELPATH: Final[Path] = Path(
     "query-alias-authority.json",
 )
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
-_UTF_8: Final[str] = "utf-8"
+_REPO_ROOT = REPO_ROOT
+_UTF_8: Final[str] = UTF_8
 _ConceptId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=64)]
 _QueryText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=160)]
 _Reason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=12, max_length=800)]

@@ -17,9 +17,11 @@ from typing import Any, Final
 import pytest
 import yaml
 
+from dev._paths import REPO_ROOT
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_WORKFLOWS_DIR: Final = Path(__file__).resolve().parents[3] / ".github" / "workflows"
+_WORKFLOWS_DIR: Final = REPO_ROOT / ".github" / "workflows"
 _TRIGGER: Final = _WORKFLOWS_DIR / "packaging-campaign-trigger.yml"
 _CI: Final = _WORKFLOWS_DIR / "ci.yml"
 _QUICK: Final = _WORKFLOWS_DIR / "packaging-quick.yml"

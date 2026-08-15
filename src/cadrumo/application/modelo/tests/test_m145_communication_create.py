@@ -141,9 +141,12 @@ def test_create_m145_communication_record_refuses_undeclared_casilla_id(tmp_path
 
 
 def test_create_m145_communication_record_uses_real_registry_membership() -> None:
-    from ....core.resources import resources
+    from ....core.resources import bundled_path
+    from ....domain.calculations.registry import load_registry_tree, select_revision
 
-    snapshot = resources().modelos.authority.snapshot("145", filing_year=2026, period="comunicacion")
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(m for m in modelos if m.id == "145")
+    revision = select_revision(modelo, filing_year=2026, period="comunicacion")
 
-    assert undeclared_casilla_ids(snapshot.revision, _field_values()) == ()
-    assert undeclared_casilla_ids(snapshot.revision, {"perceptor.no-declarado": "x"}) == ("perceptor.no-declarado",)
+    assert undeclared_casilla_ids(revision, _field_values()) == ()
+    assert undeclared_casilla_ids(revision, {"perceptor.no-declarado": "x"}) == ("perceptor.no-declarado",)

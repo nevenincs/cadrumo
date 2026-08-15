@@ -27,7 +27,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core.resources import resources
+from ....core.resources import bundled_path
+from ....domain.calculations.registry import load_registry_tree, select_revision
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._modelo_work_ux_support import (
@@ -735,7 +736,9 @@ def test_work_create_without_revision_uses_registry_revision_for_supplied_year(
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-    expected_revision = resources().modelos.authority.snapshot("131", filing_year=2026, period="2T").revision.id
+    modelos_131, _catalogues_131 = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo_131 = next(candidate for candidate in modelos_131 if candidate.id == "131")
+    expected_revision = select_revision(modelo_131, filing_year=2026, period="2T").id
 
     result = _invoke(
         [

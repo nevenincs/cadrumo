@@ -23,7 +23,6 @@ from pathlib import Path
 import pytest
 
 from ....application.modelo import maritime_facts_from_active_profile
-from ....application.workflow import WorkflowState
 from ....core.config import override_settings
 from ....core.errors import ErrorCategory, get_error_exit_code
 from ....tests.cli_envelope import unwrap_schema_envelope as _unwrap
@@ -53,7 +52,7 @@ def isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 def _register_maritime_profile(*, overrides: dict[str, str]) -> None:
     """Seed an active profile carrying ``maritime_worker.*`` facts."""
-    register_minimal_profile(WorkflowState(), profile_id=_BUCKET_ID, overrides=overrides)
+    register_minimal_profile(profile_id=_BUCKET_ID, overrides=overrides)
 
 
 class TestHelpSurfaceLocalisation:

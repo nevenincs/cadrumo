@@ -38,11 +38,12 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from dev._paths import REPO_ROOT, UTF_8
+
 from .import_hygiene_scan import dunder_all_assignment_value
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
 PKG_PREFIX = "src/cadrumo"
-_UTF_8 = "utf-8"
+_UTF_8 = UTF_8
 
 
 @dataclass(frozen=True)

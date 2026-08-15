@@ -24,7 +24,6 @@ from ....adapters.persistence.storage.bucket import (
     provision_bucket_directory,
     write_manifest,
 )
-from ....application.workflow import WorkflowState
 from ....core.config import load_settings
 from ....core.identity import nif_check_letter
 from ....tests.cli_runner import invoke_cached_cli
@@ -105,7 +104,7 @@ def seed(name: str = "default", *, tax_id: str | None = None) -> None:
     overrides = {"identity.tax_id": tax_id} if tax_id is not None else None
     profile_id = _profile_id_for_label(name)
     with open_test_profile_session(profile_id):
-        register_minimal_profile(WorkflowState(), profile_id=profile_id, display_name=name, overrides=overrides)
+        register_minimal_profile(profile_id=profile_id, display_name=name, overrides=overrides)
 
 
 def distinct_nif(name: str) -> str:

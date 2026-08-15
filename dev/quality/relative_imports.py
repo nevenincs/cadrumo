@@ -40,9 +40,9 @@ import sys
 from pathlib import Path
 from typing import Final
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+from dev._paths import REPO_ROOT, UTF_8
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 SRC_CADRUMO = REPO_ROOT / "src" / "cadrumo"
 DEV_ROOT = REPO_ROOT / "dev"
 PACKAGE_ROOTS: tuple[tuple[Path, str], ...] = (

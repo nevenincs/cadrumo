@@ -128,3 +128,40 @@ def test_the_filing_capability_check_passes_a_revision_that_can_emit() -> None:
     resolved = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
 
     _check_snapshot_filing_capability(modelo, resolved)
+
+
+def test_loader_tier_snapshots_in_this_module_carry_no_compiled_orden_authority() -> None:
+    """These snapshots are partial, and nothing here may assert on Orden data.
+
+    The tests above build snapshots from compiler-tier catalogues so they survive a
+    refusing full-tree validation. That trade is deliberate, and this is its cost:
+    ``compile_supplementary_ordenes`` runs during AUTHORITY construction, not during
+    the compile, so a loader-tier ``RegistryCatalogues`` carries an empty
+    ``supplementary_ordenes`` and every snapshot built from one inherits it.
+
+    Asserted rather than left in a comment. An invariant in a comment is a
+    convention, and conventions break at the next caller: an Orden assertion added
+    to this file would read an empty authority and pass for the wrong reason. This
+    fails instead -- both if someone asserts on Orden data here, and if loader-tier
+    catalogues ever start carrying ordenes, which would make the warning stale.
+    """
+    modelos, catalogues = _committed_registry()
+
+    assert not catalogues.supplementary_ordenes, (
+        "loader-tier catalogues now carry compiled ordenes, so the reason these tests avoid "
+        "asserting on Orden data no longer holds. Re-read the trade rather than deleting this."
+    )
+
+    modelo = next(candidate for candidate in modelos if candidate.id == "182")
+    revision = modelo.revisions["2007-y-siguientes"]
+    reviewed = revision.model_copy(
+        update={
+            "review_status": RevisionReviewStatus.OPERATOR_REVIEWED,
+            "reviewed_by": "operator",
+            "reviewed_at": date(2026, 5, 5),
+        },
+    )
+    mutated = modelo.model_copy(update={"revisions": {**modelo.revisions, reviewed.id: reviewed}})
+
+    with pytest.raises(RegistryValidationError, match="declares no export layout"):
+        build_validated_snapshot(mutated, catalogues, filing_year=2025, period="0A", revision_id="2007-y-siguientes")

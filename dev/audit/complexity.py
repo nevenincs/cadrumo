@@ -61,6 +61,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
 
+from dev._paths import UTF_8
+
 from .complexity_allowlist import load_allowlist
 
 file_complexity: Callable[[str], Any] | None
@@ -71,7 +73,7 @@ except ImportError:  # pragma: no cover - environment fallback
 else:
     file_complexity = _imported_file_complexity
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _TARGET = "src/cadrumo"
 _PROD_EXCLUDE = (
     "src/cadrumo/test_*.py,src/cadrumo/**/test_*.py,src/cadrumo/**/_test_*.py,src/cadrumo/tests/*,src/cadrumo/_data/*"

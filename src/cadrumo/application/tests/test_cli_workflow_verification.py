@@ -13,7 +13,7 @@ from ...tests.user_profile import register_minimal_profile
 from .. import wizard as _wizard  # noqa: F401 - registers compiled profile keys
 from ..auth import configure_operator_auth, logout_operator_auth, reset_operator_auth
 from ..operator_surface import require_accepted_root
-from ..workflow import WorkflowState, workflow_state_repository
+from ..workflow import workflow_state_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -44,7 +44,7 @@ def test_auth_bucket_events_survive_workflow_repository_reload() -> None:
     # ``buckets/<profile-id>``, which a workflow-state repository
     # construction would otherwise materialise first and collide with. The
     # repository this test actually mutates is opened only afterward.
-    register_minimal_profile(WorkflowState(), profile_id=_BUCKET_ID, display_name=_PROFILE_LABEL)
+    register_minimal_profile(profile_id=_BUCKET_ID, display_name=_PROFILE_LABEL)
     repository = workflow_state_repository()
 
     configured = configure_operator_auth("certificate")

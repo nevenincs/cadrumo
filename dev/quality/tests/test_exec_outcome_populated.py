@@ -73,10 +73,12 @@ from vaultspec_core.plan.parser import parse_plan
 from vaultspec_core.plan.status import ExecRecordIndex
 from vaultspec_core.vaultcore.query import list_documents
 
+from dev._paths import REPO_ROOT
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 # dev/quality/tests/<this file> -> repo root is three parents up.
-_REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
+_REPO_ROOT: Final[Path] = REPO_ROOT
 _BASELINE_PATH: Final[Path] = _REPO_ROOT / "dev" / "quality" / "exec_outcome_baseline.json"
 
 # Anti-vacuity subject floors. Set well below the measured live figures (near 306

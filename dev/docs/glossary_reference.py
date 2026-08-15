@@ -48,6 +48,7 @@ from typing import cast
 
 from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
+from dev._paths import UTF_8
 
 from ._locale_chrome import docs_chrome
 from .build import docs_build_language
@@ -57,7 +58,7 @@ from .terminology_handbook._enums import TermStatus
 from .terminology_handbook._loader import TerminologyHandbook
 from .terminology_handbook._schema import ConceptRecord, LanguageSection
 
-_UTF_8 = "utf-8"
+_UTF_8 = UTF_8
 
 #: Generated glossary path, relative to the docs root. Uncommitted and
 #: regenerated every build, like ``docs/cli/`` - the hand-written

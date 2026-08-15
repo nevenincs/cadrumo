@@ -31,6 +31,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
+from dev._paths import REPO_ROOT
+
 from ._asset_transport import (
     EvidenceLane,
     download_release_assets,
@@ -276,7 +278,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--gh", default=None)
     args = parser.parse_args(argv)
 
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = REPO_ROOT
     tags = list_sealed_candidate_tags(repository=args.repository, gh_executable=args.gh)
 
     with tempfile.TemporaryDirectory() as scratch:

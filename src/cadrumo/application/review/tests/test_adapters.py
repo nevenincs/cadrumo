@@ -49,7 +49,6 @@ from ....domain.transactions import (
 )
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import WorkflowState
 from .. import (
     FindingReviewItem,
     InvoiceReviewItem,
@@ -95,7 +94,6 @@ def _seed_active_profile(bucket_id: str = _PROFILE_ID) -> None:
     would otherwise materialise first and collide with.
     """
     register_minimal_profile(
-        WorkflowState(),
         profile_id=bucket_id,
         overrides={"identity.tax_id": "00000000T"},
     )

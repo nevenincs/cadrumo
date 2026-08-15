@@ -24,6 +24,8 @@ from typing import Any, Final
 import pytest
 import yaml
 
+from dev._paths import REPO_ROOT
+
 from ..runner_queue_watchdog import (
     JobView,
     _epoch_of,
@@ -34,7 +36,7 @@ from ..runner_queue_watchdog import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_WORKFLOWS_DIR: Final = Path(__file__).resolve().parents[3] / ".github" / "workflows"
+_WORKFLOWS_DIR: Final = REPO_ROOT / ".github" / "workflows"
 _WATCHDOG_JOB_ID: Final = "runner-queue-watchdog"
 _WATCHDOG_MODULE: Final = "dev/ci/runner_queue_watchdog.py"
 

@@ -18,6 +18,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Final
 
+from dev._paths import UTF_8
+
 from ._acquire_common import (
     AcquisitionError,
     require_command_succeeded,
@@ -29,7 +31,7 @@ from .distribution_evidence_emit import emit_installed_oracle_evidence
 from .evidence import AcquisitionIdentity, DestinationIdentity
 from .python_cohort import PythonCohort, load_python_cohort
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 # The account-scoped tap (repo `nevenincs/homebrew-tap`) serving every product
 # published under this account, not a per-product tap.
 _DEFAULT_TAP: Final[str] = "nevenincs/tap"

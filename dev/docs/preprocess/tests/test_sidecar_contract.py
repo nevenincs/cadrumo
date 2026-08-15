@@ -20,6 +20,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from .._html import build_outputs
 from .._schema import (
     PREPROCESS_SCHEMA_VERSION,
@@ -39,7 +41,7 @@ from .._sidecar import (
 pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
 
 # dev/docs/preprocess/tests/test_sidecar_contract.py -> parents[4] is repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[4]
+_REPO_ROOT = REPO_ROOT
 
 # Smallest viable real corpus file: a single BOE article slice (347 bytes)
 # carrying the exact <h5 class="articulo"> / <p class="parrafo"> markup the

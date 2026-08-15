@@ -43,6 +43,8 @@ import unicodedata
 from pathlib import Path
 from typing import Final
 
+from dev._paths import UTF_8
+
 from ._parts import split_units_by_budget, write_part_sidecars
 from ._schema import (
     ExtractionStatus,
@@ -58,7 +60,7 @@ HTML_EXTRACTOR_ID = "normatives-html"
 #: Version of this extractor; part of the cache identity. Bump when the
 #: rendering changes so a regeneration is distinguishable from a no-op.
 HTML_EXTRACTOR_VERSION = "1.3"
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 #: Standing BOE/AEAT attribution used when no canonical link pins a permalink.
 _BASE_ATTRIBUTION = (

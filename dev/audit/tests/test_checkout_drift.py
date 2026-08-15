@@ -23,6 +23,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import UTF_8 as _UTF_8
+
 from ..checkout_drift import (
     blob_hash,
     growth_against_ceiling,
@@ -32,8 +34,6 @@ from ..checkout_drift import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-_UTF_8 = "utf-8"
 
 #: Applied to every temporary repository so the checkout semantics match the
 #: real one: git stores and checks out LF regardless of platform, which is what

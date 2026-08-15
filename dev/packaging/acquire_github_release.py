@@ -18,6 +18,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
+from dev._paths import UTF_8
+
 from ._acquire_common import (
     AcquisitionError,
     require_command_succeeded,
@@ -26,7 +28,7 @@ from ._acquire_common import (
 from ._command import run_command
 from .cohort_manifest import load_release_cohort
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _DEFAULT_REPO: Final[str] = "nevenincs/cadrumo"
 
 

@@ -15,11 +15,10 @@ failure that produced this rewrite.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from cadrumo.core import resolve_anchored_extracted_unit
+from dev._paths import REPO_ROOT
 
 from ...corpus.fetch_boe_normative import (
     ArticleRedaction,
@@ -49,7 +48,7 @@ from ..legal_excerpt_vintage_screen import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 
 def test_a_latin_ordinal_is_concatenated_into_the_anchor() -> None:

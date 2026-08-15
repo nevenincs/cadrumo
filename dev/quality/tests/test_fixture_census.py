@@ -9,6 +9,8 @@ from textwrap import dedent
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..fixture_census import FixtureCensusError, _read_trees, census, iter_source_files
 from ..fixture_ownership import (
     FixtureOwnershipError,
@@ -376,7 +378,7 @@ def test_imported_effective_name_fixture_preserves_binding_and_reach(tmp_path: P
 
 def test_real_tree_source_universe_retains_each_required_root() -> None:
     """The live tree smoke proves the census starts from every maintained root."""
-    repository_root = Path(__file__).resolve().parents[3]
+    repository_root = REPO_ROOT
     sources = iter_source_files(repository_root)
     relative_sources = {path.relative_to(repository_root).as_posix() for path in sources}
 
@@ -1008,7 +1010,7 @@ def test_import_binding_matcher_excludes_a_nested_closure_sharing_a_literal_name
 
 def test_live_fixture_ownership_manifest_is_complete_and_has_no_substitutable_duplicate() -> None:
     """The checked manifest exactly classifies the stable production census."""
-    repository_root = Path(__file__).resolve().parents[3]
+    repository_root = REPO_ROOT
     check_manifest(repository_root)
 
 

@@ -25,11 +25,13 @@ import tomllib
 from pathlib import Path
 from typing import Final
 
+from dev._paths import UTF_8
+
 #: Declared locally rather than imported from ``cadrumo.core``: ``dev/`` is
 #: unshipped tooling and must not reach into the shipped package's internals,
 #: so every dev module carries its own constant (see the sibling screens in
 #: this package).
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 #: The catalogue's authoring tree, relative to the repository root.
 LEGAL_DIR: Final = Path("src/cadrumo/_data/registry/aeat/legal")

@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 import yaml
 
+from dev._paths import REPO_ROOT
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_WORKFLOW = Path(__file__).resolve().parents[3] / ".github" / "workflows" / "packaging-scoop.yml"
+_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "packaging-scoop.yml"
 
 
 def _workflow() -> dict[str, object]:

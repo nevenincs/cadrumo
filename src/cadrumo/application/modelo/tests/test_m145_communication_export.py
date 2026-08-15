@@ -22,8 +22,15 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
-from ....core.resources import resources
-from ....domain.calculations.registry import ExportFieldDefinition, ResolvedExportLayout, resolve_export_layout
+from ....core import RegistryAuthorityGrade
+from ....core.resources import bundled_path
+from ....domain.calculations.registry import (
+    ExportFieldDefinition,
+    ResolvedExportLayout,
+    load_registry_tree,
+    resolve_export_layout,
+)
+from ....domain.calculations.registry.tests import build_snapshot
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     M145CommunicationCreateCommand,
@@ -48,7 +55,16 @@ def _field_values(**overrides: str) -> dict[str, str]:
 
 
 def _resolved_layout() -> ResolvedExportLayout:
-    snapshot = resources().modelos.authority.snapshot("145", filing_year=2026, period="comunicacion")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(candidate for candidate in modelos if candidate.id == "145")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2026,
+        period="comunicacion",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
     return resolve_export_layout(snapshot)
 
 

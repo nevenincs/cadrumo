@@ -43,7 +43,6 @@ from ....domain.user_profile import UserProfileFact
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import WorkflowState
 from .. import (
     ModeloApprovalStaleReason,
     approval_stale_reasons,
@@ -91,7 +90,6 @@ def _create_profile_with_activity(activity: str) -> None:
     # ``buckets/<profile-id>``, which a workflow-state repository
     # construction would otherwise materialise first and collide with.
     register_minimal_profile(
-        WorkflowState(),
         profile_id=_PROFILE_ID,
         display_name="auton",
         overrides={"identity.tax_id": _TAX_ID, "activities.description": activity},

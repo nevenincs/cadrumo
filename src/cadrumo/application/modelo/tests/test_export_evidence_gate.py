@@ -25,7 +25,6 @@ from ....tests import general_m303_filing_evidence
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import WorkflowState
 from .._export import (
     ModeloExportCommand,
     ModeloExportEvidenceMissingError,
@@ -51,7 +50,7 @@ def active_profile(tmp_path: Path) -> Iterator[None]:
         # the capsule publishes by an atomic no-replace rename onto
         # ``buckets/<profile-id>``, which a workflow-state repository
         # construction would otherwise materialise first and collide with.
-        register_minimal_profile(WorkflowState(), profile_id="11111111-1111-4111-8111-111111111111")
+        register_minimal_profile(profile_id="11111111-1111-4111-8111-111111111111")
         yield
 
 

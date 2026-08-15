@@ -24,9 +24,10 @@ definition rather than the glossary top:
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 import pytest
+
+from dev._paths import REPO_ROOT
 
 from ..glossary_reference import render_glossary
 from ..pagefind_inject import _SUMMARY_MAX_CHARS, _summary_for
@@ -37,7 +38,7 @@ from ..terminology._unified_record import to_search_record
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 
 def _load_handbook():

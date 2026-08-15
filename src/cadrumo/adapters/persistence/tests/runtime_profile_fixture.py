@@ -9,14 +9,11 @@ import pytest
 
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
-__all__ = ["_runtime_profile", "bucket_scoped_runtime_profile_fixture"]
-
-
-@pytest.fixture(name="_runtime_profile", autouse=True)
-def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    """Install and tear down the real default-bucket runtime for one test."""
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        yield profile
+__all__ = [
+    "_runtime_profile",
+    "bucket_scoped_runtime_profile_fixture",
+    "default_bucket_runtime_profile_fixture",
+]
 
 
 def bucket_scoped_runtime_profile_fixture(
@@ -48,3 +45,36 @@ def bucket_scoped_runtime_profile_fixture(
             yield profile
 
     return _bucket_scoped_runtime_profile
+
+
+def default_bucket_runtime_profile_fixture(
+    *,
+    autouse: bool = True,
+    name: str = "_runtime_profile",
+) -> Callable[[Path], Iterator[TestRuntimeProfile]]:
+    """Build a runtime-profile fixture on the DEFAULT bucket.
+
+    The sibling above pins a bucket; this one deliberately does not, which is a
+    different contract rather than a missing argument. Modules sharing the
+    default bucket are the ones whose isolation comes from ``tmp_path`` alone,
+    and giving them a synthesised bucket id to satisfy a signature would change
+    what they exercise.
+
+    It exists because the same three-line body was written twice under two
+    names -- once autouse as ``_runtime_profile``, once explicitly requested as
+    ``secure_engine`` -- and a body copied under a second name is invisible to
+    every name-keyed search. ``autouse`` and ``name`` stay per-caller so reach
+    is still declared where it applies; only the body is shared.
+    """
+
+    @pytest.fixture(name=name, autouse=autouse)
+    def _default_bucket_runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+        with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+            yield profile
+
+    return _default_bucket_runtime_profile
+
+
+#: The default-bucket autouse runtime every persistence adapter suite installs.
+#: Bound through the factory rather than written out, so the body has one home.
+_runtime_profile = default_bucket_runtime_profile_fixture()

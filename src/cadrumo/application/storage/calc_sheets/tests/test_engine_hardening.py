@@ -6,14 +6,17 @@ from datetime import date
 
 import pytest
 
+from .....core import RegistryAuthorityGrade
 from .....core.config import override_settings
-from .....core.resources import resources
+from .....core.resources import bundled_path, resources
 from .....domain.calculations.registry import (
     FormulaDefinition,
     RegistrySnapshot,
+    load_registry_tree,
     relation_requirement_index,
     relation_source_requirements,
 )
+from .....domain.calculations.registry.tests import build_snapshot
 from .._engine import _rounding_rule_for, build_export_plan
 from .._errors import CalcSheetsEngineError
 from .._records import RelationValues
@@ -52,7 +55,16 @@ def test_guide_paragraphs_resolve_through_output_language() -> None:
 
 
 def test_blank_relation_values_carry_registry_grounding() -> None:
-    snapshot = resources().modelos.authority.snapshot("180", filing_year=2026, period="0A")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(candidate for candidate in modelos if candidate.id == "180")
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2026,
+        period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
 
     plan = build_export_plan(snapshot, relation_values=RelationValues())
 

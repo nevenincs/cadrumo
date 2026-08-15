@@ -100,7 +100,9 @@ from typing import Final
 
 import yaml
 
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import UTF_8
+
+_UTF_8: Final[str] = UTF_8
 
 #: Directories that never contain runnable project tests.
 _PRUNED: Final[frozenset[str]] = frozenset(

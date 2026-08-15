@@ -43,6 +43,8 @@ import re
 from pathlib import Path
 from typing import Final, cast
 
+from dev._paths import UTF_8
+
 from ._parts import split_units_by_budget, write_part_sidecars
 from ._schema import (
     ExtractionStatus,
@@ -52,7 +54,7 @@ from ._schema import (
 )
 from ._sidecar import sha256_of
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 #: Stable id of this extractor, recorded in every sidecar's provenance.
 TEXT_EXTRACTOR_ID = "unsupported-text"

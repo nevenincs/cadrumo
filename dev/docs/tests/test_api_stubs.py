@@ -12,15 +12,15 @@ Run via::
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
+
+from dev._paths import REPO_ROOT
 
 from ..apidocs import ApiStubManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _SRC_CADRUMO = _REPO_ROOT / "src" / "cadrumo"
 _DOCS_API = _REPO_ROOT / "docs" / "api"
 

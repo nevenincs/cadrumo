@@ -17,7 +17,9 @@ import urllib.parse
 from pathlib import Path
 from typing import Final
 
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import UTF_8
+
+_UTF_8: Final[str] = UTF_8
 _CORPUS = Path("src/cadrumo/application/ledger/tests/_evidence_corpus")
 _UA = "cadrumo-fixtures/1.0 (evidence test corpus; contact: maintainers)"
 _CLEAN_LICENCE_PATTERN = re.compile(

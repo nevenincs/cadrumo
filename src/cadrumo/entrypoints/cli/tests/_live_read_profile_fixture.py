@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from ....application.workflow import WorkflowState
 from ....core.config import override_settings
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -25,5 +24,5 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         override_settings(cadrumo_live_state_dir=tmp_path / "probe-live-state"),
         open_test_profile_session(_ACTIVE_TEST_BUCKET_ID),
     ):
-        register_minimal_profile(WorkflowState(), profile_id=_ACTIVE_TEST_BUCKET_ID)
+        register_minimal_profile(profile_id=_ACTIVE_TEST_BUCKET_ID)
         yield

@@ -58,7 +58,6 @@ from ....tests.profile_capsule import (
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...user_profile import record_to_path_values
-from ...workflow import WorkflowState
 from .. import calculate_modelo_revision_from_bucket_aggregation, create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -159,7 +158,6 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
         # ``buckets/<profile-id>``, which a workflow-state repository
         # construction would otherwise materialise first and collide with.
         register_minimal_profile(
-            WorkflowState(),
             profile_id=_BUCKET,
             display_name="derived override probe",
             overrides=overrides,

@@ -71,11 +71,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+from dev._paths import REPO_ROOT, UTF_8
+
 #: Declared locally rather than imported from ``cadrumo.core``: ``dev/`` is
 #: unshipped tooling and must not reach into the shipped package's internals,
 #: so every dev module carries its own constant (see the sibling screens in
 #: this package).
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 _BASELINE_PATH: Final = Path(__file__).resolve().parent / "checkout_drift_baseline.json"
 
@@ -323,7 +325,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--full", action="store_true", help="List every drifted path, uncapped.")
     args = parser.parse_args(argv)
 
-    root = Path(__file__).resolve().parents[2]
+    root = REPO_ROOT
     measurement = measure(root)
     total, buckets = load_ceiling()
 

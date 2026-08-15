@@ -227,6 +227,11 @@ def _calculate_303_from_observations(
     period: str,
     observations: tuple[IvaLedgerObservation, ...],
 ) -> RegistryCalculationResult:
+    # Stays on ``resources().modelos.authority`` (unlike the M390 helper below):
+    # M303 snapshots include the compiled annual-Orden authority, and the
+    # production access point is the only source of that cross-cutting
+    # projection -- bypassing it via ``load_registry_tree`` would silently
+    # produce a partial snapshot rather than a scoped one.
     snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period)
     binding_values = {
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
@@ -269,7 +274,20 @@ def _calculate_390_from_observations_and_303_filings(
     observations: tuple[IvaLedgerObservation, ...],
     quarterly_results: dict[str, RegistryCalculationResult],
 ) -> RegistryCalculationResult:
-    snapshot = resources().modelos.authority.snapshot("390", filing_year=filing_year, period="0A")
+    # Scoped to M390 alone, at calculation grade -- this computes an IVA
+    # aggregation result, never a filing claim -- rather than through
+    # ``resources().modelos.authority``, whose ``.load()`` validates every
+    # modelo in the bundled tree before returning anything.
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo_390 = next(modelo for modelo in modelos if modelo.id == "390")
+    snapshot = build_snapshot(
+        modelo_390,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=filing_year,
+        period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
     ledger_binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations)
     m303_observations = tuple(
         RegistryModeloObservation(

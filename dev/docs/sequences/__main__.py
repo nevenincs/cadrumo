@@ -46,6 +46,7 @@ from typing import Annotated, Final
 from pydantic import BaseModel, Field, StringConstraints, ValidationError
 
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from dev._paths import REPO_ROOT, UTF_8
 
 from ._compare import check_transcript, evaluate_expectations
 from ._contracts import read_sequence_contract
@@ -65,7 +66,7 @@ from ._runner import (
 )
 from ._schema import ParsedSequence, SequenceId
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _NonEmptyText = Annotated[str, StringConstraints(min_length=1)]
 
 __all__ = [
@@ -123,7 +124,7 @@ def default_docs_root() -> Path:
     Resolved relative to this module so the engine finds pages regardless of
     the process working directory (the same anchoring as seeds and goldens).
     """
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = REPO_ROOT
     return repo_root / "docs"
 
 
@@ -482,7 +483,7 @@ def _run_check_child(command: list[str], *, timeout: float) -> tuple[str, ...]:
         try:
             result = subprocess.run(  # noqa: S603 - fixed interpreter and module entrypoint.
                 command,
-                cwd=Path(__file__).resolve().parents[3],
+                cwd = REPO_ROOT,
                 env=environment,
                 capture_output=True,
                 text=True,

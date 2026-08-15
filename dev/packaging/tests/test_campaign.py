@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..campaign import (
     _COHORT_DIR,
     _LANES,
@@ -19,7 +21,7 @@ from ..campaign import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_JUSTFILE = Path(__file__).resolve().parents[3] / "justfile"
+_JUSTFILE = REPO_ROOT / "justfile"
 _PACKAGING = Path(__file__).resolve().parents[1]
 
 # The executed set, pinned as (module, extra args) per profile in run order.

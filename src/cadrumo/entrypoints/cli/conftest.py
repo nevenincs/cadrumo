@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pytest
 
-from ...application.workflow import WorkflowState
 from ...core.config import reset_settings_cache
 from ...core.i18n import OUTPUT_LANGUAGE_ENV_VAR, clear_output_language_cache
 from ...tests import temporary_env
@@ -21,7 +20,7 @@ def overview_cli_backend(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(profile_id),
     ):
-        register_minimal_profile(WorkflowState(), profile_id=profile_id)
+        register_minimal_profile(profile_id=profile_id)
         yield
 
 

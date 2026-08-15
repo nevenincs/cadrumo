@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.resources import resources
+from ....core.resources import bundled_path
+from ...calculations.registry import load_registry_tree
 from .._loader import load_user_profile_schema
 from .._schema import ProfileSchemaDefinition
 
@@ -28,4 +29,13 @@ def module_scoped_schema() -> ProfileSchemaDefinition:
 
 @pytest.fixture(name="legal_ids", scope="module")
 def legal_ids_fixture() -> frozenset[str]:
-    return frozenset(resources().modelos.authority.catalogues.legal)
+    """The legal-reference catalogue, read without a filing claim.
+
+    Consumers only check that a profile-schema legal ref resolves against the
+    catalogue -- a pure structural lookup, never a filing operation -- so this
+    reads the compile-only tree directly rather than through
+    ``resources().modelos.authority``, whose ``.load()`` validates every
+    modelo in the bundled tree before returning anything.
+    """
+    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    return frozenset(catalogues.legal)

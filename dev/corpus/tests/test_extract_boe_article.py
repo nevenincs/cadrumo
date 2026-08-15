@@ -19,6 +19,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ...docs.preprocess import PreprocessOutput
 from ...docs.preprocess._html import build_outputs
 from ..extract_boe_article import (
@@ -31,7 +33,7 @@ from ..extract_boe_article import (
 pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
 
 # dev/corpus/tests/test_extract_boe_article.py -> parents[3] is repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _NORMATIVES_HTML = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus" / "normatives" / "html"
 _LIVA_DOCUMENT = _NORMATIVES_HTML / "ley-37-1992.html"
 _LIVA_DOCUMENT_ID = "BOE-A-1992-28740"

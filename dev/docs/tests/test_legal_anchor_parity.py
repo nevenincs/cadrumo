@@ -13,9 +13,9 @@ anchor, or destination RST drifts independently.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
+
+from dev._paths import REPO_ROOT
 
 from ..legal_reference import LegalPage, LegalReferenceResult, render_legal_reference
 from ..terminology._legal_projection import project_legal_search_records
@@ -24,7 +24,7 @@ from ..terminology._unified_record import SearchRecord, to_search_record
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 
 @pytest.fixture(scope="module")

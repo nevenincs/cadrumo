@@ -16,7 +16,6 @@ from ....adapters.outbound.aeat.sede import (
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....application.calculations import CalculationObservationRepository
-from ....application.workflow import WorkflowState
 from ....core import Period
 from ....core.config import load_settings
 from ....domain.calculations.registry import RegistryModeloObservation
@@ -162,7 +161,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
         )
 
     with open_test_profile_session(_SECOND_PROFILE_ID):
-        register_minimal_profile(WorkflowState(), profile_id=_SECOND_PROFILE_ID, display_name="Second Operator")
+        register_minimal_profile(profile_id=_SECOND_PROFILE_ID, display_name="Second Operator")
 
     with open_test_profile_session(_SECOND_PROFILE_ID):
         second_evidence, _second_notice = _local_calendar_filing_evidence(_SECOND_PROFILE_ID, ())

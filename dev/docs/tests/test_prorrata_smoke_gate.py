@@ -44,6 +44,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..glossary_reference import generate_glossary_reference
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records, _Materialised
@@ -54,7 +56,7 @@ from ..terminology._unified_record import to_search_record
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 # dev/docs/tests/test_prorrata_smoke_gate.py -> parents[3] is the repo root.
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 _DOCS = _REPO_ROOT / "docs"
 
 # Four-language prorrata probes: each must surface the concept card. "pro rata"

@@ -12,11 +12,13 @@ import pytest
 from docutils import nodes
 from docutils.core import publish_doctree
 
+from dev._paths import REPO_ROOT
+
 from ..legal_reference import LegalProvisionRecord, generate_legal_reference, render_legal_reference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 
 _QUOTED_RE = re.compile(r'<blockquote lang="es">(?P<body>.*?)</blockquote>', re.DOTALL)

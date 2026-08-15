@@ -38,7 +38,9 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import UTF_8
+
+_UTF_8: Final[str] = UTF_8
 _CACHE_DIR_ENV: Final[str] = "CADRUMO_PROOF_CACHE_DIR"
 _MAX_RECORDS_ENV: Final[str] = "CADRUMO_PROOF_CACHE_MAX_RECORDS"
 # Hard cap on stored records (operator directive: every persistent cache is

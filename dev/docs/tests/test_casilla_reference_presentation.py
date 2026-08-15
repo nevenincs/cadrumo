@@ -22,13 +22,13 @@ renderer's behaviour, never a catalogue's current contents.
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 import pytest
 
 from cadrumo.core import BindingSourceKind, Modelo
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry import CasillaConstraints, InputKind
+from dev._paths import REPO_ROOT
 
 from .._locale_chrome import DocsChromeError, docs_chrome
 from ..casilla_reference import (
@@ -48,7 +48,7 @@ from ..terminology._search_record import CasillaSearchRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+_REPO_ROOT = REPO_ROOT
 
 #: Per-language marker strings this module authors onto one record, so a leak of
 #: any non-build language is detectable by exact substring.

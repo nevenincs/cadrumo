@@ -55,8 +55,9 @@ from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Final
 
-REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import REPO_ROOT, UTF_8
+
+_UTF_8: Final[str] = UTF_8
 _SOURCE_ROOTS: Final[tuple[str, ...]] = ("src", "dev", "packaging")
 _ROOT_CONFTEXT: Final[str] = "conftest.py"
 _EXCLUDED_PREFIX: Final[Path] = Path("src/cadrumo/_data")

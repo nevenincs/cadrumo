@@ -13,9 +13,11 @@ from typing import Final, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from dev._paths import UTF_8
+
 from ._hashing import sha256_path
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 _SCHEMA: Final[Literal["cadrumo.release-cohort.v1"]] = "cadrumo.release-cohort.v1"
 _MANIFEST_NAME: Final[str] = "release-cohort.json"
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"

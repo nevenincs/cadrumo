@@ -16,7 +16,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
-REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+from dev._paths import REPO_ROOT
+
 SRC_DIR: Final[Path] = REPO_ROOT / "src" / "cadrumo"
 LOCALES_DIR: Final[Path] = SRC_DIR / "locales"
 

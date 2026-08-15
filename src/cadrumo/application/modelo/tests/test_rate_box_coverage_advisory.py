@@ -41,7 +41,6 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...aggregation import CalculationSourceDiagnostic
-from ...workflow import WorkflowState
 from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from .._rate_box_advisory import collect_rate_box_coverage_diagnostics
 
@@ -69,7 +68,7 @@ def _bucket(tmp_path: Path) -> Iterator[None]:
         # the capsule publishes by an atomic no-replace rename onto
         # ``buckets/<profile-id>``, which a workflow-state repository
         # construction would otherwise materialise first and collide with.
-        register_minimal_profile(WorkflowState(), profile_id=_BUCKET_ID)
+        register_minimal_profile(profile_id=_BUCKET_ID)
         yield
 
 

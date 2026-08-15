@@ -13,11 +13,13 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
+from dev._paths import UTF_8
+
 from ._parts import split_units_by_budget
 from ._schema import ExtractionStatus, PreprocessOutput, PreprocessUnit, SourceDocumentKind
 from ._sidecar import sha256_of
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 # Stable extractor identity/version values are part of the upstream preprocess
 # cache key and the repo-root rule's explicit version stamp.

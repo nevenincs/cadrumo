@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from dev._paths import REPO_ROOT
+
 from ..smoke_absent_llm import (
     _EXTRA,
     _INFERENCE_SURFACES,
@@ -29,7 +31,6 @@ from ..smoke_absent_llm import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_the_guard_symbol_comes_from_the_registry_not_a_literal() -> None:

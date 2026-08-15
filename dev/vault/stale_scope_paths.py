@@ -46,7 +46,9 @@ import sys
 from pathlib import Path
 from typing import Final
 
-_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+from dev._paths import REPO_ROOT
+
+_ROOT: Final[Path] = REPO_ROOT
 _PLANS: Final[Path] = _ROOT / ".vault/plan"
 
 _ROW: Final[re.Pattern[str]] = re.compile(r"^- \[( |x)\] `([A-Z0-9.]+)` - (.*)$")

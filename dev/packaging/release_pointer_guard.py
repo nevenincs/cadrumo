@@ -36,7 +36,9 @@ from typing import Final
 
 from packaging.version import InvalidVersion, Version
 
-_UTF_8: Final[str] = "utf-8"
+from dev._paths import UTF_8
+
+_UTF_8: Final[str] = UTF_8
 
 #: The Homebrew formula carries no `version` stanza — the version lives in the
 #: release-asset URL it pins, which is the same string a user's `brew install`

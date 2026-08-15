@@ -43,7 +43,7 @@ from ....domain.calculations.registry import (
 )
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
+from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest, assert_two_ejercicio_round_trip
 from .._observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -101,28 +101,34 @@ def _year_n_plus_1_observation() -> RegistryModeloObservation:
 
 def test_year_n_observation_persists_and_reloads_strictly(tmp_path: Path) -> None:
     """Year-N 308 casilla values survive the encrypted-SQL roundtrip unchanged."""
-    obs_n = _year_n_observation()
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(repo.prepare_observation_envelope(obs_n, source_kind="app_filing", captured_at=_CLOCK_N))
-        loaded = _find_observation(repo, filing_year=_YEAR_N, period="AD-HOC")
-        assert loaded is not None
-        assert loaded.observation == obs_n
-        assert loaded.source_kind == "app_filing"
-        assert loaded.captured_at == _CLOCK_N
+    assert_two_ejercicio_round_trip(
+        tmp_path=tmp_path,
+        stage="year_n",
+        modelo=_MODELO,
+        period="AD-HOC",
+        obs_n=_year_n_observation(),
+        obs_n_plus_1=_year_n_plus_1_observation(),
+        year_n=_YEAR_N,
+        year_n_plus_1=_YEAR_N_PLUS_1,
+        clock_n=_CLOCK_N,
+        clock_n_plus_1=_CLOCK_N_PLUS_1,
+    )
 
 
 def test_year_n_plus_1_observation_persists_and_reloads_strictly(tmp_path: Path) -> None:
     """Year-N+1 308 casilla values survive the roundtrip with distinct tipo-solicitud."""
-    obs_n1 = _year_n_plus_1_observation()
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(repo.prepare_observation_envelope(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1))
-        loaded = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period="AD-HOC")
-        assert loaded is not None
-        assert loaded.observation == obs_n1
-        assert loaded.source_kind == "app_filing"
-        assert loaded.captured_at == _CLOCK_N_PLUS_1
+    assert_two_ejercicio_round_trip(
+        tmp_path=tmp_path,
+        stage="year_n_plus_1",
+        modelo=_MODELO,
+        period="AD-HOC",
+        obs_n=_year_n_observation(),
+        obs_n_plus_1=_year_n_plus_1_observation(),
+        year_n=_YEAR_N,
+        year_n_plus_1=_YEAR_N_PLUS_1,
+        clock_n=_CLOCK_N,
+        clock_n_plus_1=_CLOCK_N_PLUS_1,
+    )
 
 
 def test_both_ad_hoc_observations_are_independently_retrievable(tmp_path: Path) -> None:

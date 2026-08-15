@@ -91,9 +91,11 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
+from dev._paths import UTF_8
+
 from ..sanitizer import ResidualKind, checksum_valid_spans
 
-_UTF_8: Final[str] = "utf-8"
+_UTF_8: Final[str] = UTF_8
 
 #: Suffixes carrying DATA rather than prose. These are the blocking scope: a
 #: taxpayer identity in one of these is a payload, and this project has no
