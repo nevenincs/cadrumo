@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:0926c2d06375ddac44718dacceeb4660d948e4e1646ee80b18ccba583e6cf16e'
+body_hash: 'sha256:7c418a914def1aa87b41d50fc8db86d01c9946372c0f25cfe597a675be354cd5'
 related: []
 ---
 
@@ -283,3 +283,45 @@ actually holds predates the cutover. The campaign's target state has never been
 materialised on real disk, which supports the read-path finding from the
 opposite side: nothing in production has ever produced the state the read path
 expects.
+
+### Retraction: there is no unopenable-bucket defect, and this section was wrong
+
+The two sections above -- the "structural floor" and the read-path correction --
+are **retracted**. Both rest on a measurement taken without logging in, and the
+conclusion drawn from it is false.
+
+Registration closes the session in a `finally` block and returns an INCOMPLETE
+setup state. A freshly registered profile is therefore **locked, not broken**,
+and authenticating is the design rather than a missing step. Instrumented
+properly -- create through the sanctioned door, then log in, then read -- records
+come back normally, the keystore route is entered **zero** times on the whole
+path, and no keystore artefact is written at all.
+
+So: no production path is missing. No bucket is structurally unopenable. The
+resolver is not mis-stating custody. What the earlier sections described as a
+security-shaped defect requiring an owner ruling was a probe that stopped one
+step short of the operator's own workflow.
+
+**What survives the retraction, because it was measured rather than inferred.**
+The keystore route genuinely is dead code -- entered zero times on the working
+path, written by nothing -- so deleting it remains correct, and is now plainly
+removal of dead code rather than a repair. The four pre-capsule buckets remain
+unreachable for the three reasons already recorded, none of which involves that
+route. And the ownership analysis distinguishing a key handed to one caller from
+a shared module-level object stands on its own; only the premise that prompted
+it was false.
+
+**Why this belongs in the audit rather than being quietly edited out.** The
+claim travelled. It was written here, escalated to the operator as a live defect
+making every newly created profile unreadable, used to park another agent's
+conversion sweep as structurally blocked, and used to widen a blast radius from
+"modules that read records" to "modules that need a usable profile at all". Each
+of those was a reasonable step from the one before, and the whole chain rested
+on a single unexamined assumption about what a fresh profile should be able to do.
+
+The lesson is the campaign's own, met from a new direction. A plausible symptom
+invites a plausible cause, and the cheaper the cause is to believe, the less
+likely anyone is to probe the step before it. **The defence is to reproduce
+through the operator's actual workflow, not through the shortest path that
+produces the symptom** -- and specifically, when a refusal says "not ready", to
+establish what would make it ready before concluding that nothing can.
