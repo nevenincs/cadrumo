@@ -951,4 +951,3 @@ Kept as a technique, not committed: it is a scratch plugin, and its output needs
 a per-primitive unit cost beside the repeat count before any entry in it should
 be read as a target. Without that column it ranks the cheapest thing in the tree
 first.
-
