@@ -254,24 +254,39 @@ def test_config_passphrase_change_round_trips_file_custody(tmp_path: Path) -> No
 
 
 def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:
-    """The accepted custody verbs are mounted under the config root.
+    """The accepted custody verbs are mounted, and the retired ones are not.
 
-    ``login`` and ``logout`` are the canonical profile-session doors. The
-    retired ``switch`` spelling is asserted absent in the same pass, because
-    the cutover was a deletion rather than a rename: an alias or a hidden
-    registration would satisfy a mounted-verb check while reinstating the
-    second door the one-verb rule removed.
+    ``login`` and ``logout`` are the canonical profile-session doors. Retired
+    spellings are asserted ABSENT in the same pass, because each cutover was a
+    deletion rather than a rename: an alias or a hidden registration would
+    satisfy a mounted-verb check while reinstating the door the ruling removed.
+
+    This list previously asserted ``recover`` and ``recovery`` were mounted.
+    Both had been retired by an accepted ruling, so the assertion outlived the
+    decision it was written under and failed against a tree that was correct --
+    the mirror of the repair that fixed gates asserting removed verbs were
+    absent. They are now checked in the retired direction, which is the claim
+    that is actually true and which still catches a silent reinstatement.
+
+    ``passphrase`` is deliberately asserted in NEITHER direction. It does not
+    resolve today, but unlike the others its absence is not a ruling: there is
+    no passphrase-change surface anywhere below the command line either, so
+    what is missing is the capability to rotate a profile credential rather
+    than one spelling of a verb. Asserting it mounted fails against the tree;
+    asserting it retired would encode a product decision nobody has taken. The
+    open question is tracked as its own row, and this module makes no claim
+    about it rather than quietly answering it.
     """
 
-    for verb in ("login", "logout", "passphrase", "recover", "recovery"):
+    for verb in ("login", "logout"):
         help_result = _run_cadrumo(tmp_path, ("config", verb, "--help"))
         assert help_result.returncode == 0, _combined_output(help_result)
         assert verb in _combined_output(help_result)
 
-    retired_verb = "switch"
-    retired = _run_cadrumo(tmp_path, ("config", retired_verb, "--help"))
-    assert retired.returncode != 0
-    assert f"No such command '{retired_verb}'" in _combined_output(retired)
+    for retired_verb in ("switch", "recover", "recovery"):
+        retired = _run_cadrumo(tmp_path, ("config", retired_verb, "--help"))
+        assert retired.returncode != 0, _combined_output(retired)
+        assert f"No such command '{retired_verb}'" in _combined_output(retired)
 
 
 def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: Path) -> None:
