@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:b382170c858c1bb529662b31c9f53f2248fbd2fb0c5bedd50e7d3bc37a528da9'
+body_hash: 'sha256:e569af26e78a3dc717d0ef195848d9d0edbac35b545f6aa8889ec88a8909186c'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -138,3 +138,36 @@ The code landed in `459db261e2`, a peer's broad commit that captured the working
 tree before this session could commit it under its own message. Recorded here
 because the measurement and the equivalence proof are otherwise unattached to
 the change.
+
+## Correcting my own scandir claim: the win is pruning, not the primitive
+
+A commit message of mine states that replacing `Path.rglob` with `os.scandir`
+made the source-tree walk about ten times faster. That number is real and the
+attribution is wrong, which matters because it points the next reader at the
+wrong lever.
+
+Measured on Python 3.13.11, over `src/cadrumo`, separating the two variables:
+
+    rglob, primitive only            4,981 files   0.386-0.415s
+    scandir, primitive only          4,981 files   0.249-0.276s
+    rglob + Python-level filtering    4,977 files   0.376s
+    scandir + directory pruning       4,977 files   0.024s
+
+The primitive alone is about 1.5x, not ten. Python 3.13 rewrote globbing onto
+`os.scandir` and closed most of the gap that older advice assumes. The ~16x
+comes from PRUNING: refusing to descend into `__pycache__` and `_data` at all,
+which `rglob` cannot express -- it can only filter paths after walking them, so
+the subtree is traversed either way.
+
+The original measurement compared "rglob plus a Python filter over every path"
+against "scandir with pruning", which conflated the two variables and credited
+the faster primitive with the pruning's saving.
+
+Two things follow. Migrating a walk to `scandir` for its own sake buys little;
+migrating it so the walk can PRUNE buys a lot. And a caller that must inspect
+every file anyway should expect no gain from the change at all.
+
+Found because a peer, migrating this code onto the shared
+`cadrumo.core.scan_directory` primitive, wrote the correct attribution into its
+docstring and contradicted the claim. Verified here rather than taken on trust,
+and the peer is right.
