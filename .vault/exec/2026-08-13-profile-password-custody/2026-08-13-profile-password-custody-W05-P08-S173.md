@@ -105,6 +105,32 @@ unnoticed.
 
 ## Notes
 
+**Both gates were re-proven from a clean context, and the second proof taught
+something the first did not.** Three runtime patches applied from outside the
+tree, none touching a tracked file: neutralising the structural lock probe,
+observing a lock unconditionally, and re-collapsing the carried reason onto the
+absent-record status. The first reds both locked cases, the second reds the
+ready control and the destroyed-record case, and the third reds the locked
+cases. The instructive part is that the first proof MASKS the third on the
+entry point that loads the encrypted workflow state -- that load is refused
+before the collapsed reason is ever consulted, so the run reports unreadable
+whichever way the reason is wired. Isolating the first lie therefore requires
+the supplied-state entry point, which skips that load and reports the absent
+record verbatim. That the two lies hide each other under measurement is exactly
+why one of them survived the earlier investigation, and it is the reason both
+entry points now carry their own assertion rather than one standing in for the
+pair.
+
+**Every downstream reader of the status set was audited, not just the one
+already noted.** Four production surfaces branch on the record-failure
+statuses. Three of them -- the auth operator's configure path and the
+certificate-source gate -- open the encrypted workflow state BEFORE they
+consult the health verdict, so a locked profile is refused by that load and
+never reaches their branches at all; their behaviour is unchanged by this row
+and needs nothing. The diagnostics readiness row is the sole genuine
+fall-through, because it is the one surface reached with a health verdict and
+no loaded state.
+
 **The CLI status surface was measured, not assumed, and it did not regress.**
 Run against a locked capsule, it refuses before reaching the projection's
 fall-through and prints the logged-out sentence with the login action and the
@@ -119,21 +145,30 @@ It still warns, so nothing is silently passed, but the sentence is untrue.
 Correcting it needs a new operator string in all four catalogues, which this
 row may not author, and the row belongs to that surface's owner.
 
-**A peer's broad commit captured this working tree mid-row.** The changes were
-swept into a registry sweep commit that was not this row's. Nothing was
-committed, stashed or reverted here.
+**Peers' broad commits captured this working tree mid-row, repeatedly.** Every
+file this row touched was swept into registry-sweep commits that were not this
+row's, spread across six of them rather than one, so the change is committed but
+its history is scattered and none of it carries this row's subject. The
+verification pass therefore had to re-derive what had landed by reading the
+tree rather than by reading a diff. Nothing was committed, stashed or reverted
+here.
 
-**The suites were run and their red is attributed, none of it from this
-change.** The one failure that WAS from this change -- the pinned log
-assertion -- is corrected above and passes. Everything else reproduces
-sequentially and lands in four ambient families: registry validation and load
-failures from a concurrent authority-grade sweep; a shared capsule-seeding
-harness that now collides with the committed-capsule authority, which accounts
-for every error in the resume suite and the empty-projection assertion; CLI
-verbs and a wizard creation door that are settled absences; and a helper whose
-signature changed underneath its callers. The modules pinning the refusal
-messages this row refactored, the capsule lifecycle, and the cross-process
-record roundtrip are all green.
+**The suites were re-run sequentially and their red is attributed, none of it
+from this change.** The one failure that WAS from this change -- the pinned log
+assertion -- is corrected above and passes. The rest lands in five ambient
+families: registry validation failures from a concurrent authority-grade sweep;
+a shared capsule-seeding harness that no longer publishes a capsule the
+committed-capsule projection discovers, which accounts for every error in the
+resume suite and for the empty-projection assertion; CLI verbs and a wizard
+creation door that are settled absences; a profile-registration helper whose
+signature changed underneath its callers; and, arriving mid-run, a peer's new
+custody error class landing without its error-code registry entry, which now
+fails the resume suite at import rather than at assertion. That last one is the
+tree moving underneath the run, and the refusal says so itself. The row's own
+surfaces -- the cross-process locked-profile suite, the resolution suite whose
+log framing this row corrected, and the health projection suite -- are green
+together, as is the agent-facing readiness taxonomy, which admitted the new
+member with no edit to that tree.
 
 **The durable lesson is that a null is a decision to discard evidence.** The
 resolver had the reason in its hands -- it caught a specific typed refusal and
