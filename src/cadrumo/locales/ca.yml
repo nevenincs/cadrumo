@@ -65750,6 +65750,8 @@ modelo:
               label: Nombre total de registres de perceptor declarats
             x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
               label: Total import de la retenció o ingrés a compte
+            x-e1in4opec9gn6p9de9in8pbecdkmurg:
+              label: Base de retenció o ingrés a compte
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
               label: Clau de personalitat del perceptor no resident
             x-e1in4opecpim6q315lo62prf:
