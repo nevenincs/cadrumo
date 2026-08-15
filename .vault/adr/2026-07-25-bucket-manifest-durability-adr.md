@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#bucket-manifest-durability'
 date: '2026-07-25'
-modified: '2026-07-26'
-body_hash: 'sha256:37697ce5f7f4ecb3d361a07e7aaec217d56f29ca10d53194ae94243918668086'
+modified: '2026-08-15'
+body_hash: 'sha256:2015c51d91e5b2e92ef0fdade3a388c08732bb0244c121653051688146c59050'
 related:
   - "[[2026-07-25-code-dedup-sweep-adr]]"
   - "[[2026-07-25-compatibility-checkpoint-adr]]"
@@ -364,3 +364,63 @@ deferred by omission: `bucket_dek` genuinely needs its own owner-gated record
 rather than being bundled into a manifest decision, and the save-writer field loss
 on absolute session minutes is a different defect on the same format and belongs
 to the session-lifetime surface. Both are named here so neither is lost.
+
+## Amendment: the retirement wins, and this record is superseded on the manifest's future
+
+This record and `2026-08-13-profile-bucket-lifecycle-successor-adr` assert
+incompatible things about the same file, and neither superseded the other, so the
+corpus asserted both. This record keeps the manifest durable and gives it a
+forward version ceiling; the later record removes the manifest from production
+composition and forbids recreating a plaintext manifest. The operator has ruled:
+**the retirement wins.**
+
+The manifest is therefore **retired but present**. It is no longer a durable
+format earning a version ceiling, and the enrollment half of this record is
+withdrawn rather than deferred. What survives from this record is its diagnosis,
+which the measurement below confirms was accurate about the hazard and wrong
+about the scale.
+
+**A pre-capsule bucket is unreachable through every operator path.** Profile
+listing and profile resolution both project committed custody capsules; a bucket
+directory carrying a `manifest.toml` and no capsule cannot be listed, cannot be
+resolved by identifier or by label, and therefore cannot be authenticated into.
+Nothing that finds or opens a profile reads the manifest. Buckets in that state
+hold their bytes and no code path reaches them.
+
+**The consumer count in the Problem Statement is wrong and the error is
+instructive.** This record states that `read_manifest` is "the sole ingress for
+all sixteen production consumers". The measured number is **three**, in two
+modules. The inflation is name-based: this tree uses "manifest" for at least six
+unrelated artefacts -- the attachment manifest, the manual-fetch manifest, the
+M303 orden manifest, the registry loader manifest, the corpus manifest and this
+one -- so any census by name counts all of them. The number was wrong in an
+accepted decision record rather than in one reader's head, which is why it
+survived re-reading and was acted on.
+
+The three, and what each actually needs:
+
+- the idle-lock window and the absolute session cap, read as per-bucket
+  *overrides* by the bucket data-key module, both of which already catch the
+  missing-manifest refusal and fall back to configured defaults;
+- the manifest digest and its deletion fingerprint, which have **no production
+  caller at all**.
+
+So the manifest has one functional dependency -- two optional session-window
+overrides -- and one dead helper pair.
+
+**The reader is not removed by this amendment, and removing it is not
+self-executing.** Removing the reader drops per-profile session windows to
+settings-only unless the capsule gains a home for them, which is a behaviour
+change rather than a deletion and is ruled separately. The dead digest helpers
+go independently. Both are opened as rows in the same action as this amendment.
+
+**A finding about the bootstrap-exempt allowlist, recorded here because it has no
+better home.** That file grants session-gate exemptions whose *entries* are
+correct and whose *stated reasons* are false. Two were found in one day: an
+exemption justified by citing a test that was never written, and the profile-list
+exemption justified by asserting it "reads the plaintext per-bucket
+`manifest.toml` files" -- which it no longer does, since listing projects
+capsules. The exemption remains correct on other grounds, but a file whose
+reasons are false is worse than one with no comments, because the next reader
+inherits the reason instead of re-deriving it. The file wants a pass that
+re-derives every stated reason against the tree, not a fix to the two entries.
