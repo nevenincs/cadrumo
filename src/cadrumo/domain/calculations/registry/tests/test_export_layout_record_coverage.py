@@ -169,19 +169,45 @@ def test_the_fixture_anchor_still_names_an_incomplete_layout(
     """
     modelo_id, revision_id, layout_id = _INCOMPLETE_ANCHOR
     modelos, catalogues = registry_tree
-    modelo = next((candidate for candidate in modelos if candidate.id == modelo_id), None)
-    assert modelo is not None, f"anchor modelo {modelo_id!r} is no longer in the bundled registry"
-    revision = modelo.revisions.get(revision_id)
-    assert revision is not None, f"anchor revision {revision_id!r} is no longer declared by modelo {modelo_id!r}"
-    layout = next((candidate for candidate in _fixed_width_layouts(revision) if candidate.id == layout_id), None)
-    assert layout is not None, f"anchor layout {layout_id!r} is no longer a fixed-width layout on this revision"
+    cohort = {
+        (candidate_modelo, candidate_revision, layout.id): gap
+        for candidate_modelo, candidate_revision, revision in _revisions_with_fixed_width_layouts(modelos)
+        for layout in _fixed_width_layouts(revision)
+        if (gap := _obligatorio_gap(layout, catalogues))
+    }
+    if not cohort:
+        # The cohort emptied: every AEAT-obligatorio position in the bundled
+        # tree is now writable. That is the campaign's goal reached on this
+        # narrow axis, not a reason to delete the anchor -- so the assertion
+        # becomes the positive statement of the same fact, and re-engages by
+        # itself the moment any layout stops writing an obligatorio position.
+        # The gate's own broader rule (every non-omissible position, not only
+        # the obligatorio-marked ones) still refuses layouts today; those are
+        # covered by the live-derived tests below, which need no anchor.
+        assert not _obligatorio_gap_anywhere(modelos, catalogues), "cohort recomputed non-empty within one test"
+        return
 
-    gap = _obligatorio_gap(layout, catalogues)
-    assert gap, (
-        f"anchor layout {layout_id!r} no longer leaves any AEAT-obligatorio position unwritten. If it was "
-        f"genuinely completed, move this anchor to another incomplete layout rather than deleting it"
+    assert (modelo_id, revision_id, layout_id) in cohort, (
+        f"anchor layout {layout_id!r} no longer leaves any AEAT-obligatorio position unwritten, but "
+        f"{sorted(cohort)} still do. Move the anchor to one of them rather than deleting it"
     )
-    assert _gate(revision, catalogues), f"the gate accepts anchor layout {layout_id!r} despite the gap {sorted(gap)}"
+    modelo = next(candidate for candidate in modelos if candidate.id == modelo_id)
+    revision = modelo.revisions[revision_id]
+    assert _gate(revision, catalogues), (
+        f"the gate accepts anchor layout {layout_id!r} despite the gap {sorted(cohort[(modelo_id, revision_id, layout_id)])}"
+    )
+
+
+def _obligatorio_gap_anywhere(
+    modelos: tuple[ModeloDefinition, ...],
+    catalogues: RegistryCatalogues,
+) -> set[tuple[str, int, int]]:
+    """Every AEAT-obligatorio position unwritable by its own layout, tree-wide."""
+    found: set[tuple[str, int, int]] = set()
+    for _modelo_id, _revision_id, revision in _revisions_with_fixed_width_layouts(modelos):
+        for layout in _fixed_width_layouts(revision):
+            found |= _obligatorio_gap(layout, catalogues)
+    return found
 
 
 def test_an_unwritable_obligatorio_position_forces_a_refusal(
@@ -218,8 +244,16 @@ def test_every_enumerated_coordinate_is_a_real_unwritten_design_position(
     modelos, catalogues = registry_tree
     for _modelo_id, _revision_id, revision in _revisions_with_fixed_width_layouts(modelos):
         for layout in _fixed_width_layouts(revision):
+            # Sub-fields count as declared: where AEAT desglosa a field the gate
+            # enumerates the SUB-FIELD coordinates, which live under
+            # ``components`` and never appear in ``sheet.fields``. Reading only
+            # the top level would call a correctly-reported sub-field a
+            # fabricated coordinate.
             declared = {
-                (field.offset, field.length) for sheet in _design_sheets(layout, catalogues) for field in sheet.fields
+                (candidate.offset, candidate.length)
+                for sheet in _design_sheets(layout, catalogues)
+                for field in sheet.fields
+                for candidate in (field, *field.components)
             }
             if not declared:
                 continue
