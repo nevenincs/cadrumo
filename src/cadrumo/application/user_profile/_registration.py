@@ -39,6 +39,7 @@ from ...core import NIST_PASSPHRASE_MIN_LENGTH, PassphraseStrength, assess_passp
 from ...core.errors import CadrumoError
 from ...core.identity import BucketId, ProfileId
 from ...domain.user_profile import ProfileSetupState, UserProfileRecord, new_profile_id
+from ..evidence import try_record_legal_hold_snapshot
 from ..filing import try_record_filing_retention_snapshot
 from ..profile_custody import create_profile_custody_registration_material
 from ._capsule_record import ProfileRecordSession
@@ -233,6 +234,22 @@ def register_profile_with_credentials(
     try_record_filing_retention_snapshot(
         bucket_id=str(identity),
         records=(),
+        observed_at=datetime.now(UTC),
+    )
+
+    # Record that this profile has zero known open legal cases, for the same
+    # reason and the same best-effort asymmetry as the filing snapshot above.
+    # A profile at this instant has no filings and no captured AEAT
+    # expedientes -- there is nothing yet for an outside legal hold to be a
+    # hold ON, so "zero known cases" is a fact about a brand-new profile
+    # rather than an assumption of clearance. It is NOT a standing answer for
+    # this profile's later life: a genuinely external hold arising afterwards
+    # is unknowable to this system until something (a future expedientes
+    # capture, an operator affirmation) records it, and until it does the
+    # deletion preflight keeps reading this recorded fact.
+    try_record_legal_hold_snapshot(
+        bucket_id=str(identity),
+        open_case_ids=(),
         observed_at=datetime.now(UTC),
     )
 
