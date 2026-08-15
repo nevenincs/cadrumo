@@ -30,7 +30,8 @@ import pytest
 
 from .._errors import ProfileCustodyRecordError
 from .._inventory import (
-    DATABASE_REPRESENTATION_RELATIVE_PATHS,
+    DATABASE_PRESENCE_ONLY_RELATIVE_PATHS,
+    DATABASE_SIDECAR_RELATIVE_PATHS,
     inventory_profile_custody_capsule,
 )
 
@@ -86,16 +87,15 @@ def _relative_paths(capsule: Path) -> set[str]:
     return {entry.relative_path for entry in inventory.entries}
 
 
-def test_the_three_database_paths_are_named_from_the_storage_taxonomy() -> None:
-    """The excluded set is derived, not a second hand-typed literal.
+def test_the_database_paths_are_named_from_the_storage_taxonomy() -> None:
+    """The two collections are derived, not a second hand-typed literal.
 
-    Anchoring it to the taxonomy member the engine itself resolves is what
+    Anchoring them to the taxonomy member the engine itself resolves is what
     stops a rename of the database directory or filename from silently
-    emptying the exclusion and reinstating the defect.
+    emptying them and reinstating the defect.
     """
-    expected = frozenset({"db/cadrumo.db", "db/cadrumo.db-wal", "db/cadrumo.db-shm"})
-
-    assert expected == DATABASE_REPRESENTATION_RELATIVE_PATHS
+    assert frozenset({"db/cadrumo.db-wal", "db/cadrumo.db-shm"}) == DATABASE_SIDECAR_RELATIVE_PATHS
+    assert frozenset({"db/cadrumo.db"}) == DATABASE_PRESENCE_ONLY_RELATIVE_PATHS
 
 
 def test_a_checkpoint_leaves_the_inventory_digest_unmoved(tmp_path: Path) -> None:
@@ -125,7 +125,7 @@ def test_the_observation_still_reports_the_sidecars_the_digest_ignores(tmp_path:
     """
     capsule = _capsule_with_an_open_connection(tmp_path)
     while_open = inventory_profile_custody_capsule(_PROFILE_ID, capsule)
-    assert {entry.relative_path for entry in while_open.entries} >= DATABASE_REPRESENTATION_RELATIVE_PATHS
+    assert {entry.relative_path for entry in while_open.entries} >= DATABASE_SIDECAR_RELATIVE_PATHS
 
     _checkpoint(capsule)
     after_close = inventory_profile_custody_capsule(_PROFILE_ID, capsule)
@@ -179,6 +179,51 @@ def test_a_foreign_file_under_the_database_directory_still_moves_the_digest(tmp_
     _write(capsule, "db/planted.bin", b"not one of the three named members")
 
     assert inventory_profile_custody_capsule(_PROFILE_ID, capsule).digest != before.digest
+
+
+def test_a_vanished_database_still_moves_the_digest(tmp_path: Path) -> None:
+    """The database's bytes are out of the digest; its PATH is not.
+
+    This is the half of the concession that is still a real guard, and it is
+    the reason the database is carried as a presence member rather than
+    dropped the way the sidecars are. A deletion whose target database
+    disappeared between preflight and execution is being asked to destroy
+    something other than what was confirmed, and it refuses.
+    """
+    capsule = _capsule_with_an_open_connection(tmp_path)
+    _checkpoint(capsule)
+    settled = inventory_profile_custody_capsule(_PROFILE_ID, capsule)
+
+    (capsule / "db/cadrumo.db").unlink()
+
+    assert inventory_profile_custody_capsule(_PROFILE_ID, capsule).digest != settled.digest
+
+
+def test_database_CONTENT_deliberately_does_not_move_the_digest(tmp_path: Path) -> None:
+    """Pin the limitation so it is executable, not merely documented.
+
+    Rows written into the capsule database between preflight and execution do
+    NOT move the digest, and nothing else catches them -- the deletion is the
+    only reader of this inventory in that window. Asserting the gap keeps it
+    honest in both directions: it cannot be quietly forgotten, and anyone who
+    later believes they have re-covered database content will find this case
+    red and be forced to read why it was given up.
+
+    The write here is byte-level rather than through the engine on purpose:
+    what is being pinned is the digest's blindness to the file's bytes, and no
+    key material is needed to demonstrate that.
+    """
+    capsule = _capsule_with_an_open_connection(tmp_path)
+    _checkpoint(capsule)
+    settled = inventory_profile_custody_capsule(_PROFILE_ID, capsule)
+
+    (capsule / "db/cadrumo.db").write_bytes(_DATABASE_BYTES + b"pages a later write appended")
+
+    changed = inventory_profile_custody_capsule(_PROFILE_ID, capsule)
+    assert changed.digest == settled.digest
+    assert changed.entries != settled.entries, (
+        "the walk must still SEE the change, or the limitation is a blind spot rather than a stated one"
+    )
 
 
 def test_a_capsule_of_database_files_alone_is_refused(tmp_path: Path) -> None:
