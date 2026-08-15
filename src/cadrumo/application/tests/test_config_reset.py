@@ -53,6 +53,7 @@ def _create_profile(
     green suites. It is scaffolding for a production gap this suite does not
     own, which is why it stays visible here.
     """
+    from ...adapters.persistence.storage import dispose_engine, dispose_engines_for_bucket
     from ...tests.user_profile import register_minimal_profile
     from ..evidence import LegalHoldCaseAuthority
 
@@ -67,6 +68,14 @@ def _create_profile(
         open_case_ids=(),
         observed_at=datetime.now(UTC),
     )
+    # Seeding opened this bucket's database, and on Windows an open SQLite
+    # handle blocks the atomic no-replace rename the capsule deletion performs,
+    # so the erase fails on a handle rather than on anything under test. The
+    # sibling recovery suite disposes for the same reason before it forks. This
+    # is a harness workaround for a real hazard the reset itself does not
+    # handle: a process that opened a profile cannot then erase it on Windows.
+    dispose_engines_for_bucket(profile_id)
+    dispose_engine()
 
 
 def _delete_profile_through_custody(profile_id: str, *, root: Path) -> None:
@@ -142,6 +151,7 @@ def _persist_filing(
     locks on unopened targets does not have.
     """
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+    from ...adapters.persistence.storage import dispose_engine, dispose_engines_for_bucket
     from ...core import Period
     from ...domain.modelos import (
         ModeloCode,
@@ -181,6 +191,9 @@ def _persist_filing(
         records=tuple(saved.records.values()),
         observed_at=datetime.now(UTC),
     )
+    # Same Windows handle hazard as the seeding helper above.
+    dispose_engines_for_bucket(bucket_id)
+    dispose_engine()
 
 
 def _fingerprint(bucket_id: str) -> str:
