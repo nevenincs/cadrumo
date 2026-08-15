@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:4d3d4030f0fad7f42b5a548ad8310829d665e43f84e643b421c7006805faaf60'
+body_hash: 'sha256:37bf246e293ece1781be27c010d66fc59a1ef949e6b2b119234713c33b9c7130'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -121,6 +121,7 @@ Expose canonical profile verbs and secret channels through typed action envelope
 - [x] `W03.P06.S135` - Have Terra XHigh name the capsules root path in the retired-custody refusal, since the message names which retired member was found but never where, so an operator is told to destructively reset a store whose location the refusal does not give, and naming the root preserves every constraint because it is not a bucket and not an identity and requires no inference from retired content; `src/cadrumo/adapters/persistence/storage/custody/_capsule_discovery.py`.
 - [ ] `W03.P06.S136` - Have Terra XHigh finish the creation-door conversion enumerated by CALL SITE of the creation verb rather than by named helper, since the helper census structurally cannot see a test invoking the verb inline in its own body and the measured population is fifty-one modules against the thirty the census reported, so converting a helper while leaving an inline invocation is a half-fix that reads complete from the diff; `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/entrypoints/cli/_config/tests/`.
 - [ ] `W03.P06.S139` - Have Terra XHigh re-found the four modules whose subject IS the creation surface rather than converting them, since the retired verb is what they exist to test so a fixture conversion would destroy the coverage, while most of their call sites currently expect success and therefore assert a capability the product no longer offers; `src/cadrumo/entrypoints/cli/_config/tests/`.
+- [ ] `W03.P06.S140` - Have Terra XHigh resolve the three creation flags that have no mapped fact path by reading the profile schema rather than inferring one, since each currently blocks a conversion and guessing a path would write a fixture that quietly declares something false about a filer, the flags being the employee indicator the new-entity profit-period exclusion and the marital status; `src/cadrumo/domain/user_profile/ and src/cadrumo/entrypoints/cli/_config/`.
 
 ## Wave `W04` - retire superseded custody
 
