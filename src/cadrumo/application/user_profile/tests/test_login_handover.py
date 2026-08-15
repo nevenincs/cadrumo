@@ -82,6 +82,7 @@ class _RecoveryResult(TypedDict):
 class _ChildLoginResult(TypedDict):
     bucket_id: str
     closed_previous: str | None
+    already_authenticated: bool
 
 
 class _ResumeProbeResult(TypedDict):
@@ -377,7 +378,13 @@ def _login_in_separate_process_child(
     _ = settings
     try:
         outcome = login_profile(name=profile, now=now, passphrase_callback=lambda: password)
-        result_queue.put({"bucket_id": outcome.bucket_id, "closed_previous": outcome.closed_previous_bucket_id})
+        result_queue.put(
+            {
+                "bucket_id": outcome.bucket_id,
+                "closed_previous": outcome.closed_previous_bucket_id,
+                "already_authenticated": outcome.already_authenticated,
+            }
+        )
     finally:
         _close_child_login(token)
 
@@ -983,7 +990,6 @@ def test_same_profile_relogin_in_a_new_process_keeps_its_own_session_material(tm
 
         first = _login_in_separate_process(storage_root, profile, _PASSWORD_A)
         assert first["bucket_id"] == profile
-        assert first["closed_previous"] is None
 
         second = _login_in_separate_process(
             storage_root,
@@ -992,11 +998,17 @@ def test_same_profile_relogin_in_a_new_process_keeps_its_own_session_material(tm
             now=_now() + timedelta(days=1),
         )
         assert second["bucket_id"] == profile
-        assert second["closed_previous"] is None
+        # Placed past the idle window so this is a real authentication that
+        # reaches the retirement step. The idempotent no-op returns before it,
+        # and a repeat login that took that path would prove nothing here.
+        assert second["already_authenticated"] is False
 
         surviving = _probe_resumable_session(storage_root, profile)
         assert surviving["resumed"] is True
         assert surviving["dek_length"] == 32
+
+        assert first["closed_previous"] is None
+        assert second["closed_previous"] is None
 
 
 def test_pointer_conflict_rolls_back_candidate_and_keeps_live_a(tmp_path: Path) -> None:
