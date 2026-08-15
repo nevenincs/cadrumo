@@ -52,7 +52,7 @@ class _StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
 
-type _AnchorKey = tuple[str, int, str | None, int, str]
+type _AnchorKey = tuple[str, int, str | None, str | None, str]
 type _RecordKey = tuple[str, str]
 
 

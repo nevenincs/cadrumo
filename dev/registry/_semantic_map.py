@@ -47,6 +47,26 @@ class _StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
 
+def _coerce_ordinal(value: object) -> object:
+    """Accept a legacy authored int literal alongside the parser's printed str label.
+
+    Committed semantic-map authoring data predates the parser's widened
+    ``str | None`` ordinal and still writes bare integers (``ordinal = 14``).
+    Coercing here lets that authored data hydrate unchanged while the anchor's
+    stored value matches the parser type exactly, so ``_semantic_anchor_key``
+    and ``_parser_anchor_key`` compare like-for-like without re-keying
+    committed TOML/JSON.
+    """
+    if value is None or isinstance(value, str):
+        return value
+    if isinstance(value, int) and not isinstance(value, bool):
+        return str(value)
+    raise ValueError("ordinal must be a printed str label, a legacy int literal, or None")
+
+
+type _AnchorOrdinal = Annotated[str | None, BeforeValidator(_coerce_ordinal)]
+
+
 class SemanticMapAnchor(_StrictModel):
     """The complete parser-owned identity of one official design slot.
 
@@ -59,7 +79,12 @@ class SemanticMapAnchor(_StrictModel):
     sheet: str = Field(min_length=1)
     source_row: int = Field(gt=0)
     source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
-    ordinal: int = Field(gt=0)
+    #: The ordinal AEAT printed, verbatim -- a str because it is a printed LABEL,
+    #: never an arithmetic value. Mirrors
+    #: :attr:`domain.calculations.registry.RecordDesignField.ordinal`, which
+    #: :class:`RecordDesignIntermediateField.ordinal` is a straight 1:1
+    #: projection of; this anchor field is the same value one join step later.
+    ordinal: _AnchorOrdinal = Field(default=None, min_length=1)
     record_identity: str = Field(min_length=1)
 
 

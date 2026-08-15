@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-15'
-body_hash: 'sha256:06917b6987c8adf8944dd51ffecf2c1572c8e85675fb3267b42b5a371c4ded1d'
+body_hash: 'sha256:2f4e1254e50197150ebd360512562faeee5f97b484f4e38bcfe6b755e9464b19'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -181,6 +181,40 @@ Bind collection VaultSpec execution records and plan state into one auditable co
 - [x] `W08.P28.S96` - Run feature-scoped and repository-wide VaultSpec checks without rewriting unrelated debt; `.vault`.
 - [x] `W08.P28.S97` - Create and validate one execution record per completed Step; `.vault/exec/2026-08-14-test-harness-sanity`.
 - [x] `W08.P28.S98` - Prove every mandate requirement has authoritative evidence and no work remains; `.vault/plan/2026-08-14-test-harness-sanity-plan.md`.
+
+## Wave `W09` - reopen the census on the body-keyed axis
+
+A second team re-scanned the test corpus after W08 closed and found duplication the name-keyed census could not reach: exact-duplicate helper bodies, near-identical drifted variants, and semantically mirrored reimplementations under different names in different libraries. The originating audit already named this axis problem -- thirteen behaviours under thirty-eight names -- and recorded the census as unable to reach a verdict on this tree. This wave carries that second sweep, its consolidations, and the census records the constraint requires, so both teams see one plan.
+
+### Phase `W09.P29` - consolidate exact-duplicate helper bodies found by the body-keyed rescan
+
+Twenty-five file-disjoint batches of byte-identical helper bodies, partitioned by union-find over the task-to-file graph so no two workers touch one file. Each slice consolidates at the narrowest common owner, deletes every redundant definition outright with no bridge or alias, and compares failures as a set rather than a count because parts of this tree are deliberately red.
+
+- [x] `W09.P29.S111` - Partition the body-keyed rescan into file-disjoint batches by union-find over the task-to-file graph and assert no file appears in two batches; `scratchpad census artefacts`.
+- [x] `W09.P29.S112` - Consolidate the thirteen observation-lookup helpers into one narrowest-owner helper carrying the return annotation every original lacked; `src/cadrumo/application/calculations/tests/_observation_lookup_support.py`.
+- [x] `W09.P29.S113` - Consolidate the ten attribute-replacement context managers onto the documented submodule-direct convention and preserve the monkeypatch-ban rationale; `src/cadrumo/tests/attribute_scope.py`.
+- [x] `W09.P29.S114` - Consolidate the eight convenio rate resolvers and prove every per-country treaty rate and legal citation stayed in its own file; `src/cadrumo/application/calculations/tests/_convenio_rate_support.py`.
+- [x] `W09.P29.S115` - Consolidate the five secure-object repository builders into the existing support module and remove the unused imports a prior slice left behind; `src/cadrumo/adapters/persistence/storage/sql/tests/_secure_objects_support.py`.
+- [x] `W09.P29.S116` - Consolidate the five docs HTTP server helpers to the strictest cleanup form and close the listening socket every copy leaked; `dev/docs/tests/_http_serve_support.py`.
+- [x] `W09.P29.S117` - Collapse the sixty-six structurally identical modelo 131 modulos tests into parametrized cases without losing a single expected value or IAE citation; `src/cadrumo/domain/calculations/registry/tests/test_modelo_131_modulos_engine*.py`.
+- [x] `W09.P29.S118` - Consolidate the ledger corpus match and oracle-rule helpers and upgrade the existing shared copies to the stricter guarded variant; `src/cadrumo/entrypoints/cli/tests/_ledger_corpus_support.py`.
+- [x] `W09.P29.S119` - Consolidate the remaining digest, live-write-declaration, ephemeral-repository and fragment-writer helpers without crossing the dev and shipped-package boundary; `dev/packaging, src/cadrumo/entrypoints/mcp/tests, dev/docs/terminology_handbook/tests`.
+- [ ] `W09.P29.S120` - Write one census record per consolidated cluster proving substitutability and naming the canonical owner, as the fixture-deletion constraint requires; `.vault/audit`.
+
+### Phase `W09.P30` - adjudicate drifted variants and semantically mirrored reimplementations
+
+The classes the name-keyed census cannot reach. Drift is scored by structural similarity over normalised AST node sequences; semantic mirrors are found only by meaning-based search, since they share neither name nor structure. Both are adjudicated before any edit: a copy that looks interchangeable and silently is not is more dangerous than an honest duplicate.
+
+- [x] `W09.P30.S121` - Score name-grouped helper clusters by structural similarity over normalised AST node sequences to separate genuine drift from name collision; `scratchpad census artefacts`.
+- [x] `W09.P30.S122` - Adjudicate every drifted cluster above the similarity threshold as real drift, deliberate variant, or false positive before any edit; `src/cadrumo, dev`.
+- [ ] `W09.P30.S123` - Migrate the under-adopted canonical locale and loader-directory fixture homes onto their existing owners rather than creating new ones; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `W09.P30.S124` - Sweep the corpus by meaning for reimplementations sharing neither name nor structure and record which could not have been reached by name or grep; `src/cadrumo, dev`.
+- [ ] `W09.P30.S125` - Re-key the duplication gate on body rather than name so a renamed twin cannot sit outside its own comparison; `dev/quality`.
+- [ ] `W09.P30.S126` - Sweep the thirty-seven pre-provisioned-bucket isolated-backend fixtures onto the canonical factory after extending it with settings and profile override passthroughs; `src/cadrumo/tests/active_profile_isolated_backend_fixture.py, src/cadrumo/entrypoints/cli/tests`.
+- [ ] `W09.P30.S127` - Converge the two independently written synthetic text-layer PDF builders and the four differently-named twins onto the canonical fixture; `src/cadrumo/tests/pdf_fixtures.py, src/cadrumo/application/live/tests/_notification_document_support.py`.
+- [ ] `W09.P30.S128` - Fold the four differently-named review-package builders onto a path-returning sibling of the canonical bytes builder; `src/cadrumo/application/modelo/tests, src/cadrumo/entrypoints/cli/tests`.
+- [ ] `W09.P30.S129` - Route the secure-object namespace registration mirror in the persistence package to an owner both test packages may import; `src/cadrumo/adapters/persistence/operations/tests`.
+- [x] `W09.P30.S130` - Consolidate the drifted release-cohort builders onto a deterministic clock and retire the wall-clock variant; `dev/packaging/tests/_release_cohort_support.py`.
 
 ## Parallelization
 
