@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.modelo import calculation_result_summary
 from ....application.workflow import workflow_state_repository
 from ....core import Period
@@ -24,10 +21,8 @@ from ....domain.modelos import (
     derive_work_unit_id,
     upsert_work_unit,
 )
-from ....tests.profile_capsule import open_test_profile_session
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.registry_observations import registry_grounded_observations
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 from .._modelo_rendering import result_summary_lines, result_summary_payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -37,19 +32,7 @@ _NOW = datetime(2026, 7, 2, 12, 0, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _REVISION_ID = "2019-y-siguientes"
 
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_PROFILE_ID),
-    ):
-        try:
-            register_minimal_profile(profile_id=_PROFILE_ID)
-            yield
-        finally:
-            dispose_engine()
+_isolated_backend = active_profile_isolated_backend_fixture(bucket_id=_PROFILE_ID, dispose_engine_around=True)
 
 
 def _seed_m130_work_unit() -> WorkUnit:

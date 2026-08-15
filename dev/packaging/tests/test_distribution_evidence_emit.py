@@ -9,7 +9,6 @@ values, and the produced record is validated by the tamper-evident
 
 from __future__ import annotations
 
-import platform
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -18,15 +17,8 @@ from pathlib import Path
 import pytest
 
 from .._command import CommandResult, run_command
-from ..cohort_manifest import (
-    REQUIRED_ARTIFACT_KINDS,
-    BuildIdentity,
-    LoadedReleaseCohort,
-    SourceIdentity,
-    create_manifest,
-    load_release_cohort,
-    write_manifest,
-)
+from ._release_cohort_support import release_cohort
+from ..cohort_manifest import LoadedReleaseCohort
 from ..distribution_evidence_emit import (
     build_client_evidence,
     build_installed_oracle_evidence,
@@ -59,31 +51,7 @@ _COHORT_VERSION = "0.2.1"
 
 def _release_cohort(root: Path) -> LoadedReleaseCohort:
     """Materialise a genuine release cohort with every required artifact kind."""
-    root.mkdir()
-    artifacts = []
-    for index, (name, kind) in enumerate(sorted(REQUIRED_ARTIFACT_KINDS.items())):
-        path = root / "artifacts" / f"{name}.bin"
-        path.parent.mkdir(exist_ok=True)
-        path.write_bytes(f"{index}:{name}\n".encode())
-        artifacts.append((name, kind, path))
-    manifest = create_manifest(
-        root=root,
-        version=_COHORT_VERSION,
-        source=SourceIdentity(commit="c" * 40, tag=f"v{_COHORT_VERSION}"),
-        created_at=datetime(2026, 1, 1, tzinfo=UTC),
-        builder=BuildIdentity(
-            implementation="dev.packaging.release_cohort",
-            format_version=1,
-            python=platform.python_version(),
-            uv="0.11.29",
-            platform=platform.system(),
-            architecture=platform.machine(),
-            build_constraints_sha256="d" * 64,
-        ),
-        artifacts=artifacts,
-    )
-    write_manifest(root, manifest)
-    return load_release_cohort(root)
+    return release_cohort(root, version=_COHORT_VERSION)
 
 
 def _captured_command(argv: tuple[str, ...], cwd: Path) -> CommandResult:

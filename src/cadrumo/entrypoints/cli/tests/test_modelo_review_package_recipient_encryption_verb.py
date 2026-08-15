@@ -44,13 +44,12 @@ from __future__ import annotations
 
 import json
 import zipfile
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.modelo import (
     RecipientFingerprintRegistryRepository,
     ensure_recipient_encryption_keypair,
@@ -58,34 +57,21 @@ from ....application.modelo import (
 )
 from ....core import CasillaId, validated_casilla_id
 from ....domain.user_profile import UserProfileFact
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
+from ....tests.profile_capsule import set_active_test_profile_facts
 from ._modelo_review_package_support import seed_exportable_modelo_revision
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 
+_isolated_backend = active_profile_isolated_backend_fixture(bucket_id=_BUCKET_ID, dispose_engine_around=True)
+
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_BUCKET_ID),
-    ):
-        try:
-            register_minimal_profile(profile_id=_BUCKET_ID)
-            yield
-        finally:
-            dispose_engine()
 
 
 def _set_export_profile_name() -> None:

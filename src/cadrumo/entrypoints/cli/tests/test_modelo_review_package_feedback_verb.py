@@ -38,14 +38,13 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.modelo import (
     RecipientFingerprintRegistryRepository,
     ensure_recipient_encryption_keypair,
@@ -54,16 +53,17 @@ from ....application.modelo import (
 from ....core import STR_KEYED_MAPPING_ADAPTER, CasillaId, validated_casilla_id
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import UserProfileFact
+from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
-from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import register_minimal_profile
 from ._modelo_review_package_support import seed_exportable_modelo_revision
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
+
+_isolated_backend = active_profile_isolated_backend_fixture(bucket_id=_BUCKET_ID, dispose_engine_around=True)
 
 
 def _invoke(args: Sequence[str]) -> Result:
@@ -74,20 +74,6 @@ def _payload_string(output: str, key: str) -> str:
     value = STR_KEYED_MAPPING_ADAPTER.validate_python(_payload(output))[key]
     assert isinstance(value, str)
     return value
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_BUCKET_ID),
-    ):
-        try:
-            register_minimal_profile(profile_id=_BUCKET_ID)
-            yield
-        finally:
-            dispose_engine()
 
 
 def _set_export_profile_name() -> None:

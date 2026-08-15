@@ -146,6 +146,11 @@ def register_cli_profile(*, label: str, facts: Mapping[str, str] | None = None) 
     over them, which is what the retired scripted-creation flag did: a test that
     only cares about a tax id should not have to restate the territorial and IVA
     regime a readiness check will demand.
+
+    The profile is left INCOMPLETE, as the production credential door leaves it.
+    Completing setup writes a bucket record, and a bucket created through this
+    door cannot presently be opened -- so a test needing a complete profile is
+    blocked upstream of this helper, not by it.
     """
     from ..application.user_profile import register_profile_with_credentials
     from ..core.config import load_settings

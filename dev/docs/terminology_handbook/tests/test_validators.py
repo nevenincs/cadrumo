@@ -27,6 +27,7 @@ from .. import (
     relation_integrity_validator,
 )
 from .._validators import _bundled_legal_ref_ids
+from ._support import write_concept_fragment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -82,13 +83,6 @@ short_description = "Regimen de estimacion objetiva."
 label = "modulos"
 term_status = "preferred"
 """
-
-
-def write_concept_fragment(tmp_path: Path, name: str, content: str) -> Path:
-    concepts = tmp_path / "concepts"
-    concepts.mkdir(exist_ok=True)
-    (concepts / name).write_text(content, encoding="utf-8")
-    return concepts
 
 
 def _handbook(tmp_path: Path, fragments: dict[str, str]) -> TerminologyHandbook:

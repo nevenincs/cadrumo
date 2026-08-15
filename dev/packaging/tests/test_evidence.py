@@ -16,14 +16,8 @@ from .._command import run_command
 from .._hashing import sha256_path
 from .._proof_ledger import record_proof, reset_proof_ledger
 from .._smoke_common import write_smoke_manifest
-from ..cohort_manifest import (
-    REQUIRED_ARTIFACT_KINDS,
-    BuildIdentity,
-    SourceIdentity,
-    create_manifest,
-    load_release_cohort,
-    write_manifest,
-)
+from ._release_cohort_support import release_cohort
+from ..cohort_manifest import load_release_cohort
 from ..evidence import (
     AcquisitionIdentity,
     ClientIdentity,
@@ -42,34 +36,6 @@ from ..evidence import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-
-def _release_cohort(root: Path):
-    root.mkdir()
-    artifacts = []
-    for index, (name, kind) in enumerate(sorted(REQUIRED_ARTIFACT_KINDS.items())):
-        path = root / "artifacts" / f"{name}.bin"
-        path.parent.mkdir(exist_ok=True)
-        path.write_bytes(f"{index}:{name}\n".encode())
-        artifacts.append((name, kind, path))
-    manifest = create_manifest(
-        root=root,
-        version="0.2.0",
-        source=SourceIdentity(commit="a" * 40, tag="v0.2.0"),
-        created_at=datetime.now(UTC),
-        builder=BuildIdentity(
-            implementation="dev.packaging.release_cohort",
-            format_version=1,
-            python=platform.python_version(),
-            uv="0.11.29",
-            platform=platform.system(),
-            architecture=platform.machine(),
-            build_constraints_sha256="b" * 64,
-        ),
-        artifacts=artifacts,
-    )
-    write_manifest(root, manifest)
-    return load_release_cohort(root)
 
 
 def _executed_transcript(tmp_path: Path) -> CommandTranscript:
@@ -99,7 +65,7 @@ def test_command_transcript_projects_canonical_result_with_independent_stream_or
 
 
 def _passing_evidence(tmp_path: Path) -> DistributionEvidence:
-    cohort = _release_cohort(tmp_path / "cohort")
+    cohort = release_cohort(tmp_path / "cohort")
     observed_at = datetime.now(UTC)
     return create_distribution_evidence(
         row_id="windows-x86-64-python",
