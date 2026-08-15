@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-15'
-body_hash: 'sha256:c51da0c35fb6c9ae76a4a22a188ed242d21913b1ecd9682e55e81625ad64df99'
+body_hash: 'sha256:47d8bc1d9f65c3e420813437c801280ce1e11c75f6e77a55c414f39e7e2cdf0b'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -210,19 +210,26 @@ The classes the name-keyed census cannot reach. Drift is scored by structural si
 - [x] `W09.P30.S123` - Migrate the under-adopted canonical locale and loader-directory fixture homes onto their existing owners rather than creating new ones; `src/cadrumo/domain/calculations/registry/tests`.
 - [x] `W09.P30.S124` - Sweep the corpus by meaning for reimplementations sharing neither name nor structure and record which could not have been reached by name or grep; `src/cadrumo, dev`.
 - [x] `W09.P30.S125` - Re-key the duplication gate on body rather than name so a renamed twin cannot sit outside its own comparison; `dev/quality`.
-- [ ] `W09.P30.S126` - Sweep the thirty-seven pre-provisioned-bucket isolated-backend fixtures onto the canonical factory after extending it with settings and profile override passthroughs; `src/cadrumo/tests/active_profile_isolated_backend_fixture.py, src/cadrumo/entrypoints/cli/tests`.
-- [ ] `W09.P30.S127` - Converge the two independently written synthetic text-layer PDF builders and the four differently-named twins onto the canonical fixture; `src/cadrumo/tests/pdf_fixtures.py, src/cadrumo/application/live/tests/_notification_document_support.py`.
+- [x] `W09.P30.S126` - Sweep the thirty-seven pre-provisioned-bucket isolated-backend fixtures onto the canonical factory after extending it with settings and profile override passthroughs; `src/cadrumo/tests/active_profile_isolated_backend_fixture.py, src/cadrumo/entrypoints/cli/tests`.
+- [x] `W09.P30.S127` - Converge the two independently written synthetic text-layer PDF builders and the four differently-named twins onto the canonical fixture; `src/cadrumo/tests/pdf_fixtures.py, src/cadrumo/application/live/tests/_notification_document_support.py`.
 - [x] `W09.P30.S128` - Fold the four differently-named review-package builders onto a path-returning sibling of the canonical bytes builder; `src/cadrumo/application/modelo/tests, src/cadrumo/entrypoints/cli/tests`.
 - [x] `W09.P30.S129` - Route the secure-object namespace registration mirror in the persistence package to an owner both test packages may import; `src/cadrumo/adapters/persistence/operations/tests`.
 - [x] `W09.P30.S130` - Consolidate the drifted release-cohort builders onto a deterministic clock and retire the wall-clock variant; `dev/packaging/tests/_release_cohort_support.py`.
-- [ ] `W09.P30.S131` - Rename the worked-example oracle reader to oracle_declared_figures so it stops sharing vocabulary with the manual-input allowlist that governs silent-blank casillas; `src/cadrumo/domain/calculations/registry/tests/_manual_oracle_support.py`.
-- [ ] `W09.P30.S132` - Converge the hand-spelled CLI runtime isolation fixture onto the taxonomy-derived canonical helper, closing a storage-path defect the canonical docstring records as already fixed elsewhere; `src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`.
+- [x] `W09.P30.S131` - Re-consolidate the worked-example oracle input reader after a concurrent edit deleted the shared function and pasted its body into three consumers, then rename it clear of the manual-input allowlist vocabulary; `src/cadrumo/domain/calculations/registry/tests/_manual_oracle_support.py`.
+- [x] `W09.P30.S132` - Converge the hand-spelled CLI runtime isolation fixture onto the taxonomy-derived canonical helper, closing a storage-path defect the canonical docstring records as already fixed elsewhere; `src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`.
 - [x] `W09.P30.S133` - Determine whether any production path rebuilds the transactions or invoices directory from the taxonomy rather than the resolved setting, which would make the drifted override a live defect rather than a self-consistent one; `src/cadrumo/core, src/cadrumo/application`.
 - [x] `W09.P30.S134` - Sweep every test HTTP server for the shutdown-close-join triad and close the socket and thread leaks that accumulate under parallel execution; `dev/docs/tests, src/cadrumo/adapters/outbound`.
 - [x] `W09.P30.S135` - Move the in-memory engine disposal in the hash-column-width test inside a finally so a failing assertion cannot skip it; `src/cadrumo/adapters/persistence/storage/sql/tests/test_hash_column_widths.py`.
-- [ ] `W09.P30.S136` - Close the live-write declaration helper still duplicated in the evaluation tree, or record the cross-tree import direction as the standing reason it cannot move; `dev/agent_eval/tests/test_confirmation_gate_golden.py`.
+- [x] `W09.P30.S136` - Close the live-write declaration helper still duplicated in the evaluation tree, or record the cross-tree import direction as the standing reason it cannot move; `dev/agent_eval/tests/test_confirmation_gate_golden.py`.
 - [x] `W09.P30.S137` - Sweep key providers and encrypted sessions for guaranteed teardown, the one resource class left unexamined; `src/cadrumo/adapters/persistence/storage`.
-- [ ] `W09.P30.S138` - Re-run the registry-tests failure-set diff from a quiesced tree so the consolidation pair is cleared on evidence rather than on zero-overlap reasoning; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `W09.P30.S138` - Re-run the registry-tests failure-set diff from a quiesced tree so the consolidation pair is cleared on evidence rather than on zero-overlap reasoning; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `W09.P30.S139` - Migrate the CLI-surface workflow tests off application-layer profile seeding onto the credential-registering door so the custody envelope opens under the configured passphrase; `src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`.
+- [x] `W09.P30.S140` - Record the fourth storage-plus-auth isolation composition in the isolated-backend cluster census so the cluster count reflects every known site; `src/cadrumo/entrypoints/cli/tests/_cli_surface_support.py`.
+- [x] `W09.P30.S141` - Treat a body-duplicate that closes over a same-named module constant as its own triage bucket, since the safe fix is to parameterise the constant rather than delete the duplicate; `dev/quality/helper_body_census.py`.
+- [x] `W09.P30.S142` - Delete the storage-root override that a nested call silently supersedes, so a reordered context tuple cannot start pointing at the wrong root; `src/cadrumo/entrypoints/cli/_config/tests/_isolated_storage_fixture.py`.
+- [x] `W09.P30.S143` - Rename the local isolation fixture that shadows the canonical one imported into the same module; `src/cadrumo/entrypoints/cli/tests/test_cli_workflow_verification.py`.
+- [x] `W09.P30.S144` - Converge the two remaining inline profile-isolation compositions onto the canonical factory, dropping a second occurrence of the superseded storage-root override for free; `src/cadrumo/entrypoints/cli/tests/_isolated_profile_storage_fixtures.py`.
+- [ ] `W09.P30.S145` - Determine whether any current door can still write an unnormalised regime value, since the retired wizard may have been the only path that exercised read-time normalisation; `src/cadrumo/application/wizard, src/cadrumo/domain/user_profile`.
 
 ## Parallelization
 
