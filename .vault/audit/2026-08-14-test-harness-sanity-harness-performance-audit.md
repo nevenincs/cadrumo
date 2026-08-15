@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:af394307d6cf9ccaf5a64812e459aa016a25c00b5b508246226bcb3c5ead9d4c'
+body_hash: 'sha256:9c2d402a3d97d98f8ded9ae0976d36bf3932ca9ab51e37902b687d5270d9349e'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1210,3 +1210,62 @@ Recorded with the reproduction so the choice is made deliberately rather than
 under time pressure mid-profile. Profiling runs in this campaign now pass an
 explicit private `--basetemp`, which is safe for a throwaway run precisely
 because nothing needs to retain its directories.
+
+## The largest lever in the campaign: KDF calibration re-measured per registration
+
+Profiling the slowest package-local test
+(`test_profile_selection_precedence_uses_explicit_flag_then_pointer`, 134.53s in
+the table and **127.29s in isolation**, so real work rather than contention)
+found the cost was not where the test looks. A cProfile of one profile
+registration:
+
+    19.14s  _register_profile
+    16.92s    register_profile_with_credentials
+    16.56s      create_profile_custody_registration_material
+    16.11s        calibrate_profile_kdf        <- 14 x _measure_profile_kdf
+
+`calibrate_profile_kdf` MEASURES the parameter grid on the host -- one
+supervised child process per warmup and per sample -- to pick the strongest KDF
+point inside the operator latency band. It then does it again for the next
+registration, on the same machine, for the same answer.
+
+### The repository had already written the escape, and the reasoning
+
+The seam exists: `cadrumo_profile_kdf_measure_calibration`. Its own comment
+inside `calibrate_profile_kdf` states the case exactly -- measuring is "the
+right price for an operator's one-off enrolment and the wrong one for a host
+that enrols constantly" -- and records that declining to measure adopts the
+SAME fixed point the function returns when the grid cannot be measured before
+its deadline, "a stronger point than the measured band's floor, so nothing
+about the wrap weakens".
+
+`src/cadrumo/tests/secure_sql.py` already takes that seam in three places. The
+shared CLI registration door, `register_cli_profile`, did not -- and it has
+**156 call sites across 62 modules**. The lever was not a new idea; it was an
+existing, documented, already-used decision that one door had missed.
+
+    one registration : 17.44s / 17.61s  ->  2.20s / 1.41s
+    custody module   : 239.79s          ->  155.81s
+
+with IDENTICAL failure sets by name (3 failed, 3 passed on both sides).
+
+### Why this is not a security weakening, checked rather than argued
+
+Three things were established before the change, not after:
+
+- The fallback is the same fixed point calibration itself falls back to on
+  deadline, and stronger than the measured band's floor. That is the shipped
+  function's own claim about its own fallback, not an assumption about it.
+- The calibration BEHAVIOUR is proven by
+  `custody/tests/test_kdf_supervision.py`, which drives `calibrate_profile_kdf`
+  directly and was confirmed never to reach it through this door. So no
+  calibration regression can hide behind the change; that gate still passes
+  17/17 after it.
+- Only the TEST door changed. The production path, and any test that wants real
+  measurement, is untouched.
+
+The count of 156 call sites is deliberately NOT reported as a time saving. It is
+a count, and this campaign has already recorded what happens when a repeat count
+is read as a cost. What is measured is the per-registration figure and one
+module; the suite-wide effect follows from those two, and will be visible in the
+next full profile rather than asserted here.
