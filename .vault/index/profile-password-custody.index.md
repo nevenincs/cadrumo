@@ -6,7 +6,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:8709a16254bf50bc2cbe5ab0e678ff99901c6861c5cec97b5246d649ad23d0f9'
+body_hash: 'sha256:1adc79133c2d4749663414f911243836bf0d5166ffbf57f30fe0e1c264114dfe'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -43,6 +43,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W04-P07-S117]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S120]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S124]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S126]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S19]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S28]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S32]]'
@@ -173,6 +174,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W04-P07-S117` - Have Terra XHigh remove the bucket manifest reader now that the retirement is ruled, taking its per-bucket session-window override with it
 - `2026-08-13-profile-password-custody-W04-P07-S120` - Have Terra XHigh repair the rotation crash-window test module broken at HEAD, which imports a keystore filename constant whose definition the deletion removed and which it is now the only referent of, this being a collection error that can abort a whole run rather than a single failing test
 - `2026-08-13-profile-password-custody-W04-P07-S124` - Have Terra XHigh reconstruct the rotation crash-window coverage against the two surviving stores after the module was deleted whole to unblock collection
+- `2026-08-13-profile-password-custody-W04-P07-S126` - Have Sol Medium enrol the custody capsule formats in the governed persisted-format inventory
 - `2026-08-13-profile-password-custody-W04-P07-S19` - Have Terra XHigh dissolve the forwarding port package in five ordered parts
 - `2026-08-13-profile-password-custody-W04-P07-S28` - Have Terra XHigh relocate the surviving per-profile session, wipe and identity residue into the custody package that the accepted decision names as sole authority, in one atomic move, so no surviving primitive is left behind a shared-master name
 - `2026-08-13-profile-password-custody-W04-P07-S39` - Have Terra XHigh delete the re-export bridge module in the custody package and repoint its sole consumer at the two modules it forwards to, in one commit
