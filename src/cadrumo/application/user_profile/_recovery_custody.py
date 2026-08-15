@@ -43,6 +43,7 @@ from secrets import token_bytes
 from typing import TYPE_CHECKING
 
 from ..profile_custody import (
+    ProfileRecoveryArtifactWarning,
     create_profile_recovery_enrollment_material,
     prove_profile_recovery_artifact,
     unlock_profile_custody_password,
@@ -96,7 +97,7 @@ class ProfileRecoveryArtifactReceipt:
     dek_epoch: str
     artifact_digest: str
     target: Path
-    warnings: tuple[str, ...]
+    warnings: tuple[ProfileRecoveryArtifactWarning, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -173,7 +174,7 @@ def export_profile_recovery_artifact(
         dek_epoch=receipt.artifact.dek_epoch,
         artifact_digest=receipt.artifact.self_digest,
         target=receipt.target,
-        warnings=tuple(warning.value for warning in receipt.warnings),
+        warnings=receipt.warnings,
     )
 
 
