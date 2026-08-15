@@ -1522,8 +1522,7 @@ def _named_by_any_string(path: Path, mod: str, rel: str, string_pool: Iterable[s
     suffix = f".{path.stem}"
     filename = path.name
     return any(
-        text == mod or text == rel or text == filename or text.endswith(suffix) or text.endswith(f"/{filename}")
-        for text in string_pool
+        text in (mod, rel, filename) or text.endswith(suffix) or text.endswith(f"/{filename}") for text in string_pool
     )
 
 
@@ -1533,6 +1532,7 @@ def find_orphaned_modules(
     reexport_paths: Iterable[str],
     *,
     repo_root: Path = REPO_ROOT,
+    src_root: Path = SRC_ROOT,
 ) -> list[OrphanedModule]:
     """Return every module under the package that nothing reaches.
 
@@ -1548,6 +1548,8 @@ def find_orphaned_modules(
         reexport_paths: Repo-relative paths of the pure-re-export modules
             family 2 found, used to mark the bridge subset.
         repo_root: Root the reported paths are relative to.
+        src_root: Source root the candidates' dotted names are taken relative
+            to; injectable so a caller can scan a synthetic tree.
 
     A module counts as reached by a static import, by a dynamic
     ``importlib.import_module`` target, or by ANY string constant naming it --
@@ -1573,7 +1575,7 @@ def find_orphaned_modules(
     for path in package_files:
         if path.name in _NON_IMPORTED_REACH_FILENAMES or path.name.startswith("test_"):
             continue
-        mod = module_name_for(path)
+        mod = module_name_for(path, src_root=src_root)
         if mod in reached:
             continue
         rel = str(path.relative_to(repo_root)).replace("\\", "/")

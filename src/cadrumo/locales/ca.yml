@@ -6559,9 +6559,11 @@ errors:
       l'aplicació.
     auth_storage_master_key_material_missing: No existeix material de clau mestra.
       L'emmagatzematge segur encara no està aprovisionat.
-    auth_storage_master_key_passphrase_mismatch: La contrasenya no desembolcalla la
-      clau mestra. Torna a introduir-la; si l'has oblidada, executa aeat config recover
-      amb el teu codi de recuperació de 24 paraules.
+    auth_storage_master_key_passphrase_mismatch: 'La contrasenya no desembolcalla
+      la clau mestra. Torna a introduir-la i comprova el proveïdor d''emmagatzematge
+      segur seleccionat. Una contrasenya oblidada no es pot restablir: la clau mestra
+      només es pot recuperar a partir d''una còpia de seguretat de la teva carpeta
+      d''emmagatzematge segur, feta amb la contrasenya que la desbloqueja.'
     auth_storage_master_key_unavailable: No s'ha pogut obtenir la clau mestra de cap
       proveïdor. Comprova l'anell de claus o la frase de contrasenya de la còpia de
       seguretat.
@@ -6746,7 +6748,6 @@ errors:
       de transaccions.
     error_financial_usage_ratios_usage_ratio: S'ha produït un error en els percentatges
       d'ús.
-    error_fixture_provisioning: No s'han pogut preparar les dades de prova.
     error_flow: El flux guiat ha fallat.
     error_invoice_link_inconsistency: L'enllaç ha deixat la factura i la transacció
       dessincronitzades. Revisa tots dos catàlegs manualment.
@@ -6955,7 +6956,6 @@ errors:
       i s'ha exhaurit el pressupost de reintents.
     fail_manuals_manual_parse: Un registre de manual no ha superat la validació de
       l'esquema.
-    fail_mcp_launch: No s'ha pogut iniciar el servidor MCP.
     fail_modelo_calculation_revision_persistence: No s'ha pogut desar o llegir el
       catàleg de revisions de càlcul.
     fail_modelo_filing_record_persistence: No s'ha pogut desar o llegir el catàleg

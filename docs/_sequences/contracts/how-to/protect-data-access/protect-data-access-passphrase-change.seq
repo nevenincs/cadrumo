@@ -1,3 +1,0 @@
-@step Change the passphrase that opens the master key.
-@static aeat config passphrase change
-@blocked interactive-tty Refuses with 'a secret is required but no interactive terminal is available'.

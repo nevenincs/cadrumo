@@ -3,13 +3,23 @@
 from __future__ import annotations
 
 import base64
+import binascii
 from typing import Final
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
-from ...adapters.persistence.storage import ARGON2_VERSION
+from ...adapters.persistence.storage import ARGON2_VERSION, KDF_SALT_BYTES
 from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record, encrypt_record
-from ...adapters.persistence.storage.master_key import KdfParams, derive_kek_with_params
+from ...adapters.persistence.storage.master_key import (
+    MAX_MEMORY_COST_KIB,
+    MAX_PARALLELISM,
+    MAX_TIME_COST,
+    MIN_MEMORY_COST_KIB,
+    MIN_PARALLELISM,
+    MIN_TIME_COST,
+    KdfParams,
+    derive_kek_with_params,
+)
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING
 from ...domain.user_profile import UserProfilePortableExport, UserProfileValidationError
@@ -40,6 +50,24 @@ class EncryptedProfileBundleExport(BaseModel):
     the key hydrates AS the accepted value and passes a check the writer never
     actually made. Every field on this record is stamped explicitly by
     :func:`encrypt_profile_bundle_for_passphrase`.
+
+    The three Argon2 cost axes and the salt length carry the same window as
+    :class:`KdfParams`, the record the writer stamps them from, read from that
+    declaration rather than restated. They were bare integers and a bare
+    string, which made this the one storage KDF record that could describe an
+    arbitrarily weak derivation: eight kibibytes, one iteration, a one-byte
+    salt. The writer never emitted such a set, so nothing this build wrote was
+    weak -- what the looseness cost was that a re-exported envelope could
+    circulate as an application-grade encrypted bundle while being
+    brute-forceable, and that a structurally invalid salt was indistinguishable
+    at the boundary from a wrong passphrase, sending an operator to recover a
+    passphrase that was never wrong.
+
+    Reading the window from :class:`KdfParams` rather than restating it is what
+    keeps the bound this record VALIDATES against from drifting away from the
+    parameters the writer STAMPS: a cost bump on the enrolment record moves
+    both together, and the writer's own output stays inside the bound by
+    construction rather than by two numbers happening to agree.
     """
 
     model_config = _STRICT_FROZEN
@@ -49,11 +77,23 @@ class EncryptedProfileBundleExport(BaseModel):
     payload_schema_version: int
     kdf: str = Field(min_length=1)
     kdf_version: int
-    memory_cost: int
-    time_cost: int
-    parallelism: int
+    memory_cost: int = Field(ge=MIN_MEMORY_COST_KIB, le=MAX_MEMORY_COST_KIB)
+    time_cost: int = Field(ge=MIN_TIME_COST, le=MAX_TIME_COST)
+    parallelism: int = Field(ge=MIN_PARALLELISM, le=MAX_PARALLELISM)
     salt_b64: str
     ciphertext_b64: str
+
+    @field_validator("salt_b64")
+    @classmethod
+    def _check_salt_b64(cls, value: str) -> str:
+        """Refuse a salt that is not canonical base64 of exactly the KDF length."""
+        try:
+            decoded = base64.b64decode(value.encode("ascii"), validate=True)
+        except (UnicodeEncodeError, binascii.Error) as exc:
+            raise ValueError("salt_b64 must be canonical base64") from exc
+        if len(decoded) != KDF_SALT_BYTES:
+            raise ValueError(f"salt_b64 must encode exactly {KDF_SALT_BYTES} bytes")
+        return value
 
 
 # Encrypted envelopes are user-profile input, so preserve the registered

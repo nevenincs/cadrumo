@@ -29,7 +29,7 @@ from ._events import (
     OperationReconciliationEvent,
     OperationTerminalEvent,
 )
-from ._execution_context import DefinitionBoundContext
+from ._execution_context import DefinitionBoundContext, OperationDeclarationError
 from ._executor import OperationResumableExecutor
 from ._interactions import (
     OperationApplyResponse,
@@ -213,6 +213,8 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 context=context,
                 executor=executor.execute(request, context),
             )
+        except OperationDeclarationError:
+            raise
         except Exception as error:
             return await self._settle_executor_failure(context.snapshot, error)
         return context.snapshot
@@ -528,7 +530,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             raise ValueError("terminal receipt does not match successor revision")
         definition = self._registry.lookup(snapshot.identity.definition_id)
         if receipt.effect not in definition.capabilities.permitted_effects:
-            raise ValueError("terminal receipt effect is not declared by its definition")
+            raise OperationDeclarationError("terminal receipt effect is not declared by its definition")
         if (
             receipt.condition is not OperationTerminalCondition.INTERRUPTED
             or snapshot.identity.operation_id in self._executor_tasks
@@ -754,6 +756,8 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 context=context,
                 executor=resumable_executor.resume(request, checkpoint, context),
             )
+        except OperationDeclarationError:
+            raise
         except Exception as error:
             return await self._settle_executor_failure(context.snapshot, error)
         return context.snapshot

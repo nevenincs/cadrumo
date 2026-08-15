@@ -6,7 +6,6 @@ data_type = "year"
 semantic_role = "filing_year"
 required = true
 input_kind = "informational"
-export_refs = ["modelo-308-p01-ejercicio"]
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019"]
 
@@ -18,7 +17,6 @@ data_type = "text"
 semantic_role = "tipo_solicitud"
 required = true
 input_kind = "informational"
-export_refs = ["modelo-308-p01-tipo-solicitud"]
 legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "ley-37-1992:art-161"]
 source_refs = ["aeat-dr-308-2019"]
 

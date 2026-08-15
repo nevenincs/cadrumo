@@ -398,16 +398,20 @@ def test_derived_family_membership_equals_the_independently_walked_tree() -> Non
     set for some families would otherwise be invisible. The walk here is the
     raw one, independent of the reconciliation's own path projection.
     """
-    raw_terminals, raw_callback_paths, _ = _raw_live_click_surface()
+    raw_terminals, _, _ = _raw_live_click_surface()
     report = _live_reconciliation()
 
     families = get_operator_surface_contract().command_families
     assert families, "the contract declared no families, so this gate would check nothing"
 
-    # Callback paths are dispatch surfaces that are not terminal children, so a
-    # terminals-only denominator understates a family: `config repair` and
-    # `app ledger participation` are both reachable verbs with no leaf entry.
-    dispatch_paths = frozenset(raw_terminals) | raw_callback_paths
+    # A family's verbs are its terminal commands plus the callbacks carrying
+    # their OWN schema key. Both corrections matter and pull opposite ways: a
+    # terminals-only denominator misses `config repair` and `app ledger
+    # participation`, which dispatch from a callback with no leaf entry, while
+    # an all-callbacks denominator adds `app diagnostics` (help-only, emits no
+    # envelope) and `config profile descendiente` (an alias reusing another
+    # leaf's result, so not a command in its own right).
+    dispatch_paths = frozenset(raw_terminals) | frozenset(CALLBACK_SCHEMA_KEY_BY_CLI_PATH)
     mismatches: list[str] = []
     for family in families:
         identity = (family.root.value, family.child)

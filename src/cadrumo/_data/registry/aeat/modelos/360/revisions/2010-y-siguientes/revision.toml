@@ -16,3 +16,16 @@ source_refs = [
     "boe-modelo-360-2010-form",
 ]
 
+
+[revisions."2010-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2010-y-siguientes' of modelo 360 has no strictly-earlier sibling revision of this modelo (valid_from 2010-04-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+legal_refs = [
+    "ley-37-1992:art-117-bis",
+    "orden-eha-789-2010:art-1",
+    "orden-eha-789-2010:art-4",
+]
+source_refs = [
+    "aeat-dr-360-2010",
+    "aeat-modelo-360-procedure",
+    "boe-modelo-360-2010-form",
+]

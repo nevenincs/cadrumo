@@ -28,6 +28,16 @@ from ._models import OperationId
 from ._registry import OperationRegistry
 
 
+class OperationDeclarationError(ValueError):
+    """One executor claim the operation definition does not declare.
+
+    A declaration refusal is a definition-contract breach detected by the
+    supervisor before any state mutation, not an executor runtime failure, so
+    it reaches its caller instead of settling the operation into an opaque
+    terminal diagnostic.
+    """
+
+
 class _Cancellation:
     def __init__(
         self,
@@ -132,7 +142,7 @@ class _DefinitionBoundEvents:
     async def phase(self, phase_code: OperationEventCode) -> None:
         definition = self._context.registry.lookup(self._context.identity.definition_id)
         if phase_code not in definition.phase_codes:
-            raise ValueError("operation phase is not declared by its definition")
+            raise OperationDeclarationError("operation phase is not declared by its definition")
         event = OperationPhaseEvent(
             identity=self._context.identity,
             revision=0,
@@ -177,7 +187,7 @@ class _DefinitionBoundEvents:
     async def effect(self, effect: OperationEffect) -> None:
         definition = self._context.registry.lookup(self._context.identity.definition_id)
         if effect not in definition.capabilities.permitted_effects:
-            raise ValueError("operation effect is not declared by its definition")
+            raise OperationDeclarationError("operation effect is not declared by its definition")
         event = OperationEffectEvent(
             identity=self._context.identity,
             revision=0,
@@ -218,7 +228,7 @@ class _DefinitionBoundCleanup:
     def own(self, resource: AsyncCloseable, *, family: OperationOwnedResource) -> None:
         definition = self._context.registry.lookup(self._context.identity.definition_id)
         if family not in definition.capabilities.owned_resources:
-            raise ValueError("operation resource family is not declared by its definition")
+            raise OperationDeclarationError("operation resource family is not declared by its definition")
         self._context.resources.setdefault(self._context.identity.operation_id, []).append(resource)
 
 
@@ -229,7 +239,7 @@ class _DefinitionBoundInteractions:
     async def request(self, pending: OperationPendingInteraction) -> None:
         definition = self._context.registry.lookup(self._context.identity.definition_id)
         if pending.request.kind not in definition.interaction_kinds:
-            raise ValueError("operation interaction kind is not declared by its definition")
+            raise OperationDeclarationError("operation interaction kind is not declared by its definition")
         if pending.request.identity != self._context.identity:
             raise ValueError("operation interaction identity does not match executor context")
         successor_revision = self._context.snapshot.revision + 1
@@ -250,4 +260,4 @@ class _DefinitionBoundInteractions:
         )
 
 
-__all__ = ["DefinitionBoundContext"]
+__all__ = ["DefinitionBoundContext", "OperationDeclarationError"]

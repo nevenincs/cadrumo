@@ -6613,9 +6613,11 @@ errors:
       la aplicación.
     auth_storage_master_key_material_missing: No existe material de clave maestra.
       El almacenamiento seguro aún no está aprovisionado.
-    auth_storage_master_key_passphrase_mismatch: La frase de contraseña no desenvuelve
-      la clave maestra. Vuelve a introducirla; si la has olvidado, ejecuta aeat config
-      recover con tu código de recuperación de 24 palabras.
+    auth_storage_master_key_passphrase_mismatch: 'La frase de contraseña no desenvuelve
+      la clave maestra. Vuelve a introducirla y comprueba el proveedor de almacenamiento
+      seguro seleccionado. Una contraseña olvidada no se puede restablecer: la clave
+      maestra solo se puede recuperar a partir de una copia de seguridad de tu carpeta
+      de almacenamiento seguro, hecha con la contraseña que la desbloquea.'
     auth_storage_master_key_unavailable: No se pudo obtener la clave maestra de ningún
       proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
     clave_movil_identity_checksum: El identificador de Cl@ve Móvil tiene una forma
@@ -6798,7 +6800,6 @@ errors:
       transacciones.
     error_financial_usage_ratios_usage_ratio: Se produjo un error en los porcentajes
       de uso.
-    error_fixture_provisioning: No se pudieron preparar los datos de prueba.
     error_flow: El flujo guiado falló.
     error_invoice_link_inconsistency: El enlace entre catálogos dejó la factura y
       la transacción desincronizadas. Revisa ambos catálogos manualmente.
@@ -7005,7 +7006,6 @@ errors:
     fail_llm_transient_transport: La petición no llegó al motor del modelo de lenguaje
       y se agotó el presupuesto de reintentos.
     fail_manuals_manual_parse: Un registro de manual no superó la validación del esquema.
-    fail_mcp_launch: No se pudo iniciar el servidor MCP.
     fail_modelo_calculation_revision_persistence: No se pudo guardar o leer el catálogo
       de revisiones de cálculo.
     fail_modelo_filing_record_persistence: No se pudo guardar o leer el catálogo de

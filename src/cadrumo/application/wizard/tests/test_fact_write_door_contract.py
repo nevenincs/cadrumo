@@ -91,9 +91,12 @@ def _declared_door(call: ast.Call) -> str | None:
         if keyword.arg != "door":
             continue
         value = keyword.value
-        if isinstance(value, ast.Attribute) and isinstance(value.value, ast.Name):
-            if value.value.id == WizardFactWriteDoor.__name__:
-                return value.attr
+        if (
+            isinstance(value, ast.Attribute)
+            and isinstance(value.value, ast.Name)
+            and value.value.id == WizardFactWriteDoor.__name__
+        ):
+            return value.attr
         return None
     return None
 
@@ -144,4 +147,6 @@ def test_every_declared_door_is_reached_by_a_production_site() -> None:
         f"these door members reach no production site: {sorted(declared - reached)}. Either the "
         "surface regressed to an untyped event stamp, or the member is dead and should go."
     )
-    assert reached - declared == set(), f"these sites name doors the enum does not declare: {sorted(reached - declared)}"
+    assert reached - declared == set(), (
+        f"these sites name doors the enum does not declare: {sorted(reached - declared)}"
+    )

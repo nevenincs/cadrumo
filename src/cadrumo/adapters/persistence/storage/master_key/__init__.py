@@ -62,7 +62,16 @@ from ._active_session import (
 from ._bucket_session import BucketSession
 from ._errors import MasterKeyReentrantError
 from ._idle_timeout import evaluate_idle
-from ._kdf_params import ARGON2_VERSION, KdfParams
+from ._kdf_params import (
+    ARGON2_VERSION,
+    MAX_MEMORY_COST_KIB,
+    MAX_PARALLELISM,
+    MAX_TIME_COST,
+    MIN_MEMORY_COST_KIB,
+    MIN_PARALLELISM,
+    MIN_TIME_COST,
+    KdfParams,
+)
 from ._login_throttle import (
     LoginThrottleState,
     ThrottleEvaluation,
@@ -109,6 +118,12 @@ __all__ = [
     "ARGON2_PARALLELISM",
     "ARGON2_TIME_COST",
     "ARGON2_VERSION",
+    "MAX_MEMORY_COST_KIB",
+    "MAX_PARALLELISM",
+    "MAX_TIME_COST",
+    "MIN_MEMORY_COST_KIB",
+    "MIN_PARALLELISM",
+    "MIN_TIME_COST",
     "BucketSession",
     "FileFallbackMasterKeyProvider",
     "KdfParams",

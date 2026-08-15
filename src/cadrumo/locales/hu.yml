@@ -6471,9 +6471,11 @@ errors:
       használ, amelyet ez a verzió nem támogat. Frissítse az alkalmazást.
     auth_storage_master_key_material_missing: Nincs főkulcs-anyag. A biztonságos tároló
       még nincs kiosztva.
-    auth_storage_master_key_passphrase_mismatch: A jelmondat nem oldja fel a mesterkulcsot.
-      Add meg újra; ha elfelejtetted, futtasd az aeat config recover parancsot a 24
-      szavas helyreállítási kódoddal.
+    auth_storage_master_key_passphrase_mismatch: 'A jelmondat nem oldja fel a mesterkulcsot.
+      Add meg újra, és ellenőrizd a kiválasztott biztonságos tárolási szolgáltatót.
+      Az elfelejtett jelmondat nem állítható vissza: a mesterkulcs csak a biztonságos
+      tároló mappájának a feloldó jelmondattal készített biztonsági mentéséből állítható
+      helyre.'
     auth_storage_master_key_unavailable: A főkulcsot egyetlen szolgáltatótól sem sikerült
       beszerezni. Ellenőrizze a kulcstárat vagy a fájl-tartalék jelmondat.
     clave_movil_identity_checksum: A Cl@ve Móvil azonosító alakja érvényes, de az
@@ -6647,7 +6649,6 @@ errors:
       deklarációi hiányoznak vagy érvénytelenek.
     error_financial_transactions_transaction: Tranzakció-katalógus hiba történt.
     error_financial_usage_ratios_usage_ratio: Használati arány hiba történt.
-    error_fixture_provisioning: A tesztfixture-öket nem sikerült kiosztani.
     error_flow: A vezetett folyamat hibára futott.
     error_invoice_link_inconsistency: A kapcsolás a számla- és tranzakció-katalógusokat
       szinkronon kívülre hozta. Egyeztesse manuálisan mindkét katalógust.
@@ -6831,7 +6832,6 @@ errors:
     fail_llm_transient_transport: A kérés nem jutott el a nyelvi modell futtatókörnyezetéhez,
       és az újrapróbálkozási keret elfogyott.
     fail_manuals_manual_parse: Egy kézikönyv-rekord nem ment át a sémaérvényesítésen.
-    fail_mcp_launch: Az MCP-kiszolgálót nem sikerült elindítani.
     fail_modelo_calculation_revision_persistence: A számítás-revízió katalógust nem
       sikerült menteni vagy betölteni.
     fail_modelo_filing_record_persistence: A benyújtás-rekord katalógust nem sikerült

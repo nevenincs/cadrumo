@@ -6150,9 +6150,10 @@ errors:
       version this build does not support. Update the application.
     auth_storage_master_key_material_missing: No master-key material exists. The secure
       store has not been provisioned yet.
-    auth_storage_master_key_passphrase_mismatch: The passphrase does not unwrap the
-      master key. Re-enter it; if you have forgotten it, run aeat config recover with
-      your 24-word recovery code.
+    auth_storage_master_key_passphrase_mismatch: 'The passphrase does not unwrap the
+      master key. Re-enter it and check the selected secure-storage backend. A forgotten
+      passphrase cannot be reset: the master key is recoverable only from a backup
+      of your secure-storage folder, taken under the passphrase that unlocks it.'
     auth_storage_master_key_unavailable: The master key could not be acquired from
       any provider. Check the keychain or the file-fallback passphrase.
     clave_movil_identity_checksum: The Cl@ve Móvil identifier has a valid shape but
@@ -6321,7 +6322,6 @@ errors:
       missing or carries an invalid corpus attribute.
     error_financial_transactions_transaction: A transaction-catalogue error occurred.
     error_financial_usage_ratios_usage_ratio: A usage-ratio error occurred.
-    error_fixture_provisioning: The test fixtures could not be provisioned.
     error_flow: The guided flow failed.
     error_invoice_link_inconsistency: The link left the invoice and transaction catalogues
       out of sync. Reconcile both catalogues manually.
@@ -6504,7 +6504,6 @@ errors:
     fail_llm_transient_transport: The request did not reach the language-model runtime
       and the retry budget was exhausted.
     fail_manuals_manual_parse: A manual record failed schema validation.
-    fail_mcp_launch: The MCP server could not be launched.
     fail_modelo_calculation_revision_persistence: The calculation-revision catalogue
       could not be saved or loaded.
     fail_modelo_filing_record_persistence: The filing-record catalogue could not be

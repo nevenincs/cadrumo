@@ -21,3 +21,21 @@ source_refs = [
     "boe-modelo-202-base-order",
     "boe-modelo-202-2018-amendment",
 ]
+
+
+[revisions."2019-2022".family_dispositions.casilla_continuidad_evolutions]
+reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2019-2022' of modelo 202 has no strictly-earlier sibling revision of this modelo (valid_from 2019-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+legal_refs = [
+    "ley-27-2014:art-40",
+    "ley-27-2014:art-29",
+    "ley-27-2014:art-30",
+    "ley-27-2014:art-105",
+    "orden-hfp-227-2017:art-1",
+    "orden-hac-941-2018:art-primero-5-anexo-i",
+]
+source_refs = [
+    "aeat-dr-202-2019",
+    "aeat-modelo-202-instructions-2018-2022",
+    "boe-modelo-202-base-order",
+    "boe-modelo-202-2018-amendment",
+]

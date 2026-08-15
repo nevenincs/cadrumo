@@ -36,3 +36,57 @@ source_refs = [
     "aeat-modelo-720-procedure",
     "boe-modelo-720-2013-form",
 ]
+
+[revisions."2013-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2013-y-siguientes' of modelo 720 has no strictly-earlier sibling revision of this modelo (valid_from 2012-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-bis",
+    "rd-1065-2007:art-42-ter",
+    "rd-1065-2007:art-54-bis",
+    "orden-hap-72-2013:art-1",
+    "orden-hap-72-2013:art-2",
+    "orden-hap-72-2013:art-7",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-720",
+    "aeat-modelo-720-procedure",
+    "boe-modelo-720-2013-form",
+]
+
+[revisions."2013-y-siguientes".family_dispositions.projection_endpoints]
+reason = "FilingProjectionRef (cadrumo.core) is a closed discriminated union of exactly seven projection_kind members, all prefixed m303_ and used exclusively by modelo 303's engine-computed IVA facts; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming modelo 720's own casillas can validate. Modelo 720 is not modelo 303, so the projection_endpoints family cannot be populated by construction. This revision's own export_layouts already demonstrate the mechanism that serves its repeating rows: at least one authored ExportRecordDefinition declares repeat == \"binding_rows\", materializing repeating rows from binding values rather than from a projection_endpoints declaration."
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-bis",
+    "rd-1065-2007:art-42-ter",
+    "rd-1065-2007:art-54-bis",
+    "orden-hap-72-2013:art-1",
+    "orden-hap-72-2013:art-2",
+    "orden-hap-72-2013:art-7",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-720",
+    "aeat-modelo-720-procedure",
+    "boe-modelo-720-2013-form",
+]
+
+[revisions."2013-y-siguientes".family_dispositions.relations]
+reason = "Modelo 720 declares calculation_class = \"informative\". validate_informative_class_invariant hard-refuses any revision of an informative-class modelo that declares a non-empty relations family -- cross-model relations feed a filing-grade calculation this modelo does not perform. The relations family cannot be populated for this modelo by registry construction."
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-bis",
+    "rd-1065-2007:art-42-ter",
+    "rd-1065-2007:art-54-bis",
+    "orden-hap-72-2013:art-1",
+    "orden-hap-72-2013:art-2",
+    "orden-hap-72-2013:art-7",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-720",
+    "aeat-modelo-720-procedure",
+    "boe-modelo-720-2013-form",
+]
