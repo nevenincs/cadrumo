@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:d9cff3564c74b91fbb9b6977b44b19dc31c5b034c536cdfd47a172b5011f14c2'
+body_hash: 'sha256:af394307d6cf9ccaf5a64812e459aa016a25c00b5b508246226bcb3c5ead9d4c'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1159,3 +1159,54 @@ and the tax-id determinism pair.
 under `--dist=loadfile` different modules land on different workers, so there is
 no shared process to memoise into. Cross-module sharing here would pay off only
 when the scheduler happened to co-locate them.
+
+## A completed run destroyed at teardown by the SHARED pytest temp root
+
+The package-local slice (`src/cadrumo` minus `src/cadrumo/tests`, ~24k tests)
+ran to **100%** with **zero worker deaths** -- the fail-closed policy from the
+previous round held across the whole slice -- and then lost its entire report:
+
+    File "_pytest/pathlib.py", line 371, in cleanup_numbered_dir
+      cleanup_dead_symlinks(root)
+    File "_pytest/pathlib.py", line 356, in cleanup_dead_symlinks
+      if not left_dir.resolve().exists():
+    PermissionError: [WinError 5] Access is denied:
+      'C:\Users\hello\AppData\Local\Temp\pytest-of-hello\pytest-current'
+
+Every test had executed. The durations table and the pass/fail summary were
+never printed, because the exception escaped the session finalizer. Roughly
+eighty minutes of work produced no readable result.
+
+### Why it happens here specifically
+
+`pytest-of-hello` is a per-USER temp root, not a per-session one, and several
+pytest sessions run concurrently on this box at all times. At teardown pytest
+walks that shared root and stats `pytest-current`, a symlink each session
+replaces as it starts. When a peer session swaps it mid-stat, Windows answers
+Access Denied rather than "missing", and the reaper raises instead of skipping.
+
+This is the same FAMILY as the xdist worker death fixed above: not a test
+failing, but the harness's own lifecycle handling discarding a run that had
+already succeeded. The failure lands at the last possible moment, which is what
+makes it expensive -- the cost is the whole run, every time.
+
+The repository already reasons about this concurrency at the OTHER end. Its
+numbered-dir reaper exists precisely because "several sessions may run
+concurrently ... each of them runs this reaper at its own startup", and it is
+careful to spare a running session's directory. Startup is owned and guarded;
+teardown is still pytest's own and unguarded.
+
+### Not fixed here, deliberately
+
+The teardown path is inside `_pytest.pathlib`, reached through a session
+finalizer. Making it tolerant means either patching a private pytest internal
+from `conftest.py`, or moving every session to a private `--basetemp` -- which
+would sidestep the collision but also opt out of the numbered-dir retention that
+keeps this box's temp from filling (39.1 GB was measured once, and is why the
+retention policy exists). Both are harness-lifecycle decisions with a blast
+radius beyond this campaign, and the second trades one disk hazard for another.
+
+Recorded with the reproduction so the choice is made deliberately rather than
+under time pressure mid-profile. Profiling runs in this campaign now pass an
+explicit private `--basetemp`, which is safe for a throwaway run precisely
+because nothing needs to retain its directories.
