@@ -4,8 +4,8 @@ Scores whether an OBSERVED trajectory confirmed the active taxpayer identity bef
 every mutation, and RE-confirmed after a profile switch - the Erik/Erika hazard the
 block-first-mutation gate exists to close. The dimension replays the REAL
 ``identity_gate_refusal`` decision over a hand-constructed :class:`LiveTrajectory`
-(the injection point: this test imports the gate from the ``entrypoints.mcp`` facade
-and hands it to the SDK-independent scorer, which never imports ``entrypoints.mcp``),
+(the injection point: this test imports the gate from the ``cadrumo_harness.mcp`` facade
+and hands it to the SDK-independent scorer, which never imports ``cadrumo_harness.mcp``),
 so it scores the real gate, never a re-implementation.
 
 No mocks: every trajectory is built from the real ``LiveTrajectory`` /
@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.operator_surface import command_classification
-from cadrumo.entrypoints.mcp import (
+from cadrumo_harness.mcp import (
     IDENTITY_READ_CONSOLE_TOOLS,
     SessionIdentityState,
     identity_gate_refusal,

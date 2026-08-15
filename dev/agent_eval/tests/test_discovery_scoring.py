@@ -11,7 +11,7 @@ policy and asserted directly.
 
 The advertised-tool counts are measured from the live descriptor set via the public
 ``build_tool_descriptors`` facade; the CORE orientation predicate (the ``contract``
-verb plus the ``overview.*`` family) mirrors ``entrypoints.mcp._surface`` and is
+verb plus the ``overview.*`` family) mirrors ``cadrumo_harness.mcp._surface`` and is
 reproduced locally rather than imported to keep this test off the cross-package
 private-import ratchet. Every trajectory is hand-constructed from the real
 ``LiveTrajectory`` / ``LiveToolCallRecord`` models - no mocks of the scoring code
@@ -25,7 +25,7 @@ from typing import TypedDict, Unpack
 
 import pytest
 
-from cadrumo.entrypoints.mcp import build_tool_descriptors
+from cadrumo_harness.mcp import build_tool_descriptors
 
 from .. import (
     LiveToolCallRecord,
@@ -54,13 +54,13 @@ _TARGET = "modelo.work.calculate"
 # The always-on advertised tools that are NOT per-verb descriptors: the
 # `harness.load` floor (1), the two grounding tools (2), and the search/execute/
 # toolsets meta trio (3). The CORE and FULL advertised totals both add this
-# constant to their per-verb slice (mirrors `entrypoints.mcp._server`'s list_tools
+# constant to their per-verb slice (mirrors `cadrumo_harness.mcp._server`'s list_tools
 # assembly: `[floor_tool, *grounding_tools, *advertised, *meta_tools]`).
 _ALWAYS_ON_NON_VERB_TOOLS = 1 + 2 + 3
 
 
 def _is_orientation(command_key: str) -> bool:
-    # Mirrors `entrypoints.mcp._surface.is_orientation_command`: the `contract`
+    # Mirrors `cadrumo_harness.mcp._surface.is_orientation_command`: the `contract`
     # capability verb plus the `overview.*` obligation-derivation family.
     return command_key == "contract" or command_key.startswith("overview.")
 

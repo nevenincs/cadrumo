@@ -2,9 +2,9 @@
 
 Captures one real scripted-persona session against the real ``cadrumo-mcp`` server
 over stdio, then scores trajectories with the REAL faithfulness check injected
-from ``entrypoints.mcp`` and the live-write / handoff leaf sets injected from
+from ``cadrumo_harness.mcp`` and the live-write / handoff leaf sets injected from
 their single ``_hitl`` declarations - the hexagonal injection pattern the scorer
-mandates (this package never imports ``entrypoints.mcp``; the test, which may,
+mandates (this package never imports ``cadrumo_harness.mcp``; the test, which may,
 supplies the callable and the data). The scorer's semantics are exercised over
 constructed trajectories fed to the real scorer - real judging logic, test-data
 inputs, no mocks.
@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.entrypoints.mcp import faithfulness_check
+from cadrumo_harness.mcp import faithfulness_check
 
 from .. import (
     GoldenScenario,

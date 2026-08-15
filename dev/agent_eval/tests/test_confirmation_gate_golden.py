@@ -8,7 +8,7 @@ of the defense-in-depth against that risk (the CLI's own ``--yes`` /
 write-policy / ``LiveSubmitForbiddenError`` rails are the deterministic
 backstop beneath it).
 
-``src/cadrumo/entrypoints/mcp/tests/test_hitl_and_live_write.py`` already proves the
+``src/cadrumo-harness/src/cadrumo_harness/mcp/tests/test_hitl_and_live_write.py`` already proves the
 pure ``confirmation_for_tool`` function returns the right enum for a handful of
 command keys in isolation. This module proves the stronger claim: the gate sits
 IN FRONT of the dispatched call (it is evaluated,
@@ -26,7 +26,7 @@ MCP server over an in-memory client session instead of asserting a hand-rolled
 boolean (``aeat-quality-gates``, ``aeat-quality-gates``).
 
 See Also:
-    :mod:`~entrypoints.mcp._hitl`
+    :mod:`~cadrumo_harness.mcp._hitl`
         Human-in-the-loop confirmation policy projected onto MCP tool calls.
     :class:`~agent.eval.ConfirmationGateCheck`
         Caller-injected golden-eval verdict that records expected and actual
@@ -49,7 +49,7 @@ from pathlib import Path
 import mcp.types as mcp_types
 import pytest
 
-from cadrumo.entrypoints.mcp import (
+from cadrumo_harness.mcp import (
     ConfirmationPolicy,
     McpToolDescriptor,
     build_server,
@@ -73,7 +73,7 @@ _EXPORT_STEP = "modelo.export"
 _CALCULATE_STEP = "modelo.work.calculate"
 # Not an exposed tool anywhere in the command set (the live tree is read-only and
 # live submission is permanently forbidden) - a hypothetical live-write leaf, kept
-# consistent with entrypoints/mcp/tests/test_hitl_and_live_write.py's own
+# consistent with cadrumo_harness/mcp/tests/test_hitl_and_live_write.py's own
 # defensive proof.
 _HYPOTHETICAL_LIVE_WRITE_STEP = "modelo.work.submit"
 
@@ -187,7 +187,7 @@ def test_confirmation_gate_wired_into_golden_scenario_passes_when_tiers_match() 
     ``confirmation_for_tool`` decisions are resolved here (the test), packaged as
     :class:`ConfirmationGateCheck` rows, and injected into
     ``run_golden_scenario`` via ``expected_confirmation_tiers`` - the runner
-    itself never imports ``entrypoints.mcp`` or resolves a tier.
+    itself never imports ``cadrumo_harness.mcp`` or resolves a tier.
     """
     export_descriptor = _descriptors_by_command_key()[_EXPORT_STEP]
     calculate_descriptor = _descriptors_by_command_key()[_CALCULATE_STEP]

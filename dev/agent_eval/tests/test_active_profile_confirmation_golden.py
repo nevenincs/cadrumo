@@ -27,7 +27,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.operator_surface import command_classification
-from cadrumo.entrypoints.mcp import ConfirmationPolicy, build_tool_descriptors, confirmation_for_tool
+from cadrumo_harness.mcp import ConfirmationPolicy, build_tool_descriptors, confirmation_for_tool
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
@@ -47,7 +47,7 @@ _CONFIRMATION_COMMAND = "config.profile.status"
 # Command keys this scenario treats as a mutating attempt on the active profile's
 # state. Declared scenario data (mirrors `ContradictionScenario.mutating_commands`),
 # cross-checked below against the live MCP tool-descriptor mutability classification
-# (`entrypoints.mcp._tools.build_tool_descriptors`, the same classification the
+# (`cadrumo_harness.mcp._tools.build_tool_descriptors`, the same classification the
 # PreToolUse confirmation gate reads) so the declared set is not a hand-wavy guess.
 _MUTATING_COMMANDS = (
     "modelo.work.create",
@@ -124,7 +124,7 @@ def test_confirmation_command_resolves_and_mutating_commands_are_non_read_only_o
 
     Cross-checks ``_CONFIRMATION_COMMAND`` and ``_MUTATING_COMMANDS`` against the REAL MCP
     tool-descriptor classification and confirmation gate (the same authority the ``PreToolUse``
-    gate reads via ``entrypoints.mcp._hitl.confirmation_for_tool``), so neither declared set is
+    gate reads via ``cadrumo_harness.mcp._hitl.confirmation_for_tool``), so neither declared set is
     an invented label. Under the declared-risk model the
     ``config profile`` family is ``LOCAL_STATE_MUTATING`` at whole-family granularity (it also
     owns ``create``/``edit``/``delete``), so ``config.profile.status`` is non-read-only like the

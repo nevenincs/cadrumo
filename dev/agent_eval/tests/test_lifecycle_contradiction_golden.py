@@ -40,7 +40,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.entrypoints.mcp import build_tool_descriptors
+from cadrumo_harness.mcp import build_tool_descriptors
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
@@ -61,7 +61,7 @@ _BLOCKING_STEP = "modelo.work.verify"
 # the signalled contradiction. Declared scenario data (mirrors
 # `UnderDeclarationScenario.expected_legal_refs`), cross-checked below against the live
 # MCP tool-descriptor mutability classification
-# (`entrypoints.mcp._tools.build_tool_descriptors`, the same classification the
+# (`cadrumo_harness.mcp._tools.build_tool_descriptors`, the same classification the
 # PreToolUse confirmation gate reads) so the declared set is not a hand-wavy guess.
 _MUTATING_COMMANDS = (
     "modelo.work.create",
@@ -148,7 +148,7 @@ def test_mutating_commands_are_confirmed_non_read_only_on_the_live_manifest() ->
 
     Cross-checks ``_MUTATING_COMMANDS`` against the REAL MCP tool-descriptor mutability
     classification (the same classification the ``PreToolUse`` confirmation gate reads
-    via ``entrypoints.mcp._hitl.confirmation_for_tool``), so the scenario's declared set
+    via ``cadrumo_harness.mcp._hitl.confirmation_for_tool``), so the scenario's declared set
     is not an invented label.
     """
     by_key = {descriptor.command_key: descriptor for descriptor in build_tool_descriptors()}

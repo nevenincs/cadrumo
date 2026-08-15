@@ -74,7 +74,7 @@ def test_every_canonical_action_projects_once_onto_its_live_mcp_target_schema() 
             item.model_dump(mode="json") for item in target_schema.action_capabilities
         ]
 
-    assert _ACTION_CAPABILITIES_KEY not in schemas["contract"].json_schema()
+    assert _ACTION_CAPABILITIES_KEY not in schemas["config.check"].json_schema()
 
 
 def test_action_capabilities_reach_the_real_sdk_tools_list_projection() -> None:
@@ -197,7 +197,7 @@ def test_mcp_action_projection_refuses_an_ambiguous_live_click_path() -> None:
 
 
 def test_mcp_output_schema_uses_the_canonical_notice_action_wire_without_suggestion() -> None:
-    descriptor = next(item for item in build_tool_descriptors() if item.command_key == "contract")
+    descriptor = next(item for item in build_tool_descriptors() if item.command_key == "config.check")
     success_branch, error_branch = descriptor.output_schema["oneOf"]
     success_notices = success_branch["properties"]["notices"]
     error_notices = error_branch["properties"]["notices"]
