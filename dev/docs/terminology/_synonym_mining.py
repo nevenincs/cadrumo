@@ -26,7 +26,6 @@ from typing import Annotated, Final
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.resources import bundled_path
 from dev._paths import UTF_8
 
 from ..terminology_handbook import TerminologyHandbook, load_terminology_handbook
@@ -218,8 +217,13 @@ class RatificationValidationResult(BaseModel):
 
 
 def synonym_ratification_queue_path() -> Path:
-    """Return the bundled synonym-ratification queue path."""
-    return bundled_path("terminology", "ratification", "synonym-candidates.json")
+    """Return the dev-local synonym-ratification queue path.
+
+    A build-time review queue read by this harness and by no runtime
+    consumer - so it lives beside the harness under ``dev/`` rather than in
+    the shipped ``_data`` tree.
+    """
+    return Path(__file__).resolve().parent / "ratification" / "synonym-candidates.json"
 
 
 def load_synonym_ratification_queue(path: Path | None = None) -> SynonymRatificationQueue:

@@ -93,6 +93,17 @@ def _resolve_witnessed_certificate_credentials(
     return credentials.model_copy(update={"password": password})
 
 
+def _bucket_has_a_committed_capsule(bucket_id: str) -> bool:
+    """Report whether ``bucket_id`` resolves to a committed profile capsule.
+
+    The same resolution the profile-health assessment uses, so a projection and
+    the verdict it carries cannot disagree about whether the pointer resolves.
+    """
+    from ..workflow import resolve_profile_bucket
+
+    return resolve_profile_bucket(bucket_id) is not None
+
+
 @contextmanager
 def active_auth_projection_span(
     *,
@@ -114,6 +125,26 @@ def active_auth_projection_span(
             provider = _project_provider_kind(requested_provider or fallback_provider)
             yield ActiveAuthProjectionSnapshot(
                 bucket_id=None,
+                state=None,
+                provider=provider,
+                certificate_credentials=(
+                    unnamed_certificate_credentials(resolved) if provider is AuthProviderKind.CERTIFICATE else None
+                ),
+            )
+            return
+        if not _bucket_has_a_committed_capsule(bucket_id):
+            # An active-profile pointer whose bucket carries no committed
+            # capsule is a state the health assessment is built to REPORT --
+            # it declares a dangling-pointer status for exactly this. Reading
+            # workflow state to describe it would open that bucket's database,
+            # which the storage layer refuses because a bucket exists only once
+            # its capsule is published, so the surface asking the question
+            # would raise instead of answering it. The stateless snapshot below
+            # is the same shape already used when no profile resolves at all;
+            # the bucket id is retained so the verdict can still name it.
+            provider = _project_provider_kind(requested_provider or fallback_provider)
+            yield ActiveAuthProjectionSnapshot(
+                bucket_id=bucket_id,
                 state=None,
                 provider=provider,
                 certificate_credentials=(

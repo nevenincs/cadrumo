@@ -18,14 +18,19 @@ Public surface:
 * :class:`RetentionBlockingRecord` — one record still inside its window.
 * :class:`RetainableFilingRecord` — structural view the assessment consumes
   (satisfied by :class:`domain.modelos.ModeloRecord`).
-* :class:`RetentionFloorError` / :class:`RetentionError` — the refusal raised
-  when an erase would destroy a still-retained record without an override.
+* :class:`RetentionFloorError` / :class:`RetentionError` — the refusal
+  RESERVED for an erase that would destroy a still-retained record without an
+  override. Nothing raises it today; the erase it guarded was withdrawn with
+  it, and :mod:`application.bucket_maintenance` refuses every existing target
+  rather than erasing one it cannot assess.
 
 See Also:
     :class:`domain.modelos.ModeloRecord`
         The filed-record aggregate the floor assesses.
     :mod:`application.bucket_maintenance`
-        The erase surface that enforces the floor before destroying a bucket.
+        The surface that once enforced the floor. Its destructive erase is
+        withdrawn; it now refuses an existing target outright, naming the
+        authenticated retention assessment it can no longer make.
 """
 
 from __future__ import annotations

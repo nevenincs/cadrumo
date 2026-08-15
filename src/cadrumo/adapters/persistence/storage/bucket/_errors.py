@@ -114,11 +114,22 @@ class BucketLockedError(BucketError):
 
 
 class RecoveryUnavailableError(BucketError):
-    """Raised when the recovery wrap cannot be loaded for the active bucket.
+    """The refusal reserved for a recovery wrap that cannot be loaded.
 
-    Distinguishes "recovery never enrolled" (the bucket's manifest has
-    recovery envelope state from a torn or tampered envelope; the
-    typed payload carries the active bucket id.
+    The prose that stood here was destroyed by an edit and is NOT reconstructed
+    below, because its meaning did not survive either. It distinguished
+    "recovery never enrolled" from a torn or tampered envelope by reading a
+    ``recovery_enrolled`` flag off the bucket manifest, and that field has since
+    been removed: the manifest now REFUSES a payload carrying it, which
+    ``test_rejects_the_removed_manifest_recovery_mirror`` pins. So the
+    distinction has no basis left in the record, and restoring the sentence
+    would reinstate a claim the tree contradicts.
+
+    What is established by measurement, and nothing beyond it: the class exists
+    and is exported, it carries the active bucket id in its typed payload, and
+    it has no raise sites anywhere in the tree. Whoever reinstates a recovery
+    lifecycle owns re-deciding what this refusal distinguishes, on whatever
+    signal the manifest carries then.
     """
 
     def __init__(self, *, bucket_id: str) -> None:
@@ -130,10 +141,16 @@ class RecoveryUnavailableError(BucketError):
 
 
 class RecoveryVerificationError(BucketError):
-    """Raised when the operator-typed recovery code does not decode.
+    """The refusal reserved for an operator-typed recovery code that fails to decode.
 
-    Fired by ``aeat config recover`` when the 24-word entry does not
-    unwrap the bucket's recovery envelope.
+    Not raised anywhere. The command-line verb this once named no longer
+    resolves, and the citation is removed rather than repointed because there
+    is no replacement verb to point at: a dead operator instruction in a
+    docstring is worse than none, since a reader will try it.
+
+    The shape it describes is still the intended one -- a 24-word entry that
+    does not unwrap the bucket's recovery envelope -- but nothing today accepts
+    such an entry.
     """
 
     def __init__(self, detail: str | None = None) -> None:

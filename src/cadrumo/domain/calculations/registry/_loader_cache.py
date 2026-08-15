@@ -167,19 +167,28 @@ def _directory_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
 
 
 def _directory_modelo_source(entry: Path) -> ModeloSource:
-    validate_modelo_directory_source(entry)
+    # The validator already discovers this modelo's revision sources as its last
+    # step, so it hands them back rather than being asked to find them twice.
+    # Discovery walks every revision directory and each one's fragment tree, and
+    # doing it twice per modelo was a measurable share of authority load.
+    revision_sources = validate_modelo_directory_source(entry)
     manifest_path = entry / "manifest.toml"
     return ModeloSource(
         modelo_id=_read_modelo_id(manifest_path, description="manifest"),
         layout="directory",
         path=entry.resolve(),
         manifest_path=manifest_path.resolve(),
-        revision_sources=_discover_revision_sources(entry / "revisions"),
+        revision_sources=revision_sources,
     )
 
 
-def validate_modelo_directory_source(entry: Path) -> None:
-    """Validate every entry that belongs to one directory-mode modelo source."""
+def validate_modelo_directory_source(entry: Path) -> tuple[ModeloRevisionSource, ...]:
+    """Validate every entry that belongs to one directory-mode modelo source.
+
+    Returns the revision sources it discovered while validating. Callers that
+    only want the refusal may ignore the value; the one caller that needs both
+    takes it from here instead of repeating the walk.
+    """
     allowed_directories = frozenset({"locales", "revisions"})
     for child in sorted(entry.iterdir()):
         if child.is_file():
@@ -193,7 +202,7 @@ def validate_modelo_directory_source(entry: Path) -> None:
                 _validate_flat_toml_files(child, description="modelo locale")
             continue
         raise RegistryLoadError(f"{child}: unrecognized modelo source entry")
-    _discover_revision_sources(entry / "revisions")
+    return _discover_revision_sources(entry / "revisions")
 
 
 def _validate_flat_toml_files(directory: Path, *, description: str) -> None:

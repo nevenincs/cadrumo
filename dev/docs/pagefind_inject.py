@@ -27,7 +27,7 @@ palette narrow by surface.
 Ranking: every record carries a base ranking weight from the unified
 projection (tier ordering - concepts outrank navigation outranks full
 text). If the committed relevance file
-(``src/cadrumo/_data/terminology/relevance/relevance.json``) is present, its
+(``dev/docs/terminology/relevance/relevance.json``) is present, its
 term-to-target weights BOOST the matching records; if absent, the base weights
 stand. Because the Pagefind index regenerates on every build and this module
 re-reads the relevance file each run, the boost applies automatically once the
@@ -62,7 +62,7 @@ InjectCallback = Callable[["PagefindIndex"], Awaitable[None]]
 #: The committed relevance-weights file (the build-time RAG sweep's output).
 #: Optional: present-boosts, absent-uses-base-weights. Re-read every build so
 #: it auto-applies the moment the sweep lands the file.
-_RELEVANCE_RELPATH = Path("src") / "cadrumo" / "_data" / "terminology" / "relevance" / "relevance.json"
+_RELEVANCE_RELPATH = Path("dev") / "docs" / "terminology" / "relevance" / "relevance.json"
 
 #: Pagefind meta / filter / sort values are strings; the weight is rendered to
 #: a fixed-width zero-padded integer string so Pagefind's lexical sort orders

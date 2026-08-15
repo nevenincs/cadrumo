@@ -126,7 +126,7 @@ def test_relevance_file_present_is_loaded(tmp_path: Path) -> None:
         score_floor=0.5,
     )
 
-    rel = tmp_path / "src/cadrumo/_data/terminology/relevance"
+    rel = tmp_path / "dev/docs/terminology/relevance"
     rel.mkdir(parents=True)
     (rel / "relevance.json").write_text(result.model_dump_json(), encoding="utf-8")
 
@@ -137,7 +137,7 @@ def test_relevance_file_present_is_loaded(tmp_path: Path) -> None:
 
 def test_relevance_file_malformed_raises_search_injection_error(tmp_path: Path) -> None:
     """A present file that is not a valid SweepResult fails closed."""
-    rel = tmp_path / "src/cadrumo/_data/terminology/relevance"
+    rel = tmp_path / "dev/docs/terminology/relevance"
     rel.mkdir(parents=True)
     (rel / "relevance.json").write_text(json.dumps({"not": "a sweep result"}), encoding="utf-8")
     with pytest.raises(SearchInjectionError) as exc_info:

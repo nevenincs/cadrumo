@@ -1,8 +1,11 @@
 """Gates over the committed term-target relevance data.
 
-The relevance data (``src/cadrumo/_data/terminology/relevance/relevance.json``) is
-the precompiled RAG output that SHIPS so CI and the docs build -- which have no
-GPU and no RAG service -- can rank the palette WITHOUT running retrieval. It is
+The relevance data (``dev/docs/terminology/relevance/relevance.json``) is
+the precompiled RAG output that is COMMITTED so CI and the docs build -- which
+have no GPU and no RAG service -- can rank the palette WITHOUT running
+retrieval. It is read from the repository checkout by the docs harness and by
+no runtime consumer, so it lives under ``dev/`` rather than in the shipped
+``_data`` tree. It is
 committed (unlike the uncommitted Pagefind index) precisely because the build
 cannot regenerate it. These gates keep the committed artifact honest:
 
@@ -45,7 +48,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 # export one (see cadrumo.core._config_state_root for the runtime data root).
 _REPO_ROOT = REPO_ROOT
 
-_RELEVANCE_PATH = _REPO_ROOT / "src" / "cadrumo" / "_data" / "terminology" / "relevance" / "relevance.json"
+_RELEVANCE_PATH = _REPO_ROOT / "dev" / "docs" / "terminology" / "relevance" / "relevance.json"
 _PARSEABLE_CASILLA_RECORD_ID_RE = re.compile(r"^casilla:[^:]+:.+")
 
 

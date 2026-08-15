@@ -24,10 +24,19 @@ the state-free CLI surfaces enforced by
 :mod:`entrypoints.cli.tests.test_lazy_command_tree`. :class:`CarriedSecureObject`
 and :class:`CoverageManifest` are declared in the same
 ``_portable_export`` module and share the same lazy-resolution path so
-importing either does not trigger the same cascade. Every other
-re-export (errors, value records, schema records, loader,
-registry-contract) stays eager because each is genuinely lightweight
-and every consumer pays for it unconditionally.
+importing either does not trigger the same cascade.
+
+The registry-contract re-exports resolve lazily for the same reason. This
+docstring previously stated they stayed eager "because each is genuinely
+lightweight"; that was measurably untrue -- ``_registry_contract`` reaches the
+calculation registry and cost roughly a second of import on its own, which
+every consumer of a plain exception class from this package paid. The claim
+outlived the code it described and is corrected here rather than deleted, since
+it is the reason the eager import survived beside a ``__getattr__`` written to
+avoid exactly it.
+
+The remaining re-exports (errors, value records, schema records, loader) stay
+eager because each is genuinely lightweight and every consumer needs them.
 
 See Also:
     :class:`UserProfileRecord`
@@ -50,7 +59,7 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from ._errors import (
     ProfileAlreadyExistsError,
@@ -76,14 +85,6 @@ from ._labels import (
 )
 from ._loader import load_user_profile_schema
 from ._protocols import ProfileCustodyLabelAuthorityProtocol
-from ._registry_contract import (
-    UserProfileRegistryContractIssue,
-    UserProfileRegistryContractReport,
-    UserProfileSelectorIndex,
-    build_user_profile_selector_index,
-    profile_binding_selectors,
-    validate_user_profile_registry_contract,
-)
 from ._schema import (
     NUMERIC_PROFILE_FIELD_TYPES,
     ProfileDerivedSelectorDefinition,
@@ -120,6 +121,21 @@ if TYPE_CHECKING:
     from ._portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport
 
 
+#: Names ``_registry_contract`` owns, resolved on first use. Kept as an explicit
+#: set so a symbol added there without being listed here fails loudly at the
+#: attribute lookup rather than silently reintroducing the eager import.
+_REGISTRY_CONTRACT_EXPORTS: Final[frozenset[str]] = frozenset(
+    {
+        "UserProfileRegistryContractIssue",
+        "UserProfileRegistryContractReport",
+        "UserProfileSelectorIndex",
+        "build_user_profile_selector_index",
+        "profile_binding_selectors",
+        "validate_user_profile_registry_contract",
+    },
+)
+
+
 def __getattr__(name: str):
     """Resolve heavy re-exports on demand to keep the boundary lazy.
 
@@ -129,7 +145,20 @@ def __getattr__(name: str):
     :class:`CarriedSecureObject` and :class:`CoverageManifest` are declared
     in the same ``_portable_export`` module, so they share the same
     lazy-resolution rationale.
+
+    The registry-contract symbols are deferred for exactly that reason and
+    were previously imported eagerly a few lines above, which cancelled the
+    deferral: this package exports plain exception classes that callers reach
+    for constantly, and every one of those imports paid a full registry
+    compile. Measured at roughly one second per interpreter, charged to every
+    xdist worker and every subprocess that imports the CLI.
     """
+    if name in _REGISTRY_CONTRACT_EXPORTS:
+        from . import _registry_contract
+
+        value = getattr(_registry_contract, name)
+        globals()[name] = value
+        return value
     if name == "UserProfilePortableExport":
         from ._portable_export import UserProfilePortableExport
 

@@ -176,8 +176,8 @@ def persist_answers(
     explicitly supplied on the command line. On the ``"edit"`` path it
     scopes the write to exactly those questions: ``edit`` is a patch,
     so a field the operator did not name is left untouched. It must be
-    supplied for ``"edit"``; it is ignored for ``"create"``, which
-    always registers the full set.
+    supplied for ``"edit"``, which is the only mode that reaches the
+    write; the ``"create"`` arm refuses above it and consumes nothing.
 
     Returns the updated :class:`WorkflowState` after persisting the answers.
     """
