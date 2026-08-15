@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#test-harness-sanity'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:e7d66505e8cafbe12ef08e50d0324e429bd09b09c864a95c3cea4be1091a6dc1'
+body_hash: 'sha256:f2b7c12640af20be184838f3d6a61f9de61a7be259078347b80f8c0f2b92f76a'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -66,5 +66,20 @@ The instinct is right in general and wrong here, and the distinguishing question
 ## Notes
 
 Per-test hot spots were not obtained. Two full-lane runs with `--durations` were killed before the summary prints, and durations measured against the current tree would be distorted anyway: a large fraction of tests currently fail fast on a registry gap unrelated to timing, and a failed test is usually a fast one.
+
+**Correction, 2026-08-15.** The second half of that reasoning is half right, and
+the difference decides whether the technique is usable at all. A red tree makes a
+durations ranking INCOMPLETE — fast failures crowd out slow passing tests, so the
+list under-reports — but it does not make the entries on it false. A test that
+appears slow IS slow, whatever its neighbours are doing. Durations are therefore a
+valid way to FIND targets and an invalid way to rank them exhaustively, and
+dismissing the technique because the tree is red throws away evidence that is
+sound as far as it goes.
+
+The real obstacle is narrower and mechanical: `--durations` prints only at the end
+of a run, so a run that does not finish yields nothing at all. A sequential pass
+over `domain/calculations/registry/tests/` was still at 61% after twenty-five
+minutes. Splitting the work per module does not rescue it either, because separate
+processes each pay the per-process authority load instead of sharing one.
 
 The collection figures above are trustworthy because they do not depend on tests passing.
