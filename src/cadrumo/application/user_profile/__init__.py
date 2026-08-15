@@ -136,6 +136,7 @@ if TYPE_CHECKING:
         resolve_active_capability,
         resolve_capability,
     )
+    from ._capsule_record import ProfileRecordSession
     from ._censo_errors import (
         CensoSyncError,
     )
@@ -211,7 +212,6 @@ if TYPE_CHECKING:
     from ._filing_baseline import missing_filing_baseline_flags
     from ._keys_validation import list_profile_key_records, validate_profile_values
     from ._language_resolver import resolve_profile_output_language_hint
-    from ._capsule_record import ProfileRecordSession
     from ._lifecycle import ProfileCapsuleLifecycle
     from ._login_session import (
         ProfileLoginOutcome,

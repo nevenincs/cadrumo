@@ -42,7 +42,6 @@ from typing import Any
 
 import pytest
 
-from cadrumo.application.user_profile import UserProfileLifecycleRepository
 from cadrumo.domain.user_profile import (
     ProfileSetupState,
     UserProfileFact,
@@ -52,6 +51,7 @@ from cadrumo.domain.user_profile import (
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.modelo_cli import create_modelo_work_unit_via_cli
+from cadrumo.tests.profile_capsule import seed_test_profile_record
 from cadrumo.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 
 from .. import UnderDeclarationScenario, check_under_declaration_scenario
@@ -118,8 +118,11 @@ def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )
-    lifecycle = UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository)
-    lifecycle.save(record)
+    seed_test_profile_record(
+        record,
+        root=runtime_profile.storage_root,
+        label="Under-declaration golden-eval test profile",
+    )
 
 
 def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestRuntimeProfile) -> None:

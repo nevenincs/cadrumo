@@ -423,22 +423,69 @@ def _concat_prefix_marker(argument: ast.expr) -> str | None:
     return f"{literal}.*"
 
 
+_UNSCANNED_MODULE_NAMES: frozenset[str] = frozenset({"test_parity.py", "manager.py", "_ast_scanner.py"})
+"""Modules whose dotted string literals describe the scan itself, not call sites."""
+
+
+def declares_locale_keys(module: Path) -> bool:
+    """Return True when ``module`` is a source file the key scan reads.
+
+    Shared by the tree walk below and by the change-scoped scan, so a module the
+    tree ignores can never be judged as an added or orphaned call site by the
+    other. Two independent copies of this predicate would let one scanner see a
+    key the other cannot.
+    """
+    if module.name in _UNSCANNED_MODULE_NAMES:
+        return False
+    return not (
+        module.name.startswith("test_") or module.name.startswith("_test_") or "/tests/" in module.as_posix()
+    )
+
+
+def _parse_module_source(source: str, filename: str) -> ast.Module | None:
+    """Parse ``source``, debug-logging and swallowing a syntax failure."""
+    try:
+        return ast.parse(source, filename=filename)
+    except SyntaxError as exc:
+        _log.debug("locale ast scan: parse failure %s (%s)", filename, exc)
+        return None
+
+
+def scan_source_text(source: str, *, filename: str) -> set[str]:
+    """Emit the concrete dotted locale keys one module's source text declares.
+
+    The text form of :func:`scan_source_tree`, for callers holding a revision's
+    content rather than a working-tree file: comparing a module's key set before
+    and after a change is what makes a co-landing check possible at all.
+    Unparseable source yields an empty set, exactly as the tree walk skips it.
+    """
+    tree = _parse_module_source(source, filename)
+    if tree is None:
+        return set()
+    return _extract_error_constructor_keys(tree) | _extract_locale_constant_keys(tree)
+
+
+def scan_namespace_markers_in_text(source: str, *, filename: str) -> set[str]:
+    """Emit the dynamic-namespace markers one module's source text declares."""
+    tree = _parse_module_source(source, filename)
+    if tree is None:
+        return set()
+    return _extract_fstring_prefixes(tree) | _extract_concat_prefixes(tree)
+
+
 def _iter_parseable_python_modules(root: Path) -> Iterator[tuple[Path, ast.Module]]:
     """Yield ``(path, tree)`` pairs of parseable Python ASTs under ``root``."""
     for module in iter_directory(root, pattern="*.py", recursive=True):
-        if module.name in {"test_parity.py", "manager.py", "_ast_scanner.py"}:
-            continue
-        if module.name.startswith("test_") or module.name.startswith("_test_") or "/tests/" in module.as_posix():
+        if not declares_locale_keys(module):
             continue
         try:
             source = module.read_text(encoding=_UTF_8, errors="ignore")
         except OSError as exc:
             _log.debug("locale ast scan: skipping %s (%s)", module, exc)
             continue
-        try:
-            yield module, ast.parse(source, filename=str(module))
-        except SyntaxError as exc:
-            _log.debug("locale ast scan: parse failure %s (%s)", module, exc)
+        tree = _parse_module_source(source, str(module))
+        if tree is not None:
+            yield module, tree
 
 
 def scan_source_tree(root: Path) -> set[str]:
@@ -550,4 +597,11 @@ def find_tr_constant_naming_violations(root: Path) -> list[str]:
     return violations
 
 
-__all__ = ["find_tr_constant_naming_violations", "scan_namespace_markers", "scan_source_tree"]
+__all__ = [
+    "declares_locale_keys",
+    "find_tr_constant_naming_violations",
+    "scan_namespace_markers",
+    "scan_namespace_markers_in_text",
+    "scan_source_text",
+    "scan_source_tree",
+]

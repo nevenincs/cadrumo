@@ -64,10 +64,18 @@ def distinct_nif(name: str) -> str:
     return f"{number:08d}{nif_check_letter(number)}"
 
 
-def create_profile_via_cli(name: str, *, tax_id: str | None = None) -> None:
-    """Register a profile through the shared CLI registration door."""
+def create_profile_via_cli(name: str, *, tax_id: str | None = None, complete: bool = True) -> None:
+    """Register a profile through the shared CLI registration door.
+
+    ``complete=False`` stops after registration, leaving the profile in the
+    state registration itself produces: a real, addressable, writable bucket
+    whose setup was never committed. That is the only supported way to reach
+    the incomplete state, because completion is a separate compare-and-swap
+    rather than part of registration.
+    """
     register_cli_profile(
         label=name,
+        complete=complete,
         facts={
             "identity.tax_id": tax_id or distinct_nif(name),
             "taxpayer_type.entity_type": "natural_person",

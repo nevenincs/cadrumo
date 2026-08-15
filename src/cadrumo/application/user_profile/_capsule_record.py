@@ -494,9 +494,12 @@ def _build_record_event(
 ):
     try:
         event_type = BucketEventType(command.event_type)
+    except ValueError as exc:
+        raise ProfileRecordIntegrityError("profile record command event names no current bucket event type") from exc
+    try:
         occurred_at = datetime.fromisoformat(command.occurred_at).astimezone(UTC)
     except ValueError as exc:
-        raise ProfileRecordIntegrityError("profile record command event is not a current bucket event") from exc
+        raise ProfileRecordIntegrityError("profile record command event instant is not a parsable timestamp") from exc
     if occurred_at != record.updated_at:
         raise ProfileRecordIntegrityError("profile record event instant differs from its replacement record")
     if _REQUIRED_EVENT_FIELDS.intersection(command.payload):

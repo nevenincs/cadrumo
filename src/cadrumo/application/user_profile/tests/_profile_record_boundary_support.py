@@ -214,7 +214,7 @@ def advance_to_revision_two(
     return replacement
 
 
-def defaultable_fields_at_default(record: BaseModel) -> list[str]:
+def defaultable_fields_at_default(record: BaseModel, *, excluded: frozenset[str] | None = None) -> list[str]:
     """Return the defaultable field names sitting at their model default.
 
     Derived from the model's own fields rather than a maintained list, so a
@@ -222,10 +222,19 @@ def defaultable_fields_at_default(record: BaseModel) -> list[str]:
     when someone remembers to extend an enumeration. A non-empty result means
     a save-drops-field / load-re-defaults-field regression in those fields
     would be invisible to an equality assertion.
+
+    Args:
+        record: The model instance to sweep.
+        excluded: Field names whose non-default proof is carried elsewhere.
+            Defaults to the profile record's own pinned and clock-defaulted
+            pair. A sibling boundary proving a DIFFERENT model passes its own
+            set, so the exclusion stays a statement about the model under
+            proof rather than a constant inherited from an unrelated one.
     """
+    skip = SCHEMA_PINNED_FIELDS | FACTORY_DEFAULT_FIELDS if excluded is None else excluded
     at_default: list[str] = []
     for name, field in type(record).model_fields.items():
-        if name in SCHEMA_PINNED_FIELDS or name in FACTORY_DEFAULT_FIELDS:
+        if name in skip:
             continue
         if field.default is PydanticUndefined or field.default_factory is not None:
             continue

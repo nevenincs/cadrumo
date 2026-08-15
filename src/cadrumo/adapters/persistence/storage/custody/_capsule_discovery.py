@@ -37,6 +37,7 @@ from ._filesystem import (
     read_regular_file,
     read_regular_file_fd,
 )
+from ._paths import profile_custody_directory_name
 
 
 class _CommitIdentity(Protocol):
@@ -322,11 +323,24 @@ def _windows_candidate_profile_id(
 
 
 def _canonical_profile_id(candidate_name: str) -> UUID | None:
+    """Recognize only a name the custody path builder itself could have written.
+
+    Recognition is expressed as the exact inverse of
+    :func:`profile_custody_directory_name` rather than as a second spelling of
+    the same canonicality rule.  Two independent spellings can disagree, and
+    the disagreement is silent in the worst direction: a capsule the writer
+    published under a name this reader rejects is undiscoverable while its
+    material sits on disk.
+    """
     try:
         profile_id = UUID(candidate_name)
     except ValueError:
         return None
-    return profile_id if str(profile_id) == candidate_name else None
+    try:
+        canonical = profile_custody_directory_name(profile_id)
+    except ValueError:
+        return None
+    return profile_id if canonical == candidate_name else None
 
 
 __all__ = [
