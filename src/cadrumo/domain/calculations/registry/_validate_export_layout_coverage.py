@@ -32,6 +32,11 @@ something the DESIGN says, never something a per-modelo allowlist asserts:
 * a position AEAT declares as fill ("BLANCOS", "Sin contenido", a blank
   constant) is omissible -- there is no datum there.
 
+Where AEAT *desglosa* a printed field into sub-fields, the SUB-FIELDS are the
+positions and the parent's span is not one; each sub-field is judged for
+omissibility on its own. See :func:`_required_positions` for why requiring the
+parent inverted the incentive on Modelo 576.
+
 Everything else is required. Measured over the eighteen bundled designs backing
 a fixed-width layout: 570 positions marked obligatorio, 266 administration-
 reserved, 29 declared fill, 8,297 ordinary data positions.
@@ -192,18 +197,53 @@ def _omissible_reason(field: RecordDesignField) -> str | None:
     return None
 
 
-def _required_positions(sheet: RecordDesignSheet) -> tuple[_RequiredPosition, ...]:
-    return tuple(
-        _RequiredPosition(
-            sheet=sheet.name,
-            offset=field.offset,
-            length=field.length,
-            description=field.description,
-            obligatorio=bool(_OBLIGATORIO.search(field.validation or "")),
-        )
-        for field in sheet.fields
-        if _omissible_reason(field) is None
+def _position(sheet_name: str, field: RecordDesignField) -> _RequiredPosition:
+    return _RequiredPosition(
+        sheet=sheet_name,
+        offset=field.offset,
+        length=field.length,
+        description=field.description,
+        obligatorio=bool(_OBLIGATORIO.search(field.validation or "")),
     )
+
+
+def _required_positions(sheet: RecordDesignSheet) -> tuple[_RequiredPosition, ...]:
+    """Return every position of ``sheet`` an authored layout must be able to write.
+
+    Where AEAT *desglosa* a printed field into sub-fields, THE SUB-FIELDS ARE THE
+    POSITIONS and the parent's own span is not one. The parent is a printed
+    grouping whose extent
+    :attr:`~._record_design_schema.RecordDesignField.components` deliberately
+    leaves intact for geometry consumers; asking a layout to write the group as a
+    single position asks it to write the wrong thing.
+
+    Modelo 576 is the worked case. Row ``19`` spans ``@514+40`` and says so in
+    prose -- "Este campo se desglosa en los 8 campos siguientes" -- over
+    ``19.1``..``19.8``, one of which (``19.3``, ``@520+8``) is RESERVADO para
+    AEAT. Requiring the parent inverted the incentive at exactly the wrong
+    place: a layout authoring the eight leaves faithfully was refused at 41/42
+    because none of them sits at ``(514, 40)``, while a single 40-byte blob
+    satisfied the check and wrote taxpayer data straight across AEAT's own
+    reserved bytes. The gate rewarded the shape that corrupts the filing.
+
+    Omissibility is judged per sub-field, so ``19.3`` drops out and the seven
+    real data slots stay required. A parent the design ITSELF declares omissible
+    takes its whole span out with it: nothing inside a span reserved for the
+    Administración is a datum the filer may write.
+    """
+    positions: list[_RequiredPosition] = []
+    for field in sheet.fields:
+        if _omissible_reason(field) is not None:
+            continue
+        if field.components:
+            positions.extend(
+                _position(sheet.name, component)
+                for component in field.components
+                if _omissible_reason(component) is None
+            )
+            continue
+        positions.append(_position(sheet.name, field))
+    return tuple(positions)
 
 
 def _sheet_constants(sheet: RecordDesignSheet) -> dict[tuple[int, int], str]:
