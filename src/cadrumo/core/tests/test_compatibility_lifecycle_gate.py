@@ -180,15 +180,34 @@ def test_every_durable_format_carries_a_frozen_floor() -> None:
     ("floors", "expected"),
     [
         # The exact shape the checkpoint would take today: the three canonical
-        # tiers frozen, the three durable formats with no floor machinery omitted.
+        # tiers frozen, every other durable format left bare.
+        #
+        # These expectations are hand-listed ON PURPOSE. Deriving them from
+        # PERSISTED_FORMATS would compute the answer the same way the function
+        # under test does, so every case would pass by construction. The cost is
+        # that they go stale whenever the inventory changes -- which is the
+        # price of an independent expectation, not a defect in it.
         (
             {"secure_object": 1, "bundle": 3, "archive": 3},
-            ("bucket_database_file", "operation_journal", "secret_index"),
+            (
+                "bucket_database_file",
+                "operation_journal",
+                "profile_capsule_commit",
+                "profile_capsule_password_envelope",
+                "profile_capsule_recovery_envelope",
+                "secret_index",
+            ),
         ),
         # One omission is still an omission.
         (
             {"secure_object": 1, "bundle": 3, "archive": 3, "secret_index": 2},
-            ("bucket_database_file", "operation_journal"),
+            (
+                "bucket_database_file",
+                "operation_journal",
+                "profile_capsule_commit",
+                "profile_capsule_password_envelope",
+                "profile_capsule_recovery_envelope",
+            ),
         ),
         # Freezing only the substrate leaves every other durable format bare.
         (
@@ -198,6 +217,9 @@ def test_every_durable_format_carries_a_frozen_floor() -> None:
                 "bucket_database_file",
                 "bundle",
                 "operation_journal",
+                "profile_capsule_commit",
+                "profile_capsule_password_envelope",
+                "profile_capsule_recovery_envelope",
                 "secret_index",
             ),
         ),

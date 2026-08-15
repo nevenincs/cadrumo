@@ -110,6 +110,36 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     # these keys and never validates these keys against the tree -- so an entry
     # outliving its implementation is invisible here, which is how the data-key
     # entry outlived its own deletion.
+    #
+    # The three profile-capsule file formats are enrolled below. They were
+    # absent while the retired manifest was present -- the artefact being
+    # removed was governed and the artefact replacing it was not -- and the
+    # blindness noted above is why: nothing enumerates the tree against this
+    # inventory, so a format that never appears here never fails anything.
+    # Each carries its own schema-version constant, and each class is argued
+    # rather than inherited from its neighbours.
+    #
+    # The capsule's custody and data CATEGORIES are deliberately not here: both
+    # are directories rather than file formats, so they carry no bytes to keep
+    # readable. What they contain is enrolled under its own keys.
+    #
+    # Unreadable, no password unwraps the bucket's data key ever again, and
+    # every encrypted record under it is lost. This is the obligation the
+    # retired ``bucket_dek`` entry used to carry, now under different custody.
+    "profile_capsule_password_envelope": PersistedFormatClass.DURABLE,
+    # The SOLE discovery proof for a capsule: recognition reads this marker and
+    # nothing else, and returns "no such profile" when it will not parse. There
+    # is no rebuild path, and its self-digest is not something an operator can
+    # reconstruct by hand -- so losing readability does not corrupt the profile,
+    # it makes the profile cease to exist while its bytes sit on disk.
+    "profile_capsule_commit": PersistedFormatClass.DURABLE,
+    # NOT regenerable, which is the whole test: the application cannot re-derive
+    # recovery material on demand the way it rebuilds a session or a throttle.
+    # Its readability is load-bearing exactly in the case it exists for -- a
+    # forgotten password -- where failing to read it turns a recoverable profile
+    # into total loss. Optional to CREATE is not the same as discardable once
+    # created.
+    "profile_capsule_recovery_envelope": PersistedFormatClass.DURABLE,
     # The per-bucket SQLite file holding the encrypted secure_objects table --
     # every filing, ledger entry, and evidence record a taxpayer has. The rows
     # inside are already DURABLE under "secure_object"; the file that carries
