@@ -34,3 +34,23 @@ source_refs = [
     "aeat-modelo-145-form",
     "aeat-dr-145-v20",
 ]
+
+[revisions."2012-01-31-y-siguientes".family_dispositions.filing_schedules]
+reason = "RIRPF art. 88.1 directs this communication to the pagador, not to the tax administration: the contribuyente 'debera comunicar al pagador' and the pagador is obliged to keep the signed communication, with the Administracion tributaria granted accessibility only. Nothing is ever presented to AEAT, so there is no presentation calendar for a filing schedule to model."
+legal_refs = [
+    "rd-439-2007:art-88",
+]
+source_refs = [
+    "aeat-modelo-145-procedure",
+    "aeat-modelo-145-obligaciones-retenedor",
+]
+
+[revisions."2012-01-31-y-siguientes".family_dispositions.deadline_windows]
+reason = "RIRPF art. 88.3 and 88.4 anchor every plazo to an event rather than to the calendar: before January 1 or at the start of the employment relationship, and within ten days of a variation in circumstances. Art. 88.3 adds that the communication need not be repeated each ejercicio while circumstances are unchanged, so no recurring calendar window exists to declare and none is fabricated."
+legal_refs = [
+    "rd-439-2007:art-88",
+]
+source_refs = [
+    "aeat-modelo-145-procedure",
+    "aeat-modelo-145-obligaciones-retenedor",
+]
