@@ -65879,12 +65879,16 @@ modelo:
             x-e1in4opec9gn6p9de9in8pbecdkmurg:
               label: A forrásadó vagy adóelőleg alapja
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
+              help: 'Csak akkor kell kitölteni, ha a kedvezményezett típusa 5-ös kód:
+                F természetes személy, J jogi személy vagy szervezet esetén.'
               label: A külföldi illetőségű kedvezményezett jogi személyiségének kódja
             x-e1in4opecpim6q315ln62or9dlkmarjkds:
               label: A külföldi illetőségű kedvezményezett születési ideje
             x-e1in4opecpim6q315lo62prf:
               label: A nyeremény kifizetésének időpontja
             x-e1in4opecpim6q315lpmusjkclng:
+              help: A sorsolás megtartásának napja, illetve annak az eseménynek a
+                napja, amelyre a nyereményt eredményező fogadást megkötötték.
               label: A sorsolás vagy fogadás időpontja
             x-e1in4opectin6t3fe8mm6rr2e9ng:
               label: A nyeremény beszedési megbízottja
@@ -65919,6 +65923,9 @@ modelo:
             x-e1in4opee1gmispde9in6qb4cln66qb1:
               label: A kedvezményezett adóügyi illetőségének országa vagy területe
             x-e1in4opee1p6utj9dphmio8:
+              help: A kedvezményezett lakcíme szerinti tartomány vagy autonóm város
+                kétjegyű kódja. A külföldön szokásos tartózkodási hellyel bíró jövedelemadó-alanyoknál
+                98, az 5-ös kedvezményezetti típusnál 99 a kód.
               label: A kedvezményezett lakcíme szerinti tartomány kódja
             x-e1in4opee9in8pbecdkmurg:
               label: A forrásadó vagy adóelőleg összege

@@ -65376,8 +65376,11 @@ modelo:
             x-e1in4opecpim6q315ln62or9dlkmarjkds:
               label: Date of birth of the non-resident payee
             x-e1in4opecpim6q315lo62prf:
+              help: Date on which the prize obtained was paid or credited to the payee.
               label: Date the prize was paid
             x-e1in4opecpim6q315lpmusjkclng:
+              help: Date on which the draw was held, or on which the event took place
+                that the bet determining the prize was placed on.
               label: Date the draw or bet was held
             x-e1in4opectin6t3fe8mm6rr2e9ng:
               label: Prize collection agent
@@ -65409,8 +65412,14 @@ modelo:
               label: Surnames and given name, legal name or business name of the payee's
                 representative
             x-e1in4opee1gmispde9in6qb4cln66qb1:
+              help: 'Only where the payee type is code 5: two alphabetic characters
+                for the payee''s country or territory of residence under Annex II
+                of Order EHA/3496/2011. Blank in every other case.'
               label: Payee country or territory of tax residence
             x-e1in4opee1p6utj9dphmio8:
+              help: Two digits for the province or autonomous city of the payee's
+                address. Digits 98 are used for personal income tax payers habitually
+                resident abroad and 99 where the payee type is code 5.
               label: Province code of the payee's address
             x-e1in4opee9in8pbecdkmurg:
               label: Amount of withholding or payment on account
@@ -72873,11 +72882,7 @@ modelo:
         2021-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
               label: Filing year to which the self-assessment relates
-            x-chim6r1ee1in4qbfchng:
-              help: null
-              label: Period (calendar month)
           construct:
             modelo-604-autoliquidacion:
               field:

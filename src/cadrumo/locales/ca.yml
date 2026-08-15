@@ -65840,8 +65840,11 @@ modelo:
             x-e1in4opecpim6q315ln62or9dlkmarjkds:
               label: Data de naixement del perceptor no resident
             x-e1in4opecpim6q315lo62prf:
+              help: Data en què s'hagi satisfet o abonat al perceptor el premi obtingut.
               label: Data de pagament del premi
             x-e1in4opecpim6q315lpmusjkclng:
+              help: Data en què s'hagi celebrat el sorteig o hagi tingut lloc l'esdeveniment
+                sobre el qual s'hagi fet l'aposta que determina l'obtenció del premi.
               label: Data de celebració del sorteig o aposta
             x-e1in4opectin6t3fe8mm6rr2e9ng:
               label: Gestor de cobrament del premi
