@@ -716,8 +716,6 @@ application:
           auth test` abans de llegir dades AEAT.
   bucket_maintenance:
     errors:
-      archive_active_bucket: El bucket actiu no es pot arxivar; canvia primer a un
-        altre perfil.
       archive_not_confirmed: Arxivar és una transició d'estat reversible, però requereix
         confirmació explícita.
       delete_active_bucket: No es pot eliminar el bucket actiu; inicia primer la sessió

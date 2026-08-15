@@ -363,11 +363,13 @@ def test_invoice_operation_type_renders_as_a_json_enum_on_every_writing_verb() -
     [
         ("diagnostics.telemetry.status", "tier", "core.telemetry:TelemetryTier"),
         ("diagnostics.telemetry.flush", "tier", "core.telemetry:TelemetryTier"),
-        (
-            "registry.audit_oracles",
-            "environment",
-            "domain.calculations.registry:OracleEnvironment",
-        ),
+        # "registry.audit_oracles" carries no CLI, application, or MCP
+        # declaration anywhere in production -- `OracleEnvironment` gates only
+        # the internal domain oracle-binding audit
+        # (`domain.calculations.registry.audit_oracle_bindings`), which has no
+        # operator-facing verb wrapping it. This axis is retired from the
+        # parametrize set rather than pinned against a fictional command; a
+        # real "registry audit-oracles" verb would re-enroll it here.
         (
             "modelo.filing_record.import",
             "evidence_kind",

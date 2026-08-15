@@ -139,8 +139,18 @@ def test_distinct_action_ids_sharing_one_target_remain_distinct_and_ordered() ->
 
 
 def test_mcp_action_projection_refuses_an_orphan_target_and_insufficient_sources() -> None:
-    refs = _refs_for("config.profile.edit")
-    schemas = build_verb_input_schemas(("config.profile.edit",))
+    # ``config.profile.edit`` declares every wizard field, including
+    # ``profile_name``, as a schema-optional CLI argument -- required-ness is
+    # enforced in the command body (``_require_profile_name``), not the
+    # advertised schema, the same headless-dispatch shape ``modelo.work.*``
+    # uses. Its ``required_input_names`` is therefore empty, so it cannot
+    # exercise the "insufficient sources" refusal: zero declared
+    # specifications trivially cover zero required names. The orphan case
+    # stays on it (identity mismatch does not depend on required-ness);
+    # the insufficient case targets ``config.auth.certificate.remove``,
+    # whose ``name`` argument is genuinely schema-required.
+    refs = _refs_for("config.profile.edit", "config.auth.certificate.remove")
+    schemas = build_verb_input_schemas(("config.profile.edit", "config.auth.certificate.remove"))
     orphan_catalogue = build_action_catalogue(
         (
             ActionCatalogueEntry(
@@ -152,8 +162,8 @@ def test_mcp_action_projection_refuses_an_orphan_target_and_insufficient_sources
     insufficient_catalogue = build_action_catalogue(
         (
             ActionCatalogueEntry(
-                action_id="operator.profile.edit_without_source",
-                target_command_key="config.profile.edit",
+                action_id="operator.certificate.remove_without_source",
+                target_command_key="config.auth.certificate.remove",
             ),
         )
     )

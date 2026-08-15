@@ -33,3 +33,12 @@ LOCALES_DIR: Final[Path] = SRC_DIR / "locales"
 #: Scoped to ``dev/docs`` rather than ``dev``: the rest of the harness is
 #: developer-facing, and its strings have no business in a catalogue that ships.
 DOCS_SRC_DIR: Final[Path] = REPO_ROOT / "dev" / "docs"
+
+#: The MCP harness (``cadrumo-mcp``) is a separate distribution living beside
+#: ``src/cadrumo`` rather than inside it, but its operator-facing elicitation
+#: prompts and refusal messages render through the same shared ``tr()``
+#: catalogue (only its model-facing tool names and descriptions stay
+#: deliberately unlocalized English). A scan that stopped at ``src/cadrumo``
+#: would report every one of its catalogue keys as an extra key with no
+#: codebase site, for exactly the reason :data:`DOCS_SRC_DIR` exists.
+HARNESS_SRC_DIR: Final[Path] = REPO_ROOT / "src" / "cadrumo-harness" / "src" / "cadrumo_harness"

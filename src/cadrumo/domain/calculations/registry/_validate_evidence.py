@@ -339,6 +339,26 @@ class EvidenceValidator:
                     )
         return failures
 
+    def source_text(self, source: SourceReference) -> str | None:
+        """Return ``source``'s normalised bundled text, or ``None`` when unreachable.
+
+        Public wrapper around :meth:`_source_text` for content-shape checks that
+        need the same PDF-sidecar-aware, disk-cached text resolution this class
+        already owns -- e.g. a vocabulary probe over a deadline window's
+        ``official_source_guidance`` sources -- without duplicating the manual-PDF
+        sidecar lookup, the on-disk cache, or the companion-binary fallback path.
+        Swallows the read failures :meth:`validate_source_citations` reports as
+        failures itself; a caller with no per-citation failure slot to put that in
+        treats an unreadable source the same way :func:`validate_layout_authority_content`
+        does -- skipped rather than silently accepted.
+        """
+        if self._source_root is None:
+            return None
+        try:
+            return self._source_text(source)
+        except OSError:
+            return None
+
     def _source_text(self, source: SourceReference) -> str:
         cached = self._source_text_cache.get(source.id)
         if cached is not None:

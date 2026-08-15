@@ -649,8 +649,6 @@ application:
           before reading AEAT data.
   bucket_maintenance:
     errors:
-      archive_active_bucket: The active bucket cannot be archived; switch to another
-        profile first.
       archive_not_confirmed: Archiving is a reversible state transition, but it still
         requires explicit confirmation.
       delete_active_bucket: Cannot delete the active bucket; log in to another profile

@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:79c04242e32094f8b08a63733d1c8af6a503817728be40e4bcf93ed9f5554c0b'
+body_hash: 'sha256:481cc1bd6d250d4d1eb339111805a6a53f6ad05dda2a4c103bb67ceae83b56f8'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -225,6 +225,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S161` - Have Sol Medium state the boundary the persisted-format discriminator currently lacks, ruling whether a versioned shape nested inside a persisted record is itself a format, since the question has now arrived three times from different directions and each was answered locally, and the answer decides whether the custody hold evidence and the legal-hold and retention snapshots enrol or stay out; `src/cadrumo/core/compatibility_lifecycle.py`.
 - [ ] `W04.P07.S164` - Have Terra XHigh collapse the storage layer's two live custody packages to one canonical home, since a forty-three module master_key package and a thirty-seven module custody package coexist at HEAD with production runtime and blob-store and crypto and envelope all importing the former, establishing first from the code whether this is a relocation that moved part of a package and stopped or an old-and-new split the cutover has not collapsed, and then landing the completed relocation atomically with every consumer in one commit rather than leaving the split documented and standing; `src/cadrumo/adapters/persistence/storage/`.
 - [ ] `W04.P07.S166` - Have Terra XHigh compose the full-corpus collectability proof into a lane that is actually run, since the harness that would have caught two test packages being uncollectable is real and mutation-tested but is enrolled only in a standalone recipe every other lane ignores and in a single separately-named continuous-integration job, so every routine local and integration run stayed green throughout the window those packages could not import, and a green lane structurally unable to see a collection error is what makes one read as infrastructure noise and get scrolled past; `justfile and .github/workflows/ci.yml`.
+- [ ] `W04.P07.S167` - Have Terra XHigh restore the hard-cutover absence gate's anti-tautology proof, whose fixture now trips the retired-name net as well as the package net so the two are no longer isolated and the proof asserts less than it reads as asserting, the gate's substantive absence assertions all passing while this one case is red at HEAD and was red before any current work touched it; `src/cadrumo/application/tests/test_custody_hard_cutover_absence.py`.
 
 ## Wave `W05` - end-to-end proof
 

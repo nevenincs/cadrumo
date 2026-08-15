@@ -94,10 +94,10 @@ LITERAL_VERSION_EXEMPTIONS: dict[tuple[str, str], str] = {}
 """Empty, and that is the honest state rather than an oversight.
 
 Every off-version write the tree currently needs already derives its number from
-the constant it is testing against -- the manifest lineage probes write
-``BUCKET_MANIFEST_SCHEMA_VERSION + 1`` and ``BUCKET_MANIFEST_DURABILITY_FLOOR - 1``
-rather than hardcoding either, so they track the format exactly as a fixture
-should and need no exemption.
+the constant it is testing against -- lineage probes across the enrolled formats
+write forms like ``PROFILE_SESSION_SCHEMA_VERSION + 1`` rather than hardcoding
+the drifted number, so they track the format exactly as a fixture should and
+need no exemption.
 
 The mechanism ships empty for the case that has not arrived yet: a probe that
 genuinely must name a fixed historical version, where deriving it from the
