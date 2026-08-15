@@ -278,12 +278,12 @@ def _duplicates[T](values: Iterable[T]) -> tuple[T, ...]:
     return tuple(sorted(duplicates, key=repr))
 
 
-def _entry_key(entry: SemanticMapEntry) -> tuple[str, int, str, int, str, str]:
+def _entry_key(entry: SemanticMapEntry) -> tuple[str, int, str, str, str, str]:
     return (
         entry.anchor.sheet,
         entry.anchor.source_row,
         entry.anchor.source_cell or "",
-        entry.anchor.ordinal,
+        entry.anchor.ordinal or "",
         entry.anchor.record_identity,
         str(entry.export_field_id),
     )

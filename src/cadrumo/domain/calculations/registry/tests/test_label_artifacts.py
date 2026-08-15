@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from datetime import date
 
 import pytest
@@ -13,7 +11,7 @@ from .._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, Perio
 from .._validate_label_artifacts import collect_label_artifact_findings, validate_no_label_artifacts
 from .._validate_registry_scope import validate_registry_scope
 from ._registry_schema_support import _committed_registry_tree
-from ._synthetic_locale_fixtures import _synthetic_locale_scope, synthetic_locale_state
+from ._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -21,14 +19,6 @@ _SAMPLE_UNRESOLVED_PLACEHOLDER = "{" + "0" + "}"
 _TEST_CASILLA_ID: CasillaId = validated_casilla_id("0001", surface="_TEST_CASILLA_ID")
 
 __all__ = ["_synthetic_locale_scope"]
-
-
-def _write_test_label(label: str) -> str:
-    key = f"test.schema.casilla.{hashlib.sha256(label.encode('utf-8')).hexdigest()}.label"
-    if synthetic_locale_state.root is not None:
-        with (synthetic_locale_state.root / "es.yml").open("a", encoding="utf-8") as handle:
-            handle.write(f"{json.dumps(key)}: {json.dumps(label, ensure_ascii=False)}\n")
-    return key
 
 
 def _modelo_with_label(label: str) -> ModeloDefinition:

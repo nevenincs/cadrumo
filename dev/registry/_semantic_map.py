@@ -84,7 +84,12 @@ class SemanticMapAnchor(_StrictModel):
     #: :attr:`domain.calculations.registry.RecordDesignField.ordinal`, which
     #: :class:`RecordDesignIntermediateField.ordinal` is a straight 1:1
     #: projection of; this anchor field is the same value one join step later.
-    ordinal: _AnchorOrdinal = Field(default=None, min_length=1)
+    #: The type permits ``None`` to match the parser exactly, but stays
+    #: REQUIRED (no default): every currently-authored anchor names a real
+    #: field with a real printed ordinal, and TOML has no way to author an
+    #: explicit null, so an omitted key refuses at load rather than silently
+    #: defaulting into an anchor no parser field can ever match.
+    ordinal: _AnchorOrdinal = Field(min_length=1)
     record_identity: str = Field(min_length=1)
 
 

@@ -6,7 +6,7 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .._record_design_coverage import calculation_closure_casilla_ids
-from .._schema import CasillaContinuidadEvolutionDefinition, ModeloDefinition, RegistryCatalogues
+from .._schema import CasillaContinuidadEvolutionDefinition, RegistryCatalogues
 from .._schema_input_kind import InputKind
 from .._validate import RegistryValidator
 from ._record_design_support import _committed_registry_tree
@@ -28,6 +28,7 @@ from ._referential_integrity_support import (
     minimal_modelo,
     minimal_revision,
     minimal_source_ref,
+    modelo_validation_failures,
     segmented_casilla,
     single_segment_casilla,
     snapshot_for_revision,
@@ -53,14 +54,6 @@ _MISSING_SOURCE_ID = "aeat-missing-source"
 _EXTRA_LEGAL_ID = "ley-35-2006:art-9998"
 _EXTRA_SOURCE_ID = "aeat-extra-source"
 _PARITY_SOURCE_ID = "aeat-open-parity-source"
-
-
-def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
-    try:
-        RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
-    except RegistryValidationError as exc:
-        return str(exc).splitlines()
-    return []
 
 
 def _catalogues_with_executable_parity_source() -> RegistryCatalogues:
@@ -119,7 +112,7 @@ def test_segment_qualified_reference_resolves_across_segments() -> None:
     ).model_copy(
         update={"completeness_manifest": manifest},
     )
-    failures = _modelo_validation_failures(minimal_modelo(revision))
+    failures = modelo_validation_failures(minimal_modelo(revision))
     unknown_casilla_failures = [f for f in failures if "unknown casilla" in f]
     assert unknown_casilla_failures == [], (
         f"a segment-qualified casilla reference must resolve; got: {unknown_casilla_failures}"
@@ -410,7 +403,7 @@ def test_completeness_gate_fails_on_manifest_metadata_mismatch() -> None:
     )
     revision = minimal_revision(casillas=(declared,)).model_copy(update={"completeness_manifest": manifest})
     modelo = minimal_modelo(revision)
-    failures = _modelo_validation_failures(modelo)
+    failures = modelo_validation_failures(modelo)
     mismatch = [
         f
         for f in failures
@@ -454,7 +447,7 @@ def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
         update={"completeness_manifest": manifest, "casillas": (ungrounded,)},
     )
     modelo = minimal_modelo(revision)
-    failures = _modelo_validation_failures(modelo)
+    failures = modelo_validation_failures(modelo)
     legal = [f for f in failures if "casilla.id '01'" in f and "without legal_refs" in f]
     source = [f for f in failures if "casilla.id '01'" in f and "without source_refs" in f]
     assert legal, f"ungrounded required casilla must be reported without legal_refs; got: {failures}"
@@ -476,7 +469,7 @@ def test_completeness_manifest_refs_must_resolve_in_registry_validation() -> Non
         update={"completeness_manifest": manifest},
     )
 
-    failures = _modelo_validation_failures(minimal_modelo(revision))
+    failures = modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
         "calculation-completeness manifest references unknown legal id 'ley-35-2006:art-9999'" in failure
@@ -523,7 +516,7 @@ def test_casilla_continuidad_evolution_refs_must_resolve_in_registry_validation(
         update={"casilla_continuidad_evolutions": (evolution,)},
     )
 
-    failures = _modelo_validation_failures(minimal_modelo(revision))
+    failures = modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
         "casilla continuidad evolution 'test-continuidad-2024-2025' "

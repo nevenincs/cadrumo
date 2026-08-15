@@ -8,12 +8,14 @@ first and collide with.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import nullcontext
 from pathlib import Path
 
 import pytest
 
 from ..adapters.persistence.storage import dispose_engine
+from ..core.config import override_settings
 from .profile_capsule import open_test_profile_session
 from .secure_sql import isolated_profile_storage_root
 from .user_profile import register_minimal_profile
@@ -28,6 +30,9 @@ def active_profile_isolated_backend_fixture(
     autouse: bool = True,
     name: str = "_isolated_backend",
     dispose_engine_around: bool = False,
+    settings_overrides: Mapping[str, object] | None = None,
+    profile_overrides: Mapping[str, str] | None = None,
+    display_name: str | None = None,
 ) -> Callable[[Path], Iterator[None]]:
     """Build a fixture isolating storage and opening a seeded profile session.
 
@@ -42,24 +47,55 @@ def active_profile_isolated_backend_fixture(
     into it) and in a ``finally`` after the yield (so this test's connection
     cannot leak into the next). Default ``False`` preserves every existing
     caller's behaviour unchanged.
+
+    ``settings_overrides`` is a third axis: some sites additionally pin a
+    Settings field ``isolated_profile_storage_root`` does not itself set (most
+    commonly ``cadrumo_output_language``, also ``cadrumo_live_state_dir``).
+    Applied via :func:`~cadrumo.core.config.override_settings` OUTSIDE (before)
+    ``isolated_profile_storage_root`` in the with-tuple, matching the majority
+    of the sites this replaces -- ``isolated_profile_storage_root`` layers its
+    own ``cadrumo_local_storage_root`` override on top without disturbing
+    fields the caller already set, so the two compose regardless of which
+    field each touches. Default ``None`` preserves every existing caller's
+    behaviour unchanged.
+
+    ``profile_overrides`` is a fourth axis: a small number of sites need a
+    non-default profile fact (e.g. ``identity.tax_id``) stamped on the seeded
+    profile, passed straight through to
+    :func:`~cadrumo.tests.user_profile.register_minimal_profile`. Default
+    ``None`` preserves every existing caller's behaviour unchanged.
+
+    ``display_name`` is a fifth axis, also a straight passthrough to
+    :func:`~cadrumo.tests.user_profile.register_minimal_profile`. Default
+    ``None`` preserves every existing caller's behaviour unchanged.
     """
 
     @pytest.fixture(name=name, autouse=autouse)
     def _active_profile_isolated_backend(tmp_path: Path) -> Iterator[None]:
         if dispose_engine_around:
             dispose_engine()
+        settings_cm = override_settings(**settings_overrides) if settings_overrides else nullcontext()
         with (
+            settings_cm,
             isolated_profile_storage_root(tmp_path=tmp_path),
             open_test_profile_session(bucket_id),
         ):
             if dispose_engine_around:
                 try:
-                    register_minimal_profile(profile_id=bucket_id)
+                    register_minimal_profile(
+                        profile_id=bucket_id,
+                        display_name=display_name,
+                        overrides=profile_overrides,
+                    )
                     yield
                 finally:
                     dispose_engine()
             else:
-                register_minimal_profile(profile_id=bucket_id)
+                register_minimal_profile(
+                    profile_id=bucket_id,
+                    display_name=display_name,
+                    overrides=profile_overrides,
+                )
                 yield
 
     return _active_profile_isolated_backend

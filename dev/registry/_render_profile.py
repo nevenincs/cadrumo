@@ -78,7 +78,10 @@ class RenderProfileAnchor(_StrictModel):
     sheet: str = Field(min_length=1)
     source_row: int = Field(gt=0)
     source_cell: str | None = Field(pattern=r"^[A-Z]+[1-9][0-9]*$")
-    ordinal: int = Field(gt=0)
+    #: The ordinal AEAT printed, verbatim -- a str because it is a printed LABEL,
+    #: never an arithmetic value. Mirrors
+    #: :attr:`domain.calculations.registry.RecordDesignField.ordinal`.
+    ordinal: str | None = Field(default=None, min_length=1)
     record_identity: str = Field(min_length=1)
 
 
@@ -683,11 +686,17 @@ def _duplicates[T](values: Iterable[T]) -> tuple[T, ...]:
     return tuple(sorted(duplicates, key=repr))
 
 
-def _anchor_key(anchor: RenderProfileAnchor) -> tuple[str, int, int, str, str]:
+def _anchor_key(anchor: RenderProfileAnchor) -> tuple[str, int, str, str, str]:
+    """Return a deterministic, total sort key -- presentation order, not AEAT order.
+
+    Plain string ordering on ``ordinal`` is fine here: every use is a stable,
+    reproducible listing (an error message, a persisted artefact), never an
+    AEAT-numeric position a downstream index depends on.
+    """
     return (
         anchor.sheet,
         anchor.source_row,
-        anchor.ordinal,
+        anchor.ordinal or "",
         anchor.source_cell or "",
         anchor.record_identity,
     )

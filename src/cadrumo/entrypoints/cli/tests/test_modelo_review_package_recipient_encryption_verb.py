@@ -61,7 +61,7 @@ from ....tests.active_profile_isolated_backend_fixture import active_profile_iso
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import set_active_test_profile_facts
-from ._modelo_review_package_support import seed_exportable_modelo_revision
+from ._modelo_review_package_support import build_review_package_via_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -111,12 +111,9 @@ _MODELO_111_INPUTS: dict[CasillaId, str] = {
 
 def _build_package(tmp_path: Path, *, name: str = "review-package.zip") -> Path:
     _set_export_profile_name()
-    work_unit_id, _ = seed_exportable_modelo_revision(input_values_by_casilla_id=_MODELO_111_INPUTS)
-    package_path = tmp_path / name
-    build_result = _invoke(
-        ["app", "modelo", "review-package", "build", work_unit_id, "--output", str(package_path)],
+    package_path, _, _ = build_review_package_via_cli(
+        tmp_path, invoke=_invoke, input_values_by_casilla_id=_MODELO_111_INPUTS, name=name
     )
-    assert build_result.exit_code == 0, build_result.output
     return package_path
 
 

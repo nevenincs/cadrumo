@@ -47,6 +47,7 @@ from .._schema import (
 )
 from .._schema_verification import VerificationExpectationDefinition
 from .._snapshot import build_validated_snapshot
+from .._validate import RegistryValidator
 from .._validate_references import check_all_id_references
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -76,6 +77,7 @@ __all__ = [
     "minimal_revision",
     "minimal_source_ref",
     "minimal_workbook_ref",
+    "modelo_validation_failures",
     "segmented_casilla",
     "single_segment_casilla",
     "snapshot_for_revision",
@@ -354,6 +356,19 @@ def _single_segment_casilla() -> CasillaDefinition:
     )
 
 
+def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
+    """Run real registry validation and return its accumulated failure lines, or none.
+
+    Shared across the referential-integrity test modules that assert on failure
+    MESSAGE text rather than the raised exception itself.
+    """
+    try:
+        RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
+    except RegistryValidationError as exc:
+        return str(exc).splitlines()
+    return []
+
+
 def _completeness_manifest(
     casillas: tuple[CalculationCompletenessCasilla, ...],
 ) -> CalculationCompletenessManifest:
@@ -380,6 +395,7 @@ minimal_modelo = _minimal_modelo
 minimal_revision = _minimal_revision
 minimal_source_ref = _minimal_source_ref
 minimal_workbook_ref = _minimal_workbook_ref
+modelo_validation_failures = _modelo_validation_failures
 segmented_casilla = _segmented_casilla
 single_segment_casilla = _single_segment_casilla
 snapshot_for_revision = _snapshot_for_revision

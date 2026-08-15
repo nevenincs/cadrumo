@@ -34,6 +34,7 @@ from ....application.provisioning import (
 from ....core import LOCAL_TRANSPORT_LABEL, AcceleratorKind
 from ....core.config import load_settings, override_settings
 from ....domain.iva import InvoiceKind
+from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.secure_sql import TestRuntimeProfile
 from .._batch_ingest import BatchRunResult, run_evidence_batch
 from .._evidence import PurchaseInvoiceEvidenceService
@@ -63,23 +64,6 @@ _SCAN = "scanned_invoice_from_commons_1.pdf"
 
 _GIB = 1024**3
 _SUPPLIER_CIF = "B12345674"
-
-
-def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:
-    """Build a real text-layer PDF, so the document genuinely needs a reader."""
-    from io import BytesIO
-
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfgen import canvas
-
-    buf = BytesIO()
-    page = canvas.Canvas(buf, pagesize=A4)
-    y = 760
-    for line in lines:
-        page.drawString(72, y, line)
-        y -= 20
-    page.save()
-    return buf.getvalue()
 
 
 @pytest.fixture
@@ -634,7 +618,7 @@ class TestInferencePacing:
         A real loopback endpoint supplies the reply, so the router, the provider
         client and the socket are all production code and no model runs.
         """
-        pdf = _text_pdf_bytes(
+        pdf = text_pdf_bytes(
             (
                 "Factura de Suministros Batch SL",
                 f"NIF: {_SUPPLIER_CIF}",

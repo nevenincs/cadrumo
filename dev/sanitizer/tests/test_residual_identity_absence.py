@@ -82,6 +82,7 @@ import pytest
 from pydantic import SecretStr
 
 from cadrumo.tests import SRC_CADRUMO
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .. import (
     CHECKSUM_VERIFIED_KINDS,
@@ -458,15 +459,4 @@ def _pre_sanitisation_token_map() -> TokenMap:
 
 def _pdf_bytes_containing(text: str) -> bytes:
     """Build a one-page PDF whose content stream carries ``text``."""
-    import io
-
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfgen import canvas
-
-    buffer = io.BytesIO()
-    pdf_canvas = canvas.Canvas(buffer, pagesize=A4)
-    pdf_canvas.setFont("Helvetica", 10)
-    pdf_canvas.drawString(50, 700, text)
-    pdf_canvas.showPage()
-    pdf_canvas.save()
-    return buffer.getvalue()
+    return text_pdf_bytes((text,))

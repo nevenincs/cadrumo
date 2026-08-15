@@ -4,7 +4,7 @@ tags:
   - '#test-harness-sanity'
 date: '2026-08-14'
 modified: '2026-08-15'
-body_hash: 'sha256:2f4e1254e50197150ebd360512562faeee5f97b484f4e38bcfe6b755e9464b19'
+body_hash: 'sha256:66035b3ec3fbee3ca161abe7c2ae0d8b0c2cf2b73bdca17a84c1d9cfe8ae2c31'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -215,6 +215,7 @@ The classes the name-keyed census cannot reach. Drift is scored by structural si
 - [ ] `W09.P30.S128` - Fold the four differently-named review-package builders onto a path-returning sibling of the canonical bytes builder; `src/cadrumo/application/modelo/tests, src/cadrumo/entrypoints/cli/tests`.
 - [ ] `W09.P30.S129` - Route the secure-object namespace registration mirror in the persistence package to an owner both test packages may import; `src/cadrumo/adapters/persistence/operations/tests`.
 - [x] `W09.P30.S130` - Consolidate the drifted release-cohort builders onto a deterministic clock and retire the wall-clock variant; `dev/packaging/tests/_release_cohort_support.py`.
+- [ ] `W09.P30.S131` - Rename the worked-example oracle input reader so it stops colliding by name with the manual-input allowlist concept a separate ADR governs; `src/cadrumo/domain/calculations/registry/tests`.
 
 ## Parallelization
 

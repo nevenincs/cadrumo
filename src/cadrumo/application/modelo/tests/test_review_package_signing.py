@@ -32,6 +32,7 @@ See Also:
 from __future__ import annotations
 
 import contextvars
+import functools
 import threading
 from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
@@ -56,7 +57,6 @@ from ....domain.modelos import (
     derive_work_unit_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .._review_package import build_review_package
 from .._review_package_signing import (
     ReviewPackageSigningError,
     ReviewPackageSigningKeyNotFoundError,
@@ -70,6 +70,7 @@ from .._review_package_signing import (
     sign_review_package,
     verify_review_package_signature,
 )
+from ._review_package_bytes_support import build_package_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -137,18 +138,12 @@ def _revision(work_unit: WorkUnit) -> CalculationRevision:
     )
 
 
-def _build_package(tmp_path: Path, *, bucket_id: str) -> Path:
-    work_unit = _work_unit(bucket_id=bucket_id)
-    revision = _revision(work_unit)
-    output_path = tmp_path / "review-package.zip"
-    build_review_package(
-        revision=revision,
-        work_unit=work_unit,
-        draft_bytes=_DRAFT_BYTES,
-        output_path=output_path,
-        built_by="operator",
-    )
-    return output_path
+_build_package = functools.partial(
+    build_package_path,
+    work_unit_factory=_work_unit,
+    revision_factory=_revision,
+    draft_bytes=_DRAFT_BYTES,
+)
 
 
 def test_ensure_keypair_mints_then_persists_and_is_idempotent(tmp_path: Path) -> None:

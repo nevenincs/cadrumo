@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:5926602a028224caeb7a569f7bf2503749edad4d876809c9e059aa7c68974a81'
+body_hash: 'sha256:d2cf703ce055e3341006e78f48cffb515bbf9fc355e30b230945563b1996b812'
 related:
   - "[[2026-08-14-registry-temporal-coverage-research]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -75,7 +75,6 @@ The 670 are `Modelo.M303`'s régimen simplificado annual IVA módulos activity i
 1. **Stub-grounding refusal**, `verify_legal_reference_grounding` in `src/cadrumo/domain/calculations/registry/_legal.py` -- refuses a dispositive-kind legal reference anchored at `#modelo-<id>` whose corpus text carries no article/disposición of its own. Scoped to this one anchor shape deliberately: a first attempt scoped to every dispositive-kind reference mis-fired on 59 of 633 real, correctly-grounded entries (apartados, anexos, compound-ordinal disposiciones, bis/ter/decies-suffixed articles all legitimately lack an "articulo N." heading). Refusal set on the real catalogue: exactly `{orden-eha-2887-2008:modelo-151, orden-hac-1023-2021:modelo-714}`. Mutation-proven with a cause-unique marker string.
 2. **A third failure reason**, `NO LEGAL EVIDENCE OF REVISION RECORDED`, in `test_every_modelo_revision_span_is_corpus_proven` (`test_revision_span_matches_published_designs.py`) -- fires alongside (never replacing) the existing design-evidence relayout failure when a modelo's entire revision history cites only its founding orden despite corpus evidence proving a relayout. Fires on 10 revisions across 8 modelos (193, 200, 220, 303 x3, 322, 353, 604, 714), verified strictly additive (the gate's `AssertionError` still fires; nothing that passed before still passes now by a weaker route).
 3. **`valid_from` correction**, M200's revision, `2025-01-01 -> 2024-01-01` -- the only registry-data fact fix landed this session beyond two narrowly-authorized stale-comment corrections (M222, M270). Blast radius measured both in simulation and against the real load: nothing resolves differently, two previously-refusing `on=`-dated selections now resolve to the same single existing revision.
-
 
 ### m714-rebuilt | high | Acquisition, executed: M714 restructured into five ejercicio-scoped revisions, and a standing coverage-hole finding dissolved as a side effect
 

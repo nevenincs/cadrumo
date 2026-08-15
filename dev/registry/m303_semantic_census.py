@@ -85,6 +85,10 @@ class M303SemanticCensusExpectation:
     #: a header, which is a measurement rather than an invariant.
     review_home_totals: Mapping[str, int]
     #: The S63 declaration-index spans that carry simplified-regime projections.
+    #: DP30302's simplified rows are a plain sequential AEAT numbering with no
+    #: dotted or ``bis`` label, so the census still expresses them as ``int``
+    #: here; :attr:`simplified_anchors` renders each to the printed ``str``
+    #: ordinal the parser and semantic map now carry.
     simplified_ordinal_spans: tuple[range, ...]
     #: Ordinals inside those spans that the design reserves as fillers.
     simplified_filler_ordinals: frozenset[int]
@@ -95,10 +99,10 @@ class M303SemanticCensusExpectation:
         return self.fixed_anchor_count + M303_VARIABLE_ENVELOPE_ANCHOR_COUNT
 
     @property
-    def simplified_anchors(self) -> frozenset[tuple[str, int]]:
+    def simplified_anchors(self) -> frozenset[tuple[str, str]]:
         """Return the exact DP30302 anchor index simplified projections must cover."""
         return frozenset(
-            ("DP30302", ordinal)
+            ("DP30302", str(ordinal))
             for span in self.simplified_ordinal_spans
             for ordinal in span
             if ordinal not in self.simplified_filler_ordinals
@@ -264,12 +268,12 @@ class EpochAnchorPairing:
     """How two epochs' anchors correspond, by the designs' own declarations."""
 
     #: Target anchor -> the predecessor anchor declaring the same slot.
-    paired: Mapping[tuple[str, int], tuple[str, int]]
+    paired: Mapping[tuple[str, str | None], tuple[str, str | None]]
     #: Target anchors the predecessor does not declare, or declares a different
     #: number of times. Every one is a hand-review question.
-    unpaired_target: frozenset[tuple[str, int]]
+    unpaired_target: frozenset[tuple[str, str | None]]
     #: The mirror image: predecessor anchors this epoch stops declaring.
-    unpaired_predecessor: frozenset[tuple[str, int]]
+    unpaired_predecessor: frozenset[tuple[str, str | None]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -417,27 +421,27 @@ def census_m303_semantic_map(
 
 def _entry_at(semantic_map: SemanticMap, record_identity: str, ordinal: int) -> SemanticMapEntry:
     for entry in semantic_map.entries:
-        if entry.anchor.record_identity == record_identity and entry.anchor.ordinal == ordinal:
+        if entry.anchor.record_identity == record_identity and entry.anchor.ordinal == str(ordinal):
             return entry
     raise ValueError(f"semantic map has no entry at {record_identity}/{ordinal}")
 
 
-def _field_anchor(field: RecordDesignIntermediateField) -> tuple[str, int, str | None, int, str]:
+def _field_anchor(field: RecordDesignIntermediateField) -> tuple[str, int, str | None, str | None, str]:
     return (
         str(field.sheet),
         int(field.source_row),
         field.source_cell,
-        int(field.ordinal),
+        field.ordinal,
         str(field.record_identity),
     )
 
 
-def _semantic_anchor(anchor: SemanticMapAnchor) -> tuple[str, int, str | None, int, str]:
+def _semantic_anchor(anchor: SemanticMapAnchor) -> tuple[str, int, str | None, str | None, str]:
     return (
         str(anchor.sheet),
         int(anchor.source_row),
         anchor.source_cell,
-        int(anchor.ordinal),
+        anchor.ordinal,
         str(anchor.record_identity),
     )
 
@@ -447,13 +451,17 @@ def _relative_anchor(
     design_epoch: str,
     *,
     body: bool,
-) -> tuple[str, int, str | None, int, str]:
+) -> tuple[str, int, str | None, str | None, str]:
     if body:
+        # ``body_ordinal`` stays the marker's genuine ``int`` -- it is a
+        # sequential envelope marker, never a printed field label -- so it is
+        # rendered to ``str`` only here, at the boundary with the now-``str``
+        # anchor it is compared against.
         return (
             str(envelope.sheet),
             int(envelope.body_source_row),
             envelope.body_source_cell,
-            int(envelope.body_ordinal),
+            str(envelope.body_ordinal),
             str(envelope.record_identity),
         )
     closer = envelope.closing
@@ -463,7 +471,7 @@ def _relative_anchor(
         str(envelope.sheet),
         int(closer.source_row),
         closer.source_cell,
-        int(closer.ordinal),
+        str(closer.ordinal),
         str(envelope.record_identity),
     )
 
@@ -504,17 +512,17 @@ def pair_epoch_anchors(
     homes across an epoch boundary through it, and the epoch gates verify
     against it, so the two cannot hold different notions of "the same slot".
     """
-    before: dict[tuple[str, str, str, int, str, str], list[tuple[str, int]]] = {}
-    after: dict[tuple[str, str, str, int, str, str], list[tuple[str, int]]] = {}
+    before: dict[tuple[str, str, str, int, str, str], list[tuple[str, str | None]]] = {}
+    after: dict[tuple[str, str, str, int, str, str], list[tuple[str, str | None]]] = {}
     for source, sink in ((predecessor, before), (target, after)):
         for sheet in source.sheets:
             for field in sheet.fields:
                 sink.setdefault(design_declaration_key(field), []).append(
-                    (str(field.record_identity), int(field.ordinal)),
+                    (str(field.record_identity), field.ordinal),
                 )
 
-    paired: dict[tuple[str, int], tuple[str, int]] = {}
-    unpaired_target: set[tuple[str, int]] = set()
+    paired: dict[tuple[str, str | None], tuple[str, str | None]] = {}
+    unpaired_target: set[tuple[str, str | None]] = set()
     for key, anchors in after.items():
         counterparts = before.get(key, [])
         if len(counterparts) != len(anchors):

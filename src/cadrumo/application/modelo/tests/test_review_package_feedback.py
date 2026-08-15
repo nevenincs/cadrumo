@@ -41,6 +41,7 @@ See Also:
 
 from __future__ import annotations
 
+import functools
 from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -63,7 +64,6 @@ from ....domain.modelos import (
     derive_work_unit_id,
 )
 from ....tests.secure_sql import isolated_two_bucket_runtime
-from .._review_package import build_review_package
 from .._review_package_collab_audit import emit_collab_feedback_countersign_attached_event
 from .._review_package_counter_sign import counter_sign_review_package
 from .._review_package_feedback import (
@@ -84,6 +84,7 @@ from .._review_package_signing import (
     ensure_review_package_signing_keypair,
     sign_review_package,
 )
+from ._review_package_bytes_support import build_package_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -171,18 +172,13 @@ def _revision(work_unit: WorkUnit) -> CalculationRevision:
     )
 
 
-def _build_package(tmp_path: Path, *, bucket_id: str) -> Path:
-    work_unit = _work_unit(bucket_id=bucket_id)
-    revision = _revision(work_unit)
-    output_path = tmp_path / f"review-package-{bucket_id}.zip"
-    build_review_package(
-        revision=revision,
-        work_unit=work_unit,
-        draft_bytes=_DRAFT_BYTES,
-        output_path=output_path,
-        built_by="operator",
-    )
-    return output_path
+_build_package = functools.partial(
+    build_package_path,
+    work_unit_factory=_work_unit,
+    revision_factory=_revision,
+    draft_bytes=_DRAFT_BYTES,
+    filename_template="review-package-{bucket_id}.zip",
+)
 
 
 def test_full_round_trip_originator_signs_accountant_countersigns_and_returns_feedback(

@@ -145,7 +145,22 @@ def generalize_dp30302_field_description(normalized_description: str) -> str:
     return _ACTIVIDAD_SLOT.sub("Actividad N", normalized_description)
 
 
-def resolve_dp30302_module_sub_indices(fields: Sequence[RecordDesignIntermediateField]) -> dict[int, int]:
+def _numeric_module_ordinal(ordinal: str | None) -> int:
+    """Parse a repeating-module field's printed ordinal as its numeric sort position.
+
+    A string sort would put ``"2"`` after ``"10"`` and silently invert the
+    sub-index run this resolves, so ordering needs the real numeric value.
+    Every DP30302 repeating-module row is a plain AEAT-numbered box -- never
+    blank, dotted, or ``bis``-suffixed in this range -- so parsing here reads
+    the source's own printed number rather than fabricating one; anything else
+    is a genuine corpus surprise this refuses loudly rather than mis-order.
+    """
+    if ordinal is None or not ordinal.isdigit():
+        raise RegistryValidationError(f"DP30302 module field ordinal is not a plain numbered label: {ordinal!r}")
+    return int(ordinal)
+
+
+def resolve_dp30302_module_sub_indices(fields: Sequence[RecordDesignIntermediateField]) -> dict[str | None, int]:
     """Assign a deterministic, gap-free sub-index to every repeating module field.
 
     Fields are grouped by their exact activity slot and generalized
@@ -163,14 +178,14 @@ def resolve_dp30302_module_sub_indices(fields: Sequence[RecordDesignIntermediate
         key = (slot, generalize_dp30302_field_description(field.normalized_description))
         groups[key].append(field)
 
-    sub_index_by_ordinal: dict[int, int] = {}
+    sub_index_by_ordinal: dict[str | None, int] = {}
     for (slot, generalized), members in groups.items():
         ordinals = tuple(member.ordinal for member in members)
         if len(set(ordinals)) != len(ordinals):
             raise RegistryValidationError(
                 f"DP30302 module family {generalized!r} activity {slot} carries duplicate ordinals: {ordinals!r}",
             )
-        for sub_index, member in enumerate(sorted(members, key=lambda field: field.ordinal), start=1):
+        for sub_index, member in enumerate(sorted(members, key=lambda field: _numeric_module_ordinal(field.ordinal)), start=1):
             sub_index_by_ordinal[member.ordinal] = sub_index
     return sub_index_by_ordinal
 
