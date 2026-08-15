@@ -4921,6 +4921,8 @@ cli:
       auth_state_unreadable: No es pot comprovar l'autenticació fins que les dades
         locals de sessió desades siguin llegibles.
       profile_keys_set: '%{present}/%{total} claus de perfil establertes.'
+      profile_locked: No has iniciat la sessió. Executa `aeat config login` per desbloquejar
+        el teu perfil.
       profile_missing_fields: 'Al perfil li falten %{count} camp(s) obligatori(s):
         %{fields}'
       profile_none: No hi ha cap perfil configurat
@@ -49265,6 +49267,75 @@ modelo:
       revision:
         2003-y-siguientes:
           casilla:
+            afiliado-nif:
+              help: null
+              label: NIF de l'afiliat o mutualista
+            afiliado-nombre:
+              help: null
+              label: Cognoms i nom de l'afiliat o mutualista
+            cotizacion-abril:
+              help: null
+              label: 'Cotització de abril: situació mensual i import de la quota meritada'
+            cotizacion-agosto:
+              help: null
+              label: 'Cotització de agost: situació mensual i import de la quota meritada'
+            cotizacion-diciembre:
+              help: null
+              label: 'Cotització de desembre: situació mensual i import de la quota
+                meritada'
+            cotizacion-enero:
+              help: null
+              label: 'Cotització de gener: situació mensual i import de la quota meritada'
+            cotizacion-febrero:
+              help: null
+              label: 'Cotització de febrer: situació mensual i import de la quota
+                meritada'
+            cotizacion-julio:
+              help: null
+              label: 'Cotització de juliol: situació mensual i import de la quota
+                meritada'
+            cotizacion-junio:
+              help: null
+              label: 'Cotització de juny: situació mensual i import de la quota meritada'
+            cotizacion-marzo:
+              help: null
+              label: 'Cotització de març: situació mensual i import de la quota meritada'
+            cotizacion-mayo:
+              help: null
+              label: 'Cotització de maig: situació mensual i import de la quota meritada'
+            cotizacion-noviembre:
+              help: null
+              label: 'Cotització de novembre: situació mensual i import de la quota
+                meritada'
+            cotizacion-octubre:
+              help: null
+              label: 'Cotització de octubre: situació mensual i import de la quota
+                meritada'
+            cotizacion-septiembre:
+              help: null
+              label: 'Cotització de setembre: situació mensual i import de la quota
+                meritada'
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaració complementària o substitutiva
+            declarante-razon-social:
+              help: null
+              label: Raó social del declarant
+            numero-afiliacion:
+              help: null
+              label: Número d'afiliació
+            numero-identificativo-anterior:
+              help: null
+              label: Número identificatiu de la declaració anterior
+            numero-justificante:
+              help: null
+              label: Número de justificant de la declaració
+            numero-total-afiliados:
+              help: null
+              label: Nombre total de registres d'afiliats o mutualistes
+            persona-relacion:
+              help: null
+              label: Persona amb qui relacionar-se
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Exercici a què es refereix la declaració
@@ -65743,12 +65814,21 @@ modelo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
             x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
+              help: Suma de les bases de retenció o ingrés a compte reflectides en
+                els registres de perceptor, en euros.
               label: Total import base de retenció o ingrés a compte
             x-chim6r1eehnn8obc5lkmqs3fe9q6abbge9imqqbfec:
+              help: Suma dels imports íntegres dels premis reflectits en els registres
+                de perceptor, en euros, sense signe ni coma decimal.
               label: Total import o valoració dels premis
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: Nombre total de perceptors relacionats en els registres de detall
+                de tipus 2. Si un mateix perceptor figura en diversos registres, es
+                computa tantes vegades com hi figuri.
               label: Nombre total de registres de perceptor declarats
             x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
+              help: Suma de les retencions o ingressos a compte reflectits en els
+                registres de perceptor, en euros.
               label: Total import de la retenció o ingrés a compte
             x-e1in4opec9gn6p9de9in8pbecdkmurg:
               label: Base de retenció o ingrés a compte
@@ -65767,14 +65847,26 @@ modelo:
             x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
               label: Lloc de naixement del perceptor no resident
             x-e1in4opedpkmc:
+              help: NIF del perceptor del premi. Només es deixa en blanc si el tipus
+                de perceptor és la clau 5 i el perceptor no disposa de NIF espanyol,
+                cas en què s'ha d'emplenar obligatòriament el número d'identificació
+                fiscal al país de residència.
               label: Número d'identificació fiscal (NIF) del perceptor
             x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
               label: Número d'identificació fiscal al país de residència fiscal
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: NIF de la persona o entitat que, si escau, intervingui com a representant
+                del perceptor. En qualsevol altre cas s'omple amb blancs.
               label: NIF del representant legal del perceptor
             x-e1in4opedpnmqojick:
+              help: Per a persones físiques, primer cognom, un espai, segon cognom,
+                un espai i nom complet, en aquest ordre. Per a persones jurídiques
+                o entitats, la denominació o raó social completa, sense anagrames.
               label: Cognoms i nom, raó social o denominació del perceptor
             x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
+              help: Cognoms i nom del representant si és persona física, o la denominació
+                o raó social completa si és persona jurídica o entitat. En qualsevol
+                altre cas s'omple amb blancs.
               label: Cognoms i nom, raó social o denominació del representant del
                 perceptor
             x-e1in4opee1gmispde9in6qb4cln66qb1:
@@ -65784,6 +65876,11 @@ modelo:
             x-e1in4opee9in8pbecdkmurg:
               label: Import de la retenció o ingrés a compte
             x-e1in4opeehkn0rpde1in4or5e1q6usg:
+              help: Clau 1 persona física contribuent de l'IRPF, 2 entitat en règim
+                d'atribució de rendes resident en territori espanyol, 3 persona jurídica
+                o entitat resident subjecte passiu de l'Impost sobre Societats, 4
+                establiment permanent en territori espanyol, 5 persona o entitat no
+                resident que opera sense mediació d'establiment permanent.
               label: Tipus de perceptor
           construct:
             modelo-270-informative:
@@ -73243,6 +73340,20 @@ modelo:
         official_name: null
         title: null
       revision:
+        2021-2023:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix l'autoliquidació
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (mes natural)
+          construct:
+            modelo-604-autoliquidacion:
+              field:
+                title: null
+          field:
+            label: null
         2021-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -73251,6 +73362,277 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període (mes natural)
+          construct:
+            modelo-604-autoliquidacion:
+              field:
+                title: null
+          field:
+            label: null
+        2024-y-siguientes:
+          casilla:
+            x-c5n6au3f5pn7arb5e9niqqjledq6ipj9cdgmst35:
+              help: null
+              label: Annex informatiu. Número de justificant
+            x-cdnmqs3c5pi6aorcc5p62or9dtn2qorfdlo6opbdcln78obid5gg:
+              help: null
+              label: Declaració complementària
+            x-cdnmqs3c5pn7arb5e9niqqjledq6ipj9cdgmst355lgmst35e9kmusg:
+              help: null
+              label: Número de justificant de la declaració anterior
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix l'autoliquidació
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Idioma de la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (mes natural)
+            x-chim6r1eehkn0rpdc5qn8rrcd5onaqb4c5hmirre:
+              help: null
+              label: 'Tipus d''autoliquidació (I: a ingressar, N: negativa)'
+            x-chnmqbb5ecn64r3fe5qma:
+              help: null
+              label: Domicili fiscal en territori espanyol. Bloc
+            x-chnmqbb5ecn66obcd5j6ior1chnn4bbeelmmasjf:
+              help: null
+              label: Domicili fiscal en territori espanyol. Qualificador del número
+            x-chnmqbb5ecn66rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Domicili fiscal en territori espanyol. Codi postal
+            x-chnmqbb5ecn66rr4d5jmubbge9nncqbecdkm2:
+              help: null
+              label: Domicili fiscal en territori espanyol. Codi de província
+            x-chnmqbb5ecn66rrde1m6arb5dpq6u:
+              help: null
+              label: Domicili fiscal en territori espanyol. Complement del domicili
+            x-chnmqbb5ecn6asr3c5m6asj1:
+              help: null
+              label: Domicili fiscal en territori espanyol. Escala
+            x-chnmqbb5ecn6orr3c5m6ip31cg:
+              help: null
+              label: Domicili fiscal en territori espanyol. Localitat o població
+            x-chnmqbb5ecn6qtbed5hmis39ds:
+              help: null
+              label: Domicili fiscal en territori espanyol. Municipi
+            x-chnmqbb5ecn6srrdc9p6abbmd5gg:
+              help: null
+              label: Domicili fiscal en territori espanyol. Nom de la via
+            x-chnmqbb5ecn6stbdclp6ubb3c5pm2:
+              help: null
+              label: Domicili fiscal en territori espanyol. Número de casa
+            x-chnmqbb5ecn70r31dpq62:
+              help: null
+              label: Domicili fiscal en territori espanyol. Planta
+            x-chnmqbb5ecn70rriehgmo:
+              help: null
+              label: Domicili fiscal en territori espanyol. Portal
+            x-chnmqbb5ecn70sjfepkmsor9c4:
+              help: null
+              label: Domicili fiscal en territori espanyol. Província
+            x-chnmqbb5ecn70tb5e9q62:
+              help: null
+              label: Domicili fiscal en territori espanyol. Porta
+            x-chnmqbb5ecn78qbgdsmmstbdclp62or9dtn0:
+              help: null
+              label: Domicili fiscal en territori espanyol. Tipus de numeració
+            x-chnmqbb5ecn78qbgdsmncqb1:
+              help: null
+              label: Domicili fiscal en territori espanyol. Tipus de via
+            x-chnmqbb5f0n66rr4d5jmubbgc5kn6:
+              help: null
+              label: Domicili fiscal a l'estranger. Codi de país
+            x-chnmqbb5f0n66rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Domicili fiscal a l'estranger. Codi postal (ZIP)
+            x-chnmqbb5f0n66rrde1m6arb5dpq6u:
+              help: null
+              label: Domicili fiscal a l'estranger. Complement del domicili
+            x-chnmqbb5f0n68rrdd5hmir39ds:
+              help: null
+              label: Domicili fiscal a l'estranger. Domicili
+            x-chnmqbb5f0n70ob9ec:
+              help: null
+              label: Domicili fiscal a l'estranger. País
+            x-chnmqbb5f0n70rr2dhgm6qbfdo:
+              help: null
+              label: Domicili fiscal a l'estranger. Població o ciutat
+            x-chnmqbb5f0n70sjfepkmsor9c4mn4pb7d5nmsbb5edq62p3f:
+              help: null
+              label: Domicili fiscal a l'estranger. Província, regió o estat
+            x-dhkn2bhg64mm4objckmmirbgdtn6iojcck:
+              help: null
+              label: Operacions subjectes no exemptes realitzades en el període. Base
+                imposable [01]
+            x-dhkn2bhg68mm6tbfehgg:
+              help: null
+              label: Operacions subjectes no exemptes realitzades en el període. Quota
+                [02]
+            x-dhkn2bhg6cmm4objckmn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Rectificacions. Base imposable [03]
+            x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Rectificacions. Signe de la base imposable [03]
+            x-dhkn2bhg6gmm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Rectificacions. Quota [04]
+            x-dhkn2bhg6gmn6qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Rectificacions. Signe de la quota [04]
+            x-dhkn2bhg6kmmus35e9gm6qbfdpin6bb5f1imst31ec:
+              help: null
+              label: Operacions exemptes realitzades en el període [05]
+            x-dhkn2bhg6omm2bb4cli7aor9e8:
+              help: null
+              label: A deduir [06]
+            x-dhkn2bhg6smn4pbjelm78ob4ds:
+              help: null
+              label: Resultat de l'autoliquidació [07]
+            x-dhkn2bhg70mm8qb6clp6arj3d5gg:
+              help: null
+              label: Diferència ([02] - [04]) [08]
+            x-dhkn2bhg74mm6tbfehgiqpbjehgm8ro:
+              help: null
+              label: Quota d'operacions subjectes no exemptes del període atribuïble
+                a l'Administració de l'Estat [09]
+            x-dhkn2bhh60mm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6bb5edq62p3f:
+              help: null
+              label: Quota de rectificacions realitzades en el període atribuïble
+                a l'Administració de l'Estat [10]
+            x-dhkn2bhh60mn6qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aspdclpn8ob4ds:
+              help: null
+              label: Signe de la quota de rectificacions del període atribuïble a
+                l'Administració de l'Estat [10]
+            x-dhkn2bhh64mn0rricdimst31d9iiqobke9km4tb9c9m6abb5edq62p3f:
+              help: null
+              label: Percentatge atribuïble a l'Administració de l'Estat [11]
+            x-dhkn2bhh68mn4pbjelm78ob4dsmmasrkc5i6u:
+              help: null
+              label: Resultat atribuïble a l'Administració de l'Estat ([09] - [10])
+                [12]
+            x-edo2sorfchkmerpdc9km6:
+              help: null
+              label: Subjecte passiu. Codi BIC
+            x-edo2sorfchkmerpddhimi:
+              help: null
+              label: Subjecte passiu. Codi LEI (norma ISO 17442)
+            x-edo2ss35e9pmurj15lhmurjkc5hn8ro:
+              help: null
+              label: Subjecte passiu. Persona de contacte
+            x-edo2st35dhimcrredsmm6rreehgm6t3f:
+              help: null
+              label: Subjecte passiu. Telèfon de contacte
+            x-ehin4shec5m62tj15phnarrkc4mn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Tributació per territori. Àlaba. Quota de rectificacions realitzades
+                en el període [14]
+            x-ehin4shec5m62tj15phnarrkc4mn6tbaclq62spddpniqpbocln78obj:
+              help: null
+              label: Tributació per territori. Àlaba. Quota d'operacions subjectes
+                no exemptes del període [13]
+            x-ehin4shec5m62tj15phnarrkc4mn8rrkc5m2qobke9km4tb9c9m6a:
+              help: null
+              label: Tributació per territori. Àlaba. Quota total atribuïble [15]
+            x-ehin4shec5m62tj15pkmqs3fe9q6abbfe1in4ob3d5nmspbj5lingpbeehgn6:
+              help: null
+              label: Tributació per territori. Àlaba. Import de les operacions exemptes
+                [17]
+            x-ehin4shec5m62tj15po6usj3cln78obackmm2t3id5h7aqb2dhig:
+              help: null
+              label: Tributació per territori. Àlaba. % atribuïble [16]
+            x-ehin4shec5m62tj15ppmipredsmm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Tributació per territori. Àlaba. Signe de la quota de rectificacions
+                del període [14]
+            x-ehin4sheclpn8ob4dsn66tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Tributació per territori. Estat. Quota de rectificacions realitzades
+                en el període [34]
+            x-ehin4sheclpn8ob4dsn66tbfehgiqsrld9in8obj5ln6ubb5f1imst31ec:
+              help: null
+              label: Tributació per territori. Estat. Quota d'operacions subjectes
+                no exemptes del període [33]
+            x-ehin4sheclpn8ob4dsn66tbfehgiqt3fehgmobb1ehp6iojld5h6op8:
+              help: null
+              label: Tributació per territori. Estat. Quota total atribuïble [35]
+            x-ehin4sheclpn8ob4dsn6irbgdtp78p9ddto6asj1cdkmurj5ecmmau35dpq62so:
+              help: null
+              label: Tributació per territori. Estat. Import de les operacions exemptes
+                [37]
+            x-ehin4sheclpn8ob4dsn70rricdimst31d9iiqobke9km4tb9c9m6a:
+              help: null
+              label: Tributació per territori. Estat. % atribuïble [36]
+            x-ehin4sheclpn8ob4dsn76qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Tributació per territori. Estat. Signe de la quota de rectificacions
+                del període [34]
+            x-ehin4shectqmis3lf9hmuo9ecdqmut315lp6aorkd5j6ior1cdkmurj5ec:
+              help: null
+              label: Tributació per territori. Guipúscoa. Quota de rectificacions
+                realitzades en el període [19]
+            x-ehin4shectqmis3lf9hmuo9ecdqmut315lpnaqj5ehgn6bbedsmmau35dpq62so:
+              help: null
+              label: Tributació per territori. Guipúscoa. Quota d'operacions subjectes
+                no exemptes del període [18]
+            x-ehin4shectqmis3lf9hmuo9ecdqmut315lq6ut31dgmm2t3id5h7aqb2dhig:
+              help: null
+              label: Tributació per territori. Guipúscoa. Quota total atribuïble [20]
+            x-ehin4shectqmis3lf9hmuo9ed5mn0rriehiiqrrgclp62or9dtn6aspdcls6arjkc5pg:
+              help: null
+              label: Tributació per territori. Guipúscoa. Import de les operacions
+                exemptes [22]
+            x-ehin4shectqmis3lf9hmuo9ee1nn4or5dpq62qj55lgn8sj9c9qmiojcck:
+              help: null
+              label: Tributació per territori. Guipúscoa. % atribuïble [21]
+            x-ehin4shectqmis3lf9hmuo9eedkmerjf5lhnarrkc4mn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Tributació per territori. Guipúscoa. Signe de la quota de rectificacions
+                del període [19]
+            x-ehin4shedpgncobie9gisorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Tributació per territori. Navarra. Quota de rectificacions realitzades
+                en el període [29]
+            x-ehin4shedpgncobie9gisorldtq62bbjell6at31ecmmsrpdcls6arjkc5pg:
+              help: null
+              label: Tributació per territori. Navarra. Quota d'operacions subjectes
+                no exemptes del període [28]
+            x-ehin4shedpgncobie9gisorldtq62bbkdtq62r1dc5q74qb2elkm4r35:
+              help: null
+              label: Tributació per territori. Navarra. Quota total atribuïble [30]
+            x-ehin4shedpgncobie9gisqbde1nn4t355lnn0pbic5hmirreclpiqpbocln78obj:
+              help: null
+              label: Tributació per territori. Navarra. Import de les operacions exemptes
+                [32]
+            x-ehin4shedpgncobie9giss3fe9hmarjkc5l6abb1ehp6iojld5h6op8:
+              help: null
+              label: Tributació per territori. Navarra. % atribuïble [31]
+            x-ehin4shedpgncobie9gissr9ctn6ubb3elnn8o9de9im6t39cpkm6ob3d5nmspbj:
+              help: null
+              label: Tributació per territori. Navarra. Signe de la quota de rectificacions
+                del període [29]
+            x-ehin4sheepknkor1f5gisorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Tributació per territori. Biscaia. Quota de rectificacions realitzades
+                en el període [24]
+            x-ehin4sheepknkor1f5gisorldtq62bbjell6at31ecmmsrpdcls6arjkc5pg:
+              help: null
+              label: Tributació per territori. Biscaia. Quota d'operacions subjectes
+                no exemptes del període [23]
+            x-ehin4sheepknkor1f5gisorldtq62bbkdtq62r1dc5q74qb2elkm4r35:
+              help: null
+              label: Tributació per territori. Biscaia. Quota total atribuïble [25]
+            x-ehin4sheepknkor1f5gisqbde1nn4t355lnn0pbic5hmirreclpiqpbocln78obj:
+              help: null
+              label: Tributació per territori. Biscaia. Import de les operacions exemptes
+                [27]
+            x-ehin4sheepknkor1f5giss3fe9hmarjkc5l6abb1ehp6iojld5h6op8:
+              help: null
+              label: Tributació per territori. Biscaia. % atribuïble [26]
+            x-ehin4sheepknkor1f5gissr9ctn6ubb3elnn8o9de9im6t39cpkm6ob3d5nmspbj:
+              help: null
+              label: Tributació per territori. Biscaia. Signe de la quota de rectificacions
+                del període [24]
           construct:
             modelo-604-autoliquidacion:
               field:

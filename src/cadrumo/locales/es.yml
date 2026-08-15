@@ -4962,6 +4962,8 @@ cli:
       auth_state_unreadable: No se puede comprobar la autenticación hasta que los
         datos locales de sesión guardados sean legibles.
       profile_keys_set: '%{present}/%{total} claves de perfil configuradas.'
+      profile_locked: No has iniciado sesión. Ejecuta `aeat config login` para desbloquear
+        tu perfil.
       profile_missing_fields: 'Al perfil le faltan %{count} campo(s) obligatorio(s):
         %{fields}'
       profile_none: No hay perfil configurado
@@ -51549,6 +51551,81 @@ modelo:
       revision:
         2003-y-siguientes:
           casilla:
+            afiliado-nif:
+              help: null
+              label: NIF del afiliado o mutualista
+            afiliado-nombre:
+              help: null
+              label: Apellidos y nombre del afiliado o mutualista
+            cotizacion-abril:
+              help: null
+              label: 'Cotizacion de abril: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-agosto:
+              help: null
+              label: 'Cotizacion de agosto: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-diciembre:
+              help: null
+              label: 'Cotizacion de diciembre: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-enero:
+              help: null
+              label: 'Cotizacion de enero: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-febrero:
+              help: null
+              label: 'Cotizacion de febrero: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-julio:
+              help: null
+              label: 'Cotizacion de julio: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-junio:
+              help: null
+              label: 'Cotizacion de junio: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-marzo:
+              help: null
+              label: 'Cotizacion de marzo: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-mayo:
+              help: null
+              label: 'Cotizacion de mayo: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-noviembre:
+              help: null
+              label: 'Cotizacion de noviembre: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-octubre:
+              help: null
+              label: 'Cotizacion de octubre: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-septiembre:
+              help: null
+              label: 'Cotizacion de septiembre: situacion mensual e importe de la
+                cuota devengada'
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaracion complementaria o sustitutiva
+            declarante-razon-social:
+              help: null
+              label: Razon social del declarante
+            numero-afiliacion:
+              help: null
+              label: Numero de afiliacion
+            numero-identificativo-anterior:
+              help: null
+              label: Numero identificativo de la declaracion anterior
+            numero-justificante:
+              help: null
+              label: Numero de justificante de la declaracion
+            numero-total-afiliados:
+              help: null
+              label: Numero total de registros de afiliados o mutualistas
+            persona-relacion:
+              help: null
+              label: Persona con quien relacionarse
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Ejercicio al que se refiere la declaración
@@ -68085,16 +68162,28 @@ modelo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
             x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
+              help: Suma de las bases de retención o ingreso a cuenta reflejadas en
+                los registros de perceptor, en euros.
               label: Total importe base de retención o ingreso a cuenta
             x-chim6r1eehnn8obc5lkmqs3fe9q6abbge9imqqbfec:
+              help: Suma de los importes íntegros de los premios reflejados en los
+                registros de perceptor, en euros, sin signo ni coma decimal.
               label: Total importe o valoración de los premios
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: Número total de perceptores relacionados en los registros de detalle
+                de tipo 2. Si un mismo perceptor figura en varios registros, se computa
+                tantas veces como figure relacionado.
               label: Número total de registros de perceptor declarados
             x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
+              help: Suma de las retenciones o ingresos a cuenta reflejados en los
+                registros de perceptor, en euros.
               label: Total importe de la retención o ingreso a cuenta
             x-e1in4opec9gn6p9de9in8pbecdkmurg:
               label: Base de retención o ingreso a cuenta
             x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
+              help: 'Solo se cumplimenta cuando el tipo de perceptor es la clave 5:
+                F si el perceptor es persona física y J si se trata de una persona
+                jurídica o una entidad.'
               label: Clave de personalidad del perceptor no residente
             x-e1in4opecpim6q315ln62or9dlkmarjkds:
               label: Fecha de nacimiento del perceptor no residente
@@ -68109,14 +68198,26 @@ modelo:
             x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
               label: Lugar de nacimiento del perceptor no residente
             x-e1in4opedpkmc:
+              help: NIF del perceptor del premio. Solo se deja en blanco si el tipo
+                de perceptor es la clave 5 y el perceptor no dispone de NIF español,
+                en cuyo caso se cumplimenta obligatoriamente el número de identificación
+                fiscal en el país de residencia.
               label: NIF del perceptor
             x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
               label: Número de identificación fiscal en el país de residencia fiscal
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: NIF de la persona o entidad que, en su caso, intervenga como representante
+                del perceptor. En cualquier otro caso se rellena a blancos.
               label: NIF del representante legal del perceptor
             x-e1in4opedpnmqojick:
+              help: Para personas físicas, primer apellido, un espacio, segundo apellido,
+                un espacio y nombre completo, en este orden. Para personas jurídicas
+                o entidades, la denominación o razón social completa, sin anagramas.
               label: Apellidos y nombre, razón social o denominación del perceptor
             x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
+              help: Apellidos y nombre del representante si es persona física, o su
+                denominación o razón social completa si es persona jurídica o entidad.
+                En cualquier otro caso se rellena a blancos.
               label: Apellidos y nombre, razón social o denominación del representante
                 del perceptor
             x-e1in4opee1gmispde9in6qb4cln66qb1:
@@ -68126,6 +68227,11 @@ modelo:
             x-e1in4opee9in8pbecdkmurg:
               label: Importe de la retención o ingreso a cuenta
             x-e1in4opeehkn0rpde1in4or5e1q6usg:
+              help: Clave 1 persona física contribuyente del IRPF, 2 entidad en régimen
+                de atribución de rentas residente en territorio español, 3 persona
+                jurídica o entidad residente sujeto pasivo del Impuesto sobre Sociedades,
+                4 establecimiento permanente en territorio español, 5 persona o entidad
+                no residente que opera sin mediación de establecimiento permanente.
               label: Tipo de perceptor
           construct:
             modelo-270-informative:
@@ -75855,7 +75961,7 @@ modelo:
         official_name: Modelo 604. Impuesto sobre las Transacciones Financieras. Autoliquidación.
         title: Impuesto sobre las Transacciones Financieras - autoliquidación
       revision:
-        2021-y-siguientes:
+        2021-2023:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
@@ -75869,7 +75975,293 @@ modelo:
                 title: Modelo 604 autoliquidación del Impuesto sobre las Transacciones
                   Financieras
           field:
-            label: Modelo 604 (orden-hac-510-2021), ejercicios 2021 y siguientes
+            label: Modelo 604 (orden-hac-510-2021), ejercicios 2021 a 2023
+        2021-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la autoliquidación
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (mes natural)
+          construct:
+            modelo-604-autoliquidacion:
+              field:
+                title: Modelo 604 autoliquidación del Impuesto sobre las Transacciones
+                  Financieras
+        2024-y-siguientes:
+          casilla:
+            x-c5n6au3f5pn7arb5e9niqqjledq6ipj9cdgmst35:
+              help: null
+              label: Anexo informativo. Número de justificante
+            x-cdnmqs3c5pi6aorcc5p62or9dtn2qorfdlo6opbdcln78obid5gg:
+              help: null
+              label: Declaración complementaria
+            x-cdnmqs3c5pn7arb5e9niqqjledq6ipj9cdgmst355lgmst35e9kmusg:
+              help: null
+              label: Número de justificante de la declaración anterior
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la autoliquidación
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Idioma de la declaración
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (mes natural)
+            x-chim6r1eehkn0rpdc5qn8rrcd5onaqb4c5hmirre:
+              help: null
+              label: 'Tipo de autoliquidación (I: a ingresar, N: negativa)'
+            x-chnmqbb5ecn64r3fe5qma:
+              help: null
+              label: Domicilio fiscal en territorio español. Bloque
+            x-chnmqbb5ecn66obcd5j6ior1chnn4bbeelmmasjf:
+              help: null
+              label: Domicilio fiscal en territorio español. Calificador del número
+            x-chnmqbb5ecn66rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Domicilio fiscal en territorio español. Código postal
+            x-chnmqbb5ecn66rr4d5jmubbge9nncqbecdkm2:
+              help: null
+              label: Domicilio fiscal en territorio español. Código de provincia
+            x-chnmqbb5ecn66rrde1m6arb5dpq6u:
+              help: null
+              label: Domicilio fiscal en territorio español. Complemento del domicilio
+            x-chnmqbb5ecn6asr3c5m6asj1:
+              help: null
+              label: Domicilio fiscal en territorio español. Escalera
+            x-chnmqbb5ecn6orr3c5m6ip31cg:
+              help: null
+              label: Domicilio fiscal en territorio español. Localidad o población
+            x-chnmqbb5ecn6qtbed5hmis39ds:
+              help: null
+              label: Domicilio fiscal en territorio español. Municipio
+            x-chnmqbb5ecn6srrdc9p6abbmd5gg:
+              help: null
+              label: Domicilio fiscal en territorio español. Nombre de la vía
+            x-chnmqbb5ecn6stbdclp6ubb3c5pm2:
+              help: null
+              label: Domicilio fiscal en territorio español. Número de casa
+            x-chnmqbb5ecn70r31dpq62:
+              help: null
+              label: Domicilio fiscal en territorio español. Planta
+            x-chnmqbb5ecn70rriehgmo:
+              help: null
+              label: Domicilio fiscal en territorio español. Portal
+            x-chnmqbb5ecn70sjfepkmsor9c4:
+              help: null
+              label: Domicilio fiscal en territorio español. Provincia
+            x-chnmqbb5ecn70tb5e9q62:
+              help: null
+              label: Domicilio fiscal en territorio español. Puerta
+            x-chnmqbb5ecn78qbgdsmmstbdclp62or9dtn0:
+              help: null
+              label: Domicilio fiscal en territorio español. Tipo de numeración
+            x-chnmqbb5ecn78qbgdsmncqb1:
+              help: null
+              label: Domicilio fiscal en territorio español. Tipo de vía
+            x-chnmqbb5f0n66rr4d5jmubbgc5kn6:
+              help: null
+              label: Domicilio fiscal en el extranjero. Código de país
+            x-chnmqbb5f0n66rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Domicilio fiscal en el extranjero. Código postal (ZIP)
+            x-chnmqbb5f0n66rrde1m6arb5dpq6u:
+              help: null
+              label: Domicilio fiscal en el extranjero. Complemento del domicilio
+            x-chnmqbb5f0n68rrdd5hmir39ds:
+              help: null
+              label: Domicilio fiscal en el extranjero. Domicilio
+            x-chnmqbb5f0n70ob9ec:
+              help: null
+              label: Domicilio fiscal en el extranjero. País
+            x-chnmqbb5f0n70rr2dhgm6qbfdo:
+              help: null
+              label: Domicilio fiscal en el extranjero. Población o ciudad
+            x-chnmqbb5f0n70sjfepkmsor9c4mn4pb7d5nmsbb5edq62p3f:
+              help: null
+              label: Domicilio fiscal en el extranjero. Provincia, región o estado
+            x-dhkn2bhg64mm4objckmmirbgdtn6iojcck:
+              help: null
+              label: Operaciones sujetas no exentas realizadas en el período. Base
+                imponible [01]
+            x-dhkn2bhg68mm6tbfehgg:
+              help: null
+              label: Operaciones sujetas no exentas realizadas en el período. Cuota
+                [02]
+            x-dhkn2bhg6cmm4objckmn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Rectificaciones. Base imponible [03]
+            x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Rectificaciones. Signo de la base imponible [03]
+            x-dhkn2bhg6gmm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Rectificaciones. Cuota [04]
+            x-dhkn2bhg6gmn6qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Rectificaciones. Signo de la cuota [04]
+            x-dhkn2bhg6kmmus35e9gm6qbfdpin6bb5f1imst31ec:
+              help: null
+              label: Operaciones exentas realizadas en el período [05]
+            x-dhkn2bhg6omm2bb4cli7aor9e8:
+              help: null
+              label: A deducir [06]
+            x-dhkn2bhg6smn4pbjelm78ob4ds:
+              help: null
+              label: Resultado de la autoliquidación [07]
+            x-dhkn2bhg70mm8qb6clp6arj3d5gg:
+              help: null
+              label: Diferencia ([02] - [04]) [08]
+            x-dhkn2bhg74mm6tbfehgiqpbjehgm8ro:
+              help: null
+              label: Cuota de operaciones sujetas no exentas del período atribuible
+                a la Administración del Estado [09]
+            x-dhkn2bhh60mm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6bb5edq62p3f:
+              help: null
+              label: Cuota de rectificaciones realizadas en el período atribuible
+                a la Administración del Estado [10]
+            x-dhkn2bhh60mn6qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aspdclpn8ob4ds:
+              help: null
+              label: Signo de la cuota de rectificaciones del período atribuible a
+                la Administración del Estado [10]
+            x-dhkn2bhh64mn0rricdimst31d9iiqobke9km4tb9c9m6abb5edq62p3f:
+              help: null
+              label: Porcentaje atribuible a la Administración del Estado [11]
+            x-dhkn2bhh68mn4pbjelm78ob4dsmmasrkc5i6u:
+              help: null
+              label: Resultado atribuible a la Administración del Estado ([09] - [10])
+                [12]
+            x-edo2sorfchkmerpdc9km6:
+              help: null
+              label: Sujeto pasivo. Código BIC
+            x-edo2sorfchkmerpddhimi:
+              help: null
+              label: Sujeto pasivo. Código LEI (norma ISO 17442)
+            x-edo2ss35e9pmurj15lhmurjkc5hn8ro:
+              help: null
+              label: Sujeto pasivo. Persona de contacto
+            x-edo2st35dhimcrredsmm6rreehgm6t3f:
+              help: null
+              label: Sujeto pasivo. Teléfono de contacto
+            x-ehin4shec5m62tj15phnarrkc4mn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Tributación por territorio. Álava. Cuota de rectificaciones realizadas
+                en el período [14]
+            x-ehin4shec5m62tj15phnarrkc4mn6tbaclq62spddpniqpbocln78obj:
+              help: null
+              label: Tributación por territorio. Álava. Cuota de operaciones sujetas
+                no exentas del período [13]
+            x-ehin4shec5m62tj15phnarrkc4mn8rrkc5m2qobke9km4tb9c9m6a:
+              help: null
+              label: Tributación por territorio. Álava. Cuota total atribuible [15]
+            x-ehin4shec5m62tj15pkmqs3fe9q6abbfe1in4ob3d5nmspbj5lingpbeehgn6:
+              help: null
+              label: Tributación por territorio. Álava. Importe de las operaciones
+                exentas [17]
+            x-ehin4shec5m62tj15po6usj3cln78obackmm2t3id5h7aqb2dhig:
+              help: null
+              label: Tributación por territorio. Álava. % atribuible [16]
+            x-ehin4shec5m62tj15ppmipredsmm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Tributación por territorio. Álava. Signo de la cuota de rectificaciones
+                del período [14]
+            x-ehin4sheclpn8ob4dsn66tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Tributación por territorio. Estado. Cuota de rectificaciones
+                realizadas en el período [34]
+            x-ehin4sheclpn8ob4dsn66tbfehgiqsrld9in8obj5ln6ubb5f1imst31ec:
+              help: null
+              label: Tributación por territorio. Estado. Cuota de operaciones sujetas
+                no exentas del período [33]
+            x-ehin4sheclpn8ob4dsn66tbfehgiqt3fehgmobb1ehp6iojld5h6op8:
+              help: null
+              label: Tributación por territorio. Estado. Cuota total atribuible [35]
+            x-ehin4sheclpn8ob4dsn6irbgdtp78p9ddto6asj1cdkmurj5ecmmau35dpq62so:
+              help: null
+              label: Tributación por territorio. Estado. Importe de las operaciones
+                exentas [37]
+            x-ehin4sheclpn8ob4dsn70rricdimst31d9iiqobke9km4tb9c9m6a:
+              help: null
+              label: Tributación por territorio. Estado. % atribuible [36]
+            x-ehin4sheclpn8ob4dsn76qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Tributación por territorio. Estado. Signo de la cuota de rectificaciones
+                del período [34]
+            x-ehin4shectqmis3lf9hmuo9ecdqmut315lp6aorkd5j6ior1cdkmurj5ec:
+              help: null
+              label: Tributación por territorio. Guipúzcoa. Cuota de rectificaciones
+                realizadas en el período [19]
+            x-ehin4shectqmis3lf9hmuo9ecdqmut315lpnaqj5ehgn6bbedsmmau35dpq62so:
+              help: null
+              label: Tributación por territorio. Guipúzcoa. Cuota de operaciones sujetas
+                no exentas del período [18]
+            x-ehin4shectqmis3lf9hmuo9ecdqmut315lq6ut31dgmm2t3id5h7aqb2dhig:
+              help: null
+              label: Tributación por territorio. Guipúzcoa. Cuota total atribuible
+                [20]
+            x-ehin4shectqmis3lf9hmuo9ed5mn0rriehiiqrrgclp62or9dtn6aspdcls6arjkc5pg:
+              help: null
+              label: Tributación por territorio. Guipúzcoa. Importe de las operaciones
+                exentas [22]
+            x-ehin4shectqmis3lf9hmuo9ee1nn4or5dpq62qj55lgn8sj9c9qmiojcck:
+              help: null
+              label: Tributación por territorio. Guipúzcoa. % atribuible [21]
+            x-ehin4shectqmis3lf9hmuo9eedkmerjf5lhnarrkc4mn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Tributación por territorio. Guipúzcoa. Signo de la cuota de rectificaciones
+                del período [19]
+            x-ehin4shedpgncobie9gisorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Tributación por territorio. Navarra. Cuota de rectificaciones
+                realizadas en el período [29]
+            x-ehin4shedpgncobie9gisorldtq62bbjell6at31ecmmsrpdcls6arjkc5pg:
+              help: null
+              label: Tributación por territorio. Navarra. Cuota de operaciones sujetas
+                no exentas del período [28]
+            x-ehin4shedpgncobie9gisorldtq62bbkdtq62r1dc5q74qb2elkm4r35:
+              help: null
+              label: Tributación por territorio. Navarra. Cuota total atribuible [30]
+            x-ehin4shedpgncobie9gisqbde1nn4t355lnn0pbic5hmirreclpiqpbocln78obj:
+              help: null
+              label: Tributación por territorio. Navarra. Importe de las operaciones
+                exentas [32]
+            x-ehin4shedpgncobie9giss3fe9hmarjkc5l6abb1ehp6iojld5h6op8:
+              help: null
+              label: Tributación por territorio. Navarra. % atribuible [31]
+            x-ehin4shedpgncobie9gissr9ctn6ubb3elnn8o9de9im6t39cpkm6ob3d5nmspbj:
+              help: null
+              label: Tributación por territorio. Navarra. Signo de la cuota de rectificaciones
+                del período [29]
+            x-ehin4sheepknkor1f5gisorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Tributación por territorio. Vizcaya. Cuota de rectificaciones
+                realizadas en el período [24]
+            x-ehin4sheepknkor1f5gisorldtq62bbjell6at31ecmmsrpdcls6arjkc5pg:
+              help: null
+              label: Tributación por territorio. Vizcaya. Cuota de operaciones sujetas
+                no exentas del período [23]
+            x-ehin4sheepknkor1f5gisorldtq62bbkdtq62r1dc5q74qb2elkm4r35:
+              help: null
+              label: Tributación por territorio. Vizcaya. Cuota total atribuible [25]
+            x-ehin4sheepknkor1f5gisqbde1nn4t355lnn0pbic5hmirreclpiqpbocln78obj:
+              help: null
+              label: Tributación por territorio. Vizcaya. Importe de las operaciones
+                exentas [27]
+            x-ehin4sheepknkor1f5giss3fe9hmarjkc5l6abb1ehp6iojld5h6op8:
+              help: null
+              label: Tributación por territorio. Vizcaya. % atribuible [26]
+            x-ehin4sheepknkor1f5gissr9ctn6ubb3elnn8o9de9im6t39cpkm6ob3d5nmspbj:
+              help: null
+              label: Tributación por territorio. Vizcaya. Signo de la cuota de rectificaciones
+                del período [24]
+          construct:
+            modelo-604-autoliquidacion:
+              field:
+                title: Modelo 604 autoliquidación del Impuesto sobre las Transacciones
+                  Financieras
+          field:
+            label: Modelo 604 (orden-hac-510-2021), ejercicios 2024 y siguientes
     '714':
       field:
         official_name: Impuesto sobre el Patrimonio. Declaración

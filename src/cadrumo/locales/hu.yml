@@ -4833,6 +4833,8 @@ cli:
       auth_state_unreadable: A hitelesítési készültség nem ellenőrizhető, amíg a mentett
         helyi munkamenetadatok nem olvashatók.
       profile_keys_set: '%{present}/%{total} profilkulcs beállítva.'
+      profile_locked: Nem vagy bejelentkezve. Futtasd az `aeat config login` parancsot
+        a profilod feloldásához.
       profile_missing_fields: 'A profilból %{count} kötelező mező hiányzik: %{fields}'
       profile_none: Nincs beállított profil.
       profile_storage: active_profile=%{active_profile} source=%{source} status=%{status}
@@ -49180,6 +49182,69 @@ modelo:
       revision:
         2003-y-siguientes:
           casilla:
+            afiliado-nif:
+              help: null
+              label: A tag vagy önsegélyezőpénztári tag adószáma
+            afiliado-nombre:
+              help: null
+              label: A tag vagy önsegélyezőpénztári tag családi és utóneve
+            cotizacion-abril:
+              help: null
+              label: 'Járulék, április: havi állapot és az esedékes járulék összege'
+            cotizacion-agosto:
+              help: null
+              label: 'Járulék, augusztus: havi állapot és az esedékes járulék összege'
+            cotizacion-diciembre:
+              help: null
+              label: 'Járulék, december: havi állapot és az esedékes járulék összege'
+            cotizacion-enero:
+              help: null
+              label: 'Járulék, január: havi állapot és az esedékes járulék összege'
+            cotizacion-febrero:
+              help: null
+              label: 'Járulék, február: havi állapot és az esedékes járulék összege'
+            cotizacion-julio:
+              help: null
+              label: 'Járulék, július: havi állapot és az esedékes járulék összege'
+            cotizacion-junio:
+              help: null
+              label: 'Járulék, június: havi állapot és az esedékes járulék összege'
+            cotizacion-marzo:
+              help: null
+              label: 'Járulék, március: havi állapot és az esedékes járulék összege'
+            cotizacion-mayo:
+              help: null
+              label: 'Járulék, május: havi állapot és az esedékes járulék összege'
+            cotizacion-noviembre:
+              help: null
+              label: 'Járulék, november: havi állapot és az esedékes járulék összege'
+            cotizacion-octubre:
+              help: null
+              label: 'Járulék, október: havi állapot és az esedékes járulék összege'
+            cotizacion-septiembre:
+              help: null
+              label: 'Járulék, szeptember: havi állapot és az esedékes járulék összege'
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Kiegészítő vagy helyettesítő bevallás
+            declarante-razon-social:
+              help: null
+              label: A bejelentő cégneve
+            numero-afiliacion:
+              help: null
+              label: Tagsági azonosító szám
+            numero-identificativo-anterior:
+              help: null
+              label: A korábbi bevallás azonosító száma
+            numero-justificante:
+              help: null
+              label: A bevallás igazolásszáma
+            numero-total-afiliados:
+              help: null
+              label: A tag- és önsegélyezőpénztári rekordok száma összesen
+            persona-relacion:
+              help: null
+              label: Kapcsolattartó személy
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Az adóbevallás vonatkozási éve
@@ -65795,12 +65860,21 @@ modelo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
             x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
+              help: A kedvezményezetti rekordokban szereplő forrásadó- vagy adóelőleg-alapok
+                összege euróban.
               label: A forrásadó vagy adóelőleg alapjának teljes összege
             x-chim6r1eehnn8obc5lkmqs3fe9q6abbge9imqqbfec:
+              help: A kedvezményezetti rekordokban szereplő bruttó nyereményösszegek
+                összege euróban, előjel és tizedesjel nélkül.
               label: A nyeremények teljes összege vagy értéke
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: A 2-es típusú tételes rekordokban felsorolt kedvezményezettek
+                teljes száma. A több rekordban szereplő kedvezményezettet minden előfordulásnál
+                külön kell számolni.
               label: A bevallott kedvezményezetti rekordok teljes száma
             x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
+              help: A kedvezményezetti rekordokban szereplő forrásadók vagy adóelőlegek
+                összege euróban.
               label: A forrásadó vagy adóelőleg teljes összege
             x-e1in4opec9gn6p9de9in8pbecdkmurg:
               label: A forrásadó vagy adóelőleg alapja
@@ -65820,14 +65894,26 @@ modelo:
             x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
               label: A külföldi illetőségű kedvezményezett születési helye
             x-e1in4opedpkmc:
+              help: A nyeremény kedvezményezettjének adóazonosító száma. Csak akkor
+                marad üresen, ha a kedvezményezett típusa 5-ös kód és nincs spanyol
+                adóazonosítója; ilyenkor az illetőség szerinti ország adóazonosítója
+                kötelező.
               label: A kedvezményezett adóazonosító száma
             x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
               label: Adóazonosító szám az adóügyi illetőség szerinti országban
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: A kedvezményezett képviselőjeként eljáró személy vagy szervezet
+                adóazonosító száma, ha van ilyen. Minden más esetben üres.
               label: A kedvezményezett törvényes képviselőjének adóazonosító száma
             x-e1in4opedpnmqojick:
+              help: Természetes személynél az első vezetéknév, szóköz, a második vezetéknév,
+                szóköz és a teljes utónév ebben a sorrendben. Jogi személynél vagy
+                szervezetnél a teljes cégnév vagy elnevezés, logó nélkül.
               label: A kedvezményezett vezeték- és utóneve, cégneve vagy elnevezése
             x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
+              help: A képviselő vezeték- és utóneve természetes személy esetén, vagy
+                a teljes cégnév, illetve elnevezés jogi személy vagy szervezet esetén.
+                Minden más esetben üres.
               label: A kedvezményezett képviselőjének vezeték- és utóneve, cégneve
                 vagy elnevezése
             x-e1in4opee1gmispde9in6qb4cln66qb1:
@@ -65837,6 +65923,11 @@ modelo:
             x-e1in4opee9in8pbecdkmurg:
               label: A forrásadó vagy adóelőleg összege
             x-e1in4opeehkn0rpde1in4or5e1q6usg:
+              help: '1-es kód: a személyi jövedelemadó alanyát képező természetes
+                személy; 2: Spanyolországban illetőséggel bíró jövedelem-hozzárendelési
+                szervezet; 3: társasági adó alanyát képező jogi személy vagy belföldi
+                szervezet; 4: spanyolországi állandó telephely; 5: állandó telephely
+                nélkül működő külföldi illetőségű személy vagy szervezet.'
               label: A kedvezményezett típusa
           construct:
             modelo-270-informative:
@@ -73323,6 +73414,20 @@ modelo:
         official_name: null
         title: null
       revision:
+        2021-2023:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az önadózás vonatkozási éve
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Időszak (naptári hónap)
+          construct:
+            modelo-604-autoliquidacion:
+              field:
+                title: null
+          field:
+            label: null
         2021-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -73331,6 +73436,270 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Időszak (naptári hónap)
+          construct:
+            modelo-604-autoliquidacion:
+              field:
+                title: null
+          field:
+            label: null
+        2024-y-siguientes:
+          casilla:
+            x-c5n6au3f5pn7arb5e9niqqjledq6ipj9cdgmst35:
+              help: null
+              label: Tájékoztató melléklet. Igazolásszám
+            x-cdnmqs3c5pi6aorcc5p62or9dtn2qorfdlo6opbdcln78obid5gg:
+              help: null
+              label: Kiegészítő bevallás
+            x-cdnmqs3c5pn7arb5e9niqqjledq6ipj9cdgmst355lgmst35e9kmusg:
+              help: null
+              label: Az előző bevallás igazolásszáma
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az önadózás vonatkozási éve
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: A bevallás nyelve
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Időszak (naptári hónap)
+            x-chim6r1eehkn0rpdc5qn8rrcd5onaqb4c5hmirre:
+              help: null
+              label: 'Az önadózás típusa (I: fizetendő, N: nemleges)'
+            x-chnmqbb5ecn64r3fe5qma:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Tömb
+            x-chnmqbb5ecn66obcd5j6ior1chnn4bbeelmmasjf:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Házszám kiegészítő
+            x-chnmqbb5ecn66rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Irányítószám
+            x-chnmqbb5ecn66rr4d5jmubbge9nncqbecdkm2:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Tartománykód
+            x-chnmqbb5ecn66rrde1m6arb5dpq6u:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Cím kiegészítés
+            x-chnmqbb5ecn6asr3c5m6asj1:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Lépcsőház
+            x-chnmqbb5ecn6orr3c5m6ip31cg:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Helység vagy település
+            x-chnmqbb5ecn6qtbed5hmis39ds:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Önkormányzat
+            x-chnmqbb5ecn6srrdc9p6abbmd5gg:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Közterület neve
+            x-chnmqbb5ecn6stbdclp6ubb3c5pm2:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Házszám
+            x-chnmqbb5ecn70r31dpq62:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Emelet
+            x-chnmqbb5ecn70rriehgmo:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Bejárat
+            x-chnmqbb5ecn70sjfepkmsor9c4:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Tartomány
+            x-chnmqbb5ecn70tb5e9q62:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Ajtó
+            x-chnmqbb5ecn78qbgdsmmstbdclp62or9dtn0:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Házszámozás típusa
+            x-chnmqbb5ecn78qbgdsmncqb1:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Közterület jellege
+            x-chnmqbb5f0n66rr4d5jmubbgc5kn6:
+              help: null
+              label: Adóügyi lakóhely külföldön. Országkód
+            x-chnmqbb5f0n66rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Adóügyi lakóhely külföldön. Irányítószám (ZIP)
+            x-chnmqbb5f0n66rrde1m6arb5dpq6u:
+              help: null
+              label: Adóügyi lakóhely külföldön. Cím kiegészítés
+            x-chnmqbb5f0n68rrdd5hmir39ds:
+              help: null
+              label: Adóügyi lakóhely külföldön. Cím
+            x-chnmqbb5f0n70ob9ec:
+              help: null
+              label: Adóügyi lakóhely külföldön. Ország
+            x-chnmqbb5f0n70rr2dhgm6qbfdo:
+              help: null
+              label: Adóügyi lakóhely külföldön. Település vagy város
+            x-chnmqbb5f0n70sjfepkmsor9c4mn4pb7d5nmsbb5edq62p3f:
+              help: null
+              label: Adóügyi lakóhely külföldön. Tartomány, régió vagy állam
+            x-dhkn2bhg64mm4objckmmirbgdtn6iojcck:
+              help: null
+              label: Az időszakban végzett adóköteles, nem mentes ügyletek. Adóalap
+                [01]
+            x-dhkn2bhg68mm6tbfehgg:
+              help: null
+              label: Az időszakban végzett adóköteles, nem mentes ügyletek. Adó [02]
+            x-dhkn2bhg6cmm4objckmn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Helyesbítések. Adóalap [03]
+            x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Helyesbítések. Az adóalap előjele [03]
+            x-dhkn2bhg6gmm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Helyesbítések. Adó [04]
+            x-dhkn2bhg6gmn6qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Helyesbítések. Az adó előjele [04]
+            x-dhkn2bhg6kmmus35e9gm6qbfdpin6bb5f1imst31ec:
+              help: null
+              label: Az időszakban végzett mentes ügyletek [05]
+            x-dhkn2bhg6omm2bb4cli7aor9e8:
+              help: null
+              label: Levonandó [06]
+            x-dhkn2bhg6smn4pbjelm78ob4ds:
+              help: null
+              label: Az önadózás eredménye [07]
+            x-dhkn2bhg70mm8qb6clp6arj3d5gg:
+              help: null
+              label: Különbözet ([02] - [04]) [08]
+            x-dhkn2bhg74mm6tbfehgiqpbjehgm8ro:
+              help: null
+              label: Az időszak adóköteles, nem mentes ügyleteinek az államigazgatásnak
+                betudható adója [09]
+            x-dhkn2bhh60mm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6bb5edq62p3f:
+              help: null
+              label: Az időszakban végzett helyesbítések államigazgatásnak betudható
+                adója [10]
+            x-dhkn2bhh60mn6qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aspdclpn8ob4ds:
+              help: null
+              label: Az időszak államigazgatásnak betudható helyesbítési adójának
+                előjele [10]
+            x-dhkn2bhh64mn0rricdimst31d9iiqobke9km4tb9c9m6abb5edq62p3f:
+              help: null
+              label: Az államigazgatásnak betudható százalék [11]
+            x-dhkn2bhh68mn4pbjelm78ob4dsmmasrkc5i6u:
+              help: null
+              label: Az államigazgatásnak betudható eredmény ([09] - [10]) [12]
+            x-edo2sorfchkmerpdc9km6:
+              help: null
+              label: Adóalany. BIC-kód
+            x-edo2sorfchkmerpddhimi:
+              help: null
+              label: Adóalany. LEI-kód (ISO 17442 szabvány)
+            x-edo2ss35e9pmurj15lhmurjkc5hn8ro:
+              help: null
+              label: Adóalany. Kapcsolattartó személy
+            x-edo2st35dhimcrredsmm6rreehgm6t3f:
+              help: null
+              label: Adóalany. Kapcsolattartó telefonszáma
+            x-ehin4shec5m62tj15phnarrkc4mn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Területi adózás. Álava. Az időszakban végzett helyesbítések adója
+                [14]
+            x-ehin4shec5m62tj15phnarrkc4mn6tbaclq62spddpniqpbocln78obj:
+              help: null
+              label: Területi adózás. Álava. Az időszak adóköteles, nem mentes ügyleteinek
+                adója [13]
+            x-ehin4shec5m62tj15phnarrkc4mn8rrkc5m2qobke9km4tb9c9m6a:
+              help: null
+              label: Területi adózás. Álava. Teljes betudható adó [15]
+            x-ehin4shec5m62tj15pkmqs3fe9q6abbfe1in4ob3d5nmspbj5lingpbeehgn6:
+              help: null
+              label: Területi adózás. Álava. A mentes ügyletek összege [17]
+            x-ehin4shec5m62tj15po6usj3cln78obackmm2t3id5h7aqb2dhig:
+              help: null
+              label: Területi adózás. Álava. Betudható százalék [16]
+            x-ehin4shec5m62tj15ppmipredsmm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Területi adózás. Álava. Az időszaki helyesbítések adójának előjele
+                [14]
+            x-ehin4sheclpn8ob4dsn66tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Területi adózás. Állam. Az időszakban végzett helyesbítések adója
+                [34]
+            x-ehin4sheclpn8ob4dsn66tbfehgiqsrld9in8obj5ln6ubb5f1imst31ec:
+              help: null
+              label: Területi adózás. Állam. Az időszak adóköteles, nem mentes ügyleteinek
+                adója [33]
+            x-ehin4sheclpn8ob4dsn66tbfehgiqt3fehgmobb1ehp6iojld5h6op8:
+              help: null
+              label: Területi adózás. Állam. Teljes betudható adó [35]
+            x-ehin4sheclpn8ob4dsn6irbgdtp78p9ddto6asj1cdkmurj5ecmmau35dpq62so:
+              help: null
+              label: Területi adózás. Állam. A mentes ügyletek összege [37]
+            x-ehin4sheclpn8ob4dsn70rricdimst31d9iiqobke9km4tb9c9m6a:
+              help: null
+              label: Területi adózás. Állam. Betudható százalék [36]
+            x-ehin4sheclpn8ob4dsn76qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Területi adózás. Állam. Az időszaki helyesbítések adójának előjele
+                [34]
+            x-ehin4shectqmis3lf9hmuo9ecdqmut315lp6aorkd5j6ior1cdkmurj5ec:
+              help: null
+              label: Területi adózás. Gipuzkoa. Az időszakban végzett helyesbítések
+                adója [19]
+            x-ehin4shectqmis3lf9hmuo9ecdqmut315lpnaqj5ehgn6bbedsmmau35dpq62so:
+              help: null
+              label: Területi adózás. Gipuzkoa. Az időszak adóköteles, nem mentes
+                ügyleteinek adója [18]
+            x-ehin4shectqmis3lf9hmuo9ecdqmut315lq6ut31dgmm2t3id5h7aqb2dhig:
+              help: null
+              label: Területi adózás. Gipuzkoa. Teljes betudható adó [20]
+            x-ehin4shectqmis3lf9hmuo9ed5mn0rriehiiqrrgclp62or9dtn6aspdcls6arjkc5pg:
+              help: null
+              label: Területi adózás. Gipuzkoa. A mentes ügyletek összege [22]
+            x-ehin4shectqmis3lf9hmuo9ee1nn4or5dpq62qj55lgn8sj9c9qmiojcck:
+              help: null
+              label: Területi adózás. Gipuzkoa. Betudható százalék [21]
+            x-ehin4shectqmis3lf9hmuo9eedkmerjf5lhnarrkc4mn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Területi adózás. Gipuzkoa. Az időszaki helyesbítések adójának
+                előjele [19]
+            x-ehin4shedpgncobie9gisorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Területi adózás. Navarra. Az időszakban végzett helyesbítések
+                adója [29]
+            x-ehin4shedpgncobie9gisorldtq62bbjell6at31ecmmsrpdcls6arjkc5pg:
+              help: null
+              label: Területi adózás. Navarra. Az időszak adóköteles, nem mentes ügyleteinek
+                adója [28]
+            x-ehin4shedpgncobie9gisorldtq62bbkdtq62r1dc5q74qb2elkm4r35:
+              help: null
+              label: Területi adózás. Navarra. Teljes betudható adó [30]
+            x-ehin4shedpgncobie9gisqbde1nn4t355lnn0pbic5hmirreclpiqpbocln78obj:
+              help: null
+              label: Területi adózás. Navarra. A mentes ügyletek összege [32]
+            x-ehin4shedpgncobie9giss3fe9hmarjkc5l6abb1ehp6iojld5h6op8:
+              help: null
+              label: Területi adózás. Navarra. Betudható százalék [31]
+            x-ehin4shedpgncobie9gissr9ctn6ubb3elnn8o9de9im6t39cpkm6ob3d5nmspbj:
+              help: null
+              label: Területi adózás. Navarra. Az időszaki helyesbítések adójának
+                előjele [29]
+            x-ehin4sheepknkor1f5gisorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Területi adózás. Bizkaia. Az időszakban végzett helyesbítések
+                adója [24]
+            x-ehin4sheepknkor1f5gisorldtq62bbjell6at31ecmmsrpdcls6arjkc5pg:
+              help: null
+              label: Területi adózás. Bizkaia. Az időszak adóköteles, nem mentes ügyleteinek
+                adója [23]
+            x-ehin4sheepknkor1f5gisorldtq62bbkdtq62r1dc5q74qb2elkm4r35:
+              help: null
+              label: Területi adózás. Bizkaia. Teljes betudható adó [25]
+            x-ehin4sheepknkor1f5gisqbde1nn4t355lnn0pbic5hmirreclpiqpbocln78obj:
+              help: null
+              label: Területi adózás. Bizkaia. A mentes ügyletek összege [27]
+            x-ehin4sheepknkor1f5giss3fe9hmarjkc5l6abb1ehp6iojld5h6op8:
+              help: null
+              label: Területi adózás. Bizkaia. Betudható százalék [26]
+            x-ehin4sheepknkor1f5gissr9ctn6ubb3elnn8o9de9im6t39cpkm6ob3d5nmspbj:
+              help: null
+              label: Területi adózás. Bizkaia. Az időszaki helyesbítések adójának
+                előjele [24]
           construct:
             modelo-604-autoliquidacion:
               field:
