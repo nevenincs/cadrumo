@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:d235b6c37575200c111cd62fa09dbe7f75643c9370331a9a4b60f41d77626e66'
+body_hash: 'sha256:0a0c1aa02ba7a97325cf8881cf7910ef793540b4a26b06e14d6a3a2767429911'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -179,6 +179,7 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S106` - Have Terra XHigh close the under-declaration in the minimal profile registration helper whose signature accepts a plain string identifier while it builds a record whose identifier is UUID-constrained, so every caller passing a readable identifier fails at construction rather than at the boundary that declared the looser type, this being the same defect reached independently from two directions tonight; `src/cadrumo/tests/ and src/cadrumo/application/user_profile/`.
 - [x] `W04.P07.S107` - Have Terra XHigh rule whether the master key and derived key encryption key should become wipeable like the two data encryption key unwraps now are, since six provider implementations and the derivation helper all return immutable material, or record why the master key is deliberately out of scope given each provider carries its own lifetime and a mutable buffer changes what every consumer holds; `src/cadrumo/adapters/persistence/storage/master_key/`.
 - [ ] `W04.P07.S109` - Have Terra XHigh extend the re-export bridge and orphan detector to walk the test tree, since it currently skips it entirely and a whole class of orphaned export module is therefore invisible, which is how an adapter export survived its only consumer's deletion with zero importers anywhere; `dev/import_hygiene_scan.py`.
+- [ ] `W04.P07.S110` - Have Sol Medium rule on the bucket key enrolment ordering defect, since a bucket counts as registered purely because its capsule exists rather than by any stored enrolment, and registration permanently refuses minting by tested design, so the only window to mint the wrapped bucket key closes at capsule publication while the enrolment flag that opens it defaults false and is passed true by no production code anywhere, leaving no path that creates a bucket the storage layer will open; `src/cadrumo/adapters/persistence/storage/master_key/_master_key_bucket_dek.py and src/cadrumo/application/user_profile/`.
 
 ## Wave `W05` - end-to-end proof
 

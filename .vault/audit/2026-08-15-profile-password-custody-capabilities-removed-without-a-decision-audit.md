@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:c805632d152a919bb22dd2a06ae063bea884f14179c39803af28f3cf71b9aa89'
+body_hash: 'sha256:946bb5e6197ebc6c32b7d953c2f4a8d5760be09822a1a71672575d2f253c4f78'
 related: []
 ---
 
@@ -147,3 +147,48 @@ because an agent refused to invent a ruling it could not locate and reported the
 absence instead. That is not yet a standing mechanism, but it is the behaviour a
 standing mechanism would have to encode: an unpersisted decision must be
 reported as missing rather than reconstructed.
+
+## The scripted-creation gap has a structural floor, not just a refused verb
+
+The scripted-creation item above was framed as a refused door: the wizard
+creation path declines, an accepted decision record still promises it, and the
+operator-facing surfaces still advertise it. Measurement while converting test
+helpers shows the gap is deeper than a refusal, and this is the strongest
+evidence yet that it needs an operator ruling rather than a sweep.
+
+A bucket counts as REGISTERED purely because its profile capsule exists. The
+key-schedule lookup derives that answer from capsule recognition rather than
+reading any stored enrolment, and returns the current schedule the moment a
+capsule is published.
+
+Registration then permanently refuses minting. That is deliberate and pinned:
+a shipped test asserts that a registered bucket without its key refuses and
+never mints, alongside its three siblings covering the other combinations. So
+the only window in which a bucket's wrapped key can be created closes at the
+instant the capsule is published.
+
+The flag that opens that window defaults to false, and **no production code
+anywhere passes it true** -- only tests do. Combined, those two facts mean no
+production path creates a bucket the storage layer will subsequently open. A
+profile registered through the surviving credential door has a capsule and a
+custody envelope, and its bucket refuses every command that reads or persists a
+record.
+
+The refusal raised in that state says so in its own prose: it instructs the
+operator to log in to an existing profile, and then states that if no profile
+exists yet, **this build has no command that creates one**. The condition the
+earlier sections of this audit inferred from decision records and operator
+surfaces is asserted directly by production error text.
+
+Two consequences for how the standing question should be answered.
+
+Restoring scripted creation is not only re-enabling a verb. Whatever door is
+sanctioned must mint the wrapped bucket key BEFORE publishing the capsule, or it
+produces the same structurally unopenable profile. The ordering is the
+requirement; the verb is the surface.
+
+And the failure is invisible to a large class of tests. Anything that stops at
+registry validation never reaches a bucket record and passes cleanly; only work
+that reads or writes records surfaces it. So a green suite is not evidence that
+a creation door produces a usable profile, and the conversion sweep's early
+successes should not be read as clearing this.
