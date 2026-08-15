@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-15'
 body_schema: 'body-v1'
-body_hash: 'sha256:7951e405b050500030006924bf51fc85123bc02c596154eda6c467c6a9c132e8'
+body_hash: 'sha256:5a6f7db25faf8102e6494b6792c122dffec8b0e0664f93a347e727849cfb8a07'
 step_id: 'S69'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -87,3 +87,27 @@ than scoped, applying thirteen fixes tree-wide. It was deliberately NOT reverted
 because the touched set includes peers' substantial in-flight work and a blind
 revert would destroy real edits to undo a lint fix. None are in this commit's
 pathspec.
+
+
+**Correction to the paragraph above, made by its author and adopted.** The
+statement that the wider suites were unquotable BECAUSE of concurrent registry
+writes over-attributes. What was established is narrower: ONE module was observed
+failing with that error, verbatim, on a fail-fast run. The three broader runs over
+the storage and maintenance suites never completed -- their timeouts fired while
+they were still running, so there is no summary, no tally, and no cause
+established for any of their failures, and their logs contain zero occurrences of
+that error string.
+
+So the honest position is that one module's failure is attributed and an unknown
+number of failures elsewhere are UNATTRIBUTED. They may share the cause; it was
+not shown. Nobody should read this record as evidence that those suites are
+merely registry-blocked.
+
+The cross-process contention hazard itself stands on the one established
+occurrence, and is worth carrying regardless: sequential running defends against
+the parallel collection race, not against a peer rewriting shared inputs while a
+suite reads them.
+
+The verdict on the change is unaffected, resting on the consumer suite and the
+behavioural probe rather than on the unmeasured suites.
+
