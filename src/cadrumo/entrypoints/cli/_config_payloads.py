@@ -934,6 +934,37 @@ class ConfigProfileExportReconcileFailurePayload(OutputSchema):
     reason: str = Field(min_length=1)
 
 
+@register_schema("config.profile.delete")
+class ConfigProfileDeleteResult(OutputSchema):
+    """JSON envelope for ``aeat config profile delete``.
+
+    Reports the tombstoned profile id and display label plus whether the active
+    profile pointer had to be cleared. Bounded and typed at the same widths
+    :class:`~cadrumo.application.user_profile.ProfileLifecycleResult` carries
+    (the mutated :class:`~cadrumo.domain.user_profile.UserProfileRecord`), so
+    an empty identity/label or an unknown lifecycle status is refused rather
+    than reported as a valid tombstoning.
+    """
+
+    profile_id: BucketId
+    display_name: str = Field(min_length=1, max_length=160)
+    setup_state: ProfileSetupState
+    active_profile_cleared: bool
+
+
+@register_schema("config.profile.rename")
+class ConfigProfileRenameResult(OutputSchema):
+    """JSON envelope for ``aeat config profile rename``.
+
+    Reports the immutable profile id plus the previous and new display labels;
+    profile identity and bucket storage remain unchanged.
+    """
+
+    profile_id: BucketId
+    previous_display_name: str = Field(min_length=1, max_length=160)
+    display_name: str = Field(min_length=1, max_length=160)
+
+
 @register_schema("config.profile.export")
 class ConfigProfileExportResult(OutputSchema):
     """JSON envelope for ``aeat config profile export``.

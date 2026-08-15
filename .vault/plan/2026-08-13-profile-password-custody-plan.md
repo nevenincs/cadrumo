@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-15'
-body_hash: 'sha256:2d2f9ba4549f04a93dda784809374af781989e3115480f165d2b10c1dc67f227'
+body_hash: 'sha256:6c4c7f7dd268307046f9f9b9302d8a591c0a5d0bc0e2195f8308e8f8eed7af0e'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -184,6 +184,8 @@ Remove shared-master custody and prove no retired path remains reachable or reco
 - [ ] `W04.P07.S111` - Have Sol Medium author the decision record for which custody a bucket is enrolled in and pin the defect with a failing regression that reaches an actual record read through the sanctioned door, stating both the resolver-reads-stored-custody option and the rejected mint-a-second-wrapped-copy option with the exposure-widening argument that defeats it, and establishing whether any profile on real disk is currently in the unopenable state since that decides whether a migration question exists at all; `.vault/adr/ and src/cadrumo/adapters/persistence/storage/master_key/tests/`.
 - [ ] `W04.P07.S112` - Have Sol Medium give a verb's existence one authoritative declaration, since six independent surfaces must currently agree that a verb exists and none of them is the authority, so the operator manifest declared none of seventeen verbs while five other surfaces still described them and each surface broke in turn as the previous was repaired; `src/cadrumo/application/operator_surface/ and src/cadrumo/entrypoints/mcp/`.
 - [ ] `W04.P07.S114` - Have Terra XHigh repair the two stale schema tests the build crash was masking, one asserting a required profile argument on a command whose parameters are all optional and which resolves to a different verb, the other parametrised against a command key carrying zero production declarations, both unreachable while the coverage gate crashed and neither attributable to the step that revealed them; `src/cadrumo/entrypoints/mcp/tests/`.
+- [ ] `W04.P07.S115` - Have Sol Medium decide whether per-profile session windows survive the cutover as a capsule field or drop to settings only, since the idle and absolute window overrides are the manifest's last functional dependency and the capsule has no home for them, so removing the reader without ruling would collapse every profile to the configured default as a behaviour change disguised as a deletion; `src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/core/config/`.
+- [ ] `W04.P07.S116` - Have Terra XHigh delete the bucket manifest digest and deletion fingerprint helpers, exported from the maintenance package with zero production callers, being dead capacity rather than a dependency; `src/cadrumo/application/bucket_maintenance/_manifest_digest.py`.
 
 ## Wave `W05` - end-to-end proof
 

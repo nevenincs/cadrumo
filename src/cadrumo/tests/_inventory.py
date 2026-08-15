@@ -114,6 +114,30 @@ def _scan_files(root: Path, *, suffix: str | None, prune_data_at: Path | None = 
 
 
 @cache
+def modules_declaring_class(class_name: str) -> tuple[Path, ...]:
+    """Return every package module declaring a class called *class_name*.
+
+    The shared answer to "is this identity declared exactly once", which several
+    single-owner gates each used to compute by walking the whole package and
+    parsing every module for themselves -- a full 4,988-file parse per gate.
+    Routed through :func:`package_python_files` and :func:`ast_for_path`, the
+    walk and the parse are paid once per process and shared by every caller.
+
+    A module that cannot be parsed is skipped rather than raising, matching
+    :func:`ast_for_path`. A single-owner assertion still fails on such a module,
+    because the declaration it holds goes missing from this list.
+    """
+    found: list[Path] = []
+    for path in package_python_files():
+        tree = ast_for_path(path)
+        if tree is None:
+            continue
+        if any(isinstance(node, ast.ClassDef) and node.name == class_name for node in ast.walk(tree)):
+            found.append(path.resolve())
+    return tuple(found)
+
+
+@cache
 def read_source(path: Path) -> str:
     """Return *path* decoded as UTF-8, read once per process.
 

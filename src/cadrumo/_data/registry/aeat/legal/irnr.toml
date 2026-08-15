@@ -705,6 +705,39 @@ applies_from = 2011-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos/dr210_2011.pdf"
 review_status = "reviewed"
 
+# Modelo 210 diseño de registro for accruals (devengos) between 01/06/2022 and
+# 01/01/2026, backing the orden-hac-56-2024 layout amendment. Acquired,
+# manifested and on disk since 2026-07-21 but previously unregistered, so no
+# record_design source covered the window. Re-fetched from the live AEAT URL
+# on 2026-08-15 and confirmed byte-identical (sha256 match) before registering.
+[sources."aeat-dr-210-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_210/files/02-210-devengos-entre-01-06-2022-y-01-01-2026.xls"
+sha256 = "dce167991abaf547f31b38d7a5e51892ff6e8bd49a27a539432ab504891a0c00"
+bytes = 308224
+retrieved_at = 2026-07-21
+applies_from = 2022-06-01
+applies_to = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_22/dr210e22.xls"
+review_status = "reviewed"
+
+# Modelo 210 diseño de registro for accruals (devengos) from 01/01/2026
+# onward, backing the orden-hac-623-2026 layout amendment. Same acquisition
+# and re-verification history as aeat-dr-210-2022 above.
+[sources."aeat-dr-210-2026"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_210/files/01-210-devengos-a-partir-de-2026.xlsx"
+sha256 = "2f86f1b95cd64a0c2d5eb3bf503052e6d3cb7f76994466a933fb2b91be2ca6c2"
+bytes = 121815
+retrieved_at = 2026-07-21
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_26/dr210_2026.xlsx"
+review_status = "reviewed"
+
 # Modelo 216 sources — the governing Orden HAC/56/2024 (BOE-A-2024-1772) is the
 # same bundled corpus the Modelo 210 sources cite; it approves and governs the
 # Modelo 216/296 IRNR retención forms (arts. 1 y ss.). Reuses the reviewed corpus

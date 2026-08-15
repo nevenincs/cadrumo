@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import ast
 from pathlib import Path
 
 import pytest
 
 from ... import core
+from ...tests._inventory import modules_declaring_class
 from .. import EstadoCasillaOficial
 from .. import _estado_casilla_oficial as owner
 
@@ -109,15 +109,7 @@ def test_estado_casilla_oficial_is_the_single_public_core_identity() -> None:
         "undefined",
     )
 
-    source_root = Path(__file__).parents[2]
-    declarations = [
-        path.resolve()
-        for path in source_root.rglob("*.py")
-        if any(
-            isinstance(node, ast.ClassDef) and node.name == "EstadoCasillaOficial"
-            for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
-        )
-    ]
+    declarations = list(modules_declaring_class("EstadoCasillaOficial"))
     assert declarations == [Path(owner.__file__).resolve()]
 
 

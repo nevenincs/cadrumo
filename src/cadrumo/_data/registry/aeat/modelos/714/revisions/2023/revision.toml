@@ -1,0 +1,29 @@
+[revisions."2023"]
+authority_grade = "filing"
+# One of five ejercicio-scoped revisions replacing the prior single open-ended
+# "2021-y-siguientes" revision, which cited a stub (orden-hac-1023-2021:modelo-714)
+# whose document_id resolved to an unrelated municipal resolution. The real
+# governing instrument is a joint IRPF+Patrimonio orden published each March,
+# already bundled in this corpus for Modelo 100's half and never previously cited
+# for Modelo 714's half. Article numbering confirmed stable across all five years
+# (art 2 = Patrimonio obligation, art 4 = Patrimonio model approval, art 8 = joint
+# deadline) by reading each file's own id="a2"/id="a4" body content directly.
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+period_selector = { years = [2023], periods = ["0A"] }
+legal_refs = [
+    "ley-19-1991:art-28",
+    "ley-19-1991:art-30",
+    "ley-19-1991:art-31",
+    "ley-19-1991:art-4-9",
+    "orden-hac-265-2024:art-2",
+    "orden-hac-265-2024:art-4",
+]
+orden_aplicabilidad = [
+    "orden-hac-265-2024:art-4",
+]
+source_refs = [
+    "aeat-modelo-714-procedure",
+    "boe-modelo-714-layout",
+    "aeat-dr-714-2023",
+]
