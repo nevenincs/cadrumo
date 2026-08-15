@@ -192,6 +192,20 @@ LOGIN_GATED_VERB_PATHS: tuple[LoginGatedVerb, ...] = (
             "ability to unlock the named target."
         ),
     ),
+    LoginGatedVerb(
+        verb_path="config profile delete",
+        reason=(
+            "Recorded for a DIFFERENT reason from its two siblings above, and the difference "
+            "matters because the output-leaves-the-store reasoning that gates them does not "
+            "reach this verb: nothing leaves the store, the capsule is destroyed in place. "
+            "What gates it is that it is irreversible and needs no target unlock at all - the "
+            "custody primitives destroy a capsule without opening it - so the mechanical "
+            "reading that frees a target-scoped verb frees this one most easily of the three, "
+            "and it is the one where a wrongly-granted exemption costs a taxpayer their "
+            "encrypted financial history rather than a redundant copy of it. The absence of an "
+            "exemption is the whole protection; this entry is what keeps the absence deliberate."
+        ),
+    ),
 )
 
 
