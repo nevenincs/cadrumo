@@ -190,7 +190,14 @@ if _ORPHANED_CONSENT_VERIFIERS:  # pragma: no cover - the failure is the collect
         "verifier with no declared symbol runs against nothing."
     )
 
-_NEIGHBOURING_TRANSPORTS_THAT_MUST_SURVIVE = (SRC_CADRUMO / "entrypoints" / "mcp" / "_call_runtime.py",)
+#: The MCP call runtime now ships in the harness distribution beside the
+#: package rather than under ``entrypoints/mcp``. It is still the neighbouring
+#: transport this gate must see survive, so the path follows it; asserting the
+#: old location would report the cloud transport's deletion as having taken a
+#: live neighbour with it.
+_NEIGHBOURING_TRANSPORTS_THAT_MUST_SURVIVE = (
+    SRC_CADRUMO.parent / "cadrumo-harness" / "src" / "cadrumo_harness" / "mcp" / "_call_runtime.py",
+)
 
 
 def _production_sites_naming(symbols: tuple[str, ...]) -> dict[str, list[str]]:
@@ -440,6 +447,18 @@ def _column_role_mapper_transport(provider: LLMProvider | None = None) -> str:
     return _transport_of(SemanticColumnRoleMapper(model=model, provider=resolved).decided_by)
 
 
+def _supply_nature_proposer_transport(provider: LLMProvider | None = None) -> str:
+    from ...llm import SupplyNatureProposer
+    from ..config import LLMProvider
+
+    resolved = provider if provider is not None else LLMProvider.LOCAL
+    model = "qwen3:1.7b" if resolved is LLMProvider.LOCAL else "gpt-4.1"
+    # Pinned for the reason the column-role mapper's builder states: resolving
+    # the role would run the on-host hardware admission check and make this
+    # gate's result a property of the machine it ran on.
+    return _transport_of(SupplyNatureProposer(model=model, provider=resolved).decided_by)
+
+
 _READERS_WITH_NO_PROVIDER_AXIS: dict[str, Callable[[], str]] = {
     "LocalTextLLMClassifier": _text_classifier_transport,
     "LocalVisionLLMClassifier": _vision_classifier_transport,
@@ -456,6 +475,7 @@ _READERS_WITH_A_PROVIDER_AXIS: dict[str, Callable[[LLMProvider | None], str]] = 
     "TextInvoiceFieldExtractor": _text_extractor_transport,
     "LocalVisionDocumentTranscriber": _vision_transcriber_transport,
     "SemanticColumnRoleMapper": _column_role_mapper_transport,
+    "SupplyNatureProposer": _supply_nature_proposer_transport,
 }
 """Readers that accept a provider, keyed to a builder taking the provider.
 
@@ -538,6 +558,7 @@ def test_a_reader_reachable_only_under_consent_stamps_the_transport_it_actually_
         "TextInvoiceFieldExtractor": LLMProvider.OPENAI,
         "LocalVisionDocumentTranscriber": LLMProvider.ANTHROPIC,
         "SemanticColumnRoleMapper": LLMProvider.OPENAI,
+        "SupplyNatureProposer": LLMProvider.ANTHROPIC,
     }
     assert set(off_host) == set(_READERS_WITH_A_PROVIDER_AXIS)
 
