@@ -157,7 +157,7 @@ _build_package_bytes = functools.partial(
 
 
 def test_recipient_registered_and_removed_events_roundtrip(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="collab-audit-registry") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="58dd42a2-eae2-4f4c-834c-880296513648") as profile:
         registry = RecipientFingerprintRegistryRepository(objects=profile.repository)
         event_repository = BucketEventHistoryRepository(objects=profile.repository)
 
@@ -167,7 +167,7 @@ def test_recipient_registered_and_removed_events_roundtrip(tmp_path: Path) -> No
 
         registered_event = emit_collab_recipient_registered_event(
             record,
-            bucket_id="collab-audit-registry",
+            bucket_id="58dd42a2-eae2-4f4c-834c-880296513648",
             repository=event_repository,
             occurred_at=_NOW,
         )
@@ -179,7 +179,7 @@ def test_recipient_registered_and_removed_events_roundtrip(tmp_path: Path) -> No
         registry.remove("my-accountant")
         removed_event = emit_collab_recipient_removed_event(
             recipient_id="my-accountant",
-            bucket_id="collab-audit-registry",
+            bucket_id="58dd42a2-eae2-4f4c-834c-880296513648",
             repository=event_repository,
             occurred_at=_NOW,
         )
@@ -194,9 +194,9 @@ def test_recipient_registered_and_removed_events_roundtrip(tmp_path: Path) -> No
 
 
 def test_package_encrypted_and_decrypted_events_roundtrip(tmp_path: Path) -> None:
-    package_bytes = _build_package_bytes(tmp_path, bucket_id="collab-audit-crypto")
+    package_bytes = _build_package_bytes(tmp_path, bucket_id="3d18d934-b77f-41af-b276-72240e1f39d2")
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="collab-audit-crypto") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="3d18d934-b77f-41af-b276-72240e1f39d2") as profile:
         event_repository = BucketEventHistoryRepository(objects=profile.repository)
 
         recipient_private_key = X25519PrivateKey.generate()
@@ -209,7 +209,7 @@ def test_package_encrypted_and_decrypted_events_roundtrip(tmp_path: Path) -> Non
         )
         encrypted_event = emit_collab_package_encrypted_event(
             envelope,
-            bucket_id="collab-audit-crypto",
+            bucket_id="3d18d934-b77f-41af-b276-72240e1f39d2",
             repository=event_repository,
             occurred_at=_NOW,
         )
@@ -222,7 +222,7 @@ def test_package_encrypted_and_decrypted_events_roundtrip(tmp_path: Path) -> Non
 
         decrypted_event = emit_collab_package_decrypted_event(
             envelope,
-            bucket_id="collab-audit-crypto",
+            bucket_id="3d18d934-b77f-41af-b276-72240e1f39d2",
             repository=event_repository,
             occurred_at=_NOW,
         )
@@ -235,12 +235,12 @@ def test_package_encrypted_and_decrypted_events_roundtrip(tmp_path: Path) -> Non
 
 
 def test_review_only_workspace_opened_event_roundtrip(tmp_path: Path) -> None:
-    package_bytes = _build_package_bytes(tmp_path, bucket_id="collab-audit-workspace")
+    package_bytes = _build_package_bytes(tmp_path, bucket_id="26662b29-2bf4-4599-85a7-7918c4af96f9")
     package_path = tmp_path / "review-package.zip"
     package_path.write_bytes(package_bytes)
     manifest = verify_review_package(package_path).manifest
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="collab-audit-workspace") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="26662b29-2bf4-4599-85a7-7918c4af96f9") as profile:
         event_repository = BucketEventHistoryRepository(objects=profile.repository)
 
         recipient_private_key = X25519PrivateKey.generate()
@@ -257,7 +257,7 @@ def test_review_only_workspace_opened_event_roundtrip(tmp_path: Path) -> None:
 
         opened_event = emit_collab_review_only_workspace_opened_event(
             workspace,
-            bucket_id="collab-audit-workspace",
+            bucket_id="26662b29-2bf4-4599-85a7-7918c4af96f9",
             repository=event_repository,
             occurred_at=_NOW,
         )
@@ -272,11 +272,11 @@ def test_review_only_workspace_opened_event_roundtrip(tmp_path: Path) -> None:
 
 
 def test_package_counter_signed_event_roundtrip(tmp_path: Path) -> None:
-    package_bytes = _build_package_bytes(tmp_path, bucket_id="collab-audit-countersign")
+    package_bytes = _build_package_bytes(tmp_path, bucket_id="7e0ff69f-8968-409e-89cc-ace755670367")
     package_path = tmp_path / "review-package.zip"
     package_path.write_bytes(package_bytes)
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="collab-audit-countersign") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="7e0ff69f-8968-409e-89cc-ace755670367") as profile:
         event_repository = BucketEventHistoryRepository(objects=profile.repository)
 
         operator_keypair = ensure_review_package_signing_keypair(
@@ -298,7 +298,7 @@ def test_package_counter_signed_event_roundtrip(tmp_path: Path) -> None:
 
         counter_signed_event = emit_collab_package_counter_signed_event(
             receipt,
-            bucket_id="collab-audit-countersign",
+            bucket_id="7e0ff69f-8968-409e-89cc-ace755670367",
             repository=event_repository,
             occurred_at=_NOW,
         )

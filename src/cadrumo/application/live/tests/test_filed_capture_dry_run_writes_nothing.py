@@ -35,7 +35,7 @@ def test_dry_run_absorb_leaves_the_bucket_database_byte_identical(tmp_path: Path
 
     observation = _prior_303_observation(pending_compensation=Decimal("0.00"))
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="filed-dry-run-byte-identical") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="0981a5d8-4224-4246-b73c-4fe7b1d3ff51") as profile:
         store = FiledDeclaracionObservationStore(tmp_path, objects=profile.repository)
         accumulator = _CaptureAccumulator()
 

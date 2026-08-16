@@ -145,7 +145,7 @@ def test_set_impersonation_persists_no_secret_field(tmp_path: Path) -> None:
     deliberately truncates a scope URL's path in *rendered* text, so the
     full-URL assertion reads the persisted record rather than the CLI text.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="impersonation-no-secret-field") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="361721e5-da87-4f70-aba1-a78f62b7ec0b") as profile:
         set_result = invoke_cached_cli(
             [
                 "config",
@@ -205,7 +205,7 @@ def test_factory_dispatches_to_impersonation_after_cli_set(tmp_path: Path) -> No
     """
     with (
         scoped_env_var("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json"),
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-dispatch-credential-source") as profile,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="b596182a-a527-44d0-bcc5-b408ff9424e8") as profile,
     ):
         result = invoke_cached_cli(
             [
@@ -228,7 +228,7 @@ def test_factory_dispatches_to_impersonation_after_cli_set(tmp_path: Path) -> No
 
 
 def test_set_oauth_desktop_restores_the_default_after_impersonation(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="restore-oauth-desktop-credential-source") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="a0230b2f-7a63-4a83-950c-3b3fb2ec7723") as profile:
         impersonation_result = invoke_cached_cli(
             [
                 "config",

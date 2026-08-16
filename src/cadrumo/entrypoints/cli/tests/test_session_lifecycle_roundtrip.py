@@ -76,7 +76,7 @@ def _load(repository: SecureObjectRepository) -> object:
 def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     """A real active-profile runtime with an unlocked per-bucket repository."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="session-roundtrip") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="97602740-eaa9-46db-851e-b253171bcaed") as profile:
         yield profile
 
 
@@ -84,7 +84,7 @@ def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 def _inactive_repository(tmp_path: Path) -> SecureObjectRepository:
     """A real repository whose bucket session has already closed."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="session-roundtrip") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="97602740-eaa9-46db-851e-b253171bcaed") as profile:
         repository = profile.repository
     assert _active_session.get() is None
     return repository

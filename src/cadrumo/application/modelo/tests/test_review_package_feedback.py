@@ -628,11 +628,11 @@ def test_emit_collab_feedback_countersign_attached_event_refuses_unverified_feed
     from ....tests.secure_sql import isolated_runtime_profile
     from .._review_package_feedback import ImportedFeedback
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="feedback-attach-guard") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="9a1ab02a-114c-439a-ae84-4b55d9bd64d1") as profile:
         event_repository = BucketEventHistoryRepository(objects=profile.repository)
 
         feedback = build_feedback_package(
-            bucket_id="feedback-attach-guard",
+            bucket_id="9a1ab02a-114c-439a-ae84-4b55d9bd64d1",
             work_unit_id=_PLACEHOLDER_WORK_UNIT_ID,
             calculation_revision_id=_PLACEHOLDER_REVISION_ID,
             note="unstructured, no sign-off",
@@ -645,7 +645,7 @@ def test_emit_collab_feedback_countersign_attached_event_refuses_unverified_feed
         with pytest.raises(ValueError, match="unverified or absent"):
             emit_collab_feedback_countersign_attached_event(
                 imported,
-                bucket_id="feedback-attach-guard",
+                bucket_id="9a1ab02a-114c-439a-ae84-4b55d9bd64d1",
                 repository=event_repository,
                 occurred_at=_NOW,
             )

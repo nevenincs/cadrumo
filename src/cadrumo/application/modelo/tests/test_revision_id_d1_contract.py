@@ -61,7 +61,7 @@ _T0 = datetime(2026, 6, 10, 10, 0, 0, tzinfo=UTC)
 @pytest.fixture
 def work_unit_repo(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalogueRepository]]:
     """Yield an isolated bucket and work-unit repository."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="d1-contract-test") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="65c4334d-2458-4967-9e2f-5046012b4484") as profile:
         yield profile.bucket_id, WorkUnitCatalogueRepository(objects=profile.repository)
 
 

@@ -412,7 +412,7 @@ def test_interrupted_provenance_is_not_operator_electable() -> None:
 
 
 def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-preserve-sectors"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="ce2eee1d-3086-41f0-8c9c-bab63890f9f1"):
         repository = ProrrataRegisterRepository()
         definition = SectorDefinition(
             sector_id="comercio",
@@ -494,7 +494,7 @@ def test_declare_sector_requires_at_least_one_activity_code() -> None:
 
 
 def test_upsert_sector_definition_preserves_entries(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-preserve-entries"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="77873c85-0589-4b50-b184-7e8f33dc4471"):
         repository = ProrrataRegisterRepository()
         entry = ProrrataRegisterEntry(
             ejercicio=2025,

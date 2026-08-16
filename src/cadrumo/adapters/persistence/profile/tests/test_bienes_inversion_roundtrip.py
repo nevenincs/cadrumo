@@ -63,7 +63,7 @@ def _populated_register() -> BienesInversionIvaRegister:
 
 def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
     """BienesInversionIvaRegister roundtrips through encrypted SQL, field-for-field."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bi-rt-survives"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="d63bdf53-db2f-43f7-a735-458cc56ccb9a"):
         repo = BienesInversionIvaRegisterRepository()
         original = _populated_register()
         repo.save(original)
@@ -88,7 +88,7 @@ def test_register_add_refuses_duplicate_identifier(tmp_path: Path) -> None:
     """The atomic add path refuses a second record with an existing identifier."""
     from ..bienes_inversion import BienInversionRecordError, declare_bien_inversion
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bi-rt-dup"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="573d2a96-ff7a-48c2-9128-0a8e395f4928"):
         record = _populated_register().records[0]
         declare_bien_inversion(record)
         with pytest.raises(BienInversionRecordError, match="already exists"):
@@ -108,7 +108,7 @@ def test_register_corrupted_prorrata_surfaces_at_load(tmp_path: Path) -> None:
     from ...storage import PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
     from ...storage.sql import SecureObjectRow
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bi-rt-corrupt") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="95f73d79-f5cb-4bb7-984d-0991c85c698d") as profile:
         engine = get_engine(profile.settings)
         repo = BienesInversionIvaRegisterRepository()
         original = _populated_register()
@@ -143,7 +143,7 @@ def test_register_missing_cuota_surfaces_at_load(tmp_path: Path) -> None:
     from ...storage import PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
     from ...storage.sql import SecureObjectRow
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bi-rt-missing") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="736f0917-5f82-4fad-9731-22994886baf9") as profile:
         engine = get_engine(profile.settings)
         repo = BienesInversionIvaRegisterRepository()
         repo.save(_populated_register())

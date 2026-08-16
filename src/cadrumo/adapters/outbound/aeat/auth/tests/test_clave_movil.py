@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 @pytest.fixture(autouse=True)
 def _isolated_secure_session_backend(tmp_path: Path):
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="clave-movil-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="38550e03-9b84-40f7-b9ef-48b6a8693f84"):
         yield
 
 

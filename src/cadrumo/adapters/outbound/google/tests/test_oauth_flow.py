@@ -200,15 +200,15 @@ def test_interactive_terminal_guard_refuses_a_non_tty_stdin() -> None:
 
 def test_login_flow_refuses_missing_profile_record_before_oauth_network(tmp_path: Path) -> None:
     with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-profile-missing") as profile,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1f54e86d-e8dd-4327-8651-cc6d9a44843c") as profile,
         override_settings(cadrumo_secret_store_backend="unsecured"),
         pytest.raises(GoogleAuthProfileUnboundError) as raised,
     ):
         run_login_flow(_valid_oauth_client(), profile.bucket_id)
 
     assert raised.value.context == {
-        "profile": "google-profile-missing",
-        "bucket_id": "google-profile-missing",
+        "profile": "1f54e86d-e8dd-4327-8651-cc6d9a44843c",
+        "bucket_id": "1f54e86d-e8dd-4327-8651-cc6d9a44843c",
         "reason": "profile_record_missing",
     }
     assert raised.value.translated_message == "adapters.google.oauth_flow.errors.profile_state_unresolved"

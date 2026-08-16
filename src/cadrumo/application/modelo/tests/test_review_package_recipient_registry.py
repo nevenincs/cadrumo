@@ -81,14 +81,14 @@ _KNOWN_VECTOR_SEQ32_SHA256 = "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8ab
 
 
 def test_load_returns_empty_register_when_absent(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-empty") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="135dbe14-59b2-4418-9731-552c860fcf78") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
         assert repository.load() == RecipientFingerprintRegister()
 
 
 def test_add_then_load_roundtrips_with_strict_equality(tmp_path: Path) -> None:
     public_key_hex = _fresh_public_key_hex()
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-roundtrip") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="77a6c02c-9b4e-458b-877d-0bb8ad233ee1") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
 
         added = repository.add(
@@ -125,7 +125,7 @@ def test_encrypted_registry_load_refuses_duplicate_persisted_recipient_id(tmp_pa
     boundary, where a pre-existing bad row must never select a trusted key by
     tuple order.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-persisted-duplicate") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="19c86bf5-83c1-4901-a9ed-ebbab0460c1a") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
         repository.add(recipient_id="acct", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
         expected = repository.add(recipient_id="gestor", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
@@ -159,7 +159,7 @@ def test_encrypted_registry_load_refuses_duplicate_persisted_recipient_id(tmp_pa
 
 def test_register_is_never_stored_as_plaintext(tmp_path: Path) -> None:
     public_key_hex = _fresh_public_key_hex()
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-ciphertext") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f5a353fa-361e-4bf2-abc3-83675e2ef80e") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
         repository.add(recipient_id="my-accountant", public_key_hex=public_key_hex, added_at=_NOW)
 
@@ -185,7 +185,7 @@ def test_register_is_never_stored_as_plaintext(tmp_path: Path) -> None:
 
 
 def test_add_refuses_duplicate_recipient_id(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-dup") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cdfb8758-b634-4a3a-a773-5d8a82b2ed31") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
         repository.add(recipient_id="my-accountant", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
 
@@ -195,7 +195,7 @@ def test_add_refuses_duplicate_recipient_id(tmp_path: Path) -> None:
 
 def test_remove_refuses_missing_recipient_id(tmp_path: Path) -> None:
     with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-missing") as profile,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="149809a3-c4de-40c0-8181-36858b8d0162") as profile,
         pytest.raises(RecipientNotRegisteredError),
     ):
         RecipientFingerprintRegistryRepository(objects=profile.repository).remove("nobody")
@@ -203,14 +203,14 @@ def test_remove_refuses_missing_recipient_id(tmp_path: Path) -> None:
 
 def test_get_refuses_missing_recipient_id(tmp_path: Path) -> None:
     with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-get-missing") as profile,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cf272ad2-1286-4663-84fe-326afa95dda5") as profile,
         pytest.raises(RecipientNotRegisteredError),
     ):
         RecipientFingerprintRegistryRepository(objects=profile.repository).get("nobody")
 
 
 def test_add_then_remove_then_list_reflects_removal(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-remove") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="dcffda71-679b-4381-8aa9-25fe689e8f55") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
         repository.add(recipient_id="a", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
         repository.add(recipient_id="b", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
@@ -223,14 +223,14 @@ def test_add_then_remove_then_list_reflects_removal(tmp_path: Path) -> None:
 
 def test_two_buckets_maintain_independent_registers(tmp_path: Path) -> None:
     """Two profiles' recipient registries never collide -- per-bucket scoping."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-b1") as profile_one:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="7e263462-fbaf-4c50-8b20-c4b5c84a7e15") as profile_one:
         RecipientFingerprintRegistryRepository(objects=profile_one.repository).add(
             recipient_id="only-in-one",
             public_key_hex=_fresh_public_key_hex(),
             added_at=_NOW,
         )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-b2") as profile_two:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="3e2c956e-7ade-4471-ae5e-1a4573f5d4a7") as profile_two:
         register_two = RecipientFingerprintRegistryRepository(objects=profile_two.repository).load()
 
     assert register_two.records == ()
@@ -250,7 +250,7 @@ def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
     roundtrip-discipline proof exists to catch.
     """
     public_key_hex = _fresh_public_key_hex()
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-corrupt") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="0b47fb30-9219-487d-82fa-7c1fd796ceac") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
         repository.add(recipient_id="my-accountant", public_key_hex=public_key_hex, added_at=_NOW)
 
@@ -307,7 +307,7 @@ def test_known_vector_fingerprint_survives_the_encrypted_registry_roundtrip(tmp_
     ``sha256_hex`` delegation is byte-identical across the persistence
     boundary, not just in memory.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-known-vector") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="4c8742c7-1471-433a-9e6b-3d420f0c13f5") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
         repository.add(
             recipient_id="known-vector",

@@ -210,7 +210,7 @@ def test_project_ledger_list_applies_sort_over_real_repository(tmp_path: Path) -
     appear in ascending magnitude order — proving the sort is wired into the
     projection path, not only the helper.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="65853d4f-9e30-443f-9f91-b048ef4d292e") as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         txns = [
             _transaction(

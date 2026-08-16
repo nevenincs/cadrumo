@@ -66,7 +66,7 @@ def _save_two_justificantes(repo: JustificanteRepository, tmp_path: Path) -> tup
 
 @pytest.fixture(autouse=True)
 def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="justificante-test") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="562b3752-db22-4329-a58d-fb3b4df61e7d") as profile:
         yield profile
 
 

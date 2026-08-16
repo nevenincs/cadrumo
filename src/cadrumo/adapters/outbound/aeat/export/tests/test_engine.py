@@ -29,7 +29,7 @@ _SUBMITTED_AT = datetime(2026, 5, 28, 12, 55, 0, tzinfo=UTC)
 @pytest.fixture(autouse=True)
 def _secure_database(tmp_path: Path) -> Iterator[None]:
     """Run historical-record tests against a real active profile runtime."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="submission-export-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="32c5a791-4b7d-4347-bae1-8d3c84e15ce0"):
         yield
 
 

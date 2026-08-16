@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 @pytest.fixture()
 def _runtime_profile(tmp_path: Path) -> Iterator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="wallet-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f699b704-4c17-4682-ab50-7a2051ce4c52"):
         yield
 
 
@@ -96,7 +96,7 @@ def test_cli_balance_verb_emits_expected_keys(
     tmp_path: Path,
 ) -> None:
     """The CLI JSON surface emits gross, active, and expired balances."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cli-wallet-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="8a2b9f0f-dd5d-4dd9-8d69-c75b3d3d470d"):
         repo = IvaCompensationHistoryRepository()
         repo.save_period(_state(filing_year=2020, period="4T", generated=Decimal("100.00")))
         repo.save_period(_state(filing_year=2023, period="2T", generated=Decimal("200.00")))
@@ -120,7 +120,7 @@ def test_cli_balance_verb_text_output_lines(
     tmp_path: Path,
 ) -> None:
     """Text-mode output includes tab-separated active and expired metric lines."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cli-text-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1bc50652-bc61-4376-9ca2-607157d33204"):
         repo = IvaCompensationHistoryRepository()
         repo.save_period(_state(filing_year=2020, period="4T", generated=Decimal("100.00")))
         repo.save_period(_state(filing_year=2023, period="2T", generated=Decimal("200.00")))

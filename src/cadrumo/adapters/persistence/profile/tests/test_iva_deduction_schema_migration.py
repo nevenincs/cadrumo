@@ -241,9 +241,9 @@ def _stored_row_state(engine: Engine, namespace: str) -> tuple[tuple[bytes, int,
 
 def test_atomic_v1_migration_cas_conflict_writes_no_replacements(tmp_path: Path) -> None:
     """A concurrent revision between validation and commit rolls back every replacement."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="s54-v1-cas") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="7918a6f2-c538-4517-a103-21c162fce270") as profile:
         engine = get_engine(profile.settings)
-        repository = TransactionCatalogueRepository(bucket_id="s54-v1-cas")
+        repository = TransactionCatalogueRepository(bucket_id="7918a6f2-c538-4517-a103-21c162fce270")
         transaction = _authoritative_transaction().model_copy(
             update={
                 "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_INVESTMENT,
@@ -254,7 +254,7 @@ def test_atomic_v1_migration_cas_conflict_writes_no_replacements(tmp_path: Path)
         _seed_v1_catalogue(
             repository,
             engine=engine,
-            bucket_id="s54-v1-cas",
+            bucket_id="7918a6f2-c538-4517-a103-21c162fce270",
             transaction=transaction,
         )
         bienes_repository = BienesInversionIvaRegisterRepository()
@@ -292,20 +292,20 @@ def test_atomic_v1_migration_cas_conflict_writes_no_replacements(tmp_path: Path)
             )
 
         transaction_repository_key = secure_object_key_digest(
-            transaction_object_key("s54-v1-cas", transaction.transaction_id)
+            transaction_object_key("7918a6f2-c538-4517-a103-21c162fce270", transaction.transaction_id)
         )
         with pytest.raises(SecureObjectRevisionConflictError):
             repository._objects.migrate_targets_atomically(
                 (
                     SecureObjectMigrationTarget(
                         TRANSACTION_CATALOGUE_NAMESPACE.namespace,
-                        transaction_index_object_key("s54-v1-cas"),
+                        transaction_index_object_key("7918a6f2-c538-4517-a103-21c162fce270"),
                         SensitivityClass.FINANCIAL,
                         2,
                     ),
                     SecureObjectMigrationTarget(
                         TRANSACTION_CATALOGUE_NAMESPACE.namespace,
-                        transaction_object_key("s54-v1-cas", transaction.transaction_id),
+                        transaction_object_key("7918a6f2-c538-4517-a103-21c162fce270", transaction.transaction_id),
                         SensitivityClass.FINANCIAL,
                         2,
                     ),
@@ -331,9 +331,9 @@ def test_atomic_v1_migration_cas_conflict_writes_no_replacements(tmp_path: Path)
 
 def test_authoritative_v1_rows_upgrade_and_roundtrip_through_real_secure_repositories(tmp_path: Path) -> None:
     """Both deduction-schema owners validate and atomically replace authoritative v1 rows."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="s54-v1-success") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="949862e4-398e-4c4c-8209-f3dbd4b2636d") as profile:
         engine = get_engine(profile.settings)
-        transaction_repository = TransactionCatalogueRepository(bucket_id="s54-v1-success")
+        transaction_repository = TransactionCatalogueRepository(bucket_id="949862e4-398e-4c4c-8209-f3dbd4b2636d")
         transaction = _authoritative_transaction().model_copy(
             update={
                 "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_INVESTMENT,
@@ -345,7 +345,7 @@ def test_authoritative_v1_rows_upgrade_and_roundtrip_through_real_secure_reposit
             objects=transaction_repository._objects,
             engine=engine,
             namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
-            object_key=transaction_object_key("s54-v1-success", transaction.transaction_id),
+            object_key=transaction_object_key("949862e4-398e-4c4c-8209-f3dbd4b2636d", transaction.transaction_id),
             written_at=transaction.modified_at,
             current_payload=_transaction_payload(transaction, schema_version=2),
             legacy_payload=_transaction_payload(transaction, schema_version=1),
@@ -354,7 +354,7 @@ def test_authoritative_v1_rows_upgrade_and_roundtrip_through_real_secure_reposit
             objects=transaction_repository._objects,
             engine=engine,
             namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
-            object_key=transaction_index_object_key("s54-v1-success"),
+            object_key=transaction_index_object_key("949862e4-398e-4c4c-8209-f3dbd4b2636d"),
             written_at=now(),
             current_payload=_index_payload(transaction.transaction_id, schema_version=2),
             legacy_payload=_index_payload(transaction.transaction_id, schema_version=1),
@@ -376,9 +376,9 @@ def test_authoritative_v1_rows_upgrade_and_roundtrip_through_real_secure_reposit
             legacy_payload=json.dumps(legacy_register).encode("utf-8"),
         )
         aggregation = aggregate_iva_ledger_observations_from_repositories(
-            bucket_id="s54-v1-success",
+            bucket_id="949862e4-398e-4c4c-8209-f3dbd4b2636d",
             period=Period.from_year_and_code(2026, "2T"),
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="s54-v1-success"),
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="949862e4-398e-4c4c-8209-f3dbd4b2636d"),
         )
         loaded_transactions = transaction_repository.load()
         loaded_register = bienes_repository.load()
@@ -407,9 +407,9 @@ def test_authoritative_v1_rows_upgrade_and_roundtrip_through_real_secure_reposit
 
 def test_v1_rows_without_authoritative_backfill_evidence_refuse_through_real_secure_repository(tmp_path: Path) -> None:
     """The read-side cutover names the exact legacy item that needs remediation."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="s54-v1-refusal") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="688dd717-f78e-48ae-86a6-8d689a9c0843") as profile:
         engine = get_engine(profile.settings)
-        transaction_repository = TransactionCatalogueRepository(bucket_id="s54-v1-refusal")
+        transaction_repository = TransactionCatalogueRepository(bucket_id="688dd717-f78e-48ae-86a6-8d689a9c0843")
         transaction = _authoritative_transaction()
         legacy_transaction = json.loads(_transaction_payload(transaction, schema_version=1).decode("utf-8"))
         del legacy_transaction["payload"]["deduction_fact_kind"]
@@ -418,7 +418,7 @@ def test_v1_rows_without_authoritative_backfill_evidence_refuse_through_real_sec
             objects=transaction_repository._objects,
             engine=engine,
             namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
-            object_key=transaction_object_key("s54-v1-refusal", transaction.transaction_id),
+            object_key=transaction_object_key("688dd717-f78e-48ae-86a6-8d689a9c0843", transaction.transaction_id),
             written_at=transaction.modified_at,
             current_payload=_transaction_payload(transaction, schema_version=2),
             legacy_payload=json.dumps(legacy_transaction).encode("utf-8"),
@@ -427,13 +427,15 @@ def test_v1_rows_without_authoritative_backfill_evidence_refuse_through_real_sec
             objects=transaction_repository._objects,
             engine=engine,
             namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
-            object_key=transaction_index_object_key("s54-v1-refusal"),
+            object_key=transaction_index_object_key("688dd717-f78e-48ae-86a6-8d689a9c0843"),
             written_at=now(),
             current_payload=_index_payload(transaction.transaction_id, schema_version=2),
             legacy_payload=_index_payload(transaction.transaction_id, schema_version=1),
         )
         with pytest.raises(StorageValidationError, match="deduction_fact_kind and deduction_provenance"):
-            transaction_repository.migrate_iva_deduction_authority(asset_profile_id="s54-v1-refusal")
+            transaction_repository.migrate_iva_deduction_authority(
+                asset_profile_id="688dd717-f78e-48ae-86a6-8d689a9c0843"
+            )
         transaction_versions = {
             row.schema_version
             for row in transaction_repository._objects.iter_all_records_raw()
@@ -469,9 +471,9 @@ def test_v1_rows_without_authoritative_backfill_evidence_refuse_through_real_sec
 
 def test_semantically_malformed_v1_provenance_refuses_before_every_replacement(tmp_path: Path) -> None:
     """A present but legally incompatible authority is not accepted as backfill evidence."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="s54-v1-malformed") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="22edd7b2-41ac-4280-8bd3-d0a901d1f986") as profile:
         engine = get_engine(profile.settings)
-        repository = TransactionCatalogueRepository(bucket_id="s54-v1-malformed")
+        repository = TransactionCatalogueRepository(bucket_id="22edd7b2-41ac-4280-8bd3-d0a901d1f986")
         transaction = _authoritative_transaction().model_copy(
             update={
                 "deduction_provenance": IvaDeductionClassificationProvenance(
@@ -484,12 +486,12 @@ def test_semantically_malformed_v1_provenance_refuses_before_every_replacement(t
         _seed_v1_catalogue(
             repository,
             engine=engine,
-            bucket_id="s54-v1-malformed",
+            bucket_id="22edd7b2-41ac-4280-8bd3-d0a901d1f986",
             transaction=transaction,
         )
 
         with pytest.raises(ValueError, match="requires 'invoice_evidence' evidence"):
-            repository.migrate_iva_deduction_authority(asset_profile_id="s54-v1-malformed")
+            repository.migrate_iva_deduction_authority(asset_profile_id="22edd7b2-41ac-4280-8bd3-d0a901d1f986")
 
         assert {
             row.schema_version
@@ -507,13 +509,13 @@ def test_reciprocal_investment_v1_migration_refuses_unlinked_then_persists_only_
             "prorrata_sector_id": "sector-a",
         }
     )
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="s54-v1-unlinked") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bbacb43d-ef9c-4322-832f-a3c04a1ed7e5") as profile:
         engine = get_engine(profile.settings)
-        repository = TransactionCatalogueRepository(bucket_id="s54-v1-unlinked")
+        repository = TransactionCatalogueRepository(bucket_id="bbacb43d-ef9c-4322-832f-a3c04a1ed7e5")
         _seed_v1_catalogue(
             repository,
             engine=engine,
-            bucket_id="s54-v1-unlinked",
+            bucket_id="bbacb43d-ef9c-4322-832f-a3c04a1ed7e5",
             transaction=transaction,
         )
         unlinked_register = BienesInversionIvaRegister(
@@ -544,7 +546,7 @@ def test_reciprocal_investment_v1_migration_refuses_unlinked_then_persists_only_
             legacy_payload=json.dumps(unlinked_legacy).encode("utf-8"),
         )
         with pytest.raises(ValueError, match="not reciprocal"):
-            repository.migrate_iva_deduction_authority(asset_profile_id="s54-v1-unlinked")
+            repository.migrate_iva_deduction_authority(asset_profile_id="bbacb43d-ef9c-4322-832f-a3c04a1ed7e5")
         assert {
             row.schema_version
             for row in repository._objects.iter_all_records_raw()
@@ -568,7 +570,7 @@ def test_reciprocal_investment_v1_migration_refuses_unlinked_then_persists_only_
             current_payload=linked_register.model_dump_json().encode("utf-8"),
             legacy_payload=json.dumps(linked_legacy).encode("utf-8"),
         )
-        repository.migrate_iva_deduction_authority(asset_profile_id="s54-v1-unlinked")
+        repository.migrate_iva_deduction_authority(asset_profile_id="bbacb43d-ef9c-4322-832f-a3c04a1ed7e5")
         assert {
             row.schema_version
             for row in repository._objects.iter_all_records_raw()

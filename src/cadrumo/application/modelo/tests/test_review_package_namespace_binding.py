@@ -34,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_signing_key_row_carries_registry_declared_metadata(tmp_path: Path) -> None:
     """The signing keypair save persists the metadata its registry def declares."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="review-pkg-sign-binding") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="a19b3b57-1e77-4a31-9dc1-54d04fbd5d9d") as profile:
         ensure_review_package_signing_keypair(bucket_id=profile.bucket_id, repository=profile.repository)
 
         with session_scope(profile.repository._engine) as session:

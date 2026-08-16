@@ -272,7 +272,7 @@ def test_registered_recipient_public_key_is_the_encryption_target(tmp_path: Path
         recipient_private_key.public_key().public_bytes_raw(),
     )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-enc-g-registry") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f47793db-b91f-4d35-95fd-5e68ce6fcbac") as profile:
         repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
         repository.add(recipient_id="my-accountant", public_key_hex=recipient_public_key_hex, added_at=_NOW)
         registered = repository.get("my-accountant")
@@ -494,7 +494,7 @@ def test_replay_guard_refuses_a_second_presentation_of_the_same_envelope_nonce(t
         issued_at=_NOW,
     )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-enc-p-replay-guard") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1d9c0483-98fe-4896-9eb2-1ccb660f2983") as profile:
         guard = RecipientReplayGuardRepository(objects=profile.repository)
 
         # First presentation: decrypts and the nonce is recorded consumed.
@@ -587,14 +587,18 @@ def test_envelope_json_round_trip_preserves_ciphertext_bytes(tmp_path: Path) -> 
 
 def test_ensure_recipient_encryption_keypair_mints_once_and_reuses(tmp_path: Path) -> None:
     """``ensure_recipient_encryption_keypair`` mirrors the signing keypair's idempotent-reuse contract."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-enc-keypair-mint") as profile:
-        minted = ensure_recipient_encryption_keypair(bucket_id="recip-enc-keypair-mint", repository=profile.repository)
-        reused = ensure_recipient_encryption_keypair(bucket_id="recip-enc-keypair-mint", repository=profile.repository)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cec6b9b7-f07d-45c0-a1ee-46064972a1df") as profile:
+        minted = ensure_recipient_encryption_keypair(
+            bucket_id="cec6b9b7-f07d-45c0-a1ee-46064972a1df", repository=profile.repository
+        )
+        reused = ensure_recipient_encryption_keypair(
+            bucket_id="cec6b9b7-f07d-45c0-a1ee-46064972a1df", repository=profile.repository
+        )
         assert reused.private_key_hex == minted.private_key_hex
         assert reused.public_key_hex == minted.public_key_hex
 
         loaded = load_recipient_encryption_keypair(
-            bucket_id="recip-enc-keypair-mint",
+            bucket_id="cec6b9b7-f07d-45c0-a1ee-46064972a1df",
             repository=profile.repository,
         )
         assert loaded.private_key_hex == minted.private_key_hex
@@ -618,11 +622,11 @@ def test_ensure_recipient_encryption_keypair_refuses_a_naive_or_non_utc_generate
 ) -> None:
     """The minted keypair's ``created_at`` must carry one explicit UTC instant."""
     with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-enc-keypair-time") as profile,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="ff063716-086e-4576-9d53-3f44ab646d21") as profile,
         pytest.raises(ValidationError, match="datetime must be"),
     ):
         ensure_recipient_encryption_keypair(
-            bucket_id="recip-enc-keypair-time",
+            bucket_id="ff063716-086e-4576-9d53-3f44ab646d21",
             repository=profile.repository,
             generated_at=generated_at,
         )
@@ -632,11 +636,11 @@ def test_load_recipient_encryption_keypair_refuses_before_mint(tmp_path: Path) -
     from .._review_package_recipient_encryption import RecipientEncryptionKeyNotFoundError
 
     with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-enc-keypair-unminted") as profile,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="df232797-fe0c-4e0f-9f80-c608b60391e7") as profile,
         pytest.raises(RecipientEncryptionKeyNotFoundError),
     ):
         load_recipient_encryption_keypair(
-            bucket_id="recip-enc-keypair-unminted",
+            bucket_id="df232797-fe0c-4e0f-9f80-c608b60391e7",
             repository=profile.repository,
         )
 
@@ -649,9 +653,9 @@ def test_recipient_encryption_key_is_stored_only_as_ciphertext_at_rest(tmp_path:
     ciphertext directly (bypassing the repository's decrypt step) and confirm
     the plaintext private-key hex does NOT appear in it.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-enc-keypair-custody") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="54a0e9b6-44e3-45ac-999e-b8ca8e21da09") as profile:
         keypair = ensure_recipient_encryption_keypair(
-            bucket_id="recip-enc-keypair-custody",
+            bucket_id="54a0e9b6-44e3-45ac-999e-b8ca8e21da09",
             repository=profile.repository,
         )
 

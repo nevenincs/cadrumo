@@ -55,14 +55,14 @@ def _fresh_nonce_hex() -> str:
 
 
 def test_load_returns_empty_ledger_when_absent(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-replay-empty") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="922171fc-7bb5-40c0-ac9a-11431b11a64f") as profile:
         repository = RecipientReplayGuardRepository(objects=profile.repository)
         assert repository.load() == ConsumedNonceLedger()
 
 
 def test_is_consumed_is_false_before_and_true_after_mark_consumed(tmp_path: Path) -> None:
     nonce_hex = _fresh_nonce_hex()
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-replay-flag") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="81f3bb9d-313c-444b-9475-9d32310484dc") as profile:
         repository = RecipientReplayGuardRepository(objects=profile.repository)
         assert repository.is_consumed(nonce_hex) is False
 
@@ -73,7 +73,7 @@ def test_is_consumed_is_false_before_and_true_after_mark_consumed(tmp_path: Path
 
 def test_mark_consumed_then_load_roundtrips_with_strict_equality(tmp_path: Path) -> None:
     nonce_hex = _fresh_nonce_hex()
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-replay-roundtrip") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1f8ea194-51c7-4d6c-abf4-df4043cc5e1a") as profile:
         repository = RecipientReplayGuardRepository(objects=profile.repository)
 
         updated = repository.mark_consumed(nonce_hex, consumed_at=_NOW)
@@ -96,7 +96,7 @@ def test_mark_consumed_then_load_roundtrips_with_strict_equality(tmp_path: Path)
 def test_mark_consumed_refuses_a_naive_or_non_utc_consumed_at(tmp_path: Path, consumed_at: datetime) -> None:
     """A consumed-nonce record must carry one explicit UTC ``consumed_at`` instant."""
     nonce_hex = _fresh_nonce_hex()
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-replay-time") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="e3b1b181-438d-4f22-867f-5e981d979775") as profile:
         repository = RecipientReplayGuardRepository(objects=profile.repository)
         with pytest.raises(ValidationError, match="datetime must be"):
             repository.mark_consumed(nonce_hex, consumed_at=consumed_at)
@@ -104,7 +104,7 @@ def test_mark_consumed_refuses_a_naive_or_non_utc_consumed_at(tmp_path: Path, co
 
 def test_ledger_is_never_stored_as_plaintext(tmp_path: Path) -> None:
     nonce_hex = _fresh_nonce_hex()
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-replay-ciphertext") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="4384aad2-586d-4e57-bafa-78c2d2c98031") as profile:
         repository = RecipientReplayGuardRepository(objects=profile.repository)
         repository.mark_consumed(nonce_hex, consumed_at=_NOW)
 
@@ -122,7 +122,7 @@ def test_ledger_is_never_stored_as_plaintext(tmp_path: Path) -> None:
 def test_mark_consumed_twice_refuses_as_replay(tmp_path: Path) -> None:
     """Real behaviour: presenting the same nonce a second time is a replay refusal."""
     nonce_hex = _fresh_nonce_hex()
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-replay-twice") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="c565705d-eaa8-411f-b420-8296f3c19c03") as profile:
         repository = RecipientReplayGuardRepository(objects=profile.repository)
         repository.mark_consumed(nonce_hex, consumed_at=_NOW)
 
@@ -142,7 +142,7 @@ def test_concurrent_same_nonce_consumption_allows_exactly_one_success(tmp_path: 
     replay_refusals: list[RecipientPackageReplayedError] = []
     unexpected: list[Exception] = []
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-replay-same-race") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="7a6da921-b01a-47c6-965b-fcf8280e83d3") as profile:
         repository = RecipientReplayGuardRepository(objects=profile.repository)
         gate = threading.Barrier(writer_count)
 
@@ -176,7 +176,7 @@ def test_concurrent_distinct_nonce_consumption_preserves_every_record(tmp_path: 
     nonces = tuple(_fresh_nonce_hex() for _ in range(8))
     unexpected: list[Exception] = []
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-replay-distinct-race") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="c7b05088-3df5-4dc7-92aa-c364cf37a431") as profile:
         repository = RecipientReplayGuardRepository(objects=profile.repository)
         gate = threading.Barrier(len(nonces))
 
@@ -205,13 +205,13 @@ def test_concurrent_distinct_nonce_consumption_preserves_every_record(tmp_path: 
 def test_two_buckets_maintain_independent_ledgers(tmp_path: Path) -> None:
     """Two profiles' replay ledgers never collide -- per-bucket scoping."""
     shared_nonce_hex = _fresh_nonce_hex()
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-replay-b1") as profile_one:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1d9626a5-f7a1-4615-a8c3-dd7073664c10") as profile_one:
         RecipientReplayGuardRepository(objects=profile_one.repository).mark_consumed(
             shared_nonce_hex,
             consumed_at=_NOW,
         )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-replay-b2") as profile_two:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bd58b114-6a62-49ff-b412-07122fe6a41f") as profile_two:
         repository_two = RecipientReplayGuardRepository(objects=profile_two.repository)
         # The same nonce value is unconsumed in the second bucket's own ledger.
         assert repository_two.is_consumed(shared_nonce_hex) is False
@@ -228,7 +228,7 @@ def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
     would re-open every previously-consumed nonce to replay) empty ledger.
     """
     nonce_hex = _fresh_nonce_hex()
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-replay-corrupt") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="b59a72bb-15e7-4c8c-94c0-691d11dc1449") as profile:
         repository = RecipientReplayGuardRepository(objects=profile.repository)
         repository.mark_consumed(nonce_hex, consumed_at=_NOW)
 

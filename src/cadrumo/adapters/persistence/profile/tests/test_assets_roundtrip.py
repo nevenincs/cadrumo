@@ -72,7 +72,7 @@ def test_assets_ledger_survives_encrypted_storage_roundtrip(
 ) -> None:
     """AssetsLedgerDocument + AmortizacionLedger roundtrip through encrypted SQL."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-rt-survives"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="0611f8c1-ff10-4ebf-8bbc-6f6cdebece7a"):
         assets_repo = AssetsLedgerRepository()
         amortizacion_repo = AmortizacionLedgerRepository()
 
@@ -132,7 +132,7 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
     from ...storage import PROFILE_ASSETS_LEDGER_NAMESPACE
     from ...storage.sql import SecureObjectRow
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-rt-dropped") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="196b0b56-31ec-4598-a910-9c4ae58ff804") as profile:
         engine = get_engine(profile.settings)
         assets_repo = AssetsLedgerRepository()
         asset = _populated_asset()
@@ -181,7 +181,7 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
     from ...storage import PROFILE_ASSETS_LEDGER_NAMESPACE
     from ...storage.sql import SecureObjectRow
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-rt-missing") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="131dcb94-9624-4ef4-8837-36e1f0212b5a") as profile:
         engine = get_engine(profile.settings)
         assets_repo = AssetsLedgerRepository()
         assets_repo.save(AssetsLedgerDocument(assets=(_populated_asset(),)))

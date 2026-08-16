@@ -85,7 +85,7 @@ def test_storage_state_for_session_unloaded_state_carries_translated_message(
     causes load() to return None under an isolated profile bucket."""
     from ......tests.secure_sql import isolated_runtime_profile
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="auth-state-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="87d6afab-fc98-40b0-9711-c4907ade037b"):
         session = _minimal_session(storage_state_path=tmp_path / "nonexistent.json")
         with pytest.raises(SedeNavigationError) as exc_info:
             storage_state_for_session(session)

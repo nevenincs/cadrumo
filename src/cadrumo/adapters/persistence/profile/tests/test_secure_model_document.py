@@ -29,7 +29,7 @@ def test_kernel_roundtrips_a_strict_document_as_encrypted_registry_governed_byte
             ),
         ),
     )
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="secure-model-kernel") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="a0e10fc6-03c5-4290-832a-fcb4c7654fe4") as profile:
         persistence = ProfileBareModelSecurePersistence(
             objects=profile.repository,
             definition=PROFILE_ASSETS_LEDGER_NAMESPACE,
