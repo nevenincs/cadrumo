@@ -54,7 +54,9 @@ def test_clean_root_refusal_executes_projected_profile_recovery_then_retries(
         assert f'  action.failed_condition_id: "{_FAILED_CONDITION_ID}"' in text
         assert '"evidence_id":"profile.active.storage_route"' in text
         assert (
-            '  action.action: {"action_id":"operator.profile.create","target_command_key":"config.profile.create"}'
+            '  action.action: {"action_id":"operator.profile.create",'
+            '"cli_path":["config","profile","create"],'
+            '"target_command_key":"config.profile.create"}'
         ) in text
         assert '"argument_name":"profile_name"' in text
         assert '  action.missing_argument_names: ["profile_name"]' in text
@@ -90,6 +92,7 @@ def test_clean_root_refusal_executes_projected_profile_recovery_then_retries(
             ],
             "action": {
                 "action_id": _RECOVERY_ACTION_ID,
+                "cli_path": ["config", "profile", "create"],
                 "target_command_key": "config.profile.create",
             },
             "argument_bindings": [

@@ -18,6 +18,7 @@ from ....tests.profile_capsule import open_test_profile_session, set_active_test
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ._cli_json_support import _json_object
+from ._ledger_llm_support import _import_one_transaction
 
 _PROFILE_ID = "9e0f3a2b-5d1c-4a77-9b2d-27ed6d6c7f10"
 _PROFILE_LABEL = "tester"
@@ -60,26 +61,21 @@ def open_bucket_session(tmp_path: Path) -> Iterator[None]:
             dispose_engine()
 
 
-def _create_profile_and_import(tmp_path: Path) -> str:
-    statement = tmp_path / "statement.csv"
-    statement.write_text(
-        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
-        "2026-04-15,Client SL,Invoice 1,-50.00,EUR,n26-001\n",
-        encoding="utf-8",
-        newline="\n",
-    )
-    imported = _invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
-    assert imported.exit_code == 0, imported.output
+def import_validation_transaction(tmp_path: Path) -> str:
+    """Import this suite's one CSV row through the real CLI, returning its id.
 
-    listed = _invoke(["--format", "json", "app", "ledger", "list"])
-    assert listed.exit_code == 0, listed.output
-    payload = STR_KEYED_MAPPING_ADAPTER.validate_json(listed.output)
-    rows = _json_object(payload.get("result", payload)).get("rows", [])
-    assert isinstance(rows, list)
-    assert rows, listed.output
-    transaction_id = _json_object(rows[0])["transaction_id"]
-    assert isinstance(transaction_id, str)
-    return transaction_id
+    The import itself is not this module's to implement: writing a statement,
+    driving ``ledger import`` and reading the id back is one behaviour with one
+    home, and a second copy of it drifted here under a name claiming it also
+    created a profile, which it never did. Only the scenario data is local.
+    """
+    return _import_one_transaction(
+        tmp_path,
+        payee="Client SL",
+        reference="Invoice 1",
+        amount="-50.00",
+        marker="n26-001",
+    )
 
 
 def _set_profile_axis(key: str, value: str) -> None:

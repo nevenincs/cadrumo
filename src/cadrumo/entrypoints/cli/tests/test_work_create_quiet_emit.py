@@ -41,6 +41,9 @@ from .._common import _emit_envelope
 from .._modelo_payloads import WorkCreateResult
 from .._modelo_rendering import work_unit_payload
 from .._modelo_work_lifecycle_cli import _emit_work_create_result
+from ._english_locale_fixture import english_locale_fixture
+
+__all__ = ["english_locale_fixture"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

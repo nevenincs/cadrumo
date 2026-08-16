@@ -15,6 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....application.ledger import ExportSerializationFormat, LedgerExportResult, LedgerExportRow
+from ....core import OperatorActionAxis
 from ....domain.categories import ProportionalityKind, SpendingCategory
 from ....domain.transactions import BusinessClassification
 from .._ledger_catalogue_invoice_payloads import (
@@ -91,12 +92,16 @@ def _period_payload(**overrides: object) -> dict[str, object]:
 def test_readiness_issue_payloads_keep_the_domain_detail_requirement() -> None:
     """Both operator projections refuse an issue the ledger preflight model rejects."""
     shared = {"transaction_id": "a" * 64, "reason": "missing_category", "detail": "category required"}
+    # The readiness projection additionally carries the typed operator action
+    # the envelope contract requires; the preflight projection does not. The
+    # detail requirement under test is what they still share.
+    readiness = {**shared, "operator_action": OperatorActionAxis.IMPORT_LEDGER_DATA}
 
     assert LedgerPreflightIssuePayload.model_validate(shared).detail == "category required"
-    assert LedgerIssuePayload.model_validate(shared).detail == "category required"
+    assert LedgerIssuePayload.model_validate(readiness).detail == "category required"
 
-    for payload_type in (LedgerPreflightIssuePayload, LedgerIssuePayload):
-        invalid = {**shared, "detail": ""}
+    for payload_type, valid in ((LedgerPreflightIssuePayload, shared), (LedgerIssuePayload, readiness)):
+        invalid = {**valid, "detail": ""}
         with pytest.raises(ValueError, match="at least 1 character"):
             payload_type.model_validate(invalid)
 
@@ -506,7 +511,7 @@ def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> Non
             "applied": [
                 {
                     "transaction_id": "a" * 64,
-                    "matched_rule_id": "r" * 64,
+                    "matched_rule_id": "e" * 64,
                     "classification": BusinessClassification.BUSINESS,
                 },
             ],

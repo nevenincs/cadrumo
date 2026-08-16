@@ -100,10 +100,21 @@ def test_common_action_resolver_uses_the_live_surface_for_zero_and_required_inpu
         "argument_bindings": [],
     }
 
-    with pytest.raises(ValueError, match=r"config\.profile\.sandbox\.restore: name"):
-        resolve_notice_action(
-            action=ActionReference(action_id="operator.profile.sandbox.restore"),
-        )
+    # COVERAGE GAP, deliberately recorded rather than faked.
+    #
+    # This test also covered the required-input half: an action whose target
+    # command declares a required parameter the caller has not bound must
+    # refuse. It was pinned to `operator.profile.sandbox.restore`, which the
+    # retired profile restore surface took with it.
+    #
+    # There is no substitute today. Resolving every entry in the live
+    # catalogue with no bindings raises nothing at all, so no action currently
+    # declares a refusing required argument. Re-pointing at any live id would
+    # assert a refusal that cannot happen, and asserting "nothing refuses"
+    # would gate on the gap rather than the property.
+    #
+    # Restore this half with the profile restore/import surface, whose verbs
+    # take the required subject arguments the case needs.
 
 
 def test_common_action_resolver_refuses_invalid_invocation_reconciliation() -> None:
@@ -244,13 +255,13 @@ def test_powershell_action_token_is_literal_under_the_real_shell(value: str, ren
 @pytest.mark.parametrize(
     ("action_id", "argument_name", "source_key", "value", "expected_tail"),
     (
-        (
-            "operator.profile.import",
-            "path",
-            "out",
-            r"C:\tmp\$(Write-Output PWN)\bundle.aeat",
-            r"config profile import 'C:\tmp\$(Write-Output PWN)\bundle.aeat'",
-        ),
+        # A path-argument case belongs here too, but no action in the live
+        # catalogue takes one: the profile import/export surface is retired
+        # pending its rebuild. Restore a path case with that surface rather
+        # than reaching for an action id the catalogue no longer declares.
+        # The quoting itself stays covered against a REAL shell by
+        # `test_powershell_action_token_is_literal_under_the_real_shell`,
+        # which runs the `$(Write-Output PWN)` payload through pwsh.
         (
             "operator.profile.login",
             "name",

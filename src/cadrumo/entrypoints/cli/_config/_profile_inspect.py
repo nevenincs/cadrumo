@@ -194,6 +194,7 @@ def _register_show_command(
             report=report,
             blocking_count=len(blocking),
             values=values,
+            display_name=pointer.label,
         )
         from ....application.user_profile import censo_divergence_notice
 
@@ -565,6 +566,7 @@ def _record_validity_lines(
     report: _ProfileValidationReport,
     blocking_count: int,
     values: Mapping[str, object],
+    display_name: str,
 ) -> list[str]:
     """Render the ``show`` text report for one profile record.
 
@@ -577,10 +579,17 @@ def _record_validity_lines(
         blocking_count=blocking_count,
         issue_count=len(report.issues),
     )
+    # The label names WHICH profile this report is about, and the text surface
+    # needs it more than the JSON one does: the identifier is redacted on the
+    # way out, so without the label an operator reads one taxpayer's facts with
+    # nothing on screen saying whose they are. The JSON payload has carried
+    # `display_name` throughout; this row is what stops the two renderings
+    # disagreeing about whether the subject is stated.
     lines = [
         prose,
         validity_row,
         f"profile_id\t{record.profile_id}",
+        f"display_name\t{display_name}",
         f"setup_state\t{record.setup_state.value}",
     ]
     lines.extend(

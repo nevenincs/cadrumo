@@ -99,6 +99,28 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
             explicit_fields=has_explicit_profile_fields(kwargs),
             full_screen=host_can_run_full_screen(),
         ):
+            # The setup flow is not a creation authority and refuses `create`
+            # outright, so the scripted arm of THIS verb has to reach the
+            # credential registration door itself rather than hand the
+            # operator a refusal that names a capability no surface offered.
+            #
+            # Only the BARE form is taken natively. An invocation carrying
+            # profile field flags keeps the flow, because the flow is where
+            # those values are validated -- the foral-CCAA refusal, the
+            # legal-entity form requirement and the IRNR redirect all fire in
+            # its body. Handling those here would drop the operator's supplied
+            # facts on the floor and register a bare profile instead, which is
+            # a silent under-declaration: the flags vanish and the refusal that
+            # should have fired does not.
+            scripted_ctx = kwargs.get("ctx")
+            if (
+                mode == "create"
+                and isinstance(scripted_ctx, _TyperClickContext)
+                and not has_explicit_profile_fields(kwargs)
+            ):
+                from ._scripted_registration import register_profile_from_scripted_invocation
+
+                return register_profile_from_scripted_invocation(scripted_ctx, kwargs)
             return wizard_command(*args, **kwargs)
 
         ctx = kwargs.get("ctx")
