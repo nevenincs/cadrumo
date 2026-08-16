@@ -8,7 +8,7 @@ record which topped a single query outrank whole classes above it for every
 query -- a legal provision boosted to 0.98 sat above the casilla rows at 0.8
 and the modelo cards at 0.9 that it merely grounds.
 
-The accepted contract confines a boost to the band between its own class's
+The governing contract confines a boost to the band between its own class's
 declared weight and the next class's, reserving a margin so it approaches but
 never reaches the class above. Curation then orders within a class and the
 declared ladder orders across classes, which is what each authority is for.

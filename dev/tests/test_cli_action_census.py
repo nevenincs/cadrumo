@@ -314,7 +314,7 @@ def new_refusal(suggestion: str) -> None:
 
 
 def test_default_json_output_remains_the_s01_candidate_contract(capsys: pytest.CaptureFixture[str]) -> None:
-    """Opt-in fixed-point diagnostics do not alter S01's machine-readable output."""
+    """Opt-in fixed-point diagnostics do not alter the census's machine-readable output."""
     assert main(["HEAD", "--json"]) == 0
     payload = json.loads(capsys.readouterr().out)
 
