@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:663a772cb4190b9cc7cf210b69e3b3d3e151ed59f740b233727f2547d8ce5b62'
+body_hash: 'sha256:a731388162efd60340c909b6979035076f758712b7797cd084c7be0492d69a2a'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -3800,3 +3800,41 @@ One headline figure is corrected downward, and one rule-out's reasoning is
 corrected while its conclusion survives. **Structural completeness may be
 declared for the landed work**; the open items in the closure summary remain
 open and are decisions, not omissions.
+
+## Correction to the honesty review: the headline is a BAND, not a point
+
+The review corrected the headline from -65% to -56% on three runs measuring
+43.85s, 38.87s and 42.86s. Two further runs the same day measured **44.38s** and
+**34.69s**, the latter with per-test calls of 6.54 / 6.29 / 5.08s against the
+pre-fix 12.90 / 11.25 / 9.84s -- i.e. squarely back at the original figure.
+
+Full same-day sample: **34.69, 38.87, 42.86, 43.85, 44.38s.** The earlier session
+measured a tight 34.30-35.79s. The module's wall clock is **variable across
+sessions**, which on this box means peer suites competing for it.
+
+So:
+
+- The original **-65%** was the low end of the band.
+- The review's **-56%** was the high end.
+- **Neither is wrong, and neither is a measurement**: both are single-session
+  samples of a quantity that ranges 34.7-44.4s.
+
+**Corrected once more, and this time as a band: ~98s -> 35-44s, about -55% to
+-64%.** The before-state was itself two samples in one session, so it deserves
+the same caution.
+
+What is stable and reproducible across every session is the **structural**
+metric, which is why it should have been the headline all along:
+
+| | before | after (two sessions) |
+|---|---|---|
+| connections | 76 | 12, 13 |
+| connect time | 71.5s | 8.2s, 9.2s |
+
+**Standing lesson, third statement of it in this audit and the one that finally
+sticks: on this machine a wall clock is a band, and a point estimate of it is a
+claim about the hour it was taken. Lead with the deterministic metric -- calls
+avoided, connections removed, files not read -- and quote wall clock as a range
+with its sample size.** The honesty review caught an overstatement and replaced
+it with an understatement, because it applied more runs but still not the right
+KIND of claim.
