@@ -38,11 +38,10 @@ from click.testing import Result
 from ....tests import FIXTURES_DIR
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.ledger_cli import list_ledger_rows_via_cli as _list_rows
-from ._isolated_profile_storage_fixtures import live_fx_isolated_backend
+from ._isolated_profile_storage_fixtures import live_fx_seeded_backend
 from ._ledger_corpus_support import _match, _oracle_rules
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["live_fx_isolated_backend"]
 
 _CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
 _FILES = (
@@ -66,6 +65,13 @@ def _import_corpus() -> None:
         assert result.exit_code == 0, f"{name}: {result.output}"
 
 
+# The cross-year corpus is the starting state every test here reads or
+# disposes from, not the thing under test. Seeded once and copied per test:
+# each test still gets its own storage root, so nothing it changes escapes.
+_seeded_origin, live_fx_seeded_world = live_fx_seeded_backend(seed=_import_corpus)
+__all__ = ["_seeded_origin", "live_fx_seeded_world"]
+
+
 def _year_of(row: dict[str, object]) -> int:
     date_str = row.get("date")
     assert isinstance(date_str, str)
@@ -75,7 +81,6 @@ def _year_of(row: dict[str, object]) -> int:
 # --- Annual reach: the operator wants the whole year, not one quarter --------
 def test_corpus_spans_both_years() -> None:
     """The full-year reviewer must see rows in 2025 AND 2026 (cross-year ledger)."""
-    _import_corpus()
     rows = _list_rows()
     years = {_year_of(r) for r in rows}
     assert {2025, 2026} <= years, years
@@ -88,7 +93,6 @@ def test_annual_review_filter_renders_full_year() -> None:
     token works, so the operator is not forced to walk four quarters — but the
     output is a row dump, not a totalled picture.
     """
-    _import_corpus()
     annual = _invoke(["app", "ledger", "review", "--filter", "period=0A", "--filter", "year=2025"])
     assert annual.exit_code == 0, annual.output
     # The annual filter must contain rows dated across the year, not just Q1.
@@ -98,7 +102,6 @@ def test_annual_review_filter_renders_full_year() -> None:
 
 def test_all_four_quarters_reviewable() -> None:
     """Each 2025 quarter is independently reviewable (per-period is the only roll-up)."""
-    _import_corpus()
     for q in ("1T", "2T", "3T", "4T"):
         result = _invoke(["app", "ledger", "review", "--filter", f"period={q}", "--filter", "year=2025"])
         assert result.exit_code == 0, f"{q}: {result.output}"
@@ -111,7 +114,6 @@ def test_check_surfaces_both_years_as_touched_periods() -> None:
     straddles a year boundary: ``periods`` lists ``2025`` and ``2026``. It is a
     period inventory, not a reconciliation of cross-year transactions.
     """
-    _import_corpus()
     checked = _invoke(["--format", "json", "app", "ledger", "check"])
     assert checked.exit_code == 0, checked.output
     result = json.loads(checked.output)["result"]
@@ -129,7 +131,6 @@ def test_annual_income_and_expense_picture_must_be_summed_by_hand(tmp_path: Path
     amount magnitudes from ``list`` JSON grouped by direction. The sums are
     asserted only for internal consistency, never against a tax formula.
     """
-    _import_corpus()
     rules = _oracle_rules()
 
     # Bulk-classify the full-corpus business rows against the oracle. --file
@@ -183,7 +184,6 @@ def test_full_year_total_equals_sum_of_its_quarters() -> None:
     Proves the operator CAN reconstruct the year from per-period views — but
     only by summing four separate queries; the CLI offers no annual aggregate.
     """
-    _import_corpus()
     rows_2025 = [r for r in _list_rows() if _year_of(r) == 2025]
 
     def _quarter(month: int) -> int:
@@ -210,7 +210,6 @@ def test_cross_year_invoice_is_settled_in_2026_under_a_2025_reference() -> None:
     nothing links the prior-year reference to the paid-year settlement — the
     devengo-vs-caja reconciliation is fully manual.
     """
-    _import_corpus()
     rows = _list_rows()
     cross_year = []
     for r in rows:
@@ -236,7 +235,6 @@ def test_cross_year_invoice_falls_outside_a_2025_period_filter() -> None:
     2025 Renta. A year-end reviewer working from the period filter alone would
     under-count 2025 income by this row unless they reconcile devengo by hand.
     """
-    _import_corpus()
     review_2025 = _invoke(["app", "ledger", "review", "--filter", "period=0A", "--filter", "year=2025"])
     assert review_2025.exit_code == 0, review_2025.output
     review_2026 = _invoke(["app", "ledger", "review", "--filter", "period=0A", "--filter", "year=2026"])
@@ -256,7 +254,6 @@ def test_no_annual_money_rollup_surface_exists() -> None:
     no income, expense, or net-activity figure — confirming the year-end Renta
     picture is not a first-class CLI output.
     """
-    _import_corpus()
     status = _invoke(["--format", "json", "app", "ledger", "status", "--period", "0A", "--year", "2025"])
     assert status.exit_code == 0, status.output
     result = json.loads(status.output)["result"]
