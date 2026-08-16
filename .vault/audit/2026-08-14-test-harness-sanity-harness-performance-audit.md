@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:77d5282343c0ad0e7ce120898c4dcc5ffc31521d911125b2c6a2e5a5bc8656fd'
+body_hash: 'sha256:1e745c5b78ae1f9f6fbc8116dc014be831d07b9732c8f913c7cbe79510bbbb07'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1765,3 +1765,54 @@ is commands executing against encrypted per-test stores. The harness overhead
 around it is already memoised, and the repeated work inside it is repeated
 because each test insists on its own world. There is no broad lever here of the
 kind the KDF calibration was.
+
+## A whole testpaths entry had never been profiled
+
+`pyproject.toml` lists three `testpaths`: `src/cadrumo`,
+`src/cadrumo-harness`, and one packaging file. Every profile in this campaign
+ran against `src/cadrumo`. The harness package -- 54 test files, 400 tests --
+had never been measured at all, and the "all slices profiled" conclusion
+recorded above was therefore wrong about its own coverage.
+
+It was found by re-reading the configuration rather than by any measurement,
+which is the uncomfortable part: eleven rounds of profiling had taken the slice
+list as given instead of deriving it from what the suite actually declares.
+
+### The lever it contained
+
+    build_tool_descriptors : 107.3s across 14 calls, of a 144s module
+      _output_schema_for   : 102.2s across 3,990 calls
+
+One build renders ~285 output schemas at 7.7s, and the MCP tests were paying it
+once per test for an answer that cannot change: the descriptor set is a pure
+function of the loaded command tree, and manifest, registry and CLI argument
+vectors are all fixed at import.
+
+Two properties were checked BEFORE memoising, because this is production code
+and not a test helper:
+
+- `McpToolDescriptor` carries the strict FROZEN config, so one caller cannot
+  mutate what the next receives -- safe by construction, the same reasoning that
+  made the shared registry tree safe.
+- The descriptions are deliberately English, not localised (the builder says so
+  in its own comment), so a cached value cannot pin a locale. A localised
+  description would have made this memo a correctness bug rather than a win.
+
+And no test mutates the surface then rebuilds; every `SCHEMA_REGISTRY` use in
+the harness tests is a read.
+
+    one build            : 4.45s then 0.00s
+    test_meta_tools      : 68.20s -> 33.42s
+    whole harness slice  : 142.92s -> 92.84s
+
+with identical results either side (26 failed, 374 passed). The win is not only
+in tests: `_server.py` builds descriptors at startup and `_hitl.py` calls the
+builder once per query.
+
+### The lesson
+
+The campaign concluded twice that the optimisation space was exhausted. Both
+times that conclusion was true of the slices it had profiled and false of the
+suite, because the slice list came from habit. A coverage claim should be
+derived from the configuration that defines the population -- here, three lines
+of `testpaths` -- not from the set of runs that happen to have been done.
