@@ -1293,6 +1293,11 @@ class _ManualInputSelector(BaseModel):
     # implicit-decimal scale of a record-field slot, declared per the diseno de
     # registro because the width alone does not imply it
     decimals: int | None = Field(default=None, ge=0)
+    # Whether the record-field slot carries AEAT's sign marker in position 1,
+    # declared per the diseno de registro: a row AEAT types ``N`` reserves that
+    # byte and a row typed ``Num`` does not, and the width alone cannot say
+    # which. Only meaningful for the record-field shape.
+    signed: bool | None = None
     # both shapes
     data_type: _ManualInputDataType
 
@@ -1320,6 +1325,19 @@ class _ManualInputSelector(BaseModel):
             raise RegistryValidationError(
                 "manual_input boolean-casilla_id selector must declare true_value and false_value",
             )
+        if self.signed is not None:
+            # The sign marker is a byte of the fixed-width slot, so it is only
+            # meaningful where the selector names one.
+            if has_casilla:
+                raise RegistryValidationError(
+                    "manual_input casilla-shape selector cannot declare signed: the sign marker is a "
+                    "byte of a fixed-width record slot, which the casilla shape does not name",
+                )
+            if self.signed and self.data_type != "money":
+                raise RegistryValidationError(
+                    f"manual_input record-field selector can declare signed only for money data, "
+                    f"not {self.data_type!r}",
+                )
         return self
 
 

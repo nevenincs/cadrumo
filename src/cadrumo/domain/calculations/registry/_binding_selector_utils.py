@@ -59,6 +59,16 @@ class BindingFixedExportSelector(BaseModel):
     data_type: BindingExportDataType
     decimals: int | None = Field(default=None, ge=0)
     field: str | None = Field(default=None, min_length=1, max_length=128)
+    #: Whether the wire slot carries AEAT's sign marker in its first position.
+    #:
+    #: AEAT types a numeric design row ``N`` (numérico CON signo) or ``Num``
+    #: (sin signo), and an ``N`` row reserves position 1 for the marker: ``N``
+    #: for a negative value, a space otherwise. The two renderings differ for
+    #: EVERY value, not only negatives -- a 17-byte signed slot emits a space
+    #: plus 16 magnitude digits where an unsigned one emits 17 digits -- so a
+    #: binding projecting into an ``N`` row must declare this or the slot is
+    #: malformed on the wire and refuses outright on a negative.
+    signed: bool = False
 
     @model_validator(mode="after")
     def _require_declared_scale(self) -> BindingFixedExportSelector:
@@ -71,6 +81,19 @@ class BindingFixedExportSelector(BaseModel):
                 f"binding export projection into record {self.record!r} declares decimals "
                 f"but its data_type is {self.data_type!r}",
             )
+        if self.signed:
+            # Mirrors _fixed_width_codec._validate_signed_shape: the sign marker
+            # is a real byte taken out of the magnitude, so a slot that cannot
+            # spare one, or whose type has no sign to carry, cannot declare it.
+            if self.data_type != "money":
+                raise RegistryValidationError(
+                    f"binding export projection into record {self.record!r} can declare signed "
+                    f"only for money data, not {self.data_type!r}",
+                )
+            if self.length < 2:
+                raise RegistryValidationError(
+                    f"signed binding export projection into record {self.record!r} requires at least two bytes",
+                )
         return self
 
 
@@ -121,6 +144,7 @@ class _BindingExportProjection(BaseModel):
     data_type: BindingExportDataType | None = None
     decimals: int | None = Field(default=None, ge=0)
     field: str | None = Field(default=None, min_length=1, max_length=128)
+    signed: bool | None = None
 
     def export_selector(self, *, binding_id: str) -> BindingExportSelector | None:
         """Return the typed export selector, or ``None`` for non-export selectors.
@@ -156,6 +180,11 @@ class _BindingExportProjection(BaseModel):
                     f"binding {binding_id!r} row export projection declares decimals "
                     f"but its data_type is {self.data_type!r}",
                 )
+            if self.signed is not None:
+                raise RegistryValidationError(
+                    f"binding {binding_id!r} row export projection cannot declare signed: a row "
+                    "field takes its wire shape from the repeated record's row layout",
+                )
             return BindingRowExportSelector(
                 record=self.record,
                 row_field=self.row_field,
@@ -175,6 +204,7 @@ class _BindingExportProjection(BaseModel):
                 data_type=self.data_type,
                 decimals=self.decimals,
                 field=self.field,
+                signed=bool(self.signed),
             )
         if fixed_count:
             missing = [

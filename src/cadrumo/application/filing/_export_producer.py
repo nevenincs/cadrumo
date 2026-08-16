@@ -78,6 +78,11 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
         FilingProducerKey.TAXPAYER_GIVEN_NAME: identity.given_name,
         FilingProducerKey.TAXPAYER_SURNAMES: identity.surnames,
         FilingProducerKey.TAXPAYER_FULL_NAME: identity.full_name,
+        # "Apellidos o Razon Social": the two are mutually exclusive by
+        # construction -- a natural person carries surnames and no legal_name,
+        # an entity carries legal_name and no surnames -- so this resolves to
+        # whichever the filer actually has, and stays absent only when both are.
+        FilingProducerKey.TAXPAYER_SURNAMES_OR_LEGAL_NAME: identity.surnames or identity.legal_name,
         FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA: amendment.is_rectificativa if amendment else None,
         FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: amendment.is_complementaria if amendment else None,
         FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT: amendment.original_aeat_receipt if amendment else None,
