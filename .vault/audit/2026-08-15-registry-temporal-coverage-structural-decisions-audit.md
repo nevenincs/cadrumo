@@ -5,7 +5,7 @@ tags:
 date: '2026-08-15'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:9e4bd0854ee3e65fef856fae7c5d6e2e6f11a5b460e303284dcf48c160058e3e'
+body_hash: 'sha256:9fa257c1e4c6762cdb58efc8071786cce5fcac63f3bba0249349fe3a459a48b7'
 related:
   - "[[2026-08-15-registry-temporal-coverage-audit]]"
   - "[[2026-08-14-registry-temporal-coverage-audit]]"
@@ -166,6 +166,63 @@ So this item should be read as "standardise the convention now; the unlock is
 gated on an AEAT registration", not as an available coverage win. The
 thirteen-role structural identity above stands regardless and is what makes the
 eventual de-scoping mechanical.
+
+### modelo-scoped-mechanisms | high | Shared mechanisms are named for the first modelo that needed them, and one is already rejecting a filing
+
+**Verified here.** The envelope finding above is not a one-off. It is one instance
+of a pattern that runs through the export type system: a mechanism that any
+modelo could use is named, scoped and gated for whichever modelo happened to
+need it first, and the next modelo that needs it cannot reach it.
+
+The census, counted from the shipped enums:
+
+| surface | members | modelo-scoped |
+|---|---|---|
+| `FilingProducerKey` | 36 | **16 (44%)** — fifteen `m303.*`, one `m111.*` |
+| `ExportComputedKey` | 5 | **3 (60%)** — all `m303_*` |
+| `ExportDraftAttribute` | 4 | 0 |
+| `ExportValuePolicy` | 12 | 0 |
+
+Beyond the enums, the generic `ExportLayoutDefinition` carries a field literally
+named `m303_filing_envelope`, and the generic export schema module defines
+`M303EnvelopePrefixRole` and `M303FilingEnvelopeDefinition`. The
+`xml_dictionary` render path in
+`src/cadrumo/application/filing/_export_xml_dictionary.py` branches on
+`draft.modelo == Modelo.M100` at four separate points — unfiled comunidad path
+suppression, a `toma de datos` NIF stamp, a sign branch, and a
+`_MODELO_100_EXPORT_CODE_CONVERTERS` table keyed by field id — so the only
+non-fixed-width format the product ships is not modelo-neutral in its renderer.
+
+**Not every modelo-scoped name is wrong, and the discriminating test is whether
+the CONCEPT or only the MECHANISM is modelo-specific.** That test is decidable
+from the registry, and it separates the census cleanly:
+
+- `m303.redeme_enrolled` is **correctly** scoped. `redeme` appears in exactly one
+  modelo's registry data. REDEME is an IVA register the M303 regime turns on; a
+  generic name would invent a concept that does not exist elsewhere.
+- `m303.prorrata_special_option` and `m303.prorrata_special_revocation` are
+  **mis**-scoped. `prorrata` appears in the registry data of **five** modelos —
+  100, 303, 322, 361 and 390. The concept is shared; only the key is not.
+- `ExportComputedKey.M303_COMPLEMENTARIA_PAGE_MARKER` is **mis**-scoped, and this
+  one has stopped being a risk and become a defect.
+
+**The already-paid cost.** Modelo 131's export layout carries this comment in its
+2024, 2025 and 2026 revisions, verbatim:
+
+> A boolean export field renders the canonical "X" or blank, so this field
+> currently emits "X" where AEAT admits only "C" or blank, and AEAT rejects the
+> file. No carrier can emit "C" here: the one that exists,
+> `m303_complementaria_page_marker`, is `ExportComputedKey.M303_*`-scoped.
+
+So three Modelo 131 revisions currently produce a file **AEAT rejects**, and the
+sole cause is that the mechanism which would produce the correct byte is named
+for another modelo. The layout's authors chose the loud failure deliberately over
+a silent one, and documented the reasoning — but the choice was forced by a
+naming decision, not by anything AEAT publishes.
+
+This reframes the envelope finding above: `M303EnvelopePrefixRole` duplicating
+the neutral thirteen-role vocabulary is the same defect at a larger scale, and
+the two should be ruled on together rather than as unrelated items.
 
 ### temporal-coverage-shapes | high | The era problem is three distinct problems wearing one name
 
@@ -431,6 +488,21 @@ shipped format vocabulary does not model an XSD and web-service submission. That
 generalises to any modelo AEAT moves to this channel, which is what makes it
 worth ruling on rather than parking.
 
+**This audit first stated that blocker too narrowly, and the correction matters
+for how it is sized.** The first version said the obstacle was that the only
+bundled `.properties` dictionaries belong to Modelo 100 — true, but that is a
+corpus fact and reads as "acquire a file". The deeper obstacle is that
+`xml_dictionary` is **not modelo-neutral in its renderer**: as recorded in the
+modelo-scoped-mechanisms finding above, its render path branches on
+`draft.modelo == Modelo.M100` at four points. So the second format is, in
+practice, Modelo 100's format with a general name.
+
+That changes the question the operator is answering. It is not "should the
+format vocabulary grow a third member for XSD submission" alone; it is also
+whether the second member is general enough to be extended from, or whether
+generalising `xml_dictionary` is itself prerequisite work. Acquiring a Modelo 289
+dictionary would not by itself make that path usable.
+
 Modelo 186 and Modelo 361 are **reported by earlier lanes** and were not
 re-derived here: Modelo 186's bundled design is recorded as an image-only PDF
 with no text layer, truncated at position 34 of 320 with its defunciones annex
@@ -518,11 +590,27 @@ between a red line and its task. Until the vocabulary admits an unreviewed state
 or an explicit operator step exists, that pressure recurs with every acquisition,
 and the next breach may not self-report.
 
-**On the envelope vocabularies.** An ADR must decide whether the Modelo 303
-envelope definition is re-expressed on the neutral role vocabulary, and must rule
-on the one substantive difference between them — whether the period role admits
-both an annual constant and a periodic token. The thirteen-role identity and the
-328-byte extent are settled.
+**On modelo-scoped mechanisms.** An ADR must decide the general rule before the
+individual instances, because they are one defect: whether a mechanism any modelo
+could use may be named, scoped or gated for one, and what the test is for
+distinguishing a genuinely modelo-specific *concept* from a shared *mechanism*
+that happens to have one caller. This audit offers that test — is the concept
+present in more than one modelo's registry data — because it is decidable and it
+sorted the census cleanly, but the rule itself is the operator's to set.
+
+Two things should be sized against whatever rule is chosen: `FilingProducerKey`
+and `ExportComputedKey` are 44% and 60% modelo-scoped, and the `xml_dictionary`
+renderer branches on modelo at four points. One should be treated as urgent
+regardless of the rule: three Modelo 131 revisions currently emit a file AEAT
+rejects because the carrier they need is `M303_*`-scoped, and that is a live
+filing defect rather than an architectural preference.
+
+**On the envelope vocabularies.** This is an instance of the item above and
+should be ruled with it, not separately. An ADR must decide whether the Modelo
+303 envelope definition is re-expressed on the neutral role vocabulary, and must
+rule on the one substantive difference between them — whether the period role
+admits both an annual constant and a periodic token. The thirteen-role identity
+and the 328-byte extent are settled.
 
 What the ADR must NOT assume is that this is an available coverage unlock. On the
 evidence now recorded, de-scoping ahead of an AEAT *entidad desarrolladora*
