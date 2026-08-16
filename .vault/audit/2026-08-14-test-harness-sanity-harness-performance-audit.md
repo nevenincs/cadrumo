@@ -2523,3 +2523,66 @@ worth more than the scope axis. It is unproven: it needs checking against open
 engine handles, WAL sidecars, and any absolute path baked into the encrypted
 store. That validation is the next substantial piece, and it should not be
 started as a side effect of a smaller change.
+
+## The suite calls the live European Central Bank, and the gate against it is green
+
+Profiling ONE CLI test (`test_ledger_persona_multicurrency`, cProfile, 28.25s
+total) found the dominant cost is not work at all:
+
+| symbol | calls | tottime |
+|---|---|---|
+| `_ssl._SSLSocket.read` | 54 | 8.90s |
+| `_ssl._SSLSocket.do_handshake` | 54 | 2.30s |
+| `socket.connect` | 54 | 2.14s |
+
+**13.3s of 28.2s -- 47% of a single test -- is live HTTPS traffic**: 54 TLS
+connections resolving FX rates against the ECB Data Portal, one fresh
+`urllib.request.urlopen` per (currency, date) pair with no keep-alive
+(`adapters/outbound/fx/_ecb_provider.py:199`).
+
+### The discipline exists; only its enforcement is missing
+
+This is not an undecided question. `_ecb_provider.py`'s module docstring states
+the contract: the default transport reaches the live host unconditionally
+because that is what the adapter is for, and holding a deterministic suite off
+that host is a TEST concern -- inject `tests.ecb_stub.ecb_csv_fetch`, or declare
+`aeat_live` and be selected by the live lane alone. `test_ledger_corpus_fidelity`
+shows the sanctioned shape, with a declared corpus FX oracle held flat across
+the corpus period so expected EUR values stay exact.
+
+There is even a gate: `test_deterministic_tests_do_not_open_a_live_ecb_transport_door`.
+**It passes.** Run on 2026-08-16 at `addcd09d8a`: 2 passed.
+
+The blind spot is its reach. `_live_ecb_door_violations` AST-scans TEST modules
+for a syntactic door -- `EcbReferenceRateProvider(...)` without a `fetch=`
+keyword, or a call to `default_ecb_rate_provider`. The CLI persona suites name
+neither. They drive the real Typer app, and the door is opened by PRODUCTION
+code on their behalf (`entrypoints/cli/_ledger_import_cli.py:212`,
+`entrypoints/cli/_ledger.py:417`). No door appears in the test module, so the
+scan finds nothing and the gate reports clean.
+
+The gate watches the front door; the traffic goes through the wall. Its name
+claims "deterministic tests do not open a live ECB transport door", but what it
+actually measures is "no test module SYNTACTICALLY NAMES one", and those two
+statements came apart the moment a test reached the provider transitively.
+
+### Why this outranks its own runtime cost
+
+- The default lane depends on an external service being reachable and correct.
+- Expected EUR figures derive from live market data, so a test's arithmetic can
+  drift with the market rather than with the code.
+- It is a live-network dependency sitting OUTSIDE the `aeat_live` lane that
+  exists precisely to contain it.
+- It is a candidate cause for the `test_batch_ingest_runner` flakiness recorded
+  earlier in this campaign as undiagnosed. That investigation ruled out resource
+  exhaustion and a leaked endpoint setting but never examined outbound sockets --
+  the one hypothesis that predicts "fails about one run in two under load,
+  passes six of six alone".
+
+### Standing lesson
+
+A gate keyed on a SYMBOL NAME cannot see a caller that reaches the symbol
+through production code. Where the hazard is "this test reaches the network",
+the honest instrument observes the SOCKET, not the source text. Any future gate
+phrased as "tests do not do X" should be checked against the transitive path
+before its green is believed.
