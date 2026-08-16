@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:023c82ed8f751c3fbdb71f102a91d119e5c0b87c72e679e010e1c576556328fc'
+body_hash: 'sha256:889f370b5490f0b4094542800594b65088b10ed78fa94333af8ded4b252357e4'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -3100,3 +3100,59 @@ list` renders are declared in the authoring TOML and need neither formula
 compilation nor record-design parsing. That is an ADR, not a sweep -- it adds a
 second read path over registry data, and the rule that snapshot construction is
 authority-owned exists precisely to stop those multiplying.
+
+## The compile is first-touch I/O over 17,526 files, not loader inefficiency
+
+Sampling `_construct_authority` (not cProfile -- this workload is call-count
+heavy and cProfile has already lied twice here):
+
+| self | frame |
+|---|---|
+| 38.6% | `pathlib open` |
+| 14.3% | `core/_directory_scan.py:307(_read_entries)` |
+| 13.4% | `pathlib stat` |
+| 11.6% | `read_text` |
+| 8.0% | `bs4/_lxml.feed` |
+| 2.9% / 2.8% / 2.7% | `os.walk` / `glob` / `realpath` |
+
+**~80% is filesystem work.** Cumulatively: `load_registry_tree` 90.3%,
+`_load_all_modelo_definitions` 72.3%, `_merge_revision_directory` 51.1%, and
+**`rtoml.load` / `read_toml` 50.0%** via `_read_single_revision_table`.
+
+Two candidate explanations, both testable, both wrong in the interesting way:
+
+- **Loader inefficiency?** No. `_read_entries` already uses `os.scandir` with a
+  materialised list -- the efficient shape, and deliberately so (its docstring
+  explains the handle is closed before the caller sees an entry, to survive a
+  Windows sharing violation). There is no obvious redundant work to remove.
+- **The `Y:` backing share?** Not established. Loading the same tree from the
+  share and from a local-disk copy gave share 10.14/1.19/2.12s and local
+  15.70/4.78/4.59s -- i.e. the share appears FASTER, which is not credible. The
+  arms ran in sequence, the local copy was written immediately before its arm,
+  and the OS page cache cannot be dropped here without admin rights. **That
+  comparison is confounded and proves nothing; do not cite it either way.**
+
+What the same data does establish, because it holds inside BOTH arms
+independently: the first load is **10.14s** (share) and **15.70s** (local), and
+the second and third are **1.19-2.12s** and **4.59-4.78s**. Same code, same
+tree, caches cleared between every run. **The cold compile is dominated by
+first-touch I/O; once the operating system holds the files, the identical work
+costs a fraction.**
+
+### What that means for the remedy
+
+The registry tree is **17,526 files** (18,847 fingerprint entries). Nothing in
+the loader is wasting time: it is reading seventeen thousand small TOML
+fragments because that is what compiling the authority requires.
+
+So a faster loader is not the lever, and neither is a bigger cache -- the
+existing 23.1 MB pickle already collapses a warm compile to 2.9s. **The lever is
+touching fewer files**, which is exactly the metadata-projection proposal
+recorded above, and this measurement is its quantitative support: printing
+`code / title / cadence / domain / revisions` currently costs a first-touch read
+of a seventeen-thousand-file tree.
+
+**Ruled out, do not re-chase:** micro-optimising `_directory_scan`,
+`_read_entries`, or the TOML read path; and any attempt to attribute the cold
+cost to the `Y:` share without a cache-dropping benchmark that this environment
+cannot run.
