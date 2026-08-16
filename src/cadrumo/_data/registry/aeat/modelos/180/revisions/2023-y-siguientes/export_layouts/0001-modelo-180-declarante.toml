@@ -112,26 +112,43 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2023"]
 
-# UNWRITTEN, DELIBERATELY: campo 7 "PERSONA CON QUIEN RELACIONARSE" (59-67 telefono, 68-107 apellidos y nombre).
-# AEAT declares a datum here, and no producer key carries a contact telephone or contact name. A filler was previously
-# authored over it; that emitted the same spaces the codec already pre-fills
-# while making the position look covered. The slot is left unwritten so the
-# missing carrier stays visible. Restore a field here only with a real source.
-# UNWRITTEN, DELIBERATELY: campo 8 "NUMERO IDENTIFICATIVO DE LA DECLARACION".
-# AEAT declares a datum here, and the sequential number is assigned at presentation and no producer key carries it. A filler was previously
-# authored over it; that emitted the same spaces the codec already pre-fills
-# while making the position look covered. The slot is left unwritten so the
-# missing carrier stays visible. Restore a field here only with a real source.
-# UNWRITTEN, DELIBERATELY: campo 9 "DECLARACION COMPLEMENTARIA O SUSTITUTIVA" (121 "C", 122 "S").
-# AEAT declares a datum here, and the is_complementaria producer is a boolean and renders "X", not the "C" this design admits; there is no sustitutiva producer at all. A filler was previously
-# authored over it; that emitted the same spaces the codec already pre-fills
-# while making the position look covered. The slot is left unwritten so the
-# missing carrier stays visible. Restore a field here only with a real source.
-# UNWRITTEN, DELIBERATELY: campo 10 "NUMERO IDENTIFICATIVO DE LA DECLARACION ANTERIOR".
-# AEAT declares a datum here, and no producer key carries the prior declaration's number. A filler was previously
-# authored over it; that emitted the same spaces the codec already pre-fills
-# while making the position look covered. The slot is left unwritten so the
-# missing carrier stays visible. Restore a field here only with a real source.
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-decl-persona-relacion-telefono"
+offset = 59
+length = 9
+kind = "header"
+# Design campo 7 subcampo 1, "59-67 TELEFONO: Campo numerico de nueve
+# posiciones". Read from the profile contact section, which models the
+# persona con quien relacionarse as its own party: under a gestor this is
+# routinely neither the taxpayer nor the presenter, so neither identity may
+# stand in for it. Absent stays blank, which AEAT prescribes for an
+# unfilled header field.
+producer_key = "contact_person.phone"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-decl-persona-relacion-nombre"
+offset = 68
+length = 40
+kind = "header"
+# Design campo 7 subcampo 2, "68-107 APELLIDOS Y NOMBRE: Se consignara el
+# primer apellido, un espacio, el segundo apellido, un espacio y el nombre
+# completo, necesariamente en este orden" -- the operator supplies the
+# contact name already composed in that order.
+producer_key = "contact_person.full_name"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
 [[revisions.2023-y-siguientes.export_layouts.records.fields]]
 id = "modelo-180-decl-total-perceptores"
 offset = 136

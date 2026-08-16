@@ -4,9 +4,7 @@
 # 01-181-diseno-de-registro-actualizado-en-2022.pdf, sha256
 # 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b).
 #
-# Eleven casillas carry no semantic_role: the role the naming convention would
-# give them scores above the typo-twin gate's similarity threshold against
-# Modelo 189's or Modelo 345's role for the same concept.
+# Every casilla carries its canonical m181_<id> semantic_role.
 
 # Campo 5. Positions 18-57. RAZON SOCIAL DEL DECLARANTE.
 [[revisions."2009-y-siguientes".casillas]]
@@ -14,6 +12,7 @@ id = "declarante-razon-social"
 number = "tipo1.18-57"
 section = ["declarante"]
 data_type = "name"
+semantic_role = "m181_declarante_razon_social"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-181-t1-razon-social"]
@@ -27,6 +26,7 @@ id = "persona-relacion"
 number = "tipo1.59-107"
 section = ["declarante"]
 data_type = "text"
+semantic_role = "m181_persona_relacion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-181-t1-persona-relacion"]
@@ -39,6 +39,7 @@ id = "numero-identificativo-declaracion"
 number = "tipo1.108-120"
 section = ["declarante"]
 data_type = "integer"
+semantic_role = "m181_numero_identificativo_declaracion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-181-t1-numero-identificativo"]
@@ -51,6 +52,7 @@ id = "declaracion-complementaria-sustitutiva"
 number = "tipo1.121-122"
 section = ["declarante"]
 data_type = "text"
+semantic_role = "m181_declaracion_complementaria_sustitutiva"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-181-t1-complementaria-sustitutiva"]
@@ -63,6 +65,7 @@ id = "numero-identificativo-anterior"
 number = "tipo1.123-135"
 section = ["declarante"]
 data_type = "integer"
+semantic_role = "m181_numero_identificativo_anterior"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-181-t1-numero-identificativo-anterior"]
@@ -75,6 +78,7 @@ id = "numero-total-declarados"
 number = "tipo1.136-144"
 section = ["declarante"]
 data_type = "integer"
+semantic_role = "m181_numero_total_declarados"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-181-t1-numero-total-declarados"]
@@ -147,6 +151,7 @@ id = "declarado-nif"
 number = "tipo2.18-26"
 section = ["declarado"]
 data_type = "nif"
+semantic_role = "m181_declarado_nif"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-181-t2-declarado-nif"]
@@ -159,6 +164,7 @@ id = "representante-legal-nif"
 number = "tipo2.27-35"
 section = ["declarado"]
 data_type = "nif"
+semantic_role = "m181_representante_legal_nif"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-181-t2-representante-legal-nif"]
@@ -171,6 +177,7 @@ id = "declarado-nombre"
 number = "tipo2.36-75"
 section = ["declarado"]
 data_type = "name"
+semantic_role = "m181_declarado_nombre"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-181-t2-declarado-nombre"]
@@ -183,6 +190,7 @@ id = "codigo-provincia"
 number = "tipo2.76-77"
 section = ["declarado"]
 data_type = "text"
+semantic_role = "m181_codigo_provincia"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-181-t2-codigo-provincia"]
@@ -319,6 +327,7 @@ id = "porcentaje-participacion"
 number = "tipo2.166-171"
 section = ["declarado"]
 data_type = "decimal"
+semantic_role = "m181_porcentaje_participacion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-181-t2-porcentaje-participacion"]
