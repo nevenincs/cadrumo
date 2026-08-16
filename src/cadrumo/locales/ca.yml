@@ -1238,6 +1238,10 @@ application:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
         evidència de compra o identificadors d'adjunt.
+      evidence_detachment_requires_ids: La separació d'evidència del llibre requereix
+        almenys un id d'adjunt.
+      evidence_detachment_unknown_attachment: La transacció del llibre no porta els
+        adjunts %{attachment_ids}.
       idempotency_key_conflict: La clau d'idempotència ja identifica una transacció
         emmagatzemada amb dades diferents. Useu una clau d'idempotència nova per a
         un moviment diferent, o ometeu la clau per afegir un duplicat deliberat.
@@ -5304,6 +5308,11 @@ cli:
           sigui concloent plantejarà la pregunta.
         nothing_to_withdraw: No hi havia res confirmat per a '{identifier}', de manera
           que no s'ha retirat res i el magatzem ja es troba en l'estat sol·licitat.
+    detach:
+      actor_help: Actor registrat en l'esdeveniment de cicle de vida.
+      attachment_help: Id de l'adjunt que se separa; repetible.
+      help: Separa adjunts d'un moviment del llibre sense esborrar-ne els bytes.
+      id_help: Id de la transacció del llibre (o un prefix inequívoc).
     doclink:
       actor_help: Etiqueta de l'operador.
       help: Descàrrega un enllaç de document de Drive i desa'n els bytes com a evidència
@@ -72776,12 +72785,22 @@ modelo:
       revision:
         2020-y-siguientes:
           casilla:
+            x-chim6r1ecdgmqoj9dsmn0pbid5nm8qb3d5i62p0:
+              label: Indicador de canvi de periodicitat en l'obligació de declarar
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              label: Declaració complementària o substitutiva
             x-chim6r1ed5mn0rriehiiqrrgclp62or9dtn6aso:
               help: null
               label: Import de les operacions intracomunitàries
             x-chim6r1ed5mn0rriehiiqsj5cdq6ipj9cdgm6qbfdpin6:
               help: null
               label: Import de les rectificacions
+            x-chim6r1edpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              label: NIF del representant legal del declarant
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              label: Número identificatiu de la declaració
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              label: Número identificatiu de la declaració anterior
             x-chim6r1edpqmqpbidsmmus35e9gm8rriclpg:
               help: null
               label: Nombre total d'operadors intracomunitaris

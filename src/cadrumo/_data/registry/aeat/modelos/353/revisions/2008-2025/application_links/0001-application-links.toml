@@ -69,3 +69,16 @@ consumer = "cadrumo.domain.calculations.registry"
 requires_snapshot = true
 legal_refs = ["orden-eha-3434-2007:art-2", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2021-2025", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
+
+# Export consumer for the generated fichero-BOE layout. Required by the registry
+# validator whenever a revision declares export layouts. Grounded on Orden
+# EHA/3434/2007 art. 8, which approves the modelo 353 aggregated autoliquidación
+# and its telematic presentation, and cites the exact record design the layout
+# was generated from.
+[[revisions."2008-2025".application_links]]
+id = "modelo-353-2008-2025-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2021-2025", "aeat-modelo-353-procedure"]

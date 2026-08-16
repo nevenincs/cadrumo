@@ -8,7 +8,7 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
-
+export_refs = ["m347-2025.declarante.f003"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
 number = "tipo-declaracion"
@@ -17,6 +17,13 @@ data_type = "text"
 semantic_role = "tipo_declaracion"
 required = true
 input_kind = "informational"
+# The abstract declaration type has no box of its own on this design. AEAT
+# prints only the two flags that qualify it -- declaracion complementaria and
+# declaracion sustitutiva, at positions 121-122, carried by
+# 'decl.complementaria-sustitutiva' -- and an ordinaria declaration is the
+# unmarked case, expressed by leaving both blank rather than by a positive
+# value anywhere on the record.
+export_exemption_reason = "not_in_record_design"
 legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 
@@ -32,6 +39,7 @@ required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
+export_refs = ["m347-2025.declarado.f005"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "contraparte.nombre"
 number = "contraparte.nombre"
@@ -42,6 +50,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
+export_refs = ["m347-2025.declarado.f007"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "contraparte.clave-operacion"
 number = "contraparte.clave-operacion"
@@ -52,6 +61,7 @@ required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
+export_refs = ["m347-2025.declarado.f011"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "contraparte.importe-Q1"
 number = "contraparte.importe-Q1"
@@ -64,6 +74,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
+export_refs = ["m347-2025.declarado.f018"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "contraparte.importe-Q2"
 number = "contraparte.importe-Q2"
@@ -76,6 +87,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
+export_refs = ["m347-2025.declarado.f020"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "contraparte.importe-Q3"
 number = "contraparte.importe-Q3"
@@ -88,6 +100,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
+export_refs = ["m347-2025.declarado.f022"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "contraparte.importe-Q4"
 number = "contraparte.importe-Q4"
@@ -100,6 +113,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
+export_refs = ["m347-2025.declarado.f024"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "contraparte.pais-codigo"
 number = "contraparte.pais-codigo"
@@ -110,3 +124,4 @@ required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
+export_refs = ["m347-2025.declarado.f009"]

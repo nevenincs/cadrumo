@@ -1,3 +1,11 @@
+# The ledger-direct IVA cuota vocabulary below files no slot on this modelo's
+# own record. AEAT's diseño for 353 carries no devengado, repercutido,
+# soportado, deducible or recargo field anywhere -- a search of the design for
+# any of those stems returns nothing -- because 353 is the GROUP AGGREGATE
+# return: the members liquidate their own cuotas on Modelo 322 and 353 files
+# only the sum of their results, through [01]. These casillas therefore carry
+# not_in_record_design: they are calculation support that reconciles against
+# the members, never boxes the operator files.
 # Modelo 353 (agregado del grupo) — reconciliation casillas surfacing the
 # cross-member previous_filing sums. Each is a bound casilla pulling
 # the per_grupo_member aggregate of the corresponding 322 result casilla, so the
@@ -14,6 +22,7 @@ input_kind = "bound"
 binding = "modelo-353-prev-322-cuota-devengada-total"
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2021-2025"]
+export_exemption_reason = "not_in_record_design"
 
 [[revisions."2008-2025".casillas]]
 id = "iva.reconciliacion.deducible-322"
@@ -26,6 +35,7 @@ input_kind = "bound"
 binding = "modelo-353-prev-322-cuota-deducible-total"
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2021-2025"]
+export_exemption_reason = "not_in_record_design"
 
 [[revisions."2008-2025".casillas]]
 id = "iva.reconciliacion.resultado-322"
@@ -38,3 +48,4 @@ input_kind = "bound"
 binding = "modelo-353-prev-322-resultado-regimen-general"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2021-2025"]
+export_exemption_reason = "not_in_record_design"

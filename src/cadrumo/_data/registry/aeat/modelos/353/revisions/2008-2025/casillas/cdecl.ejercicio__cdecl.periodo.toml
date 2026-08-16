@@ -8,6 +8,7 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2021-2025"]
+export_refs = ["m353-2021.pagina01.f010"]
 
 [[revisions."2008-2025".casillas]]
 id = "decl.periodo"
@@ -19,4 +20,5 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2021-2025"]
+export_refs = ["m353-2021.pagina01.f011"]
 

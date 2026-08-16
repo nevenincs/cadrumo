@@ -1243,6 +1243,10 @@ application:
     errors:
       evidence_attachment_requires_ids: El adjunto de evidencia del libro mayor requiere
         evidencia de compra o identificadores de adjunto.
+      evidence_detachment_requires_ids: La separación de evidencia del libro requiere
+        al menos un id de adjunto.
+      evidence_detachment_unknown_attachment: La transacción del libro no lleva los
+        adjuntos %{attachment_ids}.
       idempotency_key_conflict: La clave de idempotencia ya identifica una transacción
         almacenada con datos distintos. Use una clave de idempotencia nueva para un
         movimiento diferente, u omita la clave para añadir un duplicado deliberado.
@@ -5344,6 +5348,11 @@ cli:
           concluyente planteará la pregunta.
         nothing_to_withdraw: No había nada confirmado para '{identifier}', por lo
           que no se ha retirado nada y el almacén ya está en el estado solicitado.
+    detach:
+      actor_help: Actor registrado en el evento de ciclo de vida.
+      attachment_help: Id del adjunto que se separa; repetible.
+      help: Separa adjuntos de un movimiento del libro sin borrar sus bytes.
+      id_help: Id de la transacción del libro (o un prefijo inequívoco).
     doclink:
       actor_help: Etiqueta del operador.
       help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia
@@ -75176,12 +75185,22 @@ modelo:
       revision:
         2020-y-siguientes:
           casilla:
+            x-chim6r1ecdgmqoj9dsmn0pbid5nm8qb3d5i62p0:
+              label: Indicador de cambio de periodicidad en la obligación de declarar
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              label: Declaración complementaria o sustitutiva
             x-chim6r1ed5mn0rriehiiqrrgclp62or9dtn6aso:
               help: null
               label: Importe de las operaciones intracomunitarias
             x-chim6r1ed5mn0rriehiiqsj5cdq6ipj9cdgm6qbfdpin6:
               help: null
               label: Importe de las rectificaciones
+            x-chim6r1edpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              label: NIF del representante legal del declarante
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              label: Número identificativo de la declaración
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              label: Número identificativo de la declaración anterior
             x-chim6r1edpqmqpbidsmmus35e9gm8rriclpg:
               help: null
               label: Numero total de operadores intracomunitarios

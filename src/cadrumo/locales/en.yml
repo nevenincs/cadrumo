@@ -1127,6 +1127,10 @@ application:
     errors:
       evidence_attachment_requires_ids: Ledger evidence attachment requires purchase
         evidence or attachment ids.
+      evidence_detachment_requires_ids: Ledger evidence detachment requires at least
+        one attachment id.
+      evidence_detachment_unknown_attachment: The ledger transaction does not carry
+        attachment(s) %{attachment_ids}.
       idempotency_key_conflict: The idempotency key already identifies a stored transaction
         with different details. Use a new idempotency key for a different movement,
         or omit the key to append a deliberate duplicate.
@@ -4934,6 +4938,11 @@ cli:
           will raise the question.
         nothing_to_withdraw: Nothing was confirmed for '{identifier}', so nothing
           was withdrawn and the store is already in the state you asked for.
+    detach:
+      actor_help: Actor recorded on the lifecycle event.
+      attachment_help: Id of the attachment to detach; repeatable.
+      help: Detach attachments from a ledger transaction without deleting their bytes.
+      id_help: Ledger transaction id (or an unambiguous prefix).
     doclink:
       actor_help: Operator label.
       help: Fetch a Drive document link and store its bytes as encrypted evidence
@@ -72269,12 +72278,22 @@ modelo:
       revision:
         2020-y-siguientes:
           casilla:
+            x-chim6r1ecdgmqoj9dsmn0pbid5nm8qb3d5i62p0:
+              label: Indicator of a change in filing periodicity
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              label: Supplementary or replacement declaration
             x-chim6r1ed5mn0rriehiiqrrgclp62or9dtn6aso:
               help: null
               label: Amount of intra-Community transactions
             x-chim6r1ed5mn0rriehiiqsj5cdq6ipj9cdgm6qbfdpin6:
               help: null
               label: Amount of the corrections
+            x-chim6r1edpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              label: NIF of the declarant's legal representative
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              label: Declaration identification number
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              label: Identification number of the previous declaration
             x-chim6r1edpqmqpbidsmmus35e9gm8rriclpg:
               help: null
               label: Total number of intra-Community operators

@@ -1,0 +1,35 @@
+[[revisions."2008-y-siguientes".verification_expectations]]
+id = "modelo-347-informative-summary-verification"
+computed_casilla_ids = [
+    "decl.ejercicio",
+    "decl.tipo-declaracion",
+    "decl.total-personas-entidades",
+    "decl.importe-total-anual",
+    "contraparte.nif",
+    "contraparte.clave-operacion",
+    "contraparte.importe-anual",
+]
+reconcile_when_present_casilla_ids = [
+    "decl.total-inmuebles",
+    "decl.importe-total-arrendamiento-locales",
+    "inmueble.arrendatario-nif",
+    "inmueble.importe-operacion",
+]
+tolerance = "0.00"
+rounding = "none"
+min_coverage = "1.0"
+discrepancy_causes = ["extraction_unreliable"]
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-eha-3012-2008:art-10",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-31",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-347-2025",
+    "aeat-dr-347-2011",
+    "aeat-modelo-347-procedure",
+    "boe-modelo-347-2008-form",
+    "boe-modelo-347-2011-amendment",
+]
