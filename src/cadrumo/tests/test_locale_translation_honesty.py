@@ -38,7 +38,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from cadrumo.domain.calculations.registry import (
+from ..domain.calculations.registry import (
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
 )
