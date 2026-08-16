@@ -1,0 +1,657 @@
+# Modelo 390 revision 2025: the Real Decreto-ley 4/2024 temporary 2 % and
+# 7,5 % rate rungs of apartado 5 (paginas 2 and 3).
+#
+# These rates do not exist on the 2022 design, so each rung is a genuinely
+# new box rather than a cross-year reuse. Every one derives its section,
+# cardinality and LIVA grounding from the EXISTING sibling rung of the same
+# family in this same revision, plus real-decreto-ley-4-2024:art-1 -- the
+# instrument this registry already cites for its 2 % and 7,5 % boxes.
+#
+# The family, rate and base/cuota split are read from the design's own
+# description. The base/cuota split is taken from the TRAILING segment:
+# pagina 2's apartado is itself titled "Base imponible y cuota", so a
+# whole-string test marks every row on that page a base and would write each
+# cuota figure into its sibling base box.
+#
+# Offsets, lengths and box numbers transcribed from aeat-dr-390-2025
+# (sha256 6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252).
+
+# Box [671] - '5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 2% - Base imponible [671]' (offset 285, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.repercutido.intragrupo.tipo-2.base"
+number = "671"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_repercutido_intragrupo_tipo_2_base"
+continuidad_id = "iva-repercutido-intragrupo-tipo-2-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct declared block from the ordinary-regime rungs; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-repercutido-intragrupo21-base-tipo-2-base"]
+
+# Box [672] - '5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 2% - Cuota [672]' (offset 302, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.repercutido.intragrupo.tipo-2.cuota"
+number = "672"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_repercutido_intragrupo_tipo_2_cuota"
+continuidad_id = "iva-repercutido-intragrupo-tipo-2-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct declared block from the ordinary-regime rungs; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-repercutido-intragrupo21-cuota-tipo-2-cuota"]
+
+# Box [673] - '5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 7,5% - Base imponible [673]' (offset 387, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.repercutido.intragrupo.tipo-7-5.base"
+number = "673"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_repercutido_intragrupo_tipo_7_5_base"
+continuidad_id = "iva-repercutido-intragrupo-tipo-7-5-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct declared block from the ordinary-regime rungs; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-repercutido-intragrupo21-base-tipo-7-5-base"]
+
+# Box [674] - '5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 7,5% - Cuota [674]' (offset 404, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.repercutido.intragrupo.tipo-7-5.cuota"
+number = "674"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_repercutido_intragrupo_tipo_7_5_cuota"
+continuidad_id = "iva-repercutido-intragrupo-tipo-7-5-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Operaciones intragrupo (REGE) are a distinct declared block from the ordinary-regime rungs; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-repercutido-intragrupo21-cuota-tipo-7-5-cuota"]
+
+# Box [675] - '5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 2% - Base imponible [675]' (offset 523, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.repercutido.criterio-caja.tipo-2.base"
+number = "675"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_repercutido_criterio_caja_tipo_2_base"
+continuidad_id = "iva-repercutido-criterio-caja-tipo-2-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a distinct declared block from the ordinary-regime rungs; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-repercutido-criterio-caja21-base-tipo-2-base"]
+
+# Box [676] - '5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 2% - Cuota [676]' (offset 540, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.repercutido.criterio-caja.tipo-2.cuota"
+number = "676"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_repercutido_criterio_caja_tipo_2_cuota"
+continuidad_id = "iva-repercutido-criterio-caja-tipo-2-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a distinct declared block from the ordinary-regime rungs; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-repercutido-criterio-caja21-cuota-tipo-2-cuota"]
+
+# Box [677] - '5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 7,5% - Base imponible [677]' (offset 625, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.repercutido.criterio-caja.tipo-7-5.base"
+number = "677"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_repercutido_criterio_caja_tipo_7_5_base"
+continuidad_id = "iva-repercutido-criterio-caja-tipo-7-5-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a distinct declared block from the ordinary-regime rungs; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-repercutido-criterio-caja21-base-tipo-7-5-base"]
+
+# Box [678] - '5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 7,5% - Cuota [678]' (offset 642, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.repercutido.criterio-caja.tipo-7-5.cuota"
+number = "678"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_repercutido_criterio_caja_tipo_7_5_cuota"
+continuidad_id = "iva-repercutido-criterio-caja-tipo-7-5-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Regimen especial del criterio de caja is a distinct declared block from the ordinary-regime rungs; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-repercutido-criterio-caja21-cuota-tipo-7-5-cuota"]
+
+# Box [679] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 2% - Base imponible [679]' (offset 761, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.repercutido.bienes-usados.tipo-2.base"
+number = "679"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_repercutido_bienes_usados_tipo_2_base"
+continuidad_id = "iva-repercutido-bienes-usados-tipo-2-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Regimen especial de bienes usados is a distinct declared block; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-repercutido-bienes-usados21-base-tipo-2-base"]
+
+# Box [680] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 2% - Cuota [680]' (offset 778, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.repercutido.bienes-usados.tipo-2.cuota"
+number = "680"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_repercutido_bienes_usados_tipo_2_cuota"
+continuidad_id = "iva-repercutido-bienes-usados-tipo-2-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Regimen especial de bienes usados is a distinct declared block; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-repercutido-bienes-usados21-cuota-tipo-2-cuota"]
+
+# Box [681] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 7,5% - Base imponible [681]' (offset 863, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.repercutido.bienes-usados.tipo-7-5.base"
+number = "681"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_repercutido_bienes_usados_tipo_7_5_base"
+continuidad_id = "iva-repercutido-bienes-usados-tipo-7-5-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Regimen especial de bienes usados is a distinct declared block; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-repercutido-bienes-usados21-base-tipo-7-5-base"]
+
+# Box [682] - '5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 7,5% - Cuota [682]' (offset 880, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.repercutido.bienes-usados.tipo-7-5.cuota"
+number = "682"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_repercutido_bienes_usados_tipo_7_5_cuota"
+continuidad_id = "iva-repercutido-bienes-usados-tipo-7-5-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Regimen especial de bienes usados is a distinct declared block; one official AEAT box per rate."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-repercutido-bienes-usados21-cuota-tipo-7-5-cuota"]
+
+# Box [695] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 2% - Base imponible [695]' (offset 13, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.interiores-corrientes.tipo-2.base"
+number = "695"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_interiores_corrientes_tipo_2_base"
+continuidad_id = "iva-deducible-interiores-corrientes-tipo-2-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-interiores-corrientes21-base-tipo-2-base"]
+
+# Box [696] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 2% - Cuota [696]' (offset 30, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.interiores-corrientes.tipo-2.cuota"
+number = "696"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_interiores_corrientes_tipo_2_cuota"
+continuidad_id = "iva-deducible-interiores-corrientes-tipo-2-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-interiores-corrientes21-cuota-tipo-2-cuota"]
+
+# Box [697] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 7,5% - Base imponible [697]' (offset 115, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.interiores-corrientes.tipo-7-5.base"
+number = "697"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_interiores_corrientes_tipo_7_5_base"
+continuidad_id = "iva-deducible-interiores-corrientes-tipo-7-5-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-interiores-corrientes21-base-tipo-7-5-base"]
+
+# Box [698] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 7,5% - Cuota [698]' (offset 132, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.interiores-corrientes.tipo-7-5.cuota"
+number = "698"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_interiores_corrientes_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-interiores-corrientes-tipo-7-5-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-interiores-corrientes21-cuota-tipo-7-5-cuota"]
+
+# Box [745] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 2% - Base imponible [745]' (offset 251, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.intragrupo-corrientes.tipo-2.base"
+number = "745"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_intragrupo_corrientes_tipo_2_base"
+continuidad_id = "iva-deducible-intragrupo-corrientes-tipo-2-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes21-base-tipo-2-base"]
+
+# Box [746] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 2% - Cuota [746]' (offset 268, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.intragrupo-corrientes.tipo-2.cuota"
+number = "746"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_intragrupo_corrientes_tipo_2_cuota"
+continuidad_id = "iva-deducible-intragrupo-corrientes-tipo-2-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes21-cuota-tipo-2-cuota"]
+
+# Box [747] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 7,5% - Base imponible [747]' (offset 353, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.intragrupo-corrientes.tipo-7-5.base"
+number = "747"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_intragrupo_corrientes_tipo_7_5_base"
+continuidad_id = "iva-deducible-intragrupo-corrientes-tipo-7-5-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes21-base-tipo-7-5-base"]
+
+# Box [748] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 7,5% - Cuota [748]' (offset 370, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.intragrupo-corrientes.tipo-7-5.cuota"
+number = "748"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_intragrupo_corrientes_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-intragrupo-corrientes-tipo-7-5-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-corrientes21-cuota-tipo-7-5-cuota"]
+
+# Box [749] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 2% - Base imponible [749]' (offset 489, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.interiores-inversion.tipo-2.base"
+number = "749"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_interiores_inversion_tipo_2_base"
+continuidad_id = "iva-deducible-interiores-inversion-tipo-2-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion21-base-tipo-2-base"]
+
+# Box [750] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 2% - Cuota [750]' (offset 506, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.interiores-inversion.tipo-2.cuota"
+number = "750"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_interiores_inversion_tipo_2_cuota"
+continuidad_id = "iva-deducible-interiores-inversion-tipo-2-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion21-cuota-tipo-2-cuota"]
+
+# Box [751] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 7,5% - Base imponible [751]' (offset 591, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.interiores-inversion.tipo-7-5.base"
+number = "751"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_interiores_inversion_tipo_7_5_base"
+continuidad_id = "iva-deducible-interiores-inversion-tipo-7-5-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion21-base-tipo-7-5-base"]
+
+# Box [752] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 7,5% - Cuota [752]' (offset 608, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.interiores-inversion.tipo-7-5.cuota"
+number = "752"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_interiores_inversion_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-interiores-inversion-tipo-7-5-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-interiores-inversion21-cuota-tipo-7-5-cuota"]
+
+# Box [753] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 2% - Base imponible [753]' (offset 727, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.intragrupo-inversion.tipo-2.base"
+number = "753"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_intragrupo_inversion_tipo_2_base"
+continuidad_id = "iva-deducible-intragrupo-inversion-tipo-2-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-inversion21-base-tipo-2-base"]
+
+# Box [754] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 2% - Cuota [754]' (offset 744, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.intragrupo-inversion.tipo-2.cuota"
+number = "754"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_intragrupo_inversion_tipo_2_cuota"
+continuidad_id = "iva-deducible-intragrupo-inversion-tipo-2-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-inversion21-cuota-tipo-2-cuota"]
+
+# Box [755] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 7,5% - Base imponible [755]' (offset 829, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.intragrupo-inversion.tipo-7-5.base"
+number = "755"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_intragrupo_inversion_tipo_7_5_base"
+continuidad_id = "iva-deducible-intragrupo-inversion-tipo-7-5-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-inversion21-base-tipo-7-5-base"]
+
+# Box [756] - '5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 7,5% - Cuota [756]' (offset 846, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.intragrupo-inversion.tipo-7-5.cuota"
+number = "756"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_intragrupo_inversion_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-intragrupo-inversion-tipo-7-5-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-intragrupo-inversion21-cuota-tipo-7-5-cuota"]
+
+# Box [757] - '5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 2% - Base imponible [757]' (offset 965, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.importaciones-corrientes.tipo-2.base"
+number = "757"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_importaciones_corrientes_tipo_2_base"
+continuidad_id = "iva-deducible-importaciones-corrientes-tipo-2-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-importaciones-corrientes21-base-tipo-2-base"]
+
+# Box [758] - '5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 2% - Cuota [758]' (offset 982, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.importaciones-corrientes.tipo-2.cuota"
+number = "758"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_importaciones_corrientes_tipo_2_cuota"
+continuidad_id = "iva-deducible-importaciones-corrientes-tipo-2-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-importaciones-corrientes21-cuota-tipo-2-cuota"]
+
+# Box [759] - '5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 7,5% - Base imponible [759]' (offset 1067, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.importaciones-corrientes.tipo-7-5.base"
+number = "759"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_importaciones_corrientes_tipo_7_5_base"
+continuidad_id = "iva-deducible-importaciones-corrientes-tipo-7-5-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-importaciones-corrientes21-base-tipo-7-5-base"]
+
+# Box [760] - '5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 7,5% - Cuota [760]' (offset 1084, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.importaciones-corrientes.tipo-7-5.cuota"
+number = "760"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_importaciones_corrientes_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-importaciones-corrientes-tipo-7-5-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-importaciones-corrientes21-cuota-tipo-7-5-cuota"]
+
+# Box [761] - '5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 2% - Base imponible [761]' (offset 1203, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.importaciones-inversion.tipo-2.base"
+number = "761"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_importaciones_inversion_tipo_2_base"
+continuidad_id = "iva-deducible-importaciones-inversion-tipo-2-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-importaciones-inversion21-base-tipo-2-base"]
+
+# Box [762] - '5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 2% - Cuota [762]' (offset 1220, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.importaciones-inversion.tipo-2.cuota"
+number = "762"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_importaciones_inversion_tipo_2_cuota"
+continuidad_id = "iva-deducible-importaciones-inversion-tipo-2-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-importaciones-inversion21-cuota-tipo-2-cuota"]
+
+# Box [763] - '5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 7,5% - Base imponible [763]' (offset 1305, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.importaciones-inversion.tipo-7-5.base"
+number = "763"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_importaciones_inversion_tipo_7_5_base"
+continuidad_id = "iva-deducible-importaciones-inversion-tipo-7-5-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-importaciones-inversion21-base-tipo-7-5-base"]
+
+# Box [764] - '5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 7,5% - Cuota [764]' (offset 1322, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.importaciones-inversion.tipo-7-5.cuota"
+number = "764"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_importaciones_inversion_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-importaciones-inversion-tipo-7-5-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-importaciones-inversion21-cuota-tipo-7-5-cuota"]
+
+# Box [765] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 2% - Base imponible [765]' (offset 1441, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.aic-corrientes.tipo-2.base"
+number = "765"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_aic_corrientes_tipo_2_base"
+continuidad_id = "iva-deducible-aic-corrientes-tipo-2-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-aic-corrientes21-base-tipo-2-base"]
+
+# Box [766] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 2% - Cuota [766]' (offset 1458, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.aic-corrientes.tipo-2.cuota"
+number = "766"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_aic_corrientes_tipo_2_cuota"
+continuidad_id = "iva-deducible-aic-corrientes-tipo-2-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-aic-corrientes21-cuota-tipo-2-cuota"]
+
+# Box [767] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 7,5% - Base imponible [767]' (offset 1543, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.aic-corrientes.tipo-7-5.base"
+number = "767"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_aic_corrientes_tipo_7_5_base"
+continuidad_id = "iva-deducible-aic-corrientes-tipo-7-5-base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-aic-corrientes21-base-tipo-7-5-base"]
+
+# Box [768] - '5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 7,5% - Cuota [768]' (offset 1560, length 17).
+[[revisions."2025".casillas]]
+id = "iva.anual.deducible.aic-corrientes.tipo-7-5.cuota"
+number = "768"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_deducible_aic_corrientes_tipo_7_5_cuota"
+continuidad_id = "iva-deducible-aic-corrientes-tipo-7-5-cuota"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-03-casilla-deducible-aic-corrientes21-cuota-tipo-7-5-cuota"]

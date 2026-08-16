@@ -1362,9 +1362,20 @@ _COMPACT_PDF_CRLF_ROW_RE = re.compile(
 #: would write bytes AEAT never defined -- for Modelo 156, truncating a real
 #: taxpayer's name to one character. A genuine dash-naturaleza row is always
 #: followed by its description, never by a number, so the guard costs nothing.
+#:
+#: UNDERSCORES count as that same rule. AEAT draws the empty naturaleza cell
+#: with whatever character the source used: most designs use dashes
+#: ("226-487 -------------- BLANCOS"), Modelo 185 uses underscores
+#: ("58 ______ BLANCOS."). Both mean the same thing -- no naturaleza, the
+#: description says BLANCOS -- and ``[^\W\d_]+`` cannot pick an underscore run
+#: up because it excludes ``_`` by construction, so without this the rows drop.
+#: Measured across every bundled PDF design before widening: exactly TWO rows in
+#: ONE design newly match, both of them ``BLANCOS`` fill in Modelo 185, whose
+#: two sheets were each skipped for the resulting hole and left that design
+#: yielding nothing at all.
 _NARRATIVE_PDF_ROW_RE = re.compile(
     r"^\s*(?P<start>\d+)(?:\s*[-\u2013]\s*(?P<end>\d+))?\s+"
-    r"(?P<type>[^\W\d_]+|[-\u2013]+(?!\s*\d))\s*"
+    r"(?P<type>[^\W\d_]+|[-\u2013_]+(?!\s*\d))\s*"
     r"(?P<text>.*)$",
     re.IGNORECASE,
 )
@@ -1398,6 +1409,22 @@ _PDF_RECORD_HEADING_TYPE_LAST_RE = re.compile(
     r"^(?:[A-Z]\.?\s*-?\s*)?REGISTRO DE TIPO\s+(?P<record>\d+)\s*[:.]\s*(?P<title>\S.*)$",
     re.IGNORECASE,
 )
+
+#: A bare ``<modelo>-<page>`` tag standing alone on its line, which is how the
+#: Modelo 100 PDFs head each of their record bodies -- "100-01", "100-02" and so
+#: on, printed above the ``Nº Posic. Long. Tipo`` column header. It is the same
+#: naming AEAT uses for the Modelo 714 workbook tabs ("714-01 Patrimonio"),
+#: which arrive named because they are sheet tabs; in a PDF the tag is only a
+#: line of text and nothing was reading it.
+#:
+#: Anchored to the WHOLE line, which is what keeps it from eating a position
+#: range: a field row always carries a naturaleza and a description after its
+#: range, so a line holding nothing but the tag is never one. Measured across
+#: every bundled PDF design before adding it: six designs match, all six are
+#: Modelo 100, and every occurrence names that design's own modelo. Like its
+#: sibling above it only STAGES a name -- geometry still decides whether a
+#: record starts -- so a tag appearing anywhere else stays inert.
+_PDF_RECORD_MODELO_PAGE_TAG_RE = re.compile(r"^(?P<tag>\d{3}-\d{2})$")
 
 
 @dataclass(slots=True)
@@ -1984,7 +2011,11 @@ def _naturaleza_or_none(value: str) -> str | None:
     # Stripping accents encodes to ASCII, which discards an en-dash entirely and
     # leaves an empty string, so testing it afterwards silently rejected every
     # genuine "226-487 - BLANCOS." row in the corpus.
-    if raw and set(raw) <= {"-", "–"}:
+    #
+    # UNDERSCORES are the same rule drawn with a different character: Modelo 185
+    # writes "58 ______ BLANCOS." where other designs write dashes. Both are an
+    # empty naturaleza cell whose description says BLANCOS.
+    if raw and set(raw) <= {"-", "–", "_"}:
         return "Blancos"
     normalised = unicodedata.normalize("NFKD", raw).encode("ascii", "ignore").decode("ascii").lower()
     if not normalised:
@@ -2040,6 +2071,9 @@ def _pdf_candidate_record_name(line: str) -> str | None:
     trusted on its own: see :data:`_PDF_RECORD_HEADING_TYPE_LAST_RE` for why
     this word order cannot split a record on the text alone.
     """
+    tag = _PDF_RECORD_MODELO_PAGE_TAG_RE.match(line.strip())
+    if tag is not None:
+        return tag.group("tag")
     match = _PDF_RECORD_HEADING_TYPE_LAST_RE.match(line)
     if match is None:
         return None

@@ -72873,6 +72873,12 @@ modelo:
           iva-deducible-aic-corrientes-tipo-10-cuota:
             label: Deductible input VAT on intra-Community acquisitions of current
               goods at the 10% rate - deductible VAT amount
+          iva-deducible-aic-corrientes-tipo-2-base:
+            label: Deductible input VAT on intra-Community acquisitions of current
+              goods at the 2% rate - taxable base
+          iva-deducible-aic-corrientes-tipo-2-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of current
+              goods at the 2% rate - deductible VAT amount
           iva-deducible-aic-corrientes-tipo-21-base:
             label: Deductible input VAT on intra-Community acquisitions of current
               goods at the 21% rate - taxable base
@@ -72891,6 +72897,12 @@ modelo:
           iva-deducible-aic-corrientes-tipo-5-cuota:
             label: Deductible input VAT on intra-Community acquisitions of current
               goods at the 5% rate - deductible VAT amount
+          iva-deducible-aic-corrientes-tipo-7-5-base:
+            label: Deductible input VAT on intra-Community acquisitions of current
+              goods at the 7.5% rate - taxable base
+          iva-deducible-aic-corrientes-tipo-7-5-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of current
+              goods at the 7.5% rate - deductible VAT amount
           iva-deducible-aic-corrientes-total-base:
             label: 'Total: Deductible input VAT on intra-Community acquisitions of
               current goods - taxable base'
@@ -72993,6 +73005,12 @@ modelo:
           iva-deducible-importaciones-corrientes-tipo-10-cuota:
             label: Deductible input VAT on imports of current goods at the 10% rate
               - deductible VAT amount
+          iva-deducible-importaciones-corrientes-tipo-2-base:
+            label: Deductible input VAT on imports of current goods at the 2% rate
+              - taxable base
+          iva-deducible-importaciones-corrientes-tipo-2-cuota:
+            label: Deductible input VAT on imports of current goods at the 2% rate
+              - deductible VAT amount
           iva-deducible-importaciones-corrientes-tipo-21-base:
             label: Deductible input VAT on imports of current goods at the 21% rate
               - taxable base
@@ -73011,6 +73029,12 @@ modelo:
           iva-deducible-importaciones-corrientes-tipo-5-cuota:
             label: Deductible input VAT on imports of current goods at the 5% rate
               - deductible VAT amount
+          iva-deducible-importaciones-corrientes-tipo-7-5-base:
+            label: Deductible input VAT on imports of current goods at the 7.5% rate
+              - taxable base
+          iva-deducible-importaciones-corrientes-tipo-7-5-cuota:
+            label: Deductible input VAT on imports of current goods at the 7.5% rate
+              - deductible VAT amount
           iva-deducible-importaciones-corrientes-total-base:
             label: 'Total: Deductible input VAT on imports of current goods - taxable
               base'
@@ -73019,6 +73043,12 @@ modelo:
               - taxable base
           iva-deducible-importaciones-inversion-tipo-10-cuota:
             label: Deductible input VAT on imports of capital goods at the 10% rate
+              - deductible VAT amount
+          iva-deducible-importaciones-inversion-tipo-2-base:
+            label: Deductible input VAT on imports of capital goods at the 2% rate
+              - taxable base
+          iva-deducible-importaciones-inversion-tipo-2-cuota:
+            label: Deductible input VAT on imports of capital goods at the 2% rate
               - deductible VAT amount
           iva-deducible-importaciones-inversion-tipo-21-base:
             label: Deductible input VAT on imports of capital goods at the 21% rate
@@ -73038,6 +73068,12 @@ modelo:
           iva-deducible-importaciones-inversion-tipo-5-cuota:
             label: Deductible input VAT on imports of capital goods at the 5% rate
               - deductible VAT amount
+          iva-deducible-importaciones-inversion-tipo-7-5-base:
+            label: Deductible input VAT on imports of capital goods at the 7.5% rate
+              - taxable base
+          iva-deducible-importaciones-inversion-tipo-7-5-cuota:
+            label: Deductible input VAT on imports of capital goods at the 7.5% rate
+              - deductible VAT amount
           iva-deducible-importaciones-inversion-total-base:
             label: 'Total: Deductible input VAT on imports of capital goods - taxable
               base'
@@ -73049,6 +73085,12 @@ modelo:
               rate - taxable base
           iva-deducible-interiores-corrientes-tipo-10-cuota:
             label: Deductible input VAT on current domestic transactions at the 10%
+              rate - deductible VAT amount
+          iva-deducible-interiores-corrientes-tipo-2-base:
+            label: Deductible input VAT on current domestic transactions at the 2%
+              rate - taxable base
+          iva-deducible-interiores-corrientes-tipo-2-cuota:
+            label: Deductible input VAT on current domestic transactions at the 2%
               rate - deductible VAT amount
           iva-deducible-interiores-corrientes-tipo-21-base:
             label: Deductible input VAT on current domestic transactions at the 21%
@@ -73068,12 +73110,24 @@ modelo:
           iva-deducible-interiores-corrientes-tipo-5-cuota:
             label: Deductible input VAT on current domestic transactions at the 5%
               rate - deductible VAT amount
+          iva-deducible-interiores-corrientes-tipo-7-5-base:
+            label: Deductible input VAT on current domestic transactions at the 7.5%
+              rate - taxable base
+          iva-deducible-interiores-corrientes-tipo-7-5-cuota:
+            label: Deductible input VAT on current domestic transactions at the 7.5%
+              rate - deductible VAT amount
           iva-deducible-interiores-inversion-tipo-10-base:
             label: Deductible input VAT on domestic transactions in capital goods
               at the 10% rate - taxable base
           iva-deducible-interiores-inversion-tipo-10-cuota:
             label: Deductible input VAT on domestic transactions in capital goods
               at the 10% rate - deductible VAT amount
+          iva-deducible-interiores-inversion-tipo-2-base:
+            label: Deductible input VAT on domestic transactions in capital goods
+              at the 2% rate - taxable base
+          iva-deducible-interiores-inversion-tipo-2-cuota:
+            label: Deductible input VAT on domestic transactions in capital goods
+              at the 2% rate - deductible VAT amount
           iva-deducible-interiores-inversion-tipo-21-base:
             label: Deductible input VAT on domestic transactions in capital goods
               at the 21% rate - taxable base
@@ -73092,6 +73146,12 @@ modelo:
           iva-deducible-interiores-inversion-tipo-5-cuota:
             label: Deductible input VAT on domestic transactions in capital goods
               at the 5% rate - deductible VAT amount
+          iva-deducible-interiores-inversion-tipo-7-5-base:
+            label: Deductible input VAT on domestic transactions in capital goods
+              at the 7.5% rate - taxable base
+          iva-deducible-interiores-inversion-tipo-7-5-cuota:
+            label: Deductible input VAT on domestic transactions in capital goods
+              at the 7.5% rate - deductible VAT amount
           iva-deducible-interiores-inversion-total-base:
             label: 'Total: Deductible input VAT on domestic transactions in capital
               goods - taxable base'
@@ -73104,6 +73164,12 @@ modelo:
           iva-deducible-intragrupo-corrientes-tipo-10-cuota:
             label: Deductible input VAT on current intra-group transactions at the
               10% rate - deductible VAT amount
+          iva-deducible-intragrupo-corrientes-tipo-2-base:
+            label: Deductible input VAT on current intra-group transactions at the
+              2% rate - taxable base
+          iva-deducible-intragrupo-corrientes-tipo-2-cuota:
+            label: Deductible input VAT on current intra-group transactions at the
+              2% rate - deductible VAT amount
           iva-deducible-intragrupo-corrientes-tipo-21-base:
             label: Deductible input VAT on current intra-group transactions at the
               21% rate - taxable base
@@ -73122,6 +73188,12 @@ modelo:
           iva-deducible-intragrupo-corrientes-tipo-5-cuota:
             label: Deductible input VAT on current intra-group transactions at the
               5% rate - deductible VAT amount
+          iva-deducible-intragrupo-corrientes-tipo-7-5-base:
+            label: Deductible input VAT on current intra-group transactions at the
+              7.5% rate - taxable base
+          iva-deducible-intragrupo-corrientes-tipo-7-5-cuota:
+            label: Deductible input VAT on current intra-group transactions at the
+              7.5% rate - deductible VAT amount
           iva-deducible-intragrupo-corrientes-total-base:
             label: 'Total: Deductible input VAT on current intra-group transactions
               - taxable base'
@@ -73134,6 +73206,12 @@ modelo:
           iva-deducible-intragrupo-inversion-tipo-10-cuota:
             label: Deductible input VAT on intra-group transactions in capital goods
               at the 10% rate - deductible VAT amount
+          iva-deducible-intragrupo-inversion-tipo-2-base:
+            label: Deductible input VAT on intra-group transactions in capital goods
+              at the 2% rate - taxable base
+          iva-deducible-intragrupo-inversion-tipo-2-cuota:
+            label: Deductible input VAT on intra-group transactions in capital goods
+              at the 2% rate - deductible VAT amount
           iva-deducible-intragrupo-inversion-tipo-21-base:
             label: Deductible input VAT on intra-group transactions in capital goods
               at the 21% rate - taxable base
@@ -73152,6 +73230,12 @@ modelo:
           iva-deducible-intragrupo-inversion-tipo-5-cuota:
             label: Deductible input VAT on intra-group transactions in capital goods
               at the 5% rate - deductible VAT amount
+          iva-deducible-intragrupo-inversion-tipo-7-5-base:
+            label: Deductible input VAT on intra-group transactions in capital goods
+              at the 7.5% rate - taxable base
+          iva-deducible-intragrupo-inversion-tipo-7-5-cuota:
+            label: Deductible input VAT on intra-group transactions in capital goods
+              at the 7.5% rate - deductible VAT amount
           iva-deducible-intragrupo-inversion-total-base:
             label: 'Total: Deductible input VAT on intra-group transactions in capital
               goods - taxable base'
@@ -73273,6 +73357,12 @@ modelo:
           iva-repercutido-bienes-usados-tipo-10-cuota:
             label: Output VAT under the second-hand goods special scheme at the 10%
               rate - VAT amount
+          iva-repercutido-bienes-usados-tipo-2-base:
+            label: Output VAT under the second-hand goods special scheme at the 2%
+              rate - taxable base
+          iva-repercutido-bienes-usados-tipo-2-cuota:
+            label: Output VAT under the second-hand goods special scheme at the 2%
+              rate - VAT amount
           iva-repercutido-bienes-usados-tipo-21-base:
             label: Output VAT under the second-hand goods special scheme at the 21%
               rate - taxable base
@@ -73291,6 +73381,12 @@ modelo:
           iva-repercutido-bienes-usados-tipo-5-cuota:
             label: Output VAT under the second-hand goods special scheme at the 5%
               rate - VAT amount
+          iva-repercutido-bienes-usados-tipo-7-5-base:
+            label: Output VAT under the second-hand goods special scheme at the 7.5%
+              rate - taxable base
+          iva-repercutido-bienes-usados-tipo-7-5-cuota:
+            label: Output VAT under the second-hand goods special scheme at the 7.5%
+              rate - VAT amount
           iva-repercutido-criterio-caja-tipo-0-base:
             label: Output VAT under the cash accounting special scheme at the 0% rate
               - taxable base
@@ -73303,6 +73399,12 @@ modelo:
           iva-repercutido-criterio-caja-tipo-10-cuota:
             label: Output VAT under the cash accounting special scheme at the 10%
               rate - VAT amount
+          iva-repercutido-criterio-caja-tipo-2-base:
+            label: Output VAT under the cash accounting special scheme at the 2% rate
+              - taxable base
+          iva-repercutido-criterio-caja-tipo-2-cuota:
+            label: Output VAT under the cash accounting special scheme at the 2% rate
+              - VAT amount
           iva-repercutido-criterio-caja-tipo-21-base:
             label: Output VAT under the cash accounting special scheme at the 21%
               rate - taxable base
@@ -73321,6 +73423,12 @@ modelo:
           iva-repercutido-criterio-caja-tipo-5-cuota:
             label: Output VAT under the cash accounting special scheme at the 5% rate
               - VAT amount
+          iva-repercutido-criterio-caja-tipo-7-5-base:
+            label: Output VAT under the cash accounting special scheme at the 7.5%
+              rate - taxable base
+          iva-repercutido-criterio-caja-tipo-7-5-cuota:
+            label: Output VAT under the cash accounting special scheme at the 7.5%
+              rate - VAT amount
           iva-repercutido-intragrupo-tipo-0-base:
             label: Output VAT on intra-group transactions at the 0% rate - taxable
               base
@@ -73331,6 +73439,11 @@ modelo:
               base
           iva-repercutido-intragrupo-tipo-10-cuota:
             label: Output VAT on intra-group transactions at the 10% rate - VAT amount
+          iva-repercutido-intragrupo-tipo-2-base:
+            label: Output VAT on intra-group transactions at the 2% rate - taxable
+              base
+          iva-repercutido-intragrupo-tipo-2-cuota:
+            label: Output VAT on intra-group transactions at the 2% rate - VAT amount
           iva-repercutido-intragrupo-tipo-21-base:
             label: Output VAT on intra-group transactions at the 21% rate - taxable
               base
@@ -73346,6 +73459,11 @@ modelo:
               base
           iva-repercutido-intragrupo-tipo-5-cuota:
             label: Output VAT on intra-group transactions at the 5% rate - VAT amount
+          iva-repercutido-intragrupo-tipo-7-5-base:
+            label: Output VAT on intra-group transactions at the 7.5% rate - taxable
+              base
+          iva-repercutido-intragrupo-tipo-7-5-cuota:
+            label: Output VAT on intra-group transactions at the 7.5% rate - VAT amount
           iva-repercutido-recargo-tipo-0-5-base:
             label: Equivalence surcharge at the 0.5% rate - taxable base
           iva-repercutido-recargo-tipo-1-4-base:
