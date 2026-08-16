@@ -74852,6 +74852,78 @@ modelo:
                   mensual
           field:
             label: Modelo 322 ejercicios 2008 y siguientes (Orden EHA/3434/2007)
+        2026-y-siguientes:
+          casilla:
+            x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
+              help: null
+              label: Codigo de actividad - Otras 1a
+            x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
+              help: null
+              label: Epigrafe IAE - Otras 1a
+            x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
+              help: null
+              label: Codigo de actividad - Otras 2a
+            x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
+              help: null
+              label: Epigrafe IAE - Otras 2a
+            x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
+              help: null
+              label: Codigo de actividad - Otras 3a
+            x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
+              help: null
+              label: Epigrafe IAE - Otras 3a
+            x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
+              help: null
+              label: Codigo de actividad - Otras 4a
+            x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
+              help: null
+              label: Epigrafe IAE - Otras 4a
+            x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
+              help: null
+              label: Codigo de actividad - Otras 5a
+            x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
+              help: null
+              label: Epigrafe IAE - Otras 5a
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
+              help: null
+              label: Codigo de actividad - Principal
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
+              help: null
+              label: Epigrafe IAE - Principal
+            x-chim6r1echim8tb3cdkmurhde1gmerpdcdqmarjkc4mmeobjdtm6irj1ec:
+              help: null
+              label: Derecho a deducir el pago a cuenta de entregas de gasolinas,
+                gasoleos y biocarburantes
+            x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
+              help: null
+              label: Destinatario de operaciones acogidas al criterio de caja
+            x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
+              help: null
+              label: NIF de la entidad dominante
+            x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
+              help: null
+              label: Exonerado de la declaracion-resumen anual, modelo 390
+            x-chim6r1ectp7as3f5ln7arb5e9ng:
+              help: null
+              label: Numero de grupo
+            x-chim6r1ectp7as3f5lp6ur0:
+              help: null
+              label: Dominante o dependiente
+            x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
+              help: null
+              label: 'Aplicacion de la prorrata especial: opcion o revocacion'
+            x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
+              help: null
+              label: Inscrito en el Registro de devolucion mensual
+            x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
+              help: null
+              label: Acogido a la modalidad del articulo 163 sexies.Cinco LIVA
+            x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
+              help: null
+              label: Tributacion exclusivamente foral
+            x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
+              help: null
+              label: Volumen anual de operaciones distinto de cero
     '341':
       field:
         official_name: Modelo 341. Solicitud de reintegro de compensaciones en el

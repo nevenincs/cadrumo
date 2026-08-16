@@ -72457,6 +72457,78 @@ modelo:
                 title: null
           field:
             label: null
+        2026-y-siguientes:
+          casilla:
+            x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
+              help: null
+              label: Codi d'activitat - Altres 1a
+            x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
+              help: null
+              label: Epígraf IAE - Altres 1a
+            x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
+              help: null
+              label: Codi d'activitat - Altres 2a
+            x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
+              help: null
+              label: Epígraf IAE - Altres 2a
+            x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
+              help: null
+              label: Codi d'activitat - Altres 3a
+            x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
+              help: null
+              label: Epígraf IAE - Altres 3a
+            x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
+              help: null
+              label: Codi d'activitat - Altres 4a
+            x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
+              help: null
+              label: Epígraf IAE - Altres 4a
+            x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
+              help: null
+              label: Codi d'activitat - Altres 5a
+            x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
+              help: null
+              label: Epígraf IAE - Altres 5a
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
+              help: null
+              label: Codi d'activitat - Principal
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
+              help: null
+              label: Epígraf IAE - Principal
+            x-chim6r1echim8tb3cdkmurhde1gmerpdcdqmarjkc4mmeobjdtm6irj1ec:
+              help: null
+              label: Dret a deduir el pagament a compte de lliuraments de gasolines,
+                gasolis i biocarburants
+            x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
+              help: null
+              label: Destinatari d'operacions acollides al criteri de caixa
+            x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
+              help: null
+              label: NIF de l'entitat dominant
+            x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
+              help: null
+              label: Exonerat de la declaració-resum anual, model 390
+            x-chim6r1ectp7as3f5ln7arb5e9ng:
+              help: null
+              label: Número de grup
+            x-chim6r1ectp7as3f5lp6ur0:
+              help: null
+              label: Dominant o dependent
+            x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
+              help: null
+              label: 'Aplicació de la prorrata especial: opció o revocació'
+            x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
+              help: null
+              label: Inscrit al Registre de devolució mensual
+            x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
+              help: null
+              label: Acollit a la modalitat de l'article 163 sexies.Cinc LIVA
+            x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
+              help: null
+              label: Tributació exclusivament foral
+            x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
+              help: null
+              label: Volum anual d'operacions diferent de zero
     '341':
       field:
         official_name: null
