@@ -276,7 +276,11 @@ id = "modelo-390-page-01-surnames"
 offset = 23
 length = 60
 kind = "header"
-producer_key = "taxpayer.surnames"
+# AEAT labels this slot "Apellidos o Razon Social" and marks it OBLIGATORIO,
+# pairing it with the separate "Nombre (solo personas fisicas)" slot below.
+# taxpayer.surnames is None for a legal entity, so every company filed a
+# blank obligatory field here.
+producer_key = "taxpayer.surnames_or_legal_name"
 data_type = "text"
 required = true
 padding = "right_space"

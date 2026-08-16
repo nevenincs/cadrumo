@@ -275,7 +275,10 @@ id = "modelo-128-page-01-apellidos"
 offset = 23
 length = 60
 kind = "header"
-producer_key = "taxpayer.surnames"
+# AEAT labels this slot with the razon social / denominacion alternative,
+# so it must hold an entity name when the filer is not a natural person.
+# taxpayer.surnames is None for an entity, which left it blank.
+producer_key = "taxpayer.surnames_or_legal_name"
 data_type = "text"
 required = true
 padding = "right_space"
