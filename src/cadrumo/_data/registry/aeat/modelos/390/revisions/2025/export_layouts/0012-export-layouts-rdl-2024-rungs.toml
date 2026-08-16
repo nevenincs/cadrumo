@@ -1,0 +1,619 @@
+[[revisions."2025".export_layouts]]
+id = "modelo-390-2025-fichero-boe"
+
+# Modelo 390 revision 2025: export fields for the RDL 4/2024 rate rungs.
+# Offsets and lengths transcribed from aeat-dr-390-2025 (sha256 6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252).
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-390-page-02"
+record_type = "page_02"
+order = 2
+encoding = "latin-1"
+line_ending = "none"
+
+# 5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 2% - Base imponible [671]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-intragrupo21-base-tipo-2-base"
+offset = 285
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-2.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 2% - Cuota [672]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-intragrupo21-cuota-tipo-2-cuota"
+offset = 302
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-2.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 7,5% - Base imponible [673]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-intragrupo21-base-tipo-7-5-base"
+offset = 387
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-7-5.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - Base imponible y cuota - operaciones intragrupo - Tipo 7,5% - Cuota [674]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-intragrupo21-cuota-tipo-7-5-cuota"
+offset = 404
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-7-5.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 2% - Base imponible [675]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-criterio-caja21-base-tipo-2-base"
+offset = 523
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-2.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 2% - Cuota [676]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-criterio-caja21-cuota-tipo-2-cuota"
+offset = 540
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-2.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 7,5% - Base imponible [677]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-criterio-caja21-base-tipo-7-5-base"
+offset = 625
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-7-5.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - Base imponible y cuota - regimen especial criterio caja - Tipo 7,5% - Cuota [678]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-criterio-caja21-cuota-tipo-7-5-cuota"
+offset = 642
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-7-5.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-decies", "ley-37-1992:art-163-undecies", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 2% - Base imponible [679]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-bienes-usados21-base-tipo-2-base"
+offset = 761
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-2.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 2% - Cuota [680]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-bienes-usados21-cuota-tipo-2-cuota"
+offset = 778
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-2.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 7,5% - Base imponible [681]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-bienes-usados21-base-tipo-7-5-base"
+offset = 863
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-7-5.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reg. espec. bienes usados - Tipo 7,5% - Cuota [682]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-repercutido-bienes-usados21-cuota-tipo-7-5-cuota"
+offset = 880
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-7-5.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-390-page-03"
+record_type = "page_03"
+order = 4
+encoding = "latin-1"
+line_ending = "none"
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 2% - Base imponible [695]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-interiores-corrientes21-base-tipo-2-base"
+offset = 13
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-2.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 2% - Cuota [696]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-interiores-corrientes21-cuota-tipo-2-cuota"
+offset = 30
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-2.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 7,5% - Base imponible [697]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-interiores-corrientes21-base-tipo-7-5-base"
+offset = 115
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-7-5.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 7,5% - Cuota [698]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-interiores-corrientes21-cuota-tipo-7-5-cuota"
+offset = 132
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-7-5.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 2% - Base imponible [745]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-intragrupo-corrientes21-base-tipo-2-base"
+offset = 251
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-2.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 2% - Cuota [746]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-intragrupo-corrientes21-cuota-tipo-2-cuota"
+offset = 268
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-2.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 7,5% - Base imponible [747]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-intragrupo-corrientes21-base-tipo-7-5-base"
+offset = 353
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-7-5.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Oper. intragrupo corrientes - Tipo 7,5% - Cuota [748]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-intragrupo-corrientes21-cuota-tipo-7-5-cuota"
+offset = 370
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-7-5.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 2% - Base imponible [749]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-interiores-inversion21-base-tipo-2-base"
+offset = 489
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.interiores-inversion.tipo-2.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 2% - Cuota [750]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-interiores-inversion21-cuota-tipo-2-cuota"
+offset = 506
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.interiores-inversion.tipo-2.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 7,5% - Base imponible [751]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-interiores-inversion21-base-tipo-7-5-base"
+offset = 591
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.interiores-inversion.tipo-7-5.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. bienes de inversion - Tipo 7,5% - Cuota [752]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-interiores-inversion21-cuota-tipo-7-5-cuota"
+offset = 608
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.interiores-inversion.tipo-7-5.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 2% - Base imponible [753]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-intragrupo-inversion21-base-tipo-2-base"
+offset = 727
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-2.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 2% - Cuota [754]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-intragrupo-inversion21-cuota-tipo-2-cuota"
+offset = 744
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-2.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 7,5% - Base imponible [755]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-intragrupo-inversion21-base-tipo-7-5-base"
+offset = 829
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-7-5.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 7,5% - Cuota [756]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-intragrupo-inversion21-cuota-tipo-7-5-cuota"
+offset = 846
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-7-5.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 2% - Base imponible [757]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-importaciones-corrientes21-base-tipo-2-base"
+offset = 965
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-2.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 2% - Cuota [758]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-importaciones-corrientes21-cuota-tipo-2-cuota"
+offset = 982
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-2.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 7,5% - Base imponible [759]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-importaciones-corrientes21-base-tipo-7-5-base"
+offset = 1067
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-7-5.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Import. bienes corrientes - Tipo 7,5% - Cuota [760]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-importaciones-corrientes21-cuota-tipo-7-5-cuota"
+offset = 1084
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-7-5.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 2% - Base imponible [761]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-importaciones-inversion21-base-tipo-2-base"
+offset = 1203
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-2.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 2% - Cuota [762]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-importaciones-inversion21-cuota-tipo-2-cuota"
+offset = 1220
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-2.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 7,5% - Base imponible [763]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-importaciones-inversion21-base-tipo-7-5-base"
+offset = 1305
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-7-5.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 7,5% - Cuota [764]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-importaciones-inversion21-cuota-tipo-7-5-cuota"
+offset = 1322
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-7-5.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 2% - Base imponible [765]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-aic-corrientes21-base-tipo-2-base"
+offset = 1441
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-2.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 2% - Cuota [766]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-aic-corrientes21-cuota-tipo-2-cuota"
+offset = 1458
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-2.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 7,5% - Base imponible [767]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-aic-corrientes21-base-tipo-7-5-base"
+offset = 1543
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-7-5.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 7,5% - Cuota [768]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-deducible-aic-corrientes21-cuota-tipo-7-5-cuota"
+offset = 1560
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-7-5.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71", "real-decreto-ley-4-2024:art-1"]
+source_refs = ["aeat-dr-390-2025"]
