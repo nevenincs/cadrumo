@@ -69,9 +69,8 @@ def test_an_exact_lookup_still_refuses_an_indexed_path() -> None:
 def test_an_indexed_row_of_a_declared_secret_is_masked() -> None:
     """A secret whose leaf the keyword net does not recognise must still mask."""
 
-    rows = _rows_for(UserProfileFact(path="vaults.0.recovery_phrase", value="the-actual-phrase"))
+    (row,) = _rows_for(UserProfileFact(path="vaults.0.recovery_phrase", value="the-actual-phrase"))
 
-    row = next(row for row in rows if "recovery_phrase" in row.label)
     assert row.masked
 
 
@@ -83,23 +82,27 @@ def test_an_indexed_row_of_a_declared_non_secret_is_not_masked() -> None:
     schema says is ordinary — hiding data the operator asked to see.
     """
 
-    rows = _rows_for(UserProfileFact(path="vaults.0.passphrase_hint", value="the-hint"))
+    (row,) = _rows_for(UserProfileFact(path="vaults.0.passphrase_hint", value="the-hint"))
 
-    row = next(row for row in rows if "passphrase_hint" in row.label)
     assert not row.masked
 
 
 def test_an_undeclared_indexed_path_still_falls_to_the_keyword_net() -> None:
     """The floor stays a floor: a fact no schema field declares is unchanged."""
 
-    rows = _rows_for(UserProfileFact(path="unknown_section.0.api_key", value="AKIA-not-a-real-key"))
+    (row,) = _rows_for(UserProfileFact(path="unknown_section.0.api_key", value="AKIA-not-a-real-key"))
 
-    row = next(row for row in rows if "api_key" in row.label)
     assert row.masked
 
 
-def test_an_indexed_row_keeps_its_path_as_its_label() -> None:
-    """Three instances need three distinguishable rows on a surface with one column."""
+def test_each_instance_of_a_repeated_field_gets_its_own_distinguishable_row() -> None:
+    """Repeated instances need distinguishable rows on a surface with one column.
+
+    The label is the field's authored name rather than its raw dotted path, so
+    two instances of one field would collide into two identical rows and the
+    operator could not tell which value belonged to which. What must hold is
+    that the instance is still carried, not that the label spells the path.
+    """
 
     rows = _rows_for(
         UserProfileFact(path="vaults.0.passphrase_hint", value="first"),
@@ -107,8 +110,8 @@ def test_an_indexed_row_keeps_its_path_as_its_label() -> None:
     )
 
     labels = [row.label for row in rows]
-    assert "vaults.0.passphrase_hint" in labels
-    assert "vaults.1.passphrase_hint" in labels
+    assert len(labels) == 2
+    assert len(set(labels)) == 2, f"repeated instances collapsed onto one label: {labels}"
 
 
 def test_a_censo_divergencia_axis_row_resolves_to_the_disputed_fields_label() -> None:
