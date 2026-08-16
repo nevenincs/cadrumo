@@ -35,9 +35,15 @@ import pytest
 from .....core import ExportLayoutFormat
 from .._export import derive_export_layouts_from_bindings
 from .._record_design import extract_record_design
-from .._record_design_schema import RecordDesignExtraction, RecordDesignSheet, RecordDesignSkippedSheet
+from .._record_design_schema import (
+    RecordDesignExtraction,
+    RecordDesignField,
+    RecordDesignSheet,
+    RecordDesignSkippedSheet,
+)
 from .._schema import ExportLayoutDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, SourceReference
 from .._validate_export_layout_coverage import (
+    _administration_reserved,
     _belongs_to_layout,
     _design_sources,
     _omissible_reason,
@@ -102,20 +108,24 @@ def _design_sheets(
     layout: ExportLayoutDefinition,
     catalogues: RegistryCatalogues,
 ) -> tuple[RecordDesignSheet, ...]:
-    """Return every official design sheet backing ``layout``, or ``()`` if any is unreadable.
+    """Return the official design sheets backing ``layout`` that could be read.
 
-    A design the reader cannot read in full yields NO sheets rather than an
-    assertion, because "unreadable" is a real and correct state the gate itself
-    reports: a sheet whose parsed rows leave holes in its declared extent is
-    recorded as skipped, so ``require_complete`` refuses it. Asserting here
-    instead would turn the gate's own honest refusal into a test error, and
-    every caller below already treats an empty sheet set as "nothing to check".
+    An unreadable source is SKIPPED rather than asserted on, because
+    "unreadable" is a real and correct state the gate itself reports: a sheet
+    whose rows leave holes in its declared extent is recorded as skipped, so
+    ``require_complete`` refuses it. Asserting here would turn the gate's own
+    honest refusal into a test error.
+
+    Skipped per SOURCE, never per layout. Zeroing every sheet because one of a
+    layout's sources went unreadable throws away the readable ones too, which
+    silently emptied a sibling test's whole population and made its
+    anti-vacuity assertion -- correctly -- fire.
     """
     sheets: list[RecordDesignSheet] = []
     for source in _design_sources(layout, catalogues.sources):
         read = _read_design_sheets(source)
         if isinstance(read, str):
-            return ()
+            continue
         sheets.extend(read)
     return tuple(sheets)
 
@@ -630,3 +640,127 @@ def test_a_row_aeat_does_not_mark_constante_yields_no_constant(
                         f"does not mark it Constante ({field.description!r} / {field.content!r})"
                     )
     assert checked, "no unmarked design row was examined, so this guard proved nothing"
+
+
+def _every_declared_design_row(
+    catalogues: RegistryCatalogues,
+) -> list[RecordDesignField]:
+    """Every row of every record design the registry declares, sub-fields included.
+
+    Broader than the designs a layout happens to cite, because the reservation
+    predicate is a reading of AEAT's vocabulary rather than a property of one
+    modelo.
+
+    Deliberately tolerant of a PARTIAL read, unlike ``_read_design_sheets``.
+    Completeness guards coverage ARITHMETIC -- a ratio derived from a half-read
+    design is inflated by exactly the records that were dropped -- whereas
+    classifying one row's wording needs only that row. Requiring completeness
+    here silently emptied the bare-label population instead: all sixty of those
+    rows live in Modelo 840, whose design is one of the seventeen the reader
+    cannot finish, so the fallback assertion passed its own emptiness check and
+    then proved nothing.
+    """
+    from .....core.resources import resolve_corpus_binary
+
+    rows: list[RecordDesignField] = []
+    for source in (source for source in catalogues.sources.values() if source.kind == "record_design"):
+        path = resolve_corpus_binary(*source.corpus_path.split("/"))
+        if path is None:
+            continue
+        for sheet in extract_record_design(path).sheets:
+            for field in sheet.fields:
+                rows.extend((field, *field.components))
+    return rows
+
+
+def test_a_reservado_row_naming_the_aeat_as_owner_stays_reserved(
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """AEAT naming itself as the owner settles the row, whatever its contenido says.
+
+    Anchored on AEAT's literal wording rather than on the production predicate,
+    so this can disagree with it. Modelo 131 ``@627+1`` and Modelo 303
+    ``@840+1``/``@841+1`` read ``RESERVADO PARA LA A.E.A.T.`` and yet declare
+    ``"0" o blanco`` -- a value set on a row that is unambiguously the
+    administración's, where ``"0"`` is an AEAT-side marker and not a filer tick.
+    A rule led by the contenido would hand all three to the filer, so the owner
+    signal has to be read first.
+    """
+    _modelos, catalogues = registry_tree
+    owned = [
+        field
+        for field in _every_declared_design_row(catalogues)
+        if "RESERVADO PARA LA A.E.A.T." in (field.description or "").upper()
+        or "RESERVADO PARA LA AEAT" in (field.description or "").upper()
+    ]
+    assert owned, "no design row names the A.E.A.T. as owner, so this proved nothing"
+    assert any((field.content or "").strip() for field in owned), (
+        "no owner-named row carries a contenido, so the ordering this test guards is unexercised"
+    )
+    for field in owned:
+        assert _administration_reserved(field), (
+            f"@{field.offset}+{field.length} names the A.E.A.T. as owner "
+            f"({field.description!r}, contenido {field.content!r}) but was classified as filer data"
+        )
+
+
+def test_the_colegio_concertado_row_is_filer_data_not_reserved_space(
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """Modelo 111 ``@552+1`` carries a mark the presenter writes, despite its label.
+
+    AEAT describes it ``Reservado. Administración presentando declaración de
+    Colegio Concertado (CC)`` and gives it contenido ``"X" o blanco`` -- the same
+    filer-tick spelling it uses for ``Declaración complementaria`` three rows
+    earlier. It marks Spain's *pago delegado* case, where an education
+    Administración presents the Modelo 111 for a state-subsidised school: a fact
+    only the presenter holds, and an input TO the AEAT rather than a byte it owns.
+
+    Reading the ``Reservado`` label alone excused a real datum from coverage AND
+    made the layout that correctly writes it look like a trespass into reserved
+    bytes -- the tree was internally inconsistent because the predicate was.
+    """
+    _modelos, catalogues = registry_tree
+    tagged = [
+        field for field in _every_declared_design_row(catalogues) if "Colegio Concertado" in (field.description or "")
+    ]
+    assert tagged, "the Colegio Concertado row is no longer in the bundled corpus; re-anchor this test"
+    for field in tagged:
+        assert '"X"' in (field.content or ""), (
+            f"@{field.offset}+{field.length} no longer declares AEAT's filer tick "
+            f"(contenido {field.content!r}); the premise of this test has changed"
+        )
+        assert not _administration_reserved(field), (
+            f"@{field.offset}+{field.length} carries a filer mark but was excused as reserved"
+        )
+        assert _omissible_reason(field) is None, (
+            f"@{field.offset}+{field.length} carries a filer datum yet the production rule "
+            f"still excuses it: {_omissible_reason(field)!r}"
+        )
+
+
+def test_a_bare_reservado_label_with_no_contenido_stays_reserved(
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """The fallback keeps the label-then-clause population reserved.
+
+    Modelo 840 carries around forty rows shaped ``Reservado. Apart. VII: Cuota
+    [103]`` -- the same label-then-clause form as the Modelo 111 row above, and
+    with no contenido at all. Nothing there says a filer writes them, so the
+    absence of a tick has to leave them reserved.
+
+    This is why the predicate could not be narrowed on WORDING alone: keying on
+    the ``para``-less shape would have required every one of these.
+    """
+    _modelos, catalogues = registry_tree
+    bare = [
+        field
+        for field in _every_declared_design_row(catalogues)
+        if (field.description or "").strip().startswith("Reservado.") and not (field.content or "").strip()
+    ]
+    assert bare, "no bare-label Reservado row was examined, so the fallback proved nothing"
+    for field in bare:
+        assert _administration_reserved(field), (
+            f"@{field.offset}+{field.length} ({field.description!r}) lost its reservation "
+            f"although AEAT names no owner and declares no filer tick"
+        )

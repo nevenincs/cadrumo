@@ -127,6 +127,7 @@ from .._export_field_kind import CasillaFieldKind
 from ._errors import RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
 from ._record_design import extract_record_design
+from ._record_design_schema import RecordDesignField, RecordDesignSheet
 from ._schema import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -142,18 +143,41 @@ from ._schema import (
 #: validation cell is not mistaken for the marking itself.
 _OBLIGATORIO: Final = re.compile(r"\bOBLIGATORI[OA]\b", re.IGNORECASE)
 
-#: A position AEAT reserves for its own use. The filer must NOT write it, so its
-#: absence from an authored layout is correct rather than a gap.
+#: The word by which AEAT names a slot it reserves. Necessary but NOT sufficient
+#: on its own -- see :func:`_administration_reserved` for the two signals that
+#: decide what the word means on a given row.
 #:
 #: Read from the field's DESCRIPTION only -- never from its validation or
 #: contenido prose, which is where the word appears innocently. Modelo 720's
 #: ``TIPO DE DERECHO REAL SOBRE INMUEBLE`` (25 bytes of taxpayer data) explains
 #: itself with "se deberá indicar en el espacio reservado", and scanning that
 #: prose excused a real datum from the check -- a silent pass, which is the one
-#: direction this gate must never fail in. AEAT names an administration slot in
-#: the description itself ("RESERVADO PARA LA A.E.A.T.", "Reservado para la
-#: Administración"), so the description carries every genuine case.
-_ADMINISTRATION_RESERVED: Final = re.compile(r"\breservad[oa]s?\b", re.IGNORECASE)
+#: direction this gate must never fail in.
+_RESERVED_WORD: Final = re.compile(r"\breservad[oa]s?\b", re.IGNORECASE)
+
+#: AEAT naming the reservation's OWNER: "RESERVADO PARA LA A.E.A.T.", "Reservado
+#: para la Administración", "Reservado para el sello electrónico de la AEAT",
+#: "Reservado AEAT". This is the authority stating whose bytes these are, so it
+#: settles the row outright.
+#:
+#: ``[^.;]`` is load-bearing: it cannot cross a sentence break, which is what
+#: separates naming an owner from using "Reservado" as a bare label in front of
+#: an unrelated clause. The window is wide enough for "para el sello electrónico
+#: de la " to reach its ``AEAT``.
+_RESERVED_FOR_ADMINISTRATION: Final = re.compile(
+    r"\breservad[oa]s?\b[^.;]{0,40}?\b(?:administraci[oó]n|a\.?e\.?a\.?t\.?)\b",
+    re.IGNORECASE,
+)
+
+#: AEAT's tick notation for a mark the FILER writes -- a quoted ``X``.
+#:
+#: This is the signal that a "Reservado"-labelled row holds a datum after all.
+#: It is deliberately the quoted ``X`` and not any value set: Modelo 131
+#: ``@627+1`` and Modelo 303 ``@840+1``/``@841+1`` declare ``"0" o blanco`` on
+#: rows that ARE the administración's, and ``"0"`` is an AEAT-side marker rather
+#: than a filer tick. Those three are settled by the owner rule above regardless,
+#: so this pattern never has to adjudicate them.
+_FILER_MARK: Final = re.compile(r"[\"'«“‘]\s*X\s*[\"'»”’]", re.IGNORECASE)
 
 #: A position AEAT declares as fill rather than as a datum. Anchored to the whole
 #: cell: a description that merely MENTIONS blancos while carrying a real field
@@ -213,6 +237,46 @@ class _RequiredPosition:
     obligatorio: bool
 
 
+def _administration_reserved(field: RecordDesignField) -> bool:
+    """Return whether AEAT reserves this position for itself.
+
+    The word "Reservado" alone does not settle it, and reading it as though it
+    did was a real defect: Modelo 111's ``@552+1`` is described ``Reservado.
+    Administración presentando declaración de Colegio Concertado (CC)`` and
+    declares ``"X" o blanco``. That is a mark the PRESENTER writes -- Spain's
+    *pago delegado* arrangement, where an education Administración presents the
+    Modelo 111 for a state-subsidised school -- so the row was excused from
+    coverage while the layout correctly wrote a datum there, and the
+    reserved-span rule then reported that datum as trespassing on AEAT's bytes.
+    The tree was internally inconsistent because this predicate was.
+
+    Two signals decide it, in order:
+
+    * AEAT naming the OWNER ("Reservado para la Administración", "RESERVADO PARA
+      LA A.E.A.T.", "Reservado AEAT") settles the row as reserved whatever its
+      contenido says. Modelo 131 ``@627+1`` and Modelo 303 ``@840+1`` are the
+      reason this comes first: they are the administración's AND declare a value
+      set, so a content-led rule would wrongly hand them to the filer.
+    * Otherwise a contenido declaring AEAT's filer tick ``"X"`` means the row
+      holds a datum despite the label.
+
+    A "Reservado"-labelled row that names no owner and declares no filer tick
+    stays reserved -- Modelo 840's forty-odd ``Reservado. Apart. VII: Cuota
+    [103]`` rows, which carry no contenido at all, are the population that
+    depends on that fallback.
+
+    Measured over the bundled corpus: 3,919 rows carry the word, and exactly one
+    position -- Modelo 111 ``@552+1``, in the 2016-2018 and 2019-y-siguientes
+    designs -- is reclassified as a datum by the second signal.
+    """
+    description = field.description or ""
+    if not _RESERVED_WORD.search(description):
+        return False
+    if _RESERVED_FOR_ADMINISTRATION.search(description):
+        return True
+    return not _FILER_MARK.search(field.content or "")
+
+
 def _omissible_reason(field: RecordDesignField) -> str | None:
     """Return why the DESIGN says this position may go unwritten, else ``None``.
 
@@ -228,7 +292,7 @@ def _omissible_reason(field: RecordDesignField) -> str | None:
     """
     if _OBLIGATORIO.search(field.validation or ""):
         return None
-    if _ADMINISTRATION_RESERVED.search(field.description or ""):
+    if _administration_reserved(field):
         return "reserved for the Administración"
     for text in (field.description, field.content):
         if text and _DECLARED_FILL.match(text.strip()):
@@ -364,7 +428,7 @@ def _administration_reserved_bytes(sheet: RecordDesignSheet) -> dict[int, str]:
         for candidate in (field, *field.components):
             if _OBLIGATORIO.search(candidate.validation or ""):
                 continue
-            if not _ADMINISTRATION_RESERVED.search(candidate.description or ""):
+            if not _administration_reserved(candidate):
                 continue
             for byte in range(candidate.offset, candidate.offset + candidate.length):
                 reserved[byte] = candidate.description

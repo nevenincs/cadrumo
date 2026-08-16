@@ -679,6 +679,71 @@ def test_generated_record_design_pdf_rejects_inverted_position_ranges(tmp_path: 
         extract_record_design_pdf(pdf_path)
 
 
+def test_modelo_156_reads_aeat_misspelled_afabetico_naturaleza_row() -> None:
+    """AEAT's own ``Afabético`` typo must still read as the alfabético naturaleza.
+
+    Modelo 156's afiliado record spells it ``Afabético`` -- missing the ``l`` --
+    exactly once, at ``36 - 75 Afabético APELLIDOS Y NOMBRE DEL AFILIADO O
+    MUTUALISTA``, while using the correct spelling as a naturaleza elsewhere in
+    the same design. Rejecting the misspelling dropped that row, leaving a
+    40-byte hole where the affiliate's name belongs: the record then covered 210
+    of its 250 positions, so every coverage figure derived from it was
+    overstated and the modelo could not be read in full.
+    """
+    sheets = {
+        sheet.name: sheet for sheet in _official_record_design_sheets(_record_design_pdf("modelo_156", "vigente"))
+    }
+
+    afiliado = sheets["Tipo 2 - Registro De Afiliado O Mutualista"]
+    nombre = next(field for field in afiliado.fields if field.offset == 36)
+    assert nombre.length == 40
+    assert nombre.type_code == "Alfabético"
+    assert nombre.description == "APELLIDOS Y NOMBRE DEL AFILIADO O MUTUALISTA."
+    # The row is only genuinely read if the record tiles its full declared
+    # extent; asserting the field alone would still pass on a record that
+    # dropped some OTHER row instead.
+    assert sum(field.length for field in afiliado.fields) == afiliado.total_positions == 250
+    covered = {position for field in afiliado.fields for position in range(field.offset, field.offset + field.length)}
+    assert covered == set(range(1, 251))
+
+
+def test_misspelled_naturaleza_stem_stays_narrow_enough_to_reject_field_names(tmp_path: Path) -> None:
+    """The ``afabetic`` stem must not be loosened into a prefix that eats field names.
+
+    Guards the failure the naturaleza matcher already suffered once: widening a
+    stem to the bare noun made ``num`` match ``NÚMERO`` field NAMES, promoting a
+    field's own name to its type and pushing modelo 345's tipo 2 record 45 bytes
+    past its declared 500. A stem short enough to match ``FABRICANTE`` would
+    reintroduce exactly that, so the misspelling is accepted while a real word
+    opening a description stays prose.
+    """
+    pdf_path = tmp_path / "narrow-stem-record-design.pdf"
+    _write_pdf_lines(
+        pdf_path,
+        (
+            "Tipo de registro 2: Registro de Afiliado",
+            "POSICIONES NATURALEZA DESCRIPCIÓN DE LOS CAMPOS",
+            "1 Numérico TIPO DE REGISTRO.",
+            "2-35 Alfanumérico NIF DEL AFILIADO",
+            "36-75 Afabético APELLIDOS Y NOMBRE DEL AFILIADO.",
+            "76-100 Alfanumérico DATOS DEL SOPORTE.",
+            "80-90 FABRICANTE DEL SOPORTE: se consignará el nombre.",
+            "101-250 -------- BLANCOS",
+        ),
+    )
+
+    sheet = extract_record_design_pdf(pdf_path).accept_partial()[0]
+
+    misspelled = next(field for field in sheet.fields if field.offset == 36)
+    assert misspelled.type_code == "Alfabético"
+    assert misspelled.length == 40
+    # "FABRICANTE" names no naturaleza, so its line is a description opening
+    # with its own range -- prose, not a position row. A stem loose enough to
+    # match it would promote this sub-range to a peer field at offset 80.
+    assert not [field for field in sheet.fields if field.offset == 80]
+    assert sum(field.length for field in sheet.fields) == sheet.total_positions == 250
+
+
 def test_modelo_190_record_design_pdf_extracts_narrative_type_one_and_two_records() -> None:
     sheets = {
         sheet.name: sheet
@@ -816,7 +881,20 @@ def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
     }
 
     assert field_row_pdfs
-    assert all(parsed.values())
+    # Every design either yields sheets or SAYS why it could not. A design whose
+    # rows leave holes in its own declared extent is recorded as skipped rather
+    # than handed over as whole, so an empty sheet set is a legitimate -- and
+    # loudly stated -- outcome, not a silent one. Asserting universal
+    # parseability instead would force the reader to keep returning
+    # partially-read records as if they were complete, which is the false green
+    # the skip exists to remove.
+    unexplained = sorted(
+        str(path)
+        for path, sheets in parsed.items()
+        if not sheets and not extract_record_design(_RECORD_DESIGN_ROOT / path).skipped
+    )
+    assert not unexplained, f"designs yielding no sheets and recording no reason: {unexplained}"
+    assert any(parsed.values()), "no bundled PDF design parsed at all"
     assert sum(len(sheet.fields) for sheets in parsed.values() for sheet in sheets) > len(field_row_pdfs)
 
 
@@ -833,7 +911,17 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
     parsed = {source_id: parsed_by_path[path] for source_id, path in source_items}
 
     assert sources
-    assert all(parsed.values())
+    # Same invariant as the corpus sweep above: a registered design either
+    # yields sheets or records why it could not. Modelo 156, 280 and 349's
+    # designs each leave holes in their own declared extent, which the reader
+    # now reports as skipped sheets instead of returning as whole records.
+    unexplained = sorted(
+        source_id
+        for source_id, sheets in parsed.items()
+        if not sheets and not extract_record_design(sources[source_id]).skipped
+    )
+    assert not unexplained, f"registered designs yielding no sheets and recording no reason: {unexplained}"
+    assert any(parsed.values()), "no registered record design parsed at all"
     assert {path.suffix.lower() for path in sources.values()} >= {".pdf", ".xls", ".xlsx"}
     assert sum(len(sheet.fields) for sheets in parsed.values() for sheet in sheets) > len(sources)
 
@@ -1425,3 +1513,41 @@ def test_a_dotted_ordinal_is_absorbed_as_a_component_not_a_peer() -> None:
     # only the parent at this position, exactly as before components existed.
     all_ordinals = [item.ordinal for sheet in sheets for item in sheet.fields]
     assert "19.1" not in all_ordinals
+
+
+def test_a_design_yielding_no_fields_is_never_reported_complete() -> None:
+    """A design the reader emptied must say so, not pass as a clean read.
+
+    The blind spot this closes: an EMPTY sheet set is trivially contiguous and
+    trivially free of overlaps, so every structural check written against holes
+    and overlaps reports such a design clean. Modelo 100's five 2009-2013
+    editions and Modelo 185 sat at zero sheets and zero fields for exactly that
+    reason -- their record bodies open but no heading names them, so every row
+    is discarded and nothing downstream could tell that from a design with
+    nothing to read.
+
+    The same blind spot has a sibling worth naming here: once a sheet is
+    recorded as SKIPPED it leaves the returned sheet list, so a checker walking
+    returned sheets alone stops seeing the very defect that moved it there.
+    Both halves need ``is_complete`` and the skip reasons read in the SAME pass,
+    which is what this asserts -- a design that yielded nothing must carry a
+    recorded reason, so its silence is always accounted for.
+    """
+    empty: list[str] = []
+    for path in _record_design_pdf_files():
+        relative = path.relative_to(_RECORD_DESIGN_ROOT)
+        if relative in _NON_FIELD_ROW_CORPUS_PDFS:
+            continue
+        try:
+            extraction = extract_record_design(path)
+        except Exception:  # noqa: BLE001 - a raising design is a different, louder state
+            continue
+        if sum(len(sheet.fields) for sheet in extraction.sheets):
+            continue
+        if extraction.is_complete or not extraction.skipped:
+            empty.append(str(relative))
+    assert not empty, (
+        "designs yielding no fields while reporting a complete read: "
+        + ", ".join(empty)
+        + " -- an empty read is trivially contiguous, so nothing else can catch it"
+    )
