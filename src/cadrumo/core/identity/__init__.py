@@ -40,8 +40,8 @@ from typing import Annotated
 from pydantic import AfterValidator, BeforeValidator
 
 from .._hex import Hex64Str as _Hex64Str
-from ._bucket import BucketId
-from ._digest import ContentDigest, ContentDigestOrAbsent
+from ._bucket import BucketId, canonical_bucket_id
+from ._digest import ContentDigest, ContentDigestOrAbsent, PrefixedContentDigest
 from ._documents import (
     IdentityDocument,
     IdentityError,
@@ -207,6 +207,7 @@ __all__ = [
     "InvoiceId",
     "NifIvaFormatSpec",
     "NifIvaPrefix",
+    "PrefixedContentDigest",
     "ProfileId",
     "ProfileLabel",
     "RegistrySnapshotId",
@@ -216,6 +217,7 @@ __all__ = [
     "TransactionId",
     "VerificationReportId",
     "WorkUnitId",
+    "canonical_bucket_id",
     "iso_country_for_nif_iva_prefix",
     "nif_check_letter",
     "nif_iva_format_for_country",

@@ -12,7 +12,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ...core.identity import ProfileId, ProfileLabel
+from ...core.identity import ContentDigest, PrefixedContentDigest, ProfileId, ProfileLabel
 from ...core.time import validate_utc_aware
 from ...domain.user_profile import ProfileSetupState
 
@@ -36,7 +36,7 @@ class UnlockedProfileFactSummary(BaseModel):
     setup_state: ProfileSetupState
     fact_count: int = Field(ge=0)
     record_revision: int = Field(ge=1)
-    content_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    content_digest: ContentDigest
 
 
 ProfileFactSummary = Annotated[
@@ -72,7 +72,7 @@ class CommittedProfileView(BaseModel):
     password_generation: int = Field(ge=1)
     custody_present: Literal[True] = True
     label_revision: int = Field(ge=1)
-    label_content_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    label_content_digest: PrefixedContentDigest
     label_self_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     label_source_witness: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     fact_summary: ProfileFactSummary = Field(default_factory=LockedProfileFactSummary)

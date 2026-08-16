@@ -31,7 +31,7 @@ from ...core.hashing import (
     prefixed_digest,
     validate_prefixed_digest,
 )
-from ...core.identity import ProfileLabel
+from ...core.identity import PrefixedContentDigest, ProfileLabel
 from ...core.time import validate_utc_aware
 from ._custody_hold_models import ProfileCustodyHoldAssessment, ProfileCustodyHoldEvidence
 from ._custody_pointer import ProfileCustodyPointerSnapshot
@@ -244,7 +244,7 @@ class ProfileCustodyTransactionJournal(CustodyDigestModel):
     proposed_generation: int | None = Field(default=None, ge=1)
     label: str | None = Field(default=None, min_length=1, max_length=160)
     label_revision: int | None = Field(default=None, ge=1)
-    label_content_digest: str | None = Field(default=None, min_length=71, max_length=71)
+    label_content_digest: PrefixedContentDigest | None = None
     label_self_digest: str | None = Field(default=None, min_length=71, max_length=71)
     staged_relative_path: str | None = Field(default=None, min_length=1, max_length=256)
     inventory: ProfileCustodyInventoryWitness | None = None
