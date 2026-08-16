@@ -1,0 +1,40 @@
+# Modelo 353 (agregado del grupo) — reconciliation casillas surfacing the
+# cross-member previous_filing sums. Each is a bound casilla pulling
+# the per_grupo_member aggregate of the corresponding 322 result casilla, so the
+# 353 aggregate appears in engine_result.values with full provenance.
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "iva.reconciliacion.devengada-322"
+number = "iva.reconciliacion.devengada-322"
+section = ["iva", "regimen_general", "reconciliacion"]
+data_type = "money"
+semantic_role = "iva_agregado_reconciliacion_devengada_322"
+required = false
+input_kind = "bound"
+binding = "modelo-353-prev-322-cuota-devengada-total"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "iva.reconciliacion.deducible-322"
+number = "iva.reconciliacion.deducible-322"
+section = ["iva", "regimen_general", "reconciliacion"]
+data_type = "money"
+semantic_role = "iva_agregado_reconciliacion_deducible_322"
+required = false
+input_kind = "bound"
+binding = "modelo-353-prev-322-cuota-deducible-total"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "iva.reconciliacion.resultado-322"
+number = "iva.reconciliacion.resultado-322"
+section = ["iva", "regimen_general", "reconciliacion"]
+data_type = "money"
+semantic_role = "iva_agregado_reconciliacion_resultado_322"
+required = false
+input_kind = "bound"
+binding = "modelo-353-prev-322-resultado-regimen-general"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]

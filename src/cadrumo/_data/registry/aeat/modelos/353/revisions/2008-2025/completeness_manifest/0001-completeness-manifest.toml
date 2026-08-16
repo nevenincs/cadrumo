@@ -1,0 +1,52 @@
+[revisions."2008-2025".completeness_manifest]
+source_ref = "aeat-dr-353-2021-2025"
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2021-2025"]
+
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.intracomunitaria"
+number = "iva.autorepercutido.intracomunitaria"
+
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "iva.cuota-deducible-total"
+number = "iva.cuota-deducible-total"
+
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "iva.cuota-devengada-total"
+number = "iva.cuota-devengada-total"
+
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "iva.repercutido.general"
+number = "iva.repercutido.general"
+
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "iva.repercutido.reducido"
+number = "iva.repercutido.reducido"
+
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "iva.repercutido.super-reducido"
+number = "iva.repercutido.super-reducido"
+
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "iva.resultado-regimen-general"
+number = "iva.resultado-regimen-general"
+
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "iva.soportado.interiores"
+number = "iva.soportado.interiores"
+
+# Cross-member reconciliation casillas: the per_grupo_member sums of
+# the members' 322 result casillas. Part of the 353 calculation closure, so the
+# completeness manifest must list them too (the test_record_design drift gate
+# requires manifest == closure).
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "iva.reconciliacion.devengada-322"
+number = "iva.reconciliacion.devengada-322"
+
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "iva.reconciliacion.deducible-322"
+number = "iva.reconciliacion.deducible-322"
+
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "iva.reconciliacion.resultado-322"
+number = "iva.reconciliacion.resultado-322"

@@ -1,0 +1,71 @@
+[[revisions."2008-2025".application_links]]
+id = "modelo-353-portal"
+surface = "portal"
+consumer = "portal_m353_iva_grupo_agregado"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-353-procedure"]
+
+[[revisions."2008-2025".application_links]]
+id = "modelo-353-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-353-procedure"]
+
+[[revisions."2008-2025".application_links]]
+id = "modelo-353-extractor"
+surface = "extractor"
+consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-353-procedure"]
+
+[[revisions."2008-2025".application_links]]
+id = "modelo-353-review"
+surface = "review"
+consumer = "cadrumo.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-353-procedure"]
+
+[[revisions."2008-2025".application_links]]
+id = "modelo-353-approval"
+surface = "approval"
+consumer = "cadrumo.application.filing.approval"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-353-procedure"]
+
+[[revisions."2008-2025".application_links]]
+id = "modelo-353-reconciliation"
+surface = "reconciliation"
+consumer = "cadrumo.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-2", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2021-2025", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
+
+[[revisions."2008-2025".application_links]]
+id = "modelo-353-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-353-procedure"]
+
+[[revisions."2008-2025".application_links]]
+id = "modelo-353-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure"]
+
+[[revisions."2008-2025".application_links]]
+id = "modelo-353-calculation"
+surface = "calculation"
+consumer = "cadrumo.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-eha-3434-2007:art-2", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2021-2025", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
