@@ -545,15 +545,30 @@ signed = false
 legal_refs = ["ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-341-2016"]
 
-# KNOWN GAP 3 of 3, deliberate and reported. Campo 23, positions 277-287,
-# "SWIFT". AEAT marks this slot neither reserved nor fill, so it is a real
-# content position -- but the registry declares no producer key for a BIC
-# (selected_account.iban is the only account fact there is). It was briefly
-# authored as a filler, which emits exactly the same bytes it does now while
-# making the coverage gate count it as written; that is the one thing the gate
-# cannot see through, so the position is left UNWRITTEN and reported as a gap
-# instead. Closing it needs a BIC fact on the selected account, a filing-producer
-# change outside this registry lane.
+# Campo 23, positions 277-287, "SWIFT". Previously reported as a known gap on
+# the grounds that the registry declared no BIC fact; that is no longer true --
+# selected_account.swift_bic exists on the producer-key vocabulary and the
+# export producer resolves it from the same account object the IBAN above comes
+# from, so the slot is written from a real fact rather than faked with a filler.
+#
+# required = false, unlike the IBAN beside it: a BIC is only needed where the
+# refund account is not reachable by IBAN alone, so an account that records none
+# must still file. AEAT marks neither slot obligatorio, so the distinction comes
+# from the fact rather than from the design.
+
+[[revisions."2000-y-siguientes".export_layouts.records.fields]]
+id = "modelo-341-p01-swift-bic"
+offset = 277
+length = 11
+kind = "header"
+producer_key = "selected_account.swift_bic"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
 
 [[revisions."2000-y-siguientes".export_layouts.records.fields]]
 id = "modelo-341-p01-reserved-tail"

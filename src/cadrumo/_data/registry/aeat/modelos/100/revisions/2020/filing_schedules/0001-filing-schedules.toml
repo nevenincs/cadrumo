@@ -1,0 +1,18 @@
+[[revisions."2020".filing_schedules]]
+id = "modelo-100-2020-anual"
+period_kind = "annual"
+periods = ["0A"]
+# Every contribuyente obliged by LIRPF art. 96 files one annual declaration;
+# no profile fact selects between cadences, so the condition set is empty
+# under "all" mode rather than enumerating a split that does not exist.
+profile_condition_mode = "all"
+legal_refs = [
+    "ley-35-2006:art-96",
+    "orden-hac-248-2021:art-8",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+]
+source_refs = [
+    "aeat-modelo-100-procedure",
+    "boe-modelo-100-2020-form",
+]

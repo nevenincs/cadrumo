@@ -1,0 +1,49 @@
+# Modelo 210 filing cadence.
+#
+# Two schedules, because Orden EHA/3316/2010 art. 5 gives Modelo 210 two
+# genuinely different cadences and the revision's own period_selector already
+# declares both tokens ("EVENT-N" and "0A"):
+#
+#   * Every renta OTHER than imputed urban-property income is filed per
+#     devengo. There is no recurring calendar obligation -- the obligation
+#     exists only where a renta accrued -- so this is an ad-hoc schedule keyed
+#     on the event token.
+#   * Imputed income from urban property (TRLIRNR art. 13.1.h) is filed once
+#     for the whole calendar year, during the year FOLLOWING the devengo, which
+#     is an annual cadence and is why the revision carries the "0A" token at
+#     all.
+#
+# Both cite art. 5 because that is the article fixing the plazo for each; the
+# annual one additionally cites art. 13.1.h, which is what makes that renta
+# annual rather than per-devengo.
+
+[[revisions."2025".filing_schedules]]
+id = "modelo-210-2025-devengo-event"
+period_kind = "ad_hoc"
+periods = ["EVENT-N"]
+profile_condition_mode = "all"
+legal_refs = [
+    "orden-eha-3316-2010:art-1",
+    "orden-eha-3316-2010:art-5",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+]
+source_refs = [
+    "aeat-modelo-210-procedure",
+    "boe-modelo-210-base-order",
+]
+
+[[revisions."2025".filing_schedules]]
+id = "modelo-210-2025-renta-imputada-anual"
+period_kind = "annual"
+periods = ["0A"]
+profile_condition_mode = "all"
+legal_refs = [
+    "orden-eha-3316-2010:art-1",
+    "orden-eha-3316-2010:art-5",
+    "trlirnr-rdleg-5-2004:art-13.1.h",
+]
+source_refs = [
+    "aeat-modelo-210-procedure",
+    "aeat-irnr-renta-imputada-inmueble-urbano",
+]

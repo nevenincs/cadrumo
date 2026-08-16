@@ -1,0 +1,840 @@
+[[revisions.2016-2017.export_layouts]]
+id = 'generated-modelo-232-2016-2017-fichero'
+
+[[revisions.2016-2017.export_layouts.records]]
+id = 'm232-paraisos-fiscales'
+record_type = 'paraisos-fiscales'
+order = 1
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f098'
+offset = 2189
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2189-2208.paraiso-valor-4-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f099'
+offset = 2209
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2209-2210.paraiso-valor-4-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f100'
+offset = 2211
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2211-2227.paraiso-valor-4-valor-adquisicion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f101'
+offset = 2228
+length = 5
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2228-2232.paraiso-valor-4-porcentaje-participacion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f102'
+offset = 2233
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2233-2233.paraiso-valor-5-tipo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f103'
+offset = 2234
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2234-2293.paraiso-valor-5-entidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f104'
+offset = 2294
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2294-2313.paraiso-valor-5-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f105'
+offset = 2314
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2314-2315.paraiso-valor-5-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f106'
+offset = 2316
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2316-2332.paraiso-valor-5-valor-adquisicion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f107'
+offset = 2333
+length = 5
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2333-2337.paraiso-valor-5-porcentaje-participacion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f108'
+offset = 2338
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2338-2338.paraiso-valor-6-tipo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f109'
+offset = 2339
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2339-2398.paraiso-valor-6-entidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f110'
+offset = 2399
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2399-2418.paraiso-valor-6-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f111'
+offset = 2419
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2419-2420.paraiso-valor-6-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f112'
+offset = 2421
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2421-2437.paraiso-valor-6-valor-adquisicion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f113'
+offset = 2438
+length = 5
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2438-2442.paraiso-valor-6-porcentaje-participacion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f114'
+offset = 2443
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2443-2443.paraiso-valor-7-tipo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f115'
+offset = 2444
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2444-2503.paraiso-valor-7-entidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f116'
+offset = 2504
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2504-2523.paraiso-valor-7-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f117'
+offset = 2524
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2524-2525.paraiso-valor-7-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f118'
+offset = 2526
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2526-2542.paraiso-valor-7-valor-adquisicion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f119'
+offset = 2543
+length = 5
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2543-2547.paraiso-valor-7-porcentaje-participacion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f120'
+offset = 2548
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2548-2548.paraiso-valor-8-tipo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f121'
+offset = 2549
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2549-2608.paraiso-valor-8-entidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f122'
+offset = 2609
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2609-2628.paraiso-valor-8-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f123'
+offset = 2629
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2629-2630.paraiso-valor-8-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f124'
+offset = 2631
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2631-2647.paraiso-valor-8-valor-adquisicion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f125'
+offset = 2648
+length = 5
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2648-2652.paraiso-valor-8-porcentaje-participacion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f126'
+offset = 2653
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2653-2653.paraiso-valor-9-tipo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f127'
+offset = 2654
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2654-2713.paraiso-valor-9-entidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f128'
+offset = 2714
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2714-2733.paraiso-valor-9-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f129'
+offset = 2734
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2734-2735.paraiso-valor-9-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f130'
+offset = 2736
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2736-2752.paraiso-valor-9-valor-adquisicion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f131'
+offset = 2753
+length = 5
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2753-2757.paraiso-valor-9-porcentaje-participacion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f132'
+offset = 2758
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2758-2758.paraiso-valor-10-tipo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f133'
+offset = 2759
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2759-2818.paraiso-valor-10-entidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f134'
+offset = 2819
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2819-2838.paraiso-valor-10-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f135'
+offset = 2839
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2839-2840.paraiso-valor-10-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f136'
+offset = 2841
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2841-2857.paraiso-valor-10-valor-adquisicion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f137'
+offset = 2858
+length = 5
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2858-2862.paraiso-valor-10-porcentaje-participacion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f138'
+offset = 2863
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2863-2863.paraiso-valor-11-tipo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f139'
+offset = 2864
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2864-2923.paraiso-valor-11-entidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f140'
+offset = 2924
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2924-2943.paraiso-valor-11-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f141'
+offset = 2944
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2944-2945.paraiso-valor-11-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f142'
+offset = 2946
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2946-2962.paraiso-valor-11-valor-adquisicion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f143'
+offset = 2963
+length = 5
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2963-2967.paraiso-valor-11-porcentaje-participacion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f144'
+offset = 2968
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2968-2968.paraiso-valor-12-tipo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f145'
+offset = 2969
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.2969-3028.paraiso-valor-12-entidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f146'
+offset = 3029
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.3029-3048.paraiso-valor-12-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f147'
+offset = 3049
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.3049-3050.paraiso-valor-12-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f148'
+offset = 3051
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.3051-3067.paraiso-valor-12-valor-adquisicion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f149'
+offset = 3068
+length = 5
+kind = 'binding'
+binding = 'modelo-232-2016.page_02.3068-3072.paraiso-valor-12-porcentaje-participacion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f150'
+offset = 3073
+length = 403
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f151'
+offset = 3476
+length = 13
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f152'
+offset = 3489
+length = 3
+kind = 'literal'
+literal = '</T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f153'
+offset = 3492
+length = 3
+kind = 'literal'
+literal = '232'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f154'
+offset = 3495
+length = 2
+kind = 'literal'
+literal = '02'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[[revisions.2016-2017.export_layouts.records.fields]]
+id = 'm232-2016.dr23202.f155'
+offset = 3497
+length = 4
+kind = 'literal'
+literal = '000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2016']
+
+[revisions.2016-2017.export_layouts.records.row_field_casilla_ids]

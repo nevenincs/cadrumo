@@ -1,0 +1,101 @@
+# Modelo 353 numbered liquidacion casillas for the 2008-2025 revision.
+#
+# Mirrored from the 2026-y-siguientes sibling, whose boxes this revision's own
+# design (aeat-dr-353-2021-2025, record 35301) prints identically: [01] at 1108,
+# [02] at 1125, [03] at 1142, [04] at 1159, [05] at 1176, [08] at 1254 and [09]
+# at 1271. Only the offsets moved between editions; the boxes and their
+# arithmetic did not.
+#
+# [10] is absent here on purpose. The pago a cuenta for gasolinas, gasoleos and
+# biocarburantes leaving the deposito distinto del aduanero is a 2026 addition,
+# and this design carries no slot for it, so mirroring it would declare a box
+# AEAT never printed on these years.
+#
+# The ledger-direct iva.* chain this revision already carries is untouched: it
+# is what the AEAT Manual practico IVA 2024 worked example grounds, and the two
+# coexist exactly as they do on the 2026 sibling.
+
+[[revisions."2008-2025".casillas]]
+id = "01"
+number = "01"
+section = ["iva", "grupo_entidades", "liquidacion"]
+semantic_role = "m353_resultado_total_entidades"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The design declares one aggregate-of-members slot, [01] at position 1109, and Modelo 353 has exactly one group whose member results it sums. Singleton by the design's construction, not by a missing sibling."
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-353-prev-322-resultado-regimen-general"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2021-2025"]
+
+[[revisions."2008-2025".casillas]]
+id = "02"
+number = "02"
+section = ["iva", "grupo_entidades", "compensacion"]
+semantic_role = "m353_cuotas_a_compensar"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2021-2025"]
+
+[[revisions."2008-2025".casillas]]
+id = "08"
+number = "08"
+section = ["iva", "grupo_entidades", "compensacion"]
+semantic_role = "m353_cuotas_a_compensar"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2021-2025"]
+
+[[revisions."2008-2025".casillas]]
+id = "09"
+number = "09"
+section = ["iva", "grupo_entidades", "compensacion"]
+semantic_role = "m353_cuotas_a_compensar"
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-353-2021-2025-compensar-pendientes-posteriores"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2021-2025"]
+
+[[revisions."2008-2025".casillas]]
+id = "03"
+number = "03"
+section = ["iva", "grupo_entidades", "liquidacion"]
+semantic_role = "m353_resultado"
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-353-2021-2025-resultado"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2021-2025"]
+
+[[revisions."2008-2025".casillas]]
+id = "04"
+number = "04"
+section = ["iva", "grupo_entidades", "liquidacion"]
+semantic_role = "m353_a_deducir_autoliquidaciones_anteriores"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The design declares one prior-autoliquidacion deduction slot, [04] at position 1194, used only on a complementaria. Singleton by the design's construction, not by a missing sibling."
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2021-2025"]
+
+[[revisions."2008-2025".casillas]]
+id = "05"
+number = "05"
+section = ["iva", "grupo_entidades", "liquidacion"]
+semantic_role = "m353_resultado"
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-353-2021-2025-resultado-autoliquidacion"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2021-2025"]

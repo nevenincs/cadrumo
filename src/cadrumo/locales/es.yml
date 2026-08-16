@@ -1246,8 +1246,9 @@ application:
       idempotency_key_conflict: La clave de idempotencia ya identifica una transacción
         almacenada con datos distintos. Use una clave de idempotencia nueva para un
         movimiento diferente, u omita la clave para añadir un duplicado deliberado.
-      purchase_evidence_already_set: La transacción del libro mayor ya tiene un purchase_invoice_evidence_id;
-        elimine o reemplace a través del flujo de adjuntos.
+      purchase_evidence_already_set: 'La transacción del libro ya tiene un purchase_invoice_evidence_id
+        y no puede reemplazarse en su sitio. Desvincular la evidencia no está implementado:
+        elimine la transacción y vuelva a añadirla con la evidencia correcta.'
       transaction_id_prefix_ambiguous: 'el prefijo de id de transacción %{prefix}
         coincide con %{count} transacciones: %{matches}'
       transaction_id_prefix_empty: el prefijo de id de transacción está vacío
@@ -1986,6 +1987,9 @@ application:
       lifecycle_schema_validation_failed: Los datos del perfil no coinciden con el
         esquema de perfil de usuario.
       no_active_profile_selected: No hay un perfil activo seleccionado.
+      passphrase_confirmation_mismatch: La nueva contraseña y su confirmación no coinciden
+      passphrase_current_rejected: La contraseña actual no es correcta; la contraseña
+        no se ha cambiado
       profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
         login NAME para activarlo o aeat config profile delete NAME primero.
       registration_displaced_session_not_retired: No se ha podido crear el perfil.
@@ -4085,12 +4089,16 @@ cli:
         recipient_id_help: Etiqueta estable elegida por el operador (p. ej. 'mi-gestor').
         remove_help: Elimina un destinatario de confianza por su id del perfil activo.
     custody:
+      current_passphrase_prompt: 'Contraseña actual del perfil: '
       data_loss_warning: Anota ahora esta clave de recuperación. AEAT no almacena
         la clave de recuperación en claro y no puede mostrarla otra vez.
       errors:
         echo_suppression_unavailable: Esta terminal no puede ocultar lo que se escribe,
           por lo que el secreto quedaría visible en pantalla; use --secrets-stdin.
         new_passphrase_mismatch: La nueva contraseña y su confirmación no coinciden.
+        no_controlling_terminal_for_secret: Este secreto solo puede mostrarse en un
+          terminal y no hay ninguno conectado. Vuelve a ejecutar el comando desde
+          una sesión interactiva.
         non_interactive_secret_required: Se requiere un secreto pero no hay una terminal
           interactiva; usa --secrets-stdin.
         secrets_stdin_invalid_json: El contenido de --secrets-stdin no es un objeto
@@ -4322,6 +4330,12 @@ cli:
       notices:
         already_logged_out: Ningún perfil tenía la sesión iniciada; no hay nada que
           cerrar.
+    passphrase:
+      change_help: Cambia la contraseña sin volver a cifrar los registros ni invalidar
+        una frase de recuperación.
+      help: Gestiona la contraseña que protege el perfil activo.
+      no_active_profile: No hay ningún perfil activo. Inicia sesión con 'aeat config
+        login NOMBRE' antes de cambiar su contraseña.
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
       archive:
@@ -4410,6 +4424,7 @@ cli:
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
+      create_confirm_passphrase_prompt: 'Confirma la contraseña del nuevo perfil: '
       create_epilog: 'Perfil mínimo para autónomo: aeat config profile create PROFILE
         --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME> --surnames
         <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
@@ -4418,6 +4433,17 @@ cli:
         --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
       create_help: Inicializa un nuevo perfil activo.
+      create_name_required: Se requiere un nombre de perfil. Ejecuta 'aeat config
+        profile create NOMBRE'.
+      create_passphrase_channel_absent: No hay ningún canal de contraseña disponible.
+        Ejecuta este verbo en un terminal o define CADRUMO_SECRET_PASSPHRASE para
+        una ejecución desatendida.
+      create_passphrase_mismatch: La contraseña y su confirmación no coinciden; no
+        se creó ningún perfil.
+      create_passphrase_prompt: 'Contraseña del nuevo perfil: '
+      create_recovery_not_enrolled: 'No se creó ninguna frase de recuperación: esta
+        ejecución no tenía terminal donde mostrarla. La contraseña es ahora la única
+        vía de acceso a este perfil y la recuperación no puede añadirse después.'
       delete:
         help: Elimina un perfil y su estado local; --yes confirma la eliminación
         name_help: Nombre del perfil que quieres eliminar
@@ -5717,6 +5743,7 @@ cli:
           CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
           y CADRUMO_SECRET_PASSPHRASE; los logs quedan por defecto bajo ese directorio
           de almacenamiento.
+        passphrase_change: Cambia la contraseña que protege el perfil activo.
         profile_history: Inspecciona el historial append-only de eventos del perfil.
         profile_list: Listar los perfiles de contribuyente disponibles.
         profile_login: Inicia sesión en un perfil y lo convierte en el activo.
@@ -7397,6 +7424,7 @@ errors:
       config login NAME` y vuelve a intentarlo.
     profile_name_collision: El nombre de perfil indicado ya está en uso. Elige un
       nombre distinto.
+    profile_passphrase_rotation: No se ha podido cambiar la contraseña del perfil.
     profile_registration: No se ha podido registrar el perfil.
     reconciliation_cross_bucket: La unidad de trabajo apuntada pertenece a un bucket
       distinto del perfil activo. La conciliación solo opera dentro del bucket del
@@ -53592,6 +53620,12 @@ modelo:
             x-chim6r1ec9gn6p9dehnn8obc:
               help: null
               label: Base retenciones e ingresos a cuenta total
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              label: Declaración complementaria o sustitutiva
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              label: Número identificativo de la declaración
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              label: Número identificativo de la declaración anterior
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: null
               label: Retenciones e ingresos a cuenta total
@@ -53690,6 +53724,12 @@ modelo:
             x-chim6r1ec9gn6p9dehnn8obc:
               help: null
               label: Base retenciones e ingresos a cuenta total
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              label: Declaración complementaria o sustitutiva
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              label: Número identificativo de la declaración
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              label: Número identificativo de la declaración anterior
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: null
               label: Retenciones e ingresos a cuenta total

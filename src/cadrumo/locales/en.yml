@@ -1130,8 +1130,9 @@ application:
       idempotency_key_conflict: The idempotency key already identifies a stored transaction
         with different details. Use a new idempotency key for a different movement,
         or omit the key to append a deliberate duplicate.
-      purchase_evidence_already_set: Ledger transaction already has a purchase_invoice_evidence_id;
-        remove or replace through the attachments workflow.
+      purchase_evidence_already_set: 'Ledger transaction already has a purchase_invoice_evidence_id,
+        and it cannot be replaced in place. Detaching evidence is not implemented:
+        remove the transaction and re-add it with the correct evidence.'
       transaction_id_prefix_ambiguous: 'transaction id prefix %{prefix} matches %{count}
         transactions: %{matches}'
       transaction_id_prefix_empty: transaction id prefix is empty
@@ -1808,6 +1809,10 @@ application:
       lifecycle_schema_validation_failed: The profile data does not match the user-profile
         schema.
       no_active_profile_selected: No active profile selected.
+      passphrase_confirmation_mismatch: The new password and its confirmation do not
+        match
+      passphrase_current_rejected: The current password is not correct; the password
+        was not changed
       profile_already_exists: Profile '%{profile}' already exists; run aeat config
         login NAME to activate it or aeat config profile delete NAME first.
       registration_displaced_session_not_retired: The profile could not be created.
@@ -3767,12 +3772,15 @@ cli:
         recipient_id_help: Stable operator-chosen label (e.g. 'my-accountant').
         remove_help: Remove one trusted recipient by id from the active profile.
     custody:
+      current_passphrase_prompt: 'Current profile passphrase: '
       data_loss_warning: Record this recovery key now. AEAT does not store the plaintext
         recovery key and cannot show it again.
       errors:
         echo_suppression_unavailable: This terminal cannot suppress echo, so the secret
           would be visible on screen; use --secrets-stdin instead.
         new_passphrase_mismatch: The new passphrase and confirmation do not match.
+        no_controlling_terminal_for_secret: This secret can only be shown on a terminal,
+          and no terminal is attached. Re-run the command from an interactive session.
         non_interactive_secret_required: A secret is required but no interactive terminal
           is available; use --secrets-stdin.
         secrets_stdin_invalid_json: The --secrets-stdin payload is not a valid JSON
@@ -3981,6 +3989,12 @@ cli:
       help: Close the profile session and clear its local pointer
       notices:
         already_logged_out: No profile was logged in; nothing to close.
+    passphrase:
+      change_help: Change the passphrase without re-encrypting records or invalidating
+        a recovery phrase.
+      help: Manage the passphrase that protects the active profile.
+      no_active_profile: No profile is active. Sign in with 'aeat config login NAME'
+        before changing its passphrase.
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
       archive:
@@ -4065,6 +4079,7 @@ cli:
         refresh_help: Download the latest censo from AEAT and save a snapshot
         show_help: Show the latest censo AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
+      create_confirm_passphrase_prompt: 'Confirm new profile passphrase: '
       create_epilog: 'Minimal freelancer profile: aeat config profile create PROFILE
         --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME> --surnames
         <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
@@ -4073,6 +4088,16 @@ cli:
         --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
       create_help: Initialize a new active profile.
+      create_name_required: A profile name is required. Run 'aeat config profile create
+        NAME'.
+      create_passphrase_channel_absent: No passphrase channel is available. Run this
+        verb at a terminal, or set CADRUMO_SECRET_PASSPHRASE for an unattended run.
+      create_passphrase_mismatch: The passphrase and its confirmation do not match;
+        no profile was created.
+      create_passphrase_prompt: 'New profile passphrase: '
+      create_recovery_not_enrolled: 'No recovery phrase was created: this run had
+        no terminal to display it on. The passphrase is now the only way into this
+        profile, and recovery cannot be added later.'
       delete:
         help: Delete a profile and its local state; --yes confirms the deletion
         name_help: Name of the profile to delete
@@ -5288,6 +5313,7 @@ cli:
         paragraph_storage_isolation: For an isolated blank state, set CADRUMO_LOCAL_STORAGE_ROOT,
           CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR, and CADRUMO_SECRET_PASSPHRASE;
           logs default under that storage root.
+        passphrase_change: Change the passphrase that protects the active profile.
         profile_history: Inspect the append-only profile event history.
         profile_list: List profile facts.
         profile_login: Log in to a profile and make it the active one.
@@ -6872,6 +6898,7 @@ errors:
       login NAME` and try again.
     profile_name_collision: The profile name provided is already in use. Choose a
       different name.
+    profile_passphrase_rotation: The profile password could not be changed.
     profile_registration: The profile could not be registered.
     reconciliation_cross_bucket: The addressed work unit belongs to a bucket other
       than the active profile's. Reconciliation only operates within the active profile
@@ -50523,6 +50550,12 @@ modelo:
             x-chim6r1ec9gn6p9dehnn8obc:
               help: null
               label: Total base for withholdings and payments on account
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              label: Supplementary or replacement declaration
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              label: Declaration identification number
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              label: Identification number of the previous declaration
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: null
               label: Total withholdings and payments on account
@@ -50621,6 +50654,12 @@ modelo:
             x-chim6r1ec9gn6p9dehnn8obc:
               help: null
               label: Total base for withholdings and payments on account
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              label: Supplementary or replacement declaration
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              label: Declaration identification number
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              label: Identification number of the previous declaration
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: null
               label: Total withholdings and payments on account

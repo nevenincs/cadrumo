@@ -34,3 +34,23 @@ source_refs = [
     "aeat-renta-2025-manual-parte1",
     "boe-modelo-131-2007-form",
 ]
+
+[revisions."2025".family_dispositions.relations]
+reason = "A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 99 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this declaration through the same revision."
+legal_refs = [
+    "rd-439-2007:art-110",
+    "orden-eha-672-2007:art-3",
+    "orden-hac-1347-2024:art-4",
+    "orden-hac-1347-2024:da-1",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-68.4",
+    "real-decreto-ley-13-2025:art-2",
+    "rd-439-2007:art-95",
+]
+source_refs = [
+    "aeat-dr-131-2025",
+    "aeat-modelo-131-procedure",
+    "aeat-modelo-131-instructions",
+    "aeat-renta-2025-manual-parte1",
+    "boe-modelo-131-2007-form",
+]

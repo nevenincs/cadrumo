@@ -73,3 +73,15 @@ source_refs = [
     "boe-modelo-347-2008-form",
     "boe-modelo-347-2011-amendment",
 ]
+
+[revisions."2008-y-siguientes".family_dispositions.dependency_classifications]
+reason = "A dependency classification declares which OTHER modelo's filing a value here derives from, and modelo 347 derives from none. It reports the declarant's own operations with third parties above the article 33 threshold, read from the declarant's books rather than folded in from another return -- unlike modelo 180, whose declarante totals classify a dependency on the modelo 115 retenciones it summarises. The family is inapplicable by this modelo's nature, not merely unpopulated."
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-31",
+]
+source_refs = [
+    "aeat-dr-347-2025",
+    "aeat-modelo-347-procedure",
+]

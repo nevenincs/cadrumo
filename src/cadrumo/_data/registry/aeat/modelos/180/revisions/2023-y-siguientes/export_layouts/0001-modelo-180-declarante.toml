@@ -150,6 +150,61 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2023"]
 [[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-decl-numero-identificativo"
+offset = 108
+length = 13
+kind = "casilla"
+casilla_id = "decl.numero-identificativo"
+# Design campo 8. AEAT assigns the numero identificativo to the declaration at
+# presentation rather than deriving it from the draft, so no producer key can
+# carry it -- the filer holds it, and a manual casilla is the channel. Modelo
+# 190 authors the same slot the same way.
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-decl-complementaria-sustitutiva"
+offset = 121
+length = 2
+kind = "casilla"
+casilla_id = "decl.complementaria-sustitutiva"
+# Design campo 9. AEAT declares 121-122 as ONE two-byte field here (modelo 190
+# splits its own equivalent into two one-byte rows because ITS design does),
+# holding "C" for complementaria or "S" for sustitutiva on a second or later
+# presentation. The amendment_evidence producers cannot serve it: they carry
+# booleans, and a boolean export field renders X rather than the letters this
+# design admits.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-decl-numero-identificativo-anterior"
+offset = 123
+length = 13
+kind = "casilla"
+casilla_id = "decl.numero-identificativo-anterior"
+# Design campo 10. Required by the design only when campo 9 carries "C" or "S",
+# naming the declaration this one replaces or supplements. Same filer-held
+# origin as campo 8.
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
 id = "modelo-180-decl-total-perceptores"
 offset = 136
 length = 9

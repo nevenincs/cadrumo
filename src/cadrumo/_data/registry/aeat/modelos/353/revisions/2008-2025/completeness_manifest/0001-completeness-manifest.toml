@@ -50,3 +50,36 @@ number = "iva.reconciliacion.deducible-322"
 [[revisions."2008-2025".completeness_manifest.casillas]]
 casilla_id = "iva.reconciliacion.resultado-322"
 number = "iva.reconciliacion.resultado-322"
+
+# Numbered liquidacion boxes. AEAT prints [01], [02], [03], [04], [05], [08] and
+# [09] on this revision's own diseno de registro, and they close the calculation:
+# [09] and [03] and [05] are computed from the others. Listed here because the
+# manifest must carry every non-internal casilla in the closure, which is what
+# the fichero-BOE completeness gate then requires the export to render.
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "01"
+number = "01"
+
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "02"
+number = "02"
+
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "03"
+number = "03"
+
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "04"
+number = "04"
+
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "05"
+number = "05"
+
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "08"
+number = "08"
+
+[[revisions."2008-2025".completeness_manifest.casillas]]
+casilla_id = "09"
+number = "09"

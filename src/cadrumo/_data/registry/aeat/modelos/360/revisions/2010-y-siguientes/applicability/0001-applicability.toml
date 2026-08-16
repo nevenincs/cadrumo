@@ -1,0 +1,27 @@
+# Modelo 360 applicability.
+#
+# The claimant is an empresario o profesional NOT established in the territory
+# of application of the tax, recovering Spanish input VAT through the procedure
+# of Ley 37/1992 art. 117 bis rather than by deducting it on a periodic
+# self-assessment. That is the whole gate: a taxpayer who files a Modelo 303
+# deducts its input VAT there and has no Modelo 360 to file.
+#
+# Entity type is deliberately NOT gated. A non-established claimant may be a
+# natural person, a company or an entity under the attribution regime, and the
+# design carries no discriminator that would let one of them be refused.
+#
+# `cuota_bearing = false`: this is a refund REQUEST, not a self-assessment. It
+# determines no cuota; the amount claimed is the input VAT the listed invoices
+# already bore.
+
+[[revisions."2010-y-siguientes".applicability]]
+id = "modelo-360-2010-no-establecido"
+applicable_entity_types = ["natural_person", "legal_entity", "attribution_entity"]
+applicable_reason = "Modelo 360: un empresario o profesional no establecido en el territorio de aplicacion del impuesto solicita la devolucion de las cuotas de IVA soportadas en dicho territorio, relacionando las facturas y documentos de importacion que las soportaron."
+not_applicable_reason = "Modelo 360 no aplica: la solicitud de devolucion a no establecidos corresponde unicamente a quien no esta establecido en el territorio de aplicacion del impuesto. Un empresario establecido deduce sus cuotas soportadas en su propia autoliquidacion periodica (Modelo 303), no por este procedimiento."
+cuota_bearing = false
+legal_refs = [
+    "ley-37-1992:art-117-bis",
+    "orden-eha-789-2010:art-1",
+    "orden-eha-789-2010:art-4",
+]

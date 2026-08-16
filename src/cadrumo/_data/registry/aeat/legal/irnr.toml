@@ -869,6 +869,7 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
+record_design_epoch = "2023"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_296/files/02-296-ejercicio-2023.pdf"
 sha256 = "858152af847e23e3165ba38295696466dfdf96f1ec55503f606cf982a4ae778f"
 bytes = 228371

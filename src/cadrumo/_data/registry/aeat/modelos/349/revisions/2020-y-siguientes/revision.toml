@@ -49,3 +49,17 @@ source_refs = [
     "aeat-modelo-349-instructions",
     "aeat-modelo-349-procedure",
 ]
+
+[revisions."2020-y-siguientes".family_dispositions.relations]
+reason = "A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 34 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this declaration through the same revision."
+legal_refs = [
+    "orden-eha-769-2010:art-1",
+    "orden-hac-174-2020:art-1",
+    "ley-58-2003:art-93",
+    "rd-1624-1992:art-81",
+]
+source_refs = [
+    "aeat-dr-349-2020-current",
+    "aeat-modelo-349-instructions",
+    "aeat-modelo-349-procedure",
+]

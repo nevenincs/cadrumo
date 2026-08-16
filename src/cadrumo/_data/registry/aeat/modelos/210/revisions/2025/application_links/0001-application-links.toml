@@ -122,3 +122,13 @@ consumer = "cadrumo.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = ["orden-eha-3316-2010:art-1"]
 source_refs = ["aeat-dr-210-2022", "aeat-modelo-210-procedure"]
+
+# Extractor consumer for the declaración-PDF profile. Required by the registry
+# validator whenever a revision declares extraction profiles.
+[[revisions."2025".application_links]]
+id = "modelo-210-2025-extractor"
+surface = "extractor"
+consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+requires_snapshot = true
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-dr-210-2022"]

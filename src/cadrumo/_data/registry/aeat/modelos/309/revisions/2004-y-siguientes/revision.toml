@@ -27,3 +27,15 @@ source_refs = [
     "aeat-modelo-309-procedure",
     "boe-modelo-309-2003-form",
 ]
+
+[revisions."2004-y-siguientes".family_dispositions.relations]
+reason = "A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 2 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this declaration through the same revision."
+legal_refs = [
+    "orden-hac-3625-2003:apartado-1",
+    "orden-hac-3625-2003:apartado-3",
+]
+source_refs = [
+    "aeat-dr-309-2023",
+    "aeat-modelo-309-procedure",
+    "boe-modelo-309-2003-form",
+]

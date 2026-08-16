@@ -1,0 +1,356 @@
+# Modelo 360 repeated-slot bindings.
+#
+# Authored from the bundled diseno de registro: every id carries the exact
+# byte range the design prints for that slot, so an export map claims each
+# anchor by span rather than by name matching. AEAT itself declares the
+# repetition, printing activity slots 2-10 as "Igual campo 44/45/46".
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.799-803.actividad-nace-1-codigo"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-1-codigo", offset = 799, length = 5, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.804-805.actividad-nace-1-idioma"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-1-idioma", offset = 804, length = 2, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.806-830.actividad-nace-1-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-1-descripcion", offset = 806, length = 25, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.831-835.actividad-nace-2-codigo"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-2-codigo", offset = 831, length = 5, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.836-837.actividad-nace-2-idioma"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-2-idioma", offset = 836, length = 2, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.838-862.actividad-nace-2-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-2-descripcion", offset = 838, length = 25, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.863-867.actividad-nace-3-codigo"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-3-codigo", offset = 863, length = 5, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.868-869.actividad-nace-3-idioma"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-3-idioma", offset = 868, length = 2, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.870-894.actividad-nace-3-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-3-descripcion", offset = 870, length = 25, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.895-899.actividad-nace-4-codigo"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-4-codigo", offset = 895, length = 5, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.900-901.actividad-nace-4-idioma"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-4-idioma", offset = 900, length = 2, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.902-926.actividad-nace-4-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-4-descripcion", offset = 902, length = 25, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.927-931.actividad-nace-5-codigo"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-5-codigo", offset = 927, length = 5, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.932-933.actividad-nace-5-idioma"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-5-idioma", offset = 932, length = 2, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.934-958.actividad-nace-5-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-5-descripcion", offset = 934, length = 25, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.959-963.actividad-nace-6-codigo"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-6-codigo", offset = 959, length = 5, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.964-965.actividad-nace-6-idioma"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-6-idioma", offset = 964, length = 2, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.966-990.actividad-nace-6-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-6-descripcion", offset = 966, length = 25, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.991-995.actividad-nace-7-codigo"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-7-codigo", offset = 991, length = 5, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.996-997.actividad-nace-7-idioma"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-7-idioma", offset = 996, length = 2, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.998-1022.actividad-nace-7-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-7-descripcion", offset = 998, length = 25, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.1023-1027.actividad-nace-8-codigo"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-8-codigo", offset = 1023, length = 5, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.1028-1029.actividad-nace-8-idioma"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-8-idioma", offset = 1028, length = 2, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.1030-1054.actividad-nace-8-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-8-descripcion", offset = 1030, length = 25, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.1055-1059.actividad-nace-9-codigo"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-9-codigo", offset = 1055, length = 5, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.1060-1061.actividad-nace-9-idioma"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-9-idioma", offset = 1060, length = 2, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.1062-1086.actividad-nace-9-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-9-descripcion", offset = 1062, length = 25, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.1087-1091.actividad-nace-10-codigo"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-10-codigo", offset = 1087, length = 5, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.1092-1093.actividad-nace-10-idioma"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-10-idioma", offset = 1092, length = 2, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.1094-1118.actividad-nace-10-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "actividad-nace-10-descripcion", offset = 1094, length = 25, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.1986-2001.anexo-1-numero-registro"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-1-numero-registro", offset = 1986, length = 16, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2004-2043.anexo-1-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-1-descripcion", offset = 2004, length = 40, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2104-2119.anexo-2-numero-registro"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-2-numero-registro", offset = 2104, length = 16, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2122-2161.anexo-2-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-2-descripcion", offset = 2122, length = 40, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2222-2237.anexo-3-numero-registro"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-3-numero-registro", offset = 2222, length = 16, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2240-2279.anexo-3-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-3-descripcion", offset = 2240, length = 40, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2340-2355.anexo-4-numero-registro"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-4-numero-registro", offset = 2340, length = 16, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2358-2397.anexo-4-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-4-descripcion", offset = 2358, length = 40, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2458-2473.anexo-5-numero-registro"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-5-numero-registro", offset = 2458, length = 16, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2476-2515.anexo-5-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-5-descripcion", offset = 2476, length = 40, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2576-2591.anexo-6-numero-registro"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-6-numero-registro", offset = 2576, length = 16, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2594-2633.anexo-6-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-6-descripcion", offset = 2594, length = 40, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2694-2709.anexo-7-numero-registro"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-7-numero-registro", offset = 2694, length = 16, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2712-2751.anexo-7-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-7-descripcion", offset = 2712, length = 40, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2812-2827.anexo-8-numero-registro"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-8-numero-registro", offset = 2812, length = 16, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2830-2869.anexo-8-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-8-descripcion", offset = 2830, length = 40, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2930-2945.anexo-9-numero-registro"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-9-numero-registro", offset = 2930, length = 16, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.2948-2987.anexo-9-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-9-descripcion", offset = 2948, length = 40, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.3048-3063.anexo-10-numero-registro"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-10-numero-registro", offset = 3048, length = 16, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_01.3066-3105.anexo-10-descripcion"
+source = "manual_input"
+selector = { record = "page_01", field = "anexo-10-descripcion", offset = 3066, length = 40, data_type = "text" }
+legal_refs = ["orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]

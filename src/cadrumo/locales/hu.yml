@@ -1176,8 +1176,9 @@ application:
       idempotency_key_conflict: Az idempotencia-kulcs már egy eltérő adatokkal tárolt
         tranzakciót azonosít. Használjon új idempotencia-kulcsot másik mozgáshoz,
         vagy hagyja el a kulcsot szándékos duplikátum hozzáadásához.
-      purchase_evidence_already_set: A főkönyvi tranzakciónak már van purchase_invoice_evidence_id-je;
-        távolítsa el vagy cserélje ki a csatolmányok munkafolyamatán keresztül.
+      purchase_evidence_already_set: 'A főkönyvi tranzakciónak már van purchase_invoice_evidence_id-je,
+        és nem cserélhető helyben. A bizonylat leválasztása nincs implementálva: törölje
+        a tranzakciót, és adja hozzá újra a helyes bizonylattal.'
       transaction_id_prefix_ambiguous: 'a(z) %{prefix} tranzakcióazonosító-előtag
         %{count} tranzakcióra illeszkedik: %{matches}'
       transaction_id_prefix_empty: a tranzakcióazonosító-előtag üres
@@ -1883,6 +1884,8 @@ application:
         config profile edit parancsot a megadásához.'
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
       no_active_profile_selected: Nincs kiválasztva aktív profil.
+      passphrase_confirmation_mismatch: Az új jelszó és a megerősítése nem egyezik
+      passphrase_current_rejected: A jelenlegi jelszó helytelen; a jelszó nem változott
       profile_already_exists: A(z) %{profile} profil már létezik; futtassa az aeat
         config login NÉV parancsot az aktiváláshoz, vagy az aeat config profile delete
         NÉV parancsot a törléshez.
@@ -3965,12 +3968,16 @@ cli:
         recipient_id_help: Stabil, kezelő által választott címke (pl. 'a-konyvelom').
         remove_help: Egy bizalmi címzett eltávolítása azonosító alapján az aktív profilból.
     custody:
+      current_passphrase_prompt: 'A profil jelenlegi jelszava: '
       data_loss_warning: Jegyezze fel most ezt a helyreállítási kulcsot. Az AEAT nem
         tárolja a nyílt helyreállítási kulcsot, és nem tudja újra megjeleníteni.
       errors:
         echo_suppression_unavailable: Ez a terminál nem tudja elrejteni a beírt szöveget,
           így a titok láthatóvá válna a képernyőn; használja a --secrets-stdin kapcsolót.
         new_passphrase_mismatch: Az új passphrase és a megerősítés nem egyezik.
+        no_controlling_terminal_for_secret: Ez a titok csak terminálon jeleníthető
+          meg, de nincs csatlakoztatva terminál. Futtassa újra a parancsot interaktív
+          munkamenetből.
         non_interactive_secret_required: Titok szükséges, de nincs interaktív terminál;
           használja a --secrets-stdin kapcsolót.
         secrets_stdin_invalid_json: A --secrets-stdin tartalma nem érvényes JSON objektum.
@@ -4202,6 +4209,12 @@ cli:
       help: A profil munkamenetének lezárása és helyi mutatójának törlése
       notices:
         already_logged_out: Egyetlen profil sem volt bejelentkezve; nincs mit lezárni.
+    passphrase:
+      change_help: Jelszó módosítása a rekordok újratitkosítása és a helyreállítási
+        kifejezés érvénytelenítése nélkül.
+      help: Az aktív profilt védő jelszó kezelése.
+      no_active_profile: Nincs aktív profil. Jelentkezzen be az 'aeat config login
+        NÉV' paranccsal a jelszó módosítása előtt.
     profile:
       already_exists: A(z) %{name} profil már létezik. Válasszon másik célazonosítót.
       archive:
@@ -4293,6 +4306,7 @@ cli:
         show_help: Az AEAT által legutóbb jelentett nyilvántartás megjelenítése erre
           a profilra.
         snapshot_id_help: Konkrét pillanatkép-azonosító (előtagok elfogadva).
+      create_confirm_passphrase_prompt: 'Erősítse meg az új profil jelszavát: '
       create_epilog: 'Minimális önálló vállalkozói profil: aeat config profile create
         PROFILE --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME>
         --surnames <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
@@ -4301,13 +4315,25 @@ cli:
         --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
       create_help: Új aktív profil inicializálása.
+      create_name_required: 'Profilnév szükséges. Futtassa: ''aeat config profile
+        create NÉV''.'
+      create_passphrase_channel_absent: Nem érhető el jelszócsatorna. Futtassa ezt
+        a parancsot terminálban, vagy állítsa be a CADRUMO_SECRET_PASSPHRASE változót
+        felügyelet nélküli futtatáshoz.
+      create_passphrase_mismatch: A jelszó és a megerősítése nem egyezik; nem jött
+        létre profil.
+      create_passphrase_prompt: 'Az új profil jelszava: '
+      create_recovery_not_enrolled: 'Nem jött létre helyreállítási kifejezés: ennek
+        a futtatásnak nem volt terminálja a megjelenítéséhez. A jelszó mostantól az
+        egyetlen belépési mód ehhez a profilhoz, és a helyreállítás később nem adható
+        hozzá.'
       delete:
         help: Töröl egy profilt és a helyi állapotát; a --yes megerősíti a törlést
         name_help: A törlendő profil neve
         notices:
           deleted: A profil a helyi állapotával együtt törölve.
-          preflight: 'Csak előzetes ellenőrzés: semmi sem lett törölve. Futtassa
-            újra a --yes kapcsolóval a törléshez.'
+          preflight: 'Csak előzetes ellenőrzés: semmi sem lett törölve. Futtassa újra
+            a --yes kapcsolóval a törléshez.'
         refusal:
           active_profile: Az aktív profil nem törölhető. Zárd le a munkamenetet az
             'aeat config logout' paranccsal, majd próbáld újra.
@@ -5591,6 +5617,7 @@ cli:
           az env változókat; CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file,
           CADRUMO_SECRET_STORE_DIR és CADRUMO_SECRET_PASSPHRASE; a naplók alapértelmezés
           szerint ezen tárhelygyökér alatt vannak.
+        passphrase_change: Az aktív profilt védő jelszó módosítása.
         profile_history: Az append-only profil eseménytörténet megtekintése.
         profile_list: Profiladatok listázása.
         profile_login: Bejelentkezés egy profilba, és aktívvá tétele.
@@ -7210,6 +7237,7 @@ errors:
       config login NÉV` parancsot, és próbálja újra.
     profile_name_collision: A megadott profilnév már használatban van. Válasszon más
       nevet.
+    profile_passphrase_rotation: A profil jelszavát nem sikerült megváltoztatni.
     profile_registration: A profil regisztrációja nem sikerült.
     reconciliation_cross_bucket: A megcímzett munkajegység egy másik bucket-hez tartozik,
       nem az aktív profil bucket-jéhez. Az egyeztetés csak az aktív profil bucket-en
@@ -51179,6 +51207,12 @@ modelo:
             x-chim6r1ec9gn6p9dehnn8obc:
               help: null
               label: A forrásadó és előlegfizetés teljes alapja
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              label: Kiegészítő vagy helyettesítő bevallás
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              label: A bevallás azonosító száma
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              label: Az előző bevallás azonosító száma
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: null
               label: Forrásadó és előlegfizetés összesen
@@ -51278,6 +51312,12 @@ modelo:
             x-chim6r1ec9gn6p9dehnn8obc:
               help: null
               label: A forrásadó és előlegfizetés teljes alapja
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              label: Kiegészítő vagy helyettesítő bevallás
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              label: A bevallás azonosító száma
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              label: Az előző bevallás azonosító száma
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: null
               label: Forrásadó és előlegfizetés összesen

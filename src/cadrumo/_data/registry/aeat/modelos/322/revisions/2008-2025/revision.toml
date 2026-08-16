@@ -52,3 +52,18 @@ source_refs = [
     "boe-modelo-322-2007-form",
     "aeat-calendario-contribuyente-2026-hasta-2-marzo",
 ]
+
+[revisions."2008-2025".family_dispositions.relations]
+reason = "A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 5 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this declaration through the same revision."
+legal_refs = [
+    "orden-eha-3434-2007:art-1",
+    "orden-eha-3434-2007:art-8",
+    "rd-1624-1992:art-71",
+]
+source_refs = [
+    "aeat-dr-322-2023",
+    "aeat-dr-322-2024-2025",
+    "aeat-modelo-322-procedure",
+    "boe-modelo-322-2007-form",
+    "aeat-calendario-contribuyente-2026-hasta-2-marzo",
+]

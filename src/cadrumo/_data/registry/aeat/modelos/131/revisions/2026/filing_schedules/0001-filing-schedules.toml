@@ -1,0 +1,16 @@
+[[revisions."2026".filing_schedules]]
+id = "modelo-131-2026-trimestral"
+period_kind = "quarterly"
+periods = ["1T", "2T", "3T", "4T"]
+# RIRPF art. 109 obliges every contribuyente carrying on the activity to pay
+# fraccionado quarterly; nothing splits the cadence by profile the way Modelo
+# 111's gran-empresa test does, so the condition set is empty under "all".
+profile_condition_mode = "all"
+legal_refs = [
+    "rd-439-2007:art-109",
+    "orden-eha-672-2007:art-3",
+    "rd-439-2007:art-95",
+]
+source_refs = [
+    "aeat-modelo-131-procedure",
+]

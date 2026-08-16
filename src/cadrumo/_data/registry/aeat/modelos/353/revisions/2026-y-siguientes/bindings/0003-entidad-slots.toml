@@ -1,0 +1,587 @@
+# Modelo 353 entidad-del-grupo slot bindings.
+#
+# One binding per slot field of the repeated list of entities taxed under the
+# special group regime, authored from the bundled diseno de registro. Every id
+# carries the exact byte range the design prints, so the export map claims each
+# anchor by span. The unnumbered leading block is the entidad dominante.
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.122-130.entidad-dominante-entidad-dominante-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-dominante-entidad-dominante-n-i-f", offset = 122, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.131-147.entidad-dominante-entidad-dominante-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-dominante-entidad-dominante-resultado", offset = 131, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.153-165.entidad-dominante-entidad-dominante-numero-de-justificante"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-dominante-entidad-dominante-numero-de-justificante", offset = 153, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.169-177.entidad-1-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-1-entidades-dependientes-n-i-f", offset = 169, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.178-194.entidad-1-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-1-entidades-dependientes-resultado", offset = 178, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.195-199.entidad-1-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-1-ent-depndtes-de-participac-al-final-del", offset = 195, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.200-212.entidad-1-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-1-entidades-dependientes-numero-de-justifi", offset = 200, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.216-224.entidad-2-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-2-entidades-dependientes-n-i-f", offset = 216, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.225-241.entidad-2-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-2-entidades-dependientes-resultado", offset = 225, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.242-246.entidad-2-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-2-ent-depndtes-de-participac-al-final-del", offset = 242, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.247-259.entidad-2-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-2-entidades-dependientes-numero-de-justifi", offset = 247, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.263-271.entidad-3-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-3-entidades-dependientes-n-i-f", offset = 263, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.272-288.entidad-3-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-3-entidades-dependientes-resultado", offset = 272, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.289-293.entidad-3-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-3-ent-depndtes-de-participac-al-final-del", offset = 289, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.294-306.entidad-3-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-3-entidades-dependientes-numero-de-justifi", offset = 294, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.310-318.entidad-4-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-4-entidades-dependientes-n-i-f", offset = 310, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.319-335.entidad-4-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-4-entidades-dependientes-resultado", offset = 319, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.336-340.entidad-4-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-4-ent-depndtes-de-participac-al-final-del", offset = 336, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.341-353.entidad-4-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-4-entidades-dependientes-numero-de-justifi", offset = 341, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.357-365.entidad-5-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-5-entidades-dependientes-n-i-f", offset = 357, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.366-382.entidad-5-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-5-entidades-dependientes-resultado", offset = 366, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.383-387.entidad-5-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-5-ent-depndtes-de-participac-al-final-del", offset = 383, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.388-400.entidad-5-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-5-entidades-dependientes-numero-de-justifi", offset = 388, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.404-412.entidad-6-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-6-entidades-dependientes-n-i-f", offset = 404, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.413-429.entidad-6-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-6-entidades-dependientes-resultado", offset = 413, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.430-434.entidad-6-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-6-ent-depndtes-de-participac-al-final-del", offset = 430, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.435-447.entidad-6-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-6-entidades-dependientes-numero-de-justifi", offset = 435, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.451-459.entidad-7-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-7-entidades-dependientes-n-i-f", offset = 451, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.460-476.entidad-7-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-7-entidades-dependientes-resultado", offset = 460, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.477-481.entidad-7-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-7-ent-depndtes-de-participac-al-final-del", offset = 477, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.482-494.entidad-7-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-7-entidades-dependientes-numero-de-justifi", offset = 482, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.498-506.entidad-8-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-8-entidades-dependientes-n-i-f", offset = 498, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.507-523.entidad-8-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-8-entidades-dependientes-resultado", offset = 507, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.524-528.entidad-8-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-8-ent-depndtes-de-participac-al-final-del", offset = 524, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.529-541.entidad-8-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-8-entidades-dependientes-numero-de-justifi", offset = 529, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.545-553.entidad-9-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-9-entidades-dependientes-n-i-f", offset = 545, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.554-570.entidad-9-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-9-entidades-dependientes-resultado", offset = 554, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.571-575.entidad-9-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-9-ent-depndtes-de-participac-al-final-del", offset = 571, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.576-588.entidad-9-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-9-entidades-dependientes-numero-de-justifi", offset = 576, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.592-600.entidad-10-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-10-entidades-dependientes-n-i-f", offset = 592, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.601-617.entidad-10-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-10-entidades-dependientes-resultado", offset = 601, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.618-622.entidad-10-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-10-ent-depndtes-de-participac-al-final-del", offset = 618, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.623-635.entidad-10-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-10-entidades-dependientes-numero-de-justifi", offset = 623, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.639-647.entidad-11-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-11-entidades-dependientes-n-i-f", offset = 639, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.648-664.entidad-11-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-11-entidades-dependientes-resultado", offset = 648, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.665-669.entidad-11-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-11-ent-depndtes-de-participac-al-final-del", offset = 665, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.670-682.entidad-11-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-11-entidades-dependientes-numero-de-justifi", offset = 670, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.686-694.entidad-12-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-12-entidades-dependientes-n-i-f", offset = 686, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.695-711.entidad-12-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-12-entidades-dependientes-resultado", offset = 695, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.712-716.entidad-12-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-12-ent-depndtes-de-participac-al-final-del", offset = 712, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.717-729.entidad-12-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-12-entidades-dependientes-numero-de-justifi", offset = 717, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.733-741.entidad-13-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-13-entidades-dependientes-n-i-f", offset = 733, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.742-758.entidad-13-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-13-entidades-dependientes-resultado", offset = 742, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.759-763.entidad-13-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-13-ent-depndtes-de-participac-al-final-del", offset = 759, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.764-776.entidad-13-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-13-entidades-dependientes-numero-de-justifi", offset = 764, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.780-788.entidad-14-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-14-entidades-dependientes-n-i-f", offset = 780, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.789-805.entidad-14-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-14-entidades-dependientes-resultado", offset = 789, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.806-810.entidad-14-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-14-ent-depndtes-de-participac-al-final-del", offset = 806, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.811-823.entidad-14-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-14-entidades-dependientes-numero-de-justifi", offset = 811, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.827-835.entidad-15-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-15-entidades-dependientes-n-i-f", offset = 827, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.836-852.entidad-15-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-15-entidades-dependientes-resultado", offset = 836, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.853-857.entidad-15-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-15-ent-depndtes-de-participac-al-final-del", offset = 853, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.858-870.entidad-15-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-15-entidades-dependientes-numero-de-justifi", offset = 858, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.874-882.entidad-16-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-16-entidades-dependientes-n-i-f", offset = 874, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.883-899.entidad-16-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-16-entidades-dependientes-resultado", offset = 883, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.900-904.entidad-16-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-16-ent-depndtes-de-participac-al-final-del", offset = 900, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.905-917.entidad-16-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-16-entidades-dependientes-numero-de-justifi", offset = 905, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.921-929.entidad-17-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-17-entidades-dependientes-n-i-f", offset = 921, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.930-946.entidad-17-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-17-entidades-dependientes-resultado", offset = 930, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.947-951.entidad-17-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-17-ent-depndtes-de-participac-al-final-del", offset = 947, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.952-964.entidad-17-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-17-entidades-dependientes-numero-de-justifi", offset = 952, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.968-976.entidad-18-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-18-entidades-dependientes-n-i-f", offset = 968, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.977-993.entidad-18-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-18-entidades-dependientes-resultado", offset = 977, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.994-998.entidad-18-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-18-ent-depndtes-de-participac-al-final-del", offset = 994, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.999-1011.entidad-18-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-18-entidades-dependientes-numero-de-justifi", offset = 999, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.1015-1023.entidad-19-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-19-entidades-dependientes-n-i-f", offset = 1015, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.1024-1040.entidad-19-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-19-entidades-dependientes-resultado", offset = 1024, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.1041-1045.entidad-19-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-19-ent-depndtes-de-participac-al-final-del", offset = 1041, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.1046-1058.entidad-19-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-19-entidades-dependientes-numero-de-justifi", offset = 1046, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.1062-1070.entidad-20-entidades-dependientes-n-i-f"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-20-entidades-dependientes-n-i-f", offset = 1062, length = 9, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.1071-1087.entidad-20-entidades-dependientes-resultado"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-20-entidades-dependientes-resultado", offset = 1071, length = 17, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.1088-1092.entidad-20-ent-depndtes-de-participac-al-final-del"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-20-ent-depndtes-de-participac-al-final-del", offset = 1088, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-2026.page_01.1093-1105.entidad-20-entidades-dependientes-numero-de-justifi"
+source = "manual_input"
+selector = { record = "page_01", field = "entidad-20-entidades-dependientes-numero-de-justifi", offset = 1093, length = 13, data_type = "text" }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
