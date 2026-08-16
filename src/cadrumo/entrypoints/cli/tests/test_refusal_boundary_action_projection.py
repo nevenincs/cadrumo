@@ -201,7 +201,7 @@ def test_shared_boundary_maps_declared_s114_producers(
     facts: dict[str, str | bool],
     locale: str,
 ) -> None:
-    """S114 producer families emit machine facts without their raw prose."""
+    """Refusal producer families emit machine facts without their raw prose."""
     producer_app = typer.Typer()
 
     @producer_app.command()
@@ -378,7 +378,7 @@ def test_auth_acquisition_conflict_projects_factual_no_recovery_to_json(tmp_path
 
 
 def test_boundary_fails_closed_on_a_malformed_typed_projection_marker() -> None:
-    """A corrupt S17 handoff cannot degrade to an identity-less refusal."""
+    """A corrupt boundary handoff cannot degrade to an identity-less refusal."""
 
     @command_error_boundary
     def guarded_callback() -> None:
@@ -395,7 +395,7 @@ def test_boundary_fails_closed_on_a_malformed_typed_projection_marker() -> None:
 def test_boundary_keeps_unmigrated_untyped_refusals_working(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """S18 does not globally reject refusal producers owned by later waves."""
+    """The projection does not globally reject refusal producers it does not own."""
 
     @command_error_boundary
     def untyped_refusal_callback() -> None:

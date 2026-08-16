@@ -1,9 +1,9 @@
-"""Every S59 row construction names the canonical annual-Orden authority.
+"""Every régimen-simplificado row construction names the canonical annual-Orden authority.
 
-The S59 annual Orden projection owns the durable activity identity and minimum
+The annual Orden projection owns the durable activity identity and minimum
 quota.  A direct constructor that leaves those fields to a default, or an
 activity row that does not name its selected Orden row, would recreate the
-test-only and inferred identity paths S59 removed.  This AST gate covers both
+test-only and inferred identity paths the projection removed.  This AST gate covers both
 production and test code so the proof fixtures cannot silently retain a
 different construction contract.
 """
@@ -37,7 +37,7 @@ def _package_root() -> Path:
 
 
 def _constructor_sites() -> list[tuple[str, int, str, frozenset[str]]]:
-    """Return every direct S59 constructor call in shipped code and its tests."""
+    """Return every direct régimen-simplificado row constructor call in shipped code and its tests."""
     root = _package_root()
     sites: list[tuple[str, int, str, frozenset[str]]] = []
     for path in scan_directory(root, pattern="*.py", recursive=True):
@@ -63,7 +63,7 @@ def _constructor_sites() -> list[tuple[str, int, str, frozenset[str]]]:
 
 
 def test_s59_constructor_scan_reaches_the_canonical_compiler() -> None:
-    """Keep the all-code AST census non-vacuous and bound to the S59 owner."""
+    """Keep the all-code AST census non-vacuous and bound to the row-projection owner."""
     found = {(relative, name) for relative, _, name, _ in _constructor_sites()}
 
     assert (
