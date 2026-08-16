@@ -3011,3 +3011,92 @@ Candidates verified and rejected this round, so they are not re-tried:
 (13, 26 failed), `test_llm_review_workflow` (9, red), `test_operator` (21,
 green but absence-dependent), `test_clave_credential_resolution` (17, green but
 parameterised), `test_manual_add_idempotency` (10, green but seeds are free).
+
+## Authority load, decomposed: fingerprinting is ~1s, compiling is the floor
+
+Aimed at the CLI load time directly. `aeat app modelo list` against a fresh
+storage root, measured across three different HEADs during the investigation
+(`d9844e789b`, `05e1b2bc92`, `53cb5dad74`) -- the end-to-end numbers are stable
+even though the registry tree moved underneath:
+
+| | seconds |
+|---|---|
+| cold (no caches) | 33.62, 33.31, 33.44, 33.02, 32.90 |
+| warm (caches present) | 23.33, 23.65, 24.37, 23.51 |
+
+### Where it goes
+
+`ValidatedRegistryAuthority.load` computes four fingerprint collections before
+it can consult any cache, because they ARE the cache key. That was the obvious
+suspect for the ~23s warm floor, and it is **wrong**:
+
+| phase | cold | warm |
+|---|---|---|
+| `collect_registry_tree_fingerprints` (18,847 entries) | 0.83-0.87s | 0.83s |
+| `collect_convenio_fingerprints` (9) | 0.002s | 0.002s |
+| `collect_supplementary_orden_fingerprints` (1) | 0.000s | 0.000s |
+| `collect_source_evidence_fingerprints` (2,398) | 0.074-0.085s | 0.076s |
+| **all fingerprinting** | **~0.93s** | **~0.93s** |
+| `_construct_authority` (compile the tree) | **10.1-10.5s** | **2.9s** |
+
+Fingerprinting 21,255 entries costs under a second and is not worth touching.
+**The compile is the floor**: 10.2s cold, and still 2.9s warm with the 23.1 MB
+registry pickle cache serving it. Sampling attributes 90.6% of the whole cold
+run to `_authority.load`, which these numbers now decompose.
+
+### Validation is designed NOT to be paid per invocation
+
+`_load_validated_authority` consults a verdict cache before validating:
+
+```
+if registry_validation_is_certified(root, verdict_key=..., registry_fingerprints=...):
+    authority.mark_registry_validated()
+else:
+    authority.validate_registry()
+    certify_registry_validation(root, verdict_key=...)
+```
+
+Two verdict stores exist: a **shipped** `aeat-validation-verdict.json` stamped
+beside the bundled registry root by the release build, and a writable
+per-storage-root file under `<storage-root>/cache/registry-verdict`. So the
+multi-second re-validation is meant to happen once.
+
+Neither is available here. This checkout is an authoring tree, so
+`bundled_verdict_path` returns `None`; and the per-storage-root verdict is only
+written on SUCCESS, so while the registry is red **no verdict can ever be
+certified** and every process that reaches validation pays it again. One
+measurement at the earlier HEAD put that at **~17.6s** (28.76s total minus
+10.5s compile minus 0.95s fingerprinting).
+
+Note the same storage-root scoping as the locale catalogue: even on a green
+tree, a test installing an isolated storage root cannot reuse a verdict written
+by another test, and neither can a cold CLI subprocess.
+
+### What is durable, and what is not
+
+Durable -- repeated, tight, and stable across three HEADs: the end-to-end cold
+and warm figures, the ~0.93s fingerprinting, the 10.2s/2.9s compile, and the
+90.6% sampling attribution.
+
+**Not durable:** the exact validation share, and which phase currently raises.
+The registry tree changed three times during this investigation, and at the
+latest HEAD `_construct_authority` itself raises at ~10.1s before validation is
+reached, where at the earlier HEAD construction succeeded and validation ran.
+Any finer attribution than the table above is measuring a tree that no longer
+exists. **Do not chase the compile/validate split further until the registry
+is green and still.**
+
+### The architectural point, which survives all of it
+
+Rendering `code / title / cadence / domain / revisions / local_work` requires
+compiling the ENTIRE registry authority -- every modelo, every revision,
+formulas, bindings, casillas, export layouts and record designs -- and normally
+validating it too. Even with every cache warm and a verdict certified, the floor
+is compile (2.9s) plus CLI import (~1.5s): **a listing command cannot get below
+several seconds while it goes through the full authority.**
+
+The remedy is a metadata projection for listing surfaces: the fields `modelo
+list` renders are declared in the authoring TOML and need neither formula
+compilation nor record-design parsing. That is an ADR, not a sweep -- it adds a
+second read path over registry data, and the rule that snapshot construction is
+authority-owned exists precisely to stop those multiplying.
