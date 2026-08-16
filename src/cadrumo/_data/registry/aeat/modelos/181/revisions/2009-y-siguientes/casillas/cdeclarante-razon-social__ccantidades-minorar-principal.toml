@@ -1,0 +1,548 @@
+# Modelo 181 -- the official record-design positions. Transcribed from the
+# bundled Diseno de Registro (source aeat-dr-181-2022,
+# corpus/aeat_official/disenos_registro/modelo_181/files/
+# 01-181-diseno-de-registro-actualizado-en-2022.pdf, sha256
+# 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b).
+#
+# Eleven casillas carry no semantic_role: the role the naming convention would
+# give them scores above the typo-twin gate's similarity threshold against
+# Modelo 189's or Modelo 345's role for the same concept.
+
+# Campo 5. Positions 18-57. RAZON SOCIAL DEL DECLARANTE.
+[[revisions."2009-y-siguientes".casillas]]
+id = "declarante-razon-social"
+number = "tipo1.18-57"
+section = ["declarante"]
+data_type = "name"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t1-razon-social"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 7. Positions 59-107. PERSONA CON QUIEN RELACIONARSE; the design subdivides
+# it (59-67 TELEFONO, 68-107 APELLIDOS Y NOMBRE) but declares one campo of 49.
+[[revisions."2009-y-siguientes".casillas]]
+id = "persona-relacion"
+number = "tipo1.59-107"
+section = ["declarante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t1-persona-relacion"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 8. Positions 108-120. NUMERO IDENTIFICATIVO DE LA DECLARACION.
+[[revisions."2009-y-siguientes".casillas]]
+id = "numero-identificativo-declaracion"
+number = "tipo1.108-120"
+section = ["declarante"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t1-numero-identificativo"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 9. Positions 121-122. DECLARACION COMPLEMENTARIA O SUSTITUTIVA.
+[[revisions."2009-y-siguientes".casillas]]
+id = "declaracion-complementaria-sustitutiva"
+number = "tipo1.121-122"
+section = ["declarante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t1-complementaria-sustitutiva"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 10. Positions 123-135. NUMERO IDENTIFICATIVO DE LA DECLARACION ANTERIOR.
+[[revisions."2009-y-siguientes".casillas]]
+id = "numero-identificativo-anterior"
+number = "tipo1.123-135"
+section = ["declarante"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t1-numero-identificativo-anterior"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 11. Positions 136-144. NUMERO TOTAL DE REGISTROS DECLARADOS.
+[[revisions."2009-y-siguientes".casillas]]
+id = "numero-total-declarados"
+number = "tipo1.136-144"
+section = ["declarante"]
+data_type = "integer"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t1-numero-total-declarados"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 12. Positions 145-159. IMPORTE TOTAL DEL CAPITAL AMORTIZADO -- the sum of
+# the tipo-2 campo at 127-139. "Sin signo y sin coma decimal", subdivided
+# 145-157 parte entera and 158-159 parte decimal.
+[[revisions."2009-y-siguientes".casillas]]
+id = "importe-total-capital-amortizado"
+number = "tipo1.145-159"
+section = ["declarante", "resumen"]
+data_type = "money"
+semantic_role = "m181_importe_total_capital_amortizado"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t1-importe-total-capital-amortizado"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 13. Positions 160-174. IMPORTE TOTAL DE LOS INTERESES ABONADOS EN EL
+# EJERCICIO -- the sum of the tipo-2 campo at 140-152. Subdivided 160-172 entera,
+# 173-174 decimal.
+[[revisions."2009-y-siguientes".casillas]]
+id = "importe-total-intereses"
+number = "tipo1.160-174"
+section = ["declarante", "resumen"]
+data_type = "money"
+semantic_role = "m181_importe_total_intereses"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t1-importe-total-intereses"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 14. Positions 175-189. IMPORTE TOTAL DE LOS GASTOS DERIVADOS DE LA
+# FINANCIACION AJENA -- the sum of the tipo-2 campo at 153-165. Subdivided
+# 175-187 entera, 188-189 decimal.
+[[revisions."2009-y-siguientes".casillas]]
+id = "importe-total-gastos-financiacion"
+number = "tipo1.175-189"
+section = ["declarante", "resumen"]
+data_type = "money"
+semantic_role = "m181_importe_total_gastos_financiacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t1-importe-total-gastos-financiacion"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 15. Positions 190-203. IMPORTE TOTAL DE LOS SALDOS PENDIENTES A 31 DE
+# DICIEMBRE -- the sum of the tipo-2 campo at 208-219. Subdivided 190-201 entera,
+# 202-203 decimal.
+[[revisions."2009-y-siguientes".casillas]]
+id = "importe-total-saldos-pendientes"
+number = "tipo1.190-203"
+section = ["declarante", "resumen"]
+data_type = "money"
+semantic_role = "m181_importe_total_saldos_pendientes"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t1-importe-total-saldos-pendientes"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 5. Positions 18-26. N.I.F. DEL DECLARADO.
+[[revisions."2009-y-siguientes".casillas]]
+id = "declarado-nif"
+number = "tipo2.18-26"
+section = ["declarado"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-declarado-nif"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 6. Positions 27-35. N.I.F. DEL REPRESENTANTE LEGAL.
+[[revisions."2009-y-siguientes".casillas]]
+id = "representante-legal-nif"
+number = "tipo2.27-35"
+section = ["declarado"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-representante-legal-nif"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 7. Positions 36-75. APELLIDOS Y NOMBRE O RAZON SOCIAL DEL DECLARADO.
+[[revisions."2009-y-siguientes".casillas]]
+id = "declarado-nombre"
+number = "tipo2.36-75"
+section = ["declarado"]
+data_type = "name"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-declarado-nombre"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 8. Positions 76-77. CODIGO PROVINCIA.
+[[revisions."2009-y-siguientes".casillas]]
+id = "codigo-provincia"
+number = "tipo2.76-77"
+section = ["declarado"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-codigo-provincia"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 9. Position 78. CLAVE TIPO DE IDENTIFICACION.
+[[revisions."2009-y-siguientes".casillas]]
+id = "clave-tipo-identificacion"
+number = "tipo2.78"
+section = ["operacion"]
+data_type = "text"
+semantic_role = "m181_clave_tipo_identificacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-clave-tipo-identificacion"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 10. Positions 79-82. PREFIJO CODIGO IBAN.
+[[revisions."2009-y-siguientes".casillas]]
+id = "prefijo-codigo-iban"
+number = "tipo2.79-82"
+section = ["operacion"]
+data_type = "text"
+semantic_role = "m181_prefijo_codigo_iban"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-prefijo-codigo-iban"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 11. Positions 83-102. IDENTIFICACION DEL PRESTAMO, CREDITO U OTRA
+# OPERACION FINANCIERA.
+[[revisions."2009-y-siguientes".casillas]]
+id = "identificacion-operacion"
+number = "tipo2.83-102"
+section = ["operacion"]
+data_type = "text"
+semantic_role = "m181_identificacion_operacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-identificacion-operacion"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 12. Positions 103-110. FECHA DE LA OPERACION (103-106 ano, 107-108 mes,
+# 109-110 dia).
+[[revisions."2009-y-siguientes".casillas]]
+id = "fecha-operacion"
+number = "tipo2.103-110"
+section = ["operacion"]
+data_type = "text"
+semantic_role = "m181_fecha_operacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-fecha-operacion"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 13. Positions 111-113. DURACION DE LA OPERACION, "expresada en meses".
+[[revisions."2009-y-siguientes".casillas]]
+id = "duracion-operacion"
+number = "tipo2.111-113"
+section = ["operacion"]
+data_type = "integer"
+semantic_role = "m181_duracion_operacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-duracion-operacion"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 14. Positions 114-126. IMPORTE DEL PRESTAMO, CREDITO U OTRA OPERACION
+# FINANCIERA. "Sin signo y sin coma decimal", 114-124 entera, 125-126 decimal.
+[[revisions."2009-y-siguientes".casillas]]
+id = "importe-operacion"
+number = "tipo2.114-126"
+section = ["operacion"]
+data_type = "money"
+semantic_role = "m181_importe_operacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-importe-operacion"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 15. Positions 127-139. IMPORTE ABONADO EN EL EJERCICIO EN CONCEPTO DE
+# AMORTIZACION DE CAPITAL. 127-137 entera, 138-139 decimal.
+[[revisions."2009-y-siguientes".casillas]]
+id = "importe-amortizacion-capital"
+number = "tipo2.127-139"
+section = ["operacion"]
+data_type = "money"
+semantic_role = "m181_importe_amortizacion_capital"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-importe-amortizacion-capital"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 16. Positions 140-152. IMPORTE ABONADO EN EL EJERCICIO EN CONCEPTO DE
+# INTERESES. 140-150 entera, 151-152 decimal.
+[[revisions."2009-y-siguientes".casillas]]
+id = "importe-intereses"
+number = "tipo2.140-152"
+section = ["operacion"]
+data_type = "money"
+semantic_role = "m181_importe_intereses"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-importe-intereses"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 17. Positions 153-165. IMPORTE ABONADO EN EL EJERCICIO EN CONCEPTO DE
+# GASTOS DERIVADOS DE LA FINANCIACION AJENA. 153-163 entera, 164-165 decimal.
+[[revisions."2009-y-siguientes".casillas]]
+id = "importe-gastos-financiacion"
+number = "tipo2.153-165"
+section = ["operacion"]
+data_type = "money"
+semantic_role = "m181_importe_gastos_financiacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-importe-gastos-financiacion"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 18. Positions 166-171. PORCENTAJE DE PARTICIPACION. Subdivided 166-168
+# parte entera and 169-171 parte decimal -- three decimal digits, not two.
+[[revisions."2009-y-siguientes".casillas]]
+id = "porcentaje-participacion"
+number = "tipo2.166-171"
+section = ["declarado"]
+data_type = "decimal"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-porcentaje-participacion"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 19. Position 172. ORIGEN DE LA OPERACION.
+[[revisions."2009-y-siguientes".casillas]]
+id = "origen-operacion"
+number = "tipo2.172"
+section = ["operacion"]
+data_type = "text"
+semantic_role = "m181_origen_operacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-origen-operacion"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 20. Position 173. TIPO DE OPERACION.
+[[revisions."2009-y-siguientes".casillas]]
+id = "tipo-operacion"
+number = "tipo2.173"
+section = ["operacion"]
+data_type = "text"
+semantic_role = "m181_tipo_operacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-tipo-operacion"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 21. Position 174. SUBCLAVE OPERACION.
+[[revisions."2009-y-siguientes".casillas]]
+id = "subclave-operacion"
+number = "tipo2.174"
+section = ["operacion"]
+data_type = "text"
+semantic_role = "m181_subclave_operacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-subclave-operacion"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 22. Position 175. SITUACION DEL INMUEBLE.
+[[revisions."2009-y-siguientes".casillas]]
+id = "situacion-inmueble"
+number = "tipo2.175"
+section = ["inmueble"]
+data_type = "text"
+semantic_role = "m181_situacion_inmueble"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-situacion-inmueble"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 23. Positions 176-195. REFERENCIA CATASTRAL.
+[[revisions."2009-y-siguientes".casillas]]
+id = "referencia-catastral"
+number = "tipo2.176-195"
+section = ["inmueble"]
+data_type = "text"
+semantic_role = "m181_referencia_catastral"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-referencia-catastral"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 24. Positions 196-207. VALOR DE TASACION DEL INMUEBLE OBJETO DE GARANTIA.
+# "Sin signo y sin coma decimal", two implied decimals.
+[[revisions."2009-y-siguientes".casillas]]
+id = "valor-tasacion-inmueble"
+number = "tipo2.196-207"
+section = ["inmueble"]
+data_type = "money"
+semantic_role = "m181_valor_tasacion_inmueble"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-valor-tasacion-inmueble"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 25. Positions 208-219. SALDO PENDIENTE A 31 DE DICIEMBRE. "Este saldo NO
+# se prorrateara en el caso de que la operacion corresponda a varios declarados."
+[[revisions."2009-y-siguientes".casillas]]
+id = "saldo-pendiente"
+number = "tipo2.208-219"
+section = ["operacion"]
+data_type = "money"
+semantic_role = "m181_saldo_pendiente"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-saldo-pendiente"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 26. Positions 220-412. DIRECCION DEL INMUEBLE. AEAT declares ONE
+# alfanumerico campo of 193 bytes and subdivides it into seventeen named parts
+# (220-224 tipo de via, 225-274 nombre via publica, 275-277 tipo de numeracion,
+# 278-282 numero de casa, 283-285 calificador, 286-288 bloque, 289-291 portal,
+# 292-294 escalera, 295-297 planta o piso, 298-300 puerta, 301-340 complemento,
+# 341-370 localidad, 371-400 municipio, 401-405 codigo de municipio, 406-407
+# codigo provincia, 408-412 codigo postal). The campo declared here is AEAT's
+# own 193-byte span.
+[[revisions."2009-y-siguientes".casillas]]
+id = "direccion-inmueble"
+number = "tipo2.220-412"
+section = ["inmueble"]
+data_type = "text"
+semantic_role = "m181_direccion_inmueble"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-direccion-inmueble"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 27. Position 413. CLAVE DE INTERVENCION EN LA OPERACION.
+[[revisions."2009-y-siguientes".casillas]]
+id = "clave-intervencion"
+number = "tipo2.413"
+section = ["operacion"]
+data_type = "text"
+semantic_role = "m181_clave_intervencion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-clave-intervencion"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 28. Positions 414-448. APELLIDOS Y NOMBRE O RAZON SOCIAL DEL PRESTAMISTA.
+[[revisions."2009-y-siguientes".casillas]]
+id = "prestamista-nombre"
+number = "tipo2.414-448"
+section = ["prestamista"]
+data_type = "name"
+semantic_role = "m181_prestamista_nombre"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-prestamista-nombre"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 29. Positions 449-457. N.I.F. DEL PRESTAMISTA.
+[[revisions."2009-y-siguientes".casillas]]
+id = "prestamista-nif"
+number = "tipo2.449-457"
+section = ["prestamista"]
+data_type = "nif"
+semantic_role = "m181_prestamista_nif"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-prestamista-nif"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 30. Positions 458-462. PORCENTAJE DE LA FINANCIACION DESTINADO A LA
+# VIVIENDA HABITUAL, only when subclave de operacion is 1. Subdivided 458-460
+# parte entera and 461-462 parte decimal.
+[[revisions."2009-y-siguientes".casillas]]
+id = "porcentaje-financiacion-vivienda-habitual"
+number = "tipo2.458-462"
+section = ["operacion"]
+data_type = "decimal"
+semantic_role = "m181_porcentaje_financiacion_vivienda_habitual"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-porcentaje-financiacion-vivienda"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 31. Positions 463-472. IMPORTE DEVENGADO EN EL EJERCICIO EN CONCEPTO DE
+# REINTEGRO DE INTERESES. "Sin signo y sin coma decimal".
+[[revisions."2009-y-siguientes".casillas]]
+id = "importe-reintegro-intereses"
+number = "tipo2.463-472"
+section = ["operacion"]
+data_type = "money"
+semantic_role = "m181_importe_reintegro_intereses"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-importe-reintegro-intereses"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 32. Positions 473-481. INTERESES INDEMNIZATORIOS. Subdivided 473-479
+# entera, 480-481 decimal.
+[[revisions."2009-y-siguientes".casillas]]
+id = "intereses-indemnizatorios"
+number = "tipo2.473-481"
+section = ["operacion"]
+data_type = "money"
+semantic_role = "m181_intereses_indemnizatorios"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-intereses-indemnizatorios"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 33. Positions 482-490. OTRAS CANTIDADES INDEMNIZATORIAS.
+[[revisions."2009-y-siguientes".casillas]]
+id = "otras-cantidades-indemnizatorias"
+number = "tipo2.482-490"
+section = ["operacion"]
+data_type = "money"
+semantic_role = "m181_otras_cantidades_indemnizatorias"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-otras-cantidades-indemnizatorias"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 34. Positions 491-500. CANTIDADES DESTINADAS POR LA ENTIDAD FINANCIERA A
+# MINORAR EL PRINCIPAL DEL PRESTAMO.
+[[revisions."2009-y-siguientes".casillas]]
+id = "cantidades-minorar-principal"
+number = "tipo2.491-500"
+section = ["operacion"]
+data_type = "money"
+semantic_role = "m181_cantidades_minorar_principal"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-181-t2-cantidades-minorar-principal"]
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]

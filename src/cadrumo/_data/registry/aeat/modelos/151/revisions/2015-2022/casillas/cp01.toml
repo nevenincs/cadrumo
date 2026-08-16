@@ -1,0 +1,845 @@
+# Modelo 151 (2015-2022) — casillas of design record p01.
+#
+# TRANSCRIBED from the bundled AEAT Diseño de Registro aeat-dr-151-2015
+# (corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls,
+# sha256 997dc9cf5230a374716d04a5ae9aed0e9c659ee9352451843dbc5232d3f2137a,
+# 1206784 bytes; AEAT titles it "151 - Orden HAP/2783/2015 (Ejercicios
+# 2015-2022)", matching this revision's window exactly).
+#
+# Every offset, length, label and alignment rule is read out of that design.
+# Alignment follows AEAT's own Tipo column: "An" campos are left-aligned and
+# blank-filled, "Num" campos right-aligned and zero-filled, per the design's
+# Nota 2. `number` carries the campo's own inclusive position range.
+
+
+# AEAT campo: Tipo de declaración
+[[revisions."2015-2022".casillas]]
+id = "p01.tipo-de-declaracion"
+number = "13"
+segmento = "M15101000"
+section = ["p01", "tipo-de-declaracion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-tipo-de-declaracion"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Devengo - Periodo
+[[revisions."2015-2022".casillas]]
+id = "p01.devengo-periodo"
+number = "107-108"
+segmento = "M15101000"
+section = ["p01", "devengo-periodo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-devengo-periodo"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. Sexo
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-sexo"
+number = "109"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-sexo"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. Fecha de nacimiento
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-fecha-de-nacimiento"
+number = "110-117"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "date"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-fecha-de-nacimiento"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. Cambio de domicilio
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-cambio-de-domicilio"
+number = "118"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-cambio-de-domicilio"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 44 - Tipo de vía.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-44-tipo-de-via"
+number = "119-123"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-44-tipo-de-via"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 45 - Nombre de la vía pública.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-45-nombre-de-la-via-publica"
+number = "124-173"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-45-nombre-de-la-via-publica"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 46 - Tipo de numeración.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-46-tipo-de-numeracion"
+number = "174-176"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-46-tipo-de-numeracion"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 47 - Número de casa.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-47-numero-de-casa"
+number = "177-181"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-47-numero-de-casa"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 48 - Calificador de número.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-48-calificador-de-numero"
+number = "182-184"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-48-calificador-de-numero"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 49 - Bloque.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-49-bloque"
+number = "185-187"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-49-bloque"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 50 - Portal.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-50-portal"
+number = "188-190"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-50-portal"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 51 - Escalera.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-51-escalera"
+number = "191-193"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-51-escalera"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 52 - Planta.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-52-planta"
+number = "194-196"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-52-planta"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 53 - Puerta.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-53-puerta"
+number = "197-199"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-53-puerta"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 54 - Datos complementarios de domicilio.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-54-datos-ementarios-de-domicilio"
+number = "200-239"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-54-datos-ementarios-de-domicilio"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 55 - Localidad/Población
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-55-localidad-poblacion"
+number = "240-269"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-55-localidad-poblacion"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 56 - Código postal.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-56-codigo-postal"
+number = "270-274"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-56-codigo-postal"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 58 - Código de Provincia.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-58-codigo-de-provincia"
+number = "275-276"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-58-codigo-de-provincia"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 57 - Código de Municipio.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-57-codigo-de-municipio"
+number = "277-281"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-57-codigo-de-municipio"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 59 - Teléfono fijo.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-59-telefono-fijo"
+number = "282-290"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-59-telefono-fijo"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 60 - Teléfono móvil.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-60-telefono-movil"
+number = "291-299"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-60-telefono-movil"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente. 61 - Nº de Fax.
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-61-no-de-fax"
+number = "300-308"
+segmento = "M15101000"
+section = ["p01", "contribuyente"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-61-no-de-fax"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente Domicilio Extranjero. 62 - Domicilio
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-domicili-extranjero-62-domicilio"
+number = "309-358"
+segmento = "M15101000"
+section = ["p01", "contribuyente-domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-domicili-extranjero-62-domicilio"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente Domicilio Extranjero. 63 - Datos complementarios domicilio
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-domicili-mplementarios-domicilio"
+number = "359-398"
+segmento = "M15101000"
+section = ["p01", "contribuyente-domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-domicili-mplementarios-domicilio"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente Domicilio Extranjero. 64 - Población/Ciudad
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-domicili-ero-64-poblacion-ciudad"
+number = "399-428"
+segmento = "M15101000"
+section = ["p01", "contribuyente-domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-domicili-ero-64-poblacion-ciudad"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente Domicilio Extranjero. 65 - Email
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-domicilio-extranjero-65-email"
+number = "429-528"
+segmento = "M15101000"
+section = ["p01", "contribuyente-domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-domicilio-extranjero-65-email"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente Domicilio Extranjero. 66 - Código postal/ZIP
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-domicili-ro-66-codigo-postal-zip"
+number = "529-538"
+segmento = "M15101000"
+section = ["p01", "contribuyente-domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-domicili-ro-66-codigo-postal-zip"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente Domicilio Extranjero. 67 - Provincia/Región/Estado
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-domicili-provincia-region-estado"
+number = "539-568"
+segmento = "M15101000"
+section = ["p01", "contribuyente-domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-domicili-provincia-region-estado"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente Domicilio Extranjero. 68 - País
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-domicilio-extranjero-68-pais"
+number = "569-570"
+segmento = "M15101000"
+section = ["p01", "contribuyente-domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-domicilio-extranjero-68-pais"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente Domicilio Extranjero. 70 - Teléfono Fijo
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-domicili-anjero-70-telefono-fijo"
+number = "571-585"
+segmento = "M15101000"
+section = ["p01", "contribuyente-domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-domicili-anjero-70-telefono-fijo"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente Domicilio Extranjero. 71 - Teléfono Móvil
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-domicili-njero-71-telefono-movil"
+number = "586-600"
+segmento = "M15101000"
+section = ["p01", "contribuyente-domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-domicili-njero-71-telefono-movil"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente Domicilio Extranjero. 72 - Nº Fax
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-domicilio-extranjero-72-no-fax"
+number = "601-615"
+segmento = "M15101000"
+section = ["p01", "contribuyente-domicilio-extranjero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-domicilio-extranjero-72-no-fax"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente Datos Adicionales vivienda actual. Titularidad
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-datos-ad-enda-actual-titularidad"
+number = "616"
+segmento = "M15101000"
+section = ["p01", "contribuyente-datos-ales-vivienda-actual"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-datos-ad-enda-actual-titularidad"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente Datos Adicionales vivienda actual. Porcentaje participación
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-datos-ad-orcentaje-participacion"
+number = "617-621"
+segmento = "M15101000"
+section = ["p01", "contribuyente-datos-ales-vivienda-actual"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-datos-ad-orcentaje-participacion"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente Datos Adicionales vivienda actual. Situación
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-datos-ad-vienda-actual-situacion"
+number = "622"
+segmento = "M15101000"
+section = ["p01", "contribuyente-datos-ales-vivienda-actual"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-datos-ad-vienda-actual-situacion"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Contribuyente Datos Adicionales vivienda actual. Referencia catastral
+[[revisions."2015-2022".casillas]]
+id = "p01.contribuyente-datos-ad-al-referencia-catastral"
+number = "623-642"
+segmento = "M15101000"
+section = ["p01", "contribuyente-datos-ales-vivienda-actual"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-contribuyente-datos-ad-al-referencia-catastral"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. NIF
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-nif"
+number = "643-651"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-nif"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. Apellidos
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-apellidos"
+number = "652-711"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-apellidos"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. Nombre
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-nombre"
+number = "712-731"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-nombre"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 44 - Tipo de vía.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-44-tipo-de-via"
+number = "732-736"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-44-tipo-de-via"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 45 - Nombre de la vía pública.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-45-nombre-de-la-via-publica"
+number = "737-786"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-45-nombre-de-la-via-publica"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 46 - Tipo de numeración.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-46-tipo-de-numeracion"
+number = "787-789"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-46-tipo-de-numeracion"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 47 - Número de casa.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-47-numero-de-casa"
+number = "790-794"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-47-numero-de-casa"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 48 - Calificador de número.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-48-calificador-de-numero"
+number = "795-797"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-48-calificador-de-numero"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 49 - Bloque.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-49-bloque"
+number = "798-800"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-49-bloque"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 50 - Portal.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-50-portal"
+number = "801-803"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-50-portal"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 51 - Escalera.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-51-escalera"
+number = "804-806"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-51-escalera"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 52 - Planta.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-52-planta"
+number = "807-809"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-52-planta"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 53 - Puerta.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-53-puerta"
+number = "810-812"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-53-puerta"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 54 - Datos complementarios de domicilio.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-54-datos-ementarios-de-domicilio"
+number = "813-852"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-54-datos-ementarios-de-domicilio"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 55 - Localidad/Población
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-55-localidad-poblacion"
+number = "853-882"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-55-localidad-poblacion"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 56 - Código postal.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-56-codigo-postal"
+number = "883-887"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-56-codigo-postal"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 58 - Código de Provincia.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-58-codigo-de-provincia"
+number = "888-889"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-58-codigo-de-provincia"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 57 - Código de Municipio.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-57-codigo-de-municipio"
+number = "890-894"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-57-codigo-de-municipio"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 59 - Teléfono fijo.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-59-telefono-fijo"
+number = "895-903"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-59-telefono-fijo"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 60 - Teléfono móvil.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-60-telefono-movil"
+number = "904-912"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-60-telefono-movil"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Representante. 61 - Nº de Fax.
+[[revisions."2015-2022".casillas]]
+id = "p01.representante-61-no-de-fax"
+number = "913-921"
+segmento = "M15101000"
+section = ["p01", "representante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-representante-61-no-de-fax"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Comunidad Autonoma de residencia durante el ejercicio indicado
+[[revisions."2015-2022".casillas]]
+id = "p01.comunidad-autonoma-de-e-el-ejercicio-indicado"
+number = "922-923"
+segmento = "M15101000"
+section = ["p01", "comunidad-autonoma-l-ejercicio-indicado"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-comunidad-autonoma-de-e-el-ejercicio-indicado"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Asignacion Tributaria a la Iglesia Católica
+[[revisions."2015-2022".casillas]]
+id = "p01.asignacion-tributaria-a-la-iglesia-catolica"
+number = "924"
+segmento = "M15101000"
+section = ["p01", "asignacion-tributar-la-iglesia-catolica"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-asignacion-tributaria-a-la-iglesia-catolica"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Asignacion de cantidades a fines sociales
+[[revisions."2015-2022".casillas]]
+id = "p01.asignacion-de-cantidades-a-fines-sociales"
+number = "925"
+segmento = "M15101000"
+section = ["p01", "asignacion-de-canti-des-a-fines-sociales"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-asignacion-de-cantidades-a-fines-sociales"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Declaracion Complementaria
+[[revisions."2015-2022".casillas]]
+id = "p01.declaracion-complementaria"
+number = "926"
+segmento = "M15101000"
+section = ["p01", "declaracion-complementaria"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-declaracion-complementaria"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Declaracion Complementaria 2
+[[revisions."2015-2022".casillas]]
+id = "p01.declaracion-complementaria-2"
+number = "927"
+segmento = "M15101000"
+section = ["p01", "declaracion-complementaria-2"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-declaracion-complementaria-2"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+
+# AEAT campo: Número de Justificante
+[[revisions."2015-2022".casillas]]
+id = "p01.numero-de-justificante"
+number = "928-940"
+segmento = "M15101000"
+section = ["p01", "numero-de-justificante"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-151-2015-p01-numero-de-justificante"]
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]

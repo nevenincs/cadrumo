@@ -24,13 +24,11 @@ authority_grade = "applicability"
 # NO export layout is declared on this revision. That is an absent filing
 # capability honestly reported by the export-layout gate, not an exemption.
 #
-# The era-appropriate diseno de registro for this revision IS bundled and
-# hash-verified in the corpus, but it is NOT a registered registry source: a
-# source requires `review_status`, which is Literal["reviewed"] with no pending
-# state, and no human has reviewed that document. Registering it would mean
-# asserting a review that did not happen, so this revision cites the already
-# registered orden-derived guidance instead and declares no layout. Unblocking
-# it is one operator decision, shared with the acquisition lane's bundled files.
+# This revision cites its OWN era's diseno de registro. That source was
+# registered on 2026-08-16 under explicit operator authorisation; the
+# registration provenance -- what was verified and what was not -- is recorded
+# beside the source in legal/modelo-490.toml, because a source's review_status
+# token carries no reviewer field of its own.
 #
 # No deadline_windows and no deadline application link: the only windows this modelo
 # ever declared were for 2025 and 2026, which belong to the 2023-y-siguientes
@@ -47,7 +45,7 @@ legal_refs = [
 ]
 source_refs = [
     "enrolled-modelo-490-procedure",
-    "enrolled-modelo-490-layout",
+    "aeat-dr-490-2021",
 ]
 
 
@@ -60,5 +58,5 @@ legal_refs = [
 ]
 source_refs = [
     "enrolled-modelo-490-procedure",
-    "enrolled-modelo-490-layout",
+    "aeat-dr-490-2021",
 ]

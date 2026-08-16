@@ -1,0 +1,52 @@
+# Modelo 181 fichero -- transcribed from the bundled AEAT Diseno de Registro
+# (source aeat-dr-181-2022, corpus/aeat_official/disenos_registro/modelo_181/
+# files/01-181-diseno-de-registro-actualizado-en-2022.pdf, sha256
+# 4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b).
+#
+# This is the only Modelo 181 record design AEAT publishes: one artefact, on the
+# current Disenos de Registro index, with no earlier era offered anywhere. The
+# layout mirrors it position for position.
+#
+# The design declares exactly two records of 500 bytes each: registro de tipo 1
+# (declarante) with 15 numbered campos plus a BLANCOS trailer, and registro de
+# tipo 2 (declarado) with 34 numbered campos and NO trailer -- its last campo
+# runs to byte 500. All 50 positions are declared in the record files beside
+# this one, and each record's field lengths sum to exactly 500 contiguously
+# from position 1.
+#
+# ---------------------------------------------------------------------------
+# ERA NOTE -- read before filing an older ejercicio
+# ---------------------------------------------------------------------------
+# The revision this layout is authored on, 2009-y-siguientes, declares
+# year_from = 2009 with no year_to, while the design is footered "Ejercicio
+# 2022" and its source declares applies_from 2022-01-01. AEAT publishes nothing
+# for the intervening years, so this is the only design that can be mirrored and
+# it is mirrored here rather than left unbuilt.
+#
+# Unlike Modelo 165, no campo of this design dates itself by citing a law later
+# than the revision's start, so no position is known to be inapplicable to an
+# earlier ejercicio. That is an absence of contrary evidence rather than proof
+# of stability: AEAT publishes these designs per ejercicio and this one is
+# labelled 2022. Whether the revision should be split so an older ejercicio
+# resolves a design of its own is a registry-structure question recorded in the
+# campaign's structural-decisions audit; it is not answerable from the design,
+# because AEAT publishes no other.
+#
+# Global rules the design states once, applied throughout:
+#   "Los campos numericos que no tengan contenido se rellenaran a ceros."
+#   "Los campos alfanumericos/alfabeticos que no tengan contenido se rellenaran
+#    a blancos."
+#   "Todos los campos numericos ajustados a la derecha y rellenos de ceros por
+#    la izquierda."
+#   "Todos los campos alfanumericos/alfabeticos ajustados a la izquierda y
+#    rellenos de blancos por la derecha, en mayusculas."
+#
+# Every importe on both records is declared "sin signo y sin coma decimal" with
+# a two-digit decimal tail, so each is one unsigned money span with two implied
+# decimals. The two porcentaje campos differ from each other and from the
+# importes: 166-171 carries THREE decimal digits, 458-462 carries two.
+
+[[revisions."2009-y-siguientes".export_layouts]]
+id = "modelo-181-fichero-2022"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]

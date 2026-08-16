@@ -40,6 +40,7 @@ continuidad_id = "impatriado-base-liquidable-general"
 required = false
 input_kind = "bound"
 binding = "modelo-151-impatriado-base-liquidable-general"
+export_refs = ["modelo-151-2015-p08-base-liquidable-general-17"]
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 
@@ -53,6 +54,7 @@ continuidad_id = "impatriado-cuota-integra-general"
 required = false
 input_kind = "computed"
 formula = "modelo-151-cuota-integra-general"
+export_refs = ["modelo-151-2015-p08-cuota-correspondiente-e-liquidable-general-19"]
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 
@@ -65,6 +67,7 @@ semantic_role = "impatriado_retenciones"
 continuidad_id = "impatriado-retenciones"
 required = false
 input_kind = "manual"
+export_refs = ["modelo-151-2015-p08-retencion-e-ingresos-a-cuenta-33"]
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 

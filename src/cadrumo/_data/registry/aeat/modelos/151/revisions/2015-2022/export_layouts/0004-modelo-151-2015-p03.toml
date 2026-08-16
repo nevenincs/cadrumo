@@ -1,0 +1,1191 @@
+# Modelo 151 (2015-2022) — página 03 (design sheet M15103000), positions 1-1200.
+#
+# TRANSCRIBED from the bundled AEAT Diseño de Registro aeat-dr-151-2015
+# (corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls,
+# sha256 997dc9cf5230a374716d04a5ae9aed0e9c659ee9352451843dbc5232d3f2137a,
+# 1206784 bytes; AEAT titles it "151 - Orden HAP/2783/2015 (Ejercicios
+# 2015-2022)", matching this revision's window exactly).
+#
+# Every offset, length, label and alignment rule is read out of that design.
+# Alignment follows AEAT's own Tipo column: "An" campos are left-aligned and
+# blank-filled, "Num" campos right-aligned and zero-filled, per the design's
+# Nota 2. `number` carries the campo's own inclusive position range.
+
+
+[[revisions."2015-2022".export_layouts]]
+id = "modelo-151-2015-fichero-boe"
+
+[[revisions."2015-2022".export_layouts.records]]
+id = "modelo-151-2015-p03"
+record_type = "pagina_03"
+order = 3
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-inicio-del-identifi-r-de-modelo-y-pagina-1"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-modelo-2"
+offset = 3
+length = 3
+kind = "literal"
+literal = "151"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagina-3"
+offset = 6
+length = 2
+kind = "literal"
+literal = "03"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-fin-de-identificador-de-modelo-4"
+offset = 8
+length = 4
+kind = "literal"
+literal = "000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-reservado-para-la-administracion-5"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-tipo-de-renta-1-01"
+offset = 13
+length = 2
+kind = "casilla"
+casilla_id = "p03.tipo-de-renta-1-01"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-naturaleza-2-01"
+offset = 15
+length = 1
+kind = "casilla"
+casilla_id = "p03.naturaleza-2-01"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-valoracion-3-01"
+offset = 16
+length = 17
+kind = "casilla"
+casilla_id = "p03.valoracion-3-01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-ingresos-a-cuenta-4-01"
+offset = 33
+length = 17
+kind = "casilla"
+casilla_id = "p03.ingresos-a-cuenta-4-01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-ingresos-a-cuenta-repercutidos-5-01"
+offset = 50
+length = 17
+kind = "casilla"
+casilla_id = "p03.ingresos-a-cuenta-repercutidos-5-01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-rendimiento-integro-re-inmobiliaria-imputada-6-01"
+offset = 67
+length = 17
+kind = "casilla"
+casilla_id = "p03.rendimiento-integro-re-inmobiliaria-imputada-6-01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-rentencion-o-ingreso-a-cuenta-7-01"
+offset = 84
+length = 17
+kind = "casilla"
+casilla_id = "p03.rentencion-o-ingreso-a-cuenta-7-01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagador-nif-01"
+offset = 101
+length = 9
+kind = "casilla"
+casilla_id = "p03.pagador-nif-01"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagador-f-j-01"
+offset = 110
+length = 1
+kind = "casilla"
+casilla_id = "p03.pagador-f-j-01"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagador-apellidos-o-razon-social-01"
+offset = 111
+length = 60
+kind = "casilla"
+casilla_id = "p03.pagador-apellidos-o-razon-social-01"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagador-nombre-01"
+offset = 171
+length = 20
+kind = "casilla"
+casilla_id = "p03.pagador-nombre-01"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-rend-vado-en-el-extranjero-8-01"
+offset = 191
+length = 17
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-rend-vado-en-el-extranjero-8-01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-rend-echo-en-el-extranjero-9-01"
+offset = 208
+length = 17
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-rend-echo-en-el-extranjero-9-01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-propiedad-10-01"
+offset = 225
+length = 5
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-inmuebles-propiedad-10-01"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-usufructo-11-01"
+offset = 230
+length = 5
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-inmuebles-usufructo-11-01"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-01"
+offset = 235
+length = 1
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-s-e-inmuebles-origen-12-01"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-situacion-13-01"
+offset = 236
+length = 1
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-inmuebles-situacion-13-01"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-referencia-catastral-14-01"
+offset = 237
+length = 20
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-referencia-catastral-14-01"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-tipo-de-renta-1-02"
+offset = 257
+length = 2
+kind = "casilla"
+casilla_id = "p03.tipo-de-renta-1-02"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-naturaleza-2-02"
+offset = 259
+length = 1
+kind = "casilla"
+casilla_id = "p03.naturaleza-2-02"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-valoracion-3-02"
+offset = 260
+length = 17
+kind = "casilla"
+casilla_id = "p03.valoracion-3-02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-ingresos-a-cuenta-4-02"
+offset = 277
+length = 17
+kind = "casilla"
+casilla_id = "p03.ingresos-a-cuenta-4-02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-ingresos-a-cuenta-repercutidos-5-02"
+offset = 294
+length = 17
+kind = "casilla"
+casilla_id = "p03.ingresos-a-cuenta-repercutidos-5-02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-rendimiento-integro-re-inmobiliaria-imputada-6-02"
+offset = 311
+length = 17
+kind = "casilla"
+casilla_id = "p03.rendimiento-integro-re-inmobiliaria-imputada-6-02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-rentencion-o-ingreso-a-cuenta-7-02"
+offset = 328
+length = 17
+kind = "casilla"
+casilla_id = "p03.rentencion-o-ingreso-a-cuenta-7-02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagador-nif-02"
+offset = 345
+length = 9
+kind = "casilla"
+casilla_id = "p03.pagador-nif-02"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagador-f-j-02"
+offset = 354
+length = 1
+kind = "casilla"
+casilla_id = "p03.pagador-f-j-02"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagador-apellidos-o-razon-social-02"
+offset = 355
+length = 60
+kind = "casilla"
+casilla_id = "p03.pagador-apellidos-o-razon-social-02"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagador-nombre-02"
+offset = 415
+length = 20
+kind = "casilla"
+casilla_id = "p03.pagador-nombre-02"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-rend-vado-en-el-extranjero-8-02"
+offset = 435
+length = 17
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-rend-vado-en-el-extranjero-8-02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-rend-echo-en-el-extranjero-9-02"
+offset = 452
+length = 17
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-rend-echo-en-el-extranjero-9-02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-propiedad-10-02"
+offset = 469
+length = 5
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-inmuebles-propiedad-10-02"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-usufructo-11-02"
+offset = 474
+length = 5
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-inmuebles-usufructo-11-02"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-02"
+offset = 479
+length = 1
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-s-e-inmuebles-origen-12-02"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-situacion-13-02"
+offset = 480
+length = 1
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-inmuebles-situacion-13-02"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-referencia-catastral-14-02"
+offset = 481
+length = 20
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-referencia-catastral-14-02"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-tipo-de-renta-1-03"
+offset = 501
+length = 2
+kind = "casilla"
+casilla_id = "p03.tipo-de-renta-1-03"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-naturaleza-2-03"
+offset = 503
+length = 1
+kind = "casilla"
+casilla_id = "p03.naturaleza-2-03"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-valoracion-3-03"
+offset = 504
+length = 17
+kind = "casilla"
+casilla_id = "p03.valoracion-3-03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-ingresos-a-cuenta-4-03"
+offset = 521
+length = 17
+kind = "casilla"
+casilla_id = "p03.ingresos-a-cuenta-4-03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-ingresos-a-cuenta-repercutidos-5-03"
+offset = 538
+length = 17
+kind = "casilla"
+casilla_id = "p03.ingresos-a-cuenta-repercutidos-5-03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-rendimiento-integro-re-inmobiliaria-imputada-6-03"
+offset = 555
+length = 17
+kind = "casilla"
+casilla_id = "p03.rendimiento-integro-re-inmobiliaria-imputada-6-03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-rentencion-o-ingreso-a-cuenta-7-03"
+offset = 572
+length = 17
+kind = "casilla"
+casilla_id = "p03.rentencion-o-ingreso-a-cuenta-7-03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagador-nif-03"
+offset = 589
+length = 9
+kind = "casilla"
+casilla_id = "p03.pagador-nif-03"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagador-f-j-03"
+offset = 598
+length = 1
+kind = "casilla"
+casilla_id = "p03.pagador-f-j-03"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagador-apellidos-o-razon-social-03"
+offset = 599
+length = 60
+kind = "casilla"
+casilla_id = "p03.pagador-apellidos-o-razon-social-03"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagador-nombre-03"
+offset = 659
+length = 20
+kind = "casilla"
+casilla_id = "p03.pagador-nombre-03"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-rend-vado-en-el-extranjero-8-03"
+offset = 679
+length = 17
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-rend-vado-en-el-extranjero-8-03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-rend-echo-en-el-extranjero-9-03"
+offset = 696
+length = 17
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-rend-echo-en-el-extranjero-9-03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-propiedad-10-03"
+offset = 713
+length = 5
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-inmuebles-propiedad-10-03"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-usufructo-11-03"
+offset = 718
+length = 5
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-inmuebles-usufructo-11-03"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-03"
+offset = 723
+length = 1
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-s-e-inmuebles-origen-12-03"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-situacion-13-03"
+offset = 724
+length = 1
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-inmuebles-situacion-13-03"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-referencia-catastral-14-03"
+offset = 725
+length = 20
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-referencia-catastral-14-03"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-tipo-de-renta-1-04"
+offset = 745
+length = 2
+kind = "casilla"
+casilla_id = "p03.tipo-de-renta-1-04"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-naturaleza-2-04"
+offset = 747
+length = 1
+kind = "casilla"
+casilla_id = "p03.naturaleza-2-04"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-valoracion-3-04"
+offset = 748
+length = 17
+kind = "casilla"
+casilla_id = "p03.valoracion-3-04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-ingresos-a-cuenta-4-04"
+offset = 765
+length = 17
+kind = "casilla"
+casilla_id = "p03.ingresos-a-cuenta-4-04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-ingresos-a-cuenta-repercutidos-5-04"
+offset = 782
+length = 17
+kind = "casilla"
+casilla_id = "p03.ingresos-a-cuenta-repercutidos-5-04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-rendimiento-integro-re-inmobiliaria-imputada-6-04"
+offset = 799
+length = 17
+kind = "casilla"
+casilla_id = "p03.rendimiento-integro-re-inmobiliaria-imputada-6-04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-rentencion-o-ingreso-a-cuenta-7-04"
+offset = 816
+length = 17
+kind = "casilla"
+casilla_id = "p03.rentencion-o-ingreso-a-cuenta-7-04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagador-nif-04"
+offset = 833
+length = 9
+kind = "casilla"
+casilla_id = "p03.pagador-nif-04"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagador-f-j-04"
+offset = 842
+length = 1
+kind = "casilla"
+casilla_id = "p03.pagador-f-j-04"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagador-apellidos-o-razon-social-04"
+offset = 843
+length = 60
+kind = "casilla"
+casilla_id = "p03.pagador-apellidos-o-razon-social-04"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-pagador-nombre-04"
+offset = 903
+length = 20
+kind = "casilla"
+casilla_id = "p03.pagador-nombre-04"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-rend-vado-en-el-extranjero-8-04"
+offset = 923
+length = 17
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-rend-vado-en-el-extranjero-8-04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-rend-echo-en-el-extranjero-9-04"
+offset = 940
+length = 17
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-rend-echo-en-el-extranjero-9-04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-propiedad-10-04"
+offset = 957
+length = 5
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-inmuebles-propiedad-10-04"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-usufructo-11-04"
+offset = 962
+length = 5
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-inmuebles-usufructo-11-04"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-04"
+offset = 967
+length = 1
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-s-e-inmuebles-origen-12-04"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-inmuebles-situacion-13-04"
+offset = 968
+length = 1
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-inmuebles-situacion-13-04"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-datos-adicionales-de-l-referencia-catastral-14-04"
+offset = 969
+length = 20
+kind = "casilla"
+casilla_id = "p03.datos-adicionales-de-l-referencia-catastral-14-04"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-resto-rendimiento-inte-inmobiliaria-imputada-6"
+offset = 989
+length = 17
+kind = "casilla"
+casilla_id = "p03.resto-rendimiento-inte-inmobiliaria-imputada-6"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-resto-rentencion-o-ingreso-a-cuenta-7"
+offset = 1006
+length = 17
+kind = "casilla"
+casilla_id = "p03.resto-rentencion-o-ingreso-a-cuenta-7"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-total-rendimientos-int-nmobiliaria-imputada-15"
+offset = 1023
+length = 17
+kind = "casilla"
+casilla_id = "p03.total-rendimientos-int-nmobiliaria-imputada-15"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-total-retenciones-o-ingresos-a-cuenta-16"
+offset = 1040
+length = 17
+kind = "casilla"
+casilla_id = "p03.total-retenciones-o-ingresos-a-cuenta-16"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-reservado-aeat-80"
+offset = 1057
+length = 132
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p03-indicador-de-fin-de-registro-81"
+offset = 1189
+length = 12
+kind = "literal"
+literal = "</T15103000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
