@@ -13,12 +13,13 @@ authority_grade = "applicability"
 # entire Pag. 2 this era does not have. One revision cannot carry both shapes,
 # so the eras are separate revisions and each cites only its own design.
 #
-# NO export layout is declared here: the 2021-2023 record design has not been
-# transcribed. That is an absent capability honestly reported by the
-# export-layout gate, NOT an exemption. The design is bundled and verified
-# (aeat-dr-604-2021, sha256 262e743d...), so the work is available to whoever
-# takes it: 2 records, 67 rows, 61 required positions, Pag. 0 tiling 1..328 and
-# Pag. 1 tiling 1..900.
+# This era's export layout HAS been transcribed from its own bundled design
+# (aeat-dr-604-2021, sha256 262e743d...): 2 records, 67 design rows, Pag. 0
+# tiling 1..328 and Pag. 1 tiling 1..900, each exactly once with no gap and no
+# overlap. It writes 58 of the 60 positions the design requires; the two it
+# does not write are the entidad-desarrolladora slots @93+4 and @101+9, left
+# unwritten deliberately rather than filled with a wrong identity. See the
+# layout file for that reasoning.
 #
 # No deadline_windows and no deadline application link: the only windows this
 # modelo ever declared were the twelve 2025 monthly windows, which belong to
