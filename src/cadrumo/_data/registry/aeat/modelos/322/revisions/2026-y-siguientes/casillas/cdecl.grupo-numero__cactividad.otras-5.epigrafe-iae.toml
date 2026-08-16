@@ -1,0 +1,318 @@
+# Modelo 322 ejercicio 2026 -- the identificacion, sin-actividad and actividad
+# positions the fichero layout did not cover. Transcribed from the bundled
+# Diseno de Registro (source aeat-dr-322-2026, sha256
+# f014cec44d4906bc1e2ba96ee1b336f9b400254519df5b1ab0ce69d513631a76).
+#
+# These are authored as casillas rather than wired to the existing
+# m303.*-named producer keys, and the reason is a value-encoding mismatch
+# rather than a naming objection. This design admits NUMERIC codes -- "Si=1,
+# No=2", "0, 1, 2 o 3" -- while every m303.* regime fact is a boolean whose
+# renderer emits "X" or blank. Wiring them would emit "X" where AEAT admits
+# only "1" or "2", producing a file AEAT rejects.
+
+# Identificacion. N. Grupo.
+[[revisions."2026-y-siguientes".casillas]]
+id = "decl.grupo-numero"
+number = "grupo-numero"
+section = ["identificacion", "grupo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-01-109"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Dominante / Dependiente. "Dominante=D, Dependiente=P o blanco".
+[[revisions."2026-y-siguientes".casillas]]
+id = "decl.grupo-rol"
+number = "grupo-rol"
+section = ["identificacion", "grupo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-01-119"]
+constraints = { max_length = 1, enum = ["D", "P"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"], source_refs = ["aeat-dr-322-2026"] }
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. NIF de la entidad dominante.
+[[revisions."2026-y-siguientes".casillas]]
+id = "decl.entidad-dominante-nif"
+number = "entidad-dominante-nif"
+section = ["identificacion", "grupo"]
+data_type = "nif"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-01-120"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Tributacion exclusivamente foral: sujeto pasivo que tributa
+# exclusivamente a una Administracion tributaria Foral con IVA a la importacion
+# liquidado por la Aduana pendiente de ingreso. "X o blanco".
+[[revisions."2026-y-siguientes".casillas]]
+id = "decl.tributacion-exclusivamente-foral"
+number = "tributacion-exclusivamente-foral"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-01-129"]
+constraints = { max_length = 1, enum = ["X"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"] }
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Sujeto pasivo acogido a la modalidad del regimen especial
+# regulada en el art. 163 sexies.Cinco LIVA. "Si=1, No=2".
+[[revisions."2026-y-siguientes".casillas]]
+id = "decl.regimen-163-sexies-cinco"
+number = "regimen-163-sexies-cinco"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-01-130"]
+constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"], source_refs = ["aeat-dr-322-2026"] }
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Sujeto pasivo inscrito en el Registro de devolucion mensual
+# (art. 30 RIVA). "Si=1, No=2".
+[[revisions."2026-y-siguientes".casillas]]
+id = "decl.redeme-inscrito"
+number = "redeme-inscrito"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-01-131"]
+constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"] }
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Sujeto pasivo destinatario de operaciones acogidas al regimen
+# especial del criterio de caja. "Si=1, No=2".
+[[revisions."2026-y-siguientes".casillas]]
+id = "decl.destinatario-criterio-caja"
+number = "destinatario-criterio-caja"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-01-132"]
+constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"] }
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Aplicacion de la prorrata especial (art. 103.Dos.1 LIVA):
+# opcion por la aplicacion / revocacion de la opcion. "0, 1, 2 o 3".
+[[revisions."2026-y-siguientes".casillas]]
+id = "decl.prorrata-especial"
+number = "prorrata-especial"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-01-133"]
+constraints = { max_length = 1, enum = ["0", "1", "2", "3"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-103"], source_refs = ["aeat-dr-322-2026"] }
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-103"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Sujeto pasivo exonerado de la Declaracion-resumen anual del
+# IVA, modelo 390. "0, Si=1, No=2".
+[[revisions."2026-y-siguientes".casillas]]
+id = "decl.exonerado-modelo-390"
+number = "exonerado-modelo-390"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-01-134"]
+constraints = { max_length = 1, enum = ["0", "1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"] }
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Sujeto pasivo con volumen anual de operaciones distinto de
+# cero (art. 121 LIVA). "0, Si=1, No=2".
+[[revisions."2026-y-siguientes".casillas]]
+id = "decl.volumen-anual-no-cero"
+number = "volumen-anual-no-cero"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-01-135"]
+constraints = { max_length = 1, enum = ["0", "1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-121"], source_refs = ["aeat-dr-322-2026"] }
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-121"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Identificacion. Sujeto pasivo con derecho a deducir pago a cuenta de entregas
+# de gasolinas, gasoleos y biocarburantes posteriores a la ultimacion del regimen
+# de deposito distinto del aduanero. "0=Vacio, Si=1, No=2".
+[[revisions."2026-y-siguientes".casillas]]
+id = "decl.deduccion-pago-cuenta-gasolinas"
+number = "deduccion-pago-cuenta-gasolinas"
+section = ["identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-01-136"]
+constraints = { max_length = 1, enum = ["0", "1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"], source_refs = ["aeat-dr-322-2026"] }
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Exclusivamente a cumplimentar en el ultimo periodo de la Declaracion B -
+# Codigo de actividad - Principal.
+[[revisions."2026-y-siguientes".casillas]]
+id = "actividad.principal.codigo"
+number = "principal.codigo"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-03-13"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Exclusivamente a cumplimentar en el ultimo periodo de la Declaracion C -
+# Epigrafe IAE - Principal.
+[[revisions."2026-y-siguientes".casillas]]
+id = "actividad.principal.epigrafe-iae"
+number = "principal.epigrafe-iae"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-03-16"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Exclusivamente a cumplimentar en el ultimo periodo de la Declaracion B -
+# Codigo de actividad - Otras - 1a.
+[[revisions."2026-y-siguientes".casillas]]
+id = "actividad.otras-1.codigo"
+number = "otras-1.codigo"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-03-20"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Exclusivamente a cumplimentar en el ultimo periodo de la Declaracion C -
+# Epigrafe IAE - Otras - 1a.
+[[revisions."2026-y-siguientes".casillas]]
+id = "actividad.otras-1.epigrafe-iae"
+number = "otras-1.epigrafe-iae"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-03-23"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Exclusivamente a cumplimentar en el ultimo periodo de la Declaracion B -
+# Codigo de actividad - Otras - 2a.
+[[revisions."2026-y-siguientes".casillas]]
+id = "actividad.otras-2.codigo"
+number = "otras-2.codigo"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-03-27"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Exclusivamente a cumplimentar en el ultimo periodo de la Declaracion C -
+# Epigrafe IAE - Otras - 2a.
+[[revisions."2026-y-siguientes".casillas]]
+id = "actividad.otras-2.epigrafe-iae"
+number = "otras-2.epigrafe-iae"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-03-30"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Exclusivamente a cumplimentar en el ultimo periodo de la Declaracion B -
+# Codigo de actividad - Otras - 3a.
+[[revisions."2026-y-siguientes".casillas]]
+id = "actividad.otras-3.codigo"
+number = "otras-3.codigo"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-03-34"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Exclusivamente a cumplimentar en el ultimo periodo de la Declaracion C -
+# Epigrafe IAE - Otras - 3a.
+[[revisions."2026-y-siguientes".casillas]]
+id = "actividad.otras-3.epigrafe-iae"
+number = "otras-3.epigrafe-iae"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-03-37"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Exclusivamente a cumplimentar en el ultimo periodo de la Declaracion B -
+# Codigo de actividad - Otras - 4a.
+[[revisions."2026-y-siguientes".casillas]]
+id = "actividad.otras-4.codigo"
+number = "otras-4.codigo"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-03-41"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Exclusivamente a cumplimentar en el ultimo periodo de la Declaracion C -
+# Epigrafe IAE - Otras - 4a.
+[[revisions."2026-y-siguientes".casillas]]
+id = "actividad.otras-4.epigrafe-iae"
+number = "otras-4.epigrafe-iae"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-03-44"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Exclusivamente a cumplimentar en el ultimo periodo de la Declaracion B -
+# Codigo de actividad - Otras - 5a.
+[[revisions."2026-y-siguientes".casillas]]
+id = "actividad.otras-5.codigo"
+number = "otras-5.codigo"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-03-48"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+# Exclusivamente a cumplimentar en el ultimo periodo de la Declaracion C -
+# Epigrafe IAE - Otras - 5a.
+[[revisions."2026-y-siguientes".casillas]]
+id = "actividad.otras-5.epigrafe-iae"
+number = "otras-5.epigrafe-iae"
+section = ["actividad"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-page-03-51"]
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]

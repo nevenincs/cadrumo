@@ -21,6 +21,32 @@
 # reader emits neither; the closing tag is declared here as its own
 # record, exactly as Modelo 390 and Modelo 122 declare the same <AUX>
 # wrapper's footer. It interpolates the ejercicio, so it is `computed`.
+#
+# KNOWN LIMITATION -- this layout writes ONE instance of each page.
+#
+# AEAT packs N renta slots INLINE at fixed offsets inside each of pages
+# 02-08 (page 04 carries nine, page 02 four, page 07 eight), and handles a
+# taxpayer with more rentas than a page holds by emitting the whole page
+# record again. Every slot this layout declares is at the design's own
+# offset, so a filing that fits within one instance of each page is written
+# correctly and completely; a filing that overflows a page is NOT, because
+# nothing here emits the second instance.
+#
+# No `repeat` mode is declared, and that is deliberate. `binding_rows` and
+# `projection_rows` both render one logical row per record occurrence,
+# which would emit different bytes than AEAT specifies for a page that
+# packs N rows into ONE occurrence. Declaring either would trade a missing
+# capability for wrong output.
+#
+# Modelo 151 is the hardest of the three known cases. Modelo 714 repeats a
+# page behind an "Indicador de página complementaria" at position 12, and
+# Modelo 390 pages 5 and 7 carry a settable Blanco/"C"; both at least put a
+# discriminator in the bytes. Pages 02-08 here carry neither -- the only
+# Declaracion Complementaria bytes in the whole design are on page 01
+# (@926+1 and @927+1) and they mark the DECLARATION, not a page instance.
+# So a second instance of page 02 is byte-indistinguishable from the first,
+# and any future page-packed repeat mechanism would have to carry the
+# occurrence index outside the record.
 
 [[revisions."2015-2022".export_layouts]]
 id = "modelo-151-2015-fichero-boe"

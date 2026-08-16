@@ -71953,6 +71953,78 @@ modelo:
                 title: null
           field:
             label: null
+        2026-y-siguientes:
+          casilla:
+            x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
+              help: null
+              label: Activity code - Other 1st
+            x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
+              help: null
+              label: IAE heading - Other 1st
+            x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
+              help: null
+              label: Activity code - Other 2nd
+            x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
+              help: null
+              label: IAE heading - Other 2nd
+            x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
+              help: null
+              label: Activity code - Other 3rd
+            x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
+              help: null
+              label: IAE heading - Other 3rd
+            x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
+              help: null
+              label: Activity code - Other 4th
+            x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
+              help: null
+              label: IAE heading - Other 4th
+            x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
+              help: null
+              label: Activity code - Other 5th
+            x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
+              help: null
+              label: IAE heading - Other 5th
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
+              help: null
+              label: Activity code - Main
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
+              help: null
+              label: IAE heading - Main
+            x-chim6r1echim8tb3cdkmurhde1gmerpdcdqmarjkc4mmeobjdtm6irj1ec:
+              help: null
+              label: Entitled to deduct the advance payment on supplies of petrol,
+                diesel and biofuels
+            x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
+              help: null
+              label: Recipient of cash-basis scheme transactions
+            x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
+              help: null
+              label: Tax ID of the dominant entity
+            x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
+              help: null
+              label: Exempt from the annual summary return, form 390
+            x-chim6r1ectp7as3f5ln7arb5e9ng:
+              help: null
+              label: Group number
+            x-chim6r1ectp7as3f5lp6ur0:
+              help: null
+              label: Dominant or dependent entity
+            x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
+              help: null
+              label: 'Special pro rata: election or revocation'
+            x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
+              help: null
+              label: Registered in the monthly refund register
+            x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
+              help: null
+              label: Electing the regime under LIVA article 163 sexies.Five
+            x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
+              help: null
+              label: Taxed exclusively under a foral administration
+            x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
+              help: null
+              label: Annual turnover other than zero
     '341':
       field:
         official_name: null

@@ -583,7 +583,7 @@ source_refs = ["aeat-dr-131-2024"]
 id = "modelo-131-2024-dpa-complementaria-indicator"
 offset = 12
 length = 1
-kind = "header"
+kind = "computed"
 # DELIBERATE, DO NOT "FIX" THIS INTO A FILLER.
 # The DPA design row 5 declares its contenido as
 # 'Blanco (No complementaria) o "C" (Complementaria)' -- unlike Pag. 1 row 5,
