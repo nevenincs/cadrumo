@@ -51581,16 +51581,22 @@ modelo:
               help: null
               label: Solicita la devolución por transferencia
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
+              help: null
               label: Ganancia patrimonial
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
+              help: null
               label: NIF de la sociedad o fondo de inversión
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
+              help: null
               label: Retención o ingreso a cuenta
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
+              help: null
               label: Tipo de renta
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
+              help: null
               label: Total ganancias patrimoniales
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
+              help: null
               label: Total retenciones o ingresos a cuenta
             x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
               help: null
@@ -53243,48 +53249,20 @@ modelo:
             x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d0:
               help: null
               label: Valor de transmisión [2]
-        2015-y-siguientes:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: Ejercicio al que se refiere la declaracion
-            x-chim6r1ee1in4qbfchng:
-              help: null
-              label: Periodo (anual, 0A)
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
-              label: Ganancia patrimonial
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
-              label: NIF de la sociedad o fondo de inversión
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
-              label: Retención o ingreso a cuenta
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
-              label: Tipo de renta
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
-              label: Total ganancias patrimoniales
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
-              label: Total retenciones o ingresos a cuenta
-            x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
-              help: null
-              label: Base liquidable general (régimen impatriados, excluida la parte
-                del ahorro art. 25.1.f TRLIRNR)
-            x-d5mn0obke9km2p3f5phnarrkc4mm8qb6clp6arj3d5gmo:
-              help: null
-              label: Cuota diferencial (cuota integra general menos retenciones)
-            x-d5mn0obke9km2p3f5phnarrkc4mmirjkcljn4o9dctimspbic5m0:
-              help: null
-              label: 'Cuota integra general (escala art. 93.2.e.1º: 24% hasta 600.000
-                €, 47% sobre el exceso)'
-            x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
-              help: null
-              label: Retenciones e ingresos a cuenta (pagos a cuenta, art. 93.2.f)
           construct:
             m151-impatriado-calculation:
               field:
                 title: Modelo 151 IRPF régimen impatriados cuota
           field:
-            label: Modelo 151 ejercicios 2015 a 2024 (régimen impatriados, escala
+            label: Modelo 151 ejercicios 2015 a 2022 (régimen impatriados, escala
               general plana 24/47 tras Ley 26/2014; parte del ahorro no modelada en
               esta revisión)
+        2015-y-siguientes:
+          casilla:
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
+              label: Tipo de renta
+            x-d5mn0obke9km2p3f5phnarrkc4mmirjkcljn4o9dctimspbic5m0:
+              help: null
         2025-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -75198,7 +75176,7 @@ modelo:
           Modelo agregado. Autoliquidación mensual.
         title: IVA. Grupo de entidades. Modelo agregado. Autoliquidación mensual
       revision:
-        2008-y-siguientes:
+        2008-2025:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
@@ -75252,8 +75230,84 @@ modelo:
                 title: Modelo 353 IVA grupo de entidades modelo agregado autoliquidacion
                   mensual
           field:
+            label: Modelo 353 ejercicios 2008 a 2025 (Orden EHA/3434/2007)
+        2008-y-siguientes:
+          casilla:
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: Cuota IVA repercutido al tipo super-reducido (4%) - agregado
+                del grupo
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: Resultado del grupo (cuota devengada agregada - cuota deducible
+                agregada)
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: Cuota IVA soportado en operaciones interiores corrientes - agregado
+                del grupo
+          construct:
+            modelo-353-iva-grupo-agregado:
+              field:
+                title: Modelo 353 IVA grupo de entidades modelo agregado autoliquidacion
+                  mensual
+          field:
             label: Modelo 353 ejercicios 2008 y siguientes (Orden EHA/3434/2007 art
               2 y 8)
+        2026-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Resultado total (sumatorio del resultado de entidades) [01]
+            '02':
+              help: null
+              label: Cuotas a compensar pendientes de ejercicios anteriores [02]
+            '03':
+              help: null
+              label: Resultado ([01] - [08]) [03]
+            '04':
+              help: null
+              label: 'A deducir: resultado de autoliquidaciones anteriores del mismo
+                concepto, ejercicio y periodo [04]'
+            '05':
+              help: null
+              label: Resultado de la autoliquidación ([03] - [04]) [05]
+            08:
+              help: null
+              label: Cuotas a compensar de periodos anteriores aplicadas en este periodo
+                [08]
+            09:
+              help: null
+              label: Cuotas a compensar de periodos previos pendientes para periodos
+                posteriores ([02]-[08]) [09]
+            '10':
+              help: null
+              label: Pago a cuenta de entregas de gasolinas, gasóleos y biocarburantes
+                atribuible a la Administración del Estado [10]
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la autoliquidacion
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo mensual (01..12)
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4cli7aor9c9m6ab9j68p0:
+              help: null
+              label: Cuota deducible agregada del grupo reconciliada desde los Modelos
+                322 de los miembros
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4clr6arj7c5i62b9j68p0:
+              help: null
+              label: Cuota devengada agregada del grupo reconciliada desde los Modelos
+                322 de los miembros
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbjiclpnar3kc5i6ub9j68p0:
+              help: null
+              label: Resultado agregado del grupo reconciliado desde los Modelos 322
+                de los miembros
+          construct:
+            modelo-353-iva-grupo-agregado:
+              field:
+                title: Modelo 353 IVA grupo de entidades modelo agregado autoliquidacion
+                  mensual
+          field:
+            label: Modelo 353 ejercicio 2026 y siguientes (Orden EHA/3434/2007)
     '360':
       field:
         official_name: Modelo 360. Solicitud de devolución del Impuesto sobre el Valor
@@ -84557,6 +84611,10 @@ profile:
         status:
           label: Estado del censo
       contact:
+        contact_person_name:
+          label: Apellidos y nombre de la persona con quien relacionarse
+        contact_person_phone:
+          label: Teléfono de la persona con quien relacionarse
         fiscal_address:
           label: Domicilio fiscal
         fiscal_address_cadastral_reference:

@@ -49217,16 +49217,22 @@ modelo:
               help: null
               label: Visszatérítést kér banki átutalással
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
+              help: null
               label: Tőkenyereség
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
+              help: null
               label: A társaság vagy befektetési alap adóazonosító száma (NIF)
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
+              help: null
               label: Forrásadó vagy adóelőleg
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
+              help: null
               label: Jövedelemtípus
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
+              help: null
               label: Tőkenyereségek összesen
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
+              help: null
               label: Forrásadók és adóelőlegek összesen
             x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
               help: null
@@ -50856,47 +50862,15 @@ modelo:
             x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d0:
               help: null
               label: Átruházási érték [2]
-        2015-y-siguientes:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: A bevallás tárgyát képező adóév
-            x-chim6r1ee1in4qbfchng:
-              help: null
-              label: Időszak (éves, 0A)
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
-              label: Tőkenyereség
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
-              label: A társaság vagy befektetési alap adóazonosító száma (NIF)
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
-              label: Forrásadó vagy adóelőleg
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
-              label: Jövedelemtípus
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
-              label: Tőkenyereségek összesen
-            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
-              label: Forrásadók és adóelőlegek összesen
-            x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
-              help: null
-              label: Általános adóalap (beköltöző-rendszer, a TRLIRNR 25.1.f cikke
-                szerinti megtakarítási rész kivételével)
-            x-d5mn0obke9km2p3f5phnarrkc4mm8qb6clp6arj3d5gmo:
-              help: null
-              label: Különbözeti adókötelezettség (bruttó általános adókötelezettség
-                levonva a visszatartásokkal)
-            x-d5mn0obke9km2p3f5phnarrkc4mmirjkcljn4o9dctimspbic5m0:
-              help: null
-              label: 'Bruttó általános adókötelezettség (a 93.2.e.1. cikk szerinti
-                sáv: 24% 600 000 EUR-ig, 47% a felette)'
-            x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
-              help: null
-              label: Visszatartások és előlegfizetések (93.2.f cikk)
           construct:
             m151-impatriado-calculation:
               field:
-                title: null
+                title: 151-es nyomtatvány, személyi jövedelemadó, bevándorolt munkavállalók
+                  rendszere, adóösszeg
           field:
-            label: null
+            label: 151-es nyomtatvány, 2015–2022 adóévek (bevándorolt munkavállalók
+              különleges rendszere, a 26/2014. sz. törvény szerinti egykulcsos 24/47
+              általános adótábla; a megtakarítási rész ebben a változatban nincs modellezve)
         2025-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -72839,7 +72813,7 @@ modelo:
         official_name: null
         title: null
       revision:
-        2008-y-siguientes:
+        2008-2025:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
@@ -72889,7 +72863,86 @@ modelo:
               field:
                 title: null
           field:
+            label: 353-as modelo, 2008-2025 adóévek (EHA/3434/2007 rendelet)
+        2008-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              label: Az önadózás adóéve
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4cli7aor9c9m6ab9j68p0:
+              label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
+                levonható összeg
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              label: Csökkentett kulcs (10%) szerint felszámított ÁFA - csoportösszesítés
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: Szuperkedvezményes kulcs (4%) szerint felszámított ÁFA - csoportösszesítés
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: A csoport eredménye (összesített keletkezett ÁFA mínusz összesített
+                levonható ÁFA)
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: Folyó belföldi ügyletek után viselt ÁFA - csoportösszesítés
+          construct:
+            modelo-353-iva-grupo-agregado:
+              field:
+                title: null
+          field:
             label: null
+        2026-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Teljes eredmény (a csoporttagok eredményeinek összege) [01]
+            '02':
+              help: null
+              label: Korábbi évekből fennmaradó, beszámítható összegek [02]
+            '03':
+              help: null
+              label: Eredmény ([01] - [08]) [03]
+            '04':
+              help: null
+              label: 'Levonandó: azonos jogcímű, évi és időszaki korábbi önadózások
+                eredménye [04]'
+            '05':
+              help: null
+              label: Az önadózás eredménye ([03] - [04]) [05]
+            08:
+              help: null
+              label: Korábbi időszakok beszámítható összegei, ebben az időszakban
+                felhasználva [08]
+            09:
+              help: null
+              label: Korábbi időszakok beszámítható összegei, későbbi időszakokra
+                átvive ([02]-[08]) [09]
+            '10':
+              help: null
+              label: Benzin, gázolaj és bioüzemanyag értékesítése utáni előleg, az
+                állami adóhatóságnak betudhatóan [10]
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az önadózás adóéve
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Havi időszak (01..12)
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4cli7aor9c9m6ab9j68p0:
+              help: null
+              label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
+                levonható összeg
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4clr6arj7c5i62b9j68p0:
+              help: null
+              label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
+                keletkezett ÁFA
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbjiclpnar3kc5i6ub9j68p0:
+              help: null
+              label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
+                eredmény
+          construct:
+            modelo-353-iva-grupo-agregado:
+              field:
+                title: null
+          field:
+            label: 353-as modelo, 2026-tól kezdődő adóévek (EHA/3434/2007 rendelet)
     '360':
       field:
         official_name: null
@@ -81859,6 +81912,10 @@ profile:
         status:
           label: Censo állapota
       contact:
+        contact_person_name:
+          label: Kapcsolattartó vezeték- és keresztneve
+        contact_person_phone:
+          label: Kapcsolattartó telefonszáma
         fiscal_address:
           label: Adóügyi cím
         fiscal_address_cadastral_reference:
