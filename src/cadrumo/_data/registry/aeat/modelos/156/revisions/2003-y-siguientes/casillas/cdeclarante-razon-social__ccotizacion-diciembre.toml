@@ -1,6 +1,6 @@
 # Modelo 156 -- the official record-design positions. Transcribed from the
-# bundled ANEXO II of Orden HAC/3580/2003 (source enrolled-modelo-156-layout /
-# aeat-dr-156-2021, corpus/aeat_official/disenos_registro/modelo_156/files/
+# bundled ANEXO II of Orden HAC/3580/2003 (source enrolled-modelo-156-layout,
+# corpus/aeat_official/disenos_registro/modelo_156/files/
 # 01-156-diseno-de-registro-vigente.pdf, sha256
 # d387cfeb7254e49d539d5c3a731c0bd6bf275c8c1fdae80e6faa5a1006d5d068).
 #
@@ -22,7 +22,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t1-razon-social"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Campo 7. Positions 59-107, alfanumerico de 49 posiciones. The design
 # subdivides the slot (59-67 TELEFONO, 68-107 APELLIDOS Y NOMBRE) but declares
@@ -37,7 +37,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t1-persona-relacion"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Campo 8. Positions 108-120, numerico de 13 posiciones. "El numero de
 # justificante correspondiente a la declaracion."
@@ -51,7 +51,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t1-numero-justificante"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Campo 9. Positions 121-122, alfabetico: 121 declaracion complementaria ("C"),
 # 122 declaracion sustitutiva ("S").
@@ -64,7 +64,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t1-complementaria-sustitutiva"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Campo 10. Positions 123-135, numerico de 13 posiciones. Carries content only
 # when campo 9 declares "C" or "S"; "en cualquier otro caso debera rellenarse a
@@ -78,7 +78,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t1-numero-identificativo-anterior"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Campo 11. Positions 136-144, numerico de 9 posiciones. "El numero total de
 # afiliados o mutualistas declarados ... (Numero de registros de tipo 2)."
@@ -92,7 +92,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t1-numero-total-afiliados"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Campo 5. Positions 18-26, alfanumerico de 9 posiciones. "El numero de
 # identificacion fiscal del afiliado o mutualista."
@@ -106,7 +106,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-afiliado-nif"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Campo 7. Positions 36-75. "Por ser personas fisicas se consignara el primer
 # apellido, un espacio, el segundo apellido, un espacio y el nombre completo."
@@ -123,7 +123,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-afiliado-nombre"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Campo 8. Positions 76-87, alfanumerico de 12 posiciones. "Se consignaran
 # unicamente los digitos sin caracteres especiales que identifiquen al afiliado o
@@ -138,7 +138,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-numero-afiliacion"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Positions 88-96, alfanumerico de 9 posiciones: ENERO. The design
 # subdivides the slot into 88 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
@@ -157,7 +157,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-enero"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Positions 97-105, alfanumerico de 9 posiciones: FEBRERO. The design
 # subdivides the slot into 97 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
@@ -176,7 +176,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-febrero"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Positions 106-114, alfanumerico de 9 posiciones: MARZO. The design
 # subdivides the slot into 106 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
@@ -195,7 +195,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-marzo"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Positions 115-123, alfanumerico de 9 posiciones: ABRIL. The design
 # subdivides the slot into 115 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
@@ -214,7 +214,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-abril"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Positions 124-132, alfanumerico de 9 posiciones: MAYO. The design
 # subdivides the slot into 124 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
@@ -233,7 +233,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-mayo"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Positions 133-141, alfanumerico de 9 posiciones: JUNIO. The design
 # subdivides the slot into 133 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
@@ -252,7 +252,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-junio"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Positions 142-150, alfanumerico de 9 posiciones: JULIO. The design
 # subdivides the slot into 142 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
@@ -271,7 +271,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-julio"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Positions 151-159, alfanumerico de 9 posiciones: AGOSTO. The design
 # subdivides the slot into 151 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
@@ -290,7 +290,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-agosto"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Positions 160-168, alfanumerico de 9 posiciones: SEPTIEMBRE. The design
 # subdivides the slot into 160 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
@@ -309,7 +309,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-septiembre"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Positions 169-177, alfanumerico de 9 posiciones: OCTUBRE. The design
 # subdivides the slot into 169 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
@@ -328,7 +328,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-octubre"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Positions 178-186, alfanumerico de 9 posiciones: NOVIEMBRE. The design
 # subdivides the slot into 178 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
@@ -347,7 +347,7 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-noviembre"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]
 
 # Positions 187-195, alfanumerico de 9 posiciones: DICIEMBRE. The design
 # subdivides the slot into 187 SITUACION MENSUAL DE LAS COTIZACIONES (alfabetico
@@ -366,4 +366,4 @@ required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-diciembre"]
 legal_refs = ["orden-hac-3580-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-156-layout", "aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]

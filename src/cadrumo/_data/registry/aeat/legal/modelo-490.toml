@@ -68,7 +68,11 @@ source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-9721"
 review_status = "reviewed"
 
 # AEAT publishes THREE Modelo 490 record designs, one per era, and all three are
-# now bundled. Every span below is read off AEAT's own index title for that
+# bundled in the corpus -- but only the 2023 one is a REGISTERED SOURCE below.
+# The 2021 and 2022-2T designs are deliberately NOT registered: a source requires
+# `review_status`, which is Literal["reviewed"] with no pending state, and nobody
+# has reviewed those two documents. Their spans, read off AEAT's own index titles,
+# are recorded here so the work is ready the moment that decision is made: Every span below is read off AEAT's own index title for that
 # artefact -- never chosen to make a window check pass:
 #
 #   "Orden HAC/590/2021 (Ejercicio 2021 y 2022 hasta periodo 1T)"  -> 2021-1T .. 2022-1T
@@ -79,34 +83,6 @@ review_status = "reviewed"
 # 2023 one on the current page. Two of the three boundaries fall MID-YEAR, which
 # is why the revisions that consume them narrow by period rather than by year
 # alone.
-[sources."aeat-dr-490-2021"]
-evidence_tier = "layout_authority"
-authority = "aeat"
-kind = "record_design"
-record_design_epoch = "2021"
-corpus_path = "corpus/aeat_official/disenos_registro/modelo_490/files/02-490-orden-hac-590-2021-ejercicio-2021-y-2022-hasta-periodo-1t.xlsx"
-sha256 = "d8115bd4f4d18745c6a20b9b8c184582c3ddc5ba24a6c955ba51dd92f1534fa7"
-bytes = 87923
-retrieved_at = 2026-08-15
-applies_from = 2021-01-01
-applies_to = 2022-03-31
-source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr490e21.xlsx"
-review_status = "reviewed"
-
-[sources."aeat-dr-490-2022-2t"]
-evidence_tier = "layout_authority"
-authority = "aeat"
-kind = "record_design"
-record_design_epoch = "2022"
-corpus_path = "corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx"
-sha256 = "9a4c8d8cd2e677801629b28b5152c66911d79f56f623c5b598ac6f7b4ec3bc66"
-bytes = 106654
-retrieved_at = 2026-08-15
-applies_from = 2022-04-01
-applies_to = 2022-12-31
-source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr490e22.xlsx"
-review_status = "reviewed"
-
 [sources."aeat-dr-490-2023"]
 evidence_tier = "layout_authority"
 authority = "aeat"

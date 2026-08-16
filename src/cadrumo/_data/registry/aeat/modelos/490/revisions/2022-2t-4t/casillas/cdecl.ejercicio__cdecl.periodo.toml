@@ -23,5 +23,6 @@ legal_refs = ["orden-hac-590-2021:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-490-procedure"]
 
 # No numbered form casilla is declared for this era: its diseno de registro
-# (aeat-dr-490-2022-2t) has not been transcribed. Nothing is fabricated here.
+# for this era is bundled but not a registered source (review_status), so no
+# numbered form casilla is declared. Nothing is fabricated here.
 
