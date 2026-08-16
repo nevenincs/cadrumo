@@ -13,12 +13,14 @@ done and skip the multi-second re-validation of an immutable bundled registry
 (build and continuous integration are the gate;
 the runtime asserts fingerprint identity only).
 
-Two homes back the verdict: a writable per-storage-root file (mutable trees,
-keyed on the full ``(path, size, mtime)`` tuples) and a read-only file the
-release build stamps beside the bundled tree (keyed on the install-stable
-``(relative-path, size)`` plus version, since mtime does not survive
-packaging). Every verdict is derived and rebuildable per
-``no-legacy-compatibility``: a key mismatch or a foreign record deletes the
+Two homes back the verdict: a writable per-storage-root file (mutable trees)
+and a read-only file the release build stamps beside the bundled tree. Both key
+on the tree identity that :mod:`~domain.calculations.registry._identity` owns --
+this module derives no identity of its own, so a verdict and the authority that
+consults it can never disagree about which tree was certified. The shipped
+verdict is honoured only for a STAMPED identity, because only a stamped tree has
+an install-stable identity to certify. Every verdict is derived and rebuildable
+per ``no-legacy-compatibility``: a key mismatch or a foreign record deletes the
 writable verdict and re-validates in full -- no migration.
 """
 
@@ -35,10 +37,8 @@ from .... import __version__
 from ....core import StorageCategory, storage_path
 from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.external_constants import UTF_8_ENCODING
+from ._identity import RegistryIdentity
 from ._loader_cache import is_bundled_registry_root
-
-FingerprintTuples = tuple[tuple[str, int, int, str], ...]
-"""``(path, size, mtime_ns, content_digest)`` loader tuples; the digest is empty for directories/bundled files."""
 
 SourceEvidenceFingerprintTuples = tuple[tuple[str, int, int], ...]
 """``(path, size, mtime_ns)`` tuples for source-evidence files (no content digest)."""
@@ -69,90 +69,75 @@ class RegistryValidationVerdict(BaseModel):
 
 def compute_verdict_key(
     *,
-    registry_fingerprints: FingerprintTuples,
+    identity_digest: str,
     source_evidence_fingerprints: SourceEvidenceFingerprintTuples,
     package_version: str = __version__,
 ) -> str:
-    """Hash the complete fingerprint tuples plus the package version into one key.
+    """Bind one tree identity plus the source-evidence set into a verdict key.
 
-    The two groups are the exact tuples the authority passes as its
-    ``lru_cache`` key, so correctness reduces to fingerprint identity per the
-    registry authority-flow rule. A group label is mixed in so a tuple moving
-    between groups cannot collide.
+    ``identity_digest`` comes from
+    :func:`~domain.calculations.registry._identity.resolve_registry_identity`
+    and is the ONLY registry-tree input: this module never re-derives identity
+    from fingerprint tuples, so a verdict cannot be keyed on a different view of
+    the tree than the authority cached. A group label is mixed in so a value
+    moving between groups cannot collide.
 
     Returns:
-        The hex SHA-256 digest binding the fingerprints to ``package_version``.
+        The hex SHA-256 digest binding the identity to ``package_version``.
     """
     hasher = hashlib.sha256()
     hasher.update(package_version.encode("utf-8"))
-    for label, group in (("registry", registry_fingerprints), ("source", source_evidence_fingerprints)):
-        hasher.update(label.encode("utf-8"))
-        for entry in group:
-            for part in entry:
-                hasher.update(str(part).encode("utf-8"))
+    hasher.update(b"identity")
+    hasher.update(identity_digest.encode("utf-8"))
+    hasher.update(b"source")
+    for entry in source_evidence_fingerprints:
+        for part in entry:
+            hasher.update(str(part).encode("utf-8"))
     return hasher.hexdigest()
 
 
-def compute_bundled_verdict_key(
+def compute_shipped_verdict_key(
     *,
-    registry_fingerprints: FingerprintTuples,
-    registry_root: Path,
+    identity_digest: str,
     package_version: str = __version__,
 ) -> str:
     """Compute the install-stable key for the release-stamped bundled verdict.
 
-    The per-storage-root key (:func:`compute_verdict_key`) folds absolute paths
-    and ``mtime_ns``, which do NOT survive packaging: the cohort builds the
-    wheel from a ``git archive`` extraction and installation rewrites mtimes and
-    directory sizes. This key drops the mtime component and the directory
-    entries (both packaging-unstable) and keys on the release version plus the
-    sorted ``(relative-path, size)`` of every registry FILE -- stable from the
-    build machine to every install because the bundled tree is byte-identical
-    per release. Install byte integrity is owned by the
-    package-manager digest chain; any file-set or size change re-validates.
+    Drops the source-evidence group that :func:`compute_verdict_key` folds:
+    those tuples carry absolute paths and ``mtime_ns``, neither of which
+    survives packaging. What remains is the release version plus the stamped
+    install-stable tree identity, which is byte-stable from the build machine to
+    every install. Install byte integrity is owned by the package-manager digest
+    chain; any change the stamp can see re-validates.
 
     Returns:
-        The hex SHA-256 digest over the version, relative paths, and sizes.
+        The hex SHA-256 digest over the version and the stamped identity.
     """
-    resolved_root = registry_root.resolve()
-    entries: list[tuple[str, int]] = []
-    for path, size, _mtime_ns, _content_digest in registry_fingerprints:
-        candidate = Path(path)
-        if not candidate.is_file():
-            continue
-        try:
-            relative = candidate.resolve().relative_to(resolved_root).as_posix()
-        except ValueError:
-            relative = candidate.name
-        entries.append((relative, size))
     hasher = hashlib.sha256()
-    hasher.update(b"bundled-registry")
+    hasher.update(b"shipped-registry-verdict")
     hasher.update(package_version.encode("utf-8"))
-    for relative, size in sorted(entries):
-        hasher.update(relative.encode("utf-8"))
-        hasher.update(str(size).encode("utf-8"))
+    hasher.update(identity_digest.encode("utf-8"))
     return hasher.hexdigest()
 
 
 def stamp_bundled_verdict(
     *,
-    registry_fingerprints: FingerprintTuples,
-    registry_root: Path,
+    identity_digest: str,
     output_path: Path,
     package_version: str = __version__,
 ) -> RegistryValidationVerdict:
     """Write the install-stable bundled-tree verdict at ``output_path``.
 
-    Called by the release build against the tree it is packaging so the first
-    end-user touch of this release skips validation. The caller supplies the
-    fingerprints so this module adds no loader import edge.
+    Called by the release build against the tree it is packaging, immediately
+    after that tree's identity stamp is written, so the first end-user touch of
+    this release skips validation. The caller supplies the identity digest so
+    this module adds no loader import edge and derives no identity of its own.
 
     Returns:
         The written :class:`RegistryValidationVerdict`.
     """
-    key = compute_bundled_verdict_key(
-        registry_fingerprints=registry_fingerprints,
-        registry_root=registry_root,
+    key = compute_shipped_verdict_key(
+        identity_digest=identity_digest,
         package_version=package_version,
     )
     verdict = RegistryValidationVerdict(
@@ -247,18 +232,22 @@ def registry_validation_is_certified(
     root: Path,
     *,
     verdict_key: str,
-    registry_fingerprints: FingerprintTuples,
+    identity: RegistryIdentity,
     package_version: str = __version__,
 ) -> bool:
     """Whether a persisted green verdict certifies this tree for ``root``.
 
     Checks the writable per-storage-root verdict first (matched on the full
-    ``verdict_key``), deleting it on any mismatch; then, only when a shipped
-    bundled verdict is present, matches it on the install-stable
-    :func:`compute_bundled_verdict_key`. That key is computed lazily -- only on
-    the first-touch path where a shipped verdict exists and the writable verdict
-    has not hit -- so its file-stat pass never runs on a warm load or a dev tree
-    with no shipped verdict. A hit skips ``validate_registry`` entirely.
+    ``verdict_key``), deleting it on any mismatch; then, only when the tree's
+    identity is STAMPED and a shipped verdict sits beside it, matches that
+    verdict on :func:`compute_shipped_verdict_key`.
+
+    The stamped-identity requirement is what makes the shipped branch sound: a
+    shipped verdict certifies the tree the build packaged, and only a stamp
+    establishes that this IS that tree. A walked identity -- any authoring or
+    editable tree -- never reaches the shipped branch, so no amount of verdict
+    material beside a mutable tree can certify it. Neither branch performs a
+    filesystem walk. A hit skips ``validate_registry`` entirely.
 
     Returns:
         ``True`` when a stored green verdict certifies the current tree.
@@ -270,18 +259,19 @@ def registry_validation_is_certified(
             return True
         # Mismatch: delete-not-migrate, forcing a full re-validation next.
         delete_verdict(writable)
+    if not identity.is_stamped:
+        return False
     shipped = bundled_verdict_path(root)
-    if shipped is not None:
-        shipped_verdict = read_verdict(shipped)
-        if shipped_verdict is not None:
-            bundled_key = compute_bundled_verdict_key(
-                registry_fingerprints=registry_fingerprints,
-                registry_root=root,
-                package_version=package_version,
-            )
-            if _verdict_matches(shipped_verdict, bundled_key):
-                return True
-    return False
+    if shipped is None:
+        return False
+    shipped_verdict = read_verdict(shipped)
+    if shipped_verdict is None:
+        return False
+    shipped_key = compute_shipped_verdict_key(
+        identity_digest=identity.digest,
+        package_version=package_version,
+    )
+    return _verdict_matches(shipped_verdict, shipped_key)
 
 
 def certify_registry_validation(

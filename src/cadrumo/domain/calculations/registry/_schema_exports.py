@@ -51,9 +51,11 @@ __all__ = [
     "ExportRecordDefinition",
     "ExportSemanticPayloadAxis",
     "ExportValuePolicyValue",
-    "M303EnvelopePrefixFieldDeclaration",
-    "M303EnvelopePrefixRole",
-    "M303FilingEnvelopeDefinition",
+    "FilingEnvelopeCloserDerivation",
+    "FilingEnvelopeDefinition",
+    "FilingEnvelopePrefixFieldDeclaration",
+    "FilingEnvelopePrefixRole",
+    "FilingEnvelopeTotalDerivation",
     "OneBasedExportOffset",
     "ProjectionEndpointDeclaration",
     "RecordDiscriminator",
@@ -78,9 +80,28 @@ than re-declaring the six literals.
 """
 
 
-class M303EnvelopePrefixRole(StrEnum):
-    """Closed runtime roles for the reviewed DP30300 prefix declaration."""
+class FilingEnvelopePrefixRole(StrEnum):
+    """Closed roles an AEAT variable-envelope prefix declares, in source order.
 
+    ONE vocabulary for every modelo, because the designs share one grammar: the
+    thirty-five bundled 328-byte envelopes all open with the ``<T…>`` record
+    identifier and an ``<AUX>`` block carrying the product identity between
+    reserved spans. What differs between designs is which of these roles a given
+    design prints and how wide each one is -- both facts the declaration carries
+    -- not what the roles MEAN.
+
+    Declared in this order deliberately: a declaration's roles must appear as a
+    subsequence of this tuple, so a design that omits a role stays admissible
+    while one that reorders the grammar refuses.
+
+    :attr:`COMPOSED_OPENING_TAG` is the one genuine alternative rather than an
+    omission. Some designs (Modelo 200, 100, 714) print the whole seventeen-byte
+    ``<T200020250A0000>`` identifier as ONE source row instead of the six
+    separate rows Modelo 303 prints, so the two spellings are mutually exclusive
+    and :class:`FilingEnvelopeDefinition` refuses a declaration carrying both.
+    """
+
+    COMPOSED_OPENING_TAG = "composed_opening_tag"
     OPENING_TAG = "opening_tag"
     MODELO = "modelo"
     DISCRIMINANT = "discriminant"
@@ -96,65 +117,164 @@ class M303EnvelopePrefixRole(StrEnum):
     AUX_CLOSING_TAG = "aux_closing_tag"
 
 
-def _coerce_m303_envelope_prefix_role(value: object) -> object:
-    """Hydrate the authored layout token into its closed DP30300 prefix role."""
-    if isinstance(value, M303EnvelopePrefixRole):
+#: The six roles a :attr:`FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG` fuses.
+_OPENING_TAG_COMPONENT_ROLES: tuple[FilingEnvelopePrefixRole, ...] = (
+    FilingEnvelopePrefixRole.OPENING_TAG,
+    FilingEnvelopePrefixRole.MODELO,
+    FilingEnvelopePrefixRole.DISCRIMINANT,
+    FilingEnvelopePrefixRole.FILING_YEAR,
+    FilingEnvelopePrefixRole.PERIOD,
+    FilingEnvelopePrefixRole.RECORD_TYPE,
+)
+
+
+class FilingEnvelopeCloserDerivation(StrEnum):
+    """Closed algorithms deriving a variable envelope's closing identifier."""
+
+    RELATIVE_CLOSER_V1 = "relative-closer-v1"
+
+
+class FilingEnvelopeTotalDerivation(StrEnum):
+    """Closed algorithms deriving a variable envelope's declared total."""
+
+    EMITTED_BYTE_TOTAL_V1 = "emitted-byte-total-v1"
+
+
+def _coerce_envelope_prefix_role(value: object) -> object:
+    """Hydrate the authored layout token into its closed prefix role."""
+    if isinstance(value, FilingEnvelopePrefixRole):
         return value
     if isinstance(value, str):
         try:
-            return M303EnvelopePrefixRole(value)
+            return FilingEnvelopePrefixRole(value)
         except ValueError as exc:
-            raise ValueError(f"unknown M303 envelope prefix role {value!r}") from exc
-    raise ValueError("M303 envelope prefix role must be a string")
+            raise ValueError(
+                f"unknown filing-envelope prefix role {value!r}; "
+                f"expected one of {[member.value for member in FilingEnvelopePrefixRole]}",
+            ) from exc
+    raise ValueError("filing-envelope prefix role must be a string")
 
 
-type M303EnvelopePrefixRoleValue = Annotated[
-    M303EnvelopePrefixRole,
-    BeforeValidator(_coerce_m303_envelope_prefix_role),
+def _coerce_envelope_closer_derivation(value: object) -> object:
+    if isinstance(value, FilingEnvelopeCloserDerivation):
+        return value
+    if isinstance(value, str):
+        try:
+            return FilingEnvelopeCloserDerivation(value)
+        except ValueError as exc:
+            raise ValueError(f"unknown filing-envelope closer derivation {value!r}") from exc
+    raise ValueError("filing-envelope closer derivation must be a string")
+
+
+def _coerce_envelope_total_derivation(value: object) -> object:
+    if isinstance(value, FilingEnvelopeTotalDerivation):
+        return value
+    if isinstance(value, str):
+        try:
+            return FilingEnvelopeTotalDerivation(value)
+        except ValueError as exc:
+            raise ValueError(f"unknown filing-envelope total derivation {value!r}") from exc
+    raise ValueError("filing-envelope total derivation must be a string")
+
+
+type FilingEnvelopePrefixRoleValue = Annotated[
+    FilingEnvelopePrefixRole,
+    BeforeValidator(_coerce_envelope_prefix_role),
+]
+type FilingEnvelopeCloserDerivationValue = Annotated[
+    FilingEnvelopeCloserDerivation,
+    BeforeValidator(_coerce_envelope_closer_derivation),
+]
+type FilingEnvelopeTotalDerivationValue = Annotated[
+    FilingEnvelopeTotalDerivation,
+    BeforeValidator(_coerce_envelope_total_derivation),
 ]
 
 
-class M303EnvelopePrefixFieldDeclaration(RegistryModel):
-    """One reviewed DP30300 prefix role and its exact emitted byte length."""
+class FilingEnvelopePrefixFieldDeclaration(RegistryModel):
+    """One reviewed envelope prefix role and its exact emitted byte length."""
 
-    role: M303EnvelopePrefixRoleValue
+    role: FilingEnvelopePrefixRoleValue
     length: int = Field(gt=0)
 
 
-class M303FilingEnvelopeDefinition(RegistryModel):
-    """Static DP30300 declaration carried by a generated Modelo 303 layout.
+class FilingEnvelopeDefinition(RegistryModel):
+    """Static variable-envelope declaration carried by a generated layout.
 
     This is a declaration of the envelope grammar, not an instance filing
     payload.  Period, product identity values, body occurrences, bytes, totals,
     and digests are deliberately absent: the application filing boundary owns
     those facts when it renders an approved draft.
+
+    Modelo-agnostic BY CONSTRUCTION rather than by convention. Every fact that
+    used to be a Modelo 303 constant in code -- the ``DP30300`` identity, the
+    thirteen-slot prefix, the 328-byte extent -- is declared data here, so the
+    same type carries Modelo 200's eight-slot composed-tag prefix and Modelo
+    309's thirteen without a branch. The modelo itself is deliberately NOT a
+    field: the layout is owned by exactly one revision of one modelo, and the
+    render path reads that identity from the selected snapshot rather than
+    letting a second, drift-capable spelling of it exist here.
     """
 
     schema_version: Literal[1] = 1
     source_ref: SourceRefId
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    record_identity: Literal["DP30300"]
-    prefix_fields: tuple[M303EnvelopePrefixFieldDeclaration, ...] = Field(min_length=13, max_length=13)
+    record_identity: str = Field(min_length=1)
+    prefix_fields: tuple[FilingEnvelopePrefixFieldDeclaration, ...] = Field(min_length=1)
+    prefix_extent: int = Field(gt=0)
     body_record_ids: tuple[RecordId, ...] = Field(min_length=1)
     product_identity_requirement: Literal["aeat-product-software-identity-v1"]
-    closer_derivation: Literal["m303-relative-closer-v1"]
-    total_derivation: Literal["m303-emitted-byte-total-v1"]
+    closer_derivation: FilingEnvelopeCloserDerivationValue
+    total_derivation: FilingEnvelopeTotalDerivationValue
 
     @model_validator(mode="after")
-    def _require_complete_static_grammar(self) -> M303FilingEnvelopeDefinition:
-        expected_roles = tuple(M303EnvelopePrefixRole)
-        actual_roles = tuple(field.role for field in self.prefix_fields)
-        if actual_roles != expected_roles:
+    def _require_complete_static_grammar(self) -> FilingEnvelopeDefinition:
+        roles = tuple(field.role for field in self.prefix_fields)
+        if len(set(roles)) != len(roles):
             raise RegistryValidationError(
-                "M303 filing envelope prefix declaration must retain every source-ordered closed role",
+                f"filing envelope {self.record_identity!r} prefix declaration repeats a role: {roles!r}",
             )
-        if sum(field.length for field in self.prefix_fields) != 328:
+        if not _is_subsequence(roles, tuple(FilingEnvelopePrefixRole)):
             raise RegistryValidationError(
-                "M303 filing envelope prefix declaration must retain its exact 328-byte source extent",
+                f"filing envelope {self.record_identity!r} prefix roles must appear in canonical source order",
+            )
+        _require_one_opening_tag_spelling(self.record_identity, roles)
+        declared_extent = sum(field.length for field in self.prefix_fields)
+        if declared_extent != self.prefix_extent:
+            raise RegistryValidationError(
+                f"filing envelope {self.record_identity!r} declares a {self.prefix_extent}-byte prefix extent "
+                f"but its prefix fields sum to {declared_extent}",
             )
         if len(set(self.body_record_ids)) != len(self.body_record_ids):
-            raise RegistryValidationError("M303 filing envelope body record declarations must be unique and ordered")
+            raise RegistryValidationError(
+                f"filing envelope {self.record_identity!r} body record declarations must be unique and ordered",
+            )
         return self
+
+
+def _is_subsequence(candidate: tuple[object, ...], universe: tuple[object, ...]) -> bool:
+    """Return whether ``candidate`` appears within ``universe`` in order."""
+    remaining = iter(universe)
+    return all(item in remaining for item in candidate)
+
+
+def _require_one_opening_tag_spelling(
+    record_identity: str,
+    roles: tuple[FilingEnvelopePrefixRole, ...],
+) -> None:
+    """Refuse a prefix declaring both opening-tag spellings, or neither."""
+    composed = FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG in roles
+    components = tuple(role for role in _OPENING_TAG_COMPONENT_ROLES if role in roles)
+    if composed and components:
+        raise RegistryValidationError(
+            f"filing envelope {record_identity!r} declares the composed opening tag alongside its "
+            f"component roles {tuple(role.value for role in components)!r}; the two spellings are exclusive",
+        )
+    if not composed and components != _OPENING_TAG_COMPONENT_ROLES:
+        raise RegistryValidationError(
+            f"filing envelope {record_identity!r} must declare either the composed opening tag or every "
+            f"one of its six component roles; declared {tuple(role.value for role in components)!r}",
+        )
 
 
 #: lookup rather than repeated per policy. A policy absent from this table has
@@ -623,7 +743,14 @@ class ExportLayoutDefinition(RegistryModel):
     source_refs: SourceRefs
     legal_refs: LegalRefs
     records: tuple[ExportRecordDefinition, ...] = Field(default_factory=tuple)
-    m303_filing_envelope: M303FilingEnvelopeDefinition | None = None
+    filing_envelope: FilingEnvelopeDefinition | None = None
+    """Variable-composition wrapper this fixed-width layout's records live inside.
+
+    Absent for the majority of layouts, whose records ARE the payload. Present
+    where the official design declares a ``Total: Variable`` envelope, in which
+    case the records are its body members rather than the whole file.
+    """
+
     dictionary_path_overrides: tuple[XmlDictionaryPathOverride, ...] = Field(default_factory=tuple)
     """Dictionary rows whose AEAT-declared path is corrected before use.
 
@@ -708,9 +835,9 @@ class ExportLayoutDefinition(RegistryModel):
 
 
 def _validate_xml_dictionary_layout(layout: ExportLayoutDefinition) -> None:
-    if layout.m303_filing_envelope is not None:
+    if layout.filing_envelope is not None:
         raise RegistryValidationError(
-            f"export layout {layout.id!r} declares an M303 filing envelope on an XML-dictionary layout",
+            f"export layout {layout.id!r} declares a filing envelope on an XML-dictionary layout",
         )
     if layout.dictionary_source_ref is None:
         raise RegistryValidationError(f"export layout {layout.id!r} must declare dictionary_source_ref")
@@ -742,21 +869,21 @@ def _validate_non_xml_layout(layout: ExportLayoutDefinition) -> None:
             f"export layout {layout.id!r} declares dictionary path overrides on a {layout.format} layout, "
             "which reads no dictionary",
         )
-    envelope = layout.m303_filing_envelope
+    envelope = layout.filing_envelope
     if envelope is None:
         return
     if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
         raise RegistryValidationError(
-            f"export layout {layout.id!r} declares an M303 filing envelope on a non-fixed-width layout",
+            f"export layout {layout.id!r} declares a filing envelope on a non-fixed-width layout",
         )
     if envelope.source_ref not in layout.source_refs:
         raise RegistryValidationError(
-            f"export layout {layout.id!r} M303 filing-envelope source must be included in source_refs",
+            f"export layout {layout.id!r} filing-envelope source must be included in source_refs",
         )
     record_ids = tuple(record.id for record in layout.records)
     if record_ids != envelope.body_record_ids:
         raise RegistryValidationError(
-            f"export layout {layout.id!r} M303 filing-envelope body records must retain the exact layout order",
+            f"export layout {layout.id!r} filing-envelope body records must retain the exact layout order",
         )
 
 

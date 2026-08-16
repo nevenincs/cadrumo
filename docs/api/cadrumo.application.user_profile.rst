@@ -40,6 +40,7 @@ Submodules
    cadrumo.application.user_profile._lifecycle
    cadrumo.application.user_profile._login_session
    cadrumo.application.user_profile._overview
+   cadrumo.application.user_profile._passphrase_rotation
    cadrumo.application.user_profile._preflight
    cadrumo.application.user_profile._profile_pointer_ports
    cadrumo.application.user_profile._profile_pointer_transaction

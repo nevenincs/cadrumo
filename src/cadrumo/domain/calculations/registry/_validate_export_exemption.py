@@ -87,7 +87,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ....core import CasillaId, ExportExemptionReason, ExportLayoutFormat
+from ....core import CasillaId, ExportExemptionReason, ExportLayoutFormat, RegistryAuthorityGrade
 from ....core.aggregation import BindingSourceKind
 from ._bindings import binding_source_casilla_ids, binding_source_modelo
 from ._export import derive_export_layouts_from_bindings, fixed_width_record_casilla_ids
@@ -308,6 +308,7 @@ def validate_export_exemption_declarations(
         publishes_record_design: Whether AEAT publishes a record design for this
             modelo, from :func:`modelo_publishes_a_record_design`.
     """
+    claims_filing_grade = revision.effective_authority_grade is RegistryAuthorityGrade.FILING
     failures: list[str] = []
     # Refused on emitting NOTHING, not on lacking a fixed-width layout specifically.
     # Modelo 100 files through an XML dictionary and declares no fichero BOE at all;
@@ -315,7 +316,28 @@ def validate_export_exemption_declarations(
     # emit as incapable, and would put a second, larger number into circulation
     # beside the capability worklist's. One question, one count.
     if not derive_export_layouts_from_bindings(revision):
-        # Scoped to revisions for which a record design EXISTS to author from.
+        # Scoped twice, on two independent claims the revision itself makes.
+        #
+        # FIRST, on the declared authority grade. The filing rung is the one that
+        # asserts "can additionally back a filing draft and its export"; the
+        # applicability rung asserts scheduling reach and nothing more. Refusing an
+        # applicability-grade revision for lacking an export layout refuses a claim
+        # it never made. Modelo 182 is the worked case: its revision carries a
+        # reviewed comment recording that the donativos declaration is filed by the
+        # entity RECEIVING the donation, so this application's taxpayer is the
+        # subject of the declaration and not its filer -- authoring a layout there
+        # would assert a filing capability the registry deliberately disclaims.
+        #
+        # This cannot become a mute button, and the reason is not that grade is
+        # hard to change. It is that the RUNTIME check is not scoped by grade:
+        # `_check_snapshot_filing_capability` refuses a filing-grade snapshot from
+        # any revision with no export layout, so the capability can never be
+        # exercised whatever a revision declares here. Demotion is also a real
+        # capability loss rather than a free pass -- an applicability-grade
+        # revision serves no filing surface at all -- and promotion is an
+        # attestation no program may make.
+        #
+        # SECOND, on whether a record design EXISTS to author from.
         # The refusal's own instruction is "author the layout from its official
         # record design", and for a modelo AEAT publishes no design for that is
         # not a task, it is an impossibility -- the refusal would stand forever
@@ -325,7 +347,7 @@ def validate_export_exemption_declarations(
         # registered (``test_every_bundled_record_design_is_registered``). Over
         # the bundled registry it separates exactly two modelos, 136 and 721,
         # from the other forty-six.
-        if publishes_record_design:
+        if publishes_record_design and claims_filing_grade:
             failures.append(
                 f"{prefix}: declares no export layout, so this application cannot file it. A missing "
                 "layout is not an exemption and there is no declaration that excuses it: it is the "
