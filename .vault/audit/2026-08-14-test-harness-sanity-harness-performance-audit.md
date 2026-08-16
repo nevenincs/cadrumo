@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:d7d478baaa02fa39af49347f371b7d257f9ad1efeaa0cb0b70a730e7fcba7ad0'
+body_hash: 'sha256:77d5282343c0ad0e7ce120898c4dcc5ffc31521d911125b2c6a2e5a5bc8656fd'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1716,3 +1716,52 @@ of IN-PROCESS work consist of? That is the largest single identified block of
 CPU in the suite. It is NOT claimed here to be shared or reducible -- this
 campaign has learned what happens to unmeasured claims -- only that it is now
 located.
+
+## The CLI's in-process mass is real work, and its one duplication is deliberate
+
+Profiling the largest in-process CLI module (`test_ledger_list_filter.py`, 155s)
+under cProfile, first-party frames by cumulative time:
+
+    148.4s  n=67   tests/cli_runner.py:invoke_cached_cli
+     89.3s  n=10   test_ledger_list_filter.py:_import_corpus
+     82.5s  n=40   _ledger_import_cli.py:ledger_import
+     63.3s  n=40   application/ledger/_actions_import.py:import_ledger_transactions
+     46.1s  n=111  adapters/persistence/profile/transactions.py:load
+
+Two findings, and both close the line of investigation rather than opening one.
+
+**The framework overhead is already cached.** `invoke_cached_cli` averages 2.2s
+across 67 invocations, but that figure is the COMMANDS, not the harness: the
+Click command tree is built once behind `@cache`, and `cadrumo_click_command`
+says why in its own docstring -- Typer rebuilds the full tree per invocation and
+"repeated materialization dominates test runtime". Somebody took this lever
+already, for the reason I would have taken it. What remains inside those 2.2s is
+ledger imports at ~1.6s per file, listings, and encrypted stores doing their
+work.
+
+**The one real duplication is protected.** Nine of the module's tests each call
+`_import_corpus()`, importing the same four CSVs through the real CLI at ~8.9s
+apiece -- 89.3s of a 155s module, and every one of those tests is read-only
+afterwards (no mutating verb appears anywhere in the file). That is precisely
+the shape that worked for the packaging cohort.
+
+It is not available here. Isolation comes from `live_fx_isolated_backend`, which
+is `autouse=True` and FUNCTION-scoped, and is used by fourteen modules. Sharing
+one imported corpus across the nine tests means giving them a shared backend,
+which is exactly the per-test isolation that fixture exists to provide -- and
+which the sibling `_evict_test_bound_bucket_session` guard exists to reinforce,
+after an unsealed session was observed crossing between tests and decrypting
+against the wrong bucket's DEK.
+
+So this would trade a real correctness property, in fourteen modules, for ~80s
+in one. Declined, and recorded here so the 89.3s is not rediscovered later as an
+unexplained opportunity: it is explained, and the explanation is that isolation
+costs what it costs.
+
+### Where this leaves the CPU question
+
+The suite's largest identified block -- the CLI's ~2,097s of in-process work --
+is commands executing against encrypted per-test stores. The harness overhead
+around it is already memoised, and the repeated work inside it is repeated
+because each test insists on its own world. There is no broad lever here of the
+kind the KDF calibration was.
