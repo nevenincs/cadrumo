@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:690121f5040c2fc2ec786e086b5ee5dadc5b602b1fe8a46c7b3976801b5704ed'
+body_hash: 'sha256:a75a1e2ce0fd9598e4d39657c4fd29040462d4eb8ace93daa17b5d43c1025ea5'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1913,3 +1913,55 @@ after either one alone would have been wrong.
 The revert was done by hand rather than with `git restore`, which needs explicit
 authorization in this worktree, and the file was confirmed byte-identical to
 `HEAD` afterwards rather than assumed clean.
+
+## The setup half, analysed: 1,564s, and no lever above 1.6%
+
+Setup was 17.4% of suite CPU and every prior analysis in this campaign had
+looked at CALL time. Aggregating setup-only per file:
+
+    total setup : 1,564s across 1,771 files
+     98.6s  test_acceptance_wall_catalogue     (already examined: batched wall run)
+     78.2s  test_wheel_content_boundary        (already ruled out: build semantics)
+     77.5s  test_dev_audit_report              (already optimised: shared build_report)
+
+Below those sits a visually striking pattern -- nine-plus structural gates in
+`src/cadrumo/tests/` each carrying a 16-24s setup, which looks exactly like the
+same scan being repeated per module.
+
+It is not. All of them already consume the SESSION-scoped `source_tree_ast`
+prime, so none re-parses the tree; what each pays is its own WALK over the
+shared 4,906 trees, looking for its own pattern -- skip/xfail policy, decimal
+enrollment, `Any`-parameter rationale, clock usage, per-modelo carve-outs. The
+expensive part is already shared; the remaining part is the analysis each gate
+exists to perform.
+
+Measured across the whole class rather than eyeballed:
+
+    files consuming source_tree_ast : 19
+    their total setup               : 145s = 9.3% of setup
+                                    =  1.6% of the suite's 9,351s CPU
+
+### Ruled out: fusing the nineteen walks
+
+The available lever is the one already applied INSIDE a single module (the IVA
+stem gates, three passes fused into one). Applied across these nineteen it would
+mean a session-scoped combined inventory computing every pattern in one traversal.
+
+Declined on the arithmetic and the coupling together. The ceiling is 1.6% of
+suite CPU -- and less in wall clock, since the suite is CPU/worker bound and this
+work is spread across workers already. Against that, nineteen independently
+owned gates would share one traversal: a failure in the shared walk breaks all
+nineteen at once, each gate stops being independently readable, and the next
+author adding a structural gate inherits a fused helper rather than writing an
+obvious loop.
+
+Fusing three passes inside one module was worth it because they shared a file,
+an owner and a failure mode. Nineteen gates across nineteen files share none of
+those, and the payoff is an order of magnitude smaller.
+
+### Where this leaves the setup angle
+
+Exhausted. The three largest setups were already examined in earlier rounds, and
+everything below them is either analysis a gate must do or is already sharing
+the one genuinely expensive thing (the AST prime). No unexamined setup cost
+above ~1.6% remains.
