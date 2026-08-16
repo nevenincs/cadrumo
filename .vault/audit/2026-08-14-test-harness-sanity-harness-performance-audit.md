@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:1625abe6271143a8b1c9e4ee9a4f8ca121fedcd90f4b160798688d7552c03c55'
+body_hash: 'sha256:1d4da92797fa9412f62b5451c91d2ebc6ede2bc755edc2c9134737d85e347798'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -3667,3 +3667,61 @@ The remaining named opportunities are all decisions rather than techniques:
 the compiled-artefact architecture, the combined-period gate's scan scope, and
 the worker-count cap. Further per-module profiling on this tree is unlikely to
 return until the registry campaign lands and the tail can be re-measured green.
+
+# Campaign close
+
+## What landed, with its measurement
+
+| change | effect |
+|---|---|
+| xdist fail-closed policy (`--max-worker-restart=0`) + a gate proving it | worker death now aborts loudly instead of deadlocking or corrupting a run |
+| explicit timeouts on the two 8-wide subprocess-pool gates and the real double-build | a hung pool is bounded rather than silent |
+| KDF calibration measurement declined across three doors | profile registration 17.44s -> 2.20s |
+| locale honesty gate: `@cache` + `CSafeLoader` | 125.14s -> 6.04s |
+| import-hygiene scan memoised (reused by the edge-integrity gate) | 249s -> 108s |
+| `dev/locales` C loader | 282s -> 137s |
+| MCP tool descriptors memoised | harness slice 143s -> 93s |
+| packaging cohort wheels built once per module | 204s -> 153s |
+| ledger list-filter: parse refusals de-corpused, world seeded per file | 91.30s -> 53.9s (median of 3) |
+| asesor / yearend / multicurrency personas: seed-once, copy-per-test | seedings 10/9/7 per module -> 1 each |
+| header-cell fold: one `translate` pass, memoised | 2.50x on the function; byte-identical across 5,527 inputs |
+| registry directory validators return what they classified | 115 fewer listings per compile |
+| **`probe_ollama_vision` + `_read_runtime_json` endpoint caches** | **`test_batch_ingest_runner` 98s -> 35s (-65%)**; application-lane connect time 78.6s -> 9.2s |
+
+## What is open, and it is decisions rather than techniques
+
+- **Compiled-registry artefact** -- the largest remaining lever. Handed off as a
+  copy-paste brief: hash once, compiled DB, drift detection, rebuild on
+  mismatch. The deciding measurement is in this audit: reading the 23.0 MB
+  artefact is 0.007s against a 2.9s warm load, so shipping it is necessary but
+  not sufficient -- the artefact must be randomly accessible.
+- **Combined-period gate scan scope** -- 74% of its 403 MB is bundled
+  third-party corpus text. Excluding it is ~25s -> ~7s and narrows what the gate
+  sees; stated with the exclusion named.
+- **`DEFAULT_WORKER_COUNT`** -- the only remaining wall-clock lever, costed at
+  ~1.7 GB session state per worker plus ~0.33 MB/test, peaking 4-5.7 GB.
+- **`cadrumo_llm_ollama_chat_url`** sits in `_config_runtime_fields.py` while
+  every other `cadrumo_llm_*` field lives in `_config_llm_fields.py`.
+
+## The honest part
+
+Four ideas were implemented, measured, and **not shipped** because they were no
+better or worse: the alternation regex merge (20.97s vs 15.08s), the corpus
+enumeration memo (reverted), hand-rolling the TOML read (0.87x/0.83x), and the
+section-directory scan fold (32% fewer listings, slower). Two headline claims
+were **corrected after the fact**: the ECB "47% of a test" (really 1-2% of the
+lane) and cProfile's attribution of ~30s to a string helper (really 1.4%).
+
+Three instrument failures cost the most time and are recorded as standing
+lessons: **cProfile measures the profiler** on call-count-heavy code; **a reduced
+call count is not a reduced cost**; and **a filter chosen to remove noise removed
+the finding** -- excluding loopback hid the largest cost in the suite until
+call-site attribution found it.
+
+## Not yet done: the closure honesty review
+
+`aeat-agent-orchestration` requires a fresh-context honesty review against this
+closure summary before structural completeness may be declared. **That review has
+not been run**, so this section is a closure summary and not a completeness
+claim. Its first question should be whether the ruled-out levers above were ruled
+out on measurement or on fatigue.
