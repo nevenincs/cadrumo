@@ -33,12 +33,12 @@ from .._schema import DataBindingDefinition
 from ._registry_schema_support import _committed_modelo
 
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
 def _modelo_347_revision():
     modelo, _catalogues = _committed_modelo("347")
     return modelo.revisions["2008-y-siguientes"]
-
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _M347_COUNT_BINDING = "modelo-347-declarante-numero-personas-entidades"
 
