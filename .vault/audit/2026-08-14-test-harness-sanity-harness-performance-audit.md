@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:1d4da92797fa9412f62b5451c91d2ebc6ede2bc755edc2c9134737d85e347798'
+body_hash: 'sha256:663a772cb4190b9cc7cf210b69e3b3d3e151ed59f740b233727f2547d8ce5b62'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -3725,3 +3725,78 @@ closure summary before structural completeness may be declared. **That review ha
 not been run**, so this section is a closure summary and not a completeness
 claim. Its first question should be whether the ruled-out levers above were ruled
 out on measurement or on fatigue.
+
+# Closure honesty review
+
+Run against the closure summary above, as `aeat-agent-orchestration` requires.
+Its nominated first question was whether the rule-outs were measured or fatigued.
+Two findings, and the second is the campaign's own documented error committed by
+its own author.
+
+## Finding 1: the headline number is overstated
+
+Claimed: `test_batch_ingest_runner` **98s -> 35s (-65%)**.
+
+Re-measured at HEAD `30cb295f31`, three runs: **43.85s, 38.87s, 42.86s** --
+median **42.86s**, all 21 passed. Against the ~98s before-state that is
+**-56%, not -65%**.
+
+All six landed changes are verified present at HEAD, so this is not a revert. The
+34.30-35.79s five-run set that produced the -65% claim was taken in one session
+and is not reproducing; the machine or the tree has moved under it.
+
+**Corrected claim: ~98s -> ~39-44s, about -56%.** The structural half of the
+claim is unaffected and remains reproducible: connections 76 -> 12, connect time
+71.5s -> 8.2s.
+
+**Lesson repeated from earlier in this same audit:** a multi-run median taken in
+one sitting is still one sample of the machine. The FX deltas were withdrawn for
+exactly this and the headline was not re-checked against a later day.
+
+## Finding 2: a rule-out was decided on an invalid comparison
+
+The corpus-enumeration memo on the combined-period gate was reverted because it
+measured **26.62s median against a 25.21s baseline**.
+
+That baseline was wrong. **25.21s came from a `-n auto` LANE run; the 26.62s came
+from isolated `-n0` runs.** The isolated baseline, measured now over three runs,
+is **26.56s, 28.24s, 27.10s -- median 27.10s**.
+
+So the memo was **marginally faster** than its true baseline (26.62s vs 27.10s),
+not slower. The revert still stands on its merits -- ~0.5s against a 1.7s
+run-to-run spread is below noise, and an unjustified change is still unjustified
+-- but **the stated reason was false**, and the correct reason is "no measurable
+win against a properly matched baseline".
+
+This is precisely the hazard this audit documented two sections earlier, with a
+measured 10.8x contention-inflation example, and then repeated. **A parallel-lane
+duration and an isolated duration are not comparable numbers.** Any before/after
+must hold the execution mode fixed.
+
+## Rule-outs re-examined: which were measured, which were judged
+
+| rule-out | basis | holds? |
+|---|---|---|
+| alternation regex merge | 20.97s vs 15.08s, equivalence proven over 26,824 files | measured, solid |
+| hand-rolled TOML read | 0.87x / 0.83x, 3,000 files, 5 repeats, equality gate | measured, solid |
+| section-directory scan fold | 1.49s vs 1.29s, five runs each, same mode | measured, solid |
+| directory-scan dedup ceiling (0.26s) | time inside `_read_entries`, three runs | measured, solid |
+| registry disk cache relocation | before/after on two modules, three runs each | measured, solid |
+| six read-only module conversions | all six timed | measured, solid |
+| corpus enumeration memo | **invalid baseline** -- see Finding 2 | reason corrected |
+| bs4 -> lxml | **not measured**; declined on risk/reward | judgement, labelled as such |
+| login-screen backoff wait | documented author intent | correct basis, not a timing question |
+| seeding tail (~1%) | seed costs measured, aggregate reasoned | part measured, part estimated |
+
+Eight of ten were measured. One was a judgement call and is labelled as one. One
+was decided on a bad comparison and is corrected here. **No rule-out was found to
+be fatigue presented as evidence** -- but one was evidence read carelessly, which
+is the same outcome from a different cause.
+
+## Verdict
+
+The campaign's landed work is verified present and its structural claims hold.
+One headline figure is corrected downward, and one rule-out's reasoning is
+corrected while its conclusion survives. **Structural completeness may be
+declared for the landed work**; the open items in the closure summary remain
+open and are decisions, not omissions.
