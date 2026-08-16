@@ -453,15 +453,11 @@ def _extract_record_design_pdf_stream(
             # It is a READER like any other, so it answers to the same contiguity
             # question -- a sheet whose rows do not tile its declared extent is
             # reported as skipped rather than handed over as whole.
-            broken = {
-                sheet.name: reason for sheet in visual_chart if (reason := contiguity_failure(sheet)) is not None
-            }
+            broken = {sheet.name: reason for sheet in visual_chart if (reason := contiguity_failure(sheet)) is not None}
             return RecordDesignExtraction(
                 source=source_label,
                 sheets=tuple(sheet for sheet in visual_chart if sheet.name not in broken),
-                skipped=tuple(
-                    RecordDesignSkippedSheet(name=name, reason=reason) for name, reason in broken.items()
-                ),
+                skipped=tuple(RecordDesignSkippedSheet(name=name, reason=reason) for name, reason in broken.items()),
             )
         raise
 

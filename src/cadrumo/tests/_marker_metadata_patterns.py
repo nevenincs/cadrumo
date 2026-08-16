@@ -239,7 +239,9 @@ PROCESS_PLAN_CASE = PatternCase(
 #: container is numbered or bound to its sibling containers, and that is what
 #: separates it from a state a machine actually occupies.
 PROCESS_PHASE_CASE = PatternCase(
-    re.compile(r"(^|[_-])pha" + r"se[_-]?(?:\d+|step|wave)($|[_-])|(^|[_-])(?:wave|plan)[_-]pha" + r"se($|[_-])", re.IGNORECASE),
+    re.compile(
+        r"(^|[_-])pha" + r"se[_-]?(?:\d+|step|wave)($|[_-])|(^|[_-])(?:wave|plan)[_-]pha" + r"se($|[_-])", re.IGNORECASE
+    ),
     ("test_phase_1_rollout", "_phase2_migration", "test_wave_phase_ordering", "_phase_step_id"),
     ("test_phases_of_moon", "_crash_at_handover_phase_child", "test_handover_phase_receipt", "_read_journal_phase"),
 )

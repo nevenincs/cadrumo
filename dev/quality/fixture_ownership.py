@@ -41,9 +41,7 @@ _DIVERGENCE_KINDS: Final[frozenset[str]] = frozenset(
         "compound",
     }
 )
-_ADJUDICATED_DISPOSITIONS: Final[frozenset[str]] = frozenset(
-    {_RETAINED_DIVERGENT, _SUBSTITUTABLE_DUPLICATE}
-)
+_ADJUDICATED_DISPOSITIONS: Final[frozenset[str]] = frozenset({_RETAINED_DIVERGENT, _SUBSTITUTABLE_DUPLICATE})
 
 
 class FixtureOwnershipError(RuntimeError):
@@ -102,11 +100,7 @@ def _topology_payload(record: FixtureRecord) -> dict[str, object]:
 
 
 def _bound_names(node: ast.AST) -> set[str]:
-    names = {
-        child.id
-        for child in ast.walk(node)
-        if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Store)
-    }
+    names = {child.id for child in ast.walk(node) if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Store)}
     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
         names.add(node.name)
     return names
@@ -222,11 +216,11 @@ def _referenced_names(node: ast.AST) -> set[str]:
             local_names.add(node.args.vararg.arg)
         if node.args.kwarg is not None:
             local_names.add(node.args.kwarg.arg)
-    return {
-        child.id
-        for child in ast.walk(node)
-        if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Load)
-    } - local_names - frozenset(dir(builtins))
+    return (
+        {child.id for child in ast.walk(node) if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Load)}
+        - local_names
+        - frozenset(dir(builtins))
+    )
 
 
 def _binding_semantics(
@@ -568,9 +562,7 @@ def _fixture_rows(
     )
     if repeated_dispositions is None:
         repeated_dispositions = {
-            record_id: (
-                _RETAINED_DIVERGENT if record_id in divergence else _SUBSTITUTABLE_DUPLICATE
-            )
+            record_id: (_RETAINED_DIVERGENT if record_id in divergence else _SUBSTITUTABLE_DUPLICATE)
             for record_id in repeated_ids
         }
     missing = repeated_ids - repeated_dispositions.keys()
@@ -587,9 +579,7 @@ def _fixture_rows(
         record_id = fixture_id(record)
         disposition = repeated_dispositions.get(record_id, _RETAINED_CURRENT_OWNER)
         if record_id in repeated_ids and disposition not in _ADJUDICATED_DISPOSITIONS:
-            raise FixtureOwnershipError(
-                f"invalid repeated-fixture disposition {disposition!r} for {record_id}"
-            )
+            raise FixtureOwnershipError(f"invalid repeated-fixture disposition {disposition!r} for {record_id}")
         if disposition == _RETAINED_DIVERGENT and record_id not in divergence:
             raise FixtureOwnershipError(f"retained divergent fixture has no evidence: {record_id}")
         name_count = name_counts[record.effective_name]
@@ -649,9 +639,7 @@ def build_manifest(
         "fixture_count": len(rows),
         "source_count": len(result.sources),
         "dynamic_request_count": len(result.dynamic_fixture_requests),
-        "dynamic_requests_sha256": _sha256(
-            [asdict(request) for request in result.dynamic_fixture_requests]
-        ),
+        "dynamic_requests_sha256": _sha256([asdict(request) for request in result.dynamic_fixture_requests]),
         "sources_sha256": _sha256(result.sources),
         "retained_current_owner_count": dispositions[_RETAINED_CURRENT_OWNER],
         "retained_divergent_count": dispositions[_RETAINED_DIVERGENT],
@@ -731,9 +719,7 @@ def validate_manifest(result: FixtureCensus, payload: Mapping[str, object]) -> N
     if payload != expected:
         raise FixtureOwnershipError("ownership manifest does not exactly match the live fixture census")
     substitutable = sorted(
-        record_id
-        for record_id, disposition in dispositions.items()
-        if disposition == _SUBSTITUTABLE_DUPLICATE
+        record_id for record_id, disposition in dispositions.items() if disposition == _SUBSTITUTABLE_DUPLICATE
     )
     if substitutable:
         raise FixtureOwnershipError(f"substitutable duplicate fixtures remain: {substitutable}")

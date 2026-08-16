@@ -56,9 +56,7 @@ def _run(draft: _Draft) -> list[WorkflowStep]:
 def test_an_error_finding_aborts_the_workflow() -> None:
     """The gate fires, and it fires with its own abort reason."""
     draft = _Draft(
-        findings=(
-            ModeloFinding(severity=BaseSeverity.ERROR, message="casilla 03 is required"),
-        ),
+        findings=(ModeloFinding(severity=BaseSeverity.ERROR, message="casilla 03 is required"),),
     )
 
     with pytest.raises(WorkflowAbortSignalError) as excinfo:

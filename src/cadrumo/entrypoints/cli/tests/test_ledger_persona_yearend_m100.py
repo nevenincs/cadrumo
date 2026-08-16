@@ -60,7 +60,6 @@ def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
 
 
-
 def _import_corpus() -> None:
     for name in _FILES:
         result = _invoke(["app", "ledger", "import", "--file", str(_CORPUS / name), "--provider", "csv"])

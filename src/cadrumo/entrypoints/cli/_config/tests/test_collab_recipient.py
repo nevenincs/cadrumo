@@ -51,12 +51,12 @@ def _create_profile(name: str = "collabco") -> None:
     register_cli_profile(
         label=name,
         facts={
-            "identity.tax_id": '12345678Z',
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.name": 'Collab',
-            "identity.surnames": 'Operator',
-            "activities.description": 'design',
-            "iva.regime": 'GENERAL',
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Collab",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
         },
     )
 

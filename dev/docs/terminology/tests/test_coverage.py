@@ -47,6 +47,7 @@ from ...tests._authority_fixtures import authority
 
 __all__ = ["authority"]
 
+
 @pytest.fixture(scope="module")
 def concept_cards() -> tuple[ConceptCardRecord, ...]:
     """Every Handbook concept card (bundled projection, run once)."""

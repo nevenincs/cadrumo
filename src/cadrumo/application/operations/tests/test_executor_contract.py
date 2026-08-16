@@ -222,7 +222,9 @@ def _repositories(
     return (
         OperationJournalRepository(storage_root=storage_root),
         OperationLeaseFilesystemRepository(storage_root=storage_root),
-        OperationSecureReferenceRepository(objects=_registered_objects(profile_objects, _NAMESPACE), namespace=_NAMESPACE),
+        OperationSecureReferenceRepository(
+            objects=_registered_objects(profile_objects, _NAMESPACE), namespace=_NAMESPACE
+        ),
     )
 
 

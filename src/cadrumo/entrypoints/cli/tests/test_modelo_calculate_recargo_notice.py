@@ -61,13 +61,13 @@ _M130_QUARTERLY_PERIODS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
 def _create_natural_person_profile() -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "identity.tax_id": '12345678Z',
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Readiness',
-            "activities.description": 'design',
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Operator",
+            "identity.surnames": "Readiness",
+            "activities.description": "design",
         },
     )
 

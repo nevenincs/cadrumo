@@ -136,14 +136,14 @@ def _casilla_observation(revision_payload, casilla_id: str):
 def _create_profile() -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
             "identity.tax_id": _TAX_ID,
-            "identity.name": 'Operator',
-            "identity.surnames": 'Amend',
-            "activities.description": 'design',
+            "identity.name": "Operator",
+            "identity.surnames": "Amend",
+            "activities.description": "design",
         },
     )
 

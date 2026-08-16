@@ -207,7 +207,9 @@ def run_cadrumo_subprocess(
     payload = json.dumps(
         {
             "settings": _json_safe(dict(settings)),
-            "expected_storage_route_kind": None if expected_storage_route_kind is None else expected_storage_route_kind.name,
+            "expected_storage_route_kind": None
+            if expected_storage_route_kind is None
+            else expected_storage_route_kind.name,
         },
     )
     return run_subprocess_cli_harness(

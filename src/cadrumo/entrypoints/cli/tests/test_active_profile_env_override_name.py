@@ -47,11 +47,11 @@ def _create_profile_and_resolve_uuid() -> str:
     register_cli_profile(
         label=_LABEL,
         facts={
-            "identity.tax_id": '12345678Z',
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Override',
-            "activities.description": 'design',
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Operator",
+            "identity.surnames": "Override",
+            "activities.description": "design",
         },
     )
     from ....application.workflow import read_profile_bucket

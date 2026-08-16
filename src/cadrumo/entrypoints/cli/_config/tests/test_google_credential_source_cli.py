@@ -98,8 +98,7 @@ def _create_profile(name: str = "google-credential-source-operator") -> str:
     """Register the profile through the shared CLI registration door."""
     return register_cli_profile(
         label=name,
-        facts={
-        },
+        facts={},
     )
 
 

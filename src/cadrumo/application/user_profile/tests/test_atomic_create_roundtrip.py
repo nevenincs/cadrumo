@@ -63,11 +63,11 @@ def _create(name: str, tax_id: str = "12345678Z") -> None:
         label=name,
         facts={
             "identity.tax_id": tax_id,
-            "taxpayer_type.entity_type": 'natural_person',
+            "taxpayer_type.entity_type": "natural_person",
             "identity.name": name.capitalize(),
-            "identity.surnames": 'Example',
-            "activities.description": 'design',
-            "iva.regime": 'GENERAL',
+            "identity.surnames": "Example",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
         },
     )
 

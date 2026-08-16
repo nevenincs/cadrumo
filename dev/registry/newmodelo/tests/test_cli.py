@@ -22,9 +22,7 @@ def test_default_manager_targets_the_live_cadrumo_registry_tree() -> None:
     manager = _default_manager()
 
     assert manager.registry_modelos_root.is_dir()
-    assert manager.registry_modelos_root == (
-        REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
-    )
+    assert manager.registry_modelos_root == (REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos")
 
 
 def _scaffold_args(tmp_path: Path, *extra: str) -> list[str]:

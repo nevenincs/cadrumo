@@ -20,33 +20,33 @@ def _create_defaulted_natural_person_profile(profile_name: str) -> None:
     register_cli_profile(
         label=profile_name,
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Lucia',
-            "identity.surnames": 'Navarro',
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Lucia",
+            "identity.surnames": "Navarro",
         },
     )
 
 
 def test_profile_preflight_names_profile_only_scope_for_m100() -> None:
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Daniel',
-            "identity.surnames": 'Ruiz Martin',
-            "activities.description": 'software consulting',
-            "censo.activity_start_date": '2025-01-01',
-            "tax_residence.ccaa": 'madrid',
-            "renta_filing.declaration_type": '1',
-            "irpf.estimation_regime": 'directa_simplificada',
-            "renta_taxpayer.sex": 'H',
-            "renta_taxpayer.marital_status": '1',
-            "renta_family.situacion_familiar": 'soltero',
-            "renta_taxpayer.birth_date": '1980-01-01',
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Daniel",
+            "identity.surnames": "Ruiz Martin",
+            "activities.description": "software consulting",
+            "censo.activity_start_date": "2025-01-01",
+            "tax_residence.ccaa": "madrid",
+            "renta_filing.declaration_type": "1",
+            "irpf.estimation_regime": "directa_simplificada",
+            "renta_taxpayer.sex": "H",
+            "renta_taxpayer.marital_status": "1",
+            "renta_family.situacion_familiar": "soltero",
+            "renta_taxpayer.birth_date": "1980-01-01",
         },
     )
 
@@ -178,20 +178,20 @@ def test_defaulted_profile_readiness_surfaces_block_before_modelo_work(
 def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_refuse() -> None:
     """A real no-business persona can open its applicable Renta work only."""
     register_cli_profile(
-        label='pere-landlord',
+        label="pere-landlord",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Pere',
-            "identity.surnames": 'Rosello Rerun',
-            "taxpayer_type.irpf_income_categories": 'capital_inmobiliario',
-            "tax_residence.ccaa": 'cataluna',
-            "contact.postcode": '08001',
-            "renta_filing.declaration_type": '1',
-            "renta_taxpayer.sex": 'H',
-            "renta_taxpayer.birth_date": '1952-02-12',
-            "renta_taxpayer.marital_status": '3',
-            "renta_family.situacion_familiar": 'soltero',
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Pere",
+            "identity.surnames": "Rosello Rerun",
+            "taxpayer_type.irpf_income_categories": "capital_inmobiliario",
+            "tax_residence.ccaa": "cataluna",
+            "contact.postcode": "08001",
+            "renta_filing.declaration_type": "1",
+            "renta_taxpayer.sex": "H",
+            "renta_taxpayer.birth_date": "1952-02-12",
+            "renta_taxpayer.marital_status": "3",
+            "renta_family.situacion_familiar": "soltero",
         },
     )
 
@@ -271,11 +271,11 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
 def test_attribution_entity_without_activity_remains_status_blocked() -> None:
     """The no-business natural-person exception does not leak to entities."""
     register_cli_profile(
-        label='comunidad-sin-actividad',
+        label="comunidad-sin-actividad",
         facts={
-            "taxpayer_type.entity_type": 'attribution_entity',
-            "identity.tax_id": 'E12345674',
-            "identity.name": 'Comunidad sin actividad',
+            "taxpayer_type.entity_type": "attribution_entity",
+            "identity.tax_id": "E12345674",
+            "identity.name": "Comunidad sin actividad",
         },
     )
 
@@ -296,21 +296,21 @@ def test_attribution_entity_without_activity_remains_status_blocked() -> None:
 def test_economic_activity_m100_still_requires_the_direct_estimation_modality() -> None:
     """The non-business formula guard must not default a real activity's modality."""
     register_cli_profile(
-        label='autonomo-renta',
+        label="autonomo-renta",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Ana',
-            "identity.surnames": 'Autonoma',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
-            "activities.description": 'consultoria',
-            "irpf.estimation_regime": 'directa_normal',
-            "tax_residence.ccaa": 'madrid',
-            "renta_filing.declaration_type": '1',
-            "renta_taxpayer.sex": 'M',
-            "renta_taxpayer.birth_date": '1980-01-01',
-            "renta_taxpayer.marital_status": '1',
-            "renta_family.situacion_familiar": 'soltero',
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Ana",
+            "identity.surnames": "Autonoma",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "activities.description": "consultoria",
+            "irpf.estimation_regime": "directa_normal",
+            "tax_residence.ccaa": "madrid",
+            "renta_filing.declaration_type": "1",
+            "renta_taxpayer.sex": "M",
+            "renta_taxpayer.birth_date": "1980-01-01",
+            "renta_taxpayer.marital_status": "1",
+            "renta_family.situacion_familiar": "soltero",
         },
     )
 

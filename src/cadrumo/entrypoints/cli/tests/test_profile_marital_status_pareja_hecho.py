@@ -22,13 +22,13 @@ def _json_output(output: str) -> str:
 
 def test_profile_create_show_round_trips_pareja_de_hecho_marital_status() -> None:
     register_cli_profile(
-        label='andrea',
+        label="andrea",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Andrea',
-            "identity.surnames": 'High',
-            "renta_taxpayer.marital_status": '5',
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Andrea",
+            "identity.surnames": "High",
+            "renta_taxpayer.marital_status": "5",
         },
     )
 

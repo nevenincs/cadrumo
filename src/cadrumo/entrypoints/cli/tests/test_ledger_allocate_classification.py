@@ -32,13 +32,13 @@ def _imported_transaction_id(tmp_path: Path) -> str:
     """Create a profile, import one CSV transaction, return its id."""
 
     register_cli_profile(
-        label='tester',
+        label="tester",
         facts={
-            "identity.tax_id": '00000001R',
-            "activities.description": 'freelance',
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.name": 'Tester',
-            "identity.surnames": 'Allocation',
+            "identity.tax_id": "00000001R",
+            "activities.description": "freelance",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Tester",
+            "identity.surnames": "Allocation",
         },
     )
 

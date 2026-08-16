@@ -736,11 +736,7 @@ def test_m349_declarable_facts_are_reachable_on_the_canonical_path(
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision=select_revision(
-            next(
-                candidate
-                for candidate in bundled_registry_tree()[0]
-                if candidate.id == "349"
-            ),
+            next(candidate for candidate in bundled_registry_tree()[0] if candidate.id == "349"),
             filing_year=2026,
             period="1T",
         ),

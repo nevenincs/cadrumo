@@ -252,16 +252,16 @@ def test_bare_key_keyword_still_subsumes_the_compound_key_names(fragment: str) -
 def _create_profile() -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
-            "tax_residence.jurisdiction_scope": 'common_regime',
-            "iva.regime": 'GENERAL',
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Status',
-            "activities.description": 'design',
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.regime": "GENERAL",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Operator",
+            "identity.surnames": "Status",
+            "activities.description": "design",
         },
     )
 

@@ -258,7 +258,9 @@ def test_source_provenance_dropped_dependency_treatment_is_detected_not_masked(
         payload=_json.dumps(envelope).encode("utf-8"),
     )
 
-    reloaded = CalculationRevisionCatalogueRepository(objects=secure_objects).load().get(original.calculation_revision_id)
+    reloaded = (
+        CalculationRevisionCatalogueRepository(objects=secure_objects).load().get(original.calculation_revision_id)
+    )
     assert reloaded is not None
     assert reloaded.source_provenance[0].dependency_treatment != original.source_provenance[0].dependency_treatment
     assert reloaded.source_provenance[0].dependency_treatment == ""

@@ -28,13 +28,13 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def _create_profile() -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "identity.tax_id": '12345678Z',
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Operator',
-            "activities.description": 'design',
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
         },
     )
 

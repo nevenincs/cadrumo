@@ -279,13 +279,13 @@ def test_manual_ledger_root_format_still_controls_emitted_payload_shape(tmp_path
 
     env = {"CADRUMO_SECRET_PASSPHRASE": "backend-boundary-passphrase"}
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Operator',
-            "activities.description": 'design',
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
         },
     )
 

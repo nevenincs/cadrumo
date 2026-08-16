@@ -399,7 +399,9 @@ def _general_register(ejercicio: int, *, slots: tuple[int, ...]) -> ProrrataRegi
         for slot in slots
     )
     return ProrrataRegister(
-        entries=(ProrrataRegisterEntry(ejercicio=ejercicio, regime=ProrrataRegisterRegime.GENERAL, especial_transition=None),),
+        entries=(
+            ProrrataRegisterEntry(ejercicio=ejercicio, regime=ProrrataRegisterRegime.GENERAL, especial_transition=None),
+        ),
         activity_rows=rows,
     )
 

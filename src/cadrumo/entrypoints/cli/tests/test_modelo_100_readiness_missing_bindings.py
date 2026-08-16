@@ -22,15 +22,15 @@ _REVISION = "2025"
 def _create_natural_person_profile() -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Readiness',
-            "activities.description": 'design',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
-            "irpf.estimation_regime": 'directa_normal',
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Operator",
+            "identity.surnames": "Readiness",
+            "activities.description": "design",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "irpf.estimation_regime": "directa_normal",
         },
     )
 

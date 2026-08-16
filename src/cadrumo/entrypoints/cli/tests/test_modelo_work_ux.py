@@ -556,14 +556,14 @@ def test_work_dependencies_honours_activity_start_date_pre_activity_scoping(
     report a blocker that verify itself suppresses."""
 
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Readiness',
-            "activities.description": 'design',
-            "censo.activity_start_date": '2025-01-01',
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Operator",
+            "identity.surnames": "Readiness",
+            "activities.description": "design",
+            "censo.activity_start_date": "2025-01-01",
         },
     )
 
@@ -722,15 +722,15 @@ def test_work_create_without_revision_uses_registry_revision_for_supplied_year(
     """A fresh create without ``--revision`` binds to the law-selected registry revision."""
 
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
-            "irpf.estimation_regime": 'objetiva',
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Readiness',
-            "activities.description": 'objective-estimation activity',
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "irpf.estimation_regime": "objetiva",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Operator",
+            "identity.surnames": "Readiness",
+            "activities.description": "objective-estimation activity",
         },
     )
     modelos_131, _catalogues_131 = bundled_registry_tree()
@@ -757,15 +757,15 @@ def test_m131_modulos_manual_entry_calculates_without_ledger_observations(
     _isolated_cli_backend: Path,
 ) -> None:
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
-            "irpf.estimation_regime": 'objetiva',
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Readiness',
-            "activities.description": 'objective-estimation taxi activity',
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "irpf.estimation_regime": "objetiva",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Operator",
+            "identity.surnames": "Readiness",
+            "activities.description": "objective-estimation taxi activity",
         },
     )
 
@@ -925,15 +925,15 @@ def test_work_create_rejects_revision_that_does_not_cover_filing_year(
     """
 
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
-            "irpf.estimation_regime": 'objetiva',
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Readiness',
-            "activities.description": 'objective-estimation activity',
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "irpf.estimation_regime": "objetiva",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Operator",
+            "identity.surnames": "Readiness",
+            "activities.description": "objective-estimation activity",
         },
     )
     result = _invoke(

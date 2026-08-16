@@ -737,7 +737,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--repo-root",
         type=Path,
-        default = REPO_ROOT,
+        default=REPO_ROOT,
     )
     parser.add_argument(
         "--retain-install",
