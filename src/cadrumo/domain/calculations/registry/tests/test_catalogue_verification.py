@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....core import RECORD_DESIGN_EPOCH_RE
 from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSM_EXTENSION, XLSX_EXTENSION
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
@@ -412,6 +413,119 @@ def test_no_non_record_design_source_points_at_a_binary_design_under_disenos_reg
         "binary AEAT design under disenos_registro/ -- the same misclassification tier5's "
         "M210/M280/M345 sweep found and corrected, reported here as a set so a NEW instance "
         "is caught rather than silently joining a stale allowlist:\n  " + "\n  ".join(sorted(offending))
+    )
+
+
+def _record_design_modelo(corpus_path: str) -> str | None:
+    """Return the modelo a design's bundled corpus path sits under."""
+    parts = Path(corpus_path).parts
+    for part in parts:
+        if part.startswith("modelo_"):
+            return part.removeprefix("modelo_")
+    return None
+
+
+def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> None:
+    """A design binary no generator can select is an invisible under-declaration.
+
+    ``resolve_record_design_binary`` refuses a ``record_design`` source that
+    declares no ``record_design_epoch``, so the omission is not benign: it makes
+    the bundled, hash-pinned, reviewed binary unreachable by the export-fragment
+    generator. Nothing surfaced that until a generator was pointed at the modelo,
+    which for an unauthored export layout is never -- so the sibling
+    misclassification check above could demand "reclassify as kind='record_design'
+    with a record_design_epoch" while 60 of the catalogue's 121 design sources
+    carried no epoch at all.
+
+    Epochs are also asserted UNIQUE per modelo, because the epoch is the key the
+    generator's semantic-map and render-profile trees are addressed by
+    (``dev/registry/mappings/modelo_<n>/<epoch>/``). Two designs for one modelo
+    sharing an epoch cannot both be mapped, and AEAT does re-lay a form out
+    mid-ejercicio -- which is exactly what the grammar's optional sub-year label
+    ("2024-early", "2024-late") exists to distinguish.
+
+    The pending set below is deliberately reason-bearing and fails when stale: an
+    entry that acquires an epoch, or disappears, must leave this map rather than
+    sit here looking cleared.
+    """
+    pending: dict[str, str] = {
+        # No declared applicability at all, so no ejercicio can be derived from
+        # the entry itself. Each needs its governing Orden located and an
+        # applies_from established before an epoch can be an honest claim.
+        "enrolled-modelo-038-layout": "declares neither applies_from nor applies_to",
+        "enrolled-modelo-156-layout": "declares neither applies_from nor applies_to",
+        "enrolled-modelo-576-layout": "declares neither applies_from nor applies_to",
+        # Two same-ejercicio re-layout PAIRS. A bare year would collide, so each
+        # pair needs the sub-year label ruling (which half is early/late, on
+        # AEAT's own edition boundary) from the campaign that owns the M303
+        # epoch vocabulary -- the same ruling that produced 2024-early/2024-late.
+        "aeat-dr-303-2018": "same-ejercicio pair with aeat-dr-303-2018-salvo-ultimo-periodo",
+        "aeat-dr-303-2018-salvo-ultimo-periodo": "same-ejercicio pair with aeat-dr-303-2018",
+        "aeat-dr-303-2021-hasta-periodo-06": "same-ejercicio pair with aeat-dr-303-2021-desde-periodo-07",
+        "aeat-dr-303-2021-desde-periodo-07": "same-ejercicio pair with aeat-dr-303-2021-hasta-periodo-06",
+        # Mechanically derivable, but these sit in trees another campaign holds
+        # open (the M303/M390 generator-authority work and the designless-modelo
+        # adjudication). Declared here rather than swept, so the omission stays
+        # visible and attributed instead of racing a peer's edit.
+        "aeat-dr-303-2014": "held by the in-flight M303 generator-authority campaign",
+        "aeat-dr-303-2015-2016": "held by the in-flight M303 generator-authority campaign",
+        "aeat-dr-303-2017": "held by the in-flight M303 generator-authority campaign",
+        "aeat-dr-303-2019-2020": "held by the in-flight M303 generator-authority campaign",
+        "aeat-dr-390-2015": "held by the in-flight M390 generator-authority campaign",
+        "aeat-dr-390-2016": "held by the in-flight M390 generator-authority campaign",
+        "aeat-dr-193-2024": "modelo scoped out of registry authoring by operator direction",
+        "aeat-dr-193-2025": "modelo scoped out of registry authoring by operator direction",
+        "aeat-dr-296-2023": "modelo scoped out of registry authoring by operator direction",
+        "aeat-dr-347-2008": "modelo scoped out of registry authoring by operator direction",
+        "aeat-dr-347-2010": "modelo scoped out of registry authoring by operator direction",
+        "aeat-dr-347-2011": "modelo scoped out of registry authoring by operator direction",
+        "aeat-dr-347-2025": "modelo scoped out of registry authoring by operator direction",
+    }
+
+    catalogues = _catalogues()
+    designs = [source for source in catalogues.sources.values() if source.kind == "record_design"]
+    assert designs, "the catalogue must declare record-design sources for this gate to mean anything"
+
+    undeclared = {source.id for source in designs if source.record_design_epoch is None}
+    malformed = sorted(
+        f"{source.id!r} declares epoch {source.record_design_epoch!r}"
+        for source in designs
+        if source.record_design_epoch is not None and not RECORD_DESIGN_EPOCH_RE.fullmatch(source.record_design_epoch)
+    )
+    assert malformed == [], (
+        "record-design epoch(s) do not match the shared epoch grammar (a four-digit ejercicio "
+        "with an optional lower-case sub-year label):\n  " + "\n  ".join(malformed)
+    )
+
+    stale = sorted(source_id for source_id in pending if source_id not in undeclared)
+    assert stale == [], (
+        "pending record-design epoch entr(ies) are stale -- the source now declares an epoch, or no "
+        "longer exists. Remove them from the pending map:\n  " + "\n  ".join(stale)
+    )
+    newly_undeclared = sorted(undeclared - set(pending))
+    assert newly_undeclared == [], (
+        "record-design source(s) declare no record_design_epoch, so resolve_record_design_binary "
+        "refuses them and no export-fragment generator can reach their bundled binary. Declare the "
+        "ejercicio the design governs:\n  " + "\n  ".join(newly_undeclared)
+    )
+
+    by_modelo_epoch: dict[tuple[str, str], list[str]] = {}
+    for source in designs:
+        if source.record_design_epoch is None:
+            continue
+        modelo = _record_design_modelo(source.corpus_path)
+        if modelo is None:
+            continue
+        by_modelo_epoch.setdefault((modelo, source.record_design_epoch), []).append(source.id)
+    collisions = sorted(
+        f"modelo {modelo} epoch {epoch!r}: {', '.join(sorted(source_ids))}"
+        for (modelo, epoch), source_ids in by_modelo_epoch.items()
+        if len(source_ids) > 1
+    )
+    assert collisions == [], (
+        "two record-design sources for one modelo share an epoch, so they address the same "
+        "generator mapping directory and cannot both be authored. Distinguish them with the "
+        "grammar's sub-year label:\n  " + "\n  ".join(collisions)
     )
 
 
