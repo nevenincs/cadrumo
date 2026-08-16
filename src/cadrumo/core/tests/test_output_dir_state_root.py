@@ -61,7 +61,6 @@ PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
         "llm-run-telemetry",
         "llm-usage",
         "logs",
-        "registry",
         "registry-verdict",
         "runs",
         "secrets",

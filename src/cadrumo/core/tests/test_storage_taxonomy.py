@@ -52,10 +52,8 @@ PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
         "db",
         "manifest.toml",
         "session.v2.json",
-        "bucket.dek.json",
         "login-throttle.json",
         "blobs",
-        "live-state",
         "active-profile",
     },
 )

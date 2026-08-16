@@ -236,8 +236,6 @@ Every entry is checked below by :func:`test_every_embedded_literal_exception_is_
 
 PENDING_UNDECLARED: Final[frozenset[tuple[str, str]]] = frozenset(
     {
-        ("entrypoints/cli/tests/test_config_custody_profile_lifecycle.py", "master.key"),
-        ("entrypoints/cli/tests/test_config_custody_profile_lifecycle.py", "master.kdf"),
         # This module gained its PINNED_TAXONOMY_LITERALS declaration
         # mid-edit, uncommitted, by a concurrent band of this same campaign
         # while this gate was being written -- editing it further here would
@@ -517,10 +515,10 @@ def test_the_detector_catches_a_dict_value_and_a_tuple_element_not_only_a_join_c
     """
     source = (
         'from typing import Final\n\nPINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets"})\n'
-        '\nTABLE = {"a": "db", "b": ("blobs", "audit")}\n'
+        '\nTABLE = {"a": "db", "b": ("blobs", "live-state")}\n'
     )
     entry = _synthetic_module(source)
-    assert {"db", "blobs", "audit"} <= set(entry.used)
+    assert {"db", "blobs", "live-state"} <= set(entry.used)
 
 
 @pytest.mark.parametrize(
