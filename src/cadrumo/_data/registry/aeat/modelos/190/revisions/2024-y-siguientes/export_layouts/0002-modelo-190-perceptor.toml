@@ -181,17 +181,25 @@ source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 id = "modelo-190-perc-signo-percepcion-dineraria"
 offset = 81
 length = 1
-kind = "filler"
-# Design campo 11 subdivision 81 SIGNO DE LA PERCEPCION INTEGRA: an "N"
-# only when the percepcion is a reintegro of amounts wrongly paid in an
-# earlier ejercicio, "en cualquier otro caso el contenido de este campo
-# sera un espacio". WithholdingObservation refuses a negative amount, so
-# no draft this application builds can be a reintegro and the space is
-# always the design's own correct value.
+kind = "literal"
+literal = " "
+# Design campo 11 subdivision 81 SIGNO DE LA PERCEPCION INTEGRA. AEAT
+# admits exactly two values: an "N" when the percepcion is a reintegro of
+# amounts wrongly paid in an earlier ejercicio, and otherwise "el contenido
+# de este campo sera un espacio".
+#
+# A LITERAL rather than a filler, because the space is a value this
+# application can assert, not an absence. WithholdingObservation validates
+# its amounts as non-negative, so no draft Cadrumo can build is a
+# reintegro, and the space is therefore the design's own correct value for
+# every filing -- the same reasoning as the "T" tipo de soporte literal on
+# the declarante record. If that non-negative invariant is ever relaxed,
+# this literal must become a real signo field: it is the one assumption
+# holding it up.
 data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
+required = true
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]

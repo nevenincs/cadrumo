@@ -80,12 +80,14 @@ review_status = "reviewed"
 # complementaria/sustitutiva" field exists in this tipo-1 record (unlike the
 # 100-199 informativa family's usual 121-122 pair), confirmed directly from
 # this image -- not assumed by analogy.
-# The BOE-hosted annex image was fetched as PNG (verified byte-for-byte
-# against BOE's own served bytes) and losslessly wrapped as a single-page PDF
-# so the registry's record-design tooling (which accepts only .pdf/.xls/
-# .xlsx/.xlsm) can address it; the PDF's sole content is the unmodified BOE
-# image, re-hashed after conversion. The original PNG is retained alongside
-# it in the same corpus directory for direct visual verification.
+# This points at the PNG exactly as BOE serves it. It carries no text layer,
+# so the record-design reader cannot parse it and this source stays
+# unreadable -- that refusal is the true state of the evidence, not a defect
+# to route around. A derived PDF wrapper previously stood here solely so the
+# reader (which addresses .pdf/.xls/.xlsx/.xlsm) could reach the image; it was
+# a generated artefact, not an official source, and was removed. Do not
+# re-create it: transcribing the position table below requires reading the
+# image, and no file conversion turns an image into a machine-readable design.
 [sources."boe-modelo-186-anexo-i-tipo1"]
 evidence_tier = "layout_authority"
 authority = "boe"
