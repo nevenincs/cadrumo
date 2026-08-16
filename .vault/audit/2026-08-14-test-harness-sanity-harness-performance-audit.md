@@ -2636,3 +2636,58 @@ timer: the number of corpus seedings per module went from one-per-test to one
 gets its own storage root. Prefer that metric here. **Any runtime comparison in
 a module that imports FX-bearing rows needs medians over at least three runs;
 a single before/after pair cannot clear the network noise.**
+
+## Importing the CLI parses a locale catalogue, and tests always take the slow path
+
+`entrypoints/cli` carries **142 module-level `tr()` calls across 52 files**. The
+first one executed forces the whole locale catalogue to be resolved *while the
+CLI package is being imported* -- before any command runs. Traced from a probe
+that wraps `_packaged_locale_map` and reports only genuine cache misses:
+
+```
+PARSE locale='en' seconds=2.253
+  _ledger.py:54   from ._bienes_inversion_cli import register_bienes_inversion_commands
+  _bienes_inversion_cli.py:39   help=tr(
+```
+
+There is already a defence: `_packaged_locale_map` is `lru_cache`d, and beneath
+it `_catalogue_cache` persists the flattened map keyed by source digest. It
+works -- in production. It cannot work in tests, because `catalogue_cache_path`
+resolves through `storage_path(StorageCategory.LOCALE_CATALOGUE_CACHE)`, i.e.
+`<storage-root>/cache/locale-catalogue`, and every test installs a fresh
+isolated storage root. The cache is written into a directory that is discarded
+before anything can read it.
+
+Measured directly, importing `cadrumo.entrypoints.cli` in a clean process:
+
+| storage root | import seconds |
+|---|---|
+| real (cache present) | 0.587, 0.624 |
+| empty (cache absent -- every test) | 1.464, 1.455 |
+
+**~0.85s per process**, and the in-test probe measured the parse itself at
+2.253s. Variance is negligible because no network is involved; unlike the FX
+numbers, these can be trusted from two samples.
+
+### Sized, and deliberately NOT chased
+
+The `lru_cache` makes this **once per process, not once per test**. Six workers
+means roughly 5-13s per suite run against a ~1,900s wall clock -- **well under
+1%**. A session-scoped warm-up fixture (populate `_packaged_locale_map` before
+isolation installs a storage root) would recover most of it for no production
+change, and is recorded here as available rather than done: it is not worth a
+shared-harness change at that size.
+
+Two things are worth carrying forward regardless of the timing:
+
+- **The write is not the waste; the read is.** An earlier hypothesis in this
+  session -- that the never-read cache file costs meaningful write time -- is
+  wrong and should not be re-chased: `write_catalogue_cache` measured 0.117s
+  for both locales. What is lost is the 2.253s READ that never happens.
+- **`tr()` at module scope makes importing a package do I/O.** A help string
+  evaluated at decoration time turns `import cadrumo.entrypoints.cli` into a
+  catalogue load. Deferring those 142 call sites behind a lazy string would make
+  CLI import independent of the locale layer entirely. That is a production
+  change to every CLI help surface, so it belongs in a decision record rather
+  than in a performance sweep, and its value is operator-facing startup latency
+  (`aeat --help`) more than suite time.
