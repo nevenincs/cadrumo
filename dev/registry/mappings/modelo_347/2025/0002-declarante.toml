@@ -1,0 +1,220 @@
+schema_version = 1
+fragment_id = "declarante"
+modelo = "347"
+design_epoch = "2025"
+source_ref = "aeat-dr-347-2025"
+source_sha256 = "14583ea5ee04441356c4572d30630d46bfe0818366e575ac186370dd3fe38361"
+
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f001"
+kind = "literal"
+literal = "1"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 37
+ordinal = "1"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f002"
+kind = "literal"
+literal = "347"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 39
+ordinal = "2"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f003"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 41
+ordinal = "3"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f004"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 44
+ordinal = "4"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f005"
+kind = "header"
+producer_key = "taxpayer.surnames_or_legal_name"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 54
+ordinal = "5"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f006"
+kind = "casilla"
+casilla_id = "decl.tipo-soporte"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 64
+ordinal = "6"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f007"
+kind = "casilla"
+casilla_id = "decl.persona-relacion"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 68
+ordinal = "7"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f008"
+kind = "casilla"
+casilla_id = "decl.numero-justificante"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 76
+ordinal = "8"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f009"
+kind = "casilla"
+casilla_id = "decl.complementaria-sustitutiva"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 83
+ordinal = "9"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f010"
+kind = "header"
+producer_key = "amendment_evidence.original_aeat_receipt"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 105
+ordinal = "10"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f011"
+kind = "casilla"
+casilla_id = "decl.total-personas-entidades"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 114
+ordinal = "11"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f012"
+kind = "casilla"
+casilla_id = "decl.importe-total-anual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 120
+ordinal = "12"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f013"
+kind = "casilla"
+casilla_id = "decl.total-inmuebles"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 148
+ordinal = "13"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f014"
+kind = "casilla"
+casilla_id = "decl.importe-total-arrendamiento-locales"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 154
+ordinal = "14"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f015"
+kind = "filler"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 184
+ordinal = "15"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f016"
+kind = "casilla"
+casilla_id = "decl.representante-legal-nif"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 185
+ordinal = "16"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f017"
+kind = "filler"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 194
+ordinal = "17"
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "m347-2025.declarante.f018"
+kind = "filler"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 195
+ordinal = "18"
+record_identity = "Tipo 1 - Registro De Declarante"

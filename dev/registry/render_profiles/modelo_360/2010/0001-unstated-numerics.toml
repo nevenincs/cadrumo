@@ -1,0 +1,808 @@
+# PROVISIONAL -- do not trust these rules until the PDF extractor reads this
+# design's Contenido column.
+#
+# A render profile governs the anchors whose Contenido cell the design leaves
+# BLANK, because those are the slots no source statement fixes. For this design
+# the extractor populates content on 5 of 262 fields (1 per cent), against 96 per
+# cent for Modelo 184's PDF and roughly half for the workbook designs. So the
+# 28 anchors below are "unstated" as far as the parser reports, and an unknown
+# number of them are in fact STATED by a Contenido cell that was not read.
+#
+# Every rule here is therefore a decision that may be redundant or, worse,
+# contradict what the design says. Regenerate this profile once the extractor
+# reads the column, and re-review each surviving rule against the content it
+# then reports.
+
+schema_version = 1
+fragment_id = "unstated-numerics"
+width_17_rules = []
+
+[design_identity]
+modelo = "360"
+design_epoch = "2010"
+source_ref = "aeat-dr-360-2010"
+source_sha256 = "1361d004c0156d99555e0257b269ae379cbae420a454cdb90b9c37e0abc28950"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 14
+ordinal = "7"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag1-21-year-yyyy"
+decision_statement = "The field at Pág. 1 @21+4 renders as the four-digit ejercicio, unsigned, with no decimal component."
+justification = "The design leaves the Contenido cell blank while its own header names the field an ejercicio. At four Num characters the only available reading is the four-digit year the export codec already owns."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 14
+ordinal = "7"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 26
+ordinal = "19"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag1-367-identifier-digits"
+decision_statement = "The field at Pág. 1 @367+5 renders as unsigned identifier digits with no decimal component."
+justification = "This slot identifies rather than measures -- a doorway, a postal district, a post-office box -- so it is never summed or scaled, and its leading zeros are significant. The identifier-digits policy is the only reading at this width that preserves them."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 26
+ordinal = "19"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 35
+ordinal = "28"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag1-460-identifier-digits"
+decision_statement = "The field at Pág. 1 @460+5 renders as unsigned identifier digits with no decimal component."
+justification = "This slot identifies rather than measures -- a doorway, a postal district, a post-office box -- so it is never summed or scaled, and its leading zeros are significant. The identifier-digits policy is the only reading at this width that preserves them."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 35
+ordinal = "28"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 43
+ordinal = "36"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag1-717-identifier-digits"
+decision_statement = "The field at Pág. 1 @717+10 renders as unsigned identifier digits with no decimal component."
+justification = "This slot identifies rather than measures -- a doorway, a postal district, a post-office box -- so it is never summed or scaled, and its leading zeros are significant. The identifier-digits policy is the only reading at this width that preserves them."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 43
+ordinal = "36"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 45
+ordinal = "38"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag1-757-identifier-digits"
+decision_statement = "The field at Pág. 1 @757+5 renders as unsigned identifier digits with no decimal component."
+justification = "This slot identifies rather than measures -- a doorway, a postal district, a post-office box -- so it is never summed or scaled, and its leading zeros are significant. The identifier-digits policy is the only reading at this width that preserves them."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 45
+ordinal = "38"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 91
+ordinal = "81"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag1-1426-identifier-digits"
+decision_statement = "The field at Pág. 1 @1426+5 renders as unsigned identifier digits with no decimal component."
+justification = "This slot identifies rather than measures -- a doorway, a postal district, a post-office box -- so it is never summed or scaled, and its leading zeros are significant. The identifier-digits policy is the only reading at this width that preserves them."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 91
+ordinal = "81"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 100
+ordinal = "90"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag1-1519-identifier-digits"
+decision_statement = "The field at Pág. 1 @1519+5 renders as unsigned identifier digits with no decimal component."
+justification = "This slot identifies rather than measures -- a doorway, a postal district, a post-office box -- so it is never summed or scaled, and its leading zeros are significant. The identifier-digits policy is the only reading at this width that preserves them."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 100
+ordinal = "90"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 108
+ordinal = "98"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag1-1776-identifier-digits"
+decision_statement = "The field at Pág. 1 @1776+10 renders as unsigned identifier digits with no decimal component."
+justification = "This slot identifies rather than measures -- a doorway, a postal district, a post-office box -- so it is never summed or scaled, and its leading zeros are significant. The identifier-digits policy is the only reading at this width that preserves them."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 108
+ordinal = "98"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 110
+ordinal = "100"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag1-1816-identifier-digits"
+decision_statement = "The field at Pág. 1 @1816+5 renders as unsigned identifier digits with no decimal component."
+justification = "This slot identifies rather than measures -- a doorway, a postal district, a post-office box -- so it is never summed or scaled, and its leading zeros are significant. The identifier-digits policy is the only reading at this width that preserves them."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 110
+ordinal = "100"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 113
+ordinal = "103"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag1-1853-decimal"
+decision_statement = "The field at Pág. 1 @1853+15 renders as an implied-decimal amount with two decimal places."
+justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 113
+ordinal = "103"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 115
+ordinal = "105"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag1-1871-integer"
+decision_statement = "The field at Pág. 1 @1871+5 renders as an unsigned whole number with no decimal component."
+justification = "A count of documents or a sequence position: a whole number by nature, never negative and never fractional, so no sign or decimal component applies."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 115
+ordinal = "105"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 116
+ordinal = "106"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag1-1876-integer"
+decision_statement = "The field at Pág. 1 @1876+5 renders as an unsigned whole number with no decimal component."
+justification = "A count of documents or a sequence position: a whole number by nature, never negative and never fractional, so no sign or decimal component applies."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 116
+ordinal = "106"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_ddmmyyyy"
+value_policy = "ddmmyyyy"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 117
+ordinal = "107"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag1-1881-date-ddmmyyyy"
+decision_statement = "The field at Pág. 1 @1881+8 renders as a ddmmaaaa date."
+justification = "The design names the field a fecha and gives it exactly eight Num characters, which is the ddmmaaaa order this modelo uses throughout -- its own sibling period fields state that order explicitly in their Contenido cells."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 117
+ordinal = "107"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_ddmmyyyy"
+value_policy = "ddmmyyyy"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 118
+ordinal = "108"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag1-1889-date-ddmmyyyy"
+decision_statement = "The field at Pág. 1 @1889+8 renders as a ddmmaaaa date."
+justification = "The design names the field a fecha and gives it exactly eight Num characters, which is the ddmmaaaa order this modelo uses throughout -- its own sibling period fields state that order explicitly in their Contenido cells."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 118
+ordinal = "108"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 121
+ordinal = "111"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag1-1903-year-yyyy"
+decision_statement = "The field at Pág. 1 @1903+4 renders as the four-digit ejercicio, unsigned, with no decimal component."
+justification = "The design leaves the Contenido cell blank while its own header names the field an ejercicio. At four Num characters the only available reading is the four-digit year the export codec already owns."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 121
+ordinal = "111"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 122
+ordinal = "112"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag1-1907-percentage-decimal"
+decision_statement = "The field at Pág. 1 @1907+5 renders as an implied-decimal percentage with two decimal places."
+justification = "A prorrata percentage: three integer characters carry 0 to 100 and the final two the decimal part, which is the same implied-decimal treatment the amounts receive."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 122
+ordinal = "112"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 241
+ordinal = "3"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag2-11-integer"
+decision_statement = "The field at Pág. 2 @11+5 renders as an unsigned whole number with no decimal component."
+justification = "A count of documents or a sequence position: a whole number by nature, never negative and never fractional, so no sign or decimal component applies."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 241
+ordinal = "3"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_ddmmyyyy"
+value_policy = "ddmmyyyy"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 248
+ordinal = "7"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag2-70-date-ddmmyyyy"
+decision_statement = "The field at Pág. 2 @70+8 renders as a ddmmaaaa date."
+justification = "The design names the field a fecha and gives it exactly eight Num characters, which is the ddmmaaaa order this modelo uses throughout -- its own sibling period fields state that order explicitly in their Contenido cells."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 248
+ordinal = "7"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 279
+ordinal = "38"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag2-2698-decimal"
+decision_statement = "The field at Pág. 2 @2698+15 renders as an implied-decimal amount with two decimal places."
+justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 279
+ordinal = "38"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 280
+ordinal = "39"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag2-2713-decimal"
+decision_statement = "The field at Pág. 2 @2713+15 renders as an implied-decimal amount with two decimal places."
+justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 280
+ordinal = "39"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 281
+ordinal = "40"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag2-2728-percentage-decimal"
+decision_statement = "The field at Pág. 2 @2728+5 renders as an implied-decimal percentage with two decimal places."
+justification = "A prorrata percentage: three integer characters carry 0 to 100 and the final two the decimal part, which is the same implied-decimal treatment the amounts receive."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 281
+ordinal = "40"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 282
+ordinal = "41"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag2-2733-decimal"
+decision_statement = "The field at Pág. 2 @2733+15 renders as an implied-decimal amount with two decimal places."
+justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 282
+ordinal = "41"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 293
+ordinal = "52"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag2-3111-integer"
+decision_statement = "The field at Pág. 2 @3111+5 renders as an unsigned whole number with no decimal component."
+justification = "A count of documents or a sequence position: a whole number by nature, never negative and never fractional, so no sign or decimal component applies."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 293
+ordinal = "52"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_ddmmyyyy"
+value_policy = "ddmmyyyy"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 300
+ordinal = "56"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag2-3170-date-ddmmyyyy"
+decision_statement = "The field at Pág. 2 @3170+8 renders as a ddmmaaaa date."
+justification = "The design names the field a fecha and gives it exactly eight Num characters, which is the ddmmaaaa order this modelo uses throughout -- its own sibling period fields state that order explicitly in their Contenido cells."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 300
+ordinal = "56"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 334
+ordinal = "87"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag2-5798-decimal"
+decision_statement = "The field at Pág. 2 @5798+15 renders as an implied-decimal amount with two decimal places."
+justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 334
+ordinal = "87"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 335
+ordinal = "88"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag2-5813-decimal"
+decision_statement = "The field at Pág. 2 @5813+15 renders as an implied-decimal amount with two decimal places."
+justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 335
+ordinal = "88"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 336
+ordinal = "89"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag2-5828-percentage-decimal"
+decision_statement = "The field at Pág. 2 @5828+5 renders as an implied-decimal percentage with two decimal places."
+justification = "A prorrata percentage: three integer characters carry 0 to 100 and the final two the decimal part, which is the same implied-decimal treatment the amounts receive."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 336
+ordinal = "89"
+record_identity = "Pág. 2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 2"
+source_row = 337
+ordinal = "90"
+record_identity = "Pág. 2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m360-2010-pag2-5833-decimal"
+decision_statement = "The field at Pág. 2 @5833+15 renders as an implied-decimal amount with two decimal places."
+justification = "The design labels the field an importe, base imponible or cuota and prints '2 decimales' beside its siblings, so the final two characters are the decimal part and the rest the integer part."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 2"
+source_row = 337
+ordinal = "90"
+record_identity = "Pág. 2"

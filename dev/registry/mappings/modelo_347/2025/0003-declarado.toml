@@ -1,0 +1,389 @@
+schema_version = 1
+fragment_id = "declarado"
+modelo = "347"
+design_epoch = "2025"
+source_ref = "aeat-dr-347-2025"
+source_sha256 = "14583ea5ee04441356c4572d30630d46bfe0818366e575ac186370dd3fe38361"
+
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f001"
+kind = "literal"
+literal = "2"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 211
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f002"
+kind = "literal"
+literal = "347"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 213
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f003"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 215
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f004"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 218
+ordinal = "4"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f005"
+kind = "casilla"
+casilla_id = "contraparte.nif"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 221
+ordinal = "5"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f006"
+kind = "casilla"
+casilla_id = "contraparte.representante-legal-nif"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 247
+ordinal = "6"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f007"
+kind = "casilla"
+casilla_id = "contraparte.nombre"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 255
+ordinal = "7"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f008"
+kind = "literal"
+literal = "D"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 265
+ordinal = "8"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f009"
+kind = "casilla"
+casilla_id = "contraparte.pais-codigo"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 267
+ordinal = "9"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f010"
+kind = "filler"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 312
+ordinal = "10"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f011"
+kind = "casilla"
+casilla_id = "contraparte.clave-operacion"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 313
+ordinal = "11"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f012"
+kind = "casilla"
+casilla_id = "contraparte.importe-anual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 349
+ordinal = "12"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f013"
+kind = "casilla"
+casilla_id = "contraparte.operacion-seguro"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 370
+ordinal = "13"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f014"
+kind = "casilla"
+casilla_id = "contraparte.arrendamiento-local-negocio"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 375
+ordinal = "14"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f015"
+kind = "casilla"
+casilla_id = "contraparte.importe-metalico"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 385
+ordinal = "15"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f016"
+kind = "casilla"
+casilla_id = "contraparte.importe-transmisiones-inmuebles"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 404
+ordinal = "16"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f017"
+kind = "casilla"
+casilla_id = "contraparte.ejercicio-operacion"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 426
+ordinal = "17"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f018"
+kind = "casilla"
+casilla_id = "contraparte.importe-Q1"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 430
+ordinal = "18"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f019"
+kind = "casilla"
+casilla_id = "contraparte.importe-transmisiones-Q1"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 463
+ordinal = "19"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f020"
+kind = "casilla"
+casilla_id = "contraparte.importe-Q2"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 494
+ordinal = "20"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f021"
+kind = "casilla"
+casilla_id = "contraparte.importe-transmisiones-Q2"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 528
+ordinal = "21"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f022"
+kind = "casilla"
+casilla_id = "contraparte.importe-Q3"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 558
+ordinal = "22"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f023"
+kind = "casilla"
+casilla_id = "contraparte.importe-transmisiones-Q3"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 589
+ordinal = "23"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f024"
+kind = "casilla"
+casilla_id = "contraparte.importe-Q4"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 619
+ordinal = "24"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f025"
+kind = "casilla"
+casilla_id = "contraparte.importe-transmisiones-Q4"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 652
+ordinal = "25"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f026"
+kind = "casilla"
+casilla_id = "contraparte.nif-operador-comunitario"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 683
+ordinal = "26"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f027"
+kind = "casilla"
+casilla_id = "contraparte.criterio-caja"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 732
+ordinal = "27"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f028"
+kind = "casilla"
+casilla_id = "contraparte.inversion-sujeto-pasivo"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 750
+ordinal = "28"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f029"
+kind = "casilla"
+casilla_id = "contraparte.bienes-vinculados"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 756
+ordinal = "29"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f030"
+kind = "casilla"
+casilla_id = "contraparte.importe-criterio-caja"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 764
+ordinal = "30"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f031"
+kind = "casilla"
+casilla_id = "contraparte.numero-convocatoria-bdns"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 787
+ordinal = "31"
+record_identity = "Tipo 2 - Registro De Declarado"
+
+[[entries]]
+export_field_id = "m347-2025.declarado.f032"
+kind = "filler"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Declarado"
+source_row = 792
+ordinal = "32"
+record_identity = "Tipo 2 - Registro De Declarado"

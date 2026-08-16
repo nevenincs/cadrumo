@@ -1,0 +1,25 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "347"
+design_epoch = "2025"
+source_ref = "aeat-dr-347-2025"
+source_sha256 = "14583ea5ee04441356c4572d30630d46bfe0818366e575ac186370dd3fe38361"
+
+
+[[records]]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+export_record_id = "m347-declarante"
+record_type = "declarante"
+
+[[records]]
+sheet = "Tipo 2 - Registro De Declarado"
+record_identity = "Tipo 2 - Registro De Declarado"
+export_record_id = "m347-declarado"
+record_type = "declarado"
+
+[[records]]
+sheet = "Tipo 2 - Registro De Inmueble"
+record_identity = "Tipo 2 - Registro De Inmueble"
+export_record_id = "m347-inmueble"
+record_type = "inmueble"
