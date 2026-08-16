@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:a75a1e2ce0fd9598e4d39657c4fd29040462d4eb8ace93daa17b5d43c1025ea5'
+body_hash: 'sha256:7e0798073f1863e1bfd319732d63e60d38f3710b592007a36fdb19bc9f3fb171'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1965,3 +1965,44 @@ Exhausted. The three largest setups were already examined in earlier rounds, and
 everything below them is either analysis a gate must do or is already sharing
 the one genuinely expensive thing (the AST prime). No unexamined setup cost
 above ~1.6% remains.
+
+## First regression check against the baseline
+
+The baseline reference exists so a round costs one profile and a diff rather
+than a re-derivation. First use of it:
+
+    CPU now 9,289s vs baseline 9,351s  (-0.7%)
+    phase   call 7,586s | setup 1,597s | teardown 106s  (unchanged shape)
+
+Every baseline file within +-10s, which is noise on this box. Two files sat
+above 90s without being in the recorded top set:
+`test_batch_ingest_runner.py` (93.8s, and 94.7s in the per-file aggregation that
+produced the baseline -- not new), and
+`application/tests/test_state_projection.py` (92.0s, which had been below the
+78.6s cutoff of that aggregation).
+
+### The candidate, investigated and cleared
+
+Isolated and repeated, per the loop's own rule about repeating before reporting:
+**71.39s and 71.50s**. So the 92.0s was contention, and the honest position is
+that no isolated baseline for this file exists -- a regression cannot be claimed
+from a contended figure against a contended cutoff.
+
+Profiled anyway, since a reproducible 71.4s file is a target on its own terms:
+
+    58.1s  n=31  core/resources/_repos/modelos.py:authority
+    53.3s  n=1   registry/_authority.py:_load_validated_authority
+    47.8s  n=1   registry/_authority.py:validate_registry
+
+Thirty-one authority requests, ONE real validated load. The expensive thing is
+already memoised; what the module pays is a single registry validation at 47.8s,
+which every process needs before it can answer a projection question at all.
+Nothing to share, and the discriminator (`n=1` against `n=31`) settled it
+without a second experiment.
+
+### What the check cost and what it bought
+
+One profile (31 minutes) plus two isolated re-runs, to establish that the suite
+has not drifted and that the one candidate is contention over an already-shared
+cost. That is the intended steady state: the baseline turns an open-ended
+"find something" round into a bounded comparison with a definite answer.
