@@ -26,8 +26,18 @@ llm_profile_isolated_backend = active_profile_isolated_backend_fixture(
 )
 
 
-live_fx_isolated_backend = active_profile_isolated_backend_fixture(
-    bucket_id="00000000-0000-4000-8000-000000000000",
-    dispose_engine_around=True,
-    settings_overrides={"cadrumo_output_language": "en", "cadrumo_live_tests_enabled": "1"},
+_LIVE_FX_BACKEND: dict[str, object] = {
+    "bucket_id": "00000000-0000-4000-8000-000000000000",
+    "dispose_engine_around": True,
+    "settings_overrides": {"cadrumo_output_language": "en", "cadrumo_live_tests_enabled": "1"},
+}
+
+live_fx_isolated_backend = active_profile_isolated_backend_fixture(**_LIVE_FX_BACKEND)  # type: ignore[arg-type]
+
+#: The same seeded world, built once per file instead of once per test, for
+#: suites whose every test only reads it. The parameters are shared with the
+#: function-scoped fixture above so the two cannot drift apart.
+live_fx_isolated_backend_per_module = active_profile_isolated_backend_fixture(
+    **_LIVE_FX_BACKEND,  # type: ignore[arg-type]
+    scope="module",
 )

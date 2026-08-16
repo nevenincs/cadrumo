@@ -18,10 +18,10 @@ import pytest
 
 from ....tests import FIXTURES_DIR
 from ....tests.cli_runner import invoke_cached_cli
-from ._isolated_profile_storage_fixtures import live_fx_isolated_backend
+from ._isolated_profile_storage_fixtures import live_fx_isolated_backend_per_module
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["live_fx_isolated_backend"]
+__all__ = ["live_fx_isolated_backend_per_module"]
 
 _CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
 _FILES = (
@@ -32,7 +32,15 @@ _FILES = (
 )
 
 
-def _import_corpus() -> None:
+@pytest.fixture(autouse=True, scope="module")
+def _imported_corpus(_isolated_backend: None) -> None:
+    """Import the ledger corpus once for the file.
+
+    Every test here only lists; none writes to the ledger. Importing four CSVs
+    per test spent most of the file's runtime rebuilding a world no test
+    changed. The explicit ``_isolated_backend`` dependency pins the ordering:
+    the corpus must land inside the seeded profile session, not before it.
+    """
     for name in _FILES:
         result = invoke_cached_cli(["app", "ledger", "import", "--file", str(_CORPUS / name), "--provider", "csv"])
         assert result.exit_code == 0, f"{name}: {result.output}"
@@ -57,7 +65,6 @@ def _list_rows_with_options(*args: str) -> list[dict[str, Any]]:
 
 def test_list_without_filter_returns_full_ledger() -> None:
     """The unfiltered baseline lists the whole operating-scale corpus."""
-    _import_corpus()
     assert len(_list_rows()) >= 500
 
 
@@ -69,7 +76,6 @@ def test_period_filter_narrows_to_one_year() -> None:
     in that year — proving the filter actually applies rather than passing the
     full set through.
     """
-    _import_corpus()
     full = _list_rows()
     years = sorted({str(r["date"])[:4] for r in full})
     assert len(years) >= 2, f"corpus must span >=2 years to exercise the year filter, got {years}"
@@ -82,7 +88,6 @@ def test_period_filter_narrows_to_one_year() -> None:
 
 def test_period_year_options_match_filter_clauses() -> None:
     """Convenience ``--period/--year`` flags route through the same typed filter as ``--filter``."""
-    _import_corpus()
     full = _list_rows()
     target = sorted({str(r["date"])[:4] for r in full})[0]
 
@@ -149,7 +154,6 @@ def test_classification_filter_narrows_to_one_class() -> None:
     # against the BusinessClassification enum, whose members are UPPERCASE
     # (NOT_YET_PROCESSED / BUSINESS / ...), so the filter value is uppercase —
     # the same contract `ledger review --filter classification=` already uses.
-    _import_corpus()
     full = _list_rows()
     not_processed = _list_rows("classification=NOT_YET_PROCESSED")
     assert len(not_processed) == len(full)
@@ -160,7 +164,6 @@ def test_classification_filter_narrows_to_one_class() -> None:
 
 def test_text_filter_matches_description_substring() -> None:
     """A text filter returns only rows whose description carries the needle."""
-    _import_corpus()
     full = _list_rows()
     needle = "Transferencia"
     expected = [r for r in full if needle.casefold() in r["description"].casefold()]
@@ -171,7 +174,6 @@ def test_text_filter_matches_description_substring() -> None:
 
 def test_combined_filters_compose_as_intersection() -> None:
     """Two filter clauses compose: the result is the intersection of both."""
-    _import_corpus()
     full = _list_rows()
     target_year = sorted({str(r["date"])[:4] for r in full})[0]
     combined = _list_rows("period=0A", f"year={target_year}", "classification=NOT_YET_PROCESSED")
@@ -194,7 +196,6 @@ def test_direction_filter_narrows_to_one_money_flow() -> None:
     The lowercase value exercises the case-insensitive parse the shared spec
     added for the natural ``incoming`` / ``outgoing`` operator spelling.
     """
-    _import_corpus()
     full = _list_rows()
     directions = {r["direction"] for r in full}
     assert {"INCOMING", "OUTGOING"} <= directions, f"corpus must carry both directions, got {directions}"
@@ -220,7 +221,6 @@ def test_direction_filter_uppercase_value_matches_too() -> None:
     case-insensitive parse accepts both the natural operator spelling and the
     canonical form rather than silently rejecting one.
     """
-    _import_corpus()
     lower = {r["full_id"] for r in _list_rows("direction=incoming")}
     upper = {r["full_id"] for r in _list_rows("direction=INCOMING")}
     assert lower == upper
