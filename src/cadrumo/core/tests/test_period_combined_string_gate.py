@@ -79,6 +79,66 @@ def _text(pattern: str) -> Pattern[str]:
 
 ALLOWLIST: tuple[AllowlistRule, ...] = (
     AllowlistRule(
+        path=_path(r"^docs/_sequences/"),
+        reason=(
+            "captured CLI transcripts record the argv an author typed; the token is a "
+            "recorded evidence FILENAME, and the sequence is a replay artefact rather "
+            "than a call site that could parse it"
+        ),
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"fixtures/"),
+    ),
+    AllowlistRule(
+        path=_path(r"^src/cadrumo/_data/registry/aeat/legal/"),
+        reason=(
+            "legal entries quote an Orden's own published title verbatim, and several "
+            "name the span they govern ('hasta periodo 1T'); altering official wording "
+            "to satisfy a grammar rule would break the corpus cross-check"
+        ),
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"Orden|Ejercicio|periodo|quarter|trimestre"),
+    ),
+    AllowlistRule(
+        path=_path(
+            r"^src/cadrumo/application/modelo/tests/test_(?:"
+            r"m303_filing_evidence_validation|m303_regimen_simplificado_scope|"
+            r"modelo_work_review|prior_domiciliation_election"
+            r")\.py$"
+        ),
+        reason=(
+            "operator-facing work-unit LABELS and AEAT CSV evidence references; the "
+            "period reaches these tests as a typed filing_year/period pair and the "
+            "string is only what the operator or the authority prints"
+        ),
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+    ),
+    AllowlistRule(
+        path=_path(r"^src/cadrumo/application/storage/sync_runs/tests/test_sync_run_record_store\.py$"),
+        reason="resolved_scope is a rendered display string persisted for the operator, not a period selector",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"resolved_scope"),
+    ),
+    AllowlistRule(
+        path=_path(r"^src/cadrumo/entrypoints/cli/tests/test_(?:ledger_list_filter|modelo_work_review_envelope)\.py$"),
+        reason=(
+            "the combined form is the REFUSED input under test -- ledger_list_filter "
+            "proves the calendar-quarter grammar is rejected -- and a work-unit label "
+            "in the envelope test; both would lose their subject if rewritten"
+        ),
+        pattern_names=frozenset({"year-qualified quarterly token", "calendar quarter token"}),
+    ),
+    AllowlistRule(
+        path=_path(r"^src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part2\.py$"),
+        reason="a bundled submitted-file fixture constant carries the captured artefact's own filename",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+    ),
+    AllowlistRule(
+        path=_path(r"^src/cadrumo/application/modelo/tests/test_export_output_paths\.py$"),
+        reason="AEAT CSV evidence reference, an authority-issued identifier the test echoes verbatim",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"CSV-"),
+    ),
+    AllowlistRule(
         path=_path(r"^src/cadrumo/tests/fixtures/"),
         reason="external HTML/PDF corpus and fixture generation material preserves official/source labels",
     ),
