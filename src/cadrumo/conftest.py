@@ -106,6 +106,43 @@ def source_tree_ast() -> Mapping[Path, ast.AST]:
     return cache
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _skip_profile_kdf_grid_measurement() -> Iterator[None]:
+    """Stop every profile registration re-benchmarking this host's KDF grid.
+
+    ``calibrate_profile_kdf`` MEASURES the parameter grid to pick the strongest
+    point inside the operator latency band: one supervised child per warmup and
+    per sample. Profiled here, that is 16.1s of the 19.1s a registration costs,
+    and it is repeated for every registration, on the same machine, for the same
+    answer. Registration doors are reached from 102 direct call sites across 31
+    test modules, besides the shared ``register_cli_profile``.
+
+    The seam and its reasoning are the shipped function's own: measuring is
+    "the right price for an operator's one-off enrolment and the wrong one for a
+    host that enrols constantly". Declining adopts the FIXED fallback point,
+    which that function also returns whenever the grid cannot be measured before
+    its deadline, and which is STRONGER than the measured band's floor -- so
+    every custody envelope a test opens is wrapped no more weakly than before.
+
+    Session-scoped and outermost, which is what makes it survive: a nested
+    ``override_settings`` setting other fields keeps this value (checked), so
+    the many tests that override a storage root do not silently re-enable
+    measurement.
+
+    It cannot reach the calibration gate. ``calibrate_profile_kdf`` consults
+    ``settings or load_settings()``, and
+    ``custody/tests/test_kdf_supervision.py`` passes an explicitly constructed
+    ``Settings``; ``override_settings`` does not reach a directly-constructed
+    ``Settings`` (checked: ``load_settings()`` reads False here while
+    ``Settings()`` still reads True). So the behaviour this skips is still
+    proven, by the module that owns it.
+    """
+    from .core.config import override_settings
+
+    with override_settings(cadrumo_profile_kdf_measure_calibration=False):
+        yield
+
+
 @pytest.fixture(autouse=True)
 def _evict_test_bound_bucket_session() -> Iterator[None]:
     """Evict a bucket session a test bound itself, so none crosses into the next test.

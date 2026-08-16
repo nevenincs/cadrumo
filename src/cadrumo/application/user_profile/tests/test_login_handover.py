@@ -112,10 +112,22 @@ def _close_live_login() -> None:
 
 
 def _child_settings(storage_root: Path) -> tuple[Settings, Token[Settings | None]]:
+    # Calibration measurement is off for the same reason the session default in
+    # `cadrumo/conftest.py` turns it off, and it has to be said again HERE:
+    # these children are spawned, so no in-process override reaches them, and
+    # `_env_file=None` means no environment default would either. The child
+    # rebuilds `Settings` from scratch and would otherwise re-measure the KDF
+    # grid -- 16.1s of supervised child processes -- once per spawned
+    # registration, for the answer the parent already has.
+    #
+    # Declining adopts the fixed fallback `calibrate_profile_kdf` also returns
+    # on deadline, which is stronger than the measured band's floor, so the
+    # custody envelope these children write is wrapped no more weakly.
     settings = Settings(
         _env_file=None,
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile=None,
+        cadrumo_profile_kdf_measure_calibration=False,
     )
     return settings, config_module._settings_override.set(settings)
 
