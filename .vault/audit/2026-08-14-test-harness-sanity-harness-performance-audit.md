@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:e454a01a83b0095e572d3d05d8d97942f3ac7ccf1435a0cfc8977a549d0e37da'
+body_hash: 'sha256:cd025bbb6277fcb1a4d7af850bbb500fd0a5d75c5b139636a6e4ebb33876fa6e'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -2109,3 +2109,35 @@ in two fails under load) so an owner can act, and because it is the stated
 precondition for the drive-once refactor: a before/after cannot establish
 behaviour preservation against a module that changes verdict between identical
 runs.
+
+## CORRECTION: the leaked-endpoint diagnosis above is REFUTED
+
+The entry above diagnosed the batch-ingest flakiness as an ephemeral loopback
+URL surviving its context manager and being probed by a later test. That
+hypothesis was instrumented and is WRONG.
+
+A plugin recorded `cadrumo_llm_ollama_chat_url` at the setup of every test in
+the module. All twenty-one tests see the DEFAULT endpoint, port 11434. Not one
+sees an ephemeral port. There is no leak of the kind described.
+
+Re-reading the failure with that constraint: the test that failed in the
+captured run, `test_a_document_needing_a_reader_is_read_when_one_is_there`, is
+the ONE test that uses the loopback reader -- so the refused connection happens
+INSIDE its own block, not in a later test inheriting a dead URL. The earlier
+reasoning inverted this: it treated "only one test uses the loopback" as
+evidence that the failing tests were others, without checking which test the
+captured failure belonged to.
+
+The remaining puzzle is why a connection to a listening `ThreadingHTTPServer` is
+REFUSED rather than answered (a request to an unserved path would be a 404, not
+`ECONNREFUSED`), and that is now un-diagnosed rather than diagnosed. The
+observations that stand are: the module fails intermittently, roughly one run in
+two under load; the failing set varies; and the most-failing test passes 6/6
+alone.
+
+Recorded as a correction rather than an edit because the wrong diagnosis was
+committed and may have been read. The lesson is the one this campaign keeps
+relearning in new costumes: a hypothesis that explains every observation is
+still a hypothesis, and this one survived precisely because it was never asked
+to predict anything falsifiable until the instrument was built. It took one
+plugin and one run to kill.
