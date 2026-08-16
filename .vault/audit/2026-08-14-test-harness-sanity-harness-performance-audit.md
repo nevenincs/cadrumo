@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:3573d45e9e017a930a3ffd659e050d33df37e069688dd6dc12e2ac3dbc3cbff4'
+body_hash: 'sha256:91c589f801a332572bcfad30d405589c9f9595ec1a27dbf20531f50b2b15c065'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1550,3 +1550,58 @@ for any of it.
 The ranking itself is essentially unchanged from the previous profile, which
 independently confirms the phase conclusion: the remaining top entries are the
 ones already examined and ruled out as irreducible or already shared.
+
+## The suite is CPU-bound, not tail-bound -- which retires the "slowest file" idea too
+
+The previous entry concluded that suite wall clock is set by the longest FILE
+under `--dist=loadfile`, and that per-test work therefore buys CPU rather than
+wall clock. The first half of that is wrong, and it was wrong because it was
+reasoned rather than measured.
+
+Measured properly, by running with `--durations=0` and aggregating the 23,922
+recorded phases per FILE -- an instrument this campaign had not used before:
+
+    total recorded CPU     : 9,354s
+    suite wall clock       : 1,843.55s across 6 workers
+    perfect-balance floor  : 1,559s   (9,354 / 6)
+    longest single FILE    :   169s
+    worker utilisation     :   85%
+
+The suite runs 18% above a perfect-balance floor, and the longest file is 169s
+against a floor of 1,559s. **No file is anywhere near the critical path.** There
+is no tail to cut: the binding constraint is total CPU divided by workers.
+
+The top twelve files together are 1,238s, or **13.2%** of all recorded CPU. So
+deleting the twelve slowest files outright -- every one of them a gate this
+campaign has already examined and mostly found irreducible -- would cut wall
+clock by at most about 13%.
+
+### What actually moves this suite
+
+Only two things:
+
+1. **Broad, cross-cutting CPU reductions.** A change that touches one test
+     removes at most ~1% of one file; a change that touches a category of tests
+     removes real CPU. The KDF calibration fix is the shape that works, and its
+     modest 4.6% wall-clock effect is now explicable rather than disappointing:
+     it removed a few hundred seconds from 9,354.
+2. **More workers.** At 85% utilisation the schedule is already good, so wall
+     clock tracks `CPU / workers` closely. This is a policy knob
+     (`DEFAULT_WORKER_COUNT` is 6 on a 24-core box, deliberately leaving room
+     for co-resident agents), and it is coupled to the 1,216 MB-per-worker AST
+     prime, so it is an owner's decision and not a performance finding.
+
+### Two reasoned conclusions, both corrected by one measurement
+
+This campaign has now had to correct its own targeting twice, and both times the
+fix was a measurement it had not thought to take:
+
+- "`-n auto` durations rank work" -- false; they rank work PLUS contention,
+  caught by re-measuring a 45.57s entry at 12.94s in isolation.
+- "wall clock is set by the longest file" -- false; no file is remotely large
+  enough, caught by aggregating per file instead of reading the top-N test list.
+
+The common failure is reading a RANKING as if it were a model of where time
+goes. `--durations=N` answers "which tests are slowest", which is not "what is
+the suite waiting on", and neither question was the one that mattered. The
+per-file aggregation cost one extra flag on a run that was happening anyway.
