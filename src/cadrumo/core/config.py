@@ -39,7 +39,7 @@ from ._auth_provider import AuthProviderKind as _AuthProviderKind
 from ._config_integration_fields import (
     FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME,  # noqa: F401 - public re-export for storage adapters
 )
-from ._config_mcp_serving_fields import CadrumoMcpServingSettings
+from ._config_llm_fields import CadrumoLlmSettings
 from ._config_state_root import (
     FORMER_PRODUCT_DATABASE_FILENAME,  # noqa: F401 - public re-export for storage adapters
     default_storage_root,
@@ -130,7 +130,7 @@ class _CadrumoEnvSettingsSource(EnvSettingsSource):
             self.env_vars = original_env_vars
 
 
-class Settings(CadrumoMcpServingSettings):
+class Settings(CadrumoLlmSettings):
     """Application settings populated from process environment variables.
 
     Field names map directly to env var names (uppercased). For example,

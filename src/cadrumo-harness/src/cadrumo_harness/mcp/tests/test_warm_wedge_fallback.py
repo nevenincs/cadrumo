@@ -25,10 +25,9 @@ import time
 
 import pytest
 
-from cadrumo.core.config import override_settings
-
 from .. import _inprocess
 from .._inprocess import warm_capture_holder_age
+from .._settings import override_mcp_settings
 from .._tools import McpToolDescriptor, build_tool_descriptors
 from .._transport import McpTransport, _attested_cli_executable, _run_tool
 
@@ -73,7 +72,7 @@ def test_wedged_warm_transport_degrades_to_subprocess_then_recovers() -> None:
     try:
         assert holding.wait(timeout=5.0)
         # A tiny wedge threshold makes the held capture read as wedged at once.
-        with override_settings(
+        with override_mcp_settings(
             cadrumo_mcp_wedge_threshold_seconds=0.01,
             cadrumo_mcp_warm_capture_wait_seconds=0.05,
         ):

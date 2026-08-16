@@ -27,7 +27,6 @@ from typing import cast
 
 from cadrumo.adapters.persistence.storage import close_active_bucket_session
 from cadrumo.core import PRODUCT_IDENTITY
-from cadrumo.core.config import load_settings
 from cadrumo.core.errors import ErrorEnvelope
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.i18n import tr
@@ -49,6 +48,7 @@ from ._inprocess import (
     warm_capture_holder_age,
 )
 from ._meta_tools import ToolRunOutcome
+from ._settings import load_mcp_settings
 from ._tools import McpToolDescriptor
 
 
@@ -515,8 +515,8 @@ def _run_tool(  # pyright: ignore[reportUnusedFunction]
     )
     if not tier_runs_in_process(tier):
         return _run_subprocess_tool(descriptor, arguments)
-    settings = load_settings()
-    wedge_threshold_s = settings.cadrumo_mcp_wedge_threshold_seconds
+    mcp_settings = load_mcp_settings()
+    wedge_threshold_s = mcp_settings.cadrumo_mcp_wedge_threshold_seconds
     holder_age = warm_capture_holder_age()
     if holder_age is not None and holder_age >= wedge_threshold_s:
         return _degraded_subprocess_outcome(descriptor, arguments, wedged=True)
@@ -525,7 +525,7 @@ def _run_tool(  # pyright: ignore[reportUnusedFunction]
         arguments,
         tier=tier,
         timeout_s=timeout_seconds(tier),
-        acquire_timeout_s=settings.cadrumo_mcp_warm_capture_wait_seconds,
+        acquire_timeout_s=mcp_settings.cadrumo_mcp_warm_capture_wait_seconds,
     )
     if outcome is None:
         # Warm capture busy for the whole bound: degrade. Re-read the holder age so
