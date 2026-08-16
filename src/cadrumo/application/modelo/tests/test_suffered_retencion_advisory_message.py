@@ -10,7 +10,7 @@ all. This module pins the property against the CURRENT mechanism instead:
 ``_advisory_predicate_finding`` selects a predicate-specific literal
 ``message_locale_key`` for the two suffered-retención families at their own
 ``ModeloVerificationFinding`` constructor call site — required by
-S24's ``test_every_production_verification_finding_constructor_is_locale_neutral``,
+``test_every_production_verification_finding_constructor_is_locale_neutral``,
 which asserts every such call site's locale key is a literal, not a
 returned value — rendered through the real ``tr()`` catalogue lookup rather
 than a hand-written string.

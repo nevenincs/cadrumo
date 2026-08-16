@@ -1,4 +1,4 @@
-"""Prove the applicability registry-resolution cutover mechanism (W01.P03.S09).
+"""Prove the applicability registry-resolution cutover mechanism.
 
 Two real-behavior proofs, both against a real scratch
 :class:`ValidatedRegistryAuthority` (never a mock/patch), matching the
@@ -188,7 +188,7 @@ def _representative_profiles() -> tuple[TaxpayerProfile, ...]:
 def test_registry_resolved_rule_matches_the_literal_it_transcribes_per_profile(tmp_path: Path) -> None:
     """Condition 1: identical verdict, reason and legal_refs for every representative profile.
 
-    Not "hydrated fragment equals literal" at the data layer (S08 already
+    Not "hydrated fragment equals literal" at the data layer (the fragment-family proof already
     proves that) -- this evaluates BOTH through the real
     ``ModeloApplicabilityRule.evaluate`` and compares the
     ``ModeloApplicability`` results the application actually consumes.

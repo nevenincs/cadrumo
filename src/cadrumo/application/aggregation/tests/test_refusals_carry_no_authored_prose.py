@@ -54,7 +54,7 @@ _MESSAGE_KEYWORDS = frozenset({"message", "translated_message"})
 #: Wrappers that mark a string as a translation key rather than prose.
 _KEY_WRAPPERS = frozenset({"t", "tr", "Translatable"})
 
-#: Every refusal key this Step migrated, by owning module. A key that stops
+#: Every refusal key the migration moved, by owning module. A key that stops
 #: resolving -- or a module renamed out from under the gate -- must fail loudly
 #: rather than let the roster shrink silently.
 _MIGRATED_KEYS: tuple[str, ...] = (

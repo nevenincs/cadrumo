@@ -175,13 +175,13 @@ def test_a_changed_custody_record_still_refuses_the_prepared_deletion(tmp_path: 
 
 
 def test_the_marker_still_bites_after_the_deletion_revokes_its_own_session(tmp_path: Path) -> None:
-    """Both directions at the one call site the checkpoint used to break.
+    """Both directions at the one call site that used to break.
 
     ``_verify_source_delete_marker`` runs before every destructive step after
     the revocation. It is the guard that false-fired, so proving it now passes
     is only half the claim: the same call, on the same journal, with a durable
     custody record altered underneath it, must still refuse. Driving the
-    transaction step by step is what puts the assertions on either side of the
+    transaction one stage at a time is what puts the assertions on either side of the
     revocation, which no public entry point can do.
 
     The record it perturbs is confirmed content-covered first, so the refusal

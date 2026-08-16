@@ -77,7 +77,7 @@ exclusion is anchored: a test asserts every excluded ``short_<x>`` has a sibling
 ``<x>`` field on the same model, so dropping or renaming the full field makes
 the companion's exclusion fail rather than pass vacuously.
 
-The scan reads the CURRENT WORKTREE. S58 is a gate for the change being tested,
+The scan reads the CURRENT WORKTREE. This is a gate for the change being tested,
 so a pinned ``HEAD`` view would allow an uncommitted bare field to evade the
 ratchet. Its source snapshot is collected once per module fixture, yielding a
 reproducible report for that test invocation without using an alternate index.

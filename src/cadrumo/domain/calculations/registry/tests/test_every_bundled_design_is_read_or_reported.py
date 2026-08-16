@@ -30,7 +30,7 @@ parsed is either a parser gap or a corpus defect, and either way it is work. It 
 listed with its modelo, its filename and its cause, and the causes are grouped, so
 the reader sees a small number of fixable CLASSES rather than a pile of individual
 problems. Nothing is exempted: an allowlist here would recreate the honour-system
-list this campaign has spent its time removing, and an exemption is
+list this suite exists to remove, and an exemption is
 indistinguishable from a fix in every downstream count.
 
 NO COUNT IS PINNED. The number of designs, the number in each bucket and the size

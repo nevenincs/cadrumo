@@ -8,7 +8,7 @@ assembly, and the confirm path built its declared facts without one. So a
 cross-border document printing no statutory citation reached a category of
 ABSENT with no route forward for the operator.
 
-**The provenance is the contract, not the value.** The governing ADR sanctions
+**The provenance is the contract, not the value.** The governing decision sanctions
 exactly two sources for this axis: a printed statutory citation, which decides
 by law because an article number is a closed legal vocabulary, and an explicit
 operator assertion. Both are facts about who established the answer, and they
@@ -111,7 +111,7 @@ def test_no_assertion_leaves_the_axis_unstated_rather_than_defaulted(kind: Invoi
 
 # -- the OTHER sanctioned source, which nothing read ------------------------
 #
-# The governing ADR names two sources for this axis and the suite above covered
+# Two sources are sanctioned for this axis and the suite above covered
 # one. The citation axis was fully built, exported on the domain facade and
 # covered by its own suite -- and had NO production caller, so the gap message
 # telling an operator that a printed statutory citation settles this named a

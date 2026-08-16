@@ -455,7 +455,7 @@ def _seed_m303_ready_profile(bucket_id: str) -> None:
 class TestS03CreateWorkUnitDoorReconfirmation:
     """``create_work_unit`` re-confirms the law-determined revision itself.
 
-    ``resolve_registry_revision_for_work_target`` (S01 above) only guards
+    ``resolve_registry_revision_for_work_target`` (the sibling contract above) only guards
     callers that route through it. The population census for this gap found
     exactly one production caller doing so (``ensure_modelo_work_unit_for_active_target``)
     against roughly ninety direct ``create_work_unit`` call sites -- nearly all
@@ -471,7 +471,7 @@ class TestS03CreateWorkUnitDoorReconfirmation:
     ) -> None:
         """A real, period-declared, but year-wrong revision id is refused at creation.
 
-        Mirrors the S01 scenario one level down: ``2009-y-siguientes`` is a
+        Mirrors the sibling scenario one level down: ``2009-y-siguientes`` is a
         real M303 revision declaring the ``1T`` period token, but it covers
         2009-2022, not 2026. Calling ``create_work_unit`` directly -- the shape
         every one of the ~90 direct callers uses -- must refuse exactly as

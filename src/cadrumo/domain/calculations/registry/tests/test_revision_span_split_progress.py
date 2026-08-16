@@ -43,7 +43,7 @@ _KNOWN_SPANNING: Final[frozenset[tuple[str, str]]] = frozenset(
         ("303", "2009-y-siguientes"),  # row #117
     },
 )
-#: `("390", "2010-y-siguientes")` (rows #110, #115, #118) removed: the W04.P07.S87
+#: `("390", "2010-y-siguientes")` (rows #110, #115, #118) removed: the revision-span
 #: split replaced the open-ended revision with four exact-year revisions (2022,
 #: 2023, 2024, 2025), each claiming exactly one design year. Verified rather than
 #: assumed -- `_boundaries_for` run against each of the four returns no boundary,

@@ -69,7 +69,7 @@ _MIN_STEM_SEGMENTS: Final = 3
 #: cannot hide inside a known-bad population, and so that fixing one forces a
 #: visible edit here rather than passing silently.
 #:
-#: The W04.P07.S87 split (temporal, not this defect) replaced the single
+#: The revision-span split (temporal, not this defect) replaced the single
 #: ``2010-y-siguientes`` revision with four exact-year revisions (2022, 2023,
 #: 2024, 2025). Verified rather than assumed: this module's own detector, run
 #: against each of the four, reports all five pairings under EVERY new revision
