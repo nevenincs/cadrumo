@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:86eee7fd4b7aba93c121766d51516f4066c937e955942004fd661878c5300ddb'
+body_hash: 'sha256:477402a74b51f3981ca31ac62e3f590f1071e9df570441f368db8ec91482eb44'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -2333,3 +2333,59 @@ handles bounded, and the memory ceiling now known instead of estimated from one
 of its parts. The operator asked for instrumentation to find leaks and resource
 misuse; the honest answer is that this suite has no leaks in the classic
 channels, and its real resource story is a memory ceiling nobody had measured.
+
+## Where the per-worker memory goes
+
+The 4.0-5.7 GB per-worker ceiling was decomposed rather than left as a number.
+
+### Session state is ~1.7 GB, and the AST prime is three quarters of it
+
+Measured in one cold process, each step cumulative:
+
+    bare interpreter                            19 MB
+    import cadrumo                              +0 MB     19 MB
+    import the CLI command tree                +97 MB    116 MB
+    compiled registry tree (shared accessor)  +208 MB    324 MB
+    validated registry authority              +127 MB    451 MB
+    session AST prime (4,925 modules)       +1,272 MB  1,722 MB
+
+So the session fixtures this campaign has been sharing account for about 1.7 GB,
+and the AST prime alone is 1,272 MB of it -- which matches the 1,216 MB measured
+independently earlier and is the one component worth knowing per worker.
+
+### The other 2.3-4 GB accumulates during testing and is never released
+
+Across the 1,390-test ledger slice in a single process:
+
+    start 313 MB | 25% 667 | 50% 710 | 75% 752 | END 766 MB | PEAK 766 MB
+
+RSS climbs monotonically and ENDS at its peak: +453 MB over the slice, roughly
+0.33 MB per test, with most of it early and a slower climb after. Nothing comes
+back. Extrapolated to a worker's ~4,700 tests on top of 1.7 GB of session state,
+that is the observed 4-5.7 GB.
+
+### It is NOT Python-object retention, on the evidence available
+
+`tracemalloc` over a 35-test sample attributes only ~31 MB of surviving
+allocations, dominated by import machinery (22.5 MB of module code objects),
+then pydantic model construction and the registry compiled cache at 1-2 MB each.
+Nothing in the Python heap accounts for hundreds of megabytes.
+
+That points at native allocations (SQLite, cryptography, PDF parsing, libyaml)
+or allocator pages the interpreter frees but does not return to the OS --
+neither of which is a cache someone forgot to clear, and neither is fixable by
+clearing one.
+
+**Stated limit:** the trajectory was measured over 1,390 tests and the
+attribution over 35, because `tracemalloc` pushed the full slice past a
+ten-minute bound. A sample that small can miss an accumulating site that only
+appears later, so this rules Python-object retention unlikely rather than out.
+Settling it needs `tracemalloc` over a longer slice with a budget for the 2-3x
+overhead.
+
+### What it means for the only remaining wall-clock lever
+
+The worker-count decision now has a decomposed cost rather than a single number:
+about 1.7 GB of unavoidable session state per worker, plus roughly 0.33 MB per
+test executed, ending at 4-5.7 GB. Raising the cap multiplies the session state
+exactly and the accumulation proportionally to how the tests divide.
