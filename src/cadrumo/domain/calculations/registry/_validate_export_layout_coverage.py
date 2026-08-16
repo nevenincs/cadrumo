@@ -235,6 +235,11 @@ class _RequiredPosition:
     length: int
     description: str
     obligatorio: bool
+    #: AEAT's own ``Contenido`` cell declares this position's content to be
+    #: blanks, while its obligatoriness column still demands the position. An
+    #: obligatory BLANK: the field must be emitted so the record stays
+    #: contiguous, and a ``filler`` is the only faithful way to emit it.
+    declared_blank: bool
 
 
 def _administration_reserved(field: RecordDesignField) -> bool:
@@ -307,6 +312,7 @@ def _position(sheet_name: str, field: RecordDesignField) -> _RequiredPosition:
         length=field.length,
         description=field.description,
         obligatorio=bool(_OBLIGATORIO.search(field.validation or "")),
+        declared_blank=bool(field.content and _DECLARED_FILL.match(field.content.strip())),
     )
 
 
@@ -472,7 +478,7 @@ def _reserved_write_failures(
     return failures
 
 
-def _covers(position: _RequiredPosition, data_bytes: set[int]) -> bool:
+def _covers(position: _RequiredPosition, data_bytes: set[int], fill_bytes: set[int]) -> bool:
     """Whether the layout can really write every byte of ``position``.
 
     Coverage is measured by BYTE EXTENT, not by ``(offset, length)`` identity,
@@ -506,8 +512,21 @@ def _covers(position: _RequiredPosition, data_bytes: set[int]) -> bool:
     stays legal: a fixed-width record is contiguous and those bytes must still
     be emitted. Such positions never reach here, because
     :func:`_required_positions` excluded them.
+
+    The one position that DOES reach here and is satisfied by a filler is the
+    obligatory BLANK -- AEAT marking a position obligatorio while its own
+    ``Contenido`` cell declares the content to be blanks. Both statements are
+    the authority's and neither overrides the other: the field must be emitted,
+    and what it emits is blanks. Requiring real data there made 34 positions
+    across Modelos 369, 322, 036, 210 and 353 UNSATISFIABLE -- a filler did not
+    cover them, and a value-carrying field would both contradict the Contenido
+    cell and trip :func:`_reserved_write_failures` for claiming reserved bytes.
+    A rule no correct layout can satisfy is a rule that teaches authors to write
+    the wrong shape, which is the incentive inversion this module exists to
+    remove.
     """
-    return all(byte in data_bytes for byte in range(position.offset, position.offset + position.length))
+    countable = fill_bytes if position.declared_blank else data_bytes
+    return all(byte in countable for byte in range(position.offset, position.offset + position.length))
 
 
 def _belongs_to_layout(sheet: RecordDesignSheet, records: Sequence[ExportRecordDefinition]) -> bool:
@@ -652,10 +671,13 @@ def _missing_report(
 ) -> tuple[int, int, list[str]]:
     """Return ``(required, missing, per-sheet lines)`` for one design against one layout."""
     layout_written: set[int] = set()
+    layout_emitted: set[int] = set()
     for record in records:
         layout_written |= _written_bytes(record.fields, data_only=True)
+        layout_emitted |= _written_bytes(record.fields, data_only=False)
     if envelope is not None:
         layout_written |= _envelope_written_bytes(envelope)
+        layout_emitted |= _envelope_written_bytes(envelope)
     required_total = 0
     missing_total = 0
     lines: list[str] = []
@@ -668,13 +690,16 @@ def _missing_report(
         if joined is not None:
             consulted = tuple(joined.fields)
             written = _written_bytes(consulted, data_only=True)
+            emitted = _written_bytes(consulted, data_only=False)
         elif envelope is not None and sheet.name == envelope.record_identity:
             consulted = ()
             written = _envelope_written_bytes(envelope)
+            emitted = written
         else:
             consulted = tuple(field for record in records for field in record.fields)
             written = layout_written
-        missing = [position for position in required if not _covers(position, written)]
+            emitted = layout_emitted
+        missing = [position for position in required if not _covers(position, written, emitted)]
         missing_total += len(missing)
         # Checked against whichever fields the coverage question consulted,
         # joined or not: an unjoined sheet still knows which bytes AEAT keeps,
