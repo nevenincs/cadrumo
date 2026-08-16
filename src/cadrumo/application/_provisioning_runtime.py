@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import time
 from collections.abc import Callable, Mapping
+from time import monotonic
 from typing import TYPE_CHECKING, TypedDict, cast
 
 import httpx
@@ -13,6 +14,7 @@ from pydantic import BaseModel, Field, model_validator
 from ..core import STRICT_FROZEN_CONFIG, AcceleratorKind, ContentionCause
 from ..core.config import Settings, load_settings
 from ._provisioning_contracts import (
+    OLLAMA_PROBE_CACHE_TTL_S,
     OLLAMA_PROBE_TIMEOUT_S,
     OLLAMA_PULL_TIMEOUT_S,
     OLLAMA_READINESS_TIMEOUT_S,
@@ -48,15 +50,40 @@ def ollama_endpoint(chat_url: str, path: str) -> str:
     return f"{base}/api/{path}"
 
 
+#: When each runtime endpoint was last found unreachable, by base URL.
+#:
+#: Only FAILURE is remembered, and the asymmetry is the point. A successful read
+#: is answered live every time, so a resident-model set is never stale and
+#: contention is never assessed against a snapshot: the moment the runtime
+#: answers, this cache stops participating. What is cached is the answer that
+#: does not change and costs the most to obtain -- "nothing is listening there"
+#: -- which on a host with no local runtime was being rediscovered once per
+#: document at ~0.94s per refused connection.
+_UNREACHABLE_SINCE: dict[str, float] = {}
+
+
+def clear_runtime_endpoint_failure_cache() -> None:
+    """Forget every remembered unreachable endpoint, so the next read retries."""
+    _UNREACHABLE_SINCE.clear()
+
+
 def _read_runtime_json(settings: Settings, path: str) -> object | None:
     url = ollama_endpoint(settings.cadrumo_llm_ollama_chat_url, path)
+    base = url.rsplit("/api/", 1)[0]
+    failed_at = _UNREACHABLE_SINCE.get(base)
+    if failed_at is not None and (monotonic() - failed_at) < OLLAMA_PROBE_CACHE_TTL_S:
+        # Identical to what the failed request below returns, minus the wait.
+        return None
     try:
         with httpx.Client(timeout=OLLAMA_PROBE_TIMEOUT_S) as client:
             response = client.get(url)
             response.raise_for_status()
-            return response.json()
+            payload = response.json()
     except (httpx.HTTPError, ValueError):
+        _UNREACHABLE_SINCE[base] = monotonic()
         return None
+    _UNREACHABLE_SINCE.pop(base, None)
+    return payload
 
 
 def _resident_from_entry(entry: object) -> RuntimeResident | None:
