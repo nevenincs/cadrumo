@@ -109,3 +109,16 @@ consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["orden-eha-3316-2010:art-5"]
 source_refs = ["aeat-modelo-210-procedure"]
+
+# Export consumer for the generated fichero-BOE layout. Required by the
+# registry validator whenever a revision declares export layouts. Grounded on
+# Orden EHA/3316/2010 art 1, which approves the modelo and its ingreso/devolucion
+# document -- the two records the layout renders -- and cites the exact record
+# design the layout was generated from.
+[[revisions."2025".application_links]]
+id = "modelo-210-2025-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022", "aeat-modelo-210-procedure"]

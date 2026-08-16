@@ -188,7 +188,7 @@ def resolve_mcp_action_capabilities(
                 ),
                 mounted_family=None,
                 profile_policy=None,
-                mcp_exposure=None,
+                surface_exposure=None,
                 exclusions=(),
             )
             for command_key, verb_schema in sorted(verb_schemas.items())

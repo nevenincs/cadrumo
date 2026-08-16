@@ -455,6 +455,21 @@ class RecordDesignSkippedSheet(RegistryModel):
 
     name: str
     reason: str
+    #: Whether a reviewer DECLARED this tab is not a record-design sheet, in the
+    #: source's ``declared-non-record-sheets.json``, as opposed to the extractor
+    #: simply failing to find a header on it.
+    #:
+    #: The judgement already existed and was thrown away: the declaration was
+    #: read only to replace the parser's generic probe message with the
+    #: reviewer's prose, so a workbook carrying an adjudicated lookup tab was
+    #: indistinguishable from one that lost a record body, and both refused.
+    #: Modelo 232 is completely read -- all three record sheets, 263 anchors --
+    #: and could not be generated solely because its ``TABLAS`` lookup tab is
+    #: correctly not a record design.
+    #:
+    #: Defaults False so an undeclared skip stays a partial read. Only the
+    #: declaration can clear it, and the declaration is a registry act.
+    declared_non_record: bool = False
 
 
 class RecordDesignExtraction(RegistryModel):
@@ -481,9 +496,23 @@ class RecordDesignExtraction(RegistryModel):
     skipped: tuple[RecordDesignSkippedSheet, ...] = ()
 
     @property
+    def unread_record_sheets(self) -> tuple[RecordDesignSkippedSheet, ...]:
+        """Every skipped sheet a reviewer has NOT adjudicated as a non-record tab.
+
+        This is the set that makes a read partial. A declared non-record tab is
+        not a missing record: the reviewer opened the workbook and recorded that
+        it never carries ``Posic.``/``Lon``/``Tipo``/``Contenido`` at all.
+        """
+        return tuple(item for item in self.skipped if not item.declared_non_record)
+
+    @property
     def is_complete(self) -> bool:
-        """Whether every sheet of the source was read."""
-        return not self.skipped
+        """Whether every RECORD sheet of the source was read.
+
+        A declared non-record tab does not make a read incomplete; an
+        undeclared skip does.
+        """
+        return not self.unread_record_sheets
 
     @property
     def corrections(self) -> tuple[RecordDesignCorrection, ...]:
@@ -503,14 +532,18 @@ class RecordDesignExtraction(RegistryModel):
             The parsed sheets, when the whole source was read.
 
         Raises:
-            RegistryValidationError: when any sheet of the source was skipped.
+            RegistryValidationError: when a RECORD sheet of the source was
+                skipped without a reviewer declaring it a non-record tab.
         """
-        if self.skipped:
-            detail = "; ".join(f"{item.name!r}: {item.reason}" for item in self.skipped)
+        unread = self.unread_record_sheets
+        if unread:
+            detail = "; ".join(f"{item.name!r}: {item.reason}" for item in unread)
             raise RegistryValidationError(
                 f"{self.source}: read {len(self.sheets)} sheet(s) but could not read "
-                f"{len(self.skipped)} more, so this is a PARTIAL design and every count "
-                f"derived from it understates the source -- {detail}",
+                f"{len(unread)} more, so this is a PARTIAL design and every count "
+                f"derived from it understates the source -- {detail}. If a listed tab "
+                "carries no record design at all, declare it in the source's "
+                "declared-non-record-sheets.json rather than widening this refusal.",
             )
         return self.sheets
 

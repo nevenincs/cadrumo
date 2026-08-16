@@ -46,12 +46,12 @@ from .._manifest import (
     ExplicitExclusionInventoryRow,
     InputSchemaInventoryRow,
     LiveLeafInventoryRow,
-    McpExposureInventoryRow,
     MountedFamilyInventoryRow,
     OperatorSurfaceReconciliation,
     ProfilePolicyInventoryRow,
     ReconciliationSurface,
     ResultSchemaInventoryRow,
+    SurfaceExposureInventoryRow,
     reconcile_operator_surface_inventory,
 )
 
@@ -165,8 +165,8 @@ def _live_reconciliation() -> OperatorSurfaceReconciliation:
             )
             for key in keys
         ),
-        mcp_exposures=tuple(
-            McpExposureInventoryRow(
+        surface_exposures=tuple(
+            SurfaceExposureInventoryRow(
                 subject_leaf_key=key,
                 exposed=is_exposable_command(key),
                 provenance="is_exposable_command",
@@ -186,7 +186,7 @@ def _live_reconciliation() -> OperatorSurfaceReconciliation:
                 ),
                 ExplicitExclusionInventoryRow(
                     subject_leaf_key=key,
-                    surface=ReconciliationSurface.MCP_EXPOSURE,
+                    surface=ReconciliationSurface.SURFACE_EXPOSURE,
                     reason="root landing callback is excluded from MCP tools",
                     authority="ROOT_LANDING_SCHEMA_KEYS",
                     provenance="entrypoints.schema_surface",
@@ -302,8 +302,8 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
         )
         for key, schema in sorted(input_schemas.items())
     )
-    mcp_exposures = tuple(
-        McpExposureInventoryRow(
+    surface_exposures = tuple(
+        SurfaceExposureInventoryRow(
             subject_leaf_key=key,
             exposed=key in exposable_keys,
             provenance="is_exposable_command",
@@ -323,7 +323,7 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
             ),
             ExplicitExclusionInventoryRow(
                 subject_leaf_key=key,
-                surface=ReconciliationSurface.MCP_EXPOSURE,
+                surface=ReconciliationSurface.SURFACE_EXPOSURE,
                 reason="root landing callback is excluded from MCP tools",
                 authority="ROOT_LANDING_SCHEMA_KEYS",
                 provenance="entrypoints.schema_surface",
@@ -337,7 +337,7 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
         input_schemas=input_rows,
         mounted_families=mounted_families,
         profile_policies=profile_policies,
-        mcp_exposures=mcp_exposures,
+        surface_exposures=surface_exposures,
         exclusions=exclusions,
     )
     reconciled_by_key = {leaf.live_leaf.subject_leaf_key: leaf for leaf in report.leaves}
@@ -355,14 +355,16 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
     )
 
     excluded_from_mcp = frozenset(
-        key for key, row in reconciled_by_key.items() if row.mcp_exposure is not None and not row.mcp_exposure.exposed
+        key
+        for key, row in reconciled_by_key.items()
+        if row.surface_exposure is not None and not row.surface_exposure.exposed
     )
     assert excluded_from_mcp == ROOT_LANDING_SCHEMA_KEYS
     for key in excluded_from_mcp:
         row = reconciled_by_key[key]
         assert {exclusion.surface for exclusion in row.exclusions} == {
             ReconciliationSurface.MOUNTED_FAMILY,
-            ReconciliationSurface.MCP_EXPOSURE,
+            ReconciliationSurface.SURFACE_EXPOSURE,
         }
         assert row.mounted_family is None
         assert row.profile_policy is not None

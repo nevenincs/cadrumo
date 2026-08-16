@@ -35,7 +35,10 @@ from ._validate_dependency_sections import (
     validate_relation_section,
 )
 from ._validate_evidence import EvidenceValidator
-from ._validate_export_exemption import validate_export_exemption_declarations
+from ._validate_export_exemption import (
+    modelo_publishes_a_record_design,
+    validate_export_exemption_declarations,
+)
 from ._validate_export_layout_coverage import validate_export_layout_record_coverage
 from ._validate_exports import validate_export_layout_section
 from ._validate_formulas import validate_formula_section
@@ -74,6 +77,7 @@ def _validate_revision_surface_sections(
     prefix: str,
     modelo_id: str,
     revision: ModeloRevision,
+    publishes_record_design: bool,
     context: RevisionValidationContext,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
@@ -183,7 +187,14 @@ def _validate_revision_surface_sections(
             evidence=evidence,
         ),
     )
-    failures.extend(validate_export_exemption_declarations(prefix=prefix, modelo_id=modelo_id, revision=revision))
+    failures.extend(
+        validate_export_exemption_declarations(
+            prefix=prefix,
+            modelo_id=modelo_id,
+            revision=revision,
+            publishes_record_design=publishes_record_design,
+        ),
+    )
     failures.extend(
         validate_export_layout_record_coverage(prefix=prefix, revision=revision, source_refs=source_refs),
     )
@@ -291,6 +302,7 @@ def validate_revision_definition(
         prefix=prefix,
         modelo_id=modelo.id,
         revision=revision,
+        publishes_record_design=modelo_publishes_a_record_design(modelo, source_refs),
         context=context,
         legal_refs=legal_refs,
         source_refs=source_refs,

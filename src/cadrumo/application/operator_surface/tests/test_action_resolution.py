@@ -65,7 +65,7 @@ def _leaf(
         ),
         mounted_family=None,
         profile_policy=None,
-        mcp_exposure=None,
+        surface_exposure=None,
         exclusions=(),
     )
 

@@ -22,12 +22,12 @@ from .. import ResolvedCatalogueAction, _action_resolution, resolve_catalogue_ac
 from .._manifest import (
     InputSchemaInventoryRow,
     LiveLeafInventoryRow,
-    McpExposureInventoryRow,
     MountedFamilyInventoryRow,
     OperatorSurfaceReconciliation,
     ProfilePolicyInventoryRow,
     ReconciledOperatorLeaf,
     ResultSchemaInventoryRow,
+    SurfaceExposureInventoryRow,
 )
 from .._manifest import ResolvedCatalogueAction as ManifestResolvedCatalogueAction
 
@@ -65,7 +65,7 @@ def _reconciliation(*, target_command_key: str, required_input_names: tuple[str,
                     should_expose_via_mcp=True,
                     provenance="profile policy classification",
                 ),
-                mcp_exposure=McpExposureInventoryRow(
+                surface_exposure=SurfaceExposureInventoryRow(
                     subject_leaf_key=target_command_key,
                     exposed=True,
                     provenance="MCP tool descriptor inventory",

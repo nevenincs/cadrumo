@@ -25,14 +25,33 @@ from pydantic import ValidationError
 from .....core import ExportExemptionReason, ExportLayoutFormat
 from .._authority import ValidatedRegistryAuthority
 from .._schema import ModeloRevision
-from .._validate_export_exemption import validate_export_exemption_declarations
+from .._validate_export_exemption import (
+    modelo_publishes_a_record_design,
+    validate_export_exemption_declarations,
+)
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _gate(revision: ModeloRevision, modelo_id: str = "303") -> list[str]:
-    """Run the export-exemption gate over one revision and return its failures."""
-    return validate_export_exemption_declarations(prefix="modelo T revision R", modelo_id=modelo_id, revision=revision)
+def _gate(
+    revision: ModeloRevision,
+    modelo_id: str = "303",
+    *,
+    publishes_record_design: bool = True,
+) -> list[str]:
+    """Run the export-exemption gate over one revision and return its failures.
+
+    ``publishes_record_design`` defaults to ``True`` because every revision these
+    tests exercise belongs to a modelo AEAT publishes a design for; that is the
+    population the per-casilla exemption rules govern.
+    """
+    return validate_export_exemption_declarations(
+        prefix="modelo T revision R",
+        modelo_id=modelo_id,
+        revision=revision,
+        publishes_record_design=publishes_record_design,
+    )
 
 
 def _fixed_width_revisions(
@@ -302,3 +321,86 @@ def test_pre_populated_by_aeat_is_documented_dormant_not_silently_unused(
     modelo_100 = registry_authority.modelo("100")
     formats = {layout.format for revision in modelo_100.revisions.values() for layout in revision.export_layouts}
     assert ExportLayoutFormat.FIXED_WIDTH not in formats
+
+
+def test_the_no_layout_refusal_fires_when_a_design_exists_to_author_from() -> None:
+    """A layout-less revision of a modelo AEAT publishes a design for is refused."""
+    modelo, _ = _committed_modelo("180")
+    revision = modelo.revisions["2023-y-siguientes"]
+    stripped = revision.model_copy(update={"export_layouts": ()})
+
+    failures = _gate(stripped, modelo_id="180", publishes_record_design=True)
+
+    assert any("declares no export layout" in failure for failure in failures)
+
+
+def test_the_no_layout_refusal_is_silent_when_aeat_publishes_no_design() -> None:
+    """The same layout-less revision passes once no design exists to author from.
+
+    Paired with the test above on the SAME revision object, so the only thing
+    that differs is the predicate. That is what makes this a discrimination
+    proof rather than two independent assertions.
+    """
+    modelo, _ = _committed_modelo("180")
+    revision = modelo.revisions["2023-y-siguientes"]
+    stripped = revision.model_copy(update={"export_layouts": ()})
+
+    failures = _gate(stripped, modelo_id="180", publishes_record_design=False)
+
+    assert not any("declares no export layout" in failure for failure in failures)
+
+
+@pytest.mark.parametrize("modelo_id", ["180", "303", "131"])
+def test_a_modelo_with_a_bundled_design_reads_as_publishing_one(modelo_id: str) -> None:
+    """The predicate resolves True against the real bundled source catalogue."""
+    modelo, catalogues = _committed_modelo(modelo_id)
+
+    assert modelo_publishes_a_record_design(modelo, catalogues.sources)
+
+
+@pytest.mark.parametrize("modelo_id", ["136", "721"])
+def test_a_modelo_aeat_publishes_no_design_for_reads_as_publishing_none(modelo_id: str) -> None:
+    """Modelo 136 and 721 cite no ``record_design``, only procedure and form_spec sources.
+
+    Both are absent from every AEAT Diseño de Registro index page, current and
+    historical, and both are kept in the registry because they carry real
+    calculation machinery. They are the entire population this predicate
+    separates.
+    """
+    modelo, catalogues = _committed_modelo(modelo_id)
+
+    assert not modelo_publishes_a_record_design(modelo, catalogues.sources)
+
+
+def test_a_form_spec_citation_is_not_a_record_design() -> None:
+    """Mutation proof: the predicate keys on ``record_design``, not on tier or name.
+
+    Modelo 721 cites its approving orden's anexo at ``layout_authority`` tier
+    under an id ending ``-layout``. If the predicate keyed on either signal it
+    would read True here, the refusal would return for 721, and the distinction
+    this gate rests on would be fictional.
+    """
+    modelo, catalogues = _committed_modelo("721")
+    cited = {ref: catalogues.sources[ref] for ref in modelo.source_refs if ref in catalogues.sources}
+
+    assert cited, "fixture drift: modelo 721 should cite resolvable sources"
+    assert any(source.evidence_tier == "layout_authority" for source in cited.values())
+    assert not any(source.kind == "record_design" for source in cited.values())
+
+
+def test_an_acquisition_gap_still_refuses() -> None:
+    """A revision citing no design, in a modelo that HAS one, is still refused.
+
+    Modelo 185 is the worked case: its 2026 design is bundled while the
+    ``2003-2025`` revision cites none. Scoping the predicate per revision instead
+    of per modelo excused exactly that gap — the refusal must survive it, because
+    the design exists and has simply not been acquired for that epoch.
+    """
+    modelo, catalogues = _committed_modelo("185")
+    revision = modelo.revisions["2003-2025"]
+
+    assert not any(
+        catalogues.sources[ref].kind == "record_design" for ref in revision.source_refs if ref in catalogues.sources
+    )
+    assert modelo_publishes_a_record_design(modelo, catalogues.sources)
+    assert any("declares no export layout" in failure for failure in _gate(revision, modelo_id="185"))

@@ -1,0 +1,10 @@
+[[revisions.2025.export_layouts]]
+id = 'generated-modelo-210-2025-fichero'
+format = 'fixed_width'
+source_refs = ['aeat-dr-210-2022']
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'orden-eha-3316-2010:art-2',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+dictionary_path_overrides = []

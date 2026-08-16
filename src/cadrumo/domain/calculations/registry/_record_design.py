@@ -329,8 +329,14 @@ def _extract_record_design_workbook_cached(
                     if "has no record-design header" not in str(exc):
                         raise
                     sheet_title = worksheet.title.strip()
-                    reason = declared_skip_reasons.get(sheet_title, str(exc))
-                    skipped.append(RecordDesignSkippedSheet(name=sheet_title, reason=reason))
+                    declared = declared_skip_reasons.get(sheet_title)
+                    skipped.append(
+                        RecordDesignSkippedSheet(
+                            name=sheet_title,
+                            reason=declared if declared is not None else str(exc),
+                            declared_non_record=declared is not None,
+                        ),
+                    )
             return _extraction(source_path, sheets, skipped)
         finally:
             workbook.close()
@@ -360,8 +366,14 @@ def _extract_record_design_xls_workbook_cached(
                 if "has no record-design header" not in str(exc):
                     raise
                 stripped_name = sheet_name.strip()
-                reason = declared_skip_reasons.get(stripped_name, str(exc))
-                skipped.append(RecordDesignSkippedSheet(name=stripped_name, reason=reason))
+                declared = declared_skip_reasons.get(stripped_name)
+                skipped.append(
+                    RecordDesignSkippedSheet(
+                        name=stripped_name,
+                        reason=declared if declared is not None else str(exc),
+                        declared_non_record=declared is not None,
+                    ),
+                )
         return _extraction(source_path, sheets, skipped)
     finally:
         workbook.release_resources()
