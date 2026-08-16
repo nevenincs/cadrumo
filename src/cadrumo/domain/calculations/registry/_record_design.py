@@ -1633,13 +1633,20 @@ class _PdfParseState:
         read = tuple(result.sheet for result in self.results if result.identified and result.sheet.fields)
         if not read:
             raise RegistryValidationError("record-design PDF did not contain parseable field rows")
+        # A sheet whose rows do not tile its own declared extent was not read as
+        # published, so it is reported as SKIPPED rather than handed over as if
+        # it were whole. See :func:`contiguity_failure`.
+        broken = {sheet.name: reason for sheet in read if (reason := contiguity_failure(sheet)) is not None}
         return RecordDesignExtraction(
             source=self.source_label,
-            sheets=read,
-            skipped=tuple(
-                RecordDesignSkippedSheet(name=result.sheet.name, reason=_skipped_record_reason(result))
-                for result in self.results
-                if not (result.identified and result.sheet.fields)
+            sheets=tuple(sheet for sheet in read if sheet.name not in broken),
+            skipped=(
+                *(
+                    RecordDesignSkippedSheet(name=result.sheet.name, reason=_skipped_record_reason(result))
+                    for result in self.results
+                    if not (result.identified and result.sheet.fields)
+                ),
+                *(RecordDesignSkippedSheet(name=name, reason=reason) for name, reason in broken.items()),
             ),
         )
 
@@ -1815,6 +1822,76 @@ def _validate_pdf_sheet(sheet: RecordDesignSheet, *, source_label: str) -> None:
         )
 
 
+def contiguity_failure(sheet: RecordDesignSheet) -> str | None:
+    """Return why ``sheet``'s parsed rows do not tile its declared extent, else ``None``.
+
+    Reported as a SKIPPED sheet rather than raised, so
+    :meth:`RecordDesignExtraction.require_complete` refuses -- which is what the
+    coverage gate calls -- while ``accept_partial`` consumers keep working. A
+    hard extraction error would have destroyed the reading of every design that
+    is merely PARTLY unreadable, taking live modelos out of measurement
+    entirely; a skip states the same fact without that collateral.
+
+    The terminal-position check above compares only the LAST byte, so a row
+    dropped or invented in the MIDDLE of a record leaves it satisfied. That is
+    how every silent reader defect survived: modelo 156's ``36-75 Afabetico
+    APELLIDOS Y NOMBRE`` vanished, leaving a 40-byte hole in a 250-byte record
+    while ``is_complete`` stayed ``True`` and the modelo reported clean --
+    coverage measured over 19 positions that AEAT declares as 20, with the
+    taxpayer's name no longer checked at all. A false green is strictly worse
+    than the refusal it replaced.
+
+    A fixed-width record is contiguous, so the parsed rows must cover every byte
+    from 1 to the declared total. Overlap by CONTAINMENT is expected and
+    permitted -- AEAT prints a parent row and its own subdivisions (Modelo 190's
+    ``@81+27`` over its three sub-ranges, Modelo 180's ``@135+193`` over
+    fifteen), and both are real statements about the same bytes. What is refused
+    is a HOLE (rows were dropped) and a PARTIAL overlap or an extent past the
+    declared total (rows were invented), because neither can be a faithful read
+    of a contiguous record.
+
+    This is the visible-refusal principle applied where it is unambiguous. Doing
+    it per LINE is not possible: AEAT routinely opens a field's description with
+    that field's own range ("68-107 APELLIDOS Y NOMBRE: Se consignara el
+    primer"), so "looks like a position row" is dominated by prose -- measured
+    across the bundled corpus, 41 designs carry such lines. At sheet level the
+    arithmetic is decisive and needs no classification.
+    """
+    if sheet.total_positions is None:
+        return None
+    covered: set[int] = set()
+    for parsed_field in sheet.fields:
+        covered.update(range(parsed_field.offset, parsed_field.offset + parsed_field.length))
+    declared = set(range(1, sheet.total_positions + 1))
+    if holes := sorted(declared - covered):
+        return (
+            f"declares {sheet.total_positions} total positions but {_position_runs(holes)} were not "
+            f"read at all, so rows were dropped; a record read with holes understates every coverage "
+            f"figure derived from it"
+        )
+    if beyond := sorted(covered - declared):
+        return (
+            f"declares {sheet.total_positions} total positions but rows were read at "
+            f"{_position_runs(beyond)}, past its declared extent, so at least one row was invented; "
+            f"an invented position inflates every coverage denominator derived from it"
+        )
+    return None
+
+
+def _position_runs(positions: list[int]) -> str:
+    """Render a sorted position list as compact ``a-b`` runs."""
+    runs: list[str] = []
+    start = previous = positions[0]
+    for position in positions[1:]:
+        if position == previous + 1:
+            previous = position
+            continue
+        runs.append(str(start) if start == previous else f"{start}-{previous}")
+        start = previous = position
+    runs.append(str(start) if start == previous else f"{start}-{previous}")
+    return ", ".join(runs[:6]) + (" and more" if len(runs) > 6 else "")
+
+
 def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
     compact = _COMPACT_PDF_ROW_RE.match(line)
     if compact is not None:
@@ -1893,11 +1970,18 @@ def _naturaleza_or_none(value: str) -> str | None:
         return None
     if normalised == "blank":
         return "Blancos"
-    if normalised.startswith(("alfanum", "alphanum")):
+    # The ADJECTIVE stems, never the bare noun. "num" also prefixes
+    # "NUMERO"/"NÚMERO", which opens a great many AEAT field NAMES
+    # ("147-151 NÚMERO DE REGISTRO DEL FONDO DE PENSIONES:"). Reading that as a
+    # naturaleza promoted the wrapped tail of the description to a top-level
+    # field and pushed modelo 345's tipo 2 record 45 bytes past its declared
+    # 500 -- inventing two positions inside spans the layout already writes,
+    # which no record may declare because they would overlap.
+    if normalised.startswith(("alfanumeric", "alphanumeric")):
         return "Alfanumérico"
-    if normalised.startswith(("alfab", "alphab")):
+    if normalised.startswith(("alfabetic", "alphabetic")):
         return "Alfabético"
-    if normalised.startswith(("num", "numeric")):
+    if normalised.startswith("numeric"):
         return "Numérico"
     return None
 

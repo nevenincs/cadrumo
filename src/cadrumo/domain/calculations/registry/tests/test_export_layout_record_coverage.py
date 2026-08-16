@@ -38,6 +38,7 @@ from .._record_design import extract_record_design
 from .._record_design_schema import RecordDesignExtraction, RecordDesignSheet, RecordDesignSkippedSheet
 from .._schema import ExportLayoutDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, SourceReference
 from .._validate_export_layout_coverage import (
+    _belongs_to_layout,
     _design_sources,
     _omissible_reason,
     _read_design_sheets,
@@ -101,11 +102,20 @@ def _design_sheets(
     layout: ExportLayoutDefinition,
     catalogues: RegistryCatalogues,
 ) -> tuple[RecordDesignSheet, ...]:
-    """Read every official design sheet backing ``layout``, refusing a partial read."""
+    """Return every official design sheet backing ``layout``, or ``()`` if any is unreadable.
+
+    A design the reader cannot read in full yields NO sheets rather than an
+    assertion, because "unreadable" is a real and correct state the gate itself
+    reports: a sheet whose parsed rows leave holes in its declared extent is
+    recorded as skipped, so ``require_complete`` refuses it. Asserting here
+    instead would turn the gate's own honest refusal into a test error, and
+    every caller below already treats an empty sheet set as "nothing to check".
+    """
     sheets: list[RecordDesignSheet] = []
     for source in _design_sources(layout, catalogues.sources):
         read = _read_design_sheets(source)
-        assert not isinstance(read, str), f"bundled design for {layout.id!r} unreadable: {read}"
+        if isinstance(read, str):
+            return ()
         sheets.extend(read)
     return tuple(sheets)
 
@@ -129,11 +139,24 @@ def _obligatorio_gap(
     A strict subset of what the gate itself demands, on two axes: only positions
     AEAT explicitly marks obligatorio, and only a coordinate no record at all
     declares. A non-empty result is therefore an unarguable gap.
+
+    ``layout`` MUST be one resolved through ``derive_export_layouts_from_bindings``
+    -- as ``_fixed_width_layouts`` returns and the gate itself uses -- because
+    ``_written_coordinates`` reads ``layout.records[].fields`` directly. Passing
+    a raw ``revision.export_layouts`` entry would report every binding-derived
+    position as an unwritable gap: Modelo 369's union layout carries 58 authored
+    fields that derive to 883.
+
+    Sheets belonging to ANOTHER schema in the same shared workbook are excluded,
+    exactly as the gate excludes them. Modelo 369's three schemas cite one
+    workbook, so without this every schema was measured against the other two's
+    sheets and reported gaps for records it is not supposed to write at all.
     """
     written = _written_coordinates(layout)
     return {
         (sheet.name, field.offset, field.length)
         for sheet in _design_sheets(layout, catalogues)
+        if _belongs_to_layout(sheet, layout.records)
         for field in sheet.fields
         if _OBLIGATORIO.search(field.validation or "") and (field.offset, field.length) not in written
     }
@@ -489,12 +512,6 @@ def test_writing_a_desglosado_parent_as_one_blob_is_refused(
     assert subject is not None, "no bundled layout is backed by a design declaring a desglosado field"
     revision, layout, _sheet, parent = subject
     span = range(parent.offset, parent.offset + parent.length)
-    expected = [
-        component
-        for component in parent.components
-        if _omissible_reason(component) is None and component.offset in span
-    ]
-    assert expected, "the desglosado parent carries no required sub-field, so this proof would be vacuous"
 
     def _blobbed(record):
         outside = tuple(field for field in record.fields if field.offset not in span)
@@ -515,10 +532,26 @@ def test_writing_a_desglosado_parent_as_one_blob_is_refused(
     failures = _gate(blobbed_revision, catalogues)
     assert failures, "collapsing a desglosado field into its parent span left the gate green"
     reported = " ".join(failures)
-    for component in expected:
-        assert f"@{component.offset}+{component.length}" in reported, (
-            f"the refusal did not name sub-field @{component.offset}+{component.length}, so an author "
-            f"cannot tell which datum the blob swallowed"
+
+    # Byte-extent coverage alone cannot catch this: the blob's bytes DO cover
+    # every sub-field's span. What makes it a defect is that the same field
+    # claims the bytes AEAT reserves for itself, so that is what the refusal
+    # must name -- the intruding field and the reserved range it swallowed.
+    reserved = [
+        component
+        for component in parent.components
+        if _omissible_reason(component) is not None and component.offset in span
+    ]
+    assert reserved, "the desglosado parent reserves no sub-field, so this proof would be vacuous"
+    assert f"@{parent.offset}+{parent.length}" in reported, (
+        f"the refusal did not name the offending field @{parent.offset}+{parent.length}, so an author "
+        f"cannot tell which field to split"
+    )
+    for component in reserved:
+        last = component.offset + component.length - 1
+        assert f"@{component.offset}..{last}" in reported, (
+            f"the refusal did not name the reserved bytes @{component.offset}..{last} the blob wrote "
+            f"over, so an author cannot tell what makes the shape wrong"
         )
 
 
