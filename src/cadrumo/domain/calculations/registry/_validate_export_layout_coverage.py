@@ -288,6 +288,13 @@ _NOTE_CITATION = re.compile(
     re.IGNORECASE,
 )
 
+#: The same citation standing alone in a field's CONTENT cell, where some
+#: designs put it instead of in the naming cell. Anchored whole-cell.
+_BARE_NOTE_CITATION = re.compile(
+    r"\(?\s*(?:Nota\s*(?P<ordinal>\d{1,2})|(?P<symbol>[*]{1,3}))\s*\)?",
+    re.IGNORECASE,
+)
+
 #: The note body that delegates a position to the software house. AEAT prints
 #: this verbatim beneath the field table: "A cumplimentar por las entidades
 #: desarrolladoras (EEDD)". Matched on the DELEGATION, never on the bare note
@@ -308,6 +315,13 @@ def _eedd_delegated_reason(field: RecordDesignField, sheet: RecordDesignSheet) -
     than an absent one.
     """
     citation = _NOTE_CITATION.search(field.description or "")
+    if citation is None:
+        # Several designs put the citation in the CONTENT column instead of the
+        # naming cell, unparenthesised: m131 and m390 print "Versión del
+        # Programa" with a content cell of exactly "Nota 1". The whole cell must
+        # be the citation -- a note referenced inside prose is discussion, not a
+        # declaration about this position.
+        citation = _BARE_NOTE_CITATION.fullmatch((field.content or "").strip())
     if citation is None:
         return None
     marker = citation.group("ordinal") or citation.group("symbol") or ""
