@@ -47,6 +47,7 @@ from .._validate_export_layout_coverage import (
     _belongs_to_layout,
     _covers,
     _design_sources,
+    _missing_report,
     _omissible_reason,
     _read_design_sheets,
     _required_positions,
@@ -840,3 +841,51 @@ def test_a_required_position_that_is_not_a_declared_blank_still_needs_real_data(
             f"({position.description!r}) was satisfied by fill alone"
         )
         assert _covers(position, span, span)
+
+
+def test_a_position_two_cited_editions_share_is_counted_once(
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """A layout citing several design editions must not count shared positions twice.
+
+    Modelo 190 cites its 2024 and 2025 Diseños de Registro together, and the two
+    editions repeat every sheet they share. Counting each citation separately
+    inflated BOTH sides of the ratio -- it reported 102/106 where the union of
+    its editions declares 53 positions, 51 of them duplicated. The layout has to
+    write each position ONCE however many editions declare it, so a later
+    edition contributes only what it adds.
+
+    Pins the implication rather than the tally: for every multi-source layout,
+    the gate's own required count must equal the number of DISTINCT
+    (design record, coordinate) pairs its editions declare between them.
+    """
+    modelos, catalogues = registry_tree
+    checked = 0
+    for _modelo_id, _revision_id, revision in _revisions_with_fixed_width_layouts(modelos):
+        for layout in _fixed_width_layouts(revision):
+            if len(_design_sources(layout, catalogues.sources)) < 2:
+                continue
+            sheets = _design_sheets(layout, catalogues)
+            if not sheets:
+                continue
+            distinct = {
+                (sheet.name, position.offset, position.length)
+                for sheet in sheets
+                if _belongs_to_layout(sheet, layout.records)
+                for position in _required_positions(sheet)
+            }
+            raw = sum(
+                len(_required_positions(sheet))
+                for sheet in sheets
+                if _belongs_to_layout(sheet, layout.records)
+            )
+            if raw == len(distinct):
+                continue
+            checked += 1
+            required, _missing, _lines = _missing_report(sheets, layout.records)
+            assert required == len(distinct), (
+                f"layout {layout.id!r} counts {required} required positions where its cited editions "
+                f"declare {len(distinct)} distinct ones ({raw - len(distinct)} duplicated); a shared "
+                f"position must be satisfied once, not once per citation"
+            )
+    assert checked, "no layout cites editions sharing a position, so this rule is untested"

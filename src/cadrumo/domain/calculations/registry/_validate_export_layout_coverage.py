@@ -681,10 +681,25 @@ def _missing_report(
     required_total = 0
     missing_total = 0
     lines: list[str] = []
+    #: Positions already counted, keyed by (design record, coordinate). A layout
+    #: may cite SEVERAL editions of one modelo's design -- Modelo 190 cites its
+    #: 2024 and 2025 Diseños de Registro together -- and the editions repeat the
+    #: sheets they share. Counting them once per citation double-counts every
+    #: shared position in BOTH numerator and denominator: Modelo 190 reported
+    #: 102/106 where the union of its editions declares 100/104. The layout has
+    #: to satisfy each position ONCE, however many editions declare it, so the
+    #: later edition contributes only what it adds -- which is exactly the
+    #: (389, 1) and (390, 5) rows 2025 introduces.
+    counted: set[tuple[str, int, int]] = set()
     for sheet in sheets:
         if not _belongs_to_layout(sheet, records):
             continue
-        required = _required_positions(sheet)
+        required = tuple(
+            position
+            for position in _required_positions(sheet)
+            if (sheet.name, position.offset, position.length) not in counted
+        )
+        counted.update((sheet.name, position.offset, position.length) for position in required)
         required_total += len(required)
         joined = _join_record(sheet, records)
         if joined is not None:
