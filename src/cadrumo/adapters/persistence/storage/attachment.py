@@ -53,7 +53,7 @@ from ._namespace_registry import (
     ATTACHMENT_MANIFEST_NAMESPACE as ATTACHMENT_MANIFEST_STORAGE_NAMESPACE,
 )
 from ._namespace_registry import secure_object_namespace_logical_path
-from ._schema_lineage import inner_envelope_classification_is_expected
+from ._schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
 from .crypto import HashedLookup
 from .envelope import Envelope
 from .runtime_repository import secure_object_repository_for_active_bucket
@@ -101,7 +101,7 @@ def _validate_manifest_envelope(envelope: Envelope[Attachment]) -> None:
             "invalid attachment manifest",
             violation="manifest_classification",
         )
-    if envelope.schema_version != _ATTACHMENT_MANIFEST_VERSION:
+    if not inner_envelope_version_is_current(envelope.schema_version, _ATTACHMENT_MANIFEST_VERSION):
         raise _attachment_validation_error(
             "invalid attachment manifest",
             violation="manifest_schema_version",

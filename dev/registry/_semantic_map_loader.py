@@ -24,7 +24,7 @@ from cadrumo.domain.calculations.registry import (
     SourceRefId,
 )
 
-from ._semantic_map import M303VariableEnvelopeSemantic, SemanticMap, SemanticMapEntry, SemanticMapRecord
+from ._semantic_map import SemanticMap, SemanticMapEntry, SemanticMapRecord, VariableEnvelopeSemantic
 
 __all__ = [
     "SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION",
@@ -55,7 +55,7 @@ class SemanticMapFragment(_StrictModel):
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     records: tuple[SemanticMapRecord, ...] = ()
     entries: tuple[SemanticMapEntry, ...] = ()
-    variable_envelopes: tuple[M303VariableEnvelopeSemantic, ...] = ()
+    variable_envelopes: tuple[VariableEnvelopeSemantic, ...] = ()
 
     @model_validator(mode="after")
     def _require_authored_meaning(self) -> SemanticMapFragment:

@@ -24,9 +24,9 @@ from ._ledger_validation_fixtures import _open_bucket_session, bucket
 from ._ledger_validation_support import (
     _add_eligible_mixed_expense,
     _assert_pipeline_managed_state_refusal,
-    _create_profile_and_import,
     _flatten_box,
     _invoke,
+    import_validation_transaction,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -551,7 +551,7 @@ def test_ledger_update_rejects_empty_patch(tmp_path: Path) -> None:
     The ``ManualLedgerTransactionPatch._require_change`` validator fires when
     no option besides the id is supplied.  The CLI must not crash silently."""
 
-    txn_id = _create_profile_and_import(tmp_path)
+    txn_id = import_validation_transaction(tmp_path)
 
     result = _invoke(
         ["app", "ledger", "update", txn_id],
@@ -565,7 +565,7 @@ def test_ledger_update_rejects_empty_patch(tmp_path: Path) -> None:
 def test_ledger_update_rejects_negative_amount_with_instructive_error(tmp_path: Path) -> None:
     """``ledger update --amount=-49.99`` is refused at the CLI magnitude boundary."""
 
-    txn_id = _create_profile_and_import(tmp_path)
+    txn_id = import_validation_transaction(tmp_path)
 
     result = _invoke(
         [
@@ -594,7 +594,7 @@ def test_ledger_allocate_rejects_out_of_range_business_pct(tmp_path: Path) -> No
     is steered to the 0..1 share convention rather than seeing a bare
     'invalid'."""
 
-    txn_id = _create_profile_and_import(tmp_path)
+    txn_id = import_validation_transaction(tmp_path)
 
     result = _invoke(
         [
@@ -628,7 +628,7 @@ def test_ledger_split_rejects_blank_child_description(tmp_path: Path) -> None:
     "description must not be blank".  ``_ledger_validation_bad`` wraps it
     via the pydantic ``ValidationError`` caught in the split handler."""
 
-    txn_id = _create_profile_and_import(tmp_path)
+    txn_id = import_validation_transaction(tmp_path)
 
     result = _invoke(
         [
@@ -670,7 +670,7 @@ def test_ledger_classify_rejects_business_pct_without_mixed_classification(
     patch model.  The refusal must be user-facing prose, not a pydantic
     traceback, and must mention MIXED or business_pct."""
 
-    txn_id = _create_profile_and_import(tmp_path)
+    txn_id = import_validation_transaction(tmp_path)
 
     result = _invoke(
         [

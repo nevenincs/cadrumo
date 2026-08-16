@@ -37,6 +37,7 @@ import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
 from ....core import AEAT_CSV_MAX_LENGTH, AEAT_CSV_MIN_LENGTH, Period, is_aeat_csv
+from ....tests.aeat_literal_fixtures import COTEJO_VERIFICATION_URL_FIXTURE
 from .._schema import Justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -127,7 +128,7 @@ def _receipt_with_csv(value: str) -> Justificante:
         tax_id="12345678Z",
         total_a_ingresar=Decimal("1234.56"),
         total_a_devolver=Decimal("78.90"),
-        verification_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/cotejo/A1B2C3D4E5F6G7H8"),
+        verification_url=AnyHttpUrl(COTEJO_VERIFICATION_URL_FIXTURE),
         source_pdf_path=Path("justificantes/303-2025-1T.pdf"),
         source_pdf_sha256="3f" * 32,
         parsed_at=datetime(2026, 4, 18, 11, 7, 30, tzinfo=UTC),

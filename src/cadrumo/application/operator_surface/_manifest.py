@@ -63,7 +63,7 @@ class ReconciliationSurface(StrEnum):
     INPUT_SCHEMA = "input_schema"
     MOUNTED_FAMILY = "mounted_family"
     PROFILE_POLICY = "profile_policy"
-    MCP_EXPOSURE = "mcp_exposure"
+    SURFACE_EXPOSURE = "surface_exposure"
 
 
 class LiveLeafInventoryRow(BaseModel):
@@ -209,8 +209,14 @@ class ProfilePolicyInventoryRow(BaseModel):
         return _require_non_blank_inventory_text(value)
 
 
-class McpExposureInventoryRow(BaseModel):
-    """One observed MCP-exposure decision for a stable leaf identity."""
+class SurfaceExposureInventoryRow(BaseModel):
+    """One observed operator-surface exposure decision for a stable leaf identity.
+
+    Named for the SUBJECT, not for one consumer: the decision is whether this
+    CLI leaf may be exposed on an external operator surface at all, computed
+    by ``is_exposable_command`` over cadrumo's own command tree. The MCP
+    harness is one such surface and does not own the question.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -256,7 +262,7 @@ class ReconciledOperatorLeaf(BaseModel):
     input_schema: InputSchemaInventoryRow | None
     mounted_family: MountedFamilyInventoryRow | None
     profile_policy: ProfilePolicyInventoryRow | None
-    mcp_exposure: McpExposureInventoryRow | None
+    surface_exposure: SurfaceExposureInventoryRow | None
     exclusions: tuple[ExplicitExclusionInventoryRow, ...]
 
 
@@ -450,7 +456,7 @@ def _index_subject_rows[
     InventoryRow: ResultSchemaInventoryRow
     | InputSchemaInventoryRow
     | ProfilePolicyInventoryRow
-    | McpExposureInventoryRow
+    | SurfaceExposureInventoryRow
 ](
     rows: tuple[InventoryRow, ...],
     *,
@@ -602,33 +608,35 @@ def _reconcile_mounted_families(
         diagnostics.append(f"live mounted family with no contract declaration: {' '.join(identity)}")
 
 
-def _reconcile_mcp_exposure(
+def _reconcile_surface_exposure(
     *,
     subject_leaf_key: str,
     profile_policy: object | None,
-    mcp_exposure: McpExposureInventoryRow | None,
+    surface_exposure: SurfaceExposureInventoryRow | None,
     exclusions: dict[tuple[str, ReconciliationSurface], ExplicitExclusionInventoryRow],
     diagnostics: list[str],
-) -> McpExposureInventoryRow | None:
+) -> SurfaceExposureInventoryRow | None:
     """Require attributable MCP absence and enforce the profile exposure policy."""
-    mcp_exclusion = exclusions.get((subject_leaf_key, ReconciliationSurface.MCP_EXPOSURE))
-    if mcp_exposure is None:
+    mcp_exclusion = exclusions.get((subject_leaf_key, ReconciliationSurface.SURFACE_EXPOSURE))
+    if surface_exposure is None:
         if mcp_exclusion is None:
-            diagnostics.append(f"missing mcp_exposure accounting for {subject_leaf_key}; explicit exclusion required")
-    elif mcp_exposure.exposed:
+            diagnostics.append(
+                f"missing surface_exposure accounting for {subject_leaf_key}; explicit exclusion required"
+            )
+    elif surface_exposure.exposed:
         if mcp_exclusion is not None:
-            diagnostics.append(f"mcp_exposure is both exposed and excluded for {subject_leaf_key}")
+            diagnostics.append(f"surface_exposure is both exposed and excluded for {subject_leaf_key}")
     elif mcp_exclusion is None:
         diagnostics.append(f"silent MCP exclusion for {subject_leaf_key}; reason and authority required")
 
     if isinstance(profile_policy, ProfilePolicyInventoryRow):
-        observed_exposure = mcp_exposure.exposed if mcp_exposure is not None else False
+        observed_exposure = surface_exposure.exposed if surface_exposure is not None else False
         if profile_policy.should_expose_via_mcp != observed_exposure:
             diagnostics.append(
                 f"MCP exposure contradicts profile policy for {subject_leaf_key}: "
                 f"expected {profile_policy.should_expose_via_mcp}, observed {observed_exposure}"
             )
-    return mcp_exposure
+    return surface_exposure
 
 
 def _reconciled_leaf_exclusions(
@@ -652,7 +660,7 @@ def _reconcile_live_leaf(
     input_by_subject: dict[str, InputSchemaInventoryRow],
     family_by_identity: dict[tuple[str, str], MountedFamilyInventoryRow],
     policy_by_subject: dict[str, ProfilePolicyInventoryRow],
-    mcp_by_subject: dict[str, McpExposureInventoryRow],
+    mcp_by_subject: dict[str, SurfaceExposureInventoryRow],
     exclusions: dict[tuple[str, ReconciliationSurface], ExplicitExclusionInventoryRow],
     diagnostics: list[str],
 ) -> ReconciledOperatorLeaf:
@@ -687,10 +695,10 @@ def _reconcile_live_leaf(
         exclusions=exclusions,
         diagnostics=diagnostics,
     )
-    mcp_exposure = _reconcile_mcp_exposure(
+    surface_exposure = _reconcile_surface_exposure(
         subject_leaf_key=subject_leaf_key,
         profile_policy=profile_policy,
-        mcp_exposure=mcp_by_subject.get(subject_leaf_key),
+        surface_exposure=mcp_by_subject.get(subject_leaf_key),
         exclusions=exclusions,
         diagnostics=diagnostics,
     )
@@ -700,7 +708,7 @@ def _reconcile_live_leaf(
         input_schema=input_schema if isinstance(input_schema, InputSchemaInventoryRow) else None,
         mounted_family=mounted_family if isinstance(mounted_family, MountedFamilyInventoryRow) else None,
         profile_policy=profile_policy if isinstance(profile_policy, ProfilePolicyInventoryRow) else None,
-        mcp_exposure=mcp_exposure,
+        surface_exposure=surface_exposure,
         exclusions=_reconciled_leaf_exclusions(subject_leaf_key=subject_leaf_key, exclusions=exclusions),
     )
 
@@ -712,7 +720,7 @@ def reconcile_operator_surface_inventory(
     input_schemas: tuple[InputSchemaInventoryRow, ...],
     mounted_families: tuple[MountedFamilyInventoryRow, ...],
     profile_policies: tuple[ProfilePolicyInventoryRow, ...],
-    mcp_exposures: tuple[McpExposureInventoryRow, ...],
+    surface_exposures: tuple[SurfaceExposureInventoryRow, ...],
     exclusions: tuple[ExplicitExclusionInventoryRow, ...] = (),
 ) -> OperatorSurfaceReconciliation:
     """Join every live leaf to all surface projections by stable identity.
@@ -751,8 +759,8 @@ def reconcile_operator_surface_inventory(
         diagnostics=diagnostics,
     )
     mcp_by_subject = _index_subject_rows(
-        mcp_exposures,
-        source=ReconciliationSurface.MCP_EXPOSURE,
+        surface_exposures,
+        source=ReconciliationSurface.SURFACE_EXPOSURE,
         live_subjects=live_subjects,
         diagnostics=diagnostics,
     )

@@ -17,11 +17,10 @@ from typing import Any, cast
 import anyio
 import pytest
 
-from cadrumo.tests import connected_server_and_client_session as connect
-
 from .._meta_tools import manage_toolsets
 from .._tools import build_tool_descriptors
 from .._toolsets import MAX_ACTIVE_TOOLSETS, Toolset, build_toolsets
+from ._session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -10,10 +10,11 @@ without consequence is not an integrity field.
 The tampering under test is deliberately a *well-formed* digest that is simply
 the wrong one. That distinction is the whole point of this module: typing the
 field through :data:`~core.identity.ContentDigest` already refuses garbage, so
-a test that rewrote ``digest_hex`` to ``"z" * 64`` would pass on the field's
-shape alone and prove nothing about the key/value agreement. It was verified
-empirically -- with the agreement check removed, the malformed-value form of
-this test still passed.
+a test that rewrote ``digest_hex`` to ``"z" * 64`` would be refused by field
+validation before the agreement check was ever consulted, and so would prove
+nothing about the key/value agreement. The module was verified against a build
+with the agreement check removed: the four tampering cases below all fail
+there and all pass with it restored.
 
 The mapping keys need no separate shape check. Once agreement holds, the key
 IS the entry's validated canonical digest; a malformed key either differs from
@@ -70,9 +71,17 @@ def _index_path(store: SecretStore) -> Path:
 
 
 def _load(path: Path) -> tuple[dict[str, object], dict[str, dict[str, object]], str]:
-    """Return ``(document, entries, sole_key)`` for a single-entry index."""
+    """Return ``(document, entries, sole_key)`` for a single-entry index.
+
+    ``entries`` is installed back into ``document`` so that it is the document's
+    own live sub-mapping. A :class:`~pydantic.TypeAdapter` returns a detached
+    copy at every level, so without the re-installation each caller below would
+    tamper with an object that :func:`_save` never writes, save the pristine
+    index, and assert a refusal against an untampered store.
+    """
     document = STR_KEYED_MAPPING_ADAPTER.validate_json(path.read_text(encoding=UTF_8_ENCODING))
     entries = _SECRET_ENTRIES.validate_python(document["entries"])
+    document["entries"] = entries
     (key,) = entries
     return document, entries, key
 

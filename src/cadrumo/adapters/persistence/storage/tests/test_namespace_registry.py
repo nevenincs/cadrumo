@@ -214,16 +214,26 @@ def test_modelo_catalogue_namespaces_pin_their_persisted_addresses() -> None:
         MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
     )
 
-    expected_namespaces = {
-        MODELO_WORK_UNIT_CATALOGUE_NAMESPACE: "cadrumo.domain.modelos.work_units",
-        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE: "cadrumo.domain.modelos.calculation_revisions",
-        MODELO_FILING_RECORD_CATALOGUE_NAMESPACE: "cadrumo.domain.modelos.filing_records",
-        MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE: "cadrumo.domain.modelos.verification_reports",
+    # Each address is pinned with its OWN schema version rather than a shared
+    # literal. The four no longer sit at one version -- the calculation-revision
+    # catalogue has bumped -- and collapsing that back to a single expected
+    # value would make a correct per-namespace bump red for the wrong reason.
+    # The pin stays per namespace, so a bump still requires a deliberate edit
+    # here, which is the tripwire this test exists to be.
+    expected_addresses = {
+        MODELO_WORK_UNIT_CATALOGUE_NAMESPACE: ("cadrumo.domain.modelos.work_units", 1),
+        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE: ("cadrumo.domain.modelos.calculation_revisions", 2),
+        MODELO_FILING_RECORD_CATALOGUE_NAMESPACE: ("cadrumo.domain.modelos.filing_records", 1),
+        MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE: ("cadrumo.domain.modelos.verification_reports", 1),
     }
 
-    for definition, namespace in expected_namespaces.items():
+    for definition, (namespace, schema_version) in expected_addresses.items():
         assert definition.namespace == namespace
-        assert definition.schema_version == 1
+        assert definition.schema_version == schema_version, (
+            f"{namespace} changed its envelope contract from {schema_version} to "
+            f"{definition.schema_version}; a version is the contract previously written "
+            "rows were stamped under, so confirm the bump is intended and update this pin"
+        )
         assert definition.require_default_object_key() == SECURE_OBJECT_CATALOGUE_KEY
         assert definition.sensitivity is SensitivityClass.FINANCIAL
         # Each must resolve from the registry under its own key, so a definition
@@ -232,7 +242,7 @@ def test_modelo_catalogue_namespaces_pin_their_persisted_addresses() -> None:
 
     # The four are distinct addresses; a copy-paste collapsing two would pass
     # every per-definition assertion above.
-    assert len(set(expected_namespaces.values())) == 4
+    assert len({namespace for namespace, _ in expected_addresses.values()}) == 4
 
 
 def test_every_registered_namespace_declares_explicit_custody_disposition() -> None:

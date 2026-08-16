@@ -203,6 +203,12 @@ if TYPE_CHECKING:
         rotate_blob_stores,
         rotate_master_key,
     )
+    from ._runtime_readiness import (
+        StorageRuntimeReadiness,
+        StorageRuntimeReadinessCode,
+        StorageRuntimeReadinessIssue,
+        StorageRuntimeSession,
+    )
     from ._schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
     from ._storage_path_definitions import (
         BLOB_MANIFEST_SCHEMA_VERSION,
@@ -334,10 +340,6 @@ if TYPE_CHECKING:
     )
     from .runtime import (
         StorageRuntime,
-        StorageRuntimeReadiness,
-        StorageRuntimeReadinessCode,
-        StorageRuntimeReadinessIssue,
-        StorageRuntimeSession,
         inspect_bucket_storage_runtime,
         inspect_storage_runtime,
     )
@@ -346,6 +348,7 @@ if TYPE_CHECKING:
         secure_object_repository_for_active_bucket_or_default_route,
         secure_object_repository_for_bucket,
         secure_object_repository_for_cold_bootstrap_state,
+        secure_object_repository_for_staged_bucket,
     )
     from .secret_store import (
         SecretRecord,
@@ -567,10 +570,10 @@ _LAZY_EXPORTS: dict[str, str] = {
     "StoragePathKind": "._namespace_registry",
     "StorageRemoteMirrorPolicy": "._namespace_registry",
     "StorageRuntime": ".runtime",
-    "StorageRuntimeReadiness": ".runtime",
-    "StorageRuntimeReadinessCode": ".runtime",
-    "StorageRuntimeReadinessIssue": ".runtime",
-    "StorageRuntimeSession": ".runtime",
+    "StorageRuntimeReadiness": "._runtime_readiness",
+    "StorageRuntimeReadinessCode": "._runtime_readiness",
+    "StorageRuntimeReadinessIssue": "._runtime_readiness",
+    "StorageRuntimeSession": "._runtime_readiness",
     "StorageValidationError": ".errors",
     "TEST_SECURE_BOUND_CONTRACT_NAMESPACE": "._namespace_registry",
     "TEST_SESSION_LIFECYCLE_NAMESPACE": "._namespace_registry",
@@ -652,6 +655,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "secure_object_repository_for_active_bucket_or_default_route": ".runtime_repository",
     "secure_object_repository_for_bucket": ".runtime_repository",
     "secure_object_repository_for_cold_bootstrap_state": ".runtime_repository",
+    "secure_object_repository_for_staged_bucket": ".runtime_repository",
     "session_scope": ".sql.session",
     "suspend_active_session": ".master_key",
     "unwrap_blob_payload": ".attachment",
@@ -966,6 +970,7 @@ __all__ = [
     "secure_object_repository_for_active_bucket_or_default_route",
     "secure_object_repository_for_bucket",
     "secure_object_repository_for_cold_bootstrap_state",
+    "secure_object_repository_for_staged_bucket",
     "session_scope",
     "suspend_active_session",
     "unwrap_blob_payload",

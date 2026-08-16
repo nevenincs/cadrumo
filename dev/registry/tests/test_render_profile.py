@@ -38,6 +38,7 @@ from .._render_profile import (
     ReviewedPolicyDecision,
     SingletonNumericRule,
     Width17MembershipRule,
+    _is_source_reserved_field,
     load_and_validate_render_profile,
     load_render_profile,
     load_render_profile_source_evidence,
@@ -431,10 +432,29 @@ def test_profile_refuses_source_evidence_sha_drift() -> None:
 
 
 def test_profile_models_refuse_implicit_defaults_selectors_and_sign_conflicts() -> None:
-    """Authored rules are strict and every wire choice is explicit."""
+    """Authored rules are strict and every wire choice is explicit.
+
+    ``source_cell`` is the ONE documented exception, and it is not a weakening:
+    a PDF design has no parser-column cell to name, so requiring the key made
+    every PDF anchor unauthorable rather than making any choice explicit. The
+    exception is exactly the one :class:`SemanticMapAnchor` already carries, for
+    the same reason. Every other anchor key stays required, which is what the
+    ``source_row`` case below pins -- omit the exception and the principle it
+    guards disappears with it.
+    """
     anchor_payload = _anchor(12).model_dump(mode="python")
     del anchor_payload["source_cell"]
-    with pytest.raises(ValidationError, match="source_cell"):
+    omitted_cell = RenderProfileAnchor.model_validate(anchor_payload)
+    assert omitted_cell.source_cell is None
+
+    anchor_payload = _anchor(12).model_dump(mode="python")
+    del anchor_payload["source_row"]
+    with pytest.raises(ValidationError, match="source_row"):
+        RenderProfileAnchor.model_validate(anchor_payload)
+
+    anchor_payload = _anchor(12).model_dump(mode="python")
+    del anchor_payload["ordinal"]
+    with pytest.raises(ValidationError, match="ordinal"):
         RenderProfileAnchor.model_validate(anchor_payload)
 
     singleton_payload = _singleton(_anchor(12)).model_dump(mode="python")
@@ -1098,3 +1118,94 @@ def test_real_modelo_303_reserved_numeric_slots_are_excluded_from_eligibility() 
     eligibility = project_render_profile_eligibility(fixed)
     assert not set(reserved_numeric) & set(eligibility.all_fields)
     assert eligibility.all_fields, "excluding reserved slots must not empty the eligible set"
+
+
+def _eligibility_for(source_ref: str, epoch: str, catalogue: str) -> tuple[object, ...]:
+    """Return the eligible fields of one hash-verified design."""
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", catalogue))
+    intermediate = load_record_design_intermediate(
+        bundled_path(), catalogues.sources,
+        source_ref=source_ref, filing_year=2025, design_epoch=epoch,
+    )
+    fields = [field for sheet in intermediate.sheets for field in sheet.fields]
+    return project_render_profile_eligibility(fields).all_fields
+
+
+def test_a_pdf_design_numeric_anchor_is_eligible_for_a_reviewed_rule() -> None:
+    """Modelo 347 is PDF-sourced, and its numeric anchors need reviewed wire facts.
+
+    Selecting on the workbook abbreviations alone made every one of them
+    ineligible: a PDF design spells the naturaleza in full, and the parser
+    canonicalises it to ``Numérico``. With no eligible field, an EMPTY render
+    profile satisfied exhaustive coverage completely and the design generated
+    with no declared numeric format, sign policy or decimal placement.
+    """
+    eligible = _eligibility_for("aeat-dr-347-2025", "2025", "operaciones-terceros.toml")
+
+    assert len(eligible) == 19
+    assert all(field.source_cell is None for field in eligible), "modelo 347 is PDF-sourced"
+
+
+def test_pdf_prose_in_content_is_not_read_as_a_stated_wire_fact() -> None:
+    """A PDF field's ``content`` is description, not a Contenido cell.
+
+    Every one of Modelo 347's numeric anchors carries non-blank content, and it
+    reads like "Se consignará el número identificativo correspondiente a la
+    declaración". Under the workbook rule that non-blank content meant the design
+    had stated the wire fact, which is the wrong positive inference this test
+    pins.
+    """
+    eligible = _eligibility_for("aeat-dr-347-2025", "2025", "operaciones-terceros.toml")
+
+    assert eligible, "no eligible field to assert on"
+    assert all(field.content and field.content.strip() for field in eligible)
+
+
+@pytest.mark.parametrize(
+    ("source_ref", "epoch", "catalogue"),
+    [("aeat-dr-232-2018", "2018", "is.toml"),
+     ("aeat-dr-210-2022", "2022", "irnr.toml"),
+     ("aeat-dr-303-2025", "2025", "iva.toml")],
+)
+def test_a_workbook_design_keeps_its_exact_previous_eligibility(
+    source_ref: str, epoch: str, catalogue: str,
+) -> None:
+    """Widening to PDF sources must not move a workbook's eligible set at all.
+
+    Re-derives the ORIGINAL rule here -- workbook abbreviations plus a blank
+    Contenido cell -- and requires the live projection to agree on it exactly. A
+    workbook field carries a ``source_cell``, so the content test still applies
+    to it; if that ever stops holding, these three designs silently grow rules
+    they never needed.
+    """
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", catalogue))
+    intermediate = load_record_design_intermediate(
+        bundled_path(), catalogues.sources,
+        source_ref=source_ref, filing_year=2025, design_epoch=epoch,
+    )
+    fields = [field for sheet in intermediate.sheets for field in sheet.fields]
+    original = {
+        (field.record_identity, field.offset)
+        for field in fields
+        if field.aeat_type in {"Num", "N"}
+        and (field.content is None or not field.content.strip())
+        and not _is_source_reserved_field(field)
+    }
+    live = {
+        (field.record_identity, field.offset)
+        for field in project_render_profile_eligibility(fields).all_fields
+    }
+
+    assert live == original
+
+
+def test_a_source_reserved_pdf_slot_stays_ineligible() -> None:
+    """A reserved run carries no wire fact on either source shape.
+
+    Widening the numeric-type match must not start demanding a numeric rule for
+    a slot the design reserves, which would force an author to model meaning onto
+    filler.
+    """
+    eligible = _eligibility_for("aeat-dr-347-2025", "2025", "operaciones-terceros.toml")
+
+    assert not [field for field in eligible if _is_source_reserved_field(field)]

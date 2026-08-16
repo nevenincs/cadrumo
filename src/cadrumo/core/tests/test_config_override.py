@@ -27,6 +27,7 @@ import pytest
 from pydantic import SecretStr, ValidationError
 
 from ..config import (
+    Settings,
     coerce_output_language_setting,
     load_settings,
     override_settings,
@@ -173,12 +174,19 @@ def test_override_settings_carries_secretstr_through_validation() -> None:
     The absent-passphrase baseline is established rather than assumed. The
     pytest harness bridges the operator's local ``env/.env`` into the process
     environment so integration paths see real configuration, and that file
-    carries a real ``CADRUMO_SECRET_PASSPHRASE`` on a developer machine. This
-    test inherited it, so its two "restored to absent" assertions failed
-    locally and passed on CI — the gate meant different things in the two
-    places. The variable is isolated here, at the test, rather than by
-    narrowing what the harness bridges, which would trade this red for a
-    silent loss of coverage on the paths that need the real value.
+    carries a real ``CADRUMO_SECRET_PASSPHRASE`` on a developer machine.
+
+    Removing the variable is necessary but NOT sufficient, which is what this
+    test used to get wrong. ``conftest`` wraps the whole session in an outermost
+    ``override_settings`` for the KDF calibration flag, and that snapshots the
+    environment ONCE at session start. From then on ``load_settings`` answers
+    from the snapshot, so a later ``os.environ.pop`` plus a cache clear cannot
+    reach it and the baseline still carried the developer's passphrase.
+
+    The baseline is therefore read from a directly constructed ``Settings``,
+    which consults the live environment and no context-local override. That
+    keeps the absence ambient rather than asserted through the very mechanism
+    under test, which is what the round-trip below exercises.
     """
 
     with _absent_env_var("CADRUMO_SECRET_PASSPHRASE"):
@@ -187,12 +195,13 @@ def test_override_settings_carries_secretstr_through_validation() -> None:
 
 def _assert_secretstr_override_round_trip() -> None:
     """Assert the override installs a real SecretStr and restores absence."""
-    baseline = load_settings()
-    assert baseline.cadrumo_secret_passphrase is None
+    assert Settings().cadrumo_secret_passphrase is None, (
+        "the environment still supplies a passphrase, so the absent baseline is not established"
+    )
 
     with override_settings(cadrumo_secret_passphrase=SecretStr("test-pass")):
         overridden = load_settings()
         assert overridden.cadrumo_secret_passphrase is not None
         assert overridden.cadrumo_secret_passphrase.get_secret_value() == "test-pass"
 
-    assert load_settings().cadrumo_secret_passphrase is None
+    assert Settings().cadrumo_secret_passphrase is None

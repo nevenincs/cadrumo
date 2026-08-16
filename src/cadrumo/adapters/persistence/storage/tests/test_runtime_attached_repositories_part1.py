@@ -7,6 +7,8 @@ from typing import cast
 import pytest
 
 from .....core import Period
+from .._runtime_readiness import StorageRuntimeReadinessCode
+from ..runtime_repository import secure_object_repository_for_active_bucket_or_default_route
 from ._runtime_attached_repositories_support import (
     _BUCKET_A_ATTACHMENT_PAYLOAD,
     _BUCKET_A_ID,
@@ -165,22 +167,37 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
 
 
 def test_current_runtime_defaults_refuse_missing_session(tmp_path: Path) -> None:
+    """Every runtime default refuses, and names the readiness code that stopped it.
+
+    The refusal is localised, so its rendered prose belongs to the locale
+    catalogues rather than to this assertion. The typed readiness code in the
+    error context is the contract, and pinning it discriminates *which* refusal
+    fired -- a prose match would pass equally on a route mismatch.
+    """
     for case_name, operation in _RUNTIME_DEFAULT_REFUSAL_CASES:
         with (
             override_settings(cadrumo_local_storage_root=tmp_path / case_name, cadrumo_active_profile=_BUCKET_A_ID),
-            pytest.raises(StorageValidationError, match="no active bucket session"),
+            pytest.raises(StorageValidationError) as raised,
         ):
             operation()
+        assert raised.value.translated_message == "errors.storage.runtime.not_ready", case_name
+        assert raised.value.context is not None, case_name
+        assert raised.value.context["readiness_code"] == StorageRuntimeReadinessCode.NO_ACTIVE_SESSION.value, case_name
 
 
 def test_current_runtime_defaults_refuse_route_session_mismatch(tmp_path: Path) -> None:
+    """A session serving another bucket refuses with the mismatch code, not the absence one."""
     for case_name, operation in _RUNTIME_DEFAULT_REFUSAL_CASES:
         with (
             override_settings(cadrumo_local_storage_root=tmp_path / case_name, cadrumo_active_profile=_BUCKET_A_ID),
             activate_session(_session(_BUCKET_B_ID)),
-            pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"),
+            pytest.raises(StorageValidationError) as raised,
         ):
             operation()
+        assert raised.value.translated_message == "errors.storage.runtime.not_ready", case_name
+        assert raised.value.context is not None, case_name
+        expected = StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH.value
+        assert raised.value.context["readiness_code"] == expected, case_name
 
 
 def test_diagnostics_secure_object_total_degrades_on_missing_session(
@@ -190,10 +207,19 @@ def test_diagnostics_secure_object_total_degrades_on_missing_session(
     caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID):
+        # Pin the precondition through the typed refusal the probe swallows.
+        # The degrade log renders the error's translation key, which is shared
+        # by every unready state, so asserting on the log alone would not
+        # distinguish this test from its route-mismatch sibling below.
+        with pytest.raises(StorageValidationError) as raised:
+            secure_object_repository_for_active_bucket_or_default_route()
+        assert raised.value.context is not None
+        assert raised.value.context["readiness_code"] == StorageRuntimeReadinessCode.NO_ACTIVE_SESSION.value
+
         assert secure_object_unreadable_total() == 0
 
     assert "secure objects engine unreachable for repair probe" in caplog.text
-    assert "no active bucket session" in caplog.text
+    assert "errors.storage.runtime.not_ready" in caplog.text
 
 
 def test_diagnostics_secure_object_total_degrades_on_route_session_mismatch(
@@ -206,10 +232,17 @@ def test_diagnostics_secure_object_total_degrades_on_route_session_mismatch(
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID),
         activate_session(_session(_BUCKET_B_ID)),
     ):
+        # See the sibling above: the route mismatch is what must be shown to
+        # have caused the degrade, and only the typed code discriminates it.
+        with pytest.raises(StorageValidationError) as raised:
+            secure_object_repository_for_active_bucket_or_default_route()
+        assert raised.value.context is not None
+        assert raised.value.context["readiness_code"] == StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH.value
+
         assert secure_object_unreadable_total() == 0
 
     assert "secure objects engine unreachable for repair probe" in caplog.text
-    assert "route does not match the active bucket session" in caplog.text
+    assert "errors.storage.runtime.not_ready" in caplog.text
 
 
 def test_workflow_state_default_isolates_active_profile_writes(tmp_path: Path) -> None:

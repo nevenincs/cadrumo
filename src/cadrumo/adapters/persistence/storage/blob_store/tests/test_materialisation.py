@@ -19,7 +19,9 @@ from .._materialisation import get_secret_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_BUCKET_ID = "materialisation-wiring-test"
+# A bucket id IS a profile UUID: registration is proven by the capsule named
+# for it, so a descriptive label can never name a bucket a session can open.
+_BUCKET_ID = "3f7b9c21-84ad-4e60-9c15-5a2e6d0b7f38"
 _SECRET_CREATED_AT = datetime(2026, 8, 3, 12, 0, 0, tzinfo=UTC)
 _SECRET_EXPIRES_AT = datetime(2099, 1, 1, tzinfo=UTC)
 

@@ -638,7 +638,7 @@ def test_profiles_are_exact_and_resolve_against_live_schemas() -> None:
                 ),
                 mounted_family=None,
                 profile_policy=None,
-                mcp_exposure=None,
+                surface_exposure=None,
                 exclusions=(),
             )
             for key, schema in sorted(input_schemas.items())

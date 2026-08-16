@@ -311,6 +311,16 @@ def test_the_derivation_check_actually_reaches_the_read_paths() -> None:
     subclass inherits. Five call sites became one, so the reads are still
     guarded — by a single shared check instead of five copies.
 
+    The gate subsequently caught exactly what it was built for. The count fell
+    to 15 because ``storage/attachment.py`` had open-coded its manifest version
+    comparison as ``envelope.schema_version != _ATTACHMENT_MANIFEST_VERSION``
+    beside a real call to the classification sibling. Nothing had consolidated;
+    one read path had simply stopped using the shared predicate, which is
+    invisible to leg three -- the expected version there was registry-derived,
+    so the drift was the missing DELEGATION rather than a restated literal. The
+    site now calls the predicate and keeps its own bespoke refusal, which is
+    the contract the predicate is written for, and the count is 16 again.
+
     Lowering this floor is therefore only ever legitimate alongside evidence
     that the missing calls moved into a shared reader. A drop with no such
     consolidation is the regression this gate exists to catch: verify before

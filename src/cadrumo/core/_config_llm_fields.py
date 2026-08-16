@@ -2,7 +2,7 @@
 
 Split from :mod:`~core.config` to keep the central settings facade within the
 line budget. :class:`~core.config.Settings` inherits these fields (through the
-:class:`~core._config_mcp_serving_fields.CadrumoMcpServingSettings` mixin) with
+mixin) with
 their declared validation and defaults. The path fields declared here are
 normalized and lifecycle-classified on :class:`~core.config.Settings` by name
 through inheritance; the optional API-key secrets are blank-to-``None`` coerced

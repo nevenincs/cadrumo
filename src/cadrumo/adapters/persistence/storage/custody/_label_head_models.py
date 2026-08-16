@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator, model_v
 
 from .....core import STRICT_FROZEN_CONFIG
 from .....core.hashing import bounded_canonical_json_bytes, canonical_json_digest
+from .....core.identity import PrefixedContentDigest
 from ._capsule_records import ProfileCustodyCapsuleLabel
 from ._errors import ProfileCustodyRecordError
 
@@ -75,7 +76,7 @@ class ProfileLabelHead(_CustodyDigestModel):
     schema_version: Literal[1] = 1
     profile_id: UUID
     label_revision: int = Field(ge=1)
-    label_content_digest: str
+    label_content_digest: PrefixedContentDigest
     label_self_digest: str
     source_witness: str
     previous_head_digest: str | None = None

@@ -25,6 +25,7 @@ import os
 import sys
 from collections.abc import Mapping
 from pathlib import Path
+from time import monotonic
 from typing import TypedDict, cast
 
 import httpx
@@ -77,6 +78,7 @@ __all__ = [
     "assess_model_load_contention",
     "binding_free_bytes",
     "cadrumo_selected_models",
+    "clear_ollama_vision_probe_cache",
     "probe_hardware_profile",
     "probe_local_inference_hardware",
     "probe_local_model_provisioning",
@@ -97,6 +99,7 @@ __all__ = [
 ]
 
 from ._provisioning_contracts import (
+    OLLAMA_PROBE_CACHE_TTL_S,
     OLLAMA_PROBE_TIMEOUT_S,
     ProvisioningFactValue,
     ProvisioningOutcome,
@@ -190,10 +193,38 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
     ``GET /api/tags``. The probe never runs inference and returns unavailable
     when the server is unreachable or the configured model is not installed.
     Ledger evidence reading uses this result before local-vision inference.
+
+    The answer is cached per ``(endpoint, model)`` for
+    :data:`OLLAMA_PROBE_CACHE_TTL_S`, so a caller that asks once per document
+    asks the endpoint once instead. Keying on the endpoint keeps a suite that
+    stands up its own reader on an ephemeral port unaffected: a different URL is
+    a different question. Use :func:`clear_ollama_vision_probe_cache` where a
+    test needs the next call to reach the endpoint again.
     """
     resolved = settings if settings is not None else load_settings()
     model = resolved.cadrumo_llm_ollama_vision_model
     url = ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "tags")
+    cache_key = (url, model)
+    cached = _OLLAMA_VISION_PROBE_CACHE.get(cache_key)
+    if cached is not None and (monotonic() - cached[0]) < OLLAMA_PROBE_CACHE_TTL_S:
+        return cached[1]
+    status = _probe_ollama_vision_uncached(url=url, model=model)
+    _OLLAMA_VISION_PROBE_CACHE[cache_key] = (monotonic(), status)
+    return status
+
+
+#: Probe answers by ``(endpoint, model)``, each stamped with its monotonic
+#: reading time. Monotonic, not wall clock, so a clock adjustment cannot make an
+#: entry look arbitrarily fresh or stale.
+_OLLAMA_VISION_PROBE_CACHE: dict[tuple[str, str], tuple[float, DependencyStatus]] = {}
+
+
+def clear_ollama_vision_probe_cache() -> None:
+    """Drop every cached probe answer, so the next call reaches the endpoint."""
+    _OLLAMA_VISION_PROBE_CACHE.clear()
+
+
+def _probe_ollama_vision_uncached(*, url: str, model: str) -> DependencyStatus:
     try:
         with httpx.Client(timeout=OLLAMA_PROBE_TIMEOUT_S) as client:
             response = client.get(url)

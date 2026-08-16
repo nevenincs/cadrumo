@@ -101,7 +101,12 @@ def _recovery_envelope(*, profile_id: UUID = _PROFILE_ID, dek_epoch: str = _EPOC
 
 
 def test_supervised_password_recovery_and_artifact_paths_prove_the_same_dek(tmp_path: Path) -> None:
-    settings = _settings(tmp_path)
+    # The storage root is a SUBDIRECTORY here so the exported artifact can land
+    # outside it. An artifact written inside the root is refused by design --
+    # it would share one directory tree, one backup and one theft with the
+    # ciphertext it unwraps -- and that refusal would fire before this test
+    # reached the DEK equivalence it exists to prove.
+    settings = _settings(tmp_path / "state")
     envelope = create_profile_custody_password_envelope(
         profile_id=_PROFILE_ID,
         password=_PASSPHRASE,
@@ -625,7 +630,10 @@ def test_publication_refuses_epoch_mismatch_traversal_and_leaves_no_staging_caps
 
 
 def test_publication_and_export_refuse_real_directory_reparse_points(tmp_path: Path) -> None:
-    settings = _settings(tmp_path)
+    # As above: the export half of this test needs a destination outside the
+    # storage root, or the store-separately refusal answers first and the
+    # reparse-point refusal this test names is never reached.
+    settings = _settings(tmp_path / "state")
     envelope = create_profile_custody_password_envelope(
         profile_id=_PROFILE_ID,
         password=_PASSPHRASE,

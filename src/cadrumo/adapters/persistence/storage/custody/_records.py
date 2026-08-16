@@ -22,6 +22,11 @@ from .....core.hashing import (
 from ._errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
 
 PROFILE_CUSTODY_ENVELOPE_SCHEMA_VERSION: Final = 1
+#: The password envelope's name inside a capsule's ``custody/`` directory.
+#: Named beside its size bound and its sentinel/recovery siblings, which
+#: already carry one; it was the last capsule member whose filename was a
+#: literal repeated at each publication and read site.
+PROFILE_CUSTODY_ENVELOPE_FILENAME: Final = "envelope.v1.json"
 #: Largest possible canonical v1 envelope: all fixed-width fields, a present
 #: predecessor digest, and the ten-digit maximum password generation.
 PROFILE_CUSTODY_ENVELOPE_MAX_BYTES: Final = 704

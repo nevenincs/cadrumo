@@ -20,6 +20,10 @@ from ......domain.calculations.registry import (
     assert_remote_operation_allowed,
 )
 from ......tests import FIXTURES_DIR
+from ......tests.aeat_literal_fixtures import (
+    NOTIFICATION_ACKNOWLEDGE_PATH_CANARY,
+    NOTIFICATION_COMPARECER_PATH_CANARY,
+)
 from ...auth import AeatSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
 from .._errors import SedeNavigationError
@@ -203,7 +207,7 @@ class TestNavigateAndParseLandingGuard:
     @pytest.mark.asyncio
     async def test_unknown_same_host_path_is_refused_before_any_navigation(self) -> None:
         """A same-host mutation-shaped path cannot reach even the warm-up request."""
-        unknown = f"{_AEAT.domains.www6}/wlpl/GNNO-JDIT/comparecer"
+        unknown = f"{_AEAT.domains.www6}{NOTIFICATION_COMPARECER_PATH_CANARY}"
         async with opened_http_boundary() as boundary:
             boundary.configure_html("<html><body>unreachable</body></html>")
             with pytest.raises(RegistryValidationError, match="allowed read-only paths"):
@@ -280,7 +284,7 @@ class TestNotificationsExactReadPaths:
 
     @pytest.mark.parametrize("method", ("GET", "HEAD", "OPTIONS", "POST"))
     def test_unknown_same_host_path_is_refused_for_every_http_method(self, method: str) -> None:
-        unknown = f"{_AEAT.domains.www12}/wlpl/GNNO-JDIT/comparecer"
+        unknown = f"{_AEAT.domains.www12}{NOTIFICATION_COMPARECER_PATH_CANARY}"
 
         with pytest.raises(RegistryValidationError):
             assert_remote_operation_allowed(
@@ -289,7 +293,7 @@ class TestNotificationsExactReadPaths:
             )
 
     def test_a_redirect_to_an_undeclared_aeat_path_is_refused(self) -> None:
-        redirected = f"{_AEAT.domains.www12}/wlpl/GNNO-JDIT/acknowledge"
+        redirected = f"{_AEAT.domains.www12}{NOTIFICATION_ACKNOWLEDGE_PATH_CANARY}"
 
         with pytest.raises(SedeNavigationError, match="allowed read-only paths"):
             assert_notifications_read_landing(redirected)

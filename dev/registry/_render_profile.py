@@ -9,6 +9,7 @@ renderer can observe it when any authority, anchor, or representation drifts.
 from __future__ import annotations
 
 import json
+import unicodedata
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Annotated, Final, Literal
@@ -94,7 +95,13 @@ class RenderProfileAnchor(_StrictModel):
 
     sheet: str = Field(min_length=1)
     source_row: int = Field(gt=0)
-    source_cell: str | None = Field(pattern=r"^[A-Z]+[1-9][0-9]*$")
+    #: Defaulted to ``None`` so a PDF anchor is authorable at all, mirroring
+    #: :class:`SemanticMapAnchor`, which carries the same field for the same
+    #: reason: a workbook design has a stable parser-column cell and a PDF design
+    #: has none. The type already permitted ``None``; without a default the key
+    #: was still required, and TOML has no way to author an explicit null, so
+    #: every PDF anchor refused at load.
+    source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
     #: The ordinal AEAT printed, verbatim -- a str because it is a printed LABEL,
     #: never an arithmetic value. Mirrors
     #: :attr:`domain.calculations.registry.RecordDesignField.ordinal`.
@@ -501,7 +508,15 @@ def validate_render_profile_authority(
                 )
     for rule in profile.singleton_rules:
         field = eligible[rule.anchor]
-        if field.length == 17 or field.aeat_type != rule.aeat_type:
+        # Compared on NUMERIC-NESS, not on the spelling. A singleton rule pins
+        # ``aeat_type = "Num"`` and ``sign_policy = "unsigned"`` by construction,
+        # so its type token carries no information beyond "numeric, unsigned" --
+        # the signed ``N`` form only ever appears in a width-17 membership rule,
+        # which is matched exactly above and keeps its Num/N distinction. String
+        # equality here would refuse every PDF design, whose naturaleza the
+        # parser canonicalises to ``Numerico``, leaving those fields eligible for
+        # a rule that could never be written.
+        if field.length == 17 or not _is_numeric_aeat_type(field.aeat_type):
             raise RegistryValidationError(f"smaller singleton rule conflicts with official field at {rule.anchor!r}")
         if rule.integer_digits + rule.decimal_digits != field.length:
             raise RegistryValidationError(
@@ -580,6 +595,48 @@ def _is_source_reserved_field(field: RecordDesignIntermediateField) -> bool:
     return _RESERVED_DESCRIPTION_MARKER in field.normalized_description.casefold()
 
 
+def _is_numeric_aeat_type(aeat_type: str) -> bool:
+    """Whether ``aeat_type`` names a numeric naturaleza, however AEAT spelled it.
+
+    A workbook prints the abbreviation (``Num``, and ``N`` for the signed form);
+    a PDF design prints the word, which the shipped parser canonicalises to
+    ``Numerico``. Selecting on the abbreviations alone made every PDF design's
+    numeric fields ineligible, so no reviewed rule was ever demanded for them and
+    an empty profile satisfied exhaustive coverage completely.
+
+    Matched on an accent-stripped stem for the same reason
+    ``_naturaleza_or_none`` is: AEAT does not spell consistently, and every
+    unmatched spelling is a field that silently escapes review.
+    """
+    normalised = unicodedata.normalize("NFKD", aeat_type.strip(" .")).encode("ascii", "ignore").decode("ascii").lower()
+    return normalised in {"num", "n"} or normalised.startswith("numeric")
+
+
+def _states_no_wire_fact(field: RecordDesignIntermediateField) -> bool:
+    """Whether the design left this field's wire fact unstated at its anchor.
+
+    A WORKBOOK field has a Contenido cell, so a non-blank one is the design
+    stating the fact and the field needs no reviewed rule. A PDF design has no
+    such column: the parser fills ``content`` with the field's DESCRIPTIVE PROSE,
+    which states the fact sometimes, partially, or not at all. Modelo 347 carries
+    all of those side by side -- one field giving sign and decimals in full, one
+    giving only a width, a bare cross-reference, and a purely semantic
+    description -- so no rule over the text can separate them and every numeric
+    PDF anchor is put to a reviewed rule instead.
+
+    The source shape is read off the field rather than threaded in: a workbook
+    anchor carries a ``source_cell`` and a PDF anchor does not, which is the
+    distinction :class:`RecordDesignIntermediateField` already documents.
+
+    Where the prose DOES state a fact the reviewed rule must agree with it, which
+    keeps the official design's veto intact; that agreement is checked where the
+    rule's own evidence is validated, not here.
+    """
+    if field.source_cell is None:
+        return True
+    return field.content is None or not field.content.strip()
+
+
 def project_render_profile_eligibility(
     fixed_fields: Iterable[RecordDesignIntermediateField],
 ) -> RenderProfileEligibility:
@@ -593,8 +650,8 @@ def project_render_profile_eligibility(
     eligible = tuple(
         field
         for field in fixed_fields
-        if field.aeat_type in {"Num", "N"}
-        and (field.content is None or not field.content.strip())
+        if _is_numeric_aeat_type(field.aeat_type)
+        and _states_no_wire_fact(field)
         and not _is_source_reserved_field(field)
     )
     return RenderProfileEligibility(

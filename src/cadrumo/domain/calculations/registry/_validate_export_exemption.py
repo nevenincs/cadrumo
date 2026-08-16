@@ -85,12 +85,21 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from ....core import CasillaId, ExportExemptionReason, ExportLayoutFormat
 from ....core.aggregation import BindingSourceKind
 from ._bindings import binding_source_casilla_ids, binding_source_modelo
 from ._export import derive_export_layouts_from_bindings, fixed_width_record_casilla_ids
 from ._runtime_graph import expression_casilla_refs
-from ._schema import CasillaDefinition, DataBindingDefinition, FormulaDefinition, ModeloRevision
+from ._schema import (
+    CasillaDefinition,
+    DataBindingDefinition,
+    FormulaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+)
+from ._schema_references import SourceReference
 
 
 def _reaches_addressed_casilla(
@@ -239,11 +248,39 @@ def _manifest_casilla_exemption_failure(
     )
 
 
+def modelo_publishes_a_record_design(
+    modelo: ModeloDefinition,
+    source_refs: Mapping[str, SourceReference],
+) -> bool:
+    """Return whether AEAT publishes a machine-readable record design for this MODELO.
+
+    Read across the modelo and every one of its revisions, deliberately, not per
+    revision. A design bundled for one epoch proves AEAT publishes one for the
+    form; a revision of the same modelo that cites none is an ACQUISITION gap --
+    the epoch's design exists and has not been fetched -- and that must stay a
+    refusal. Modelo 185 is the worked case: its 2026 design is bundled, its
+    ``2003-2025`` revision cites none, and scoping this per revision quietly
+    excused exactly the acquisition gap the refusal exists to surface.
+
+    A ``form_spec`` does not count and the distinction carries the decision:
+    Modelo 721 cites its approving BOE orden's anexo at ``layout_authority``
+    tier, which is a printable form, not a positional design a fixed-width
+    writer could be authored from.
+    """
+    refs = set(modelo.source_refs)
+    for revision in modelo.revisions.values():
+        refs |= set(revision.source_refs)
+    return any(
+        (source := source_refs.get(ref)) is not None and source.kind == "record_design" for ref in refs
+    )
+
+
 def validate_export_exemption_declarations(
     *,
     prefix: str,
     modelo_id: str,
     revision: ModeloRevision,
+    publishes_record_design: bool,
 ) -> list[str]:
     """Refuse a revision that cannot emit, and every export exemption lacking a reason.
 
@@ -268,6 +305,8 @@ def validate_export_exemption_declarations(
         modelo_id: Modelo identifier, used to scope out cross-modelo binding
             edges whose source casilla ids name a foreign modelo.
         revision: The :class:`ModeloRevision` under validation.
+        publishes_record_design: Whether AEAT publishes a record design for this
+            modelo, from :func:`modelo_publishes_a_record_design`.
     """
     failures: list[str] = []
     # Refused on emitting NOTHING, not on lacking a fixed-width layout specifically.
@@ -276,12 +315,23 @@ def validate_export_exemption_declarations(
     # emit as incapable, and would put a second, larger number into circulation
     # beside the capability worklist's. One question, one count.
     if not derive_export_layouts_from_bindings(revision):
-        failures.append(
-            f"{prefix}: declares no export layout, so this application cannot file it. A missing "
-            "layout is not an exemption and there is no declaration that excuses it: it is the "
-            "filing capability being absent. Author the revision's export layout from its official "
-            "record design.",
-        )
+        # Scoped to revisions for which a record design EXISTS to author from.
+        # The refusal's own instruction is "author the layout from its official
+        # record design", and for a modelo AEAT publishes no design for that is
+        # not a task, it is an impossibility -- the refusal would stand forever
+        # and mean nothing. This is NOT a per-modelo exemption: the condition is
+        # a property of the source catalogue, and a revision cannot dodge it by
+        # dropping its citation, because every bundled design must stay
+        # registered (``test_every_bundled_record_design_is_registered``). Over
+        # the bundled registry it separates exactly two modelos, 136 and 721,
+        # from the other forty-six.
+        if publishes_record_design:
+            failures.append(
+                f"{prefix}: declares no export layout, so this application cannot file it. A missing "
+                "layout is not an exemption and there is no declaration that excuses it: it is the "
+                "filing capability being absent. Author the revision's export layout from its official "
+                "record design.",
+            )
         return failures
     # Checked BEFORE the manifest, deliberately. A revision carrying neither a
     # layout nor a completeness manifest is the least capable state there is, and
@@ -310,4 +360,4 @@ def validate_export_exemption_declarations(
     return failures
 
 
-__all__ = ["validate_export_exemption_declarations"]
+__all__ = ["modelo_publishes_a_record_design", "validate_export_exemption_declarations"]

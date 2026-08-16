@@ -177,9 +177,9 @@ def watchdog_disabled() -> bool:
     setting leaves the watchdog ENABLED.
     """
     try:
-        from cadrumo.core.config import load_settings
+        from ._settings import load_mcp_settings
 
-        return not load_settings().cadrumo_mcp_stdio_watchdog
+        return not load_mcp_settings().cadrumo_mcp_stdio_watchdog
     except Exception:
         logger.debug("watchdog: settings unreadable; keeping the watchdog enabled", exc_info=True)
         return False

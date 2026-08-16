@@ -29,7 +29,7 @@ import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from .....core import LOCKFILE_UNLINK_RETRY_SECONDS, pid_is_alive, unlink_lockfile
 from .....core.config import load_settings as _load_settings
@@ -39,7 +39,44 @@ from .._storage_path_definitions import BUCKET_LOCK_FILENAME
 from ._errors import BucketBusyError, BucketValidationError
 
 if TYPE_CHECKING:
-    from ._layout import BucketPaths
+    pass
+
+
+@runtime_checkable
+class BucketLockTarget(Protocol):
+    """What the bucket lock actually needs: one directory to place ``.lock`` in.
+
+    The lock reads two fields -- the directory it places ``.lock`` in, and the
+    bucket identity its refusals name. Declaring exactly those, rather than
+    demanding the whole :class:`BucketPaths` record, is what lets a caller holding a narrowed
+    view of a bucket delegate here without first re-widening it back to the
+    concrete record -- a round trip that had to be guarded by a runtime identity
+    check standing in for a boundary this protocol states directly.
+
+    It is deliberately NOT the pattern for the custody records. Those ports are
+    narrower than the substrate needs on purpose: they hide key material the
+    application has no business reading, so widening a crypto signature onto one
+    would either expose that material or fail late on a field the port omits.
+    The lock is the opposite case -- nothing is hidden, because nothing beyond a
+    directory is used.
+    """
+
+    @property
+    def bucket_dir(self) -> Path:
+        """The bucket directory whose ``.lock`` sidecar is the lock target."""
+        ...
+
+    @property
+    def bucket_id(self) -> str:
+        """The bucket's identity, carried on every lock refusal's context.
+
+        Declared because the lock genuinely reads it, not for symmetry: a
+        busy-or-unlockable refusal names the bucket it could not take, and a
+        protocol that omitted it would either fail late here or silently
+        degrade the operator's refusal to an unattributed one.
+        """
+        ...
+
 
 _log = get_logger(__name__)
 _LOCKFILE_MODE = 0o600
@@ -79,7 +116,7 @@ def _poll_interval_seconds() -> float:
     return _load_settings().cadrumo_bucket_lock_poll_interval_s
 
 
-def lock_path(paths: BucketPaths) -> Path:
+def lock_path(paths: BucketLockTarget) -> Path:
     """Return the canonical lockfile path for the bucket."""
     return paths.bucket_dir / BUCKET_LOCK_FILENAME
 
@@ -125,7 +162,7 @@ def _unlink_lockfile_if_present(target: Path, *, reason: str) -> bool:
     return removed
 
 
-def _unlink_released_lockfile(target: Path, paths: BucketPaths) -> None:
+def _unlink_released_lockfile(target: Path, paths: BucketLockTarget) -> None:
     """Remove the lockfile this process holds, waiting out a peer's open handle.
 
     A waiter that opens the lockfile to read the holder PID blocks this unlink
@@ -233,7 +270,7 @@ def _reclaim_if_stale(target: Path) -> None:
     _unlink_lockfile_if_present(target, reason="stale_reclaim")
 
 
-def _ensure_bucket_dir_lockable(paths: BucketPaths) -> None:
+def _ensure_bucket_dir_lockable(paths: BucketLockTarget) -> None:
     """Validate the bucket directory exists before locking, or raise.
 
     A ``not is_dir()`` bucket path always raises: a present-but-non-directory
@@ -266,7 +303,7 @@ def _ensure_bucket_dir_lockable(paths: BucketPaths) -> None:
 def _acquire_local_slot(
     target: Path,
     ownership_key: Path,
-    paths: BucketPaths,
+    paths: BucketLockTarget,
     *,
     pid: int,
     thread_id: int,
@@ -335,7 +372,7 @@ def _release_incomplete_local_slot(ownership_key: Path, *, pid: int, thread_id: 
 def _claim_lockfile(
     target: Path,
     ownership_key: Path,
-    paths: BucketPaths,
+    paths: BucketLockTarget,
     *,
     pid: int,
     thread_id: int,
@@ -378,7 +415,7 @@ def _claim_lockfile(
         raise
 
 
-def acquire_lock(paths: BucketPaths, *, wait_seconds: float = 0.0) -> None:
+def acquire_lock(paths: BucketLockTarget, *, wait_seconds: float = 0.0) -> None:
     """Acquire the per-bucket lockfile or raise :class:`BucketBusyError`.
 
     Args:
@@ -407,7 +444,7 @@ def _release_owned_slot(
     target: Path,
     ownership_key: Path,
     ownership: _LocalLockOwnership,
-    paths: BucketPaths,
+    paths: BucketLockTarget,
     *,
     current_pid: int,
     thread_id: int,
@@ -460,7 +497,7 @@ def _discard_orphan_lockfile_registration(target: Path, ownership_key: Path) -> 
         _ATEXIT_REGISTRY.discard(ownership_key)
 
 
-def release_lock(paths: BucketPaths) -> None:
+def release_lock(paths: BucketLockTarget) -> None:
     """Release the per-bucket lockfile owned by this process.
 
     Removes the lockfile only when the recorded PID matches this process;

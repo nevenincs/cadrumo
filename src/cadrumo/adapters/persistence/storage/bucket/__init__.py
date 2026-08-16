@@ -52,7 +52,7 @@ from ._errors import (
 from ._export_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 from ._keystore_paths import keystore_path, keystore_root, keystore_sidecar_path, validate_keystore_separation
 from ._layout import BucketPaths, bucket_paths, trash_rename_and_remove
-from ._lockfile import acquire_lock, lock_path, release_lock
+from ._lockfile import BucketLockTarget, acquire_lock, lock_path, release_lock
 from ._output_language_hint import (
     clear_bucket_output_language_hint,
     normalize_output_language_hint,
@@ -69,6 +69,7 @@ __all__ = [
     "BucketAlreadyPresentError",
     "BucketBusyError",
     "BucketError",
+    "BucketLockTarget",
     "BucketLockedError",
     "BucketPathTooLongError",
     "BucketPaths",

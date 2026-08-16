@@ -97,7 +97,11 @@ def test_bare_repair_runs_clean_without_session_on_fresh_root(_fresh_storage_roo
 
     payload = json.loads(json_result.output)
     profile_check = next(check for check in payload["result"]["checks"] if check["name"] == "profile.readiness")
-    assert profile_check["next_action"] is None
+    # `next_action` is a retired prose channel, not a field that happens to be
+    # unset: the payload model forbids it outright, so reading it here asserted
+    # nothing and could only ever raise. The typed projection below is what
+    # replaced it.
+    assert "next_action" not in profile_check
     assert profile_check["precondition_action"]["failed_condition_id"] == "profile.active.available"
     assert profile_check["precondition_action"]["action"]["action_id"] == "operator.profile.create"
     assert profile_check["precondition_action"]["missing_argument_names"] == ["profile_name"]

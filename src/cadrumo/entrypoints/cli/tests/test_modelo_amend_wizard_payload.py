@@ -46,6 +46,9 @@ def _valid_kwargs(**overrides: object) -> dict[str, object]:
         "operation": "modelo.work.amend_wizard",
         "amendment_kind": CalculationRevisionAmendmentKind.COMPLEMENTARIA,
         "amendment_reason": "corrected an under-reported base",
+        # Required but nullable, so every construction site must state it: this
+        # row is a COMPLEMENTARIA, not an M303 rectificativa, so it has no motive.
+        "m303_rectificativa_motive": None,
         "corrected_casillas": (),
         "export_next_action": "aeat app modelo export <work_unit_id> --output PATH",
     }

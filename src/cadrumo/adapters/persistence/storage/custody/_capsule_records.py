@@ -20,7 +20,7 @@ from .....core.hashing import (
     reject_json_constant,
     validate_prefixed_digest,
 )
-from .....core.identity import ProfileLabel
+from .....core.identity import PrefixedContentDigest, ProfileLabel
 from ._errors import ProfileCustodyRecordError
 from ._filesystem import ProfileCustodyPasswordReadOperation
 from ._records import ProfileCustodyEnvelope
@@ -80,7 +80,7 @@ class ProfileCustodyCapsuleLabel(_ProfileCustodyCapsuleLabelPayload):
     one capsule UUID and carries both content and self-authentication digests.
     """
 
-    content_digest: str
+    content_digest: PrefixedContentDigest
     self_digest: str
 
     @field_validator("content_digest")

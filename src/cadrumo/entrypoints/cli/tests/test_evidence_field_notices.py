@@ -28,6 +28,9 @@ from ....application.ledger import (
 from ....core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
 from ....core.json_contract import Notice, NoticeSeverity, derive_status
 from .._evidence_field_notices import DEGRADED_GROUNDING_OUTCOMES, field_degradation_notices
+from ._english_locale_fixture import english_locale_fixture
+
+__all__ = ["english_locale_fixture"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -9,6 +9,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ....core import OperationEffect, OperationEventKind, OperationTerminalCondition
+from ....tests.aeat_literal_fixtures import REDACTION_SESSION_QUERY_URL_CANARY
 from .._events import (
     OperationDiagnosticEvent,
     OperationEvent,
@@ -141,7 +142,7 @@ def test_event_models_are_strict_frozen_and_codes_are_stable() -> None:
         "secret:correct-horse-battery-staple",
         "token:eyJhbGciOiJIUzI1NiJ9.payload.signature",
         "Bearer abcdefghijklmnopqrstuvwxyz",
-        "https://sede.agenciatributaria.gob.es/path?session=secret",
+        REDACTION_SESSION_QUERY_URL_CANARY,
         "C:/Users/operator/private.log",
         "The browser raised TimeoutError while authenticating",
         "diagnóstico privado del contribuyente",

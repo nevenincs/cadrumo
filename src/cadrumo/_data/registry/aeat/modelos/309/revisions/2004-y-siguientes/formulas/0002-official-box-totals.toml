@@ -1,0 +1,33 @@
+# Both expressions are the record design's own, printed beside the boxes they
+# target: box [22] is captioned "Total cuota devengada
+# ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])" and box [24] "Resultado a ingresar
+# [22]-[23]". The [22] sum enumerates the four recargo de equivalencia cuota
+# tiers ([12], [15], [18], [21]) alongside the four regimen general tiers, so a
+# recargo filer is not silently under-declared.
+[[revisions."2004-y-siguientes".formulas]]
+id = "modelo-309-total-cuota-devengada"
+target_casilla_id = "22"
+expression = { op = "add", args = [
+    { casilla_id = "03" },
+    { casilla_id = "27" },
+    { casilla_id = "06" },
+    { casilla_id = "09" },
+    { casilla_id = "12" },
+    { casilla_id = "15" },
+    { casilla_id = "18" },
+    { casilla_id = "21" },
+] }
+rounding = "money-2"
+legal_refs = ["orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2004-y-siguientes".formulas]]
+id = "modelo-309-resultado-a-ingresar"
+target_casilla_id = "24"
+expression = { op = "subtract", args = [
+    { casilla_id = "22" },
+    { casilla_id = "23" },
+] }
+rounding = "money-2"
+legal_refs = ["orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]

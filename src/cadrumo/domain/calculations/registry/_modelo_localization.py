@@ -7,7 +7,7 @@ import re
 from collections.abc import Mapping
 from typing import Final, Literal, cast
 
-from ....core import OBJECT_TUPLE_ADAPTER
+from ....core import OBJECT_TUPLE_ADAPTER, Modelo
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import MissingTranslationError, lookup_translation
 from ._ids import RevisionId
@@ -18,7 +18,9 @@ ModeloLocalizationField = Literal["label", "help", "title", "official_name"]
 _PLAIN_SEGMENT: Final = re.compile(r"^[A-Za-z0-9_-]+$")
 _ENCODED_PREFIX: Final[str] = "x-"
 _SOURCE_LOCALE: Final[str] = "es"
-_MODEL_SCOPED_CONSTRUCTS: Final[frozenset[tuple[str, str]]] = frozenset({("303", "modelo-303-iva-autoliquidacion")})
+_MODEL_SCOPED_CONSTRUCTS: Final[frozenset[tuple[str, str]]] = frozenset(
+    {(Modelo.M303.value, "modelo-303-iva-autoliquidacion")},
+)
 
 
 def encode_modelo_locale_segment(value: str) -> str:

@@ -505,7 +505,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
             "RegistryValidationError",
             "SourceRefId",
         },
-        "_semantic_map": {"M303VariableEnvelopeSemantic", "SemanticMap", "SemanticMapEntry", "SemanticMapRecord"},
+        "_semantic_map": {"VariableEnvelopeSemantic", "SemanticMap", "SemanticMapEntry", "SemanticMapRecord"},
     }
     assert direct_imports == {("re", None)}
     assert not any(
@@ -514,15 +514,15 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
     )
     assert registry_facade.__all__ == [
         "SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION",
-        "M303EnvelopePrefixField",
-        "M303EnvelopePrefixRole",
-        "M303EnvelopeTotalAnchor",
-        "M303VariableEnvelopeSemantic",
+        "EnvelopePrefixField",
+        "EnvelopeTotalAnchor",
+        "FilingEnvelopePrefixRole",
         "SemanticMap",
         "SemanticMapAnchor",
         "SemanticMapEntry",
         "SemanticMapFragment",
         "SemanticMapRecord",
+        "VariableEnvelopeSemantic",
         "load_semantic_map",
     ]
     assert registry_facade.load_semantic_map is load_semantic_map

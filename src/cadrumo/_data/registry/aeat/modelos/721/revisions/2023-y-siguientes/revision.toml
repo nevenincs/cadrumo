@@ -1,0 +1,48 @@
+[revisions."2023-y-siguientes"]
+authority_grade = "filing"
+# valid_from is canonicalised to the ejercicio-start convention (January 1 of
+# period_selector.year_from), not the orden's own effective date -- that fact
+# already has its home on orden-hfp-886-2023:art-1's legal.effective_from.
+valid_from = 2023-01-01
+period_selector = { year_from = 2023, periods = ["0A"] }
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-quater",
+    "orden-hfp-886-2023:art-1",
+    "orden-hfp-886-2023:art-2",
+    "orden-hfp-886-2023:art-3",
+    "orden-hfp-886-2023:art-4",
+    "orden-hac-1504-2024:art-9",
+    "orden-hac-1504-2024:df-unica",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "boe-modelo-721-2023-layout",
+    "boe-modelo-721-2024-layout",
+    "aeat-modelo-721-procedure",
+]
+orden_aplicabilidad = [
+    "orden-hfp-886-2023:art-1",
+    "orden-hac-1504-2024:art-9",
+    "orden-hac-1504-2024:df-unica",
+]
+
+
+[revisions."2023-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2023-y-siguientes' of modelo 721 has no strictly-earlier sibling revision of this modelo (valid_from 2023-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-quater",
+    "orden-hfp-886-2023:art-1",
+    "orden-hfp-886-2023:art-2",
+    "orden-hfp-886-2023:art-3",
+    "orden-hfp-886-2023:art-4",
+    "orden-hac-1504-2024:art-9",
+    "orden-hac-1504-2024:df-unica",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "boe-modelo-721-2023-layout",
+    "boe-modelo-721-2024-layout",
+    "aeat-modelo-721-procedure",
+]

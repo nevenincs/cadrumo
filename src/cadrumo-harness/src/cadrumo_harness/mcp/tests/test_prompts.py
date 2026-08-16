@@ -21,7 +21,6 @@ import anyio
 import pytest
 
 from cadrumo.core import accepted_filing_period_codes, accepted_filing_period_patterns
-from cadrumo.tests import connected_server_and_client_session as connect
 
 from ... import iter_skill_documents, operator_rules_text
 from .._completions import complete_prompt_argument
@@ -31,6 +30,7 @@ from .._prompts import (
     build_prompt_catalogue,
     prompt_document,
 )
+from ._session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

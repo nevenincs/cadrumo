@@ -12,11 +12,11 @@ from .._manifest import (
     ExplicitExclusionInventoryRow,
     InputSchemaInventoryRow,
     LiveLeafInventoryRow,
-    McpExposureInventoryRow,
     MountedFamilyInventoryRow,
     ProfilePolicyInventoryRow,
     ReconciliationSurface,
     ResultSchemaInventoryRow,
+    SurfaceExposureInventoryRow,
     reconcile_operator_surface_inventory,
 )
 
@@ -29,7 +29,7 @@ class _ReconciliationInventory(TypedDict):
     input_schemas: tuple[InputSchemaInventoryRow, ...]
     mounted_families: tuple[MountedFamilyInventoryRow, ...]
     profile_policies: tuple[ProfilePolicyInventoryRow, ...]
-    mcp_exposures: tuple[McpExposureInventoryRow, ...]
+    surface_exposures: tuple[SurfaceExposureInventoryRow, ...]
     exclusions: tuple[ExplicitExclusionInventoryRow, ...]
 
 
@@ -73,8 +73,8 @@ def _complete_inventory() -> _ReconciliationInventory:
                 provenance="profile policy classification",
             ),
         ),
-        "mcp_exposures": (
-            McpExposureInventoryRow(
+        "surface_exposures": (
+            SurfaceExposureInventoryRow(
                 subject_leaf_key="app.ledger.list",
                 exposed=True,
                 provenance="MCP tool descriptor inventory",
@@ -109,8 +109,8 @@ def test_reconciliation_requires_reasoned_authoritative_mcp_exclusion() -> None:
             provenance="profile policy classification",
         ),
     )
-    inventory["mcp_exposures"] = (
-        McpExposureInventoryRow(
+    inventory["surface_exposures"] = (
+        SurfaceExposureInventoryRow(
             subject_leaf_key="app.ledger.list",
             exposed=False,
             provenance="MCP tool descriptor inventory",
@@ -123,7 +123,7 @@ def test_reconciliation_requires_reasoned_authoritative_mcp_exclusion() -> None:
     inventory["exclusions"] = (
         ExplicitExclusionInventoryRow(
             subject_leaf_key="app.ledger.list",
-            surface=ReconciliationSurface.MCP_EXPOSURE,
+            surface=ReconciliationSurface.SURFACE_EXPOSURE,
             reason="operator-only policy class",
             authority="profile-policy ADR",
             provenance="MCP policy projection",
@@ -131,8 +131,8 @@ def test_reconciliation_requires_reasoned_authoritative_mcp_exclusion() -> None:
     )
     report = reconcile_operator_surface_inventory(**inventory)
 
-    assert report.leaves[0].mcp_exposure is not None
-    assert report.leaves[0].mcp_exposure.exposed is False
+    assert report.leaves[0].surface_exposure is not None
+    assert report.leaves[0].surface_exposure.exposed is False
     assert report.leaves[0].exclusions[0].authority == "profile-policy ADR"
 
 
@@ -171,9 +171,9 @@ def test_reconciliation_accounts_for_the_root_status_callback_without_a_mounted_
             provenance="profile policy classification",
         ),
     )
-    inventory["mcp_exposures"] = (
-        *inventory["mcp_exposures"],
-        McpExposureInventoryRow(
+    inventory["surface_exposures"] = (
+        *inventory["surface_exposures"],
+        SurfaceExposureInventoryRow(
             subject_leaf_key="root.status",
             exposed=True,
             provenance="MCP tool descriptor inventory",
@@ -342,8 +342,8 @@ def test_reconciliation_rejects_silent_missing_surface_and_policy_exposure_contr
         reconcile_operator_surface_inventory(**inventory)
 
     inventory = _complete_inventory()
-    inventory["mcp_exposures"] = (
-        McpExposureInventoryRow(
+    inventory["surface_exposures"] = (
+        SurfaceExposureInventoryRow(
             subject_leaf_key="app.ledger.list",
             exposed=False,
             provenance="MCP tool descriptor inventory",
@@ -352,7 +352,7 @@ def test_reconciliation_rejects_silent_missing_surface_and_policy_exposure_contr
     inventory["exclusions"] = (
         ExplicitExclusionInventoryRow(
             subject_leaf_key="app.ledger.list",
-            surface=ReconciliationSurface.MCP_EXPOSURE,
+            surface=ReconciliationSurface.SURFACE_EXPOSURE,
             reason="test policy is intentionally inconsistent",
             authority="test authority",
             provenance="test inventory",

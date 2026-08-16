@@ -35,6 +35,7 @@ from ._custody import register_custody_commands
 from ._descendiente import register_descendiente_commands
 from ._login_frontend import offer_login_to_a_gated_verb
 from ._manager_dispatch import register_lazy_wizard_leaf as _register_lazy_wizard_leaf
+from ._passphrase import register_passphrase_commands
 
 # `_resolve_preflight_revision_id` moved to `_profile_inspect` alongside the
 # preflight verb, but this package remains its import site: a consumer already
@@ -447,6 +448,7 @@ register_repair_maintenance_commands(repair_app)
 register_bucket_history_commands(profile_app)
 _register_profile_delete_command(profile_app, resolve_profile_by_label=_resolve_profile_by_label)
 register_custody_commands(app)
+register_passphrase_commands(app)
 register_descendiente_commands(
     profile_app,
     resolve_active_profile_pointer=_resolve_active_profile_pointer,

@@ -1,6 +1,6 @@
 """Real-entrypoint custody coverage for the profile lifecycle surface.
 
-The ``"buckets"`` and ``"keystore"`` literals below are not arbitrary
+The ``"buckets"`` literal below is not arbitrary
 injected values: the subprocess CLI harness sets no bucket-root or
 keystore-dir override, so ``tmp_path / "buckets"`` and
 ``tmp_path / "keystore"`` check production's real DEFAULT-derived
@@ -34,7 +34,7 @@ from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets", "keystore"})
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets"})
 """Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 

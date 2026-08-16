@@ -17,6 +17,7 @@ from ...core import (
     M303RegimenSimplificadoActivityProjectionRef,
     M303RegimenSimplificadoFactProjectionRef,
     M303RegimenSimplificadoModuleProjectionRef,
+    Modelo,
 )
 from ...domain.calculations.registry import (
     CasillaFieldKind,
@@ -117,7 +118,7 @@ def _validate_m303_projection_request(
 ) -> M303FilingFacts:
     """Validate the shared snapshot/layout boundary before projecting rows."""
     facts = producer_snapshot.m303_filing_facts
-    if producer_snapshot.modelo.value != "303" or registry_snapshot.modelo.id != "303" or facts is None:
+    if producer_snapshot.modelo != Modelo.M303 or registry_snapshot.modelo.id != Modelo.M303 or facts is None:
         raise FilingExportValidationError("M303 filing projection requires one complete Modelo 303 snapshot")
     if (
         facts.period.filing_year != registry_snapshot.filing_year

@@ -36,6 +36,7 @@ required = true
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure"]
+export_refs = ["m210-2022.pagina01.f019"]
 
 [[revisions."2025".casillas]]
 id = "rendimientos_integros"
@@ -47,6 +48,7 @@ required = true
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-13.1", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure"]
+export_refs = ["m210-2022.pagina01.f083"]
 constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-modelo-210-procedure"] }
 
 [[revisions."2025".casillas]]
@@ -119,6 +121,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure"]
+export_refs = ["m210-2022.pagina01.f085"]
 
 [[revisions."2025".casillas]]
 id = "retencion_practicada"
@@ -130,6 +133,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure"]
+export_refs = ["m210-2022.pagina01.f115"]
 
 [[revisions."2025".casillas]]
 id = "base_imponible"
@@ -142,6 +146,7 @@ input_kind = "computed"
 formula = "m210-base-imponible-2025"
 legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
 source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
+export_refs = ["m210-2022.pagina01.f086"]
 
 [[revisions."2025".casillas]]
 id = "tipo_gravamen"
@@ -154,6 +159,7 @@ input_kind = "computed"
 formula = "m210-tipo-gravamen-2025-resolve"
 legal_refs = ["trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure"]
+export_refs = ["m210-2022.pagina01.f107"]
 
 [[revisions."2025".casillas]]
 id = "cuota_integra"
@@ -166,6 +172,7 @@ input_kind = "computed"
 formula = "m210-cuota-integra-2025"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b"]
 source_refs = ["aeat-modelo-210-procedure"]
+export_refs = ["m210-2022.pagina01.f108"]
 
 [[revisions."2025".casillas]]
 id = "cuota_diferencial"
@@ -178,3 +185,4 @@ input_kind = "computed"
 formula = "m210-cuota-diferencial-2025"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure"]
+export_refs = ["m210-2022.pagina01.f117"]

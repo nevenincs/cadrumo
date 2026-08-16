@@ -10,7 +10,6 @@ factories are layered on top of this readiness contract.
 from __future__ import annotations
 
 from datetime import datetime
-from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -25,8 +24,14 @@ from ....core.config import (
 )
 from ....core.time import now as _utc_now
 from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY
-from .errors import (
-    StorageValidationError,
+from ._runtime_readiness import (
+    StorageRuntimeReadiness,
+    StorageRuntimeReadinessCode,
+    StorageRuntimeReadinessIssue,
+    StorageRuntimeSession,
+    readiness_error,
+    readiness_issue,
+    runtime_not_ready_error,
 )
 from .errors import (
     storage_validation_error as _storage_validation_error,
@@ -40,49 +45,6 @@ from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.identity import BucketId
 
 _SYNTHETIC_SESSION_BUCKET_IDS = frozenset({"ephemeral"})
-
-
-class StorageRuntimeReadinessCode(StrEnum):
-    """Machine-readable secure-storage runtime readiness states."""
-
-    READY = "ready"
-    NO_ACTIVE_SESSION = "no_active_session"
-    SESSION_SEALED = "session_sealed"
-    SESSION_EXPIRED = "session_expired"
-    UNSECURED_BACKEND = "unsecured_backend"
-    ROUTE_NOT_ACTIVE_BUCKET = "route_not_active_bucket"
-    ROUTE_BUCKET_MISMATCH = "route_bucket_mismatch"
-    SESSION_CHANGED = "session_changed"
-
-
-class StorageRuntimeReadinessIssue(BaseModel):
-    """One reason the runtime is not ready for profile-bound storage."""
-
-    model_config = _STRICT_FROZEN
-
-    code: StorageRuntimeReadinessCode
-
-
-class StorageRuntimeSession(BaseModel):
-    """Key-material-free projection of the active bucket session."""
-
-    model_config = _STRICT_FROZEN
-
-    active: bool
-    idle_deadline: datetime
-    sealed: bool
-    expired: bool
-    unsecured_backend: bool
-
-
-class StorageRuntimeReadiness(BaseModel):
-    """Profile-bound storage readiness result."""
-
-    model_config = _STRICT_FROZEN
-
-    ready: bool
-    code: StorageRuntimeReadinessCode
-    issues: tuple[StorageRuntimeReadinessIssue, ...] = ()
 
 
 class StorageRuntime(BaseModel):
@@ -108,7 +70,7 @@ class StorageRuntime(BaseModel):
         if self.readiness.ready:
             return
 
-        raise _readiness_error(self.readiness)
+        raise readiness_error(self.readiness)
 
     def secure_object_repository(self) -> SecureObjectRepository:
         """Create a :class:`SecureObjectRepository` attached to this runtime's bucket."""
@@ -162,37 +124,6 @@ class StorageRuntime(BaseModel):
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.SESSION_CHANGED)
 
 
-def runtime_not_ready_error(code: StorageRuntimeReadinessCode) -> StorageValidationError:
-    """Build a locale-neutral storage-runtime readiness failure."""
-    return _readiness_error(
-        StorageRuntimeReadiness(
-            ready=False,
-            code=code,
-            issues=(StorageRuntimeReadinessIssue(code=code),),
-        ),
-    )
-
-
-def _readiness_issue(
-    *,
-    code: StorageRuntimeReadinessCode,
-) -> StorageRuntimeReadinessIssue:
-    return StorageRuntimeReadinessIssue(code=code)
-
-
-def _readiness_error(readiness: StorageRuntimeReadiness) -> StorageValidationError:
-    """Project typed readiness facts into the registered storage refusal."""
-    issue_codes = tuple(issue.code.value for issue in readiness.issues)
-    return StorageValidationError(
-        context={
-            "details": readiness.code.value,
-            "readiness_code": readiness.code.value,
-            "readiness_issue_codes": issue_codes,
-        },
-        translated_message="errors.storage.runtime.not_ready",
-    )
-
-
 def inspect_storage_runtime(
     settings: Settings | None = None,
     *,
@@ -208,7 +139,7 @@ def inspect_storage_runtime(
 
     if active is None:
         issues.append(
-            _readiness_issue(
+            readiness_issue(
                 code=StorageRuntimeReadinessCode.NO_ACTIVE_SESSION,
             ),
         )
@@ -223,26 +154,26 @@ def inspect_storage_runtime(
         )
         if active.sealed:
             issues.append(
-                _readiness_issue(
+                readiness_issue(
                     code=StorageRuntimeReadinessCode.SESSION_SEALED,
                 ),
             )
         elif expired:
             issues.append(
-                _readiness_issue(
+                readiness_issue(
                     code=StorageRuntimeReadinessCode.SESSION_EXPIRED,
                 ),
             )
         elif active.unsecured_backend:
             issues.append(
-                _readiness_issue(
+                readiness_issue(
                     code=StorageRuntimeReadinessCode.UNSECURED_BACKEND,
                 ),
             )
 
     if route.kind is not StorageRouteKind.ACTIVE_BUCKET_DATABASE:
         issues.append(
-            _readiness_issue(
+            readiness_issue(
                 code=StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET,
             ),
         )
@@ -252,7 +183,7 @@ def inspect_storage_runtime(
         and route.bucket_id != active.bucket_id
     ):
         issues.append(
-            _readiness_issue(
+            readiness_issue(
                 code=StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH,
             ),
         )

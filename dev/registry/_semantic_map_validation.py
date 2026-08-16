@@ -21,9 +21,9 @@ from cadrumo.domain.calculations.registry import (
     SourceRefId,
 )
 
-from ._m303_variable_envelope import validate_m303_variable_envelope
 from ._record_design_ir import RecordDesignIntermediate, RecordDesignIntermediateField
 from ._semantic_map import SemanticMap, SemanticMapAnchor, SemanticMapEntry, SemanticMapRecord
+from ._variable_envelope import validate_variable_envelope
 
 __all__ = [
     "SemanticMapAnomalyException",
@@ -192,32 +192,32 @@ def _validate_variable_envelope_boundary(
                 "semantic map declares a variable-envelope contract but parser output contains no variable envelope",
             )
         return
-    m303_envelopes = tuple(
-        envelope for envelope in intermediate.variable_envelopes if envelope.record_identity == "DP30300"
-    )
-    if not m303_envelopes:
-        if semantic_map.variable_envelopes:
-            raise RegistryValidationError(
-                "semantic map variable-envelope contracts are only admitted for parser-owned Modelo 303 DP30300",
-            )
-        return
-    if semantic_map.modelo != "303" or len(m303_envelopes) != 1 or len(envelope_keys) != 1:
+    if len(envelope_keys) != 1:
         raise RegistryValidationError(
-            "Modelo 303 variable-envelope authority requires exactly one parser DP30300 envelope",
+            "variable-envelope composition authority admits exactly one parser envelope per design; "
+            f"parser output declares {_format_record_keys(envelope_keys)}",
         )
     if len(semantic_map.variable_envelopes) != 1:
         raise RegistryValidationError(
-            "Modelo 303 DP30300 parser output requires exactly one reviewed variable-envelope semantic contract",
+            f"parser envelope {envelope_keys[0][1]!r} requires exactly one reviewed variable-envelope "
+            f"semantic contract, found {len(semantic_map.variable_envelopes)}",
         )
     semantic = semantic_map.variable_envelopes[0]
+    parser_envelope = intermediate.variable_envelopes[0]
+    if semantic.record_identity != parser_envelope.record_identity:
+        raise RegistryValidationError(
+            f"reviewed variable-envelope contract names {semantic.record_identity!r} but the parser owns "
+            f"{parser_envelope.record_identity!r}",
+        )
     records_by_anchor = {_semantic_record_key(record): record for record in semantic_map.records}
     body_record_ids = tuple(
         records_by_anchor[_intermediate_record_key(sheet.sheet, sheet.record_identity)].export_record_id
         for sheet in intermediate.sheets
     )
-    validate_m303_variable_envelope(
+    validate_variable_envelope(
         semantic,
-        m303_envelopes[0],
+        parser_envelope,
+        modelo=str(semantic_map.modelo),
         source=intermediate.source,
         body_record_ids=body_record_ids,
     )

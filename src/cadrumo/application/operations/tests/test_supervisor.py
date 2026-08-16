@@ -29,6 +29,7 @@ from ....core import STRICT_FROZEN_CONFIG, scan_directory
 from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.classification import SensitivityClass
 from ....core.errors import CoreError, get_registered_error_code
+from ....tests.aeat_literal_fixtures import REDACTION_TOKEN_QUERY_URL_CANARY
 from ....tests.secure_namespace_registration import registered_objects as _registered_objects
 from ....tests.secure_sql import isolated_ephemeral_secure_sql, isolated_runtime_profile
 from .. import (
@@ -93,7 +94,7 @@ _REVIEWED_PROPOSAL_DIGEST = "c" * 64
 _BASELINE_DIGEST = "d" * 64
 _PROPOSED_EFFECT_DIGEST = "e" * 64
 _SENSITIVE_EXCEPTION_DETAIL = (
-    "B12345674 https://sede.agenciatributaria.gob.es/private?token=correct-horse "
+    f"B12345674 {REDACTION_TOKEN_QUERY_URL_CANARY} "
     "C:/Users/operator/private-key.p12 Bearer correct-horse-battery-staple"
 )
 

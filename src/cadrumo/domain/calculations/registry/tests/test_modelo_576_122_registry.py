@@ -1,12 +1,12 @@
-"""Registry foundations for the final UNMODELED tail: 576, 121, 122.
+"""Registry foundations for the final UNMODELED tail: 576, 122.
 
-576 (IEDMT por matriculacion, Orden EHA/3851/2007), 121 (comunicacion de la
-cesion de la deduccion familia numerosa/discapacidad) and 122 (regularizacion de
-la misma) - both Orden HFP/105/2017. The two ordenes were NOT bundled: their
+576 (IEDMT por matriculacion, Orden EHA/3851/2007) and 122 (regularizacion de la
+deduccion por familia numerosa/discapacidad, Orden HFP/105/2017). Neither orden
+was bundled: their
 corpus excerpts were authored from the BOE fetch during this pass, so each legal
-entry carries honest "pending operator re-verification" provenance. All three are
+entry carries honest "pending operator re-verification" provenance. Both are
 grounded WINDOWLESS: 576's plazo is per-matriculacion (delegated to Orden
-EHA/1981/2005) and 121/122 remit to the annual IRPF campaign - none a fixed
+EHA/1981/2005) and 122 remits to the annual IRPF campaign - none a fixed
 calendar window, so no date is fabricated. Scheduling/applicability-grade:
 declaration-header casillas only, no bundled diseno de registro.
 
@@ -45,14 +45,6 @@ _MODELOS = [
         "orden-eha-3851-2007:art-1",
         "BOE-A-2007-22442",
         TaxDomain.IEDMT,
-    ),
-    (
-        "121",
-        "2017-y-siguientes",
-        "orden-hfp-105-2017:art-1",
-        "orden-hfp-105-2017:art-3",
-        "BOE-A-2017-1334",
-        TaxDomain.IRPF,
     ),
     (
         "122",

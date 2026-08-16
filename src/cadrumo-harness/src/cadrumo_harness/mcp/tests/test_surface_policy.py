@@ -18,8 +18,6 @@ from typing import Any, cast
 import anyio
 import pytest
 
-from cadrumo.tests import connected_server_and_client_session as connect
-
 from .._harness_tools import HARNESS_LOAD_TOOL
 from .._surface import (
     SURFACE_ENV_VAR,
@@ -29,6 +27,7 @@ from .._surface import (
     resolve_surface_mode,
 )
 from .._tools import build_tool_descriptors
+from ._session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

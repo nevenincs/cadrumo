@@ -9,6 +9,7 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede import RemoteNotification
+from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ...live import PersistedNotificationsSnapshot
 from .. import OverviewCalendarEvent, OverviewCalendarRange, calendar_events_from_notification_snapshots
 from .. import _calendar_models as _calendar_models
@@ -49,7 +50,7 @@ def test_calendar_dtos_are_publicly_owned_by_models_not_builder_module() -> None
 
 def test_calendar_event_projection_materialises_models_from_their_canonical_owner() -> None:
     """The real persisted-notification projection materialises the canonical event DTO."""
-    source_url = "https://sede.agenciatributaria.gob.es/"
+    source_url = SEDE_ROOT_URL_FIXTURE
     notification = RemoteNotification(
         certificado_id="2596230606601",
         tipo="notificacion",

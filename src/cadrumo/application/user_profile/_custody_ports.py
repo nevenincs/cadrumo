@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Protocol
 from uuid import UUID
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from ...core import ProfileSessionRefusalReason, SecureObjectWrite
     from ...core.classification import SensitivityClass
 
@@ -45,6 +47,20 @@ class ProfileBucketSessionPort(Protocol):
         """Whether the session was opened over the explicitly unsecured backend."""
         ...
 
+    @property
+    def sealed(self) -> bool:
+        """Whether this session has been closed and its key material zeroised.
+
+        Closing zeroises the buffers in place rather than replacing the object,
+        so a holder of a closed session sees something that still names its
+        bucket and still answers every other question truthfully. Without this
+        predicate the application layer could not ask whether a session it
+        holds is spent, and had to infer it from a failure at the point of use
+        -- which is how a retired session came to look identical to a live one
+        to anything deciding whether to keep trusting it.
+        """
+        ...
+
     def touch(self, now: datetime) -> None:
         """Advance the sliding idle deadline."""
         ...
@@ -77,6 +93,18 @@ class ProfileCustodyPasswordMaterialPort(Protocol):
     @property
     def sentinel(self) -> ProfileCustodySentinelPort:
         """The committed DEK sentinel proving an unwrap succeeded."""
+        ...
+
+    @property
+    def capsule_path(self) -> Path:
+        """Where the recognized capsule this material was read from lives.
+
+        The application does not open custody files by path -- the provider
+        owns that -- but it does need to ask whether an OPTIONAL member is
+        present, and the recovery wrapper is the one member whose absence is a
+        legitimate state rather than a fault. Recomputing the location here
+        instead would be a second answer to where a capsule lives.
+        """
         ...
 
 
@@ -231,6 +259,17 @@ class ProfileCustodyEnvelopePort(Protocol):
     password_generation: int
     self_digest: str
     dek_epoch: str
+
+    def canonical_json_bytes(self) -> bytes:
+        """Return the exact committed bytes of this envelope.
+
+        Declared because a rotation must name the envelope it believes it is
+        replacing: the compare-and-swap witness is the digest of these bytes,
+        and computing it from anything else would let a concurrent write slip
+        between the read and the swap. The application still reads no field of
+        the payload -- it forwards the bytes and their digest, both opaque.
+        """
+        ...
 
 
 class ProfileCustodySentinelPort(Protocol):

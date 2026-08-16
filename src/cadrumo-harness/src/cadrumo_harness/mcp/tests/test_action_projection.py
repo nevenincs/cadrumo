@@ -11,16 +11,19 @@ from cadrumo.application.operator_actions import (
     ActionCatalogueEntry,
     build_action_catalogue,
 )
+from cadrumo.application.operator_surface import OperatorSurfaceContractError
 from cadrumo.core.json_contract import Notice
 from cadrumo.entrypoints.cli import (
     VerbInputSchema,
-    build_mcp_action_input_schemas,
     build_verb_input_schemas,
     command_schema_refs,
     is_exposable_command,
-    resolve_mcp_action_capabilities,
 )
 
+from .._action_capabilities import (
+    build_mcp_action_input_schemas,
+    resolve_mcp_action_capabilities,
+)
 from .._server import build_sdk_tools
 from .._tools import build_tool_descriptors
 
@@ -168,7 +171,7 @@ def test_mcp_action_projection_refuses_an_orphan_target_and_insufficient_sources
         )
     )
 
-    with pytest.raises(ValueError, match="orphan action target command identity"):
+    with pytest.raises(OperatorSurfaceContractError, match="orphan action target command identity"):
         resolve_mcp_action_capabilities(
             catalogue=orphan_catalogue,
             command_schemas=refs,
@@ -199,7 +202,7 @@ def test_mcp_action_projection_refuses_an_ambiguous_live_click_path() -> None:
     }
     catalogue = build_action_catalogue((_catalogue_entry("operator.profile.create"),))
 
-    with pytest.raises(ValueError, match="ambiguous reconciled CLI path"):
+    with pytest.raises(OperatorSurfaceContractError, match="ambiguous reconciled CLI path"):
         resolve_mcp_action_capabilities(
             catalogue=catalogue,
             command_schemas=refs,

@@ -56,7 +56,13 @@ def _child_modules(prelude: str = "") -> frozenset[str]:
     )
     import json
 
-    return frozenset(json.loads(completed.stdout))
+    # Validated rather than cast: the child prints its own module table, so a
+    # child that failed differently could print anything, and a bare cast would
+    # let that reach the set comparison as a silently empty or wrong graph.
+    names = json.loads(completed.stdout)
+    assert isinstance(names, list), "the worker child must print a JSON list of module names"
+    assert all(isinstance(name, str) for name in names), "module names must be strings"
+    return frozenset(str(name) for name in names)
 
 
 def test_kdf_worker_child_excludes_the_heavy_persistence_graph() -> None:

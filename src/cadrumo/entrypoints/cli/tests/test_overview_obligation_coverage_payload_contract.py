@@ -35,6 +35,10 @@ from .._overview_rendering import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+#: A profile identifier is a UUIDv4 -- the shape production mints and the only
+#: shape the payload contract accepts.
+_PROFILE_ID = "44450001-0000-4000-8000-000000000001"
+
 
 def _coverage_payload(**overrides: object) -> dict[str, object]:
     payload: dict[str, object] = {
@@ -179,7 +183,7 @@ def test_every_calendar_derived_renderer_retains_coverage() -> None:
         coverage=coverage,
     )
     profile, _, profile_notices = overview_calendar_profile_output(
-        bucket_id="bucket-1",
+        bucket_id=_PROFILE_ID,
         label="Operator",
         cal=calendar,
     )
@@ -210,7 +214,7 @@ def test_every_calendar_derived_renderer_retains_coverage() -> None:
     # channel instead. The structured advised map rides on ``Notice.context``,
     # so nothing about the advisory became unreadable -- it moved surfaces.
     summary = OverviewCalendarProfilePayload.model_validate(profile)
-    assert summary.profile_id == "bucket-1"
+    assert summary.profile_id == _PROFILE_ID
     advised_contexts = [notice.context or {} for notice in profile_notices]
     assert any(context.get("modelo") == item.modelo for item in coverage.advised for context in advised_contexts), (
         f"the profile path must still surface every advised modelo; notices carried {advised_contexts}"

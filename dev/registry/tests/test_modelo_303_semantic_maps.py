@@ -885,15 +885,15 @@ def test_static_declaration_preserves_dp30300_without_instance_values(
         render_profile=epoch.profile,
         render_profile_source_evidence=epoch.source_evidence,
     )
-    declaration = rendered.layout.m303_filing_envelope
+    declaration = rendered.layout.filing_envelope
     assert declaration is not None
 
     assert declaration.source_ref == epoch.source_ref
     assert declaration.source_sha256 == epoch.source_sha256
     assert declaration.body_record_ids == tuple(record.id for record in rendered.layout.records)
     assert sum(field.length for field in declaration.prefix_fields) == _ENVELOPE_PREFIX_LENGTH
-    assert rendered.provenance_manifest.m303_variable_envelope is not None
-    assert rendered.provenance_manifest.m303_variable_envelope.envelope == declaration
+    assert rendered.provenance_manifest.variable_envelope_contract is not None
+    assert rendered.provenance_manifest.variable_envelope_contract.envelope == declaration
 
 
 def test_each_epoch_carries_its_own_map_and_render_profile_identity() -> None:

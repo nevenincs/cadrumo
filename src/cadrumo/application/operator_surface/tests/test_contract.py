@@ -508,19 +508,11 @@ def test_filing_status_filed_is_sole_source_for_filed_token() -> None:
     assert live_family.child == "live"
 
 
-def test_passphrase_family_records_an_owed_capability_rather_than_a_retirement() -> None:
-    """The one family the contract declares as not yet mounted, and why.
+def test_no_family_is_left_declared_unimplemented() -> None:
+    """Custody passphrase rotation shipped; nothing else claims an owed gap.
 
-    Custody passphrase rotation exists at no layer, and its absence is not a
-    ruling. Two things must therefore both stay true: the declaration survives,
-    so the operator surface keeps the record that the capability is owed, and
-    it is marked unmounted, so nothing reads it as an advertised door. Deleting
-    it would assert a retirement nobody decided; marking it MOUNTED would claim
-    a verb the tree does not carry.
-
-    A retired family is neither state -- the global recovery facade left no
-    declaration behind, and this asserts that too, so the two dispositions
-    cannot quietly converge.
+    The global recovery facade left no declaration behind either, so the two
+    dispositions (retired vs. owed-but-unbuilt) do not quietly converge.
     """
     contract = get_operator_surface_contract()
     by_child = {family.child: family for family in contract.command_families}
@@ -530,12 +522,7 @@ def test_passphrase_family_records_an_owed_capability_rather_than_a_retirement()
         for family in contract.command_families
         if family.mount_state is FamilyMountState.DECLARED_UNIMPLEMENTED
     }
-    assert unmounted == {"passphrase"}
-
-    passphrase = by_child["passphrase"]
-    assert passphrase.unimplemented_reason is not None
-    assert "rotation" in passphrase.unimplemented_reason
-    assert "retired" in passphrase.unimplemented_reason
+    assert unmounted == set()
 
     assert "recover" not in by_child
     assert "recovery" not in by_child

@@ -1,0 +1,1387 @@
+[[revisions.2025.export_layouts]]
+id = 'generated-modelo-210-2025-fichero'
+
+[[revisions.2025.export_layouts.records]]
+id = 'm210-autoliquidacion'
+record_type = 'autoliquidacion'
+order = 0
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f001'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f002'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '210'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f003'
+offset = 6
+length = 2
+kind = 'literal'
+literal = '01'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f004'
+offset = 8
+length = 1
+kind = 'literal'
+literal = '>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f005'
+offset = 9
+length = 1
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f006'
+offset = 10
+length = 1
+kind = 'header'
+producer_key = 'irnr.declaracion.tipo'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f007'
+offset = 11
+length = 9
+kind = 'header'
+producer_key = 'irnr.declarante.tax_id'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f008'
+offset = 20
+length = 125
+kind = 'header'
+producer_key = 'irnr.declarante.full_name'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f009'
+offset = 145
+length = 1
+kind = 'header'
+producer_key = 'irnr.declarante.capacity.contribuyente'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f010'
+offset = 146
+length = 1
+kind = 'header'
+producer_key = 'irnr.declarante.capacity.representante'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f011'
+offset = 147
+length = 1
+kind = 'header'
+producer_key = 'irnr.declarante.capacity.pagador'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f012'
+offset = 148
+length = 1
+kind = 'header'
+producer_key = 'irnr.declarante.capacity.depositario'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f013'
+offset = 149
+length = 1
+kind = 'header'
+producer_key = 'irnr.declarante.capacity.gestor'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f014'
+offset = 150
+length = 1
+kind = 'header'
+producer_key = 'irnr.declarante.capacity.retenedor'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f015'
+offset = 151
+length = 1
+kind = 'header'
+producer_key = 'irnr.devengo.agrupacion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'orden-eha-3316-2010:art-2',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f016'
+offset = 152
+length = 2
+kind = 'draft'
+draft_attribute = 'period_code'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f017'
+offset = 154
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f018'
+offset = 158
+length = 8
+kind = 'header'
+producer_key = 'irnr.devengo.fecha_devengo'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'ddmmaaaa'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f019'
+offset = 166
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo_renta'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f020'
+offset = 168
+length = 3
+kind = 'header'
+producer_key = 'irnr.renta.clave_divisa'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f021'
+offset = 171
+length = 9
+kind = 'header'
+producer_key = 'irnr.contribuyente.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f022'
+offset = 180
+length = 1
+kind = 'header'
+producer_key = 'irnr.contribuyente.person_type'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f023'
+offset = 181
+length = 125
+kind = 'header'
+producer_key = 'irnr.contribuyente.full_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f024'
+offset = 306
+length = 15
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f025'
+offset = 321
+length = 8
+kind = 'header'
+producer_key = 'irnr.contribuyente.birth_date'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'ddmmaaaa'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f026'
+offset = 329
+length = 30
+kind = 'header'
+producer_key = 'irnr.contribuyente.birth_city'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f027'
+offset = 359
+length = 2
+kind = 'header'
+producer_key = 'irnr.contribuyente.birth_country_code'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f028'
+offset = 361
+length = 2
+kind = 'header'
+producer_key = 'irnr.contribuyente.tax_residence_country_code'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f029'
+offset = 363
+length = 50
+kind = 'header'
+producer_key = 'irnr.contribuyente.foreign_address.street'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f030'
+offset = 413
+length = 40
+kind = 'header'
+producer_key = 'irnr.contribuyente.foreign_address.complement'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f031'
+offset = 453
+length = 30
+kind = 'header'
+producer_key = 'irnr.contribuyente.foreign_address.city'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f032'
+offset = 483
+length = 100
+kind = 'header'
+producer_key = 'irnr.contribuyente.foreign_address.email'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f033'
+offset = 583
+length = 10
+kind = 'header'
+producer_key = 'irnr.contribuyente.foreign_address.postal_code'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f034'
+offset = 593
+length = 30
+kind = 'header'
+producer_key = 'irnr.contribuyente.foreign_address.region'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f035'
+offset = 623
+length = 2
+kind = 'header'
+producer_key = 'irnr.contribuyente.foreign_address.country_code'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f036'
+offset = 625
+length = 15
+kind = 'header'
+producer_key = 'irnr.contribuyente.foreign_address.phone'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f037'
+offset = 640
+length = 15
+kind = 'header'
+producer_key = 'irnr.contribuyente.foreign_address.mobile_phone'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f038'
+offset = 655
+length = 15
+kind = 'header'
+producer_key = 'irnr.contribuyente.foreign_address.fax'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f039'
+offset = 670
+length = 9
+kind = 'header'
+producer_key = 'irnr.representante.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f040'
+offset = 679
+length = 1
+kind = 'header'
+producer_key = 'irnr.representante.person_type'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f041'
+offset = 680
+length = 125
+kind = 'header'
+producer_key = 'irnr.representante.full_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f042'
+offset = 805
+length = 1
+kind = 'header'
+producer_key = 'irnr.representante.appointment_kind'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f043'
+offset = 806
+length = 5
+kind = 'header'
+producer_key = 'irnr.representante.domicilio.tipo_via'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f044'
+offset = 811
+length = 50
+kind = 'header'
+producer_key = 'irnr.representante.domicilio.nombre_via'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f045'
+offset = 861
+length = 3
+kind = 'header'
+producer_key = 'irnr.representante.domicilio.tipo_numeracion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f046'
+offset = 864
+length = 5
+kind = 'header'
+producer_key = 'irnr.representante.domicilio.numero_casa'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f047'
+offset = 869
+length = 3
+kind = 'header'
+producer_key = 'irnr.representante.domicilio.calificador_numero'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f048'
+offset = 872
+length = 3
+kind = 'header'
+producer_key = 'irnr.representante.domicilio.bloque'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f049'
+offset = 875
+length = 3
+kind = 'header'
+producer_key = 'irnr.representante.domicilio.portal'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f050'
+offset = 878
+length = 3
+kind = 'header'
+producer_key = 'irnr.representante.domicilio.escalera'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f051'
+offset = 881
+length = 3
+kind = 'header'
+producer_key = 'irnr.representante.domicilio.planta'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f052'
+offset = 884
+length = 3
+kind = 'header'
+producer_key = 'irnr.representante.domicilio.puerta'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f053'
+offset = 887
+length = 40
+kind = 'header'
+producer_key = 'irnr.representante.domicilio.datos_complementarios'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f054'
+offset = 927
+length = 30
+kind = 'header'
+producer_key = 'irnr.representante.domicilio.localidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f055'
+offset = 957
+length = 5
+kind = 'header'
+producer_key = 'irnr.representante.domicilio.codigo_postal'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f056'
+offset = 962
+length = 30
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f057'
+offset = 992
+length = 5
+kind = 'header'
+producer_key = 'irnr.representante.domicilio.codigo_ine_municipio'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f058'
+offset = 997
+length = 2
+kind = 'header'
+producer_key = 'irnr.representante.domicilio.codigo_provincia'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f059'
+offset = 999
+length = 9
+kind = 'header'
+producer_key = 'irnr.representante.phone'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f060'
+offset = 1008
+length = 9
+kind = 'header'
+producer_key = 'irnr.representante.mobile_phone'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f061'
+offset = 1017
+length = 9
+kind = 'header'
+producer_key = 'irnr.representante.fax'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3316-2010:art-1',
+    'trlirnr-rdleg-5-2004:art-10',
+]
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f062'
+offset = 1026
+length = 9
+kind = 'header'
+producer_key = 'irnr.pagador.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f063'
+offset = 1035
+length = 1
+kind = 'header'
+producer_key = 'irnr.pagador.person_type'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f064'
+offset = 1036
+length = 125
+kind = 'header'
+producer_key = 'irnr.pagador.full_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f065'
+offset = 1161
+length = 5
+kind = 'header'
+producer_key = 'irnr.inmueble.situacion.tipo_via'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f066'
+offset = 1166
+length = 50
+kind = 'header'
+producer_key = 'irnr.inmueble.situacion.nombre_via'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f067'
+offset = 1216
+length = 3
+kind = 'header'
+producer_key = 'irnr.inmueble.situacion.tipo_numeracion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f068'
+offset = 1219
+length = 5
+kind = 'header'
+producer_key = 'irnr.inmueble.situacion.numero_casa'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f069'
+offset = 1224
+length = 3
+kind = 'header'
+producer_key = 'irnr.inmueble.situacion.calificador_numero'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f070'
+offset = 1227
+length = 3
+kind = 'header'
+producer_key = 'irnr.inmueble.situacion.bloque'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f071'
+offset = 1230
+length = 3
+kind = 'header'
+producer_key = 'irnr.inmueble.situacion.portal'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f072'
+offset = 1233
+length = 3
+kind = 'header'
+producer_key = 'irnr.inmueble.situacion.escalera'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f073'
+offset = 1236
+length = 3
+kind = 'header'
+producer_key = 'irnr.inmueble.situacion.planta'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f074'
+offset = 1239
+length = 3
+kind = 'header'
+producer_key = 'irnr.inmueble.situacion.puerta'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f075'
+offset = 1242
+length = 40
+kind = 'header'
+producer_key = 'irnr.inmueble.situacion.datos_complementarios'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f076'
+offset = 1282
+length = 30
+kind = 'header'
+producer_key = 'irnr.inmueble.situacion.localidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f077'
+offset = 1312
+length = 5
+kind = 'header'
+producer_key = 'irnr.inmueble.situacion.codigo_postal'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f078'
+offset = 1317
+length = 30
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f079'
+offset = 1347
+length = 5
+kind = 'header'
+producer_key = 'irnr.inmueble.situacion.codigo_ine_municipio'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f080'
+offset = 1352
+length = 2
+kind = 'header'
+producer_key = 'irnr.inmueble.situacion.codigo_provincia'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f081'
+offset = 1354
+length = 20
+kind = 'header'
+producer_key = 'irnr.inmueble.referencia_catastral'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f082'
+offset = 1374
+length = 17
+kind = 'casilla'
+casilla_id = 'base_imponible_directa_i'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f083'
+offset = 1391
+length = 17
+kind = 'casilla'
+casilla_id = 'rendimientos_integros'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f084'
+offset = 1408
+length = 17
+kind = 'casilla'
+casilla_id = 'exencion_dividendos'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f085'
+offset = 1425
+length = 17
+kind = 'casilla'
+casilla_id = 'gastos_deducibles'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f086'
+offset = 1442
+length = 17
+kind = 'casilla'
+casilla_id = 'base_imponible'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f087'
+offset = 1459
+length = 1
+kind = 'header'
+producer_key = 'irnr.ganancia_inmobiliaria.titularidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f088'
+offset = 1460
+length = 5
+kind = 'header'
+producer_key = 'irnr.ganancia_inmobiliaria.cuota_participacion_contribuyente'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f089'
+offset = 1465
+length = 5
+kind = 'header'
+producer_key = 'irnr.ganancia_inmobiliaria.cuota_participacion_conyuge'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f090'
+offset = 1470
+length = 9
+kind = 'header'
+producer_key = 'irnr.ganancia_inmobiliaria.conyuge_tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f091'
+offset = 1479
+length = 40
+kind = 'header'
+producer_key = 'irnr.ganancia_inmobiliaria.conyuge_full_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[[revisions.2025.export_layouts.records.fields]]
+id = 'm210-2022.pagina01.f092'
+offset = 1519
+length = 17
+kind = 'casilla'
+casilla_id = 'ganancia_valor_transmision'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3316-2010:art-1']
+source_refs = ['aeat-dr-210-2022']
+
+[revisions.2025.export_layouts.records.row_field_casilla_ids]

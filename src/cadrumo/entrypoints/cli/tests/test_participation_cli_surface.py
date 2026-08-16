@@ -118,8 +118,9 @@ def test_participation_rebuild_dispatches_not_swallowed_as_id(tmp_path: Path) ->
     subcommand name to its command. Asserts the rebuild action runs to a
     success exit (the typed rebuild counts), never the hex-validation failure.
     """
-    bucket_id = "participation-cli-rebuild"
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
+    bucket_id = "44440001-0000-4000-8000-000000000001"
+    bucket_label = "participation rebuild"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id, label=bucket_label):
         result = _invoke_participation("rebuild")
 
     assert result.exit_code == 0, result.output
@@ -135,8 +136,9 @@ def test_participation_lookup_still_works_for_transaction_id(tmp_path: Path) -> 
     untracked transaction), proving the reserved-name guard does not divert
     genuine lookup ids.
     """
-    bucket_id = "participation-cli-lookup"
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
+    bucket_id = "44440002-0000-4000-8000-000000000002"
+    bucket_label = "participation lookup"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id, label=bucket_label):
         transaction_id = _seed_transaction_id()
         result = _invoke_participation(transaction_id)
 
@@ -160,9 +162,10 @@ def test_participation_payload_schema_shape() -> None:
 
 def test_get_transaction_participation_reads_real_index(tmp_path: Path) -> None:
     """The read action returns the persisted participations for a transaction."""
-    bucket_id = "participation-cli-read"
+    bucket_id = "44440003-0000-4000-8000-000000000003"
+    bucket_label = "participation read"
     transaction_id = "a" * 64
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id, label=bucket_label):
         repo = TransactionParticipationIndexRepository(bucket_id=bucket_id)
         index = TransactionRevisionParticipationIndex(
             transaction_id=transaction_id,
@@ -191,8 +194,9 @@ def test_get_transaction_participation_reads_real_index(tmp_path: Path) -> None:
 
 def test_get_transaction_participation_empty_for_unknown(tmp_path: Path) -> None:
     """A transaction with no finalized participation returns an empty index, not an error."""
-    bucket_id = "participation-cli-read-empty"
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
+    bucket_id = "44440004-0000-4000-8000-000000000004"
+    bucket_label = "participation read empty"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id, label=bucket_label):
         loaded = get_transaction_participation(transaction_id="9" * 64, bucket_id=bucket_id)
 
     assert loaded.participations == ()

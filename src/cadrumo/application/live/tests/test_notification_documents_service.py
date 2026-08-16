@@ -41,6 +41,7 @@ from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.crypto import encrypt_secure_object_payload
 from ....core.i18n import tr
 from ....domain.attachments import Attachment, AttachmentKind
+from ....tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
 from ....tests.secure_sql import isolated_runtime_profile
 from .._errors import LiveApplicationInputError
 from .._notification_documents import (
@@ -353,7 +354,7 @@ def test_a_re_store_changing_a_caller_supplied_field_refuses_rather_than_droppin
     without a word, so the match covers every caller-supplied field and this
     one refuses.
     """
-    other_url = "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/DetalleSede?ncc=2699101808461&v=2"
+    other_url = f"{NOTIFICATION_DETALLE_SEDE_URL_FIXTURE}?ncc=2699101808461&v=2"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         store = _RecordingAttachmentStore()
         service = build_service(attachment_store=store)

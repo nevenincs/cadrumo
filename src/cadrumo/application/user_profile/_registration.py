@@ -28,6 +28,7 @@ See Also:
 from __future__ import annotations
 
 from base64 import b64encode
+from contextlib import ExitStack
 from datetime import UTC, datetime
 from secrets import token_bytes
 from typing import TYPE_CHECKING, Final
@@ -46,10 +47,14 @@ from ._capsule_record import ProfileRecordSession
 from ._custody_service import ProfileCustodyDisplacedSessionRetirementError
 from ._custody_transactions import ProfileCustodyTransactionConflictError
 from ._lifecycle import ProfileCapsuleLifecycle
+from ._recovery_custody import enroll_profile_recovery
 from ._validation import reject_invalid_profile_facts
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from ...domain.user_profile import UserProfileFact
+    from ._recovery_custody import ProfileRecoveryEnrollment
 
 
 PASSPHRASE_MINIMUM_LENGTH: Final[int] = NIST_PASSPHRASE_MIN_LENGTH
@@ -104,6 +109,15 @@ class ProfileRegistrationOutcome(BaseModel):
     bucket_id: BucketId
     label: str
     setup_state: ProfileSetupState
+    recovery_enrolled: bool
+    """Whether this profile was published carrying a recovery wrapper.
+
+    Not a courtesy field. Recovery can only be installed while the capsule is
+    being published, so "not enrolled" is permanent for this profile, and a
+    surface that does not tell the operator has silently spent their only
+    chance. It carries no secret -- the 24 words never reach this model -- so
+    it is safe on every envelope the flag is meant to be reported on.
+    """
 
 
 def assess_passphrase(candidate: str) -> PassphraseAssessment:
@@ -125,12 +139,22 @@ def register_profile_with_credentials(
     label: str,
     passphrase: str,
     facts: tuple[UserProfileFact, ...] = (),
+    recovery_handover: Callable[[ProfileRecoveryEnrollment], None] | None = None,
 ) -> ProfileRegistrationOutcome:
     """Create a profile from a label and a passphrase, and unlock it.
 
     The profile is born :attr:`ProfileSetupState.INCOMPLETE`: it is a
     real, writable record from this moment, and the operator completes it
     afterwards against a live profile rather than through a gated wizard.
+
+    Recovery enrollment happens HERE or never. A committed capsule has no
+    in-place installation path for a second wrapper, so the recovery envelope
+    has to be minted before the create transaction and published with the
+    capsule; the mint is placed ahead of the transaction for that reason and
+    because a failure there must leave no profile behind rather than half of
+    one. It is deliberately not best-effort the way the trailing filing and
+    legal-hold snapshots are: those record a fact ABOUT a published capsule,
+    while this changes what gets published.
 
     Args:
         label: Operator-chosen display name. Must be non-blank and must not
@@ -140,6 +164,28 @@ def register_profile_with_credentials(
             for the duration of the create span.
         facts: Optional initial facts. Empty by default — the whole point of
             this door is that a profile needs no tax data to exist.
+        recovery_handover: The channel the 24 words reach the operator
+            through, and the only one — they never touch the returned model,
+            an envelope, or a log. Supplying it enrolls recovery; omitting it
+            mints no wrapper AT ALL, and :attr:`recovery_enrolled` on the
+            result says which happened, so no surface can leave an operator
+            unaware that their one chance has passed.
+
+            Minting without a channel would be the worse failure rather than
+            the safer one: the words would be wiped unshown, leaving a second
+            wrapped copy of the DEK in the capsule that nobody can ever open —
+            attack surface with no recovery value. The portable artifact does
+            not rescue that case either, because the artifact is unwrapped BY
+            the mnemonic; file and phrase are one door, not two.
+
+            The callback is invoked once, BEFORE the capsule is published,
+            and the key is wiped by the time this returns — so a caller that
+            needs the operator to copy the words down must do that INSIDE the
+            call rather than retaining the enrollment past it. Raising from
+            the callback is the sanctioned way to report a channel that could
+            not deliver: it aborts the creation, so no profile is left holding
+            a wrapper nobody received. A caller with no interactive terminal
+            should pass no handover at all rather than one that will refuse.
 
     Returns:
         A :class:`ProfileRegistrationOutcome` for the newly-live profile.
@@ -171,11 +217,12 @@ def register_profile_with_credentials(
 
     identity = UUID(new_profile_id())
     dek = token_bytes(32)
+    dek_epoch = b64encode(token_bytes(16)).decode("ascii")
     custody_material = create_profile_custody_registration_material(
         profile_id=identity,
         password=passphrase,
         dek=dek,
-        dek_epoch=b64encode(token_bytes(16)).decode("ascii"),
+        dek_epoch=dek_epoch,
         salt=token_bytes(16),
     )
     envelope = custody_material.envelope
@@ -186,79 +233,108 @@ def register_profile_with_credentials(
     # value is not, and refusing them only on later edits would let the create
     # door plant exactly what every edit afterwards is forbidden to write.
     reject_invalid_profile_facts(str(identity), facts, require_complete=False)
-    try:
+    with ExitStack() as recovery_scope:
+        # Minted ahead of the transaction, and entered on the scope so the
+        # 24 words are zeroised on every exit -- the successful one, the
+        # refused one, and the one where the handover itself raises.
+        enrollment: ProfileRecoveryEnrollment | None = None
+        if recovery_handover is not None:
+            enrollment = enroll_profile_recovery(profile_id=identity, dek=dek, dek_epoch=dek_epoch)
+            recovery_scope.enter_context(enrollment.recovery_key)
+            # Delivered BEFORE the capsule is published, and the ordering is
+            # the whole safety property. A channel can fail at the moment of
+            # writing rather than when it is chosen -- a detached process is
+            # handed a fresh console, so the device opens and the write lands
+            # on a surface nobody will ever see. Publishing first and
+            # discovering that second would leave a live profile carrying a
+            # recovery wrapper whose only key went nowhere: enrolled, reported
+            # enrolled, and permanently unopenable, with no second chance
+            # because a committed capsule cannot be enrolled afterwards.
+            #
+            # Delivering first inverts which way a failure falls. A refused
+            # channel now aborts creation outright, so there is no profile and
+            # no orphaned wrapper. The residual cost is the mirror case -- the
+            # operator copies down 24 words and the create transaction then
+            # refuses -- which leaves them holding a phrase for a profile that
+            # does not exist. That is discardable and it is visible, which the
+            # undeliverable-wrapper state is neither.
+            recovery_handover(enrollment)
+
         try:
-            ProfileCapsuleLifecycle().create(
-                label=resolved_label,
-                profile_id=identity,
-                password_envelope=envelope,
-                sentinel=sentinel,
-                data_files={},
-                initial_record=UserProfileRecord(
-                    profile_id=str(identity),
-                    facts=facts,
-                    setup_state=ProfileSetupState.INCOMPLETE,
-                ),
-                record_session=session,
-            )
-        except ProfileCustodyDisplacedSessionRetirementError as exc:
-            # Creating a profile displaces whichever one the pointer named, and
-            # the create transaction voids that profile's stored session before
-            # it moves the pointer. When that removal cannot complete the
-            # transaction refuses with the pointer untouched -- correct, but
-            # indistinguishable from a label collision unless it is caught
-            # ahead of one, and telling the operator their brand-new label is
-            # taken would send them to rename a profile that is not the problem.
-            raise ProfileRegistrationError(
-                translated_message="application.user_profile.errors.registration_displaced_session_not_retired",
-            ) from exc
-        except ProfileCustodyTransactionConflictError as exc:
-            raise ProfileRegistrationError(
-                translated_message="application.user_profile.errors.profile_already_exists",
-                context={"profile": resolved_label},
-            ) from exc
-    finally:
-        session.close()
+            try:
+                ProfileCapsuleLifecycle().create(
+                    label=resolved_label,
+                    profile_id=identity,
+                    password_envelope=envelope,
+                    sentinel=sentinel,
+                    data_files={},
+                    initial_record=UserProfileRecord(
+                        profile_id=str(identity),
+                        facts=facts,
+                        setup_state=ProfileSetupState.INCOMPLETE,
+                    ),
+                    record_session=session,
+                    recovery_envelope=None if enrollment is None else enrollment.envelope,
+                )
+            except ProfileCustodyDisplacedSessionRetirementError as exc:
+                # Creating a profile displaces whichever one the pointer named, and
+                # the create transaction voids that profile's stored session before
+                # it moves the pointer. When that removal cannot complete the
+                # transaction refuses with the pointer untouched -- correct, but
+                # indistinguishable from a label collision unless it is caught
+                # ahead of one, and telling the operator their brand-new label is
+                # taken would send them to rename a profile that is not the problem.
+                raise ProfileRegistrationError(
+                    translated_message="application.user_profile.errors.registration_displaced_session_not_retired",
+                ) from exc
+            except ProfileCustodyTransactionConflictError as exc:
+                raise ProfileRegistrationError(
+                    translated_message="application.user_profile.errors.profile_already_exists",
+                    context={"profile": resolved_label},
+                ) from exc
+        finally:
+            session.close()
 
-    # Record that this profile has filed NOTHING, rather than leaving the fact
-    # absent. The two states are not the same: an empty recorded snapshot says
-    # the filing owner was asked and answered, while an absent one says nobody
-    # asked -- and the retention assessment refuses on absence, so without this
-    # a brand-new profile and one whose snapshot write failed are
-    # indistinguishable and both block deletion for the same opaque reason.
-    #
-    # Best-effort by the same asymmetry that governs the filing-time write: a
-    # registration REFUSED because a deletion-support record could not be
-    # written is worse than a profile whose snapshot is missing, which merely
-    # fails closed later.
-    try_record_filing_retention_snapshot(
-        bucket_id=str(identity),
-        records=(),
-        observed_at=datetime.now(UTC),
-    )
+        # Record that this profile has filed NOTHING, rather than leaving the fact
+        # absent. The two states are not the same: an empty recorded snapshot says
+        # the filing owner was asked and answered, while an absent one says nobody
+        # asked -- and the retention assessment refuses on absence, so without this
+        # a brand-new profile and one whose snapshot write failed are
+        # indistinguishable and both block deletion for the same opaque reason.
+        #
+        # Best-effort by the same asymmetry that governs the filing-time write: a
+        # registration REFUSED because a deletion-support record could not be
+        # written is worse than a profile whose snapshot is missing, which merely
+        # fails closed later.
+        try_record_filing_retention_snapshot(
+            bucket_id=str(identity),
+            records=(),
+            observed_at=datetime.now(UTC),
+        )
 
-    # Record that this profile has zero known open legal cases, for the same
-    # reason and the same best-effort asymmetry as the filing snapshot above.
-    # A profile at this instant has no filings and no captured AEAT
-    # expedientes -- there is nothing yet for an outside legal hold to be a
-    # hold ON, so "zero known cases" is a fact about a brand-new profile
-    # rather than an assumption of clearance. It is NOT a standing answer for
-    # this profile's later life: a genuinely external hold arising afterwards
-    # is unknowable to this system until something (a future expedientes
-    # capture, an operator affirmation) records it, and until it does the
-    # deletion preflight keeps reading this recorded fact.
-    try_record_legal_hold_snapshot(
-        bucket_id=str(identity),
-        open_case_ids=(),
-        observed_at=datetime.now(UTC),
-    )
+        # Record that this profile has zero known open legal cases, for the same
+        # reason and the same best-effort asymmetry as the filing snapshot above.
+        # A profile at this instant has no filings and no captured AEAT
+        # expedientes -- there is nothing yet for an outside legal hold to be a
+        # hold ON, so "zero known cases" is a fact about a brand-new profile
+        # rather than an assumption of clearance. It is NOT a standing answer for
+        # this profile's later life: a genuinely external hold arising afterwards
+        # is unknowable to this system until something (a future expedientes
+        # capture, an operator affirmation) records it, and until it does the
+        # deletion preflight keeps reading this recorded fact.
+        try_record_legal_hold_snapshot(
+            bucket_id=str(identity),
+            open_case_ids=(),
+            observed_at=datetime.now(UTC),
+        )
 
-    return ProfileRegistrationOutcome(
-        profile_id=str(identity),
-        bucket_id=str(identity),
-        label=resolved_label,
-        setup_state=ProfileSetupState.INCOMPLETE,
-    )
+        return ProfileRegistrationOutcome(
+            profile_id=str(identity),
+            bucket_id=str(identity),
+            label=resolved_label,
+            setup_state=ProfileSetupState.INCOMPLETE,
+            recovery_enrolled=enrollment is not None,
+        )
 
 
 __all__ = [

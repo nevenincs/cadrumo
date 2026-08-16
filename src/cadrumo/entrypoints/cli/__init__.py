@@ -1243,7 +1243,6 @@ _VERB_INPUT_SCHEMA_EXPORTS: frozenset[str] = frozenset(
     {
         "DECLARED_UNIMPLEMENTED_SURFACES",
         "JsonType",
-        "McpActionCapability",
         "ResolvedVerbLeaf",
         "SchemaResolutionError",
         "VerbInputSchema",
@@ -1252,11 +1251,9 @@ _VERB_INPUT_SCHEMA_EXPORTS: frozenset[str] = frozenset(
         "VerbParamKind",
         "VerbParameter",
         "assert_schema_coverage",
-        "build_mcp_action_input_schemas",
         "build_verb_input_schemas",
         "cli_argv_for",
         "is_exposable_command",
-        "resolve_mcp_action_capabilities",
     }
 )
 
@@ -1423,7 +1420,6 @@ __all__ = [
     "DECLARED_UNIMPLEMENTED_SURFACES",
     "AppRootResult",
     "JsonType",
-    "McpActionCapability",
     "OAuthClientPayload",
     "ResolvedVerbLeaf",
     "RootStatusResult",
@@ -1435,7 +1431,6 @@ __all__ = [
     "VerbParameter",
     "app",
     "assert_schema_coverage",
-    "build_mcp_action_input_schemas",
     "build_verb_input_schemas",
     "calculation_revision_lines",
     "calculation_revision_payload",
@@ -1445,5 +1440,4 @@ __all__ = [
     "is_exposable_command",
     "main",
     "resolve_cli_precondition_action",
-    "resolve_mcp_action_capabilities",
 ]

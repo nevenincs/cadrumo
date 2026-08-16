@@ -52,7 +52,7 @@ import typer._click.types
 from pydantic import BaseModel, ValidationError
 from pydantic_core import ErrorDetails
 
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
+from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, Modelo
 from ...core.flows import CheckpointAvailability, FlowMode
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ..flows import (
@@ -1448,7 +1448,7 @@ def profile_next_step_modelo(profile_values: dict[str, str]) -> str | None:
     """
     fiscal_residency = profile_values.get("taxpayer_type.fiscal_residency", "").strip().lower()
     if fiscal_residency == "non_resident_irnr":
-        return "210"
+        return Modelo.M210.value
     return None
 
 

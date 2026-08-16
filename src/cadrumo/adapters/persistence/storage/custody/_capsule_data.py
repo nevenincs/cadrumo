@@ -169,26 +169,66 @@ def replace_data_file(
         raise ProfileCustodyRecordError("profile record command cannot replace the DEK sentinel")
     if len(payload) > PROFILE_CUSTODY_DATA_FILE_MAX_BYTES:
         raise ProfileCustodyRecordError("profile record command exceeds the data-file byte limit")
-    target = data_root.joinpath(*relative_path.parts)
     with ExitStack() as anchors:
         current = data_root
         for component in relative_path.parts[:-1]:
             current = current / component
             anchor_directory(anchors, current)
-        existing = read_regular_file(
-            target,
+        replace_capsule_file(
+            current,
+            relative_path.name,
+            payload,
+            expected_sha256=expected_sha256,
             maximum_bytes=PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
-            trace=[],
         )
-        if prefixed_digest(existing) != expected_sha256:
-            raise ProfileCustodyRecordError("profile record compare-and-swap witness is stale")
-        replacement = current / f".{relative_path.name}.replace-{uuid4().hex}"
-        write_exclusive_fsynced(replacement, payload)
-        try:
-            os.replace(replacement, target)
-        except OSError as exc:
-            raise ProfileCustodyRecordError("profile record replacement could not be published") from exc
-        fsync_directory(current)
+
+
+def replace_capsule_file(
+    directory: Path,
+    filename: str,
+    payload: bytes,
+    *,
+    expected_sha256: str,
+    maximum_bytes: int,
+) -> None:
+    """Compare-and-swap one already-present regular file inside a committed capsule.
+
+    The single writer for every in-place capsule replacement, so the members of
+    a published capsule cannot come to be mutated by two write paths with
+    different guarantees. Callers hold their capsule lifecycle lock, anchor the
+    directory's identity, and supply the digest of the exact authenticated
+    bytes their command read.
+
+    The digest is a compare-and-swap witness rather than a checksum: if the
+    current bytes are not the ones the caller authenticated, the mutation is
+    refused outright rather than overwriting a concurrent writer's work. The
+    publication is a same-directory rename over a temporary the writer created
+    exclusively, then a directory fsync -- so a crash leaves either the old
+    member or the new one, never a torn file.
+
+    Args:
+        directory: The already-anchored directory holding the member.
+        filename: The member's name within ``directory``. One component; path
+            traversal is the caller's grammar to validate before arriving here.
+        payload: The replacement bytes.
+        expected_sha256: Prefixed digest of the bytes being replaced.
+        maximum_bytes: The member's own bounded-read ceiling.
+
+    Raises:
+        ProfileCustodyRecordError: When the witness is stale or the replacement
+            cannot be published.
+    """
+    target = directory / filename
+    existing = read_regular_file(target, maximum_bytes=maximum_bytes, trace=[])
+    if prefixed_digest(existing) != expected_sha256:
+        raise ProfileCustodyRecordError("profile record compare-and-swap witness is stale")
+    replacement = directory / f".{filename}.replace-{uuid4().hex}"
+    write_exclusive_fsynced(replacement, payload)
+    try:
+        os.replace(replacement, target)
+    except OSError as exc:
+        raise ProfileCustodyRecordError("profile record replacement could not be published") from exc
+    fsync_directory(directory)
 
 
 def validate_committed_data_member(relative_name: str, *, maximum_bytes: int) -> tuple[str, ...]:

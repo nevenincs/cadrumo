@@ -47,7 +47,7 @@ def test_canonical_catalogue_resolves_against_real_live_command_and_input_schema
                 ),
                 mounted_family=None,
                 profile_policy=None,
-                mcp_exposure=None,
+                surface_exposure=None,
                 exclusions=(),
             )
             for command_key, input_schema in sorted(input_schemas.items())

@@ -30,6 +30,7 @@ from ..runtime_repository import (
 )
 from ..sql import SecureObjectRepository
 from ..sql.secure_objects import SecureObjectWrite
+from .registered_bucket import publish_registration_capsule
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -43,6 +44,20 @@ _PRIVATE_BUCKET_ID = "80bc7e0d-f9dd-4be7-afc6-71d192074647"
 
 def _settings_for_bucket(root: Path, bucket_id: str) -> Settings:
     return Settings(cadrumo_local_storage_root=root, cadrumo_active_profile=bucket_id)
+
+
+def _registered_settings(root: Path, bucket_id: str, *also: str) -> Settings:
+    """Return settings for ``bucket_id`` after registering every named bucket.
+
+    Tests below open a real engine inside the bucket root, and the engine
+    refuses to bring that root into existence: a bucket exists only once its
+    profile capsule is published. Registration here is that publication, so
+    these tests exercise the same directory the operator's profile occupies
+    rather than one a fixture conjured.
+    """
+    for identity in (bucket_id, *also):
+        publish_registration_capsule(root, identity)
+    return _settings_for_bucket(root, bucket_id)
 
 
 def _session(
@@ -229,7 +244,7 @@ def test_named_bucket_runtime_rejects_blank_bucket_with_localized_validation(tmp
 
 
 def test_runtime_creates_bucket_attached_secure_object_repository(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
+    settings = _registered_settings(tmp_path, _BUCKET_A_ID)
 
     with (
         override_settings(
@@ -267,7 +282,7 @@ def test_runtime_creates_bucket_attached_secure_object_repository(tmp_path: Path
 
 
 def test_runtime_repository_rejects_unregistered_namespace_writes(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
+    settings = _registered_settings(tmp_path, _BUCKET_A_ID)
     namespace = "cadrumo-test.runtime.unregistered"
 
     with (
@@ -294,7 +309,7 @@ def test_runtime_repository_rejects_unregistered_namespace_writes(tmp_path: Path
 
 
 def test_runtime_bound_repository_refuses_write_after_session_bucket_changes(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
+    settings = _registered_settings(tmp_path, _BUCKET_A_ID)
     namespace = WORKFLOW_STATE_NAMESPACE.namespace
     object_key = "stale-session-write"
 
@@ -329,7 +344,7 @@ def test_runtime_bound_repository_refuses_write_after_session_bucket_changes(tmp
 
 
 def test_runtime_bound_repository_refuses_raw_key_write_after_session_bucket_changes(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
+    settings = _registered_settings(tmp_path, _BUCKET_A_ID)
     namespace = WORKFLOW_STATE_NAMESPACE.namespace
     hashed_object_key = b"h" * 32
 
@@ -359,7 +374,7 @@ def test_runtime_bound_repository_refuses_raw_key_write_after_session_bucket_cha
 
 
 def test_runtime_bound_repository_refuses_write_after_session_becomes_unsecured(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
+    settings = _registered_settings(tmp_path, _BUCKET_A_ID)
     namespace = WORKFLOW_STATE_NAMESPACE.namespace
     object_key = "unsecured-session-write"
 
@@ -394,7 +409,7 @@ def test_runtime_bound_repository_refuses_write_after_session_becomes_unsecured(
 
 
 def test_runtime_bound_repository_refuses_quarantine_after_session_bucket_changes(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
+    settings = _registered_settings(tmp_path, _BUCKET_A_ID)
     namespace = WORKFLOW_STATE_NAMESPACE.namespace
     # The workflow-state namespace is a singleton addressed only by its
     # declared key; this test is about the session-bucket-change refusal,
@@ -435,7 +450,7 @@ def test_runtime_bound_repository_refuses_quarantine_after_session_bucket_change
 
 
 def test_runtime_bound_repository_refuses_diagnostics_after_session_bucket_changes(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
+    settings = _registered_settings(tmp_path, _BUCKET_A_ID)
     namespace = WORKFLOW_STATE_NAMESPACE.namespace
     # The workflow-state namespace is a singleton addressed only by its
     # declared key; this test is about the session-bucket-change refusal,

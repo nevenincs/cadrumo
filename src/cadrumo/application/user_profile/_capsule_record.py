@@ -352,6 +352,69 @@ class ProfileRecordStore:
                 raise ProfileRecordIntegrityError("profile record replacement did not persist its authenticated value")
             return persisted.record
 
+    def rehead_under_rotated_envelope(
+        self,
+        *,
+        rotated: ProfileRecordSession,
+        event: ProfileRecordCommandEvent,
+    ) -> UserProfileRecord:
+        """Re-publish the current row's witness under a re-wrapped envelope.
+
+        A passphrase rotation re-mints the password envelope over the SAME
+        data key. The row's ``write_provenance`` folds the envelope digest and
+        the password generation, so after the swap the stored witness names a
+        wrapper that no longer exists and every read refuses. Nothing about
+        the RECORD changed, but its custody witness must.
+
+        Read and write use different sessions on purpose, and that asymmetry
+        is the whole method: the stored row can only be authenticated by the
+        session that wrote it, while the replacement can only be authenticated
+        afterwards by the rotated one. Both address the same profile and hold
+        the same key -- rotation does not re-key -- so the secure-object
+        repository is indifferent to which one opens it.
+
+        The revision advances rather than being rewritten in place. A row
+        rewritten under its own revision would leave a revision-one record
+        carrying a predecessor row, which the initial-lineage assertion
+        refuses outright; and the rotation is a real lifecycle fact that ought
+        to appear in the profile's history rather than mutate its past
+        silently. Content is preserved exactly, so the advance records the
+        custody change and nothing else.
+        """
+        if rotated.profile_id != self._session.profile_id:
+            raise ProfileRecordIntegrityError("rotated record session does not serve this profile")
+        if rotated.dek_epoch != self._session.dek_epoch:
+            raise ProfileRecordIntegrityError("rotated record session names a different DEK epoch")
+        if rotated.envelope_digest == self._session.envelope_digest:
+            raise ProfileRecordIntegrityError("rotated record session carries the same envelope as the current one")
+        with _secure_objects_for_record(self._session, root=self._root) as objects:
+            current = self._load_from_objects(objects)
+            replacement = UserProfileRecord(
+                schema_id=current.record.schema_id,
+                schema_version=current.record.schema_version,
+                profile_id=current.record.profile_id,
+                facts=current.record.facts,
+                setup_state=current.record.setup_state,
+                record_revision=current.record.record_revision + 1,
+                previous_record_digest=current.record.content_digest,
+                content_digest="",
+                created_at=current.record.created_at,
+                updated_at=datetime.fromisoformat(event.occurred_at).astimezone(UTC),
+            )
+            rotated.assert_replacement(current.record, replacement)
+            self._write_with_event(
+                objects,
+                record=replacement,
+                expected_row_revision_id=current.row_revision_id,
+                expected_event_revision_id=_event_history_revision(objects),
+                event=event,
+                writing_session=rotated,
+            )
+            persisted = ProfileRecordStore(session=rotated, root=self._root)._load_from_objects(objects)
+            if persisted.record != replacement:
+                raise ProfileRecordIntegrityError("re-headed profile record did not persist its authenticated value")
+            return persisted.record
+
     def _load_from_objects(self, objects: ProfileCustodySecureObjectRepositoryPort) -> LoadedProfileRecord:
         namespace = profile_custody_secure_object_namespace()
         raw, loaded = _load_profile_record_row(objects, self._session.profile_id, namespace)
@@ -375,8 +438,15 @@ class ProfileRecordStore:
         expected_row_revision_id: str,
         expected_event_revision_id: str,
         event: ProfileRecordCommandEvent,
+        writing_session: ProfileRecordSession | None = None,
     ) -> None:
-        event_value = _build_record_event(self._session, record, event)
+        # Defaults to the store's own session; a rotation supplies the
+        # re-wrapped one so the witness it stamps is the one every later read
+        # will recompute. Keeping this the single writer is the point --
+        # a rotation that assembled its own SecureObjectWrite would be a
+        # second write path into the one row this class exists to own.
+        writer = writing_session or self._session
+        event_value = _build_record_event(writer, record, event)
         events = default_profile_bucket_event_history_repository(objects=objects)
         history, observed_event_revision = events.load_revisioned()
         if observed_event_revision != expected_event_revision_id:
@@ -384,12 +454,12 @@ class ProfileRecordStore:
         next_history = append_bucket_event(history, event_value)
         record_write = SecureObjectWrite(
             namespace=profile_custody_secure_object_namespace().namespace,
-            object_key=profile_record_object_key(self._session.profile_id),
+            object_key=profile_record_object_key(writer.profile_id),
             classification=profile_custody_secure_object_namespace().sensitivity,
             schema_version=profile_custody_secure_object_namespace().schema_version,
             written_at=record.updated_at,
             payload=record.model_dump_json().encode("utf-8"),
-            write_provenance=self._session.write_provenance(record),
+            write_provenance=writer.write_provenance(record),
             source_event_id=event_value.event_id,
             expected_revision_id=expected_row_revision_id,
         )

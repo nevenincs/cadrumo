@@ -142,11 +142,11 @@ if TYPE_CHECKING:
         ExplicitExclusionInventoryRow,
         InputSchemaInventoryRow,
         LiveLeafInventoryRow,
-        McpExposureInventoryRow,
         MountedFamilyInventoryRow,
         OperatorSurfaceReconciliation,
         ProfilePolicyInventoryRow,
         ResultSchemaInventoryRow,
+        SurfaceExposureInventoryRow,
     )
     from ...application.workflow import WorkflowState
     from ...core import Period
@@ -940,15 +940,15 @@ def _current_operator_surface_schema_inventory() -> _CurrentOperatorSurfaceSchem
     )
 
 
-def _current_operator_surface_mcp_exposures(
+def _current_operator_surface_exposures(
     command_keys: tuple[str, ...],
-) -> tuple[McpExposureInventoryRow, ...]:
+) -> tuple[SurfaceExposureInventoryRow, ...]:
     """Project which registry command keys an operator surface may expose."""
-    from ...application.operator_surface import McpExposureInventoryRow
+    from ...application.operator_surface import SurfaceExposureInventoryRow
     from ._verb_input_schema import is_exposable_command
 
     return tuple(
-        McpExposureInventoryRow(
+        SurfaceExposureInventoryRow(
             subject_leaf_key=command_key,
             exposed=is_exposable_command(command_key),
             provenance="is_exposable_command",
@@ -975,7 +975,7 @@ def _current_operator_surface_exclusions() -> tuple[ExplicitExclusionInventoryRo
             ),
             ExplicitExclusionInventoryRow(
                 subject_leaf_key=command_key,
-                surface=ReconciliationSurface.MCP_EXPOSURE,
+                surface=ReconciliationSurface.SURFACE_EXPOSURE,
                 reason="root landing callback is excluded from MCP tools",
                 authority="ROOT_LANDING_SCHEMA_KEYS",
                 provenance="entrypoints.schema_surface",
@@ -1022,7 +1022,7 @@ def _current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
         input_schemas=inventory.input_rows,
         mounted_families=inventory.mounted_families,
         profile_policies=inventory.profile_policies,
-        mcp_exposures=_current_operator_surface_mcp_exposures(inventory.command_keys),
+        surface_exposures=_current_operator_surface_exposures(inventory.command_keys),
         exclusions=_current_operator_surface_exclusions(),
     )
     if ctx is not None:

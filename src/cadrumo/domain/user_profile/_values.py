@@ -20,7 +20,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.hashing import canonical_json_bytes, content_hash_hex
-from ...core.identity import ContentDigest
+from ...core.identity import ContentDigest, ContentDigestOrAbsent
 from ...core.identity import ProfileId as _ProfileId
 from ...core.parsing import parse_bool, parse_iso8601_date
 from ...core.time import UtcInstant
@@ -271,7 +271,7 @@ class UserProfileRecord(BaseModel):
     setup_state: ProfileSetupState = ProfileSetupState.COMPLETE
     record_revision: int = Field(default=1, ge=1)
     previous_record_digest: ContentDigest | None = None
-    content_digest: str = ""
+    content_digest: ContentDigestOrAbsent = ""
     created_at: UtcInstant = Field(default_factory=utc_now)
     updated_at: UtcInstant = Field(default_factory=utc_now)
 

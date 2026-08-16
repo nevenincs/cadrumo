@@ -9,6 +9,7 @@ any output fact from one.
 from __future__ import annotations
 
 import re
+import unicodedata
 from collections import Counter
 from collections.abc import Iterable, Mapping
 from pathlib import Path
@@ -34,9 +35,9 @@ from cadrumo.domain.calculations.registry import (
     RegistryValidationError,
     RevisionId,
     SourceRefId,
+    export_value_policy_wire_length,
 )
 
-from ._m303_variable_envelope import compile_m303_filing_envelope_definition
 from ._provenance_manifest import (
     EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
     ExportFieldDerivation,
@@ -51,10 +52,12 @@ from ._render_profile import (
     RenderProfileSourceEvidence,
     SingletonNumericRule,
     Width17MembershipRule,
+    _is_numeric_aeat_type,
     validate_render_profile,
 )
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
+from ._variable_envelope import compile_filing_envelope_definition
 
 __all__ = [
     "EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION",
@@ -82,13 +85,20 @@ _SLUG_RE: Final[re.Pattern[str]] = re.compile(r"[^a-z0-9]+")
 # The terminator is deliberately alternation rather than a stacked optional: the
 # "menor o igual que N." clause already ends in a period, so appending another
 # optional one would quietly admit a doubled `..` that no design writes.
+#
+# AEAT abbreviates the same clause as `15 ent. y 2 dec.` on some designs and
+# spells it out as `15 enteros y 2 decimales` on others. Modelo 303 only ever
+# spells it out, so the abbreviated form -- which is the DOMINANT form on Modelo
+# 210, covering 24 of its numeric anchors -- refused as ambiguous content. Both
+# spellings are the one grammar and are admitted as alternations rather than as
+# a second pattern, so the two cannot drift apart.
 _DECIMAL_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
-    r"^(?P<whole>\d+)\s*enteros?\s+(?:y\s+)?(?P<decimals>\d+)\s*decimales?"
+    r"^(?P<whole>\d+)\s*(?:enteros?|ent\.?)\s*(?:y|\+)?\s*(?P<decimals>\d+)\s*(?:decimales?|dec\.?)"
     r"(?:,\s*menor\s+o\s+igual\s+que\s+\d+\.|\.)?$",
     re.IGNORECASE,
 )
 _INTEGER_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
-    r"^(?P<whole>\d+)\s*enteros?\.?$",
+    r"^(?P<whole>\d+)\s*(?:enteros?|ent\.?)\.?$",
     re.IGNORECASE,
 )
 _QUOTED_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
@@ -110,6 +120,12 @@ _QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
     r'^"\d+"\s+(?:SI|NO)(?:\s+\([^)]*\))?(?:,\s*"\d+"\s+(?:SI|NO)(?:\s+\([^)]*\))?)*\.?$',
 )
 _QUOTED_NUMERIC_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r'"(?P<value>\d+)"')
+# AEAT writes the SAME closed value set two ways: quoted ("1", "2") on some
+# designs and dash-labelled with its meaning inline on others ("1 - 12 meses
+# dentro del año natural  2 - 12 meses (365 días)  3 - inferior a 12 meses").
+# Both are one enumeration and are derived through the one enumeration path, so
+# a design that changes only its spelling cannot change the emitted contract.
+_DASH_NUMERIC_ENUMERATION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r"(?:^|\s)(?P<value>\d+)\s*-\s+")
 _DATE_FORMAT_BY_POLICY: Final[Mapping[ExportValuePolicy, str]] = {
     ExportValuePolicy.YYYYMMDD: "aaaammdd",
     ExportValuePolicy.DDMMYYYY: "ddmmaaaa",
@@ -128,12 +144,30 @@ _SINGLETON_POLICY_SHAPES: Final[Mapping[ExportValuePolicy, Literal["integer", "d
     ExportValuePolicy.TWO_DIGIT_MONTH: "integer",
     ExportValuePolicy.TWO_DIGIT_DAY: "integer",
 }
-_TEXT_TYPES: Final[frozenset[str]] = frozenset({"a", "an"})
+#: Text naturalezas, in both vocabularies AEAT uses. A workbook prints the
+#: abbreviation; a PDF design prints the word, which the shipped parser
+#: canonicalises to ``Alfanumerico``/``Alfabetico``, and ``Blancos`` for a fill
+#: run. Matched accent-folded, so the accented spellings land here too.
+_TEXT_TYPES: Final[frozenset[str]] = frozenset(
+    {"a", "an", "alfanumerico", "alfabetico", "alphanumeric", "alphabetic", "blancos"},
+)
+#: Retained for the workbook abbreviations; numeric membership itself is decided
+#: by :func:`_is_numeric_aeat_type`, the one vocabulary the render profile's
+#: eligibility already uses, so the two cannot disagree about what is numeric.
 _NUMERIC_TYPES: Final[frozenset[str]] = frozenset({"n", "num"})
 _OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)\.?\s*$",
     re.IGNORECASE,
 )
+#: The quotation marks AEAT wraps a constant in. A workbook prints straight
+#: quotes; a PDF design prints guillemets, and typographic pairs appear in both
+#: -- "Constante «D»." is Modelo 347's, and it read as an ambiguous
+#: constant because the pattern below only knew ' and ". Folded to a straight
+#: quote before matching, so one pattern reads every form AEAT ships.
+_OFFICIAL_QUOTE_FOLD: Final[dict[int, str]] = str.maketrans(
+    {"«": '"', "»": '"', "“": '"', "”": '"', "‘": "'", "’": "'"},
+)
+
 _OFFICIAL_BLANK_LITERAL_CONTENT: Final[str] = "En blanco"
 _MAX_FRAGMENT_LINES: Final[int] = 1_399
 _MAX_FRAGMENT_LINE_CHARS: Final[int] = 519
@@ -196,28 +230,29 @@ def render_complete_export_tree(
     responsibilities deliberately remain later generator steps.
     """
     _validate_transport_profile(joined, transport_profile)
-    if joined.variable_envelopes and joined.m303_variable_envelope is None:
+    if joined.variable_envelopes and joined.variable_envelope_contract is None:
         identities = ", ".join(repr(envelope.record_identity) for envelope in joined.variable_envelopes)
         raise RegistryValidationError(
             "fixed-width export generation refuses variable envelopes without a separately typed and proven "
             f"composition contract: {identities}",
         )
-    if joined.m303_variable_envelope is not None and joined.revision_id != revision_id:
+    if joined.variable_envelope_contract is not None and joined.revision_id != revision_id:
         raise RegistryValidationError(
-            f"typed Modelo 303 DP30300 target revision {revision_id!r} does not match the selected "
+            f"typed filing-envelope target revision {revision_id!r} does not match the "
             f"selected revision {joined.revision_id!r}",
         )
     validate_render_profile(render_profile, joined, render_profile_source_evidence)
     records, derivations = _render_records(joined.records, transport_profile, render_profile)
     _validate_generated_projection_bijection(tuple(derivations), joined.projection_endpoints)
-    m303_filing_envelope = (
-        compile_m303_filing_envelope_definition(
-            joined.m303_variable_envelope.semantic,
-            joined.m303_variable_envelope.parser_envelope,
+    filing_envelope = (
+        compile_filing_envelope_definition(
+            joined.variable_envelope_contract.semantic,
+            joined.variable_envelope_contract.parser_envelope,
+            modelo=str(joined.modelo),
             source=joined.source,
             body_record_ids=tuple(record.id for record in records),
         )
-        if joined.m303_variable_envelope is not None
+        if joined.variable_envelope_contract is not None
         else None
     )
     layout = ExportLayoutDefinition.model_validate(
@@ -232,7 +267,7 @@ def render_complete_export_tree(
             ),
             "legal_refs": _sorted_refs(legal for field in derivations for legal in field.field.legal_refs),
             "records": records,
-            "m303_filing_envelope": m303_filing_envelope,
+            "filing_envelope": filing_envelope,
         },
     )
     _require_semantic_map_attestation(joined, semantic_map)
@@ -481,7 +516,12 @@ def _normalise_field(
         raise RegistryValidationError(
             f"official field {semantic_entry.export_field_id!r} has checksum semantics with no reviewed normalizer",
         )
-    type_code = parser_field.aeat_type.strip().casefold()
+    type_code = (
+        unicodedata.normalize("NFKD", parser_field.aeat_type.strip())
+        .encode("ascii", "ignore")
+        .decode("ascii")
+        .casefold()
+    )
     if type_code in _TEXT_TYPES:
         derivation_code: ExportFieldDerivationCode = "text-a-v1" if type_code == "a" else "text-an-v1"
         return _schema_field(
@@ -494,8 +534,21 @@ def _normalise_field(
             export_record_id=export_record_id,
             derivation_code=derivation_code,
         )
-    if type_code in _NUMERIC_TYPES:
-        if parser_field.content is None or not parser_field.content.strip():
+    if _is_numeric_aeat_type(parser_field.aeat_type):
+        # A workbook states the wire fact in its Contenido cell, so a non-blank
+        # one is derived from directly. A PDF design has no such column and the
+        # parser fills ``content`` with DESCRIPTIVE PROSE, which states the fact
+        # sometimes, partially, or not at all -- deriving a representation from
+        # it would read a sentence as a format. Those fields go to the reviewed
+        # profile, which is the same rule the profile's own eligibility applies,
+        # keyed on the same signal: a workbook anchor carries a ``source_cell``
+        # and a PDF anchor does not.
+        states_wire_fact = (
+            parser_field.source_cell is not None
+            and parser_field.content is not None
+            and bool(parser_field.content.strip())
+        )
+        if not states_wire_fact:
             return _render_profile_numeric_derivation(
                 joined_field,
                 render_profile,
@@ -548,7 +601,7 @@ def _literal_derivation(
     if blank_source_marker:
         official_literal = ""
     else:
-        match = _OFFICIAL_LITERAL_RE.fullmatch(official_content)
+        match = _OFFICIAL_LITERAL_RE.fullmatch(official_content.translate(_OFFICIAL_QUOTE_FOLD))
         if match is None:
             raise RegistryValidationError(
                 f"literal field {joined_field.semantic_entry.export_field_id!r} has ambiguous official constant "
@@ -609,11 +662,19 @@ def _numeric_derivation(
             export_record_id=export_record_id,
             derivation_code="numeric-integer-v1",
         )
-    if normalised_content.casefold() == _DATE_FORMAT_BY_POLICY[ExportValuePolicy.YYYYMMDD]:
-        if parser_field.length != 8:
+    # Both published date orders are derived from the ONE policy table rather
+    # than from a single hardcoded order. Modelo 303's designs only ever spell
+    # `aaaammdd`, so a `ddmmaaaa` slot -- which Modelo 210 spells four times --
+    # fell through to the ambiguous-content refusal even though the policy, its
+    # wire width and its encoder already existed.
+    for policy, date_format in _DATE_FORMAT_BY_POLICY.items():
+        if normalised_content.casefold() != date_format:
+            continue
+        expected_length = export_value_policy_wire_length(policy)
+        if parser_field.length != expected_length:
             raise RegistryValidationError(
                 f"official date field {joined_field.semantic_entry.export_field_id!r} has "
-                f"{parser_field.length} bytes, expected 8",
+                f"{parser_field.length} bytes, expected {expected_length}",
             )
         return _schema_field(
             joined_field,
@@ -623,8 +684,30 @@ def _numeric_derivation(
             justification=ExportJustification.NONE,
             signed=False,
             export_record_id=export_record_id,
-            date_format=_DATE_FORMAT_BY_POLICY[ExportValuePolicy.YYYYMMDD],
-            derivation_code="numeric-date-aaaammdd-v1",
+            date_format=date_format,
+            derivation_code=f"numeric-date-{date_format}-v1",
+        )
+    # A bare `AAAA` is the ejercicio, not a date. It is a closed four-character
+    # wire fact the design states outright, so it is derived here rather than
+    # left to a render profile -- the profile exists for slots the design leaves
+    # UNSTATED, and this one is stated.
+    if normalised_content.casefold() == "aaaa":
+        expected_length = export_value_policy_wire_length(ExportValuePolicy.FOUR_DIGIT_YEAR)
+        if parser_field.length != expected_length:
+            raise RegistryValidationError(
+                f"official ejercicio field {joined_field.semantic_entry.export_field_id!r} has "
+                f"{parser_field.length} bytes, expected {expected_length}",
+            )
+        return _schema_field(
+            joined_field,
+            data_type="integer",
+            required=_is_required(parser_field.validation),
+            padding=ExportPadding.LEFT_ZERO,
+            justification=ExportJustification.RIGHT,
+            signed=False,
+            export_record_id=export_record_id,
+            value_policy=ExportValuePolicy.FOUR_DIGIT_YEAR,
+            derivation_code="numeric-ejercicio-aaaa-v1",
         )
     decimal_match = _DECIMAL_CONTENT_RE.fullmatch(normalised_content)
     if decimal_match is not None:
@@ -655,11 +738,19 @@ def _numeric_derivation(
             export_record_id=export_record_id,
             derivation_code="numeric-integer-v1",
         )
+    dash_values = tuple(
+        match.group("value") for match in _DASH_NUMERIC_ENUMERATION_TOKEN_RE.finditer(normalised_content)
+    )
     if (
         _QUOTED_NUMERIC_ENUMERATION_RE.fullmatch(normalised_content) is not None
         or _QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE.fullmatch(normalised_content) is not None
+        or len(dash_values) > 1
     ):
-        raw_values = tuple(match.group("value") for match in _QUOTED_NUMERIC_TOKEN_RE.finditer(normalised_content))
+        raw_values = (
+            dash_values
+            if len(dash_values) > 1
+            else tuple(match.group("value") for match in _QUOTED_NUMERIC_TOKEN_RE.finditer(normalised_content))
+        )
         if any(len(value) != parser_field.length for value in raw_values):
             raise RegistryValidationError(
                 f"official numeric enumeration {joined_field.semantic_entry.export_field_id!r} has values "

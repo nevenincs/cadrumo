@@ -168,6 +168,11 @@ class BucketEventType(StrEnum):
     PROFILE_IMPORTED = "profile.imported"
     PROFILE_ACTIVATED = "profile.activated"
     PROFILE_SETUP_COMPLETED = "profile.setup.completed"
+    # The profile's password wrapper was re-minted over the SAME data key.
+    # A lifecycle fact, not an operator verb: it records that the custody
+    # generation advanced, which is what makes an earlier record row's
+    # provenance witness legitimately stale rather than evidence of tampering.
+    PROFILE_PASSPHRASE_ROTATED = "profile.passphrase.rotated"  # noqa: S105 - event-type token, not a credential
     # 036 censo cotejo: emitted once per artefact-apply reconciliation
     # commit (``apply_cotejo``). The live-refresh scrape against the sede
     # Mis Datos Censales endpoint was retired and its snapshot substrate

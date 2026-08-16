@@ -112,18 +112,33 @@ class ModeloSource:
 def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
     """Discover single-file and directory-mode modelo sources."""
     resolved = modelos_dir.resolve()
-    _validate_modelos_directory_entries(resolved)
+    modelo_files, modelo_directories = _validate_modelos_directory_entries(resolved)
     sources: list[ModeloSource] = []
     seen_modelo_ids: dict[str, ModeloSource] = {}
-    for source in _single_file_modelo_sources(resolved):
+    for source in _single_file_modelo_sources(modelo_files):
         _append_modelo_source(source, sources, seen_modelo_ids)
-    for source in _directory_modelo_sources(resolved):
+    for source in _directory_modelo_sources(modelo_directories):
         _append_modelo_source(source, sources, seen_modelo_ids)
     return tuple(sources)
 
 
-def _validate_modelos_directory_entries(modelos_dir: Path) -> None:
-    """Refuse plausible modelo sources that discovery would otherwise ignore."""
+def _validate_modelos_directory_entries(modelos_dir: Path) -> tuple[tuple[Path, ...], tuple[Path, ...]]:
+    """Refuse plausible modelo sources that discovery would otherwise ignore.
+
+    Returns the classification it already computed. Every directory reaching
+    the second element has been confirmed to carry ``manifest.toml``, which is
+    the same predicate discovery used to filter on, so neither the listing nor
+    the manifest probe is repeated.
+
+    Returns:
+        The ``.toml`` modelo files, then the directory-mode modelo directories.
+
+    Raises:
+        RegistryLoadError: When an entry is a non-TOML file, a directory
+            without ``manifest.toml``, or neither a file nor a directory.
+    """
+    files: list[Path] = []
+    directories: list[Path] = []
     # require_root: an unreadable modelos/ yielding empty would validate nothing
     # and hand discovery a registry with no modelos in it, so every casilla would
     # resolve blank instead of the load refusing. Reading nothing here is a broken
@@ -134,14 +149,17 @@ def _validate_modelos_directory_entries(modelos_dir: Path) -> None:
                 raise RegistryLoadError(
                     f"{entry}: unrecognized modelos file; modelo files must use the '.toml' suffix",
                 )
+            files.append(entry)
             continue
         if entry.is_dir():
             if not (entry / "manifest.toml").is_file():
                 raise RegistryLoadError(
                     f"{entry}: orphan modelo directory; directory-mode modelos must contain manifest.toml",
                 )
+            directories.append(entry)
             continue
         raise RegistryLoadError(f"{entry}: unrecognized modelos entry")
+    return tuple(files), tuple(directories)
 
 
 def _read_modelo_id(path: Path, *, description: str) -> str:
@@ -155,7 +173,7 @@ def _read_modelo_id(path: Path, *, description: str) -> str:
         raise RegistryLoadError(f"{path}: invalid {description}: {exc}") from exc
 
 
-def _single_file_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
+def _single_file_modelo_sources(modelo_files: tuple[Path, ...]) -> tuple[ModeloSource, ...]:
     return tuple(
         ModeloSource(
             modelo_id=_read_modelo_id(path, description="modelo file"),
@@ -163,16 +181,12 @@ def _single_file_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
             path=path.resolve(),
             manifest_path=path.resolve(),
         )
-        for path in scan_directory(modelos_dir, pattern="*.toml")
+        for path in modelo_files
     )
 
 
-def _directory_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
-    return tuple(
-        _directory_modelo_source(entry)
-        for entry in scan_directory(modelos_dir, select=DirectoryEntryKind.DIRECTORIES)
-        if (entry / "manifest.toml").is_file()
-    )
+def _directory_modelo_sources(modelo_directories: tuple[Path, ...]) -> tuple[ModeloSource, ...]:
+    return tuple(_directory_modelo_source(entry) for entry in modelo_directories)
 
 
 def _directory_modelo_source(entry: Path) -> ModeloSource:
@@ -242,26 +256,50 @@ def _append_modelo_source(
 def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSource, ...]:
     if not revisions_dir.is_dir():
         return ()
-    _validate_revision_directory_entries(revisions_dir)
-    file_sources = tuple(
-        source for path in scan_directory(revisions_dir, pattern="*.toml") for source in _revision_file_sources(path)
-    )
-    directory_sources = tuple(
-        _revision_directory_source(path)
-        for path in scan_directory(revisions_dir, select=DirectoryEntryKind.DIRECTORIES)
-    )
+    revision_files, revision_directories = _validate_revision_directory_entries(revisions_dir)
+    file_sources = tuple(source for path in revision_files for source in _revision_file_sources(path))
+    directory_sources = tuple(_revision_directory_source(path) for path in revision_directories)
     return (*file_sources, *directory_sources)
 
 
-def _validate_revision_directory_entries(revisions_dir: Path) -> None:
+def _validate_revision_directory_entries(revisions_dir: Path) -> tuple[tuple[Path, ...], tuple[Path, ...]]:
+    """Validate one revisions directory and return its files and subdirectories.
+
+    Returns what it classified rather than only raising, because the caller
+    needs exactly the same split. This directory used to be listed three times
+    per modelo -- once to validate, once for ``*.toml`` and once for
+    subdirectories -- and the classification each pass needed was already
+    computed by the validating pass. Measured across a warm registry compile,
+    65.6% of all directory listings were re-listings of a directory already
+    read (3,659 calls over 1,259 distinct directories).
+
+    One scan is sound here where a memo would not be: the listing is consumed
+    immediately, so this never holds a directory's contents across the window
+    in which something could write to it -- the hazard
+    :mod:`~cadrumo.core._directory_scan` documents when it declines to cache.
+
+    Returns:
+        The ``.toml`` files, then the subdirectories, each in scan order.
+
+    Raises:
+        RegistryLoadError: When an entry is a non-TOML file, or is neither a
+            file nor a directory.
+    """
+    files: list[Path] = []
+    directories: list[Path] = []
     # require_root: the sole caller guards on is_dir() before reaching here.
     for entry in scan_directory(revisions_dir, require_root=True):
-        if entry.is_file() and entry.suffix != ".toml":
-            raise RegistryLoadError(
-                f"{entry}: unrecognized revision file; revision files must use the '.toml' suffix",
-            )
-        if not entry.is_file() and not entry.is_dir():
+        if entry.is_file():
+            if entry.suffix != ".toml":
+                raise RegistryLoadError(
+                    f"{entry}: unrecognized revision file; revision files must use the '.toml' suffix",
+                )
+            files.append(entry)
+        elif entry.is_dir():
+            directories.append(entry)
+        else:
             raise RegistryLoadError(f"{entry}: unrecognized revisions entry")
+    return tuple(files), tuple(directories)
 
 
 def _revision_file_sources(path: Path) -> tuple[ModeloRevisionSource, ...]:
@@ -342,8 +380,15 @@ def _revision_fragment_section_directories(path: Path) -> tuple[Path, ...]:
 
 
 def _validate_section_fragment_names(section_dir: Path) -> None:
-    # The first nested directory settles the refusal, so this asks for one
-    # rather than building the listing every populated section discards.
+    # Two scans here, deliberately, and NOT folded into one. Folding looks like
+    # an obvious win on scan count -- section directories are the most numerous
+    # in the tree -- but both scans below select without ever stat'ing: the
+    # `select=` filter reads `os.DirEntry.is_dir()`, which `os.scandir` already
+    # populated, and `pattern=` matches on the name alone. A single scan
+    # classified in Python has to call `Path.is_dir()`, which IS a stat, once
+    # per entry. Measured: folding cut directory listings by 32% and left the
+    # warm compile no faster (1.33s single sample before, 1.49s median of five
+    # after), because the stats cost more than the listings saved.
     nested_entry = next(
         iter_directory(section_dir, select=DirectoryEntryKind.DIRECTORIES, require_root=True),
         None,
