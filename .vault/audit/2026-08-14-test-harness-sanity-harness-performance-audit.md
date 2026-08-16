@@ -3156,3 +3156,60 @@ of a seventeen-thousand-file tree.
 `_read_entries`, or the TOML read path; and any attempt to attribute the cold
 cost to the `Y:` share without a cache-dropping benchmark that this environment
 cannot run.
+
+## C-level delegation in the compile path: already done, and hand-rolling it is slower
+
+Directive: on load-bearing paths delegate to the fastest C-level calls and cache.
+Applied to the registry compile, whose hot path is `read_toml` (50% cumulative,
+~17.5k fragments). Two layers looked like Python where C exists:
+
+1. `rtoml.load(path)` appeared to read through `pathlib.Path.read_text`, and
+   `pathlib open` is the largest single self-time frame in the compile.
+2. `for key, value in loaded.items(): raw[key] = value` is a Python-level copy
+   of every parsed mapping, where `dict(loaded)` is the same operation in C.
+
+Benchmarked over 3,000 real registry fragments, warm cache, five repeats, with
+an equality gate asserting every arm produces identical output on every fragment
+before any timing:
+
+| arm | median | vs current |
+|---|---|---|
+| current: `rtoml.load(path)` + Python copy | **0.781s** | — |
+| builtin `open(...,'rb')` + `rtoml.loads` + Python copy | 0.895s | **0.87x (slower)** |
+| builtin `open(...,'rb')` + `rtoml.loads` + `dict()` C copy | 0.939s | **0.83x (slower)** |
+
+**Both "optimisations" are slower.** `rtoml` is a Rust extension and its
+`load(path)` performs the read on the Rust side, so replacing it with a Python
+read plus `loads` ADDS a layer rather than removing one; the profile's
+`read_text` attribution comes from other callers on the same stack, not from
+inside `rtoml.load`. `dict(loaded)` did not beat the explicit loop either.
+**Not shipped.** Per-arm spreads (0.712-0.955s) overlap, so the honest reading is
+"no win available", not "current is 15% better".
+
+**Ruled out, do not re-chase:** rewriting the registry TOML read path for
+C-level delegation. It is already delegated.
+
+### The remaining C-level candidate, and why it is declined
+
+`bs4/builder/_lxml.py:feed` is 8.0% self-time in the compile:
+`_orden_anual_html.py:184` runs `BeautifulSoup(markup, "lxml")` over BOE annual
+Orden HTML, and `_m303_orden_manifest.py:48` records that extracting one Orden
+means a full BeautifulSoup parse. Going to `lxml.html` directly is typically
+several times faster, because bs4 builds a Python object tree over lxml's C tree.
+
+Declined on risk-versus-reward, not on difficulty: it is a rewrite of a
+**legal-corpus extraction** (IVA módulos indexes out of BOE Orden text) from
+bs4's `find`/`select`/`get_text` onto lxml's `xpath`/`text_content`, in a path
+whose output feeds regulatory grounding. The reward is ~8% of a 10s cold compile
+that happens once per process and is already collapsed to 2.9s warm by the
+pickle cache. If it is ever taken, it needs byte-identical output proven across
+every bundled Orden, and it belongs in its own change rather than a performance
+sweep.
+
+### Standing conclusion for this path
+
+The compile is already Rust-parsed (`rtoml`), already `os.scandir`-based, already
+`lru_cache`d per modelo directory and per tree, and already served warm from a
+23.1 MB pickle. There is no idle C-level delegation left in it. **Its cost is
+the 17,526 files it touches**, which is a shape problem, not an implementation
+one -- see the metadata-projection proposal above.
