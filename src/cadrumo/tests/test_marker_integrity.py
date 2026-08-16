@@ -31,7 +31,7 @@ from typing import NamedTuple
 import pytest
 
 from ..core import scan_directory
-from ._inventory import PROJECT_TEST_ROOTS, ast_for_path, project_test_modules, repo_relative
+from ._inventory import PROJECT_TEST_ROOTS, ast_for_path, project_test_modules, qualified_name, repo_relative
 from ._marker_metadata_patterns import CAMPAIGN_METADATA_CASES as _CAMPAIGN_METADATA_CASES
 from ._marker_metadata_patterns import CAMPAIGN_METADATA_PATTERNS as _CAMPAIGN_METADATA_PATTERNS
 from ._marker_metadata_patterns import PROCESS_PLAN_CASE as _PROCESS_PLAN_CASE
@@ -1281,6 +1281,99 @@ def test_live_test_opt_in_token_is_not_used_by_production_aeat_live_paths() -> N
     """The live-test opt-in env var must remain test/core-gate infrastructure only."""
     violations = _production_live_test_opt_in_violations()
     assert not violations, "production modules must not gate live reads on the pytest opt-in:\n" + "\n".join(violations)
+
+
+#: Tests naming a live-transport ECB door that provably never issues a request,
+#: keyed by ``(module path, enclosing function)`` rather than by line number so a
+#: reordering cannot silently move the exemption onto a different test. Every
+#: entry states why the door it opens cannot reach the network.
+_LIVE_ECB_DOOR_EXEMPTIONS: dict[tuple[str, str], str] = {
+    (
+        "src/cadrumo/adapters/outbound/fx/tests/test_ecb_provider.py",
+        "test_default_provider_is_cached",
+    ): (
+        "asserts the lru_cache identity contract of default_ecb_rate_provider only; it "
+        "constructs the provider and never calls a lookup, so no transport is reached. The "
+        "cached accessor takes no fetch argument, so injection cannot close this door."
+    ),
+}
+
+
+def _live_ecb_door_violations() -> tuple[list[str], int]:
+    """Return deterministic tests opening a default-transport ECB door, and the door count.
+
+    A door is ``EcbReferenceRateProvider(...)`` built without an injected
+    ``fetch=`` transport, or any call to ``default_ecb_rate_provider``. Both bind
+    the live European Central Bank host, so a test opening one either declares
+    ``aeat_live`` -- selected by the live lane alone -- or states in
+    :data:`_LIVE_ECB_DOOR_EXEMPTIONS` why it cannot reach the network.
+    """
+    violations: list[str] = []
+    doors = 0
+    for path in _modules():
+        tree = ast_for_path(path)
+        if tree is None:
+            continue
+        relative = repo_relative(path)
+        enclosing: dict[ast.AST, str] = {}
+        for function in ast.walk(tree):
+            if isinstance(function, ast.FunctionDef | ast.AsyncFunctionDef):
+                for descendant in ast.walk(function):
+                    enclosing.setdefault(descendant, function.name)
+        module_markers, _error = _extract_pytestmark_names(path)
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            callee = (qualified_name(node.func) or "").rsplit(".", 1)[-1]
+            if callee == "EcbReferenceRateProvider":
+                if any(keyword.arg == "fetch" for keyword in node.keywords):
+                    continue
+            elif callee != "default_ecb_rate_provider":
+                continue
+            doors += 1
+            if "aeat_live" in module_markers:
+                continue
+            owner = enclosing.get(node, "<module level>")
+            if _LIVE_ECB_DOOR_EXEMPTIONS.get((relative, owner)):
+                continue
+            violations.append(
+                f"{relative}::{owner}:{node.lineno}: opens a default-transport ECB door "
+                f"({callee}) without the `aeat_live` marker; inject a RateFetch transport "
+                "(tests.ecb_stub.ecb_csv_fetch) or declare the test live"
+            )
+    return violations, doors
+
+
+def test_deterministic_tests_do_not_open_a_live_ecb_transport_door() -> None:
+    """Reaching the live ECB host is an ``aeat_live`` concern, not a production branch.
+
+    The provider carries no test-awareness: its default transport reaches the
+    European Central Bank unconditionally, because that is what the adapter is
+    for. What holds a deterministic suite off that host is this marker contract
+    plus the injectable ``RateFetch`` boundary.
+    """
+    violations, doors = _live_ecb_door_violations()
+
+    assert doors, (
+        "no ECB transport door was found in any test module; the provider was renamed or "
+        "relocated, so an empty violation list would mean 'nothing was checked'"
+    )
+    assert not violations, "deterministic tests open a live ECB transport door:\n" + "\n".join(violations)
+
+
+def test_every_live_ecb_door_exemption_still_names_a_real_test() -> None:
+    """A stale exemption must fail rather than silently excusing nothing."""
+    known = {
+        (repo_relative(path), node.name)
+        for path in _modules()
+        if (tree := ast_for_path(path)) is not None
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
+    }
+    stale = sorted(entry for entry in _LIVE_ECB_DOOR_EXEMPTIONS if entry not in known)
+
+    assert not stale, f"live-ECB door exemptions naming no such test: {stale}"
+    assert all(_LIVE_ECB_DOOR_EXEMPTIONS.values()), "every live-ECB door exemption must state its reason"
 
 
 def test_test_modules_live_under_tests_directories_and_use_test_prefix() -> None:
