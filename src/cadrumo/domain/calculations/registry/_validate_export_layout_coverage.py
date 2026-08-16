@@ -41,6 +41,17 @@ Everything else is required. Measured over the eighteen bundled designs backing
 a fixed-width layout: 570 positions marked obligatorio, 266 administration-
 reserved, 29 declared fill, 8,297 ordinary data positions.
 
+What counts as written: bytes, carrying data
+--------------------------------------------
+
+Coverage is measured by BYTE EXTENT, not by ``(offset, length)`` identity. The
+design's grouping of bytes into rows and the layout's grouping of the same bytes
+into fields are independent, and both are legitimate; demanding they agree made
+three design sheets literally unsatisfiable. And a ``filler`` never covers a
+required position: it emits blanks, so counting it hid 185 positions the
+operator's filing leaves empty -- including modelos the gate reported COMPLETE.
+:func:`_covers` carries the evidence for both halves.
+
 Joining an authored record to its design sheet
 ----------------------------------------------
 
@@ -106,7 +117,7 @@ See Also:
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final
 
@@ -117,6 +128,7 @@ from ._errors import RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
 from ._record_design import extract_record_design
 from ._schema import (
+    ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
     M303FilingEnvelopeDefinition,
@@ -147,8 +159,23 @@ _ADMINISTRATION_RESERVED: Final = re.compile(r"\breservad[oa]s?\b", re.IGNORECAS
 #: cell: a description that merely MENTIONS blancos while carrying a real field
 #: ("Rellenar con blancos si no hay importe") still holds a datum, and matching
 #: it loosely would excuse a slot that carries one.
+#:
+#: The leading article is part of the spelling. ``^\W*`` consumes only
+#: non-word characters, so it could not reach past the ``E`` of "En blanco" and
+#: 760 positions AEAT declares as holding NO datum were classed required --
+#: 663 of them Modelo 200's. Harmless while a filler counted as written; once a
+#: filler no longer covers a required position (see :func:`_covers`), the only
+#: way to satisfy such a position became writing a datum AEAT does not want,
+#: which is the gate paying for the wrong shape again.
+#:
+#: The trailing ``$`` is LOAD-BEARING and must not be relaxed to catch the
+#: wider population. 2,245 positions merely mention blanco, and the bulk are
+#: value sets where blank is one permitted value of a real datum -- ``"S" o
+#: blanco``, ``X o blanco``, ``"0" - blanco, "1" - Si``. Every one of those is a
+#: position the filer MUST be able to write, so excusing them would be a silent
+#: pass across hundreds of positions. Only the leading-article gap is fixed.
 _DECLARED_FILL: Final = re.compile(
-    r"^\W*(?:constante\W{0,3})?(?:blancos?|sin\s+contenido|no\s+utilizad[oa]s?|libre)\W*$",
+    r"^\W*(?:constante\W{0,3})?(?:en\s+)?(?:blancos?|sin\s+contenido|no\s+utilizad[oa]s?|libre)\W*$",
     re.IGNORECASE,
 )
 
@@ -308,6 +335,155 @@ def _record_written_positions(record: ExportRecordDefinition) -> set[tuple[int, 
     }
 
 
+def _written_bytes(fields: Iterable[ExportFieldDefinition], *, data_only: bool) -> set[int]:
+    """Return every byte ``fields`` writes, optionally counting only real data.
+
+    ``data_only`` drops :attr:`~.CasillaFieldKind.FILLER` slots. A filler emits
+    blanks, so a required position it "covers" is a position the operator's
+    filing leaves empty -- see :func:`_covers` for why that must not count.
+    """
+    written: set[int] = set()
+    for field in fields:
+        if field.offset is None or field.length is None:
+            continue
+        if data_only and field.kind is CasillaFieldKind.FILLER:
+            continue
+        written.update(range(field.offset, field.offset + field.length))
+    return written
+
+
+def _administration_reserved_bytes(sheet: RecordDesignSheet) -> dict[int, str]:
+    """Return every byte AEAT reserves for itself, mapped to the row that says so.
+
+    Walks sub-fields as well as top-level rows, because AEAT reserves inside a
+    desglose too: Modelo 576's ``19.3 @520+8 RESERVADO para AEAT`` sits between
+    seven real data sub-fields of one printed row.
+    """
+    reserved: dict[int, str] = {}
+    for field in sheet.fields:
+        for candidate in (field, *field.components):
+            if _OBLIGATORIO.search(candidate.validation or ""):
+                continue
+            if not _ADMINISTRATION_RESERVED.search(candidate.description or ""):
+                continue
+            for byte in range(candidate.offset, candidate.offset + candidate.length):
+                reserved[byte] = candidate.description
+    return reserved
+
+
+def _reserved_write_failures(
+    sheet: RecordDesignSheet,
+    fields: Iterable[ExportFieldDefinition],
+) -> list[str]:
+    """Return every authored field that writes taxpayer data into reserved bytes.
+
+    Byte-extent coverage asks whether a required position's bytes are written,
+    which is the right question and an incomplete one: one wide field satisfies
+    every position it spans, INCLUDING the administración's own bytes in
+    between. Modelo 576 is the worked case -- a single 40-byte field over row
+    19 covers all seven of its real sub-fields and writes straight across
+    ``19.3``, the eight bytes AEAT reserves. Under coverage alone that reads as
+    complete, which is the same incentive inversion, one layer down, that
+    requiring the parent span produced in the first place.
+
+    A ``filler`` there is CORRECT and is not reported: the record is contiguous,
+    so those bytes must still be emitted, as blanks. The rule is that a field
+    carrying a value may not claim bytes the design says belong to AEAT -- never
+    that fillers are suspect.
+    """
+    reserved = _administration_reserved_bytes(sheet)
+    if not reserved:
+        return []
+    failures: list[str] = []
+    for field in fields:
+        if field.offset is None or field.length is None or field.kind is CasillaFieldKind.FILLER:
+            continue
+        clash = sorted(byte for byte in range(field.offset, field.offset + field.length) if byte in reserved)
+        if clash:
+            failures.append(
+                f"field {field.id!r} (@{field.offset}+{field.length}) writes data into "
+                f"@{clash[0]}..{clash[-1]}, which the design reserves for the Administración "
+                f"({reserved[clash[0]]!r}); emit those bytes as a filler instead"
+            )
+    return failures
+
+
+def _covers(position: _RequiredPosition, data_bytes: set[int]) -> bool:
+    """Whether the layout can really write every byte of ``position``.
+
+    Coverage is measured by BYTE EXTENT, not by ``(offset, length)`` identity,
+    because the design's grouping of bytes into rows and the layout's grouping
+    of the same bytes into fields are independent and both are legitimate. AEAT
+    declares one 193-byte ``DIRECCIÓN DEL INMUEBLE`` where the application holds
+    fifteen separate facts, and declares eight sub-positions where Modelo 576
+    holds one span; matching coordinates demanded that the two groupings agree,
+    which they never had to.
+
+    Insisting on identity was not merely imprecise, it was UNSATISFIABLE for
+    three design sheets. Modelo 280's, Modelo 190's and Modelo 349's tipo-2
+    sheets each declare a parent row AND its sub-rows, so identity demanded
+    overlapping byte ranges -- and
+    :func:`~._export._reject_overlapping_ranges` forbids any record from
+    declaring two overlapping fields. No correct layout could satisfy both
+    halves. Modelo 280 is authored complete against its official design and was
+    reported at 33/53, every one of the twenty "unwritten" positions a
+    coordinate it does in fact write.
+
+    A FILLER never covers a required position. The gate counted one before, and
+    across the bundled tree that hid 185 positions the operator's filing emits
+    as blanks -- Modelo 270 reported 36/36 complete while blanking ``NÚMERO
+    IDENTIFICATIVO DE LA DECLARACIÓN``, Modelo 341 33/33 while blanking
+    ``SWIFT``, Modelo 190 96.2% against a real data coverage of 32%. A blank
+    where AEAT expects a datum is exactly the silent under-declaration this gate
+    exists to refuse, so a position is covered only when real data reaches every
+    one of its bytes.
+
+    A filler over bytes the design ITSELF declares omissible stays correct and
+    stays legal: a fixed-width record is contiguous and those bytes must still
+    be emitted. Such positions never reach here, because
+    :func:`_required_positions` excluded them.
+    """
+    return all(byte in data_bytes for byte in range(position.offset, position.offset + position.length))
+
+
+def _belongs_to_layout(sheet: RecordDesignSheet, records: Sequence[ExportRecordDefinition]) -> bool:
+    """Whether this design sheet is one THIS layout is supposed to render at all.
+
+    One bundled workbook can describe several independent filing schemas. Modelo
+    369 is the case: its ``union``, ``exterior`` and ``importación`` schemas each
+    declare their own layout, and all three cite the SAME design workbook, whose
+    sheets carry a per-schema ``Página`` constant (``01``-``03`` Ext, ``04``-``09``
+    Un, ``10``-``12`` Imp). Measuring every layout against every sheet scored
+    each complete schema against all 1,513 positions, including the other two
+    schemas' -- a structural cap no authoring could lift, and the reason all
+    three looked permanently incomplete while each writes its own sheets in full.
+
+    The question is asked PER COORDINATE, not per record. Asking whether any
+    record agrees overall answers "yes" for every sheet, because the envelope
+    record declares only ``<T`` and ``369`` -- constants every sheet in the
+    workbook shares -- and so agrees with all fourteen. The discriminating byte
+    is the one where the layout's records actually disagree with each other.
+
+    So a sheet is out of scope when, at some coordinate it declares, EVERY
+    record that speaks to that coordinate contradicts it. Under the importación
+    layout, sheet ``T36901 Ext`` declares ``(6,2) = "01"`` while every record
+    declaring ``(6,2)`` says ``"00"``, ``"10"``, ``"11"``, ``"12"`` -- AEAT's own
+    statement that this sheet is another schema's.
+
+    Silence is never taken as exclusion: a coordinate no record speaks to, or a
+    sheet declaring no constants at all, leaves the sheet IN scope and falls
+    through to the weaker layout-wide question. "No evidence either way" must
+    not shrink a denominator, which is the one direction this gate must never
+    fail in.
+    """
+    literals_by_record = [_record_literals(record) for record in records]
+    for coordinate, value in _sheet_constants(sheet).items():
+        declaring = [literals[coordinate] for literals in literals_by_record if coordinate in literals]
+        if declaring and all(declared != value for declared in declaring):
+            return False
+    return True
+
+
 def _join_record(
     sheet: RecordDesignSheet,
     records: Sequence[ExportRecordDefinition],
@@ -389,6 +565,21 @@ def _envelope_written_positions(envelope: M303FilingEnvelopeDefinition) -> set[t
     return written
 
 
+def _envelope_written_bytes(envelope: M303FilingEnvelopeDefinition) -> set[int]:
+    """Return every byte the filing envelope's prefix fields write.
+
+    The byte-extent counterpart of :func:`_envelope_written_positions`. Every
+    prefix field carries a real declared value, so none is filler and the
+    data-only distinction :func:`_written_bytes` draws does not arise here.
+    """
+    written: set[int] = set()
+    offset = 1
+    for field in envelope.prefix_fields:
+        written.update(range(offset, offset + field.length))
+        offset += field.length
+    return written
+
+
 def _missing_report(
     sheets: Sequence[RecordDesignSheet],
     records: Sequence[ExportRecordDefinition],
@@ -396,26 +587,40 @@ def _missing_report(
     envelope: M303FilingEnvelopeDefinition | None = None,
 ) -> tuple[int, int, list[str]]:
     """Return ``(required, missing, per-sheet lines)`` for one design against one layout."""
-    layout_written: set[tuple[int, int]] = set()
+    layout_written: set[int] = set()
     for record in records:
-        layout_written |= _record_written_positions(record)
+        layout_written |= _written_bytes(record.fields, data_only=True)
     if envelope is not None:
-        layout_written |= _envelope_written_positions(envelope)
+        layout_written |= _envelope_written_bytes(envelope)
     required_total = 0
     missing_total = 0
     lines: list[str] = []
     for sheet in sheets:
+        if not _belongs_to_layout(sheet, records):
+            continue
         required = _required_positions(sheet)
         required_total += len(required)
         joined = _join_record(sheet, records)
         if joined is not None:
-            written = _record_written_positions(joined)
+            consulted = tuple(joined.fields)
+            written = _written_bytes(consulted, data_only=True)
         elif envelope is not None and sheet.name == envelope.record_identity:
-            written = _envelope_written_positions(envelope)
+            consulted = ()
+            written = _envelope_written_bytes(envelope)
         else:
+            consulted = tuple(field for record in records for field in record.fields)
             written = layout_written
-        missing = [position for position in required if (position.offset, position.length) not in written]
+        missing = [position for position in required if not _covers(position, written)]
         missing_total += len(missing)
+        # Checked against whichever fields the coverage question consulted,
+        # joined or not: an unjoined sheet still knows which bytes AEAT keeps,
+        # and a wide field claiming them is a defect either way.
+        if intrusions := _reserved_write_failures(sheet, consulted):
+            # Counted alongside the gap so a layout cannot trade one for the
+            # other: writing across the administración's bytes is how a single
+            # wide field "covers" every position it spans.
+            missing_total += len(intrusions)
+            lines.append(f"design record {sheet.name!r}: {'; '.join(intrusions)}")
         if not missing:
             continue
         if joined is not None:

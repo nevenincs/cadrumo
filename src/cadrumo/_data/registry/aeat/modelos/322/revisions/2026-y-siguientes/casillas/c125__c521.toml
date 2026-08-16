@@ -1,0 +1,610 @@
+# Modelo 322 numbered casillas, transcribed from the bundled Diseno de
+# Registro aeat-dr-322-2026, sha256
+# f014cec44d4906bc1e2ba96ee1b336f9b400254519df5b1ab0ce69d513631a76.
+# Box number, byte extent and label are AEAT's own; data_type is derived from
+# the row's declared length and decimal shape (17 = 15 enteros + 2 decimales
+# -> money; 5 = 3 enteros + 2 decimales -> ratio).
+#
+# No row is named after a rate. Where AEAT repeats a Base/Tipo/Cuota triple,
+# the rate is a DATA slot on the row, not a label, so which statutory rate a
+# triple carries is the filer's entry and is not asserted here.
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "125"
+number = "125"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr322_125"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c125"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "126"
+number = "126"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr322_126"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c126"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "127"
+number = "127"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr322_127"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c127"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "128"
+number = "128"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+data_type = "money"
+semantic_role = "dr322_128"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c128"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "150"
+number = "150"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr322_150"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c150"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "151"
+number = "151"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr322_151"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c151"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "152"
+number = "152"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr322_152"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c152"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "153"
+number = "153"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr322_153"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c153"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "154"
+number = "154"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr322_154"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c154"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "155"
+number = "155"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr322_155"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c155"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "156"
+number = "156"
+section = ["iva", "regimen_general", "recargo"]
+data_type = "money"
+semantic_role = "dr322_156"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c156"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "157"
+number = "157"
+section = ["iva", "regimen_general", "recargo"]
+data_type = "ratio"
+semantic_role = "dr322_157"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c157"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "158"
+number = "158"
+section = ["iva", "regimen_general", "recargo"]
+data_type = "money"
+semantic_role = "dr322_158"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c158"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "159"
+number = "159"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+data_type = "money"
+semantic_role = "dr322_159"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c159"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "160"
+number = "160"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+data_type = "ratio"
+semantic_role = "dr322_160"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c160"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "161"
+number = "161"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+data_type = "money"
+semantic_role = "dr322_161"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c161"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "162"
+number = "162"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+data_type = "money"
+semantic_role = "dr322_162"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c162"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "163"
+number = "163"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+data_type = "ratio"
+semantic_role = "dr322_163"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c163"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "164"
+number = "164"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+data_type = "money"
+semantic_role = "dr322_164"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c164"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "165"
+number = "165"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr322_165"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c165"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "166"
+number = "166"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr322_166"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c166"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "167"
+number = "167"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr322_167"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c167"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "168"
+number = "168"
+section = ["iva", "regimen_general", "recargo"]
+data_type = "money"
+semantic_role = "dr322_168"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c168"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "169"
+number = "169"
+section = ["iva", "regimen_general", "recargo"]
+data_type = "ratio"
+semantic_role = "dr322_169"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c169"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "170"
+number = "170"
+section = ["iva", "regimen_general", "recargo"]
+data_type = "money"
+semantic_role = "dr322_170"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c170"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "171"
+number = "171"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+data_type = "money"
+semantic_role = "dr322_171"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c171"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "172"
+number = "172"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+data_type = "ratio"
+semantic_role = "dr322_172"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c172"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "173"
+number = "173"
+section = ["iva", "regimen_general", "intragrupo", "devengado"]
+data_type = "money"
+semantic_role = "dr322_173"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c173"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "500"
+number = "500"
+section = ["iva", "prorratas"]
+data_type = "text"
+semantic_role = "dr322_500"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c500"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "501"
+number = "501"
+section = ["iva", "prorratas"]
+data_type = "money"
+semantic_role = "dr322_501"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c501"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "502"
+number = "502"
+section = ["iva", "prorratas"]
+data_type = "money"
+semantic_role = "dr322_502"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c502"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "503"
+number = "503"
+section = ["iva", "prorratas"]
+data_type = "text"
+semantic_role = "dr322_503"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c503"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "504"
+number = "504"
+section = ["iva", "prorratas"]
+data_type = "ratio"
+semantic_role = "dr322_504"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c504"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "505"
+number = "505"
+section = ["iva", "prorratas"]
+data_type = "text"
+semantic_role = "dr322_505"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c505"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "506"
+number = "506"
+section = ["iva", "prorratas"]
+data_type = "money"
+semantic_role = "dr322_506"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c506"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "507"
+number = "507"
+section = ["iva", "prorratas"]
+data_type = "money"
+semantic_role = "dr322_507"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c507"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "508"
+number = "508"
+section = ["iva", "prorratas"]
+data_type = "text"
+semantic_role = "dr322_508"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c508"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "509"
+number = "509"
+section = ["iva", "prorratas"]
+data_type = "ratio"
+semantic_role = "dr322_509"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c509"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "510"
+number = "510"
+section = ["iva", "prorratas"]
+data_type = "text"
+semantic_role = "dr322_510"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c510"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "511"
+number = "511"
+section = ["iva", "prorratas"]
+data_type = "money"
+semantic_role = "dr322_511"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c511"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "512"
+number = "512"
+section = ["iva", "prorratas"]
+data_type = "money"
+semantic_role = "dr322_512"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c512"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "513"
+number = "513"
+section = ["iva", "prorratas"]
+data_type = "text"
+semantic_role = "dr322_513"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c513"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "514"
+number = "514"
+section = ["iva", "prorratas"]
+data_type = "ratio"
+semantic_role = "dr322_514"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c514"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "515"
+number = "515"
+section = ["iva", "prorratas"]
+data_type = "text"
+semantic_role = "dr322_515"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c515"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "516"
+number = "516"
+section = ["iva", "prorratas"]
+data_type = "money"
+semantic_role = "dr322_516"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c516"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "517"
+number = "517"
+section = ["iva", "prorratas"]
+data_type = "money"
+semantic_role = "dr322_517"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c517"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "518"
+number = "518"
+section = ["iva", "prorratas"]
+data_type = "text"
+semantic_role = "dr322_518"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c518"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "519"
+number = "519"
+section = ["iva", "prorratas"]
+data_type = "ratio"
+semantic_role = "dr322_519"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c519"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "520"
+number = "520"
+section = ["iva", "prorratas"]
+data_type = "text"
+semantic_role = "dr322_520"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c520"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "521"
+number = "521"
+section = ["iva", "prorratas"]
+data_type = "money"
+semantic_role = "dr322_521"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c521"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]

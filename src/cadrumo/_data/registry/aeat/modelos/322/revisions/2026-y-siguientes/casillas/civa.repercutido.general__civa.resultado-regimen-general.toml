@@ -1,0 +1,96 @@
+[[revisions."2026-y-siguientes".casillas]]
+id = "iva.repercutido.general"
+number = "iva.repercutido.general"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_repercutida_general"
+required = false
+input_kind = "bound"
+binding = "modelo-322-iva-repercutido-general-cuota"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "iva.repercutido.reducido"
+number = "iva.repercutido.reducido"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_repercutida_reducido"
+required = false
+input_kind = "bound"
+binding = "modelo-322-iva-repercutido-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "iva.repercutido.super-reducido"
+number = "iva.repercutido.super-reducido"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_repercutida_super_reducido"
+required = false
+input_kind = "bound"
+binding = "modelo-322-iva-repercutido-super-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "iva.soportado.interiores"
+number = "iva.soportado.interiores"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "iva_cuota_soportada_interiores"
+required = false
+input_kind = "bound"
+binding = "modelo-322-iva-soportado-interiores-cuota"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "iva.autorepercutido.intracomunitaria"
+number = "iva.autorepercutido.intracomunitaria"
+section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_cuota_autorepercutida_intracomunitaria"
+required = false
+input_kind = "bound"
+binding = "modelo-322-iva-autorepercutido-intracomunitaria-cuota"
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "iva.cuota-devengada-total"
+number = "iva.cuota-devengada-total"
+section = ["iva", "regimen_general", "totales"]
+data_type = "money"
+semantic_role = "iva_cuota_devengada_total"
+required = false
+input_kind = "computed"
+formula = "modelo-322-iva-cuota-devengada-total"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "iva.cuota-deducible-total"
+number = "iva.cuota-deducible-total"
+section = ["iva", "regimen_general", "totales"]
+data_type = "money"
+semantic_role = "iva_cuota_deducible_total"
+required = false
+input_kind = "computed"
+formula = "modelo-322-iva-cuota-deducible-total"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "iva.resultado-regimen-general"
+number = "iva.resultado-regimen-general"
+section = ["iva", "regimen_general", "totales"]
+data_type = "money"
+semantic_role = "iva_resultado_regimen_general"
+required = false
+input_kind = "computed"
+formula = "modelo-322-iva-resultado-regimen-general"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+

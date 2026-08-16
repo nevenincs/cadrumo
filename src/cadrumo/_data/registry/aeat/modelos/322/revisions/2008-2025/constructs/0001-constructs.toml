@@ -1,0 +1,70 @@
+[[revisions."2008-2025".constructs]]
+id = "modelo-322-iva-grupo-individual"
+legal_refs = [
+    "orden-eha-3434-2007:art-1",
+    "orden-eha-3434-2007:art-8",
+    "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84",
+    "ley-37-1992:art-88",
+    "ley-37-1992:art-92",
+    "rd-1624-1992:art-71",
+]
+source_refs = [
+    "aeat-dr-322-2024-2025",
+    "aeat-modelo-322-procedure",
+    "boe-modelo-322-2007-form",
+    "aeat-calendario-contribuyente-2026-hasta-2-marzo",
+]
+casilla_ids = [
+    "iva.repercutido.general",
+    "iva.repercutido.reducido",
+    "iva.repercutido.super-reducido",
+    "iva.soportado.interiores",
+    "iva.autorepercutido.intracomunitaria",
+    "iva.cuota-devengada-total",
+    "iva.cuota-deducible-total",
+    "iva.resultado-regimen-general",
+    "decl.ejercicio",
+    "decl.periodo",
+]
+formulas = [
+    "modelo-322-iva-cuota-devengada-total",
+    "modelo-322-iva-cuota-deducible-total",
+    "modelo-322-iva-resultado-regimen-general",
+]
+bindings = [
+    "modelo-322-iva-repercutido-general-cuota",
+    "modelo-322-iva-repercutido-reducido-cuota",
+    "modelo-322-iva-repercutido-super-reducido-cuota",
+    "modelo-322-iva-soportado-interiores-cuota",
+    "modelo-322-iva-autorepercutido-intracomunitaria-cuota",
+]
+workbook_parity_refs = ["modelo-322-dr-2026"]
+live_cross_references = [
+    "modelo-322-static-documentation",
+    "modelo-322-filed-declarations-read",
+]
+application_links = [
+    "modelo-322-portal",
+    "modelo-322-filing",
+    "modelo-322-extractor",
+    "modelo-322-review",
+    "modelo-322-approval",
+    "modelo-322-reconciliation",
+    "modelo-322-workflow",
+    "modelo-322-deadline",
+    "modelo-322-calculation",
+]
+filing_schedules = ["modelo-322-mensual"]
+deadline_windows = [
+    "modelo-322-2025-01",
+    "modelo-322-2025-06",
+    "modelo-322-2025-12",
+    "modelo-322-2026-01",
+]
+
+# Calculation-completeness manifest for revision 2008-2025: the
+# casillas in this revision's calculation closure (formula targets,
+# formula-expression refs, formula/binding endpoints, verification
+# operands), keyed by canonical casilla_id plus reviewed segment/number
+# metadata. Derived off-load-path from the registry calculation
+# surface; the drift re-verification test re-derives it.

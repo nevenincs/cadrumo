@@ -438,7 +438,12 @@ from ._loader import (
     load_modelo_path,
     load_registry_tree,
 )
-from ._modelo_localization import modelo_locale_key, revision_locale_key
+from ._modelo_localization import (
+    casilla_continuity_locale_key,
+    casilla_occurrence_locale_key,
+    modelo_locale_key,
+    revision_locale_key,
+)
 from ._observation_fold import (
     fold_observed_requirement_values,
     fold_sum_or_copy,
@@ -1177,8 +1182,10 @@ __all__ = [
     "calculation_closure_legal_refs",
     "calculation_closure_record_design_metadata",
     "canonical_remote_hostname",
+    "casilla_continuity_locale_key",
     "casilla_noncanonical_reference_targets",
     "casilla_noncanonical_reference_tokens",
+    "casilla_occurrence_locale_key",
     "casillas_by_binding",
     "casillas_by_id",
     "censo_modelo_ownership",
