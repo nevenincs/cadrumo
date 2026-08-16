@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:f189890e1c14d73b1304e9c798a87eae475f2d8657dc302cd65593f8314093bd'
+body_hash: 'sha256:a3f094dfa0e29c2261e267a973ee3b3197324dc0b9ef77399726efe3da3779f0'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -3275,3 +3275,70 @@ re-scan cannot move the number the operator sees.
 deduplication generally.** The ceiling is measured, small, and does not justify
 restructuring revision-fragment validation. The CLI load-time lever remains the
 metadata projection recorded above, not the scanner.
+
+## `test_batch_ingest_runner`: 73% of it is failing to connect to a local LLM, once per test
+
+The flakiness recorded as undiagnosed earlier in this campaign is diagnosed.
+
+Sampling the module (never cProfile here) puts **68.4% of self time in
+`socket.create_connection`** -- 28,231 of 41,265 samples. A socket counter that
+records LOOPBACK as well as remote targets gives the detail:
+
+| target | connections |
+|---|---|
+| **127.0.0.1:11434** (Ollama default) | **65** |
+| 127.0.0.1:1 (a deliberate unreachable sentinel, one test) | 5 |
+| ephemeral loopback ports (real local servers) | 6 |
+
+**76 connections, 71.5s of connect time, in a 97.99s module -- 73%.** Nothing is
+listening on 11434 (verified). 17 of the 21 tests attempt it.
+
+An earlier screen in this campaign reported this same module as opening ZERO
+sockets. That screen excluded loopback by design ("reaching the internet is the
+question"), and the exclusion hid the single largest cost in the suite. **A
+filter chosen to remove noise removed the finding.**
+
+### It is the attempt that costs, not the target
+
+The obvious remedy -- point the endpoint at a closed port, as one test already
+does via `override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat")`
+-- was measured and **does not work**:
+
+| | runs |
+|---|---|
+| baseline | 97.85s, 98.61s, **176.75s with 5 failures** |
+| endpoint pinned to `127.0.0.1:1` | 102.13s, 105.32s |
+
+Each connect to a closed loopback port costs ~0.94s on this host (71.5s / 76),
+whichever port it is. Redirecting the URL changes nothing because the expense is
+the connection attempt itself. **Ruled out: fixing this by changing the
+configured endpoint.**
+
+(The ~0.94s per refused loopback connect is abnormal -- a closed loopback port
+normally answers in microseconds -- so the magnitude is probably specific to
+this host's security stack. The DESIGN defect below is independent of that.)
+
+### The defect is that availability is discovered per call
+
+There is no cached availability probe anywhere in `adapters/outbound/llm`.
+Nothing asks "is a reader reachable?" once; every path that wants a reader opens
+its own socket and finds out. So a machine with no Ollama pays the discovery
+cost per document, per test, forever -- and the answer is identical every time.
+
+The fix is a **single probe whose negative result short-circuits every dependent
+path**, rather than 17 tests each learning it independently. That is also the
+production shape: a real operator without a local model server currently pays
+this per document, not once.
+
+### Two smaller defects found alongside
+
+- **The flakiness is real and reproduces**: 5 failed / 176.75s against
+  21 passed / ~98s, on identical code. It correlates with the connection
+  attempts, and connection-refusal timing is exactly the kind of thing that
+  varies run to run. Anything that binds 11434 would change these tests'
+  behaviour outright.
+- **`cadrumo_llm_ollama_chat_url` is declared in the wrong module.** Every other
+  `cadrumo_llm_*` field -- provider, model, API keys, timeouts, retries, cache
+  and telemetry dirs -- is declared in `core/_config_llm_fields.py`. The Ollama
+  endpoint alone sits in `core/_config_runtime_fields.py:18`. It is a normal
+  Settings field with the normal env override; only its home is wrong.
