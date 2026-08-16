@@ -2749,3 +2749,57 @@ profiler.** Any hot spot it reports with millions of calls must be confirmed by
 sampling, or by removing the work and re-timing, before it is believed -- and
 certainly before it is reported. Both false headlines in this campaign (the ECB
 47%, and this) came from reading a profile without checking the instrument.
+
+## Shared registry disk cache: real standalone, no measurable suite win
+
+`aeat app modelo list` against a fresh storage root pays a cold registry
+compile. The compiled artefact is cached on disk, and the cache is relocatable
+through `CADRUMO_REGISTRY_DISK_CACHE_DIR`, which `_run_cli_cold` propagates to
+its children (it filters only `AEAT_`-prefixed variables). That looked like a
+free lever: share one warm compile across every process.
+
+Standalone it is real:
+
+| configuration | seconds |
+|---|---|
+| everything cold | 32.12, 33.31, 33.44, 33.62, 33.80 |
+| fresh storage root + SHARED registry cache | 25.14, 24.76, 24.74 |
+| fully warm, same storage root reused | 23.33, 23.65 |
+
+**~8.5s per cold CLI invocation**, about 80% of the total achievable cache
+benefit, with no production change.
+
+The on-disk artefacts show what is being moved: a 23.1 MB registry pickle, a
+32.8 MB corpus-text cache and a 5.1 MB locale catalogue. Even fully warm, listing
+modelo codes deserialises ~56 MB, which is why the warm floor is still 23.3s.
+
+### It does not transfer to the suite, and the reason is already-solved
+
+Applied to real modules, before and after are indistinguishable:
+
+| module | baseline | with shared cache |
+|---|---|---|
+| `test_cold_start_wizard_registration` | 64.39, 64.80, 64.27 | 64.40, 64.67, 64.67 |
+| `test_ledger_persona_yearend_m100` | 43.06, 35.80, 43.00 | 35.87, 42.94, 35.57 |
+
+`src/cadrumo/conftest.py:50` pins `CADRUMO_LOCAL_STORAGE_ROOT` to a STABLE
+collection root, so the registry cache is already warm in the pytest process
+before any test installs its isolated root. The lever was pulled long ago; there
+is nothing left to recover in-process.
+
+The remaining cold consumers are subprocess spawns that set their own storage
+root — and the ones in the durations tail
+(`test_cold_start_wizard_registration`, `test_cli_startup_smoke`) currently FAIL
+on the registry-red HEAD, so their timings are error paths and cannot be
+optimised against. **Do not re-chase this until the registry validates.**
+
+### Two measurement hazards this reconfirms
+
+- The yearend numbers are **bimodal**: every run lands near 35.7s or near 43.0s,
+  in BOTH arms. Three samples of a two-mode distribution produce whatever median
+  the draw happens to give — the apparent 43.0 -> 35.87 "improvement" above is
+  pure sampling. For any module importing FX-bearing rows, three runs are not
+  enough; separate the modes or take many more samples.
+- **A red tree is not an optimisable tree.** With 636 of 3,126 CLI-lane tests
+  failing, much of the tail measures failure paths. Timings taken now describe a
+  program that is not the one that will ship.
