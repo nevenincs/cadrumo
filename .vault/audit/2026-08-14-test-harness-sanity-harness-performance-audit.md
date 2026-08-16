@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:cd025bbb6277fcb1a4d7af850bbb500fd0a5d75c5b139636a6e4ebb33876fa6e'
+body_hash: 'sha256:4da7741804dea19b59a07fdf889e1ad945d115887f0e87f696fbcb12f10de222'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -2141,3 +2141,54 @@ relearning in new costumes: a hypothesis that explains every observation is
 still a hypothesis, and this one survived precisely because it was never asked
 to predict anything falsifiable until the instrument was built. It took one
 plugin and one run to kill.
+
+## Resource instrumentation: what the tests leave behind
+
+The operator asked for instrumentation aimed at leaks and resource misuse
+rather than speed. A per-test probe now records what a test still HOLDS after
+its teardown -- OS handles, threads, inet sockets, RSS -- with a `gc.collect()`
+first, so an object merely awaiting collection is not counted as a leak. Deltas
+are taken around the whole test protocol, not the call phase, because a resource
+released in teardown is ordinary use and only one held past it is a leak.
+
+First run, across `test_batch_ingest_runner` plus a control module (35 tests):
+
+    threads still held after teardown : 0 tests
+    inet sockets still held           : 0 tests
+    RSS across the module             : -5 MB (no growth)
+    handles                           : 245 -> 287, net +42
+
+Threads, sockets and memory are clean, which is worth stating plainly: three of
+the four classic leak channels show nothing.
+
+Handles do only ever rise, and the rise is concentrated:
+
+    +25  test_a_poisoned_document_does_not_end_the_run        (first test in module)
+    +23  test_a_paused_item_is_attempted_on_a_later_run
+    +22  test_a_document_needing_a_reader_is_read_when_one_is_there
+     +8  test_create_manual_transaction_returns_bucket_ref    (first test in control)
+
+Every other test is zero or negative.
+
+### What this does and does not show
+
+The two first-in-module entries are ordinary lazy initialisation -- a process
+opens its stores once -- and reading them as leaks would be the "big setup
+figure is a bill, not a location" error in another costume.
+
+The interesting pair is the two reader-using tests, each retaining ~22 handles
+independently. If a single cached client pool were responsible, only the FIRST
+would pay; two separate payments suggest a per-invocation client or file set
+that is not closed. On Windows, handles are also the resource whose exhaustion
+surfaces as unrelated failures much later, which is the shape of the
+intermittent failures this module already shows.
+
+That is suggestive, not proven. Four positive data points, no breakdown of
+handle TYPE (psutil does not offer one on this platform), and no demonstration
+that the growth is unbounded rather than plateauing. Proving it needs the reader
+path exercised N times in one process while watching the count -- a contained
+experiment, not a fix.
+
+Recorded as a lead with its measurement and its limits, deliberately NOT as a
+diagnosis, because the previous entry in this document was a confident diagnosis
+that instrumentation then refuted.
