@@ -30,7 +30,7 @@ from ..errors import CoreValidationError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
-    {"tokens", "secrets", "blobs", "audit", "logs", "cache", "drafts"},
+    {"tokens", "secrets", "blobs", "live-state", "logs", "cache", "drafts"},
 )
 """Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
@@ -48,7 +48,7 @@ def test_it_builds_the_tree_and_returns_the_root(tmp_path: Path) -> None:
     # The taxonomy is broad rather than a couple of directories; assert a few
     # of its distinct lifecycle groups rather than a count that would have to
     # be edited every time the taxonomy grows.
-    for expected in ("tokens", "secrets", "blobs", "audit", "logs", "cache", "drafts"):
+    for expected in ("tokens", "secrets", "blobs", "live-state", "logs", "cache", "drafts"):
         assert (root / expected).is_dir(), f"{expected} was not materialised"
 
 
@@ -126,7 +126,7 @@ def test_the_refusal_probe_would_otherwise_succeed(tmp_path: Path) -> None:
 
 
 def test_the_root_is_restricted_to_its_owner(tmp_path: Path) -> None:
-    """The tree holds encrypted records, the keys that open them, and the audit over both.
+    """The tree holds encrypted records, the keys that open them, and the state over both.
 
     Nothing asserted these bits before, so a refactor restructuring the
     materialiser could have dropped the hardening in silence -- every other
