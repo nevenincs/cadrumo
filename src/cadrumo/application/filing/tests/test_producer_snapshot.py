@@ -96,7 +96,7 @@ from .. import __init__ as filing
 from .._export import (
     _filing_producer_values,
     _m303_complementaria_marker,
-    _m303_complementaria_page_marker,
+    _complementaria_page_marker,
     _m303_no_activity_marker,
 )
 
@@ -1013,10 +1013,10 @@ def test_m303_source_markers_share_immutable_amendment_and_disposition_evidence(
 
     draft = _marker_draft()
     assert _m303_complementaria_marker(draft, complemented) == "X"
-    assert _m303_complementaria_page_marker(draft, complemented) == "C"
+    assert _complementaria_page_marker(draft, complemented) == "C"
     assert _m303_no_activity_marker(draft, complemented) == "X"
     assert _m303_complementaria_marker(draft, ordinary) is None
-    assert _m303_complementaria_page_marker(draft, ordinary) is None
+    assert _complementaria_page_marker(draft, ordinary) is None
     assert _m303_no_activity_marker(draft, ordinary) is None
 
 

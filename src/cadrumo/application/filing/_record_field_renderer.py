@@ -302,7 +302,7 @@ def _sepa_marca(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | N
     ).value
 
 
-def m303_complementaria_page_marker(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
+def complementaria_page_marker(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
     """Render the official ``C`` page marker from amendment evidence alone."""
     del draft
     return "C" if snapshot.amendment_evidence and snapshot.amendment_evidence.is_complementaria else None
@@ -327,7 +327,7 @@ COMPUTED_VALUE_PRODUCERS: Mapping[
     ExportComputedKey.ENVELOPE_CLOSING_TAG: _envelope_closing_tag,
     ExportComputedKey.SEPA_MARCA: _sepa_marca,
     ExportComputedKey.M303_COMPLEMENTARIA_MARKER: m303_complementaria_marker,
-    ExportComputedKey.M303_COMPLEMENTARIA_PAGE_MARKER: m303_complementaria_page_marker,
+    ExportComputedKey.COMPLEMENTARIA_PAGE_MARKER: complementaria_page_marker,
     ExportComputedKey.M303_NO_ACTIVITY_MARKER: m303_no_activity_marker,
 }
 
@@ -368,7 +368,7 @@ __all__ = [
     "RecordRenderRow",
     "format_field",
     "m303_complementaria_marker",
-    "m303_complementaria_page_marker",
+    "complementaria_page_marker",
     "m303_no_activity_marker",
     "projection_field_value",
     "render_record",

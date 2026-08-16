@@ -2,6 +2,83 @@
 
 from __future__ import annotations
 
+import re
+from typing import Final
+
+from ....core import Modelo
+
+_MODELO_PREFIXED_ROLE_RE: Final = re.compile(r"^m(\d{3})_(.+)$")
+_MODELO_VALUES: Final[frozenset[str]] = frozenset(member.value for member in Modelo)
+
+#: Month names AEAT uses to enumerate the per-period rows of a single concept.
+#: A closed calendar axis, so two roles differing only in this trailing token
+#: are deliberate siblings. Several are one character apart -- ``junio`` and
+#: ``julio``, ``enero`` and ``febrero`` -- which is what drew the typo
+#: detector to them.
+_MONTH_AXIS_TOKENS: Final[frozenset[str]] = frozenset(
+    (
+        "enero",
+        "febrero",
+        "marzo",
+        "abril",
+        "mayo",
+        "junio",
+        "julio",
+        "agosto",
+        "septiembre",
+        "octubre",
+        "noviembre",
+        "diciembre",
+    )
+)
+
+
+def semantic_roles_are_modelo_prefix_siblings(left: str, right: str) -> bool:
+    """Return whether two roles are the same concept scoped to different modelos.
+
+    The ``mNNN_`` prefix is a namespace axis exactly like the tax-domain and
+    declared-axis suffixes: the registry deliberately carries one stem across
+    several modelos, and ``persona_relacion`` alone already ships under four
+    prefixes. Whether the detector fired was decided by how textually similar
+    the two modelo NUMBERS happened to be -- ``m156_``/``m345_`` passes while
+    ``m156_``/``m165_`` refuses on a digit transposition -- which is a property
+    of the numbering, not of the data.
+
+    Modelo numbers are a closed set, so the prefix is the one machine-verifiable
+    part of these strings. Both prefixes must name a real :class:`Modelo`; a
+    genuinely mistyped prefix names none and stays a typo. The stems must match
+    exactly, so a misspelt stem under one prefix is still caught.
+    """
+    left_modelo, left_stem = _split_modelo_prefix(left)
+    right_modelo, right_stem = _split_modelo_prefix(right)
+    if left_stem is None or right_stem is None:
+        return False
+    return left_stem == right_stem and left_modelo != right_modelo
+
+
+def _split_modelo_prefix(role: str) -> tuple[str | None, str | None]:
+    match = _MODELO_PREFIXED_ROLE_RE.match(role)
+    if match is None:
+        return None, None
+    modelo = match.group(1)
+    if modelo not in _MODELO_VALUES:
+        return None, None
+    return modelo, match.group(2)
+
+
+def semantic_roles_are_month_axis_siblings(left: str, right: str) -> bool:
+    """Return whether two roles differ only in a trailing calendar-month token."""
+    left_parts = left.split("_")
+    right_parts = right.split("_")
+    return (
+        len(left_parts) > 1
+        and len(right_parts) > 1
+        and left_parts[:-1] == right_parts[:-1]
+        and left_parts[-1] in _MONTH_AXIS_TOKENS
+        and right_parts[-1] in _MONTH_AXIS_TOKENS
+        and left_parts[-1] != right_parts[-1]
+    )
+
 
 def semantic_roles_are_tax_domain_siblings(left: str, right: str) -> bool:
     domain_suffixes = {"irpf", "is", "iva"}

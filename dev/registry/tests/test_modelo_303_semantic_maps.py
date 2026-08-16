@@ -115,8 +115,8 @@ _SHARED_ANCHOR_FACTS: Final[tuple[tuple[str, int, _AnchorAttribute, object], ...
     ("DP30301", "5", "computed_key", None),
     ("DP30304", "5", "literal", ""),
     ("DP30304", "5", "computed_key", None),
-    ("DP30302", "5", "computed_key", ExportComputedKey.M303_COMPLEMENTARIA_PAGE_MARKER),
-    ("DP30305", "5", "computed_key", ExportComputedKey.M303_COMPLEMENTARIA_PAGE_MARKER),
+    ("DP30302", "5", "computed_key", ExportComputedKey.COMPLEMENTARIA_PAGE_MARKER),
+    ("DP30305", "5", "computed_key", ExportComputedKey.COMPLEMENTARIA_PAGE_MARKER),
 )
 
 

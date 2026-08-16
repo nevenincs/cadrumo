@@ -29,8 +29,11 @@ class ExportComputedKey(StrEnum):
 
     ENVELOPE_CLOSING_TAG = "envelope_closing_tag"
     SEPA_MARCA = "sepa_marca"
+    #: Renders the official ``C`` page marker from amendment evidence alone.
+    #: Modelo-neutral: any modelo whose design admits ``"C"`` on a
+    #: complementaria page slot resolves it through this one key.
+    COMPLEMENTARIA_PAGE_MARKER = "complementaria_page_marker"
     M303_COMPLEMENTARIA_MARKER = "m303_complementaria_marker"
-    M303_COMPLEMENTARIA_PAGE_MARKER = "m303_complementaria_page_marker"
     M303_NO_ACTIVITY_MARKER = "m303_no_activity_marker"
 
 

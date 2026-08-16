@@ -121,7 +121,7 @@ from ._record_renderer import (
     m303_complementaria_marker as _m303_complementaria_marker,
 )
 from ._record_renderer import (
-    m303_complementaria_page_marker as _m303_complementaria_page_marker,
+    complementaria_page_marker as _complementaria_page_marker,
 )
 from ._record_renderer import (
     m303_no_activity_marker as _m303_no_activity_marker,
@@ -1498,7 +1498,7 @@ __all__ = [
     "_RecordRenderRow",
     "_format_field",
     "_m303_complementaria_marker",
-    "_m303_complementaria_page_marker",
+    "_complementaria_page_marker",
     "_m303_no_activity_marker",
     "_preflight_projection_plan",
     "_projection_field_value",
