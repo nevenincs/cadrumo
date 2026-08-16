@@ -91,3 +91,4 @@ input_kind = "bound"
 binding = "modelo-390-iva-soportado-interiores-base"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2023"]
+export_refs = ["modelo-390-page-03-casilla-soportado-interiores-base"]

@@ -1,0 +1,70 @@
+[[revisions."2025".export_layouts]]
+id = "modelo-390-2025-fichero-boe"
+
+# The three binding-derived totals that were registered but never written:
+# [48] total oper. inter. corrientes, [103] entregas intracomunitarias and
+# [104] exportaciones exentas. Each casilla already carries its binding in
+# this revision; only the export field and its export_ref were missing, so
+# the layout silently omitted three computed totals. Revision 2022 writes
+# all three.
+#
+# Offsets transcribed from aeat-dr-390-2025 (sha256 6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252).
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-390-page-03"
+record_type = "page_03"
+order = 4
+encoding = "latin-1"
+line_ending = "none"
+
+# 5. Operaciones Reg. Gral. - IVA deducible - Total oper. inter. corrientes bienes y servic. - Base imponible [48]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-soportado-interiores-base"
+offset = 217
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.soportado.interiores.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-390-page-06"
+record_type = "page_06"
+order = 7
+encoding = "latin-1"
+line_ending = "none"
+
+# 10. Volumen de operaciones - Entregas intracomunitarias de bienes y servicios [103]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-entregas-intracomunitarias"
+offset = 395
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.entregas-intracomunitarias"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-25", "ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 10. Volumen de operaciones - Exportaciones y otras operaciones exentas con derecho a deducción [104]
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-exportaciones-exentas"
+offset = 412
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.volumen.exportaciones-exentas"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]

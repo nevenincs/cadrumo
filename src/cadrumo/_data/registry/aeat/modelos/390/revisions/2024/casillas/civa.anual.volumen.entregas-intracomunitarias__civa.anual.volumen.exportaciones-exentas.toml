@@ -36,6 +36,7 @@ input_kind = "bound"
 binding = "modelo-390-volumen-entregas-intracomunitarias-base"
 legal_refs = ["ley-37-1992:art-25", "ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-entregas-intracomunitarias"]
 
 [[revisions."2024".casillas]]
 id = "iva.anual.volumen.exportaciones-exentas"
@@ -49,3 +50,4 @@ input_kind = "bound"
 binding = "modelo-390-volumen-exportaciones-exentas-base"
 legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2024"]
+export_refs = ["modelo-390-page-06-casilla-exportaciones-exentas"]
