@@ -15,16 +15,20 @@ from typing import Final
 
 import pytest
 
+from ..... import __version__
 from .....core.config import override_settings
 from .....core.resources import bundled_path
+from .._identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
 from .._verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
     bundled_verdict_path,
     certify_registry_validation,
+    compute_shipped_verdict_key,
     compute_verdict_key,
     read_verdict,
     registry_validation_is_certified,
+    shipped_verdict_location,
     verdict_cache_path,
     write_verdict,
 )
@@ -99,59 +103,85 @@ def test_read_verdict_returns_none_when_absent(tmp_path: Path) -> None:
     assert read_verdict(tmp_path / "missing.json") is None
 
 
+def _walked_identity(fingerprints: tuple[tuple[str, int, int, str], ...]) -> RegistryIdentity:
+    """Build a walked identity the way the canonical resolver would for a mutable tree."""
+    return RegistryIdentity(
+        digest=compute_walked_tree_digest(fingerprints),
+        origin=RegistryIdentityOrigin.WALKED,
+        fingerprints=fingerprints,
+    )
+
+
 def test_certify_then_matching_key_is_certified(tmp_path: Path) -> None:
     root = tmp_path / "registry" / "aeat"
+    identity = _walked_identity((("a.toml", 1, 2, "digest-a"),))
     key = compute_verdict_key(
-        registry_fingerprints=(("a.toml", 1, 2, "digest-a"),),
+        identity_digest=identity.digest,
         source_evidence_fingerprints=(("b.pdf", 3, 4),),
         package_version="1.2.3",
     )
     with override_settings(cadrumo_validation_verdict_cache_dir=tmp_path / "verdicts"):
         written = certify_registry_validation(root, verdict_key=key, package_version="1.2.3")
         assert written.is_file()
-        assert registry_validation_is_certified(root, verdict_key=key, registry_fingerprints=()) is True
+        assert registry_validation_is_certified(root, verdict_key=key, identity=identity) is True
 
 
 def test_mismatched_key_is_not_certified_and_deletes_the_stale_verdict(tmp_path: Path) -> None:
     root = tmp_path / "registry" / "aeat"
+    identity = _walked_identity((("a.toml", 1, 2, "digest-a"),))
     with override_settings(cadrumo_validation_verdict_cache_dir=tmp_path / "verdicts"):
         written = certify_registry_validation(root, verdict_key="stored-key", package_version="1.2.3")
         assert written.is_file()
-        assert registry_validation_is_certified(root, verdict_key="different-key", registry_fingerprints=()) is False
+        assert registry_validation_is_certified(root, verdict_key="different-key", identity=identity) is False
         # Delete-not-migrate: the stale writable verdict is removed so the next
-        # load re-validates rather than trusting a superseded fingerprint.
+        # load re-validates rather than trusting a superseded identity.
         assert not written.exists()
 
 
 def test_compute_verdict_key_is_sensitive_to_every_input() -> None:
-    reg = (("a.toml", 1, 2, "digest-a"),)
+    """The verdict key moves with the tree identity, the evidence set, and the version.
+
+    The tree half is now one opaque digest rather than the raw tuples, so this
+    asserts the key is sensitive to that digest changing; that the digest itself
+    is sensitive to every fingerprint field is the identity module's own gate and
+    is not restated here.
+    """
     src = (("b.pdf", 3, 4),)
-    key = compute_verdict_key(registry_fingerprints=reg, source_evidence_fingerprints=src, package_version="1.0.0")
+    key = compute_verdict_key(identity_digest="identity-a", source_evidence_fingerprints=src, package_version="1.0.0")
     assert key != compute_verdict_key(
-        registry_fingerprints=reg, source_evidence_fingerprints=src, package_version="1.0.1"
+        identity_digest="identity-a", source_evidence_fingerprints=src, package_version="1.0.1"
     )
     assert key != compute_verdict_key(
-        registry_fingerprints=(("a.toml", 1, 3, "digest-a"),),
-        source_evidence_fingerprints=src,
-        package_version="1.0.0",
-    )
-    # A same-size, same-mtime content change re-keys via the digest slot alone.
-    assert key != compute_verdict_key(
-        registry_fingerprints=(("a.toml", 1, 2, "digest-b"),),
-        source_evidence_fingerprints=src,
-        package_version="1.0.0",
+        identity_digest="identity-b", source_evidence_fingerprints=src, package_version="1.0.0"
     )
     assert key != compute_verdict_key(
-        registry_fingerprints=reg,
+        identity_digest="identity-a",
         source_evidence_fingerprints=(("b.pdf", 9, 4),),
         package_version="1.0.0",
     )
-    # A tuple moving between the two groups must not collide (group label mixed
-    # in). The registry copy carries the empty bundled-tree digest so its hashed
-    # byte stream matches the source-evidence tuple's exactly but for the label.
-    swapped = compute_verdict_key(
-        registry_fingerprints=(("b.pdf", 3, 4, ""),),
-        source_evidence_fingerprints=(("a.toml", 1, 2),),
-        package_version="1.0.0",
+
+
+def test_a_shipped_verdict_cannot_certify_a_walked_tree(tmp_path: Path) -> None:
+    """A verdict beside a mutable tree is never honoured, whatever it contains.
+
+    The shipped branch is reachable only for a STAMPED identity. Without that
+    gate a verdict file planted beside an authoring tree would certify it, which
+    is precisely the "cache over a validation gate made silently permissive"
+    failure the verdict cache is meant not to have.
+    """
+    root = tmp_path / "registry" / "aeat"
+    root.mkdir(parents=True)
+    identity = _walked_identity((("a.toml", 1, 2, "digest-a"),))
+    shipped = shipped_verdict_location(root)
+    write_verdict(
+        shipped,
+        RegistryValidationVerdict(
+            verdict_key=compute_shipped_verdict_key(identity_digest=identity.digest, package_version=__version__),
+            package_version=__version__,
+            outcome=VERDICT_OUTCOME_GREEN,
+        ),
     )
-    assert key != swapped
+    assert shipped.is_file(), "the planted verdict must exist, or this proves nothing"
+
+    with override_settings(cadrumo_validation_verdict_cache_dir=tmp_path / "verdicts"):
+        assert registry_validation_is_certified(root, verdict_key="unmatched", identity=identity) is False

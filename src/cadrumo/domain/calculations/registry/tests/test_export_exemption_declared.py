@@ -19,12 +19,15 @@ subject is a defect that hides by looking like nothing.
 
 from __future__ import annotations
 
+import inspect
+
 import pytest
 from pydantic import ValidationError
 
-from .....core import ExportExemptionReason, ExportLayoutFormat
+from .....core import ExportExemptionReason, ExportLayoutFormat, RegistryAuthorityGrade
 from .._authority import ValidatedRegistryAuthority
 from .._schema import ModeloRevision
+from .._snapshot import _check_snapshot_filing_capability
 from .._validate_export_exemption import (
     modelo_publishes_a_record_design,
     validate_export_exemption_declarations,
@@ -388,19 +391,90 @@ def test_a_form_spec_citation_is_not_a_record_design() -> None:
     assert not any(source.kind == "record_design" for source in cited.values())
 
 
-def test_an_acquisition_gap_still_refuses() -> None:
+def test_an_acquisition_gap_is_not_excused_by_the_design_predicate() -> None:
     """A revision citing no design, in a modelo that HAS one, is still refused.
 
     Modelo 185 is the worked case: its 2026 design is bundled while the
-    ``2003-2025`` revision cites none. Scoping the predicate per revision instead
-    of per modelo excused exactly that gap — the refusal must survive it, because
-    the design exists and has simply not been acquired for that epoch.
+    ``2003-2025`` revision cites none. Scoping the design predicate per revision
+    instead of per modelo excused that gap -- an ACQUISITION gap, the exact shape
+    the refusal exists to surface.
+
+    Asserted at FILING grade deliberately. Modelo 185 declares only applicability
+    on the real tree, so the grade scoping excuses it there and would make this
+    pass for the wrong reason; re-declaring the grade isolates the design
+    predicate, which is what this test is about.
     """
     modelo, catalogues = _committed_modelo("185")
-    revision = modelo.revisions["2003-2025"]
+    revision = _at_grade(modelo.revisions["2003-2025"], RegistryAuthorityGrade.FILING)
 
     assert not any(
         catalogues.sources[ref].kind == "record_design" for ref in revision.source_refs if ref in catalogues.sources
     )
     assert modelo_publishes_a_record_design(modelo, catalogues.sources)
     assert any("declares no export layout" in failure for failure in _gate(revision, modelo_id="185"))
+
+
+def _at_grade(revision: ModeloRevision, grade: RegistryAuthorityGrade) -> ModeloRevision:
+    """Return ``revision`` re-declared at ``grade``, on the real loaded object."""
+    return revision.model_copy(update={"authority_grade": grade})
+
+
+def test_the_no_layout_refusal_fires_on_a_revision_claiming_filing_grade() -> None:
+    """A filing-grade revision with a design and no layout is refused."""
+    modelo, _ = _committed_modelo("180")
+    stripped = _at_grade(
+        modelo.revisions["2023-y-siguientes"].model_copy(update={"export_layouts": ()}),
+        RegistryAuthorityGrade.FILING,
+    )
+
+    assert any("declares no export layout" in failure for failure in _gate(stripped, modelo_id="180"))
+
+
+def test_the_no_layout_refusal_is_silent_on_a_revision_claiming_only_applicability() -> None:
+    """The same layout-less revision passes once it claims scheduling reach only.
+
+    Paired with the test above on the SAME revision, so the only thing that
+    differs is the declared grade. An applicability-grade revision asserts it can
+    say when the modelo is due and to whom it applies -- it makes no export claim,
+    so there is no export claim to refuse.
+    """
+    modelo, _ = _committed_modelo("180")
+    stripped = _at_grade(
+        modelo.revisions["2023-y-siguientes"].model_copy(update={"export_layouts": ()}),
+        RegistryAuthorityGrade.APPLICABILITY,
+    )
+
+    assert not any("declares no export layout" in failure for failure in _gate(stripped, modelo_id="180"))
+
+
+def test_modelo_182_is_applicability_grade_and_is_not_asked_for_a_layout() -> None:
+    """Modelo 182 is the worked case for scoping on grade, read off the real tree.
+
+    Its revision records that the donativos declaration is filed by the entity
+    RECEIVING the donation, so this application's taxpayer is the declaration's
+    subject rather than its filer. A bundled record design exists, so the design
+    predicate alone would still demand a layout; the grade is what correctly
+    excuses it.
+    """
+    modelo, catalogues = _committed_modelo("182")
+    revision = modelo.revisions["2007-y-siguientes"]
+
+    assert revision.effective_authority_grade is RegistryAuthorityGrade.APPLICABILITY
+    assert modelo_publishes_a_record_design(modelo, catalogues.sources)
+    assert not revision.export_layouts
+    assert not any("declares no export layout" in failure for failure in _gate(revision, modelo_id="182"))
+
+
+def test_the_runtime_filing_gate_is_not_scoped_by_grade() -> None:
+    """The build-time scoping cannot become a mute button, and this is why.
+
+    ``_check_snapshot_filing_capability`` refuses a filing-grade snapshot from any
+    revision declaring no export layout, and it consults no authority grade of its
+    own. Whatever a revision declares at build time, the capability still cannot be
+    exercised. If this ever stops holding, the build-time scoping above becomes a
+    real hole and must be reconsidered.
+    """
+    source = inspect.getsource(_check_snapshot_filing_capability)
+
+    assert "RegistryAuthorityGrade" not in source
+    assert "authority_grade" not in source

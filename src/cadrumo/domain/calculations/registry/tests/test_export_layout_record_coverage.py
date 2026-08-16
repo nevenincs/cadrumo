@@ -311,6 +311,15 @@ def test_every_enumerated_coordinate_is_a_real_unwritten_design_position(
                         f"layout {layout.id!r} refusal names {coordinate}, which its official record "
                         f"design does not declare at all"
                     )
+                    if "auxiliary envelope header" in failure:
+                        # An auxiliary header joins to NO authored record, so the
+                        # "written by a different record" reasoning below does not
+                        # apply to it. Its own opening tag sits at the same low
+                        # offsets the numbered records use for theirs, and another
+                        # record writing (1, 2) does not emit the HEADER's two
+                        # bytes. The declared-position assertion above still runs,
+                        # so a fabricated coordinate is still caught here.
+                        continue
                     if coordinate in written:
                         # Legitimate only when the coordinate is written by a
                         # DIFFERENT record than the one the design record joined
@@ -519,10 +528,24 @@ def test_writing_a_desglosado_parent_as_one_blob_is_refused(
             for sheet in _design_sheets(layout, catalogues)
             for parent in sheet.fields
             if parent.components
+            and any(_omissible_reason(component) is not None for component in parent.components)
         ),
         None,
     )
-    assert subject is not None, "no bundled layout is backed by a design declaring a desglosado field"
+    # The subject must RESERVE one of its sub-fields, and selecting on that is
+    # the discipline. Byte-extent coverage cannot object to a blob laid over
+    # sub-fields that are all real data -- the blob's bytes cover every one of
+    # them -- so what makes the shape refusable is precisely that it writes
+    # AEAT's own bytes. Selecting merely on ``parent.components`` was
+    # accidentally correct while Modelo 576 was the only bundled design
+    # carrying any; as soon as another design declared components, this picked
+    # a parent reserving nothing and the proof went green against a gate that
+    # had not changed. The vacuity assertion further down states this same
+    # requirement, so pinning it in the selection is that claim moved to where
+    # it can bite instead of reporting the weaker "left the gate green".
+    assert subject is not None, (
+        "no bundled layout is backed by a design declaring a desglosado field that reserves a sub-field"
+    )
     revision, layout, _sheet, parent = subject
     span = range(parent.offset, parent.offset + parent.length)
 
@@ -936,3 +959,77 @@ def test_an_eedd_delegated_position_is_excused_only_with_its_note_body(
     assert _omissible_reason(cited, _UndefinedNote()) is None, (
         "a citation whose note the sheet never defined must leave the position required"
     )
+
+
+class TestAeatProgramSealedPositions:
+    """AEAT's own electronic-seal slot is omissible, and only on two signals.
+
+    These designs name the field ``SELLO ELECTRÓNICO`` in the cell that NAMES it
+    and delegate completion to AEAT's own programs in the cell that describes its
+    CONTENT. Neither cell alone settles the row, which is why
+    :func:`_administration_reserved` -- which reads the description only, and
+    deliberately so -- leaves them required.
+    """
+
+    @staticmethod
+    def _sealed_rows(catalogues: RegistryCatalogues) -> list[RecordDesignField]:
+        return [
+            field
+            for field in _every_declared_design_row(catalogues)
+            if "SELLO ELECTR" in (field.description or "").upper()
+            and re.search(
+                r"cumplimentad[oa]\s+(?:[^.;]{0,30}?\s+)?por\s+(?:los\s+)?programas[^.;]{0,40}?a\.?e\.?a\.?t\.?",
+                field.content or "",
+                re.IGNORECASE,
+            )
+        ]
+
+    def test_the_bundled_seal_rows_are_omissible(self, registry_tree) -> None:
+        """Real corpus rows, not a synthetic one: they must stop being demanded."""
+        _modelos, catalogues = registry_tree
+        sealed = self._sealed_rows(catalogues)
+
+        assert sealed, "no bundled row pairs a sello name with an AEAT-programs delegation"
+        for field in sealed:
+            assert _omissible_reason(field) is not None, (
+                f"@{field.offset}+{field.length} {field.description!r} is AEAT's own seal slot but is "
+                f"still demanded of the filer"
+            )
+
+    def test_the_description_alone_does_not_excuse_a_seal_row(self, registry_tree) -> None:
+        """The control: naming the sello without the delegation stays required.
+
+        Modelo 347's 2008 design is the live case -- it names ``SELLO
+        ELECTRÓNICO`` but carries a chart-geometry placeholder where the
+        delegation would be, so nothing states whose bytes these are.
+        """
+        _modelos, catalogues = registry_tree
+        named_without_delegation = [
+            field
+            for field in _every_declared_design_row(catalogues)
+            if "SELLO ELECTR" in (field.description or "").upper()
+            and field not in self._sealed_rows(catalogues)
+            and _administration_reserved(field) is False
+        ]
+
+        assert named_without_delegation, "every sello row carries a delegation, so this control is vacuous"
+        for field in named_without_delegation:
+            assert _omissible_reason(field) is None, (
+                f"@{field.offset}+{field.length} was excused on its NAME alone, which would let any row "
+                f"mentioning a seal drop out of coverage"
+            )
+
+    def test_a_delegation_without_the_seal_name_does_not_excuse_a_row(self) -> None:
+        """The other control: the delegation clause alone must not excuse a datum."""
+        datum = RecordDesignField(
+            sheet="Tipo 1",
+            row=9,
+            ordinal="9",
+            offset=1,
+            length=9,
+            type_code="Alfanumérico",
+            description="NIF DEL DECLARANTE",
+            content="Se cumplimentará por los programas de la A.E.A.T. en presentaciones telemáticas.",
+        )
+
+        assert _omissible_reason(datum) is None

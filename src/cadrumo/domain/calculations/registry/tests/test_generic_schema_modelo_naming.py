@@ -45,13 +45,7 @@ _GENERIC_CONSTRUCTION_MODULES: frozenset[str] = frozenset(
 
 #: Deferred sites, keyed by (``src/cadrumo``-relative path, class, field) -> reason.
 #: Every entry must still name a live violation; a stale one fails below.
-_ALLOWLIST: dict[tuple[str, str, str], str] = {
-    (f"{_REGISTRY_PACKAGE}/_schema_exports.py", "ExportLayoutDefinition", "m303_filing_envelope"): (
-        "DEFERRED, NOT SANCTIONED: a live instance of the defect this gate refuses. "
-        "The Modelo 303 export layouts are regenerated wholesale from their official "
-        "binaries, so this field moves with that regeneration rather than ahead of it."
-    ),
-}
+_ALLOWLIST: dict[tuple[str, str, str], str] = {}
 
 #: Matches a modelo code appearing as a name segment: ``m303``, ``modelo_303``.
 _NAME_CODE = re.compile(r"(?:^|_)(?:modelo_?|m_?)(\d{3})(?=$|_|[a-z])", re.IGNORECASE)

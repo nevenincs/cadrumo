@@ -33,7 +33,7 @@ _STATIC_CONSUMERS = (
     _REPOSITORY_ROOT / "dev" / "registry" / "_semantic_map_join.py",
     _REPOSITORY_ROOT / "dev" / "registry" / "_dp30302_field_matrix.py",
     _REPOSITORY_ROOT / "dev" / "registry" / "_export_tree.py",
-    _REPOSITORY_ROOT / "dev" / "registry" / "_m303_variable_envelope.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "_variable_envelope.py",
 )
 _LEGACY_STATIC_SYMBOLS = frozenset(
     {

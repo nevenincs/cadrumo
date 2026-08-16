@@ -542,8 +542,6 @@ class TestTypoTwinWarning:
                 "2163",
                 "irpf_deduccion_murcia_recursos_energeticos_renovables_pendiente_1",
             ),
-            ("184", "2015-y-siguientes", "tipo2.clave", "tipo_renta_atribuida_clave"),
-            ("184", "2015-y-siguientes", "tipo2.subclave", "tipo_renta_atribuida_subclave"),
             ("190", "2024-y-siguientes", "decl.total-percepciones", "total_percepciones_count"),
             ("190", "2024-y-siguientes", "decl.percepciones-total", "total_percepciones_amount"),
             ("202", "2025-y-siguientes", "61", "is_pf_mod_40_3_b2_base_tipo_3"),
@@ -840,20 +838,43 @@ class TestTypoTwinWarning:
         assert any("taxpayer_niff" in failure for failure in failures)
 
     def test_typo_twin_blocks_registry_scope(self) -> None:
+        """A typo twin refuses through the scope validator, on a tree that can answer.
+
+        The tree carries TWO modelos deliberately.
+        :func:`_tree_can_answer_role_singleton_questions` abstains on a
+        one-modelo/one-revision tree, where every role is a singleton by
+        construction, so asserting a singleton refusal there would be asserting
+        the pruning rather than the data.
+        """
         typo = _casilla(cid="a", semantic_role="taxpayer_niff", data_type="nif")
         canonical_a = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
         canonical_b = _casilla(cid="c", semantic_role="taxpayer_nif", data_type="nif")
         modelo = _registry_modelo("180", "2025", [typo, canonical_a, canonical_b])
+        sibling = _registry_modelo("184", "2025", [_casilla(cid="d", semantic_role="taxpayer_nif", data_type="nif")])
 
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
-            failures = validate_registry_scope([modelo])
+            failures = validate_registry_scope([modelo, sibling])
 
         assert captured == []
         assert failures == (
             "semantic_role 'taxpayer_niff' appears on exactly one casilla "
             "(180.2025.a); likely typo or missing role declarations on sibling casillas",
         )
+
+    def test_a_one_modelo_one_revision_tree_abstains_from_the_singleton_question(self) -> None:
+        """The control: the same typo goes unreported where the siblings were pruned.
+
+        Without this, the test above could be passing because the check never
+        abstains, and the abstention is what keeps generated-export-tree
+        validation -- which mandates exactly one modelo and one revision -- from
+        refusing every role in its candidate registry.
+        """
+        typo = _casilla(cid="a", semantic_role="taxpayer_niff", data_type="nif")
+        canonical = _casilla(cid="b", semantic_role="taxpayer_nif", data_type="nif")
+        modelo = _registry_modelo("180", "2025", [typo, canonical])
+
+        assert validate_registry_scope([modelo]) == ()
 
     def test_intentional_singleton_role_does_not_emit_warning(self) -> None:
         a = _casilla(
@@ -886,6 +907,38 @@ class TestTypoTwinWarning:
         )
         m = _registry_modelo("200", "2024-y-siguientes", [aumento, disminucion])
         assert _validate_semantic_role_typo_twins([m]) == ()
+
+    def test_quarter_axis_siblings_do_not_warn_as_typos(self) -> None:
+        """Modelo 347's four quarterly columns are an axis, not four spellings.
+
+        Its Tipo 2 record declares "IMPORTE PERCIBIDO POR TRANSMISIONES DE
+        INMUEBLES SUJETAS A IVA {PRIMER,SEGUNDO,TERCER,CUARTO} TRIMESTRE" as
+        four separate sixteen-byte columns, so each role legitimately owns one
+        casilla. They differ by a single digit, which is what drew the detector.
+        """
+        quarters = [
+            _casilla(cid=f"q{index}", semantic_role=f"importe_transmisiones_q{index}", data_type="money")
+            for index in (1, 2, 3, 4)
+        ]
+        m = _registry_modelo("347", "2008-y-siguientes", quarters)
+
+        assert _validate_semantic_role_typo_twins([m]) == ()
+
+    def test_a_misspelt_stem_under_the_same_quarter_token_still_warns(self) -> None:
+        """The control: the exemption is scoped to the token, never the stem.
+
+        Both roles end in ``q1``, so the quarter axis cannot exempt them -- it
+        requires two DISTINCT tokens -- and the transposed stem is caught
+        exactly as it was before the axis existed.
+        """
+        typo = _casilla(cid="a", semantic_role="importe_transmisionse_q1", data_type="money")
+        canonical_a = _casilla(cid="b", semantic_role="importe_transmisiones_q1", data_type="money")
+        canonical_b = _casilla(cid="c", semantic_role="importe_transmisiones_q1", data_type="money")
+        m = _registry_modelo("347", "2008-y-siguientes", [typo, canonical_a, canonical_b])
+
+        failures = _validate_semantic_role_typo_twins([m])
+
+        assert any("transmisionse_q1" in failure for failure in failures)
 
     def test_near_duplicate_with_same_axis_still_warns(self) -> None:
         typo = _casilla(

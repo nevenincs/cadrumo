@@ -473,13 +473,6 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
         "aeat-dr-303-2019-2020": "held by the in-flight M303 generator-authority campaign",
         "aeat-dr-390-2015": "held by the in-flight M390 generator-authority campaign",
         "aeat-dr-390-2016": "held by the in-flight M390 generator-authority campaign",
-        "aeat-dr-193-2024": "modelo scoped out of registry authoring by operator direction",
-        "aeat-dr-193-2025": "modelo scoped out of registry authoring by operator direction",
-        "aeat-dr-296-2023": "modelo scoped out of registry authoring by operator direction",
-        "aeat-dr-347-2008": "modelo scoped out of registry authoring by operator direction",
-        "aeat-dr-347-2010": "modelo scoped out of registry authoring by operator direction",
-        "aeat-dr-347-2011": "modelo scoped out of registry authoring by operator direction",
-        "aeat-dr-347-2025": "modelo scoped out of registry authoring by operator direction",
     }
 
     catalogues = _catalogues()

@@ -31,6 +31,7 @@ from .....tests.attribute_scope import scoped_attribute
 from .. import _formula_runtime_ops as formula_runtime_ops
 from .. import read_parameter
 from .._convenio import collect_convenio_fingerprints
+from .._identity import compute_walked_tree_digest
 from .._loader import (
     _collect_registry_tree_fingerprints_uncached,
     clear_fingerprint_cache,
@@ -105,7 +106,7 @@ def _certify_current_tree(registry_root: Path, source_root: Path) -> None:
     certify_registry_validation(
         resolved,
         verdict_key=compute_verdict_key(
-            registry_fingerprints=registry_fingerprints,
+            identity_digest=compute_walked_tree_digest(registry_fingerprints),
             source_evidence_fingerprints=source_evidence,
         ),
     )

@@ -31,6 +31,7 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.resources import bundled_path
+from .._identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
 from .._loader import (
     _collect_registry_directory_fingerprints,
     _collect_registry_tree_fingerprints,
@@ -50,6 +51,16 @@ from .._verdict_cache import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _walked_identity(fingerprints: tuple[tuple[str, int, int, str], ...]) -> RegistryIdentity:
+    """Build the walked identity the canonical resolver produces for a mutable tree."""
+    return RegistryIdentity(
+        digest=compute_walked_tree_digest(fingerprints),
+        origin=RegistryIdentityOrigin.WALKED,
+        fingerprints=fingerprints,
+    )
+
 
 _CASILLA_NUMBER_SENTINEL = "@@CASILLA_NUMBER@@"
 _SUBPROCESS_TIMEOUT_SECONDS = 300
@@ -177,8 +188,9 @@ def test_a_mutable_tree_edit_is_seen_under_a_warm_verdict_and_warm_compiled_cach
 
         fingerprints_before = _collect_registry_tree_fingerprints_uncached(resolved)
         directories_before = _collect_registry_directory_fingerprints(resolved)
+        identity_before = _walked_identity(fingerprints_before)
         verdict_key_before = compute_verdict_key(
-            registry_fingerprints=fingerprints_before,
+            identity_digest=identity_before.digest,
             source_evidence_fingerprints=(),
         )
         certify_registry_validation(resolved, verdict_key=verdict_key_before)
@@ -186,7 +198,7 @@ def test_a_mutable_tree_edit_is_seen_under_a_warm_verdict_and_warm_compiled_cach
         assert registry_validation_is_certified(
             resolved,
             verdict_key=verdict_key_before,
-            registry_fingerprints=fingerprints_before,
+            identity=identity_before,
         ), "sanity: the freshly written verdict must certify the tree it was written for"
 
         _write_registry_tree(tmp_path, number="02")
@@ -210,14 +222,18 @@ def test_a_mutable_tree_edit_is_seen_under_a_warm_verdict_and_warm_compiled_cach
         assert fingerprints_after != fingerprints_before, (
             "sanity: the edit must move the complete tree fingerprint for this proof to mean anything"
         )
+        identity_after = _walked_identity(fingerprints_after)
+        assert identity_after.digest != identity_before.digest, (
+            "sanity: the edit must move the tree IDENTITY, which is what every cache now keys on"
+        )
         assert verdict_cache_path(resolved).is_file(), "the persisted verdict must still be on disk, merely unusable"
         assert not registry_validation_is_certified(
             resolved,
             verdict_key=compute_verdict_key(
-                registry_fingerprints=fingerprints_after,
+                identity_digest=identity_after.digest,
                 source_evidence_fingerprints=(),
             ),
-            registry_fingerprints=fingerprints_after,
+            identity=identity_after,
         ), "the verdict persisted for the pre-edit tree must not certify the edited tree"
 
 
