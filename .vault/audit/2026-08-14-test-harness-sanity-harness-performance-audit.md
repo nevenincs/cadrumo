@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:91c589f801a332572bcfad30d405589c9f9595ec1a27dbf20531f50b2b15c065'
+body_hash: 'sha256:6a75a998c54c57dee2028c1b77d6658b0c965a5e9fda9f497e2cdf2db40d01ae'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1605,3 +1605,63 @@ The common failure is reading a RANKING as if it were a model of where time
 goes. `--durations=N` answers "which tests are slowest", which is not "what is
 the suite waiting on", and neither question was the one that mattered. The
 per-file aggregation cost one extra flag on a run that was happening anyway.
+
+## Where the 9,351s actually lives
+
+With per-test targeting exhausted and the suite shown to be CPU-bound, the
+useful question became which CATEGORY carries the mass. Aggregating a
+`--durations=0` run three ways:
+
+    by phase      call 7,619s (81.5%)   setup 1,625s (17.4%)   teardown 108s (1.2%)
+
+    by package    3,356s  35.9%  src/cadrumo/entrypoints/cli
+                    962s  10.3%  src/cadrumo/domain/calculations
+                    566s   6.1%  src/cadrumo/application/modelo
+                    374s   4.0%  src/cadrumo/application/user_profile
+                    317s   3.4%  src/cadrumo/application/ledger
+
+    concentration top  10 files 11.7%   top 100 files 51.2%
+                  top 250 files 72.8%   top 500 files 87.6%
+                  files under 1s each: 237s = 2.5%
+
+Three things follow that no ranking showed.
+
+**The CLI suite is the only category with real mass** -- 35.9%, more than three
+times the next. Any future broad lever is there or nowhere.
+
+**It is not a long-tail problem.** Half the CPU is in 100 files out of 2,326,
+and everything under one second put together is 2.5%. Sweeping small tests would
+be busywork.
+
+**Setup is 17.4%.** That is the fixture surface this campaign has been sharing,
+and it is now a sixth of the total -- worth knowing before anyone assumes more
+fixture sharing is where the remaining time is.
+
+### What is NOT established, and the measurement that would settle it
+
+The obvious story is that the CLI mass is subprocess boots. The per-boot floor
+was measured -- a cold `aeat --help` child costs 0.70s warm, 1.38s first -- and
+the CLI import it pays is 0.769s once per process, not per test.
+
+That is a floor, not an attribution. Reaching 3,356s from 0.70s boots needs
+roughly four thousand of them, and the actual spawn count across the CLI suite
+has NOT been measured; the static count is 119 `subprocess.run` sites over 76
+files, which says nothing about executions. Real commands also do far more than
+`--help`: registry loads, profile unlocks, ledger work.
+
+So the CLI mass is recorded as UNATTRIBUTED. Settling it needs an aggregated
+spawn count across that suite, which requires either a single-process run of the
+CLI slice (~56 minutes at its measured CPU) or a per-worker counter that
+aggregates in the xdist controller, which the scratch counter does not do.
+
+Written down explicitly because this campaign has twice shipped a conclusion
+that was reasoned rather than measured, and "it must be the subprocesses" is
+exactly the shape of both.
+
+### Process note: do not delete the log before the analysis is finished
+
+Two of this round's three profile runs were re-runs, because the log was deleted
+immediately after extracting the one number that had been planned for. Each
+re-run cost half an hour of wall clock for data that had already existed. The
+log is a few tens of kilobytes with `--tb=no`; the analysis is cheap and
+iterative and the collection is not.
