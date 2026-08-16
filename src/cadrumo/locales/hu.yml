@@ -73422,6 +73422,12 @@ modelo:
           iva-deducible-aic-corrientes-tipo-10-cuota:
             label: Közösségen belüli folyó termékbeszerzések után levonható előzetesen
               felszámított ÁFA 10% kulccsal - levonható adóösszeg
+          iva-deducible-aic-corrientes-tipo-2-base:
+            label: Közösségen belüli folyó termékbeszerzések után levonható előzetesen
+              felszámított ÁFA 2% kulccsal - adóalap
+          iva-deducible-aic-corrientes-tipo-2-cuota:
+            label: Közösségen belüli folyó termékbeszerzések után levonható előzetesen
+              felszámított ÁFA 2% kulccsal - levonható adóösszeg
           iva-deducible-aic-corrientes-tipo-21-base:
             label: Közösségen belüli folyó termékbeszerzések után levonható előzetesen
               felszámított ÁFA 21% kulccsal - adóalap
@@ -73440,6 +73446,12 @@ modelo:
           iva-deducible-aic-corrientes-tipo-5-cuota:
             label: Közösségen belüli folyó termékbeszerzések után levonható előzetesen
               felszámított ÁFA 5% kulccsal - levonható adóösszeg
+          iva-deducible-aic-corrientes-tipo-7-5-base:
+            label: Közösségen belüli folyó termékbeszerzések után levonható előzetesen
+              felszámított ÁFA 7,5% kulccsal - adóalap
+          iva-deducible-aic-corrientes-tipo-7-5-cuota:
+            label: Közösségen belüli folyó termékbeszerzések után levonható előzetesen
+              felszámított ÁFA 7,5% kulccsal - levonható adóösszeg
           iva-deducible-aic-corrientes-total-base:
             label: 'Összesen: Közösségen belüli folyó termékbeszerzések után levonható
               előzetesen felszámított ÁFA - adóalap'
@@ -73542,6 +73554,12 @@ modelo:
           iva-deducible-importaciones-corrientes-tipo-10-cuota:
             label: Folyó termékek importja után levonható előzetesen felszámított
               ÁFA 10% kulccsal - levonható adóösszeg
+          iva-deducible-importaciones-corrientes-tipo-2-base:
+            label: Folyó termékek importja után levonható előzetesen felszámított
+              ÁFA 2% kulccsal - adóalap
+          iva-deducible-importaciones-corrientes-tipo-2-cuota:
+            label: Folyó termékek importja után levonható előzetesen felszámított
+              ÁFA 2% kulccsal - levonható adóösszeg
           iva-deducible-importaciones-corrientes-tipo-21-base:
             label: Folyó termékek importja után levonható előzetesen felszámított
               ÁFA 21% kulccsal - adóalap
@@ -73560,6 +73578,12 @@ modelo:
           iva-deducible-importaciones-corrientes-tipo-5-cuota:
             label: Folyó termékek importja után levonható előzetesen felszámított
               ÁFA 5% kulccsal - levonható adóösszeg
+          iva-deducible-importaciones-corrientes-tipo-7-5-base:
+            label: Folyó termékek importja után levonható előzetesen felszámított
+              ÁFA 7,5% kulccsal - adóalap
+          iva-deducible-importaciones-corrientes-tipo-7-5-cuota:
+            label: Folyó termékek importja után levonható előzetesen felszámított
+              ÁFA 7,5% kulccsal - levonható adóösszeg
           iva-deducible-importaciones-corrientes-total-base:
             label: 'Összesen: Folyó termékek importja után levonható előzetesen felszámított
               ÁFA - adóalap'
@@ -73569,6 +73593,12 @@ modelo:
           iva-deducible-importaciones-inversion-tipo-10-cuota:
             label: Tárgyi eszközök importja után levonható előzetesen felszámított
               ÁFA 10% kulccsal - levonható adóösszeg
+          iva-deducible-importaciones-inversion-tipo-2-base:
+            label: Tárgyi eszközök importja után levonható előzetesen felszámított
+              ÁFA 2% kulccsal - adóalap
+          iva-deducible-importaciones-inversion-tipo-2-cuota:
+            label: Tárgyi eszközök importja után levonható előzetesen felszámított
+              ÁFA 2% kulccsal - levonható adóösszeg
           iva-deducible-importaciones-inversion-tipo-21-base:
             label: Tárgyi eszközök importja után levonható előzetesen felszámított
               ÁFA 21% kulccsal - adóalap
@@ -73587,6 +73617,12 @@ modelo:
           iva-deducible-importaciones-inversion-tipo-5-cuota:
             label: Tárgyi eszközök importja után levonható előzetesen felszámított
               ÁFA 5% kulccsal - levonható adóösszeg
+          iva-deducible-importaciones-inversion-tipo-7-5-base:
+            label: Tárgyi eszközök importja után levonható előzetesen felszámított
+              ÁFA 7,5% kulccsal - adóalap
+          iva-deducible-importaciones-inversion-tipo-7-5-cuota:
+            label: Tárgyi eszközök importja után levonható előzetesen felszámított
+              ÁFA 7,5% kulccsal - levonható adóösszeg
           iva-deducible-importaciones-inversion-total-base:
             label: 'Összesen: Tárgyi eszközök importja után levonható előzetesen felszámított
               ÁFA - adóalap'
@@ -73599,6 +73635,12 @@ modelo:
           iva-deducible-interiores-corrientes-tipo-10-cuota:
             label: Belföldi folyó ügyletek után levonható előzetesen felszámított
               ÁFA 10% kulccsal - levonható adóösszeg
+          iva-deducible-interiores-corrientes-tipo-2-base:
+            label: Belföldi folyó ügyletek után levonható előzetesen felszámított
+              ÁFA 2% kulccsal - adóalap
+          iva-deducible-interiores-corrientes-tipo-2-cuota:
+            label: Belföldi folyó ügyletek után levonható előzetesen felszámított
+              ÁFA 2% kulccsal - levonható adóösszeg
           iva-deducible-interiores-corrientes-tipo-21-base:
             label: Belföldi folyó ügyletek után levonható előzetesen felszámított
               ÁFA 21% kulccsal - adóalap
@@ -73617,12 +73659,24 @@ modelo:
           iva-deducible-interiores-corrientes-tipo-5-cuota:
             label: Belföldi folyó ügyletek után levonható előzetesen felszámított
               ÁFA 5% kulccsal - levonható adóösszeg
+          iva-deducible-interiores-corrientes-tipo-7-5-base:
+            label: Belföldi folyó ügyletek után levonható előzetesen felszámított
+              ÁFA 7,5% kulccsal - adóalap
+          iva-deducible-interiores-corrientes-tipo-7-5-cuota:
+            label: Belföldi folyó ügyletek után levonható előzetesen felszámított
+              ÁFA 7,5% kulccsal - levonható adóösszeg
           iva-deducible-interiores-inversion-tipo-10-base:
             label: Belföldi tárgyieszköz-ügyletek után levonható előzetesen felszámított
               ÁFA 10% kulccsal - adóalap
           iva-deducible-interiores-inversion-tipo-10-cuota:
             label: Belföldi tárgyieszköz-ügyletek után levonható előzetesen felszámított
               ÁFA 10% kulccsal - levonható adóösszeg
+          iva-deducible-interiores-inversion-tipo-2-base:
+            label: Belföldi tárgyieszköz-ügyletek után levonható előzetesen felszámított
+              ÁFA 2% kulccsal - adóalap
+          iva-deducible-interiores-inversion-tipo-2-cuota:
+            label: Belföldi tárgyieszköz-ügyletek után levonható előzetesen felszámított
+              ÁFA 2% kulccsal - levonható adóösszeg
           iva-deducible-interiores-inversion-tipo-21-base:
             label: Belföldi tárgyieszköz-ügyletek után levonható előzetesen felszámított
               ÁFA 21% kulccsal - adóalap
@@ -73641,6 +73695,12 @@ modelo:
           iva-deducible-interiores-inversion-tipo-5-cuota:
             label: Belföldi tárgyieszköz-ügyletek után levonható előzetesen felszámított
               ÁFA 5% kulccsal - levonható adóösszeg
+          iva-deducible-interiores-inversion-tipo-7-5-base:
+            label: Belföldi tárgyieszköz-ügyletek után levonható előzetesen felszámított
+              ÁFA 7,5% kulccsal - adóalap
+          iva-deducible-interiores-inversion-tipo-7-5-cuota:
+            label: Belföldi tárgyieszköz-ügyletek után levonható előzetesen felszámított
+              ÁFA 7,5% kulccsal - levonható adóösszeg
           iva-deducible-interiores-inversion-total-base:
             label: 'Összesen: Belföldi tárgyieszköz-ügyletek után levonható előzetesen
               felszámított ÁFA - adóalap'
@@ -73653,6 +73713,12 @@ modelo:
           iva-deducible-intragrupo-corrientes-tipo-10-cuota:
             label: Csoporton belüli folyó ügyletek után levonható előzetesen felszámított
               ÁFA 10% kulccsal - levonható adóösszeg
+          iva-deducible-intragrupo-corrientes-tipo-2-base:
+            label: Csoporton belüli folyó ügyletek után levonható előzetesen felszámított
+              ÁFA 2% kulccsal - adóalap
+          iva-deducible-intragrupo-corrientes-tipo-2-cuota:
+            label: Csoporton belüli folyó ügyletek után levonható előzetesen felszámított
+              ÁFA 2% kulccsal - levonható adóösszeg
           iva-deducible-intragrupo-corrientes-tipo-21-base:
             label: Csoporton belüli folyó ügyletek után levonható előzetesen felszámított
               ÁFA 21% kulccsal - adóalap
@@ -73671,6 +73737,12 @@ modelo:
           iva-deducible-intragrupo-corrientes-tipo-5-cuota:
             label: Csoporton belüli folyó ügyletek után levonható előzetesen felszámított
               ÁFA 5% kulccsal - levonható adóösszeg
+          iva-deducible-intragrupo-corrientes-tipo-7-5-base:
+            label: Csoporton belüli folyó ügyletek után levonható előzetesen felszámított
+              ÁFA 7,5% kulccsal - adóalap
+          iva-deducible-intragrupo-corrientes-tipo-7-5-cuota:
+            label: Csoporton belüli folyó ügyletek után levonható előzetesen felszámított
+              ÁFA 7,5% kulccsal - levonható adóösszeg
           iva-deducible-intragrupo-corrientes-total-base:
             label: 'Összesen: Csoporton belüli folyó ügyletek után levonható előzetesen
               felszámított ÁFA - adóalap'
@@ -73683,6 +73755,12 @@ modelo:
           iva-deducible-intragrupo-inversion-tipo-10-cuota:
             label: Csoporton belüli tárgyieszköz-ügyletek után levonható előzetesen
               felszámított ÁFA 10% kulccsal - levonható adóösszeg
+          iva-deducible-intragrupo-inversion-tipo-2-base:
+            label: Csoporton belüli tárgyieszköz-ügyletek után levonható előzetesen
+              felszámított ÁFA 2% kulccsal - adóalap
+          iva-deducible-intragrupo-inversion-tipo-2-cuota:
+            label: Csoporton belüli tárgyieszköz-ügyletek után levonható előzetesen
+              felszámított ÁFA 2% kulccsal - levonható adóösszeg
           iva-deducible-intragrupo-inversion-tipo-21-base:
             label: Csoporton belüli tárgyieszköz-ügyletek után levonható előzetesen
               felszámított ÁFA 21% kulccsal - adóalap
@@ -73701,6 +73779,12 @@ modelo:
           iva-deducible-intragrupo-inversion-tipo-5-cuota:
             label: Csoporton belüli tárgyieszköz-ügyletek után levonható előzetesen
               felszámított ÁFA 5% kulccsal - levonható adóösszeg
+          iva-deducible-intragrupo-inversion-tipo-7-5-base:
+            label: Csoporton belüli tárgyieszköz-ügyletek után levonható előzetesen
+              felszámított ÁFA 7,5% kulccsal - adóalap
+          iva-deducible-intragrupo-inversion-tipo-7-5-cuota:
+            label: Csoporton belüli tárgyieszköz-ügyletek után levonható előzetesen
+              felszámított ÁFA 7,5% kulccsal - levonható adóösszeg
           iva-deducible-intragrupo-inversion-total-base:
             label: 'Összesen: Csoporton belüli tárgyieszköz-ügyletek után levonható
               előzetesen felszámított ÁFA - adóalap'
@@ -73823,6 +73907,12 @@ modelo:
           iva-repercutido-bienes-usados-tipo-10-cuota:
             label: A használt cikkek különös szabályai szerinti ÁFA 10% kulccsal -
               adóösszeg
+          iva-repercutido-bienes-usados-tipo-2-base:
+            label: A használt cikkek különös szabályai szerinti ÁFA 2% kulccsal -
+              adóalap
+          iva-repercutido-bienes-usados-tipo-2-cuota:
+            label: A használt cikkek különös szabályai szerinti ÁFA 2% kulccsal -
+              adóösszeg
           iva-repercutido-bienes-usados-tipo-21-base:
             label: A használt cikkek különös szabályai szerinti ÁFA 21% kulccsal -
               adóalap
@@ -73841,6 +73931,12 @@ modelo:
           iva-repercutido-bienes-usados-tipo-5-cuota:
             label: A használt cikkek különös szabályai szerinti ÁFA 5% kulccsal -
               adóösszeg
+          iva-repercutido-bienes-usados-tipo-7-5-base:
+            label: A használt cikkek különös szabályai szerinti ÁFA 7,5% kulccsal
+              - adóalap
+          iva-repercutido-bienes-usados-tipo-7-5-cuota:
+            label: A használt cikkek különös szabályai szerinti ÁFA 7,5% kulccsal
+              - adóösszeg
           iva-repercutido-criterio-caja-tipo-0-base:
             label: A pénzforgalmi elszámolás különös szabályai szerinti ÁFA 0% kulccsal
               - adóalap
@@ -73852,6 +73948,12 @@ modelo:
               - adóalap
           iva-repercutido-criterio-caja-tipo-10-cuota:
             label: A pénzforgalmi elszámolás különös szabályai szerinti ÁFA 10% kulccsal
+              - adóösszeg
+          iva-repercutido-criterio-caja-tipo-2-base:
+            label: A pénzforgalmi elszámolás különös szabályai szerinti ÁFA 2% kulccsal
+              - adóalap
+          iva-repercutido-criterio-caja-tipo-2-cuota:
+            label: A pénzforgalmi elszámolás különös szabályai szerinti ÁFA 2% kulccsal
               - adóösszeg
           iva-repercutido-criterio-caja-tipo-21-base:
             label: A pénzforgalmi elszámolás különös szabályai szerinti ÁFA 21% kulccsal
@@ -73871,6 +73973,12 @@ modelo:
           iva-repercutido-criterio-caja-tipo-5-cuota:
             label: A pénzforgalmi elszámolás különös szabályai szerinti ÁFA 5% kulccsal
               - adóösszeg
+          iva-repercutido-criterio-caja-tipo-7-5-base:
+            label: A pénzforgalmi elszámolás különös szabályai szerinti ÁFA 7,5% kulccsal
+              - adóalap
+          iva-repercutido-criterio-caja-tipo-7-5-cuota:
+            label: A pénzforgalmi elszámolás különös szabályai szerinti ÁFA 7,5% kulccsal
+              - adóösszeg
           iva-repercutido-intragrupo-tipo-0-base:
             label: Csoporton belüli ügyletek után keletkezett ÁFA 0% kulccsal - adóalap
           iva-repercutido-intragrupo-tipo-0-cuota:
@@ -73879,6 +73987,10 @@ modelo:
             label: Csoporton belüli ügyletek után keletkezett ÁFA 10% kulccsal - adóalap
           iva-repercutido-intragrupo-tipo-10-cuota:
             label: Csoporton belüli ügyletek után keletkezett ÁFA 10% kulccsal - adóösszeg
+          iva-repercutido-intragrupo-tipo-2-base:
+            label: Csoporton belüli ügyletek után keletkezett ÁFA 2% kulccsal - adóalap
+          iva-repercutido-intragrupo-tipo-2-cuota:
+            label: Csoporton belüli ügyletek után keletkezett ÁFA 2% kulccsal - adóösszeg
           iva-repercutido-intragrupo-tipo-21-base:
             label: Csoporton belüli ügyletek után keletkezett ÁFA 21% kulccsal - adóalap
           iva-repercutido-intragrupo-tipo-21-cuota:
@@ -73891,6 +74003,12 @@ modelo:
             label: Csoporton belüli ügyletek után keletkezett ÁFA 5% kulccsal - adóalap
           iva-repercutido-intragrupo-tipo-5-cuota:
             label: Csoporton belüli ügyletek után keletkezett ÁFA 5% kulccsal - adóösszeg
+          iva-repercutido-intragrupo-tipo-7-5-base:
+            label: Csoporton belüli ügyletek után keletkezett ÁFA 7,5% kulccsal -
+              adóalap
+          iva-repercutido-intragrupo-tipo-7-5-cuota:
+            label: Csoporton belüli ügyletek után keletkezett ÁFA 7,5% kulccsal -
+              adóösszeg
           iva-repercutido-recargo-tipo-0-5-base:
             label: Egyenértékűségi felár 0.5% kulccsal - adóalap
           iva-repercutido-recargo-tipo-1-4-base:

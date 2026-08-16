@@ -73379,6 +73379,12 @@ modelo:
           iva-deducible-aic-corrientes-tipo-10-cuota:
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               corrents al tipus 10% - quota deduïble
+          iva-deducible-aic-corrientes-tipo-2-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              corrents al tipus 2% - base imposable
+          iva-deducible-aic-corrientes-tipo-2-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              corrents al tipus 2% - quota deduïble
           iva-deducible-aic-corrientes-tipo-21-base:
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               corrents al tipus 21% - base imposable
@@ -73397,6 +73403,12 @@ modelo:
           iva-deducible-aic-corrientes-tipo-5-cuota:
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               corrents al tipus 5% - quota deduïble
+          iva-deducible-aic-corrientes-tipo-7-5-base:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              corrents al tipus 7,5% - base imposable
+          iva-deducible-aic-corrientes-tipo-7-5-cuota:
+            label: IVA suportat deduïble en adquisicions intracomunitàries de béns
+              corrents al tipus 7,5% - quota deduïble
           iva-deducible-aic-corrientes-total-base:
             label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
               de béns corrents - base imposable'
@@ -73499,6 +73511,12 @@ modelo:
           iva-deducible-importaciones-corrientes-tipo-10-cuota:
             label: IVA suportat deduïble en importacions de béns corrents al tipus
               10% - quota deduïble
+          iva-deducible-importaciones-corrientes-tipo-2-base:
+            label: IVA suportat deduïble en importacions de béns corrents al tipus
+              2% - base imposable
+          iva-deducible-importaciones-corrientes-tipo-2-cuota:
+            label: IVA suportat deduïble en importacions de béns corrents al tipus
+              2% - quota deduïble
           iva-deducible-importaciones-corrientes-tipo-21-base:
             label: IVA suportat deduïble en importacions de béns corrents al tipus
               21% - base imposable
@@ -73517,6 +73535,12 @@ modelo:
           iva-deducible-importaciones-corrientes-tipo-5-cuota:
             label: IVA suportat deduïble en importacions de béns corrents al tipus
               5% - quota deduïble
+          iva-deducible-importaciones-corrientes-tipo-7-5-base:
+            label: IVA suportat deduïble en importacions de béns corrents al tipus
+              7,5% - base imposable
+          iva-deducible-importaciones-corrientes-tipo-7-5-cuota:
+            label: IVA suportat deduïble en importacions de béns corrents al tipus
+              7,5% - quota deduïble
           iva-deducible-importaciones-corrientes-total-base:
             label: 'Total: IVA suportat deduïble en importacions de béns corrents
               - base imposable'
@@ -73526,6 +73550,12 @@ modelo:
           iva-deducible-importaciones-inversion-tipo-10-cuota:
             label: IVA suportat deduïble en importacions de béns d'inversió al tipus
               10% - quota deduïble
+          iva-deducible-importaciones-inversion-tipo-2-base:
+            label: IVA suportat deduïble en importacions de béns d'inversió al tipus
+              2% - base imposable
+          iva-deducible-importaciones-inversion-tipo-2-cuota:
+            label: IVA suportat deduïble en importacions de béns d'inversió al tipus
+              2% - quota deduïble
           iva-deducible-importaciones-inversion-tipo-21-base:
             label: IVA suportat deduïble en importacions de béns d'inversió al tipus
               21% - base imposable
@@ -73544,6 +73574,12 @@ modelo:
           iva-deducible-importaciones-inversion-tipo-5-cuota:
             label: IVA suportat deduïble en importacions de béns d'inversió al tipus
               5% - quota deduïble
+          iva-deducible-importaciones-inversion-tipo-7-5-base:
+            label: IVA suportat deduïble en importacions de béns d'inversió al tipus
+              7,5% - base imposable
+          iva-deducible-importaciones-inversion-tipo-7-5-cuota:
+            label: IVA suportat deduïble en importacions de béns d'inversió al tipus
+              7,5% - quota deduïble
           iva-deducible-importaciones-inversion-total-base:
             label: 'Total: IVA suportat deduïble en importacions de béns d''inversió
               - base imposable'
@@ -73556,6 +73592,12 @@ modelo:
           iva-deducible-interiores-corrientes-tipo-10-cuota:
             label: IVA suportat deduïble en operacions interiors corrents al tipus
               10% - quota deduïble
+          iva-deducible-interiores-corrientes-tipo-2-base:
+            label: IVA suportat deduïble en operacions interiors corrents al tipus
+              2% - base imposable
+          iva-deducible-interiores-corrientes-tipo-2-cuota:
+            label: IVA suportat deduïble en operacions interiors corrents al tipus
+              2% - quota deduïble
           iva-deducible-interiores-corrientes-tipo-21-base:
             label: IVA suportat deduïble en operacions interiors corrents al tipus
               21% - base imposable
@@ -73574,12 +73616,24 @@ modelo:
           iva-deducible-interiores-corrientes-tipo-5-cuota:
             label: IVA suportat deduïble en operacions interiors corrents al tipus
               5% - quota deduïble
+          iva-deducible-interiores-corrientes-tipo-7-5-base:
+            label: IVA suportat deduïble en operacions interiors corrents al tipus
+              7,5% - base imposable
+          iva-deducible-interiores-corrientes-tipo-7-5-cuota:
+            label: IVA suportat deduïble en operacions interiors corrents al tipus
+              7,5% - quota deduïble
           iva-deducible-interiores-inversion-tipo-10-base:
             label: IVA suportat deduïble en operacions interiors amb béns d'inversió
               al tipus 10% - base imposable
           iva-deducible-interiores-inversion-tipo-10-cuota:
             label: IVA suportat deduïble en operacions interiors amb béns d'inversió
               al tipus 10% - quota deduïble
+          iva-deducible-interiores-inversion-tipo-2-base:
+            label: IVA suportat deduïble en operacions interiors amb béns d'inversió
+              al tipus 2% - base imposable
+          iva-deducible-interiores-inversion-tipo-2-cuota:
+            label: IVA suportat deduïble en operacions interiors amb béns d'inversió
+              al tipus 2% - quota deduïble
           iva-deducible-interiores-inversion-tipo-21-base:
             label: IVA suportat deduïble en operacions interiors amb béns d'inversió
               al tipus 21% - base imposable
@@ -73598,6 +73652,12 @@ modelo:
           iva-deducible-interiores-inversion-tipo-5-cuota:
             label: IVA suportat deduïble en operacions interiors amb béns d'inversió
               al tipus 5% - quota deduïble
+          iva-deducible-interiores-inversion-tipo-7-5-base:
+            label: IVA suportat deduïble en operacions interiors amb béns d'inversió
+              al tipus 7,5% - base imposable
+          iva-deducible-interiores-inversion-tipo-7-5-cuota:
+            label: IVA suportat deduïble en operacions interiors amb béns d'inversió
+              al tipus 7,5% - quota deduïble
           iva-deducible-interiores-inversion-total-base:
             label: 'Total: IVA suportat deduïble en operacions interiors amb béns
               d''inversió - base imposable'
@@ -73610,6 +73670,12 @@ modelo:
           iva-deducible-intragrupo-corrientes-tipo-10-cuota:
             label: IVA suportat deduïble en operacions intragrup corrents al tipus
               10% - quota deduïble
+          iva-deducible-intragrupo-corrientes-tipo-2-base:
+            label: IVA suportat deduïble en operacions intragrup corrents al tipus
+              2% - base imposable
+          iva-deducible-intragrupo-corrientes-tipo-2-cuota:
+            label: IVA suportat deduïble en operacions intragrup corrents al tipus
+              2% - quota deduïble
           iva-deducible-intragrupo-corrientes-tipo-21-base:
             label: IVA suportat deduïble en operacions intragrup corrents al tipus
               21% - base imposable
@@ -73628,6 +73694,12 @@ modelo:
           iva-deducible-intragrupo-corrientes-tipo-5-cuota:
             label: IVA suportat deduïble en operacions intragrup corrents al tipus
               5% - quota deduïble
+          iva-deducible-intragrupo-corrientes-tipo-7-5-base:
+            label: IVA suportat deduïble en operacions intragrup corrents al tipus
+              7,5% - base imposable
+          iva-deducible-intragrupo-corrientes-tipo-7-5-cuota:
+            label: IVA suportat deduïble en operacions intragrup corrents al tipus
+              7,5% - quota deduïble
           iva-deducible-intragrupo-corrientes-total-base:
             label: 'Total: IVA suportat deduïble en operacions intragrup corrents
               - base imposable'
@@ -73640,6 +73712,12 @@ modelo:
           iva-deducible-intragrupo-inversion-tipo-10-cuota:
             label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
               al tipus 10% - quota deduïble
+          iva-deducible-intragrupo-inversion-tipo-2-base:
+            label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
+              al tipus 2% - base imposable
+          iva-deducible-intragrupo-inversion-tipo-2-cuota:
+            label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
+              al tipus 2% - quota deduïble
           iva-deducible-intragrupo-inversion-tipo-21-base:
             label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
               al tipus 21% - base imposable
@@ -73658,6 +73736,12 @@ modelo:
           iva-deducible-intragrupo-inversion-tipo-5-cuota:
             label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
               al tipus 5% - quota deduïble
+          iva-deducible-intragrupo-inversion-tipo-7-5-base:
+            label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
+              al tipus 7,5% - base imposable
+          iva-deducible-intragrupo-inversion-tipo-7-5-cuota:
+            label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
+              al tipus 7,5% - quota deduïble
           iva-deducible-intragrupo-inversion-total-base:
             label: 'Total: IVA suportat deduïble en operacions intragrup amb béns
               d''inversió - base imposable'
@@ -73779,6 +73863,11 @@ modelo:
               imposable
           iva-repercutido-bienes-usados-tipo-10-cuota:
             label: IVA meritat en el règim especial de béns usats al tipus 10% - quota
+          iva-repercutido-bienes-usados-tipo-2-base:
+            label: IVA meritat en el règim especial de béns usats al tipus 2% - base
+              imposable
+          iva-repercutido-bienes-usados-tipo-2-cuota:
+            label: IVA meritat en el règim especial de béns usats al tipus 2% - quota
           iva-repercutido-bienes-usados-tipo-21-base:
             label: IVA meritat en el règim especial de béns usats al tipus 21% - base
               imposable
@@ -73794,6 +73883,12 @@ modelo:
               imposable
           iva-repercutido-bienes-usados-tipo-5-cuota:
             label: IVA meritat en el règim especial de béns usats al tipus 5% - quota
+          iva-repercutido-bienes-usados-tipo-7-5-base:
+            label: IVA meritat en el règim especial de béns usats al tipus 7,5% -
+              base imposable
+          iva-repercutido-bienes-usados-tipo-7-5-cuota:
+            label: IVA meritat en el règim especial de béns usats al tipus 7,5% -
+              quota
           iva-repercutido-criterio-caja-tipo-0-base:
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               0% - base imposable
@@ -73806,6 +73901,12 @@ modelo:
           iva-repercutido-criterio-caja-tipo-10-cuota:
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               10% - quota
+          iva-repercutido-criterio-caja-tipo-2-base:
+            label: IVA meritat en el règim especial del criteri de caixa al tipus
+              2% - base imposable
+          iva-repercutido-criterio-caja-tipo-2-cuota:
+            label: IVA meritat en el règim especial del criteri de caixa al tipus
+              2% - quota
           iva-repercutido-criterio-caja-tipo-21-base:
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               21% - base imposable
@@ -73824,6 +73925,12 @@ modelo:
           iva-repercutido-criterio-caja-tipo-5-cuota:
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               5% - quota
+          iva-repercutido-criterio-caja-tipo-7-5-base:
+            label: IVA meritat en el règim especial del criteri de caixa al tipus
+              7,5% - base imposable
+          iva-repercutido-criterio-caja-tipo-7-5-cuota:
+            label: IVA meritat en el règim especial del criteri de caixa al tipus
+              7,5% - quota
           iva-repercutido-intragrupo-tipo-0-base:
             label: IVA meritat en operacions intragrup al tipus 0% - base imposable
           iva-repercutido-intragrupo-tipo-0-cuota:
@@ -73832,6 +73939,10 @@ modelo:
             label: IVA meritat en operacions intragrup al tipus 10% - base imposable
           iva-repercutido-intragrupo-tipo-10-cuota:
             label: IVA meritat en operacions intragrup al tipus 10% - quota
+          iva-repercutido-intragrupo-tipo-2-base:
+            label: IVA meritat en operacions intragrup al tipus 2% - base imposable
+          iva-repercutido-intragrupo-tipo-2-cuota:
+            label: IVA meritat en operacions intragrup al tipus 2% - quota
           iva-repercutido-intragrupo-tipo-21-base:
             label: IVA meritat en operacions intragrup al tipus 21% - base imposable
           iva-repercutido-intragrupo-tipo-21-cuota:
@@ -73844,6 +73955,10 @@ modelo:
             label: IVA meritat en operacions intragrup al tipus 5% - base imposable
           iva-repercutido-intragrupo-tipo-5-cuota:
             label: IVA meritat en operacions intragrup al tipus 5% - quota
+          iva-repercutido-intragrupo-tipo-7-5-base:
+            label: IVA meritat en operacions intragrup al tipus 7,5% - base imposable
+          iva-repercutido-intragrupo-tipo-7-5-cuota:
+            label: IVA meritat en operacions intragrup al tipus 7,5% - quota
           iva-repercutido-recargo-tipo-0-5-base:
             label: Recàrrec d'equivalència al tipus 0,5% - base imposable
           iva-repercutido-recargo-tipo-1-4-base:

@@ -75811,6 +75811,12 @@ modelo:
           iva-deducible-aic-corrientes-tipo-10-cuota:
             label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
               corrientes al tipo 10% - Cuota deducible
+          iva-deducible-aic-corrientes-tipo-2-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              corrientes al tipo 2% - Base imponible
+          iva-deducible-aic-corrientes-tipo-2-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              corrientes al tipo 2% - Cuota deducible
           iva-deducible-aic-corrientes-tipo-21-base:
             label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
               corrientes al tipo 21% - Base imponible
@@ -75829,6 +75835,12 @@ modelo:
           iva-deducible-aic-corrientes-tipo-5-cuota:
             label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
               corrientes al tipo 5% - Cuota deducible
+          iva-deducible-aic-corrientes-tipo-7-5-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              corrientes al tipo 7,5% - Base imponible
+          iva-deducible-aic-corrientes-tipo-7-5-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              corrientes al tipo 7,5% - Cuota deducible
           iva-deducible-aic-corrientes-total-base:
             label: 'Total: IVA soportado deducible en adquisiciones intracomunitarias
               de bienes corrientes - Base imponible'
@@ -75931,6 +75943,12 @@ modelo:
           iva-deducible-importaciones-corrientes-tipo-10-cuota:
             label: IVA soportado deducible en importaciones de bienes corrientes al
               tipo 10% - Cuota deducible
+          iva-deducible-importaciones-corrientes-tipo-2-base:
+            label: IVA soportado deducible en importaciones de bienes corrientes al
+              tipo 2% - Base imponible
+          iva-deducible-importaciones-corrientes-tipo-2-cuota:
+            label: IVA soportado deducible en importaciones de bienes corrientes al
+              tipo 2% - Cuota deducible
           iva-deducible-importaciones-corrientes-tipo-21-base:
             label: IVA soportado deducible en importaciones de bienes corrientes al
               tipo 21% - Base imponible
@@ -75949,6 +75967,12 @@ modelo:
           iva-deducible-importaciones-corrientes-tipo-5-cuota:
             label: IVA soportado deducible en importaciones de bienes corrientes al
               tipo 5% - Cuota deducible
+          iva-deducible-importaciones-corrientes-tipo-7-5-base:
+            label: IVA soportado deducible en importaciones de bienes corrientes al
+              tipo 7,5% - Base imponible
+          iva-deducible-importaciones-corrientes-tipo-7-5-cuota:
+            label: IVA soportado deducible en importaciones de bienes corrientes al
+              tipo 7,5% - Cuota deducible
           iva-deducible-importaciones-corrientes-total-base:
             label: 'Total: IVA soportado deducible en importaciones de bienes corrientes
               - Base imponible'
@@ -75958,6 +75982,12 @@ modelo:
           iva-deducible-importaciones-inversion-tipo-10-cuota:
             label: IVA soportado deducible en importaciones de bienes de inversión
               al tipo 10% - Cuota deducible
+          iva-deducible-importaciones-inversion-tipo-2-base:
+            label: IVA soportado deducible en importaciones de bienes de inversión
+              al tipo 2% - Base imponible
+          iva-deducible-importaciones-inversion-tipo-2-cuota:
+            label: IVA soportado deducible en importaciones de bienes de inversión
+              al tipo 2% - Cuota deducible
           iva-deducible-importaciones-inversion-tipo-21-base:
             label: IVA soportado deducible en importaciones de bienes de inversión
               al tipo 21% - Base imponible
@@ -75976,6 +76006,12 @@ modelo:
           iva-deducible-importaciones-inversion-tipo-5-cuota:
             label: IVA soportado deducible en importaciones de bienes de inversión
               al tipo 5% - Cuota deducible
+          iva-deducible-importaciones-inversion-tipo-7-5-base:
+            label: IVA soportado deducible en importaciones de bienes de inversión
+              al tipo 7,5% - Base imponible
+          iva-deducible-importaciones-inversion-tipo-7-5-cuota:
+            label: IVA soportado deducible en importaciones de bienes de inversión
+              al tipo 7,5% - Cuota deducible
           iva-deducible-importaciones-inversion-total-base:
             label: 'Total: IVA soportado deducible en importaciones de bienes de inversión
               - Base imponible'
@@ -75988,6 +76024,12 @@ modelo:
           iva-deducible-interiores-corrientes-tipo-10-cuota:
             label: IVA soportado deducible en operaciones interiores corrientes al
               tipo 10% - Cuota deducible
+          iva-deducible-interiores-corrientes-tipo-2-base:
+            label: IVA soportado deducible en operaciones interiores corrientes al
+              tipo 2% - Base imponible
+          iva-deducible-interiores-corrientes-tipo-2-cuota:
+            label: IVA soportado deducible en operaciones interiores corrientes al
+              tipo 2% - Cuota deducible
           iva-deducible-interiores-corrientes-tipo-21-base:
             label: IVA soportado deducible en operaciones interiores corrientes al
               tipo 21% - Base imponible
@@ -76006,12 +76048,24 @@ modelo:
           iva-deducible-interiores-corrientes-tipo-5-cuota:
             label: IVA soportado deducible en operaciones interiores corrientes al
               tipo 5% - Cuota deducible
+          iva-deducible-interiores-corrientes-tipo-7-5-base:
+            label: IVA soportado deducible en operaciones interiores corrientes al
+              tipo 7,5% - Base imponible
+          iva-deducible-interiores-corrientes-tipo-7-5-cuota:
+            label: IVA soportado deducible en operaciones interiores corrientes al
+              tipo 7,5% - Cuota deducible
           iva-deducible-interiores-inversion-tipo-10-base:
             label: IVA soportado deducible en operaciones interiores con bienes de
               inversión al tipo 10% - Base imponible
           iva-deducible-interiores-inversion-tipo-10-cuota:
             label: IVA soportado deducible en operaciones interiores con bienes de
               inversión al tipo 10% - Cuota deducible
+          iva-deducible-interiores-inversion-tipo-2-base:
+            label: IVA soportado deducible en operaciones interiores con bienes de
+              inversión al tipo 2% - Base imponible
+          iva-deducible-interiores-inversion-tipo-2-cuota:
+            label: IVA soportado deducible en operaciones interiores con bienes de
+              inversión al tipo 2% - Cuota deducible
           iva-deducible-interiores-inversion-tipo-21-base:
             label: IVA soportado deducible en operaciones interiores con bienes de
               inversión al tipo 21% - Base imponible
@@ -76030,6 +76084,12 @@ modelo:
           iva-deducible-interiores-inversion-tipo-5-cuota:
             label: IVA soportado deducible en operaciones interiores con bienes de
               inversión al tipo 5% - Cuota deducible
+          iva-deducible-interiores-inversion-tipo-7-5-base:
+            label: IVA soportado deducible en operaciones interiores con bienes de
+              inversión al tipo 7,5% - Base imponible
+          iva-deducible-interiores-inversion-tipo-7-5-cuota:
+            label: IVA soportado deducible en operaciones interiores con bienes de
+              inversión al tipo 7,5% - Cuota deducible
           iva-deducible-interiores-inversion-total-base:
             label: 'Total: IVA soportado deducible en operaciones interiores con bienes
               de inversión - Base imponible'
@@ -76042,6 +76102,12 @@ modelo:
           iva-deducible-intragrupo-corrientes-tipo-10-cuota:
             label: IVA soportado deducible en operaciones intragrupo corrientes al
               tipo 10% - Cuota deducible
+          iva-deducible-intragrupo-corrientes-tipo-2-base:
+            label: IVA soportado deducible en operaciones intragrupo corrientes al
+              tipo 2% - Base imponible
+          iva-deducible-intragrupo-corrientes-tipo-2-cuota:
+            label: IVA soportado deducible en operaciones intragrupo corrientes al
+              tipo 2% - Cuota deducible
           iva-deducible-intragrupo-corrientes-tipo-21-base:
             label: IVA soportado deducible en operaciones intragrupo corrientes al
               tipo 21% - Base imponible
@@ -76060,6 +76126,12 @@ modelo:
           iva-deducible-intragrupo-corrientes-tipo-5-cuota:
             label: IVA soportado deducible en operaciones intragrupo corrientes al
               tipo 5% - Cuota deducible
+          iva-deducible-intragrupo-corrientes-tipo-7-5-base:
+            label: IVA soportado deducible en operaciones intragrupo corrientes al
+              tipo 7,5% - Base imponible
+          iva-deducible-intragrupo-corrientes-tipo-7-5-cuota:
+            label: IVA soportado deducible en operaciones intragrupo corrientes al
+              tipo 7,5% - Cuota deducible
           iva-deducible-intragrupo-corrientes-total-base:
             label: 'Total: IVA soportado deducible en operaciones intragrupo corrientes
               - Base imponible'
@@ -76072,6 +76144,12 @@ modelo:
           iva-deducible-intragrupo-inversion-tipo-10-cuota:
             label: IVA soportado deducible en operaciones intragrupo con bienes de
               inversión al tipo 10% - Cuota deducible
+          iva-deducible-intragrupo-inversion-tipo-2-base:
+            label: IVA soportado deducible en operaciones intragrupo con bienes de
+              inversión al tipo 2% - Base imponible
+          iva-deducible-intragrupo-inversion-tipo-2-cuota:
+            label: IVA soportado deducible en operaciones intragrupo con bienes de
+              inversión al tipo 2% - Cuota deducible
           iva-deducible-intragrupo-inversion-tipo-21-base:
             label: IVA soportado deducible en operaciones intragrupo con bienes de
               inversión al tipo 21% - Base imponible
@@ -76090,6 +76168,12 @@ modelo:
           iva-deducible-intragrupo-inversion-tipo-5-cuota:
             label: IVA soportado deducible en operaciones intragrupo con bienes de
               inversión al tipo 5% - Cuota deducible
+          iva-deducible-intragrupo-inversion-tipo-7-5-base:
+            label: IVA soportado deducible en operaciones intragrupo con bienes de
+              inversión al tipo 7,5% - Base imponible
+          iva-deducible-intragrupo-inversion-tipo-7-5-cuota:
+            label: IVA soportado deducible en operaciones intragrupo con bienes de
+              inversión al tipo 7,5% - Cuota deducible
           iva-deducible-intragrupo-inversion-total-base:
             label: 'Total: IVA soportado deducible en operaciones intragrupo con bienes
               de inversión - Base imponible'
@@ -76217,6 +76301,12 @@ modelo:
           iva-repercutido-bienes-usados-tipo-10-cuota:
             label: IVA devengado en el régimen especial de bienes usados al tipo 10%
               - Cuota
+          iva-repercutido-bienes-usados-tipo-2-base:
+            label: IVA devengado en el régimen especial de bienes usados al tipo 2%
+              - Base imponible
+          iva-repercutido-bienes-usados-tipo-2-cuota:
+            label: IVA devengado en el régimen especial de bienes usados al tipo 2%
+              - Cuota
           iva-repercutido-bienes-usados-tipo-21-base:
             label: IVA devengado en el régimen especial de bienes usados al tipo 21%
               - Base imponible
@@ -76235,6 +76325,12 @@ modelo:
           iva-repercutido-bienes-usados-tipo-5-cuota:
             label: IVA devengado en el régimen especial de bienes usados al tipo 5%
               - Cuota
+          iva-repercutido-bienes-usados-tipo-7-5-base:
+            label: IVA devengado en el régimen especial de bienes usados al tipo 7,5%
+              - Base imponible
+          iva-repercutido-bienes-usados-tipo-7-5-cuota:
+            label: IVA devengado en el régimen especial de bienes usados al tipo 7,5%
+              - Cuota
           iva-repercutido-criterio-caja-tipo-0-base:
             label: IVA devengado en el régimen especial del criterio de caja al tipo
               0% - Base imponible
@@ -76247,6 +76343,12 @@ modelo:
           iva-repercutido-criterio-caja-tipo-10-cuota:
             label: IVA devengado en el régimen especial del criterio de caja al tipo
               10% - Cuota
+          iva-repercutido-criterio-caja-tipo-2-base:
+            label: IVA devengado en el régimen especial del criterio de caja al tipo
+              2% - Base imponible
+          iva-repercutido-criterio-caja-tipo-2-cuota:
+            label: IVA devengado en el régimen especial del criterio de caja al tipo
+              2% - Cuota
           iva-repercutido-criterio-caja-tipo-21-base:
             label: IVA devengado en el régimen especial del criterio de caja al tipo
               21% - Base imponible
@@ -76265,6 +76367,12 @@ modelo:
           iva-repercutido-criterio-caja-tipo-5-cuota:
             label: IVA devengado en el régimen especial del criterio de caja al tipo
               5% - Cuota
+          iva-repercutido-criterio-caja-tipo-7-5-base:
+            label: IVA devengado en el régimen especial del criterio de caja al tipo
+              7,5% - Base imponible
+          iva-repercutido-criterio-caja-tipo-7-5-cuota:
+            label: IVA devengado en el régimen especial del criterio de caja al tipo
+              7,5% - Cuota
           iva-repercutido-intragrupo-tipo-0-base:
             label: IVA devengado en operaciones intragrupo al tipo 0% - Base imponible
           iva-repercutido-intragrupo-tipo-0-cuota:
@@ -76273,6 +76381,10 @@ modelo:
             label: IVA devengado en operaciones intragrupo al tipo 10% - Base imponible
           iva-repercutido-intragrupo-tipo-10-cuota:
             label: IVA devengado en operaciones intragrupo al tipo 10% - Cuota
+          iva-repercutido-intragrupo-tipo-2-base:
+            label: IVA devengado en operaciones intragrupo al tipo 2% - Base imponible
+          iva-repercutido-intragrupo-tipo-2-cuota:
+            label: IVA devengado en operaciones intragrupo al tipo 2% - Cuota
           iva-repercutido-intragrupo-tipo-21-base:
             label: IVA devengado en operaciones intragrupo al tipo 21% - Base imponible
           iva-repercutido-intragrupo-tipo-21-cuota:
@@ -76285,6 +76397,10 @@ modelo:
             label: IVA devengado en operaciones intragrupo al tipo 5% - Base imponible
           iva-repercutido-intragrupo-tipo-5-cuota:
             label: IVA devengado en operaciones intragrupo al tipo 5% - Cuota
+          iva-repercutido-intragrupo-tipo-7-5-base:
+            label: IVA devengado en operaciones intragrupo al tipo 7,5% - Base imponible
+          iva-repercutido-intragrupo-tipo-7-5-cuota:
+            label: IVA devengado en operaciones intragrupo al tipo 7,5% - Cuota
           iva-repercutido-recargo-tipo-0-5-base:
             label: Recargo de equivalencia al tipo 0,5% - Base imponible
           iva-repercutido-recargo-tipo-1-4-base:
