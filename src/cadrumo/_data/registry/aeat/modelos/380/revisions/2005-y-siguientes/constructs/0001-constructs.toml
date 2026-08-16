@@ -1,7 +1,0 @@
-[[revisions."2005-y-siguientes".constructs]]
-id = "modelo-380-autoliquidacion"
-legal_refs = ["orden-eha-1308-2005:art-1", "orden-eha-1308-2005:art-4", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-380-procedure", "enrolled-modelo-380-layout"]
-casilla_ids = ["decl.ejercicio", "decl.periodo"]
-application_links = ["modelo-380-filing"]
-workbook_parity_refs = ["modelo-380-orden-static-layout"]

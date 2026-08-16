@@ -1,7 +1,0 @@
-[[revisions."2017-y-siguientes".constructs]]
-id = "modelo-121-comunicacion"
-legal_refs = ["orden-hfp-105-2017:art-1", "orden-hfp-105-2017:art-3", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-121-procedure", "enrolled-modelo-121-layout"]
-casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
-application_links = ["modelo-121-filing"]
-workbook_parity_refs = ["modelo-121-orden-static-layout"]

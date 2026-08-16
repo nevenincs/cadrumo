@@ -230,24 +230,16 @@ class Modelo(StrEnum):
 #: extensible edge of AEAT-wide enrollment: it ratchets up as obligations are
 #: recognized and shrinks as they are modeled.
 #:
-#: **It is INTENTIONALLY EMPTY today, and that is a recorded decision rather than
-#: an oversight.** Every sentence above describes the mechanism, which is live and
-#: exercised; none of it asserts that a member currently exists. This declaration
-#: previously carried prose claiming a populated set covering the common retención
-#: autoliquidaciones and declaraciones informativas an autónomo, a PYME or an
-#: entity may owe. No such set was ever declared, so that paragraph asserted a
-#: property this module does not have.
+#: **It carries exactly one member today.** :data:`Modelo.M721` (monedas virtuales
+#: situadas en el extranjero) is a real annual informative duty resting on the same
+#: statutory basis as :data:`Modelo.M720` -- Ley 58/2003 disposicion adicional 18
+#: and RD 1065/2007 art. 42 quater -- for which AEAT publishes no record design, so
+#: this application cannot file it and the taxpayer must be advised rather than left
+#: to assume it is covered. It is the first member, and it makes the
+#: ``REGISTRY_UNMODELED`` disposition reachable from production input for the first
+#: time; the out-of-scope partition no longer resolves ahead of it for this modelo.
 #:
-#: Why it stays empty rather than being filled in passing: deciding that a
-#: registry-less form still bears a filing duty a taxpayer must be advised of is a
-#: TAX REVIEW against official BOE and AEAT sources, per entry, with human
-#: reviewer sign-off. It is not derivable from anything in this codebase, and it
-#: is not the kind of claim to infer from a form's absence. :data:`Modelo.M037`
-#: is the worked example of why: that it was suppressed by Orden HAC/1526/2024 is
-#: a fact with a source, not something the code could have concluded. An entry
-#: added without that grounding would advise a taxpayer of an obligation nobody
-#: established, which is the failure this emptiness avoids.
-#:
+#: Why the set stays otherwise minimal: deciding that a
 #: **Do not delete the consuming branch to remove "dead code".** While this
 #: mapping is empty the ``REGISTRY_UNMODELED`` disposition in
 #: :func:`application.overview.build_obligation_coverage` is unreachable from any
@@ -259,7 +251,9 @@ class Modelo(StrEnum):
 #: classifies a member correctly; it does not, and cannot, prove any actually
 #: declared obligation is correct. The first real entry therefore inherits a gate
 #: that already bites.
-UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {}
+UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
+    Modelo.M721: "monedas virtuales situadas en el extranjero; saldos superiores a 50.000 euros",
+}
 
 
 #: Registry modelos (with a TOML definition) deliberately out of scope of the
@@ -359,6 +353,12 @@ _UNMODELED_OUT_OF_SCOPE_OBLIGATIONS: Mapping[Modelo, str] = {
     Modelo.M289: "cuentas financieras CRS/DAC2; lo declaran las instituciones financieras, como el Modelo 290",
     Modelo.M379: "pagos transfronterizos CESOP; lo declaran los proveedores de servicios de pago",
     Modelo.M592: "envases de plastico no reutilizables; lo declaran fabricantes e importadores del sector",
+    Modelo.M121: "cesion de la deduccion por familia numerosa/discapacidad; tramite electivo del IRPF",
+    Modelo.M140: "abono anticipado de la deduccion por maternidad; tramite electivo del IRPF",
+    Modelo.M143: "abono anticipado de la deduccion por familia numerosa/discapacidad; tramite electivo",
+    Modelo.M361: "devolucion de IVA a no establecidos en el TAI; no aplica a contribuyentes establecidos",
+    Modelo.M380: "operaciones asimiladas a las importaciones; operadores de zonas francas y depositos",
+    Modelo.M848: "comunicacion del INCN en el IAE; solo sujetos pasivos no exentos, si no consta ya en IS",
     Modelo.M291: "cuentas de no residentes sin establecimiento permanente (entidades)",
     Modelo.M294: "clientes perceptores de beneficios de IIC (lo declaran las gestoras)",
     Modelo.M295: "clientes con posicion inversora en IIC (lo declaran las gestoras)",

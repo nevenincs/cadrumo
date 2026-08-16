@@ -1,7 +1,0 @@
-[[revisions."2014-y-siguientes".constructs]]
-id = "modelo-143-informative"
-legal_refs = ["orden-hap-2486-2014:art-1", "orden-hap-2486-2014:art-5", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-143-procedure", "enrolled-modelo-143-layout"]
-casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
-application_links = ["modelo-143-filing"]
-workbook_parity_refs = ["modelo-143-orden-static-layout"]

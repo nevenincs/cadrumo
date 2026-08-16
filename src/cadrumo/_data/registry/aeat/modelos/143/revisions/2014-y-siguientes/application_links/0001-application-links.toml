@@ -1,7 +1,0 @@
-[[revisions."2014-y-siguientes".application_links]]
-id = "modelo-143-filing"
-surface = "filing"
-consumer = "cadrumo.application.filing"
-requires_snapshot = true
-legal_refs = ["orden-hap-2486-2014:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-143-procedure"]

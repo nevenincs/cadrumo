@@ -1,7 +1,0 @@
-[[revisions."2017-y-siguientes".application_links]]
-id = "modelo-121-filing"
-surface = "filing"
-consumer = "cadrumo.application.filing"
-requires_snapshot = true
-legal_refs = ["orden-hfp-105-2017:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-121-procedure"]

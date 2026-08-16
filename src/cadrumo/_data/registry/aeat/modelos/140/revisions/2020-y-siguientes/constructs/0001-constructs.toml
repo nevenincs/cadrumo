@@ -1,7 +1,0 @@
-[[revisions."2020-y-siguientes".constructs]]
-id = "modelo-140-informative"
-legal_refs = ["orden-hac-177-2020:art-1", "orden-hac-177-2020:art-5", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-140-procedure", "enrolled-modelo-140-layout"]
-casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
-application_links = ["modelo-140-filing"]
-workbook_parity_refs = ["modelo-140-orden-static-layout"]
