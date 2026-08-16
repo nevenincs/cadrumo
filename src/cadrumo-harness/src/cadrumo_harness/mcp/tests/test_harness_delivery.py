@@ -35,7 +35,6 @@ from cadrumo.application.profile_custody import (
 )
 from cadrumo.application.user_profile import register_profile_with_credentials
 from cadrumo.domain.user_profile import UserProfileFact
-from cadrumo.tests import connected_server_and_client_session as connect
 
 from ... import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
 from .._harness_tools import (
@@ -57,6 +56,7 @@ from .._resources import (
     resource_uri,
 )
 from .._tools import build_tool_descriptors
+from ._session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

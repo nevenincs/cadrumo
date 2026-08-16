@@ -18,7 +18,6 @@ import anyio
 import pytest
 
 from cadrumo.application.operator_surface import command_classification
-from cadrumo.tests import connected_server_and_client_session as connect
 
 from .._dispatch import tool_name_for_command
 from .._harness_tools import HARNESS_LOAD_TOOL, WHOAMI_TOOL
@@ -31,6 +30,7 @@ from .._identity_gate import (
     identity_gate_refusal,
 )
 from .._tools import build_tool_descriptors
+from ._session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

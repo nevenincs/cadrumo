@@ -1,7 +1,7 @@
 """Serving-path gate tests over the real ``build_server`` handlers.
 
 Drives the real MCP server in-process through the SDK's memory transport
-(:func:`cadrumo.tests.connected_server_and_client_session`) - a real client, a
+(:func:`cadrumo_harness.mcp.tests._session.connected_server_and_client_session`) - a real client, a
 real server, no mocks - for the gates that short-circuit before the CLI subprocess: the
 persona handoff-deny boundary, the handoff faithfulness block, the meta-execute
 fail-close, and payload-free telemetry. The post-dispatch advisory and the
@@ -25,8 +25,6 @@ import mcp.types as mcp_types
 import pytest
 from mcp.client.session import ElicitationFnT
 
-from cadrumo.tests import connected_server_and_client_session as connect
-
 from .._dispatch import tool_name_for_command
 from .._faithfulness import SessionGroundingWindow, arguments_faithfulness
 from .._persona_scope import AgentPersona
@@ -34,6 +32,7 @@ from .._server import build_server
 from .._surface import SurfaceMode
 from .._telemetry import SessionTelemetryWriter, read_session_records
 from .._tools import build_tool_descriptors
+from ._session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

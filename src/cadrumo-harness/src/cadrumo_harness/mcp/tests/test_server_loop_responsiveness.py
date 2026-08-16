@@ -50,7 +50,6 @@ import pytest
 from mcp.server import Server
 
 from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD
-from cadrumo.tests import connected_server_and_client_session as connect
 from cadrumo.tests import temporary_env
 
 from .._dispatch import tool_name_for_command
@@ -58,6 +57,7 @@ from .._harness_tools import WHOAMI_TOOL
 from .._inprocess import parse_cli_envelope, run_cli_in_process
 from .._server import build_server
 from .._tools import build_tool_descriptors
+from ._session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
