@@ -1,0 +1,478 @@
+# Modelo 322 numbered casillas, transcribed from the bundled Diseno de
+# Registro aeat-dr-322-2026, sha256
+# f014cec44d4906bc1e2ba96ee1b336f9b400254519df5b1ab0ce69d513631a76.
+# Box number, byte extent and label are AEAT's own; data_type is derived from
+# the row's declared length and decimal shape (17 = 15 enteros + 2 decimales
+# -> money; 5 = 3 enteros + 2 decimales -> ratio).
+#
+# No row is named after a rate. Where AEAT repeats a Base/Tipo/Cuota triple,
+# the rate is a DATA slot on the row, not a label, so which statutory rate a
+# triple carries is the filer's entry and is not asserted here.
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "522"
+number = "522"
+section = ["iva", "prorratas"]
+data_type = "money"
+semantic_role = "dr322_522"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c522"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "523"
+number = "523"
+section = ["iva", "prorratas"]
+data_type = "text"
+semantic_role = "dr322_523"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c523"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "524"
+number = "524"
+section = ["iva", "prorratas"]
+data_type = "ratio"
+semantic_role = "dr322_524"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c524"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "700"
+number = "700"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_700"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c700"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "701"
+number = "701"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_701"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c701"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "702"
+number = "702"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_702"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c702"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "703"
+number = "703"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_703"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c703"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "704"
+number = "704"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_704"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c704"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "705"
+number = "705"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_705"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c705"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "706"
+number = "706"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_706"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c706"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "707"
+number = "707"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_707"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c707"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "708"
+number = "708"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_708"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c708"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "709"
+number = "709"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_709"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c709"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "710"
+number = "710"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_710"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c710"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "711"
+number = "711"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_711"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c711"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "712"
+number = "712"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_712"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c712"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "713"
+number = "713"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_713"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c713"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "714"
+number = "714"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_714"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c714"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "715"
+number = "715"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_715"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c715"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "716"
+number = "716"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_716"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c716"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "717"
+number = "717"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_1"]
+data_type = "money"
+semantic_role = "dr322_717"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c717"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "718"
+number = "718"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_718"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c718"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "719"
+number = "719"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_719"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c719"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "720"
+number = "720"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_720"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c720"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "721"
+number = "721"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_721"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c721"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "722"
+number = "722"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_722"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c722"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "723"
+number = "723"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_723"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c723"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "724"
+number = "724"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_724"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c724"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "725"
+number = "725"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_725"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c725"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "726"
+number = "726"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_726"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c726"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "727"
+number = "727"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_727"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c727"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "728"
+number = "728"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_728"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c728"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "729"
+number = "729"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_729"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c729"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "730"
+number = "730"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_730"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c730"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "731"
+number = "731"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_731"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c731"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "732"
+number = "732"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_732"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c732"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "733"
+number = "733"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_733"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c733"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "734"
+number = "734"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_734"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c734"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "735"
+number = "735"
+section = ["iva", "deducciones", "sectores-diferenciados", "grupo_2"]
+data_type = "money"
+semantic_role = "dr322_735"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-322-2026-c735"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026"]
