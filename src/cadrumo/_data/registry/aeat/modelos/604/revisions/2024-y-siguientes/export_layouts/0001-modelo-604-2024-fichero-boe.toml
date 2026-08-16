@@ -164,18 +164,22 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-604-604-00-reservado-93"
-offset = 93
-length = 4
-kind = "filler"
-data_type = "text"
-required = false
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
+# EEDD slots, deliberately UNWRITTEN: @93+4 "Version del Programa (**)" and
+# @101+9 "NIF Empresa Desarrollo (**)". AEAT's note (**) on aeat-dr-604-2024 reads
+# "A cumplimentar por las entidades desarrolladoras (EEDD)" -- both belong to the
+# software house, not to the filer, and no entidad-desarrolladora identity is
+# declared anywhere in this project.
+#
+# @101+9 was already corrected. @93+4 was still a filler, and misnamed
+# "reservado-93": AEAT does NOT reserve this slot, it assigns it to the EEDD, so
+# the name asserted an omissibility the design does not grant. A filler here emits
+# the same bytes an omission does -- the renderer space-fills each record before
+# writing fields -- while making the coverage gate count the position as WRITTEN.
+#
+# HISTORY, so nobody copies the old shape: Modelo 390 wrote presenter.tax_id into
+# @101+9 and this modelo followed it. The presenter is not the software developer;
+# that was a defect, never a precedent. Both slots are now unwritten here, which
+# matches 111/115/117/122/123/126/128/130/131/216/341/390/714.
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-00-reservado-97"
