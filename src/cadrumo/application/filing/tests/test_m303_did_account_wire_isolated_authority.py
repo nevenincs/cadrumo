@@ -30,9 +30,9 @@ from ....domain.calculations.registry import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
-    M303EnvelopePrefixFieldDeclaration,
-    M303EnvelopePrefixRole,
-    M303FilingEnvelopeDefinition,
+    FilingEnvelopeDefinition,
+    FilingEnvelopePrefixFieldDeclaration,
+    FilingEnvelopePrefixRole,
     RegistrySnapshot,
     RegistrySnapshotRef,
     bundled_authority,
@@ -66,15 +66,15 @@ from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArri
 from ...calculations import calculate_m303_regimen_simplificado_result
 from .. import (
     FilingElectionFacts,
+    FilingEnvelopeRenderRequest,
     FilingProducerSnapshot,
     FilingProducerSnapshotError,
-    M303FilingEnvelopeRenderRequest,
     M303FilingFacts,
     PresenterIdentity,
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
     export_draft,
-    render_m303_filing_envelope,
+    render_filing_envelope,
 )
 from .._export import _filing_producer_values, _render_layout
 from ..runtime import RegistrySchemaAccessor, _subview_from_snapshot, collection_from_snapshot
@@ -283,25 +283,34 @@ def _m303_2026_snapshot() -> RegistrySnapshot:
     )
 
 
+#: Modelo 303 prints the shared envelope grammar in its thirteen-row spelling:
+#: every role except the composed opening tag, which is the ALTERNATIVE spelling
+#: of the six rows this design prints separately.
+_M303_PREFIX_ROLES: tuple[FilingEnvelopePrefixRole, ...] = tuple(
+    role for role in FilingEnvelopePrefixRole if role is not FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG
+)
+
+
 def _filing_envelope_layout(
     snapshot: RegistrySnapshot,
     layout: ExportLayoutDefinition,
 ) -> tuple[RegistrySnapshot, ExportLayoutDefinition]:
     """Attach only the reviewed static DP30300 grammar to the test-owned layout."""
-    envelope = M303FilingEnvelopeDefinition(
+    envelope = FilingEnvelopeDefinition(
         source_ref=_SOURCE_REF,
         source_sha256=_SOURCE_SHA256,
         record_identity="DP30300",
+        prefix_extent=328,
         prefix_fields=tuple(
-            M303EnvelopePrefixFieldDeclaration(role=role, length=length)
-            for role, length in zip(M303EnvelopePrefixRole, _DP30300_PREFIX_LENGTHS, strict=True)
+            FilingEnvelopePrefixFieldDeclaration(role=role, length=length)
+            for role, length in zip(_M303_PREFIX_ROLES, _DP30300_PREFIX_LENGTHS, strict=True)
         ),
         body_record_ids=(layout.records[0].id,),
         product_identity_requirement="aeat-product-software-identity-v1",
-        closer_derivation="m303-relative-closer-v1",
-        total_derivation="m303-emitted-byte-total-v1",
+        closer_derivation="relative-closer-v1",
+        total_derivation="emitted-byte-total-v1",
     )
-    envelope_layout = layout.model_copy(update={"m303_filing_envelope": envelope})
+    envelope_layout = layout.model_copy(update={"filing_envelope": envelope})
     revision = snapshot.revision.model_copy(update={"export_layouts": (envelope_layout,)})
     return snapshot.model_copy(update={"revision": revision}), envelope_layout
 
@@ -613,7 +622,7 @@ def test_isolated_m303_did_wire_uses_only_the_snapshot_selected_account(
     assert wire[811:] == b"</T303DID00>"
 
 
-def test_m303_filing_envelope_facade_derives_ordered_bytes_from_the_canonical_resolver(tmp_path: Path) -> None:
+def test_filing_envelope_facade_derives_ordered_bytes_from_the_canonical_resolver(tmp_path: Path) -> None:
     """The public carrier accepts facts, not caller-composed body bytes or plans."""
     snapshot, layout = _load_isolated_did_layout(tmp_path)
     registry_snapshot, envelope_layout = _filing_envelope_layout(snapshot, layout)
@@ -622,8 +631,8 @@ def test_m303_filing_envelope_facade_derives_ordered_bytes_from_the_canonical_re
         registry_snapshot=registry_snapshot,
     )
 
-    result = render_m303_filing_envelope(
-        M303FilingEnvelopeRenderRequest(
+    result = render_filing_envelope(
+        FilingEnvelopeRenderRequest(
             registry_snapshot=registry_snapshot,
             layout=envelope_layout,
             draft=_draft(),
@@ -663,8 +672,8 @@ def test_export_draft_routes_m303_only_through_the_full_envelope_and_refuses_ope
     provider = _schema_provider_for_snapshot(registry_snapshot)
     draft = _draft()
 
-    rendered = render_m303_filing_envelope(
-        M303FilingEnvelopeRenderRequest(
+    rendered = render_filing_envelope(
+        FilingEnvelopeRenderRequest(
             registry_snapshot=registry_snapshot,
             layout=envelope_layout,
             draft=draft,
@@ -742,8 +751,8 @@ def test_m303_envelope_preserves_canonical_zero_one_many_projection_row_occurren
         non_agricultural_activity_count=non_agricultural_activity_count,
     )
 
-    result = render_m303_filing_envelope(
-        M303FilingEnvelopeRenderRequest(
+    result = render_filing_envelope(
+        FilingEnvelopeRenderRequest(
             registry_snapshot=registry_snapshot,
             layout=layout,
             draft=_draft(),
@@ -768,8 +777,8 @@ def test_m303_envelope_refuses_a_required_projection_record_without_an_applicabl
     )
 
     with pytest.raises(FilingExportValidationError, match="required projection record"):
-        render_m303_filing_envelope(
-            M303FilingEnvelopeRenderRequest(
+        render_filing_envelope(
+            FilingEnvelopeRenderRequest(
                 registry_snapshot=registry_snapshot,
                 layout=layout,
                 draft=_draft(),
@@ -787,21 +796,21 @@ def test_m303_envelope_refuses_a_required_projection_record_without_an_applicabl
         ({"source_sha256": "b" * 64}, "source SHA-256"),
     ),
 )
-def test_m303_filing_envelope_request_refuses_cross_source_or_digest_drift(
+def test_filing_envelope_request_refuses_cross_source_or_digest_drift(
     tmp_path: Path,
     envelope_update: dict[str, str],
     message: str,
 ) -> None:
     snapshot, layout = _load_isolated_did_layout(tmp_path)
     registry_snapshot, envelope_layout = _filing_envelope_layout(snapshot, layout)
-    envelope = envelope_layout.m303_filing_envelope
+    envelope = envelope_layout.filing_envelope
     assert envelope is not None
     source_refs = envelope_layout.source_refs
     if "source_ref" in envelope_update:
         source_refs = (*source_refs, envelope_update["source_ref"])
     invalid_layout = envelope_layout.model_copy(
         update={
-            "m303_filing_envelope": envelope.model_copy(update=envelope_update),
+            "filing_envelope": envelope.model_copy(update=envelope_update),
             "source_refs": source_refs,
         },
     )
@@ -810,7 +819,7 @@ def test_m303_filing_envelope_request_refuses_cross_source_or_digest_drift(
     )
 
     with pytest.raises(ValueError, match=message):
-        M303FilingEnvelopeRenderRequest(
+        FilingEnvelopeRenderRequest(
             registry_snapshot=invalid_snapshot,
             layout=invalid_layout,
             draft=_draft(),

@@ -392,6 +392,10 @@ def _config_help() -> HelpDocument:
                         description=tr("cli.operator_surface.help.config.profile_logout"),
                     ),
                     HelpEntry(
+                        command="aeat config passphrase change",
+                        description=tr("cli.operator_surface.help.config.passphrase_change"),
+                    ),
+                    HelpEntry(
                         command="aeat config profile delete NAME",
                         description=tr("cli.operator_surface.help.config.profile_delete"),
                     ),

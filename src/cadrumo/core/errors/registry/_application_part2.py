@@ -428,6 +428,16 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile._passphrase_rotation.ProfilePassphraseRotationError",
+        ErrorCode(
+            code="REFUSED_PROFILE_PASSPHRASE_ROTATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.profile_passphrase_rotation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile._login_session.ProfileLoginThrottledError",
         ErrorCode(
             code="REFUSED_PROFILE_LOGIN_THROTTLED",
