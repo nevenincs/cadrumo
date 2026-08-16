@@ -20,8 +20,8 @@ from cadrumo.domain.calculations.registry import (
     ExportDraftAttribute,
     ExportFieldId,
     ExportSemanticPayloadAxis,
+    FilingEnvelopePrefixRole,
     LegalRefs,
-    M303EnvelopePrefixRole,
     ModeloId,
     RecordId,
     SourceRefId,
@@ -30,14 +30,14 @@ from cadrumo.domain.calculations.registry import (
 )
 
 __all__ = [
-    "M303EnvelopePrefixField",
-    "M303EnvelopePrefixRole",
-    "M303EnvelopeTotalAnchor",
-    "M303VariableEnvelopeSemantic",
+    "EnvelopePrefixField",
+    "EnvelopeTotalAnchor",
+    "FilingEnvelopePrefixRole",
     "SemanticMap",
     "SemanticMapAnchor",
     "SemanticMapEntry",
     "SemanticMapRecord",
+    "VariableEnvelopeSemantic",
 ]
 
 
@@ -93,35 +93,35 @@ class SemanticMapAnchor(_StrictModel):
     record_identity: str = Field(min_length=1)
 
 
-def _coerce_m303_envelope_prefix_role(value: object) -> object:
+def _coerce_envelope_prefix_role(value: object) -> object:
     """Hydrate the authored TOML token into its one closed envelope role."""
-    if isinstance(value, M303EnvelopePrefixRole):
+    if isinstance(value, FilingEnvelopePrefixRole):
         return value
     if isinstance(value, str):
         try:
-            return M303EnvelopePrefixRole(value)
+            return FilingEnvelopePrefixRole(value)
         except ValueError as exc:
-            raise ValueError(f"unknown M303 envelope prefix role {value!r}") from exc
-    raise ValueError("M303 envelope prefix role must be a string")
+            raise ValueError(f"unknown envelope prefix role {value!r}") from exc
+    raise ValueError("envelope prefix role must be a string")
 
 
-type M303EnvelopePrefixRoleValue = Annotated[
-    M303EnvelopePrefixRole,
-    BeforeValidator(_coerce_m303_envelope_prefix_role),
+type FilingEnvelopePrefixRoleValue = Annotated[
+    FilingEnvelopePrefixRole,
+    BeforeValidator(_coerce_envelope_prefix_role),
 ]
 
 
-_M303_PREFIX_ROLE_ORDER: tuple[M303EnvelopePrefixRole, ...] = tuple(M303EnvelopePrefixRole)
+_PREFIX_ROLE_ORDER: tuple[FilingEnvelopePrefixRole, ...] = tuple(FilingEnvelopePrefixRole)
 
 
-class M303EnvelopePrefixField(_StrictModel):
-    """One exact source anchor and its non-inferable DP30300 prefix role."""
+class EnvelopePrefixField(_StrictModel):
+    """One exact source anchor and its non-inferable envelope prefix role."""
 
-    role: M303EnvelopePrefixRoleValue
+    role: FilingEnvelopePrefixRoleValue
     anchor: SemanticMapAnchor
 
 
-class M303EnvelopeTotalAnchor(_StrictModel):
+class EnvelopeTotalAnchor(_StrictModel):
     """The parser-owned ``Total: Variable`` marker addressed without a field slot."""
 
     source_row: int = Field(gt=0)
@@ -130,41 +130,55 @@ class M303EnvelopeTotalAnchor(_StrictModel):
     length: Literal["Variable"]
 
 
-class M303VariableEnvelopeSemantic(_StrictModel):
-    """Hash-pinned semantic and composition authority for one DP30300 envelope.
+class VariableEnvelopeSemantic(_StrictModel):
+    """Hash-pinned semantic and composition authority for one variable envelope.
 
     The ordinary semantic map deliberately excludes variable-envelope fields.
-    This separate contract retains the thirteen exact prefix anchors, ordered
-    references to the already-owned fixed body records, the relative closer,
-    and the parser's variable total marker without turning the wrapper into a
-    seventh fixed-width record.
+    This separate contract retains the exact prefix anchors, ordered references
+    to the already-owned fixed body records, the relative closer, and the
+    parser's variable total marker without turning the wrapper into one more
+    fixed-width record.
     """
 
     source_ref: SourceRefId
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    record_identity: Literal["DP30300"]
-    prefix_fields: tuple[M303EnvelopePrefixField, ...] = Field(min_length=13, max_length=13)
+    #: The parser record this wrapper composes. Declared by the map rather than
+    #: pinned to one modelo: Modelos 151, 202, 322 and 353 carry the identical
+    #: thirteen-anchor 328-byte prefix under their own record identities, so a
+    #: literal here made one modelo's envelope the only composable one by
+    #: accident rather than by contract.
+    record_identity: str = Field(min_length=1)
+    #: Which roles this design PRINTS, in source order. Not a fixed count: the
+    #: shared ``<AUX>`` grammar is spelled in thirteen rows by Modelo 303 and in
+    #: eight by Modelo 200, which fuses the first six into one composed opening
+    #: tag. A fixed width here made the thirteen-row spelling the only
+    #: expressible one, so a design differing only in how it PRINTS the same
+    #: grammar was indistinguishable from one that violates it.
+    prefix_fields: tuple[EnvelopePrefixField, ...] = Field(min_length=1)
     body_anchor: SemanticMapAnchor
     body_record_ids: tuple[RecordId, ...] = Field(min_length=1)
     closer_anchor: SemanticMapAnchor
-    total_anchor: M303EnvelopeTotalAnchor
+    total_anchor: EnvelopeTotalAnchor
 
     @model_validator(mode="after")
-    def _require_complete_ordered_semantics(self) -> M303VariableEnvelopeSemantic:
+    def _require_complete_ordered_semantics(self) -> VariableEnvelopeSemantic:
         roles = tuple(field.role for field in self.prefix_fields)
-        if roles != _M303_PREFIX_ROLE_ORDER:
+        if len(set(roles)) != len(roles):
+            raise ValueError(f"variable envelope {self.record_identity!r} prefix roles must be unique")
+        remaining = iter(_PREFIX_ROLE_ORDER)
+        if not all(role in remaining for role in roles):
             raise ValueError(
-                "M303 variable envelope prefix roles must be the exact ordered thirteen-slot DP30300 sequence",
+                f"variable envelope {self.record_identity!r} prefix roles must appear in canonical source order",
             )
         anchors = tuple(field.anchor for field in self.prefix_fields)
         if len(set(anchors)) != len(anchors):
-            raise ValueError("M303 variable envelope prefix anchors must be unique")
+            raise ValueError(f"variable envelope {self.record_identity!r} prefix anchors must be unique")
         if self.body_anchor.record_identity != self.record_identity:
-            raise ValueError("M303 variable envelope body anchor must belong to DP30300")
+            raise ValueError(f"variable envelope body anchor must belong to {self.record_identity!r}")
         if self.closer_anchor.record_identity != self.record_identity:
-            raise ValueError("M303 variable envelope closer anchor must belong to DP30300")
+            raise ValueError(f"variable envelope closer anchor must belong to {self.record_identity!r}")
         if len(set(self.body_record_ids)) != len(self.body_record_ids):
-            raise ValueError("M303 variable envelope body record identities must be unique and ordered")
+            raise ValueError("variable envelope body record identities must be unique and ordered")
         return self
 
 
@@ -264,7 +278,7 @@ class SemanticMap(_StrictModel):
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     records: tuple[SemanticMapRecord, ...] = Field(min_length=1)
     entries: tuple[SemanticMapEntry, ...] = Field(min_length=1)
-    variable_envelopes: tuple[M303VariableEnvelopeSemantic, ...] = ()
+    variable_envelopes: tuple[VariableEnvelopeSemantic, ...] = ()
 
     @model_validator(mode="after")
     def _require_unique_record_semantics(self) -> SemanticMap:

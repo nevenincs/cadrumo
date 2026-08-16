@@ -17,6 +17,9 @@ from typing import Final, Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.domain.calculations.registry import (
+    AUXILIARY_ENVELOPE_HEADER_LENGTHS,
+    AUXILIARY_ENVELOPE_HEADER_ORDINALS,
+    AUXILIARY_ENVELOPE_HEADER_ROWS,
     RecordDesignAuxiliaryEnvelopeHeader,
     RecordDesignAuxiliaryEnvelopeHeaderRole,
     RecordDesignCompositeRelativeClosing,
@@ -29,6 +32,7 @@ from cadrumo.domain.calculations.registry import (
     SourceRefId,
     extract_record_design,
     resolve_record_design_binary,
+    validate_auxiliary_envelope_header_contents,
 )
 
 __all__ = [
@@ -123,40 +127,24 @@ class RecordDesignIntermediateAuxiliaryEnvelopeHeader(_StrictModel):
             raise ValueError(msg)
 
         source_fields = self.source_fields
-        expected_lengths = (2, 3, 1, 4, 2, 5, 5, 70, 4, 4, 9, 213, 6)
-        if tuple(field.length for field in source_fields) != expected_lengths:
+        if tuple(field.length for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_LENGTHS:
             msg = "Modelo 390 auxiliary header field widths must retain official anchors"
             raise ValueError(msg)
         if tuple(field.offset for field in source_fields) != (1, 3, 6, 7, 11, 13, 18, 23, 93, 97, 101, 110, 323):
             msg = "Modelo 390 auxiliary header offsets must retain official anchors"
             raise ValueError(msg)
-        if tuple(field.source_row for field in source_fields) != tuple(range(6, 19)):
+        if tuple(field.source_row for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_ROWS:
             msg = "Modelo 390 auxiliary header source rows must retain official anchors"
             raise ValueError(msg)
-        if tuple(field.source_cell for field in source_fields) != tuple(f"A{row}" for row in range(6, 19)):
+        if tuple(field.source_cell for field in source_fields) != tuple(
+            f"A{row}" for row in AUXILIARY_ENVELOPE_HEADER_ROWS
+        ):
             msg = "Modelo 390 auxiliary header source cells must retain official anchors"
             raise ValueError(msg)
-        if tuple(field.ordinal for field in source_fields) != tuple(str(i) for i in range(1, 14)):
+        if tuple(field.ordinal for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_ORDINALS:
             msg = "Modelo 390 auxiliary header ordinals must retain official anchors"
             raise ValueError(msg)
-        expected_contents = (
-            'Constante "<T"',
-            'Constante "390"',
-            'Constante "0"',
-            "Nota 2",
-            '"0A"',
-            '"0000>"',
-            '"<AUX>"',
-            "BLANCOS",
-            "Nota 1",
-            "BLANCOS",
-            "Nota 1",
-            "BLANCOS",
-            '"</AUX>"',
-        )
-        if tuple(field.content for field in source_fields) != expected_contents:
-            msg = "Modelo 390 auxiliary header literals must retain official anchors"
-            raise ValueError(msg)
+        validate_auxiliary_envelope_header_contents(tuple(field.content for field in source_fields))
         if any(field.sheet != self.sheet or field.record_identity != self.record_identity for field in source_fields):
             msg = "Modelo 390 auxiliary header anchors must belong to one source sheet"
             raise ValueError(msg)

@@ -27,11 +27,11 @@ from ._record_design_ir import (
     RecordDesignIntermediateVariableEnvelope,
 )
 from ._semantic_map import (
-    M303VariableEnvelopeSemantic,
     SemanticMap,
     SemanticMapAnchor,
     SemanticMapEntry,
     SemanticMapRecord,
+    VariableEnvelopeSemantic,
 )
 from ._semantic_map_validation import (
     SemanticMapAnomalyException,
@@ -39,10 +39,10 @@ from ._semantic_map_validation import (
 )
 
 __all__ = [
-    "JoinedM303VariableEnvelope",
     "JoinedRecordDesign",
     "JoinedRecordDesignField",
     "JoinedRecordDesignRecord",
+    "JoinedVariableEnvelope",
     "join_record_design_semantics",
 ]
 
@@ -88,16 +88,16 @@ class JoinedRecordDesignRecord(_StrictModel):
         return self
 
 
-class JoinedM303VariableEnvelope(_StrictModel):
-    """The exact parser wrapper paired with its reviewed DP30300 semantics."""
+class JoinedVariableEnvelope(_StrictModel):
+    """The exact parser wrapper paired with its reviewed envelope semantics."""
 
     parser_envelope: RecordDesignIntermediateVariableEnvelope
-    semantic: M303VariableEnvelopeSemantic
+    semantic: VariableEnvelopeSemantic
 
     @model_validator(mode="after")
-    def _require_same_parser_identity(self) -> JoinedM303VariableEnvelope:
+    def _require_same_parser_identity(self) -> JoinedVariableEnvelope:
         if self.parser_envelope.record_identity != self.semantic.record_identity:
-            raise ValueError("joined M303 variable envelope requires the same parser and semantic identity")
+            raise ValueError("joined variable envelope requires the same parser and semantic identity")
         return self
 
 
@@ -112,7 +112,7 @@ class JoinedRecordDesign(_StrictModel):
     projection_endpoints: tuple[ProjectionEndpointDeclaration, ...] = ()
     variable_envelopes: tuple[RecordDesignIntermediateVariableEnvelope, ...] = ()
     auxiliary_envelope_headers: tuple[RecordDesignIntermediateAuxiliaryEnvelopeHeader, ...] = ()
-    m303_variable_envelope: JoinedM303VariableEnvelope | None = None
+    variable_envelope_contract: JoinedVariableEnvelope | None = None
 
     @model_validator(mode="after")
     def _require_complete_joined_state(self) -> JoinedRecordDesign:
@@ -129,16 +129,22 @@ class JoinedRecordDesign(_StrictModel):
         )
         if has_overlapping_composition_identity:
             raise ValueError("joined record design composition identities must remain disjoint")
-        parser_m303_envelopes = tuple(
-            envelope for envelope in self.variable_envelopes if envelope.record_identity == "DP30300"
+        # The composed identity comes from the reviewed map, never a literal:
+        # every modelo declaring this wrapper names its own record.
+        composed_identity = (
+            self.variable_envelope_contract.semantic.record_identity
+            if self.variable_envelope_contract is not None
+            else None
         )
-        if self.m303_variable_envelope is None:
-            if parser_m303_envelopes:
-                raise ValueError("joined DP30300 parser envelope requires reviewed semantic composition")
-        elif parser_m303_envelopes != (self.m303_variable_envelope.parser_envelope,):
-            raise ValueError("joined M303 variable envelope must be the sole parser DP30300 wrapper")
+        if self.variable_envelope_contract is None:
+            if self.variable_envelopes:
+                raise ValueError("joined parser envelope requires reviewed semantic composition")
+        elif tuple(
+            envelope for envelope in self.variable_envelopes if envelope.record_identity == composed_identity
+        ) != (self.variable_envelope_contract.parser_envelope,):
+            raise ValueError(f"joined variable envelope must be the sole parser {composed_identity!r} wrapper")
         elif self.revision_id is None:
-            raise ValueError("joined M303 variable envelope requires the exact selected revision")
+            raise ValueError("joined variable envelope requires the exact selected revision")
         return self
 
 
@@ -196,10 +202,12 @@ def _join_record_design_semantics(
         projection_endpoints=projection_endpoints,
         variable_envelopes=intermediate.variable_envelopes,
         auxiliary_envelope_headers=intermediate.auxiliary_envelope_headers,
-        m303_variable_envelope=(
-            JoinedM303VariableEnvelope(
+        variable_envelope_contract=(
+            JoinedVariableEnvelope(
                 parser_envelope=next(
-                    envelope for envelope in intermediate.variable_envelopes if envelope.record_identity == "DP30300"
+                    envelope
+                    for envelope in intermediate.variable_envelopes
+                    if envelope.record_identity == semantic_map.variable_envelopes[0].record_identity
                 ),
                 semantic=semantic_map.variable_envelopes[0],
             )

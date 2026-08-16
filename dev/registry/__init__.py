@@ -1,14 +1,14 @@
 """AEAT registry authoring-tree developer tooling (not shipped in the wheel)."""
 
 from ._semantic_map import (
-    M303EnvelopePrefixField,
-    M303EnvelopePrefixRole,
-    M303EnvelopeTotalAnchor,
-    M303VariableEnvelopeSemantic,
+    EnvelopePrefixField,
+    EnvelopeTotalAnchor,
+    FilingEnvelopePrefixRole,
     SemanticMap,
     SemanticMapAnchor,
     SemanticMapEntry,
     SemanticMapRecord,
+    VariableEnvelopeSemantic,
 )
 from ._semantic_map_loader import (
     SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION,
@@ -18,14 +18,14 @@ from ._semantic_map_loader import (
 
 __all__ = [
     "SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION",
-    "M303EnvelopePrefixField",
-    "M303EnvelopePrefixRole",
-    "M303EnvelopeTotalAnchor",
-    "M303VariableEnvelopeSemantic",
+    "EnvelopePrefixField",
+    "EnvelopeTotalAnchor",
+    "FilingEnvelopePrefixRole",
     "SemanticMap",
     "SemanticMapAnchor",
     "SemanticMapEntry",
     "SemanticMapFragment",
     "SemanticMapRecord",
+    "VariableEnvelopeSemantic",
     "load_semantic_map",
 ]

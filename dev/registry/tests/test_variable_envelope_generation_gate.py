@@ -36,7 +36,7 @@ def test_static_generator_exposes_no_filing_instance_channels() -> None:
         "payload_sha256",
         "total_length",
     }.isdisjoint(inspect.signature(render_complete_export_tree).parameters)
-    assert "m303_variable_envelope" not in RenderedExportTree.model_fields
+    assert "variable_envelope_contract" not in RenderedExportTree.model_fields
 
 
 def test_real_m200_variable_envelope_survives_join_and_refuses_fixed_generation(tmp_path: Path) -> None:
