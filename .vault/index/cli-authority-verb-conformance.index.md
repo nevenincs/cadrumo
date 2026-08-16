@@ -1,0 +1,637 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#cli-authority-verb-conformance'
+date: '2026-08-16'
+modified: '2026-08-16'
+body_schema: 'body-v1'
+body_hash: 'sha256:d56febef018dd8f262c9581b943837d8707a741c2287ed4428bd7ae9a550767e'
+related:
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S01]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S02]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S03]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S04]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S05]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S06]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S07]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S08]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S09]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S10]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S11]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P02-S12]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P02-S13]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P02-S14]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P02-S15]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P02-S16]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P02-S17]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P03-S18]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P03-S19]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P03-S20]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P03-S21]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P03-S22]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W01-P03-S23]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S24]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S25]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S26]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S27]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S28]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S29]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S30]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S31]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S32]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S33]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S34]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S35]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P04-S36]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S54]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S55]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S56]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S57]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S58]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S59]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S60]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S61]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S62]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S63]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S64]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S65]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S66]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S67]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S68]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S69]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P05-S70]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P06-S37]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P06-S43]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P06-S44]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P06-S45]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P06-S46]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P07-S47]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P07-S48]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P07-S49]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P07-S50]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P07-S51]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P07-S52]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S71]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S72]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S73]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S74]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S75]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S76]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S77]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S78]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S79]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W02-P21-S80]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P08-S224]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P08-S225]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P08-S81]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P08-S82]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P08-S83]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P09-S84]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P09-S85]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P09-S86]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P09-S87]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P09-S88]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P09-S89]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P10-S226]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P10-S227]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P10-S228]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P10-S229]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P10-S230]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P10-S231]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P10-S232]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P10-S233]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P10-S234]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P10-S235]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P10-S236]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P10-S90]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P10-S91]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P10-S92]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P10-S93]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P22-S242]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P22-S243]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P22-S244]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P22-S245]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P22-S246]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P23-S247]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P23-S248]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P23-S249]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P24-S250]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P24-S251]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P24-S252]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P24-S253]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P25-S254]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P25-S255]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P25-S256]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P25-S257]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P26-S258]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P26-S259]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P26-S260]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W03-P26-S261]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S100]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S101]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S102]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S103]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S104]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S237]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S96]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S97]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S98]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P11-S99]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P12-S105]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P12-S106]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P12-S107]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P12-S108]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P12-S109]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P12-S110]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P12-S111]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P12-S112]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P12-S113]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P12-S114]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P13-S116]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P13-S118]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P13-S119]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P14-S120]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P14-S121]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P14-S122]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P14-S123]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W04-P14-S124]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S125]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S126]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S128]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S129]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S130]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S131]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S132]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S133]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S134]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S135]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S136]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S137]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S138]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S238]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S139]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S140]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S141]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S142]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S143]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S144]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S145]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S146]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S147]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S148]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S149]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S150]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S151]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S152]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S153]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S154]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S155]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S156]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S157]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S158]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S159]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S160]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S223]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S161]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S162]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S163]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S164]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S165]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S166]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S167]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S168]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S169]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S170]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S171]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S172]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S173]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S174]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S175]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S176]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S239]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S240]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S177]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S178]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S179]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S180]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S181]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S182]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S183]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S241]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S262]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S263]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S264]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S265]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S266]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S185]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S186]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S187]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S188]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S189]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S190]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S191]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S192]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S193]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S194]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S195]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S196]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S197]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S198]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S199]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S200]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S201]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S202]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S203]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S204]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S205]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S206]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S207]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S208]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S209]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S210]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S211]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S212]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S213]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S214]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S215]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S216]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S217]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S218]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S219]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S220]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S221]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S222]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S267]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S268]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S269]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S270]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S271]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S272]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S273]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S274]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S275]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S276]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S277]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S278]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S279]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S280]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S281]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S282]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S283]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S284]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S285]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S286]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S287]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S288]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S289]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S290]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S291]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S292]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S293]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S294]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S295]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S296]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S297]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S298]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S299]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-reference]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-research]]'
+  - '[[2026-07-16-cli-authority-verb-conformance-audit]]'
+  - '[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]'
+  - '[[2026-07-16-cli-authority-verb-conformance-s37-auth-cutover-audit]]'
+  - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
+  - '[[2026-07-17-cli-authority-verb-conformance-exec]]'
+  - '[[2026-07-25-cli-authority-verb-conformance-campaign-close-honesty-review-audit]]'
+  - '[[2026-07-25-cli-authority-verb-conformance-period-grammar-refusal-audit]]'
+  - '[[2026-07-28-cli-authority-verb-conformance-adr]]'
+  - '[[2026-07-28-cli-authority-verb-conformance-formal-close-review-audit]]'
+---
+
+# `cli-authority-verb-conformance` feature index
+
+Auto-generated index of all documents tagged with `#cli-authority-verb-conformance`.
+
+## Documents
+
+### adr
+
+- `2026-07-15-cli-authority-verb-conformance-adr` - `cli-authority-verb-conformance` adr: `Single backend authorities and cost-aware CLI verbs` | (**status:** `superseded`)
+- `2026-07-28-cli-authority-verb-conformance-adr` - `cli-authority-verb-conformance` adr: `Profile-bound command criterion` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-15-cli-authority-verb-conformance-audit` - `cli-authority-verb-conformance` audit: `Wave W01 atomic Step reviews`
+- `2026-07-16-cli-authority-verb-conformance-audit` - `cli-authority-verb-conformance` audit: `S43 auth logout preservation review`
+- `2026-07-16-cli-authority-verb-conformance-duplication-authority-audit` - `cli-authority-verb-conformance` audit: `Duplication authority and CLI conformance campaign`
+- `2026-07-16-cli-authority-verb-conformance-s37-auth-cutover-audit` - `cli-authority-verb-conformance` audit: `S37 auth logout/reset cutover review`
+- `2026-07-17-cli-authority-verb-conformance-audit` - `cli-authority-verb-conformance` audit: `Rescope and split closure`
+- `2026-07-25-cli-authority-verb-conformance-campaign-close-honesty-review-audit` - `cli-authority-verb-conformance` audit: `Campaign-close honesty review`
+- `2026-07-25-cli-authority-verb-conformance-period-grammar-refusal-audit` - `cli-authority-verb-conformance` audit: `period grammar refusal`
+- `2026-07-28-cli-authority-verb-conformance-formal-close-review-audit` - `cli-authority-verb-conformance` audit: `Formal close review`
+
+### exec
+
+- `2026-07-15-cli-authority-verb-conformance-W01-P01-S01` - Change the configured root package from aeat to cadrumo
+- `2026-07-15-cli-authority-verb-conformance-W01-P01-S02` - Remove the stale live censo adapter ignore entry
+- `2026-07-15-cli-authority-verb-conformance-W01-P01-S03` - Remove the stale user-profile censo-sync adapter ignore entry
+- `2026-07-15-cli-authority-verb-conformance-W01-P01-S04` - Add only the exact core state-root test helper route to the reporting contract
+- `2026-07-15-cli-authority-verb-conformance-W01-P01-S05` - Narrow diagnostics run-health adapter access to the outbound LLM package
+- `2026-07-15-cli-authority-verb-conformance-W01-P01-S06` - Remove the concrete transaction-repository fallback and require TransactionCatalogueRepositoryProtocol
+- `2026-07-15-cli-authority-verb-conformance-W01-P01-S07` - Require a non-optional TransactionCatalogueRepositoryProtocol in the public IRNR source resolver
+- `2026-07-15-cli-authority-verb-conformance-W01-P01-S08` - Exercise M210 aggregation through the real injected transaction repository
+- `2026-07-15-cli-authority-verb-conformance-W01-P01-S09` - Replace verification's concrete invoice-repository boundary with InvoiceCatalogueRepositoryProtocol
+- `2026-07-15-cli-authority-verb-conformance-W01-P01-S10` - Widen injected OSS and IOSS invoice-repository annotations while retaining the sole default composition path
+- `2026-07-15-cli-authority-verb-conformance-W01-P01-S11` - Exercise dormant Modelo 369 verification through the real invoice repository Protocol boundary
+- `2026-07-15-cli-authority-verb-conformance-W01-P02-S12` - Retarget the ignore-edge parser from aeat imports to cadrumo imports
+- `2026-07-15-cli-authority-verb-conformance-W01-P02-S13` - Freeze the application-edge ceiling at 199
+- `2026-07-15-cli-authority-verb-conformance-W01-P02-S14` - Freeze the application-source wildcard ceiling at 78
+- `2026-07-15-cli-authority-verb-conformance-W01-P02-S15` - Freeze the domain test-edge ceiling at 2
+- `2026-07-15-cli-authority-verb-conformance-W01-P02-S16` - Assert the parsed Cadrumo ignore inventory and layered-contract inventory are non-empty
+- `2026-07-15-cli-authority-verb-conformance-W01-P02-S17` - Preserve the zero production-domain-to-adapters assertion and identify both test-only carveouts
+- `2026-07-15-cli-authority-verb-conformance-W01-P03-S18` - Run the repaired ignore-ledger tests and record the parsed 199, 78, and 2 inventory
+- `2026-07-15-cli-authority-verb-conformance-W01-P03-S19` - Run the core state-root isolation test against real isolated secure storage
+- `2026-07-15-cli-authority-verb-conformance-W01-P03-S20` - Run the focused M210 IRNR real-storage suite after making both injection points required
+- `2026-07-15-cli-authority-verb-conformance-W01-P03-S21` - Run the focused Modelo 369 verification suite after widening the invoice boundary
+- `2026-07-15-cli-authority-verb-conformance-W01-P03-S22` - Run an uncached fresh-process import graph and require all five contracts with no unmatched ignore
+- `2026-07-15-cli-authority-verb-conformance-W01-P03-S23` - Block every later Wave unless all architecture prerequisite Steps are green
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S24` - Add byte-exact pointer capture, atomic restore, idempotent clear with restrictive temporary permissions and fsync, complete short writes in the hardened byte writer, prove complete writes against a real operating-system descriptor, delegate master-key secure writes to the canonical hardened writer, remove the duplicated sensitive-persistence exemption, and expose the core pointer API
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S25` - Prove exact pointer bytes and atomic write and clear behavior through real child-process interruption
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S26` - Introduce one neutral reentrant active-profile pointer transaction service, retire the duplicate storage-adapter lock export, and route orchestration write, clear, capture, rollback, registration, and selection through the core-owned authority under a continuous whole-create-span lock with bounded fail-closed contention
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S27` - Route repository pointer reads, selection, rollback, and deletion clear through the same reentrant active-profile pointer transaction, preserve whole-create-span ownership and pointer-first test lock order, and remove the retired text-rollback persistence exemption
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S28` - Route profile-health repair mutation through the shared reentrant active-profile pointer transaction with locked reassessment, bounded fail-closed contention, and the health result's repairable flag as the sole eligibility authority, correct the three lifecycle CLI integration pointer setup calls to use the isolated backend root, then prove pointer-sourced unreadable-manifest repair, cold no-op behavior, and real CLI pointer repair, absence, and dangling-pointer outcomes
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S29` - Prove byte-exact failed-create rollback through the repository transaction nested under outer pointer ownership, then prove dangling-pointer repair fails closed under real thread contention and succeeds after lock release against real files
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S30` - Canonicalize active-profile labels to immutable bucket UUIDs at the WorkflowState and profile-health boundaries by composing the core precedence resolver with the existing manifest resolver without adding resolver authority, then prove a real lifecycle-repository-backed label override resolves its encrypted record and keeps a lower-priority dangling pointer ineligible until the override is cleared, after which the pointer becomes authoritative and repairable
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S31` - Introduce one public idempotent active-session eviction boundary that closes the currently bound BucketSession before clearing ContextVar visibility, route idle-expiry and interpreter-exit cleanup through it, and re-export it through the master-key and storage facades
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S32` - Centralize provider teardown in the shared exit boundary so production and ephemeral providers atomically detach their bookkeeping, close only their exact owned BucketSession before unwinding activation, reuse that boundary after failed entry, and do not recreate the retired OS-keyring cache
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S33` - Prove repeated active-session eviction removes current and boolean ContextVar visibility after the existing key zeroization and engine disposal, preserves nested outer-session restoration, and clears an already sealed binding
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S34` - Prove same-object file-provider eviction closes real bucket-routed storage, clears provider and active-session bookkeeping, and permits a clean fresh reopen with the persisted bucket DEK and distinct session and engine handles
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S35` - Compose strong profile logout by closing and evicting the current BucketSession before clearing the active pointer under the existing pointer transaction, then let provider bookkeeping unwind through its owning context and release the pointer sidecar lock without inventing a provider cache or bucket-lock authority
+- `2026-07-15-cli-authority-verb-conformance-W02-P04-S36` - Refuse logout under an explicit profile override, prove pointer-sourced strong logout honors lock contention and closes real storage idempotently, and restore single declaration authority to the error registry
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S68` - Prove target discovery includes live, tombstoned, and dangling-pointer buckets but excludes cold defaults
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S69` - Prove every reset phase boundary resumes honestly in a fresh child process
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S70` - Prove sorted locking, writer pauses, reset exclusion, retention recheck, and renewed confirmation with real processes
+- `2026-07-15-cli-authority-verb-conformance-W02-P06-S37` - Atomically replace broad auth clear across backend and live CLI contracts with typed target-scoped logout_operator_auth and reset_operator_auth, complete provider session coverage, safe secret and lock cleanup, distinct schemas and events, exact contract/risk/help/write metadata, four-locale help, and real workflow and command tests without a compatibility wrapper
+- `2026-07-15-cli-authority-verb-conformance-W02-P06-S43` - Prove logout preserves provider and certificate-source configuration while clearing real sessions
+- `2026-07-15-cli-authority-verb-conformance-W02-P07-S48` - Make the active certificate credential resolver and named-source certificate check use only selected-profile secure storage with explicit fail-closed absence, and make ordinary certificate-secret set/remove crash-resumable through one secret-free durable intent or outbox carrying a stable operation id, event kind and timestamp, prior-presence state, and non-secret completion witness, resuming pending mutations before accepting a new mutation without migration, fallback, probing, reconciliation, or a parallel secret writer
+- `2026-07-15-cli-authority-verb-conformance-W02-P07-S49` - Route auth status, test, login, central session acquisition, live callers, state projection, and modelo provider construction through the active certificate credential resolver by centralizing exact certificate credential projection in the application provider factory and transporting explicit absent values without changing omitted-provider reporting semantics
+- `2026-07-15-cli-authority-verb-conformance-W04-P11-S103` - Prove switching and strong logout through real persisted custody state
+- `2026-07-15-cli-authority-verb-conformance-W04-P11-S98` - Preserve config profile logout as the sole strong local-session logout command
+- `2026-07-15-cli-authority-verb-conformance-W04-P11-S99` - Remove config lock and its weaker session-only execution path without an alias
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S223` - Re-arm MCP identity confirmation when canonical profile logout clears the active taxpayer
+- `2026-07-15-cli-authority-verb-conformance-W02-P06-S44` - Prove reset removes provider state, sessions, locks, registrations, and secrets only for the explicit target
+- `2026-07-15-cli-authority-verb-conformance-W02-P06-S45` - Prove provider and all-provider deletion leave unrelated bucket session files byte-identical
+- `2026-07-15-cli-authority-verb-conformance-W02-P06-S46` - Prove acquisition-lock cleanup is target scoped and repeatable with real lock files
+- `2026-07-15-cli-authority-verb-conformance-W02-P07-S47` - Delete the certificate keyring backend, backend-kind selector, factory branch, exports, and certificate-specific keyring service and account code while retaining secure storage as the only certificate-secret backend and preserving independent master-key OS-keyring custody
+- `2026-07-15-cli-authority-verb-conformance-W02-P07-S50` - Make the certificate authenticator and adapter provider factory consume the resolved typed active certificate credential directly, eliminating their independent path and password projection from Settings
+- `2026-07-15-cli-authority-verb-conformance-W02-P07-S51` - Prove certificate secrets set, resolve, and remove only through real secure storage, force real event-commit failure after set and remove, then prove retry resumes the original operation, emits the original stable event exactly once, preserves SET versus ROTATED classification, and reports removal truthfully, and also prove no certificate keyring backend, selector, fallback, migration, probe, cleanup path, or parallel secret writer remains
+- `2026-07-15-cli-authority-verb-conformance-W02-P07-S52` - Prove register, select, check, status, test, and login consume the same resolved certificate bytes
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S71` - Expose distinct recovery status, create, rotate, verify, and recover application operations
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S72` - Make recovery create refuse an existing enrollment and rotate require an existing enrollment
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S73` - Preserve the prior recovery envelope until a candidate mnemonic has been fully verified
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S74` - Restrict recovery to file custody and return typed refusals for keyring and unsecured custody
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S75` - Preserve the established recovery fingerprint across verification and recovery operations
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S76` - Prove create refusal, rotate preconditions, candidate verification, and old-envelope survival with real encrypted files
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S77` - Prove mnemonic verification and recovery never serialize secret material
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S78` - Prove file-only custody and typed keyring or unsecured refusals across the custody matrix
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S79` - Prove passphrase change preserves encrypted data and survives failed candidate confirmation
+- `2026-07-15-cli-authority-verb-conformance-W02-P21-S80` - Re-export only the explicit passphrase and recovery lifecycle operations
+- `2026-07-17-cli-authority-verb-conformance-exec` - P07.S41 secret-store DI seam removal (auth-cert-recovery-custody plan)
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S54` - Add target deletion assessment and reset ownership fields to bucket-maintenance contracts
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S55` - Expose target-scoped deletion assessment and verify reset operation ownership and fingerprint during deletion
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S56` - Define the authoritative deletion-relevant bucket fingerprint for assessment and resume
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S57` - Prove deletion assessment reports real retention blockers without mutating the bucket
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S58` - Prove operation-owned deletion rejects mismatches and accepts only journal-proven absence
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S59` - Define durable non-secret reset operation, target phase, pointer snapshot, retention, marker, and summary models
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S60` - Persist reset journals atomically outside target directories with restrictive permissions and corruption refusal
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S61` - Prove reset journal atomicity, permissions, corruption refusal, exclusion, and fresh-process reload
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S62` - Replace scoped reset with start, status, and resume over all live, tombstoned, and dangling-pointer targets
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S63` - Acquire target locks in sorted UUID order and persist every retention decision before mutation
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S64` - Invoke target-scoped auth reset and delete canonical secure-storage certificate secrets before each target deletion without certificate keyring reconciliation or migration
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S65` - Invoke strong profile logout for the active reset target and reconcile dangling pointers through the core authority
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S66` - Persist deleting ownership before deletion and completion after each irreversible transition
+- `2026-07-15-cli-authority-verb-conformance-W02-P05-S67` - Reacquire locks and recheck fingerprints and retention during roll-forward resume without mutating on status
+- `2026-07-15-cli-authority-verb-conformance-W03-P08-S224` - Make evidence-driven LLM splitting persist the parent transition, every child, inherited validated evidence links, provenance, classifications, and events in one atomic application transaction without generic field patching
+- `2026-07-15-cli-authority-verb-conformance-W03-P08-S225` - Prove every LLM split child inherits the parent evidence and provenance consistently and any child validation or persistence failure leaves the parent, children, catalogue, and event history unchanged
+- `2026-07-15-cli-authority-verb-conformance-W03-P08-S81` - Make generic manual-field updates refuse all evidence fields, reserve evidence catalogue and provenance mutation for attach, and expose a single atomic invoice-only linkage writer
+- `2026-07-15-cli-authority-verb-conformance-W03-P08-S82` - Prove direct evidence patches fail, invoice linkage cannot mutate evidence, and failed attach or link leaves transaction, evidence catalogue, provenance, and event history unchanged
+- `2026-07-15-cli-authority-verb-conformance-W03-P08-S83` - Prove create-time and attach-time evidence validation enforce the same missing and cross-bucket policy
+- `2026-07-15-cli-authority-verb-conformance-W03-P09-S84` - Define typed portable-transfer and subject-access export purposes, requests, results, target identity, and categories derived from the actual portable bundle schema and carried registered namespaces while keeping sealed recovery archives separate
+- `2026-07-15-cli-authority-verb-conformance-W03-P09-S85` - Persist non-secret profile export operation states atomically outside the target artifact
+- `2026-07-15-cli-authority-verb-conformance-W03-P09-S86` - Implement one locked target serialization with restrictive temporary files, file fsync, durable PREPARED state, atomic replace, parent-directory fsync, post-publish COMPLETED event, and honest PREPARED recovery
+- `2026-07-15-cli-authority-verb-conformance-W03-P09-S87` - Re-export the typed profile export service as the sole public export orchestration API
+- `2026-07-15-cli-authority-verb-conformance-W03-P09-S88` - Prove portable-transfer and subject-access purposes use the same service and bundle schema, derive categories from serialized fields and registry-carried namespaces, and retain distinct purpose metadata
+- `2026-07-15-cli-authority-verb-conformance-W03-P09-S89` - Prove restrictive temporary permissions, same-target exclusion, every PREPARED and replace crash window, parent-directory durability, and fresh-process reconciliation without premature completion events
+- `2026-07-15-cli-authority-verb-conformance-W03-P10-S226` - Delegate declaracion parser and pdfplumber one-shot PDF digests to core sha256_hex without changing byte inputs or digest representation
+- `2026-07-15-cli-authority-verb-conformance-W03-P10-S227` - Delegate Clave Movil, outbound LLM cache, and agent evaluation one-shot fingerprints to core sha256_hex while preserving truncation and exact encoded inputs
+- `2026-07-15-cli-authority-verb-conformance-W03-P10-S228` - Delegate storage rotation, SQL engine, and calculation-sheet one-shot identifiers to core sha256_hex while preserving exact payload construction and truncation
+- `2026-07-15-cli-authority-verb-conformance-W03-P10-S229` - Delegate perception, retention, and calculation observation object-key digests to core sha256_hex while preserving the exact normalized key bytes
+- `2026-07-15-cli-authority-verb-conformance-W03-P10-S230` - Delegate filing import, M145 communication, workflow, and submission one-shot identifiers to core sha256_hex while preserving structured inputs, truncation, and public values
+- `2026-07-15-cli-authority-verb-conformance-W03-P10-S231` - Delegate whole-file corpus manifest hashing to core hash_file without changing manifest semantics
+- `2026-07-15-cli-authority-verb-conformance-W03-P10-S232` - Retain observability file-read retry semantics while delegating successful file-digest mechanics to core hash_file
+- `2026-07-15-cli-authority-verb-conformance-W03-P10-S233` - Delegate local manuals file verification to core hash_file while retaining the distinct network-stream hashing path
+- `2026-07-15-cli-authority-verb-conformance-W03-P10-S234` - Preserve the mirror object-key structured byte contract but delegate its one-shot digest to sha256_hex without converting it to HMAC
+- `2026-07-15-cli-authority-verb-conformance-W03-P10-S235` - Add an AST recurrence gate that rejects new reducible production SHA-256 constructor and one-shot hexdigest bodies while allowing streaming, HMAC, HKDF, X509, and digest-byte uses
+- `2026-07-15-cli-authority-verb-conformance-W03-P10-S236` - Remove EvidenceBundleService replay, its public export, and backend tests while preserving evidence check and unrelated observability replay facilities
+- `2026-07-15-cli-authority-verb-conformance-W03-P10-S90` - Delegate review-package recipient fingerprints to core sha256_hex
+- `2026-07-15-cli-authority-verb-conformance-W03-P10-S91` - Prove recipient fingerprints against known vectors and encrypted registry roundtrip
+- `2026-07-15-cli-authority-verb-conformance-W03-P10-S92` - Delegate MCP telemetry content digests to core sha256_hex
+- `2026-07-15-cli-authority-verb-conformance-W03-P10-S93` - Prove telemetry UTF-8 digests against known vectors and retained-record roundtrip
+- `2026-07-15-cli-authority-verb-conformance-W03-P22-S242` - Correct namespace registry metadata drift and make each namespace definition the sole authority for identifier, schema version, sensitivity, default object key, key grammar, owner, and custody
+- `2026-07-15-cli-authority-verb-conformance-W03-P22-S243` - Remove duplicate namespace, version, sensitivity, catalogue-key, and custody literals from transaction, invoice, modelo participation, and bucket persistence consumers and bind them to registry definitions
+- `2026-07-15-cli-authority-verb-conformance-W03-P22-S244` - Remove duplicate namespace metadata from profile, calculation, aggregation, and filed-observation repositories and bind repository construction to registry definitions
+- `2026-07-15-cli-authority-verb-conformance-W03-P22-S245` - Remove duplicate namespace and custody declarations from Clave, LLM cache and usage, bundle, attachment, and secure-storage consumers without conflating certificate custody with master-key keyring custody
+- `2026-07-15-cli-authority-verb-conformance-W03-P22-S246` - Replace literal-membership namespace checks with a non-vacuous production-root adoption gate that recognizes cadrumo-prefixed declarations, detects local metadata declarations, and proves each storage binding consumes the registered definition
+- `2026-07-15-cli-authority-verb-conformance-W03-P23-S247` - Make filed observation persistence the sole owner of latest-record selection, deterministic history ordering, metadata enrollment, and calculation-observation writes and remove the duplicate selector and persistence loop from capture orchestration
+- `2026-07-15-cli-authority-verb-conformance-W03-P23-S248` - Introduce one typed filed-capture finalizer and failure accumulator used by single, bulk, and source capture with explicit fail-fast single and source policy and best-effort bulk policy
+- `2026-07-15-cli-authority-verb-conformance-W03-P23-S249` - Prove identical latest selection and history ordering across all capture routes, their distinct failure policies, and preservation of the separate strict IVA compensation persistence path
+- `2026-07-15-cli-authority-verb-conformance-W03-P24-S250` - Define typed LLM review requests, decisions, results, and mandatory invocation origins without an application-layer default CLI source command
+- `2026-07-15-cli-authority-verb-conformance-W03-P24-S251` - Implement one application review workflow for suggest, saturate, review, apply, reject, evidence no-split, and evidence split while composing existing canonical persistence primitives
+- `2026-07-15-cli-authority-verb-conformance-W03-P24-S252` - Route classify --auto-split and split --llm through the typed review workflow with distinct invocation origins and remove CLI-owned review branching and application source-command defaults
+- `2026-07-15-cli-authority-verb-conformance-W03-P24-S253` - Prove suggestion, saturation, rejection, no-split, multi-child split, invocation-origin attribution, and CLI-route parity against real persistence and model subprocess boundaries
+- `2026-07-15-cli-authority-verb-conformance-W03-P25-S254` - Introduce one typed resolved registry context shared by scoped and unscoped query methods while preserving both public resolution forms
+- `2026-07-15-cli-authority-verb-conformance-W03-P25-S255` - Make every accepted as_of argument participate in revision validity selection or reject it explicitly instead of silently ignoring it
+- `2026-07-15-cli-authority-verb-conformance-W03-P25-S256` - Build describe, casilla listing, and formulas from shared typed projections while preserving separate casilla-detail and bindings reports unless code-level substitutability is proven
+- `2026-07-15-cli-authority-verb-conformance-W03-P25-S257` - Prove scoped and unscoped parity, historical as-of boundaries, invalid-window refusal, shared projection consistency, and the intentional distinction between bindings and casilla detail
+- `2026-07-15-cli-authority-verb-conformance-W03-P26-S258` - Make dev.audit.duplication the sole owner of the platform-neutral jscpd command, subprocess execution, timeout handling, output parsing, clone records, percentage, diagnostics, and typed availability result
+- `2026-07-15-cli-authority-verb-conformance-W03-P26-S259` - Make the health report consume the typed duplication result and classify zero observed clones as green, observed clones as amber, and unavailable, failed, timed-out, non-zero, or unparseable execution as explicit amber-unavailable
+- `2026-07-15-cli-authority-verb-conformance-W03-P26-S260` - Replace the shell pipeline with a direct Python duplication runner invocation so Windows and POSIX execute the same authority and retain stdout, stderr, return code, and timeout evidence
+- `2026-07-15-cli-authority-verb-conformance-W03-P26-S261` - Prove real zero-clone, clone, unavailable executable, non-zero, timeout, stderr, and unparseable outcomes cannot become false green and that report and direct runner render the same typed result
+- `2026-07-15-cli-authority-verb-conformance-W04-P11-S100` - Replace flat scoped reset registration with the config reset command group
+- `2026-07-15-cli-authority-verb-conformance-W04-P11-S101` - Register only reset start, status, and resume with operation, retention, reason, and confirmation options
+- `2026-07-15-cli-authority-verb-conformance-W04-P11-S102` - Prove exact sandbox labels work through switch while sandbox use and bare names are absent
+- `2026-07-15-cli-authority-verb-conformance-W04-P11-S104` - Prove reset start, status, resume, operation IDs, retention override, reasons, and confirmations across real processes
+- `2026-07-15-cli-authority-verb-conformance-W04-P11-S237` - Route both config profile export and subject-access-request through the sole portable-export application service and remove direct serialization, target writes, completion events, and static SAR category ownership from the CLI
+- `2026-07-15-cli-authority-verb-conformance-W04-P11-S96` - Restrict config switch to UUIDs and exact labels including canonical sandbox labels and reject bare sandbox names
+- `2026-07-15-cli-authority-verb-conformance-W04-P11-S97` - Remove the config profile sandbox use registration and execution path without an alias
+- `2026-07-15-cli-authority-verb-conformance-W04-P12-S105` - Replace config rekey with only config passphrase change and secure input handling
+- `2026-07-15-cli-authority-verb-conformance-W04-P12-S106` - Replace recovery display and rotation spellings with recovery status, create, and rotate
+- `2026-07-15-cli-authority-verb-conformance-W04-P12-S107` - Register only recovery verify and flat recover with secrets-stdin and no mnemonic argv
+- `2026-07-15-cli-authority-verb-conformance-W04-P12-S108` - Write create and rotate candidates directly to the controlling terminal and require full no-echo retype before commit
+- `2026-07-15-cli-authority-verb-conformance-W04-P12-S109` - Replace obsolete bootstrap exemptions with the exact accepted passphrase and recovery paths
+- `2026-07-15-cli-authority-verb-conformance-W04-P12-S110` - Prove passphrase change through a real encrypted vault
+- `2026-07-15-cli-authority-verb-conformance-W04-P12-S111` - Prove recovery status, create, rotate, verify, and recover without serialized mnemonic material
+- `2026-07-15-cli-authority-verb-conformance-W04-P12-S112` - Prove passphrases, mnemonics, and secret-input values are absent from help and examples
+- `2026-07-15-cli-authority-verb-conformance-W04-P12-S113` - Prove secure TTY failures and strict bounded secrets-stdin JSON through localized CLI execution
+- `2026-07-15-cli-authority-verb-conformance-W04-P12-S114` - Align bootstrap and repair-policy inventories with the recovery family and flat recover exception
+- `2026-07-15-cli-authority-verb-conformance-W04-P13-S116` - Remove certificate backend selection and key set, remove certificate secrets only by name through secure storage, and expose no compatibility alias or migration surface
+- `2026-07-15-cli-authority-verb-conformance-W04-P13-S118` - Prove certificate secret set and remove against real secure storage, including command failure after the secret mutation but before event commit followed by an idempotent retry with one correctly classified event, and reject backend selection, keyring spellings, migration, fallback, and duplicate mutation paths
+- `2026-07-15-cli-authority-verb-conformance-W04-P13-S119` - Require yes for reset start and resume while keeping status non-destructive
+- `2026-07-15-cli-authority-verb-conformance-W04-P14-S120` - Restrict ledger link to invoice-only linkage, route it through the atomic application writer, and remove evidence-id and evidence-update result paths
+- `2026-07-15-cli-authority-verb-conformance-W04-P14-S121` - Remove modelo audit replay and every call to the backend replay method while retaining only genuine evidence audit check
+- `2026-07-15-cli-authority-verb-conformance-W04-P14-S122` - Prove attach remains the sole evidence mutation, invoice link is atomic and invoice-only, and link rejects every removed evidence grammar
+- `2026-07-15-cli-authority-verb-conformance-W04-P14-S123` - Prove modelo audit exposes check without replay, backend replay calls, replay result schemas, or synthetic replay events
+- `2026-07-15-cli-authority-verb-conformance-W04-P14-S124` - Assert the accepted root grammar exactly and reject every removed path and option
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S177` - Run focused pointer, switch, logout, reset, and bootstrap-policy suites against real persisted state
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S178` - Run passphrase and recovery lifecycle suites against real encrypted vaults and secure input channels
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S179` - Run auth and certificate suites against real storage and provider boundaries
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S180` - Run ledger attach, atomic invoice-link, LLM split inheritance, and failure-rollback suites and prove no generic evidence bypass or partial child commit can execute
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S181` - Run application and live CLI profile-export suites across real fresh processes, target contention, schema-derived SAR categories, and every crash window
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S182` - Run evidence service and modelo audit suites and prove the replay method, command, schema, event, tests, and documentation cannot execute or be discovered
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S183` - Run MCP dispatch, identity, input-schema, risk, mutability, and telemetry parity suites
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S241` - Run hashing vector, truncation, file-retry, network-stream, mirror-key, and AST recurrence suites for all 18 one-shot and four reducible call sites
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S262` - Run namespace registry and non-vacuous production adoption suites and reject duplicate declarations across every production root
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S263` - Run filed single, bulk, source, history-ordering, and strict IVA suites against real persisted observations and artefacts
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S264` - Run the typed LLM review workflow and both CLI routing modes against real persistence and subprocess model boundaries
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S265` - Run scoped and unscoped registry query suites across historical as-of boundaries and projection parity
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S266` - Run the direct duplication runner and health-report suites and prove every unavailable or malformed execution is visibly amber rather than green
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S185` - Materialize the complete lazy CLI tree in a fresh process and assert every leaf path is unique
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S186` - Compare the materialized tree with the accepted additions and removals and fail on unplanned leaf loss
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S187` - Run documented-command path and argument conformance against the live tree
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S188` - Run JSON schema registration and output conformance for every live leaf
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S189` - Run self-referential CLI string conformance and reject every removed spelling
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S190` - Run suggestion and next-action conformance against the live tree
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S191` - Run four-locale catalogue and rendered-help coverage for every changed path
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S192` - Run generated CLI reference and static-tree conformance
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S193` - Run the mandatory documentation render-and-verify workflow after final command materialization
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S194` - Run a fresh uncached import graph and require all five contracts
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S195` - Run Ruff against every feature-owned Python file
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S196` - Run the complete feature-owned real-behavior test inventory
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S197` - Run the feature-surface-gate skill against only feature-owned paths
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S198` - Run repository ratchets for skips, test doubles, monkeypatching, tautology, markers, and discovery drift
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S199` - Run full collect-only and classify every collection failure by owner
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S200` - Run the complete unit suite and record the attributable result
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S201` - Run the complete serial integration suite and record the attributable result
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S202` - Run the complete documentation build and conformance gate
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S203` - Run the authoritative typed duplication runner and require zero clones for green, clone findings for amber, and unavailable, failed, timed-out, non-zero, or unparseable execution for explicit amber-unavailable without false green
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S204` - Dispatch a fresh Luna xhigh agent swarm over every audited functionality cluster
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S205` - Rerun Vaultspec-RAG semantic searches across certificate custody, ledger evidence, export, hashing, replay, namespaces, filed capture, LLM review, registry queries, and duplication infrastructure
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S206` - Confirm every semantic candidate with exact declaration, import, export, caller, writer, persistence, CLI, schema, locale, test, documentation, and generated-artifact searches before classification
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S207` - Record canonical owner, surviving consumers, removed declarations, bypass disposition, and non-vacuous adoption evidence for every amended functionality cluster
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S208` - Record unrelated concurrent failures separately without claiming global green
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S213` - Confirm every closed implementation Step has an attributable execution record
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S219` - Run feature-scoped Vaultspec checks and resolve every attributable finding
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S220` - Run repository-wide Vaultspec checks and triage unrelated residuals honestly
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S221` - Run the required fresh-context campaign-close honesty review with explicit audits for duplicated authority, vacuous adoption tests, ignored accepted parameters, partial transaction commits, and false-green quality infrastructure
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S287` - Bisect the documentation lane with no workers and name the module whose worker exits, since it stalls identically at 24 and at 4 workers and emits no failure identities
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S277` - Seed the profile-key registry on the MCP path itself rather than relying on a wizard import side effect, and prove whoami through a real stdio subprocess client
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S293` - Escalate to the owning TUI campaign that the committed wizard package initialiser imports an untracked results module, so a clean checkout of HEAD cannot import the wizard or run the shipped CLI
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S294` - Land the proven MCP identity seeding fix once the wizard results module is committed, so both transports report the same schema count and the parity assertion is no longer comparing two equally blind sets
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S295` - Closed as unnecessary, a peer fix bridged the payload-name filter by importing the wizard result classes into a walked module, so enrolment is filename-filtered still and the divergence ended when that bridge landed
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S125` - Remove schema registrations for lock, rekey, legacy recovery, and sandbox-use commands
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S126` - Define secret-free schemas for passphrase change, recovery status, create, rotate, verify, and flat recover
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S128` - Replace flat scoped reset with reset start, status, and resume schemas
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S129` - Remove evidence-link input and evidence-update output fields from ledger link
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S130` - Remove modelo audit replay result schema and public command key
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S131` - Retire the modelo audit replayed event token after all consumers move to check results
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S132` - Update write-policy tokens for the accepted destructive and read-only command paths
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S133` - Update the authoritative command manifest to the accepted paths and remove legacy keys
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S134` - Update nested command-path token handling and examples for passphrase, recovery, auth, and reset groups
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S135` - Replace the rekey recovery diagnostic with config passphrase change
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S136` - Replace verify-recovery terminology with config recovery verify in the recovery contract
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S137` - Assert exact new schema keys, removed-key absence, exclusivity, and secret-free results
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S138` - Update root fallback write classification without accepting removed command paths
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S238` - Remove certificate backend selectors and replay-specific fields from every payload and schema projection while preserving independent master-key keyring custody contracts
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S139` - Replace removed command, option, help, risk, and error nodes with accepted English grammar
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S140` - Replace removed command, option, help, risk, and error nodes with accepted Spanish grammar
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S141` - Replace removed command, option, help, risk, and error nodes with accepted Catalan grammar
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S142` - Replace removed command, option, help, risk, and error nodes with accepted Hungarian grammar
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S143` - Reconcile intentional identical-locale declarations after the grammar migration
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S144` - Require four-locale parity and reject orphaned locale nodes for removed grammar
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S145` - Classify passphrase, recovery, reset start and resume, portable profile export, and subject-access export under exact risk keys, with both cleartext export purposes carrying the same handoff classification
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S146` - Replace stale help records with accepted profile, recovery, certificate, reset, ledger, and audit descriptions
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S147` - Update remaining operator-surface contract notes to the accepted grammar and authority semantics
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S148` - Replace flat reset and legacy custody next actions with registered accepted commands
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S149` - Assert operator help, risk, mutability, schema, and live-registration inventories remain exact mirrors
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S150` - Prove suggestions resolve only to accepted registered commands
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S151` - Reject removed command strings in diagnostics, help, errors, and schema metadata
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S152` - Replace sandbox-use identity gating with canonical config switch handling
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S153` - Derive exact nested passphrase, recovery, auth, reset, ledger, and audit inputs from accepted schemas
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S154` - Remove legacy MCP tool keys and dispatch only accepted CLI mirrors
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S155` - Assert MCP descriptors and dispatch mirror accepted keys and reject removed keys
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S156` - Assert MCP risk annotations match the operator risk table
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S157` - Assert MCP mutability distinguishes read-only status from destructive operations
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S158` - Prove canonical switch identity gating and removed sandbox-use unavailability
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S159` - Prove generated MCP input schemas for every accepted changed command
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S160` - Refresh command-search expectations only for accepted keys and reject removed tokens
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S161` - Invoke the mandatory vaultspec-documentation workflow and keep its render-and-verify gate active for this Phase
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S162` - Rewrite data-access protection procedures for passphrase, recovery, logout, quarantine, and reset
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S163` - Rewrite authentication procedures for login, logout, reset, and backend-free certificate secrets
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S164` - Rewrite profile setup and navigation for exact switch labels and strong logout
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S165` - Rewrite ledger evidence guidance to separate attach from invoice-only link
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S166` - Rewrite bank-import examples to separate evidence attach from invoice link
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S167` - Align the how-to index with logout, passphrase, recovery, and reset lifecycle terminology
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S168` - Align the command and configuration overview with the accepted hierarchy and security semantics
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S169` - Regenerate data-access sequence goldens from real accepted commands
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S170` - Regenerate authentication sequence goldens for login, logout, reset, and certificate secrets
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S171` - Regenerate bank-import sequence goldens for attach and invoice link
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S172` - Regenerate CLI reference pages from the live command tree and prove removed pages are absent
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S173` - Regenerate the static CLI tree from the live command tree and verify exact accepted paths
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S174` - Regenerate terminology coverage from authoritative sources and reject removed command tokens
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S175` - Validate every regenerated sequence against its directive and command contract
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S176` - Build Sphinx with warnings as errors and verify references, tree, links, and sequences
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S239` - Rewrite profile export and subject-access documentation around the shared durable service, schema-derived categories, equivalent cleartext handoff risk, and separate sealed recovery archive
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S240` - Remove evidence audit replay from all user documentation, generated reference expectations, examples, and terminology projections while retaining audit check
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S209` - Invoke vaultspec-code-review over the complete feature diff for safety, intent, boundary direction, and test quality
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S210` - Resolve every in-scope blocker or major finding through its owning implementation Step
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S211` - Rerun every focused or full gate invalidated by a corrective edit
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S212` - Record a zero-blocker and zero-major formal review verdict
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S214` - Confirm no removed CLI spelling survives in source, locales, tests, docs, schemas, MCP, or suggestions
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S215` - Confirm certificate custody, ledger evidence, portable export, hashing, namespaces, filed capture, LLM review, registry projection, and duplication execution each have one canonical owner and no parallel writer, resolver, parser, or command path
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S216` - Audit every amended ADR decision, including delete-only certificate cutover, atomic ledger evidence, live export routing, 18 plus 4 hashing consolidation, backend replay removal, namespace adoption, filed capture, LLM review, registry as-of behavior, and truthful duplication infrastructure, against code and objective evidence
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S217` - Rebuild the feature index after all plan, execution, audit, ADR, research, and reference artifacts are final
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S218` - Run the plan structural check and refuse closure while any Step remains open or malformed
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S267` - Verify each open W05 Step against its named surface before checking it, never inferring satisfaction from the live command tree alone
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S268` - Complete the W06.P18 and W06.P19 evidence, refusing to close any Step whose execution record lacks a command, a non-zero collected count, an exit line, and a HEAD reference
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S269` - Decide in a follow-on ADR the criterion by which a command path is profile-bound, then reconcile the 48 unguarded mutation-shaped leaves against it per verb
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S270` - Remove the permissive not-read-only default for unknown command keys, or prove every gate resting on it still discriminates an absent key from a live write verb
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S271` - Assert structurally that an execution record carries a populated Outcome before its Step may be checked, since the vault check passes empty scaffolds
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S272` - Commit the plan file alongside execution records in every closure commit, and land the 31 closures currently held only in the working tree
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S273` - Make a stale import-linter ignore fail loudly and distinctly from a contract breach, so an aborted run cannot read as a quiet one
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S274` - Resolve the two broken layered contracts with their owning campaigns, without widening the ignore list
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S275` - Teach the documented-command conformance parser to recognise a blocked-row marker rather than reading its prose as a command path
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S276` - Attribute the two P18 failures before any closure, 8 in the passphrase and recovery lifecycle suite and 22 in the MCP parity suite, separating the expected keychain remainder from real defects
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S278` - Give the namespace-registry adoption gate an anti-vacuity floor and every production root, since it currently finds zero subjects and asserts an empty list
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S279` - Refer the config CLI module size breach to the peer TUI campaign that caused it, since the module stood at 1254 lines inside budget before the manager-from-create commit added 134
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S280` - Remove the retired evidence-bundle replay from the modelo-390 records-audit sequence prose, which contradicts its own blocked annotation
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S281` - Resolve the seven unallowlisted tokens reddening the period combined-string gate at HEAD
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S282` - Remove the two Code-Stands-Alone violations, a feature tag in a hashing test docstring and vault stems in the duplication disposition fields
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S283` - Give every set-asserting gate an anti-vacuity floor, asserting the subject count is non-zero before asserting the property, across the write-guard parity, namespace-adoption and tree-walk gates
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S284` - Assert the accepted period tokens on the error envelope structured context rather than on rendered prose, so a wording pass cannot red the grammar cases
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S285` - Ground the HITL confirmation key against the live descriptor set at the gate itself, so the permissive default cannot auto-approve an unclassified mutation if a future caller passes an unvalidated key
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S286` - Return the operator-output test probe and the wizard results schemas to their owning campaigns, since a test module registering a production schema key breaks 128 assertions and 19 setup errors while untracked
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S288` - Retire the M100 casilla-accessor hand-copy onto the public numeric_casilla_value it duplicates, in a module already importing both that ops module and the error class the copy raises
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S289` - Route the modelo evidence-covers-snapshot copy onto the public assert_evidence_covers_snapshot, and retire the cross-package private import the aggregation test uses to reach it
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S290` - Give the byte-identical FTS or-group builder one shared leaf home, since both copies sit in application packages that may not reach into each other
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S291` - Route the filing export-field overlap predicate onto the registry copy, the only admissible canonical home across that layer boundary
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S292` - Extract the shared journal-repository file substrate, noting the two classes are constraint-shape divergent so this is extraction rather than replacement
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S296` - Guard the load-bearing wizard schema re-exports against a tidy-up deletion, since the re-export idiom looks redundant and removing it silently drops both profile verbs from the MCP surface
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S297` - Give every corpus-scanning emptiness gate a non-zero subject floor, or prove per gate that its corpus cannot silently empty, since 87 in-surface gates assert an offender list empty without proving they scanned anything and a path rename would green them while the forbidden condition survives
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S298` - Remove the two feature-owned size-budget regressions this campaign introduced, the payload module pushed to 1251 by the wizard-bridge guard comment and the config help builder pushed to 195 by the custody and audit rows, since the campaign close claims no feature-owned regression exists
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S299` - Bound the shelled gettext build in the catalogue-drift POT fixture with a timeout so an upstream hang surfaces as a named failure instead of wedging the documentation lane indefinitely, since the call currently passes no timeout and the hang reproduces at zero workers
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S222` - Mark the plan complete only after every Step, record, gate, blocker, and major finding is closed
+
+### plan
+
+- `2026-07-15-cli-authority-verb-conformance-plan` - `cli-authority-verb-conformance` plan
+
+### reference
+
+- `2026-07-15-cli-authority-verb-conformance-reference` - `cli-authority-verb-conformance` reference: `Authentication logout and reset authority map`
+
+### research
+
+- `2026-07-15-cli-authority-verb-conformance-research` - `cli-authority-verb-conformance` research: `CLI authority and verb conformance`

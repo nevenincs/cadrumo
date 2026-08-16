@@ -1,0 +1,194 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#canonical-identifiers'
+date: '2026-08-16'
+modified: '2026-08-16'
+body_schema: 'body-v1'
+body_hash: 'sha256:1300102b1b1ac910c7186f30df65ec4d20a39beb16ffb0703829930356b5b448'
+related:
+  - '[[2026-08-07-canonical-identifiers-W01-P01-S01]]'
+  - '[[2026-08-07-canonical-identifiers-W01-P01-S02]]'
+  - '[[2026-08-07-canonical-identifiers-W01-P01-S03]]'
+  - '[[2026-08-07-canonical-identifiers-W01-P01-S04]]'
+  - '[[2026-08-07-canonical-identifiers-W01-P01-S66]]'
+  - '[[2026-08-07-canonical-identifiers-W01-P01-S68]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P02-S05]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P02-S06]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P02-S07]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P02-S08]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P02-S09]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P02-S10]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P02-S11]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P02-S12]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P02-S65]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S13]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S14]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S15]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S16]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S17]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S18]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S19]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S20]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S21]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S22]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S23]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S67]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S73]]'
+  - '[[2026-08-07-canonical-identifiers-W03-P04-S24]]'
+  - '[[2026-08-07-canonical-identifiers-W03-P04-S25]]'
+  - '[[2026-08-07-canonical-identifiers-W03-P04-S64]]'
+  - '[[2026-08-07-canonical-identifiers-W04-P06-S29]]'
+  - '[[2026-08-07-canonical-identifiers-W04-P06-S30]]'
+  - '[[2026-08-07-canonical-identifiers-W04-P06-S31]]'
+  - '[[2026-08-07-canonical-identifiers-W04-P06-S32]]'
+  - '[[2026-08-07-canonical-identifiers-W04-P06-S33]]'
+  - '[[2026-08-07-canonical-identifiers-W04-P06-S34]]'
+  - '[[2026-08-07-canonical-identifiers-W04-P06-S71]]'
+  - '[[2026-08-07-canonical-identifiers-W05-P07-S35]]'
+  - '[[2026-08-07-canonical-identifiers-W05-P07-S36]]'
+  - '[[2026-08-07-canonical-identifiers-W05-P07-S37]]'
+  - '[[2026-08-07-canonical-identifiers-W05-P08-S38]]'
+  - '[[2026-08-07-canonical-identifiers-W05-P08-S39]]'
+  - '[[2026-08-07-canonical-identifiers-W05-P08-S40]]'
+  - '[[2026-08-07-canonical-identifiers-W05-P08-S41]]'
+  - '[[2026-08-07-canonical-identifiers-W05-P08-S42]]'
+  - '[[2026-08-07-canonical-identifiers-W05-P08-S43]]'
+  - '[[2026-08-07-canonical-identifiers-W05-P08-S44]]'
+  - '[[2026-08-07-canonical-identifiers-W05-P08-S69]]'
+  - '[[2026-08-07-canonical-identifiers-W06-P09-S45]]'
+  - '[[2026-08-07-canonical-identifiers-W06-P09-S62]]'
+  - '[[2026-08-07-canonical-identifiers-W06-P09-S70]]'
+  - '[[2026-08-07-canonical-identifiers-W06-P10-S46]]'
+  - '[[2026-08-07-canonical-identifiers-W06-P10-S47]]'
+  - '[[2026-08-07-canonical-identifiers-W06-P10-S63]]'
+  - '[[2026-08-07-canonical-identifiers-W07-P11-S48]]'
+  - '[[2026-08-07-canonical-identifiers-W07-P11-S49]]'
+  - '[[2026-08-07-canonical-identifiers-W07-P11-S50]]'
+  - '[[2026-08-07-canonical-identifiers-W08-P12-S51]]'
+  - '[[2026-08-07-canonical-identifiers-W08-P12-S52]]'
+  - '[[2026-08-07-canonical-identifiers-W08-P12-S53]]'
+  - '[[2026-08-07-canonical-identifiers-W08-P12-S54]]'
+  - '[[2026-08-07-canonical-identifiers-W08-P12-summary]]'
+  - '[[2026-08-07-canonical-identifiers-W08-P13-S55]]'
+  - '[[2026-08-07-canonical-identifiers-W08-P13-S56]]'
+  - '[[2026-08-07-canonical-identifiers-W08-P13-S57]]'
+  - '[[2026-08-07-canonical-identifiers-W09-P14-S58]]'
+  - '[[2026-08-07-canonical-identifiers-W09-P14-S59]]'
+  - '[[2026-08-07-canonical-identifiers-W09-P14-S60]]'
+  - '[[2026-08-07-canonical-identifiers-adr]]'
+  - '[[2026-08-07-canonical-identifiers-plan]]'
+  - '[[2026-08-07-canonical-identifiers-reference]]'
+  - '[[2026-08-10-canonical-identifiers-expediente-provenance-adr]]'
+  - '[[2026-08-10-canonical-identifiers-expediente-provenance-reference]]'
+  - '[[2026-08-10-canonical-identifiers-revision-id-adjudication-reference]]'
+  - '[[2026-08-13-canonical-identifiers-final-close-review-audit]]'
+  - '[[2026-08-13-canonical-identifiers-s10-provenance-roundtrip-audit]]'
+  - '[[2026-08-13-canonical-identifiers-s11-contract-audit]]'
+  - '[[2026-08-13-canonical-identifiers-s13-csv-closure-audit]]'
+  - '[[2026-08-13-canonical-identifiers-s14-storage-key-audit]]'
+  - '[[2026-08-13-canonical-identifiers-s15-canonical-csv-audit]]'
+---
+
+# `canonical-identifiers` feature index
+
+Auto-generated index of all documents tagged with `#canonical-identifiers`.
+
+## Documents
+
+### adr
+
+- `2026-08-07-canonical-identifiers-adr` - `canonical-identifiers` adr: `Canonical AEAT document-identifier taxonomy` | (**status:** `accepted`)
+- `2026-08-10-canonical-identifiers-expediente-provenance-adr` - `canonical-identifiers` adr: `IVA compensation expediente provenance` | (**status:** `accepted`)
+
+### audit
+
+- `2026-08-13-canonical-identifiers-final-close-review-audit` - `canonical-identifiers` final close review
+- `2026-08-13-canonical-identifiers-s10-provenance-roundtrip-audit` - `canonical-identifiers` audit: `s10 provenance roundtrip`
+- `2026-08-13-canonical-identifiers-s11-contract-audit` - `canonical-identifiers` audit: `s11 contract`
+- `2026-08-13-canonical-identifiers-s13-csv-closure-audit` - `canonical-identifiers` audit: `s13 csv closure`
+- `2026-08-13-canonical-identifiers-s14-storage-key-audit` - `canonical-identifiers` audit: `S14 storage-key audit`
+- `2026-08-13-canonical-identifiers-s15-canonical-csv-audit` - `canonical-identifiers` audit: `S15 canonical CSV review`
+
+### exec
+
+- `2026-08-07-canonical-identifiers-W01-P01-S01` - Re-read domain/modelos/_ids.py against current HEAD to confirm the four ids and the duplicate pattern are still declared as described here, then alias WorkUnitId, CalculationRevisionId, FilingRecordId and VerificationReportId from core.identity.Hex64Str, deleting the duplicate pattern declaration. HEAD re-read is DONE as of 2026-08-10: all four aliases and the module-local _HEX_64_PATTERN are still declared verbatim, so the duplication this row exists to close is still live. The aliasing itself does not land as its own commit -- it is inseparable from the relocation in S02, so each symbol's alias-and-move share one index per the relocation-atomicity rule
+- `2026-08-07-canonical-identifiers-W01-P01-S02` - Relocate the four aliased ids into core/identity/ and update every consumer import in the same commit per the relocation-atomicity rule. FOUR COMMITS, one per symbol, tagged relocation:<symbol> -- the standing rule is one Step equals one symbol equals one atomic commit, and this row batches four. Ascending blast radius measured against HEAD: VerificationReportId 5 consumer files, FilingRecordId 10, CalculationRevisionId 20, WorkUnitId 27, with exactly ONE dirty consumer across all of them. THIS ROW OMITTED THREE THINGS a compliant execution must still do, rowed here rather than done silently: domain/modelos/_ids.py holds ONLY these four aliases and their __all__, so the LAST of the four commits EMPTIES it and must DELETE the module, because an empty module left standing is a bridge by another name. That deletion orphans docs/api/cadrumo.domain.modelos._ids.rst, which hard-crashes autodoc on the next nitpicky build, so the stub removal rides in the SAME commit and is generated by apidocs scaffold rather than hand-edited. And the module docstring names all four identities by name, so each departure makes it progressively false and the intermediate commits must trim it
+- `2026-08-07-canonical-identifiers-W01-P01-S03` - Re-read domain/invoices/_ids.py against current HEAD, alias InvoiceId from core.identity.Hex64Str, and relocate it with its consumer imports updated in the same commit
+- `2026-08-07-canonical-identifiers-W01-P01-S66` - Collapse the THREE hand-rolled hex-64 declarations this Wave's premise did not count, each re-declaring the exact literal pattern that core/_hex.py's own docstring names as the thing every such concept must alias instead. The Wave was planned against a reference measurement of TWO duplicates. Measured against the finished tree after all five relocations landed, the real count is SIX. Three are now closed -- the two the reference named plus one found inside domain/modelos/_verification_report.py during the relocation and absorbed there. Three remain and had no row anywhere in this plan, so closing the Wave on its original rows would have left its own stated goal unmet with a checkbox saying otherwise. Rowed as ONE row rather than three because it is one concept at three sites with an identical remedy, and three rows invite three partial closures. TERRITORY, since two fall outside this campaign's modules and the implementation may be routed elsewhere -- application/evidence/_ids.py declares BundleId and EvidenceId, domain/attachments/_ids.py declares AttachmentId, and application/modelo/_m145_communication_records.py declares a record id inline rather than in an ids module. The remedy for each is the one this Wave already proved five times over: alias from the canonical primitive, delete the local pattern constant, and repoint every consumer in the same commit. The release condition is a tree-wide collect with zero ERROR lines, not a checker pass, because a cross-package importer is invisible to both a symbol grep and a type checker and that blind spot is what made this Wave ship a P0 twice
+- `2026-08-07-canonical-identifiers-W02-P02-S05` - declare `IdentifierNamespace` as a closed StrEnum split into AEAT-issued and app-derived groups, each member documented with the concept it names
+- `2026-08-07-canonical-identifiers-W02-P02-S06` - declare `AeatExpedienteId` at the sede-schema bound and `AeatClaveLiquidacion` and `AeatPresentationId` at their current field bounds
+- `2026-08-07-canonical-identifiers-W02-P02-S07` - Retype every expediente_id model field onto AeatExpedienteId, removing the per-field repeated bound and the duplicated shape validator
+- `2026-08-07-canonical-identifiers-W02-P02-S08` - Retype Deuda.clave_liquidacion onto AeatClaveLiquidacion, and retype the second bare-str clave_liquidacion on the operator-facing wire payload in the same change
+- `2026-08-07-canonical-identifiers-W04-P06-S33` - retype every classified bucket_event_id/event_id pydantic model field onto the existing BucketEventId alias at the sites not already using it
+- `2026-08-07-canonical-identifiers-W07-P11-S48` - document the three free-text sub-populations as a code comment on IdentifierNamespace naming representative fields for each, explicitly stating none are namespace members
+- `2026-08-07-canonical-identifiers-W07-P11-S49` - author and run dev/identifier_noun_census.py, an AST sweep matching field docstrings against a noun-vocabulary heuristic independent of the original suffix heuristic
+- `2026-08-07-canonical-identifiers-W07-P11-S50` - triage the second-pass sweep's findings into the existing namespace set, a new namespace, or an explicit non-identifier exclusion, recording the disposition of each
+- `2026-08-07-canonical-identifiers-W01-P01-S04` - run the full persistence and pydantic-model roundtrip suite to confirm the relocation changed no shape
+- `2026-08-07-canonical-identifiers-W01-P01-S68` - Retype M303ProductSoftwareEvidence.digest onto the canonical ContentDigest alias, closing the SEVENTH hex-64 redeclaration site. This site existed in NO row of this plan, including S66's widened count. The Wave was planned against two duplicates, S66 re-measured six, and the true figure at HEAD is seven. A peer campaign landed this inline pattern at 2026-08-12 11:11, AFTER this campaign's own redeclaration gate landed at 2026-08-10 16:35, so the gate was green and is now red on a site no row names. Rowed rather than folded silently into S04 because S04 is a verification row and a fix carried inside a verification row is invisible to review. The remedy is the one this Wave proved five times over and the primitive's own docstring prescribes. The value is a payload digest, so it takes ContentDigest rather than a bare Hex64Str or a newly minted per-concept alias, and the module already imports from core.identity so no new import path is created. NOTE that the gate deliberately scans at HEAD rather than the working tree, so this row cannot be verified green until its commit lands. The working-tree proof is a census_sources run over the edited source.
+- `2026-08-07-canonical-identifiers-W05-P07-S35` - adjudicate each of the twelve bare `revision_id` sites against its actual producer (registry `ModeloRevision.id` versus the hex-64 `CalculationRevisionId`), recording the per-site decision in the Step record before retyping any of them
+- `2026-08-07-canonical-identifiers-W05-P07-S36` - retype every site adjudicated in `W05.P07.S35` onto `CalculationRevisionId` or the canonical `RevisionId` per its recorded disposition. DO NOT MINT `RegistryRevisionId`. This row previously instructed creating it and that instruction was superseded on 2026-08-11: the concept already has a canonical home as `type RevisionId` in the registry ids module, exported from the registry facade and carrying 16 users at HEAD, so minting a second alias beside it fragments a canonical type and is precisely the criticality this campaign exists to close. It would also have shipped green, because a faithfully-implemented wrong specification passes every gate and produces an honest exec record. Substitutability is measured and constrains the retype: `RevisionId` carries min_length, max_length and a pattern where a bare `str` carries none, so every retype NARROWS its site and is correct ONLY where the adjudication recorded a genuine registry revision slug
+- `2026-08-07-canonical-identifiers-W02-P02-S09` - Discriminate IVA-compensation provenance from AEAT register status
+- `2026-08-07-canonical-identifiers-W02-P02-S10` - Add the strict roundtrip and anti-tautology proof for the discriminated pair. Populate every defaultable field on IvaCompensationPeriodState non-default, push it through the real encrypted repository and assert strict model equality on load. For the anti-tautology proof delete the persisted provenance field from the on-disk payload, reload through the real production read path, and assert refusal rather than a silent re-default. Add a companion case proving the cross-field validator refuses both impossible pairs, an operator-seeded row carrying an expediente and an AEAT-capture row carrying none
+- `2026-08-07-canonical-identifiers-W02-P02-S11` - retype `ExpedienteDeclarationPayload.expediente_id` from unconstrained bare `str` onto `AeatExpedienteId`, closing the fourth (loosest) divergence sighted on the operator-facing wire contract
+- `2026-08-07-canonical-identifiers-W02-P02-S12` - add a golden-schema pinning test capturing `ExpedienteDeclarationPayload`'s advertised `model_json_schema()` before and after `W02.P02.S11`, so the CLI/MCP contract change is a visible reviewed diff rather than a silent constraint shift
+- `2026-08-07-canonical-identifiers-W02-P02-S65` - Measure the legitimate population before closing the discriminated-pair rows, and treat this row rather than the new refusal as their close condition. Load and construct through the wallet-balance projection, the binding-prefill resolver and the M303 carry-ingress path and confirm every legitimate row still constructs and still loads. Assert against the NEW provenance field, never against status. This row previously admitted a vacuous pass: with status still carrying provenance an implementer could satisfy the clause below by reading provenance off status, which is a control passing against the wrong field. So it now carries a second assertion only the ruled design can satisfy, that status is None on every non-AEAT path. The disconfirming observation stands: if any of those three paths carries a row whose provenance is not one of the five enum members, the enum is incomplete and S09 must be reopened rather than the row forced into an approximate member. Record the count of rows exercised per path, because a control exercising zero rows reads identically to one that passes
+- `2026-08-07-canonical-identifiers-W02-P03-S13` - Record the canonical CSV shape ruled by the ADR amendment of 2026-08-10, superseding this row's prior instruction to record that no empirical replay was possible. That instruction rested on a falsified premise and the evidence exists in three independent forms. First, three real AEAT-issued CSVs captured from live Sede sessions and byte-identical across two capture rounds (FNBB57PE9KZ5TN4R, MZRSYDRL5JMPJPRT, TUD4V9XAUV7QJ8QV), each exactly 16 uppercase alphanumeric characters. Second, 34 distinct CSV tokens across the 60 committed parser-anchor fixture PDFs, every one 16 uppercase alphanumeric. Third, a default-lane regression at adapters/inbound/justificante/tests/test_corpus_sidecar_roundtrip.py lines 244-249 that already asserts isalnum and isupper and a length between 8 and 24 on every parsed fixture. Adopt core/_aeat_csv.py's 8-32 uppercase-alphanumeric contract as canonical and retire JustificanteCsv's 4-64-no-pattern bound rather than keeping it as a second opinion. State in the Step record that the 8-24 assertion already running is strictly inside 8-32, so the retype tightens the field without being able to break the parse path
+- `2026-08-07-canonical-identifiers-W02-P03-S14` - enumerate every secure-object storage key derived from the CSV value, starting from `extract_identifier` in the justificante persistence adapter, informing (not gating, per the schema-rewrite authorisation) the key-composition redesign in `W08`
+- `2026-08-07-canonical-identifiers-W02-P03-S15` - declare `AeatCsv` in `core/identity/` at the shape decided in `W02.P03.S13`
+- `2026-08-07-canonical-identifiers-W02-P03-S16` - retype `JustificanteRef.csv` onto `AeatCsv`, removing its now-redundant field validator
+- `2026-08-07-canonical-identifiers-W02-P03-S17` - Retype Justificante.csv onto AeatCsv, deleting the JustificanteCsv alias outright rather than re-pointing it, and delete its docstring claim that the receipt domain owns the bound because it owns the artefact the value is read from. That sentence asserts the ownership the 2026-08-10 ADR amendment overturns, and leaving it standing over a retyped alias leaves source prose describing the rejected design where the next reader meets it first
+- `2026-08-07-canonical-identifiers-W02-P03-S18` - retype the two bare-`str` CSV fields onto `AeatCsv`
+- `2026-08-07-canonical-identifiers-W02-P03-S19` - retype the bare-`str` CSV field onto `AeatCsv`
+- `2026-08-07-canonical-identifiers-W02-P03-S20` - unify CSV normalisation to one form across the verify adapter and the calendar-evidence consumer, matching whichever form `W02.P03.S13` proved correct
+- `2026-08-07-canonical-identifiers-W02-P03-S21` - verify encrypted `Justificante` persistence at its canonical adapter boundary and remove the obsolete domain duplicate
+- `2026-08-07-canonical-identifiers-W02-P03-S22` - Add a shape-conformance regression over the adopted 8-32 CSV bound pinning its accept and refuse boundaries explicitly, and correct this row's prior claim that the parser-anchor fixtures carry no CSV token. They do. All 60 carry one, 34 distinct, every one 16 uppercase alphanumeric, drawn into the page body by the fixture generators and recorded in each sidecar's replacements_applied list. Construct the boundary value set from the decided bound, covering the shortest and longest accepted forms and the nearest refused ones on each side of both the length and the character-class axis. Keep the corpus sidecar roundtrip replay's corpus inputs and artefact-fidelity behaviour unchanged alongside it, while replacing duplicate local shape checks with the direct canonical predicate, and treat it as this row's control rather than as background. It is the measurement that the legitimate population still passes, and this row does not close until it is green across all 60 fixtures. State in the Step record which claim each instrument proves, shape conformance by the boundary set and artefact fidelity by the fixture replay
+- `2026-08-07-canonical-identifiers-W02-P03-S23` - Retype extract_csv_from_url's return annotation from bare str to AeatCsv, resolving this row's OBSOLETE AS WRITTEN state on measurement rather than deleting it. The row assumed the sibling justificante-identity-matching plan would hand off a new persisted cotejo-derived CSV field. It did not. Its chosen Option 4 recovers the CSV non-persistingly from FiledDeclaracionArtefact.source_url through extract_csv_from_url, so there is no new field, but there is a real successor target. That function already shape-validates its result with is_aeat_csv, the exact canonical contract AeatCsv carries, so the retype documents an invariant the function already enforces rather than adding a constraint. Confirm all four consumers still type-check
+- `2026-08-07-canonical-identifiers-W02-P03-S67` - Retype the SIX further CSV-carrying fields the original rows did not name, on the same adopted bound. THE MEASUREMENT THIS PHASE WAS PLANNED AGAINST WAS INCOMPLETE and this row states the corrected one rather than leaving a reader to re-derive it. The reference and the phase rows both describe three divergent validation strengths across six sites. Re-measured at HEAD immediately before building, the concept spans roughly twelve sites and FIVE strengths -- the documented 8-32 contract inline at four sites, bare str or None at four, the retired 4-64 alias at two, plus TWO strengths named nowhere in the reference or in the phase rows. Those two are verified_justificante_csv at application/overview/_calendar_models.py lines 168 and 329 carrying min_length=1 and max_length=64, and original_csv at domain/filing/_amendment.py line 83 carrying a bare min_length=1. The remaining unnamed sites are justificante_csv at application/filing/_complementaria.py line 66 and verified_justificante_csv at entrypoints/cli/_overview_payloads.py lines 154 and 203, both entirely unconstrained. Rowed as a sibling rather than folded into the phase, because doubling a batch after its rows are written is how scope stops being reviewable, and because a concept-shaped gap left behind a row-shaped close is what this plan already had to correct once in its opening Wave. NOTE that domain/submission/_models.py line 194 is deliberately NOT in this row -- it consumes the JustificanteCsv alias directly, so it must land in whichever commit retires that alias or the retirement is a break rather than a deferral
+- `2026-08-07-canonical-identifiers-W02-P03-S73` - Consolidate every CSV normalisation onto the one canonical authority, closing the concept-shaped gap S20's two-file row could not reach. S20 unified the verify adapter and the calendar-evidence consumer and closed green, but the concept spans SEVEN further sites re-implementing normalise_aeat_csv inline, found independently by two agents during this Phase. This is the same defect shape W01 had to correct twice (S66, S68), a row-shaped close over a concept-shaped gap. TWO strengths, not one. The wrong-form sites are _cross_period_clean_state.py lines 997 and 1000, which compare with .casefold() -- the exact form core/_aeat_csv.py's own docstring rules out, because casefold produces lowercase which fails AEAT_CSV_PATTERN outright and transliterates, fatal for a value that must round-trip to cotejo byte-for-byte. That docstring already describes those sites in the PAST TENSE as reached-for-and-corrected, and they are still there, so the prose is false where the next reader meets it. The right-form-wrong-home sites are .strip().upper() at _justificante.py lines 577, 718 and 891 and _filed_observation_persistence.py lines 519 and 594, correct today but a second authority that drifts the moment the canonical form changes. Route every site through the canonical function, delete each inline copy, and correct the canonical docstring's past-tense claim in the same commit. Line numbers are as measured at HEAD and MUST be re-verified before editing, since two of these files carry live peer WIP. NOTE that line 1008 of _cross_period_clean_state.py casefolds an expediente_id, a different namespace, so assess it on its own bound and do not sweep it in by proximity
+- `2026-08-07-canonical-identifiers-W03-P04-S24` - drop the unconsumed resolver with the dormant namespace enum
+- `2026-08-07-canonical-identifiers-W03-P04-S25` - drop resolver-only coverage after the resolver is ruled out
+- `2026-08-07-canonical-identifiers-W03-P04-S64` - Decide whether resolve_identifier_namespace is enrolled or dropped, and record the outcome before S24 executes. Search production for a site holding an AEAT identifier value whose namespace is UNKNOWN at the point of use. A semantic sweep run for the 2026-08-10 ADR amendment found none, returning only the enum's own module, its own test and an in-flight census tool. The disconfirming observation that decides this row: a genuine consumer holds a value whose namespace cannot be read off its own field type. If every candidate turns out to hold a value whose namespace is already fixed by its field type, record that the resolver is DROPPED and retire IdentifierNamespace with it rather than leaving an exported concept nothing uses. Do not manufacture a caller to justify the symbol
+- `2026-08-07-canonical-identifiers-W04-P06-S29` - retype classified transaction-id pydantic model fields onto `TransactionId` in `application/ledger/`
+- `2026-08-07-canonical-identifiers-W04-P06-S30` - retype classified transaction-id pydantic model fields onto `TransactionId` in `application/aggregation/`
+- `2026-08-07-canonical-identifiers-W04-P06-S31` - adjudicate `bucket_id` in `adapters/persistence/profile/` — zero model fields, row's premise does not survive contact
+- `2026-08-07-canonical-identifiers-W04-P06-S32` - retype classified invoice-id pydantic model fields onto `InvoiceId` in the invoices packages
+- `2026-08-07-canonical-identifiers-W04-P06-S34` - verify the four W04 adoptions changed no wire shape for already-valid values
+- `2026-08-07-canonical-identifiers-W04-P06-S71` - scope `bucket_id`'s real 81-site population — report only, do not open
+- `2026-08-07-canonical-identifiers-W05-P07-S37` - retype `short_work_unit_id` and `short_calculation_revision_id` onto the existing `core.Hex16Str` primitive rather than the full-length aliases
+- `2026-08-07-canonical-identifiers-W05-P08-S38` - declare `RegistrySnapshotId` as a new `IdentifierNamespace.APP_REGISTRY_SNAPSHOT_ID` member and alias for the composite `modelo:revision_id:filing_year:period` string, explicitly distinct from `core.identity.SnapshotId`
+- `2026-08-07-canonical-identifiers-W05-P08-S39` - declare `RegistryRevisionId` as a new `IdentifierNamespace.APP_REGISTRY_REVISION_ID` member and alias for the human-authored registry version tag
+- `2026-08-07-canonical-identifiers-W05-P08-S40` - retype the three `registry_snapshot_id` sites and the `registry_revision_id` sites onto the two new aliases
+- `2026-08-07-canonical-identifiers-W05-P08-S41` - declare `AeatCertificadoId` as a new `IdentifierNamespace.AEAT_CERTIFICADO_ID` member and alias at the 13-digit-or-longer bound its docstring already states, and retype `RemoteNotification.certificado_id` onto it
+- `2026-08-07-canonical-identifiers-W05-P08-S42` - declare `AeatBoxNumber` as a new `IdentifierNamespace.AEAT_BOX_NUMBER` member and alias, distinct from the registry's own `CasillaId`, and retype `display_number`, `form_number`, `from_number`, and `to_number` onto it
+- `2026-08-07-canonical-identifiers-W05-P08-S43` - check whether M210's `official_tipo_renta_code` catalogue is already enumerated in registry TOML
+- `2026-08-07-canonical-identifiers-W05-P08-S44` - declare `M720OperationKindCode` and `M720AssetClassCode` as `StrEnum`s in `core/` sourced from registry TOML if enumerated there, and retype `operation_kind_code` / `asset_class_code` onto them, explicitly NOT as `IdentifierNamespace` members
+- `2026-08-07-canonical-identifiers-W05-P08-S69` - adjudicate `CasillaDefinition.number` as its own identifier population, separate from `AeatBoxNumber`
+- `2026-08-07-canonical-identifiers-W06-P09-S45` - self and profile-owned tax identity: `tax_id`, `spouse_tax_id`, `profile_tax_id` onto `SubjectTaxId`
+- `2026-08-07-canonical-identifiers-W06-P09-S62` - cross-field tax-identity consistency audit for every model `W06.P09.S45` retyped
+- `2026-08-07-canonical-identifiers-W06-P09-S70` - cross-object taxpayer-identity guard on `build_complementaria`
+- `2026-08-07-canonical-identifiers-W06-P10-S46` - counterparty-facing tax identity: `supplier_tax_id`, `customer_tax_id`, `party_tax_id`, `donor_tax_id` onto `TaxIdIdentityToken`
+- `2026-08-07-canonical-identifiers-W06-P10-S47` - a roundtrip regression proving a non-Spanish-shaped counterparty tax id validates under `TaxIdIdentityToken`
+- `2026-08-07-canonical-identifiers-W06-P10-S63` - cross-field tax-identity consistency audit for every model `W06.P10.S46` retyped
+- `2026-08-07-canonical-identifiers-W08-P12-S51` - decide, and record the reason, whether every PII-shaped fold-in in `object_key_grammar` (`{member_nif}`, `{perceptor_nif}`, `{perceptor_tax_id}`) is pre-hashed uniformly or intentionally left raw beneath the outer `HashedLookup` HMAC, given the column is deterministically hashed either way
+- `2026-08-07-canonical-identifiers-W08-P12-S52` - apply the `W08.P12.S51` decision to every `SecureObjectNamespaceDefinition.object_key_grammar` declaration that currently diverges from it
+- `2026-08-07-canonical-identifiers-W08-P12-S53` - adjudicate the shared-master store as permanently unreadable through supported custody on the recorded evidence and transfer destructive reset ownership
+- `2026-08-07-canonical-identifiers-W08-P12-S54` - record the operator re-authentication step required after the custody-owned reset and re-enrolment
+- `2026-08-07-canonical-identifiers-W08-P12-summary` - `canonical-identifiers` `W08.P12` summary
+- `2026-08-07-canonical-identifiers-W08-P13-S55` - enumerate every registered `OutputSchema` class carrying an identifier field this plan retyped, cross-referenced against the wire census's roughly-fifty-class sweep
+- `2026-08-07-canonical-identifiers-W08-P13-S56` - add a golden-schema pinning test capturing each enumerated class's `model_json_schema()` output (the CLI envelope shape) and, for classes backing an MCP tool, the MCP `output_schema` from `_output_schema_for`, asserting the pinned constraints match the enrolled type
+- `2026-08-07-canonical-identifiers-W08-P13-S57` - confirm `test_json_schema_conformance.py`'s existing key-parity gate still passes and add a note in its module docstring cross-referencing the new content-pinning test, since the existing gate self-describes as structural-shape-only
+- `2026-08-07-canonical-identifiers-W09-P14-S58` - author the identifier-enrollment ratchet test asserting every production pydantic field whose name matches the namespace vocabulary carries a `core.identity` namespace alias rather than bare `str`, with `Declaracion.estado`, `Deuda.situacion`, and the three free-text sub-populations from `W07.P11.S48` as named, documented exclusions
+- `2026-08-07-canonical-identifiers-W09-P14-S59` - prove the gate's bite: add a throwaway bare-`str` field named to match the namespace vocabulary on a scratch model outside `src`, confirm the gate reds, then remove it and confirm the gate is green again
+- `2026-08-07-canonical-identifiers-W09-P14-S60` - record NRC, fixed-width fichero-BOE tax-id width (owned by the separate Modelo 200 misattribution ADR), registry TOML id-shaped values (no measured denominator), and any second-pass finding from `W07.P11.S49` not triaged into an enrolled namespace as explicit deferred follow-ups in this plan's Verification section, each with a named next reference rather than a silent close
+
+### plan
+
+- `2026-08-07-canonical-identifiers-plan` - `canonical-identifiers` plan
+
+### reference
+
+- `2026-08-07-canonical-identifiers-reference` - `canonical-identifiers` reference: `AEAT identifier taxonomy census`
+- `2026-08-10-canonical-identifiers-expediente-provenance-reference` - `canonical-identifiers` reference: `IVA compensation expediente provenance sites`
+- `2026-08-10-canonical-identifiers-revision-id-adjudication-reference` - `canonical-identifiers` reference: revision_id adjudication

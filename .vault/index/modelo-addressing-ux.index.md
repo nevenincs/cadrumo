@@ -1,0 +1,322 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#modelo-addressing-ux'
+date: '2026-08-16'
+modified: '2026-08-16'
+body_schema: 'body-v1'
+body_hash: 'sha256:5b290412761be5c863a09008db9de0c38c269a7d598b02d0e194e61ff4b5ec4d'
+related:
+  - '[[2026-06-04-modelo-addressing-ux-adr]]'
+  - '[[2026-06-04-modelo-addressing-ux-code-review-audit]]'
+  - '[[2026-06-04-modelo-addressing-ux-plan]]'
+  - '[[2026-06-04-modelo-addressing-ux-research]]'
+  - '[[2026-06-04-modelo-addressing-ux-w01-p01-s01-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w01-p01-s02-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w01-p01-s03-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w01-p01-s04-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w01-p01-s05-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w01-p01-s06-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w01-p01-s07-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w01-p02-s08-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w01-p02-s09-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w01-p02-s10-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w01-p02-s11-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w01-p02-s12-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w01-p02-s13-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w02-p03-s14-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w02-p03-s15-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w02-p03-s16-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w02-p03-s17-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w02-p03-s18-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w02-p04-s20-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w02-p04-s21-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w02-p04-s22-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w02-p08-s19-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w02-p09-s23-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w02-p09-s24-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w02-p09-s25-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w02-p09-s26-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w03-p10-s43-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w03-p10-s44-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w03-p10-s45-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w03-p10-s46-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w03-p10-s47-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w03-p10-s48-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w03-p11-s49-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w03-p11-s50-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w03-p11-s51-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w03-p11-s52-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w03-p11-s53-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w03-p11-s54-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w03-p12-s27-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w03-p12-s28-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w04-p05-s61-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w04-p05-s62-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w04-p05-s63-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w04-p05-s64-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w04-p05-s65-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w04-p05-s66-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w04-p06-s67-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w04-p06-s68-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w04-p06-s69-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w04-p06-s70-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w04-p06-s71-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w04-p06-s72-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w04-p06-s73-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w04-p06-s74-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w05-p07-s75-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w05-p07-s76-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w05-p07-s77-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w05-p07-s78-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w05-p17-s119-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w05-p17-s120-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w05-p17-s121-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w05-p17-s122-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w05-p17-s123-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w05-p17-s124-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w05-p17-s125-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w05-p17-s126-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p18-s127-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p18-s128-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p18-s130-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p18-s132-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p18-s133-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p19-s134-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p19-s136-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p19-s137-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p19-s139-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p20-s140-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p20-s142-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p20-s143-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p20-s145-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p20-s146-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p21-s147-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p21-s149-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p21-s150-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p21-s151-exec]]'
+  - '[[2026-06-04-modelo-addressing-ux-w06-p21-s153-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-W01-P01-S01]]'
+  - '[[2026-06-05-modelo-addressing-ux-W01-P01-S02]]'
+  - '[[2026-06-05-modelo-addressing-ux-W01-P01-S03]]'
+  - '[[2026-06-05-modelo-addressing-ux-W01-P01-S04]]'
+  - '[[2026-06-05-modelo-addressing-ux-W01-P02-S05]]'
+  - '[[2026-06-05-modelo-addressing-ux-W01-P02-S06]]'
+  - '[[2026-06-05-modelo-addressing-ux-W01-P02-S07]]'
+  - '[[2026-06-05-modelo-addressing-ux-W01-P02-S08]]'
+  - '[[2026-06-05-modelo-addressing-ux-W01-P12-S43]]'
+  - '[[2026-06-05-modelo-addressing-ux-W01-P12-S45]]'
+  - '[[2026-06-05-modelo-addressing-ux-W02-P03-S09]]'
+  - '[[2026-06-05-modelo-addressing-ux-W02-P03-S10]]'
+  - '[[2026-06-05-modelo-addressing-ux-W02-P03-S11]]'
+  - '[[2026-06-05-modelo-addressing-ux-W02-P03-S12]]'
+  - '[[2026-06-05-modelo-addressing-ux-W02-P04-S13]]'
+  - '[[2026-06-05-modelo-addressing-ux-W02-P04-S14]]'
+  - '[[2026-06-05-modelo-addressing-ux-W02-P04-S15]]'
+  - '[[2026-06-05-modelo-addressing-ux-W02-P04-S16]]'
+  - '[[2026-06-05-modelo-addressing-ux-code-review-audit]]'
+  - '[[2026-06-05-modelo-addressing-ux-follow-up-queue-adr]]'
+  - '[[2026-06-05-modelo-addressing-ux-plan]]'
+  - '[[2026-06-05-modelo-addressing-ux-vault-curation-audit]]'
+  - '[[2026-06-05-modelo-addressing-ux-w01-p11-s40-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w01-p11-s41-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w01-p12-s42-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w01-p12-s44-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w03-p05-s17-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w03-p05-s18-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w03-p05-s19-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w03-p05-s20-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w03-p06-s21-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w03-p06-s22-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w03-p06-s23-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w03-p06-s24-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p07-s25-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p07-s26-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p07-s27-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p08-s28-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p08-s29-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p08-s30-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p08-s31-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p08-s46-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w04-p08-s47-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p09-s32-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p09-s33-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p09-s34-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p09-s35-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p10-s36-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p10-s37-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p10-s38-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p10-s39-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p13-s48-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p13-s49-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p13-s50-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p13-s51-exec]]'
+  - '[[2026-06-05-modelo-addressing-ux-w05-p13-s52-exec]]'
+---
+
+# `modelo-addressing-ux` feature index
+
+Auto-generated index of all documents tagged with `#modelo-addressing-ux`.
+
+## Documents
+
+### adr
+
+- `2026-06-04-modelo-addressing-ux-adr` - `modelo-addressing-ux` adr: `natural-key modelo work addressing` | (**status:** `accepted`)
+- `2026-06-05-modelo-addressing-ux-follow-up-queue-adr` - Modelo Addressing UX Follow-Up ADR Queue | (**status:** `accepted`)
+
+### audit
+
+- `2026-06-04-modelo-addressing-ux-code-review-audit` - `modelo-addressing-ux` Code Review
+- `2026-06-05-modelo-addressing-ux-code-review-audit` - `modelo-addressing-ux` Code Review
+- `2026-06-05-modelo-addressing-ux-vault-curation-audit` - `modelo-addressing-ux` Vault Curation Audit
+
+### exec
+
+- `2026-06-04-modelo-addressing-ux-w01-p01-s01-exec` - W01.P01.S01 selector request result ambiguity and error objects
+- `2026-06-04-modelo-addressing-ux-w01-p01-s02-exec` - W01.P01.S02 active and explicit bucket resolution
+- `2026-06-04-modelo-addressing-ux-w01-p01-s03-exec` - W01.P01.S03 visible-target-first work-unit lookup
+- `2026-06-04-modelo-addressing-ux-w01-p01-s04-exec` - W01.P01.S04 explicit work-unit ID validation
+- `2026-06-04-modelo-addressing-ux-w01-p01-s05-exec` - W01.P01.S05 registry revision conflict refusal
+- `2026-06-04-modelo-addressing-ux-w01-p01-s06-exec` - W01.P01.S06 selector package exports
+- `2026-06-04-modelo-addressing-ux-w01-p01-s07-exec` - W01.P01.S07 selector resolution coverage
+- `2026-06-04-modelo-addressing-ux-w01-p02-s08-exec` - W01.P02.S08 revision selector operations
+- `2026-06-04-modelo-addressing-ux-w01-p02-s09-exec` - W01.P02.S09 duplicate draft current-pointer advancement
+- `2026-06-04-modelo-addressing-ux-w01-p02-s10-exec` - W01.P02.S10 filed pointer invariants
+- `2026-06-04-modelo-addressing-ux-w01-p02-s11-exec` - W01.P02.S11 revision selector coverage
+- `2026-06-04-modelo-addressing-ux-w01-p02-s12-exec` - W01.P02.S12 duplicate calculation pointer coverage
+- `2026-06-04-modelo-addressing-ux-w01-p02-s13-exec` - W01.P02.S13 exportable revision preference coverage
+- `2026-06-04-modelo-addressing-ux-w02-p03-s14-exec` - W02.P03.S14 work-unit CLI pointer payloads
+- `2026-06-04-modelo-addressing-ux-w02-p03-s15-exec` - W02.P03.S15 readable work list rows
+- `2026-06-04-modelo-addressing-ux-w02-p03-s16-exec` - W02.P03.S16 natural-key work status
+- `2026-06-04-modelo-addressing-ux-w02-p03-s17-exec` - W02.P03.S17 natural-key work revisions
+- `2026-06-04-modelo-addressing-ux-w02-p03-s18-exec` - W02.P03.S18 discovery output coverage
+- `2026-06-04-modelo-addressing-ux-w02-p04-s20-exec` - W02.P04.S20 natural-key work calculate
+- `2026-06-04-modelo-addressing-ux-w02-p04-s21-exec` - W02.P04.S21 natural-key work verify
+- `2026-06-04-modelo-addressing-ux-w02-p04-s22-exec` - W02.P04.S22 natural-key work file
+- `2026-06-04-modelo-addressing-ux-w02-p08-s19-exec` - W02.P08.S19 visible-target work create reuse
+- `2026-06-04-modelo-addressing-ux-w02-p09-s23-exec` - W02.P09.S23 natural-key modelo export
+- `2026-06-04-modelo-addressing-ux-w02-p09-s24-exec` - W02.P09.S24 Modelo 130 lifecycle without copied ids
+- `2026-06-04-modelo-addressing-ux-w02-p09-s25-exec` - W02.P09.S25 visible-target revision conflict coverage
+- `2026-06-04-modelo-addressing-ux-w02-p09-s26-exec` - W02.P09.S26 export default and ambiguity coverage
+- `2026-06-04-modelo-addressing-ux-w03-p10-s43-exec` - W03.P10.S43 adjacent command and ID-linkage classification
+- `2026-06-04-modelo-addressing-ux-w03-p10-s44-exec` - W03.P10.S44 work rename addressing
+- `2026-06-04-modelo-addressing-ux-w03-p10-s45-exec` - W03.P10.S45 work discard addressing
+- `2026-06-04-modelo-addressing-ux-w03-p10-s46-exec` - W03.P10.S46 work history addressing
+- `2026-06-04-modelo-addressing-ux-w03-p10-s47-exec` - W03.P10.S47 work compare-taxation addressing
+- `2026-06-04-modelo-addressing-ux-w03-p10-s48-exec` - W03.P10.S48 work amend addressing
+- `2026-06-04-modelo-addressing-ux-w03-p11-s49-exec` - W03.P11.S49 work revision addressing
+- `2026-06-04-modelo-addressing-ux-w03-p11-s50-exec` - W03.P11.S50 modelo reconcile addressing
+- `2026-06-04-modelo-addressing-ux-w03-p11-s51-exec` - W03.P11.S51 reconcile-from-justificante addressing
+- `2026-06-04-modelo-addressing-ux-w03-p11-s52-exec` - W03.P11.S52 modelo project addressing
+- `2026-06-04-modelo-addressing-ux-w03-p11-s53-exec` - W03.P11.S53 modelo compare addressing
+- `2026-06-04-modelo-addressing-ux-w03-p11-s54-exec` - W03.P11.S54 adjacent command regression coverage
+- `2026-06-04-modelo-addressing-ux-w03-p12-s27-exec` - W03.P12.S27 exact-id escape hatches
+- `2026-06-04-modelo-addressing-ux-w03-p12-s28-exec` - W03.P12.S28 natural-key id-type guidance
+- `2026-06-04-modelo-addressing-ux-w04-p05-s61-exec` - W04.P05.S61 locale guidance inventory
+- `2026-06-04-modelo-addressing-ux-w04-p05-s62-exec` - W04.P05.S62 English locale guidance
+- `2026-06-04-modelo-addressing-ux-w04-p05-s63-exec` - W04.P05.S63 Spanish locale guidance
+- `2026-06-04-modelo-addressing-ux-w04-p05-s64-exec` - W04.P05.S64 Catalan locale guidance
+- `2026-06-04-modelo-addressing-ux-w04-p05-s65-exec` - W04.P05.S65 Hungarian locale guidance
+- `2026-06-04-modelo-addressing-ux-w04-p05-s66-exec` - W04.P05.S66 CLI guidance coverage
+- `2026-06-04-modelo-addressing-ux-w04-p06-s67-exec` - `W04.P06.S67` tutorial natural-key lifecycle rewrite
+- `2026-06-04-modelo-addressing-ux-w04-p06-s68-exec` - `W04.P06.S68` getting-started natural-key lifecycle rewrite
+- `2026-06-04-modelo-addressing-ux-w04-p06-s69-exec` - `W04.P06.S69` quickstart natural-key lifecycle rewrite
+- `2026-06-04-modelo-addressing-ux-w04-p06-s70-exec` - `W04.P06.S70` Modelo 303 natural-key lifecycle rewrite
+- `2026-06-04-modelo-addressing-ux-w04-p06-s71-exec` - `W04.P06.S71` Modelo 390 natural-key lifecycle rewrite
+- `2026-06-04-modelo-addressing-ux-w04-p06-s72-exec` - `W04.P06.S72` Reconciliation natural-key audit
+- `2026-06-04-modelo-addressing-ux-w04-p06-s73-exec` - `W04.P06.S73` Filing spine pointer and selector explanation
+- `2026-06-04-modelo-addressing-ux-w04-p06-s74-exec` - `W04.P06.S74` CLI reference regeneration check
+- `2026-06-04-modelo-addressing-ux-w05-p07-s75-exec` - `W05.P07.S75` Application selector and lifecycle verification
+- `2026-06-04-modelo-addressing-ux-w05-p07-s76-exec` - `W05.P07.S76` focused modelo CLI gate
+- `2026-06-04-modelo-addressing-ux-w05-p07-s77-exec` - `W05.P07.S77` Documentation conformance verification
+- `2026-06-04-modelo-addressing-ux-w05-p07-s78-exec` - `W05.P07.S78` feature-surface gate
+- `2026-06-04-modelo-addressing-ux-w05-p17-s119-exec` - `W05.P17.S119` Exact raw-ID leakage audit
+- `2026-06-04-modelo-addressing-ux-w05-p17-s120-exec` - W05.P17.S120 semantic raw-ID leakage audit
+- `2026-06-04-modelo-addressing-ux-w05-p17-s121-exec` - W05.P17.S121 file-discovery blast-radius audit
+- `2026-06-04-modelo-addressing-ux-w05-p17-s122-exec` - `W05.P17.S122` Final blast-radius classification matrix
+- `2026-06-04-modelo-addressing-ux-w05-p17-s123-exec` - `W05.P17.S123` Internal service coverage
+- `2026-06-04-modelo-addressing-ux-w05-p17-s124-exec` - `W05.P17.S124` External CLI abstraction coverage
+- `2026-06-04-modelo-addressing-ux-w05-p17-s125-exec` - `W05.P17.S125` Documentation raw-ID coverage
+- `2026-06-04-modelo-addressing-ux-w05-p17-s126-exec` - `W05.P17.S126` Locale and translation guard coverage
+- `2026-06-04-modelo-addressing-ux-w06-p18-s127-exec` - W06.P18.S127 CLI module size and complexity inventory
+- `2026-06-04-modelo-addressing-ux-w06-p18-s128-exec` - W06.P18.S128 exact CLI business-logic leakage audit
+- `2026-06-04-modelo-addressing-ux-w06-p18-s130-exec` - W06.P18.S130 semantic CLI boundary audit
+- `2026-06-04-modelo-addressing-ux-w06-p18-s132-exec` - W06.P18.S132 CLI boundary classification matrix
+- `2026-06-04-modelo-addressing-ux-w06-p18-s133-exec` - W06.P18.S133 backend service home map
+- `2026-06-04-modelo-addressing-ux-w06-p19-s134-exec` - W06.P19.S134 natural-key lifecycle orchestration extraction
+- `2026-06-04-modelo-addressing-ux-w06-p19-s136-exec` - W06.P19.S136 backend revision selector defaulting extraction
+- `2026-06-04-modelo-addressing-ux-w06-p19-s137-exec` - W06.P19.S137 backend adjacent command orchestration
+- `2026-06-04-modelo-addressing-ux-w06-p19-s139-exec` - W06.P19.S139 CLI parse-call-backend-render extraction
+- `2026-06-04-modelo-addressing-ux-w06-p20-s140-exec` - W06.P20.S140 Modelo CLI command-group split
+- `2026-06-04-modelo-addressing-ux-w06-p20-s142-exec` - W06.P20.S142 Modelo CLI support helper extraction
+- `2026-06-04-modelo-addressing-ux-w06-p20-s143-exec` - W06.P20.S143 Modelo CLI architecture guard
+- `2026-06-04-modelo-addressing-ux-w06-p20-s145-exec` - W06.P20.S145 CLI size and complexity guard
+- `2026-06-04-modelo-addressing-ux-w06-p20-s146-exec` - W06.P20.S146 Extracted-module regression coverage
+- `2026-06-04-modelo-addressing-ux-w06-p21-s147-exec` - W06.P21.S147 Exact CLI boundary closure audit
+- `2026-06-04-modelo-addressing-ux-w06-p21-s149-exec` - W06.P21.S149 Semantic CLI boundary closure audit
+- `2026-06-04-modelo-addressing-ux-w06-p21-s150-exec` - W06.P21.S150 Static CLI boundary gates
+- `2026-06-04-modelo-addressing-ux-w06-p21-s151-exec` - W06.P21.S151 Focused application and CLI regression gate
+- `2026-06-04-modelo-addressing-ux-w06-p21-s153-exec` - W06.P21.S153 CLI boundary mitigation closure evidence
+- `2026-06-05-modelo-addressing-ux-W01-P01-S01` - W01.P01.S01 - current modelo CLI root inventory
+- `2026-06-05-modelo-addressing-ux-W01-P01-S02` - W01.P01.S02 - semantic decomposition discovery
+- `2026-06-05-modelo-addressing-ux-W01-P01-S03` - W01.P01.S03 - continuous decomposition baseline
+- `2026-06-05-modelo-addressing-ux-W01-P01-S04` - W01.P01.S04 - ADR coverage classification
+- `2026-06-05-modelo-addressing-ux-W01-P02-S05` - W01.P02.S05 - legacy root private import baseline
+- `2026-06-05-modelo-addressing-ux-W01-P02-S06` - W01.P02.S06 - legacy root registry authority baseline
+- `2026-06-05-modelo-addressing-ux-W01-P02-S07` - W01.P02.S07 - legacy root size budget tightening
+- `2026-06-05-modelo-addressing-ux-W01-P02-S08` - W01.P02.S08 - decomposition guard verification
+- `2026-06-05-modelo-addressing-ux-W01-P12-S43` - W01.P12.S43 - centralized revision-pick resolution
+- `2026-06-05-modelo-addressing-ux-W01-P12-S45` - W01.P12.S45 - addressing round-trip coverage
+- `2026-06-05-modelo-addressing-ux-W02-P03-S09` - W02.P03.S09 - work lifecycle command registrar
+- `2026-06-05-modelo-addressing-ux-W02-P03-S10` - W02.P03.S10 - legacy lifecycle bodies replaced
+- `2026-06-05-modelo-addressing-ux-W02-P03-S11` - W02.P03.S11 - lifecycle rendering support
+- `2026-06-05-modelo-addressing-ux-W02-P03-S12` - W02.P03.S12 - lifecycle natural-key regressions
+- `2026-06-05-modelo-addressing-ux-W02-P04-S13` - W02.P04.S13 - readiness command registrar
+- `2026-06-05-modelo-addressing-ux-W02-P04-S14` - W02.P04.S14 - discovery command extraction
+- `2026-06-05-modelo-addressing-ux-W02-P04-S15` - W02.P04.S15 - registry discovery application facade
+- `2026-06-05-modelo-addressing-ux-W02-P04-S16` - W02.P04.S16 - discovery extraction regression coverage
+- `2026-06-05-modelo-addressing-ux-w01-p11-s40-exec` - W01.P11.S40 resolver duplication inventory
+- `2026-06-05-modelo-addressing-ux-w01-p11-s41-exec` - W01.P11.S41 typed modelo addressing contracts
+- `2026-06-05-modelo-addressing-ux-w01-p12-s42-exec` - W01.P12.S42 bidirectional work target facade
+- `2026-06-05-modelo-addressing-ux-w01-p12-s44-exec` - W01.P12.S44 public modelo addressing facade exports
+- `2026-06-05-modelo-addressing-ux-w03-p05-s17-exec` - W03.P05.S17 calculate command registrar extraction
+- `2026-06-05-modelo-addressing-ux-w03-p05-s18-exec` - W03.P05.S18 legacy calculate body registrar mount
+- `2026-06-05-modelo-addressing-ux-w03-p05-s19-exec` - W03.P05.S19 calculate transport parsing support module
+- `2026-06-05-modelo-addressing-ux-w03-p05-s20-exec` - W03.P05.S20 backend calculate input ownership
+- `2026-06-05-modelo-addressing-ux-w03-p06-s21-exec` - W03.P06.S21 calculate extraction real CLI regressions
+- `2026-06-05-modelo-addressing-ux-w03-p06-s22-exec` - W03.P06.S22 row flag parsing persistence and rendering
+- `2026-06-05-modelo-addressing-ux-w03-p06-s23-exec` - W03.P06.S23 lowered calculate command budget
+- `2026-06-05-modelo-addressing-ux-w03-p06-s24-exec` - W03.P06.S24 calculate boundary exact and semantic audits
+- `2026-06-05-modelo-addressing-ux-w04-p07-s25-exec` - W04.P07.S25 resume interface contract
+- `2026-06-05-modelo-addressing-ux-w04-p07-s26-exec` - W04.P07.S26 resume ADR gate
+- `2026-06-05-modelo-addressing-ux-w04-p07-s27-exec` - W04.P07.S27 resume ambiguity refusal and candidate guidance
+- `2026-06-05-modelo-addressing-ux-w04-p08-s28-exec` - W04.P08.S28 Workflow Resume Resolution
+- `2026-06-05-modelo-addressing-ux-w04-p08-s29-exec` - W04.P08.S29 Work Resume CLI Natural Key
+- `2026-06-05-modelo-addressing-ux-w04-p08-s30-exec` - W04.P08.S30 Resume Exact Id Validation
+- `2026-06-05-modelo-addressing-ux-w04-p08-s31-exec` - W04.P08.S31 Resume CLI Tests
+- `2026-06-05-modelo-addressing-ux-w04-p08-s46-exec` - W04.P08.S46 Resume Facade Routing
+- `2026-06-05-modelo-addressing-ux-w04-p08-s47-exec` - W04.P08.S47 Resume Projection Guidance
+- `2026-06-05-modelo-addressing-ux-w05-p09-s32-exec` - W05.P09.S32 slice plan status and check
+- `2026-06-05-modelo-addressing-ux-w05-p09-s33-exec` - W05.P09.S33 decomposition step records
+- `2026-06-05-modelo-addressing-ux-w05-p09-s34-exec` - W05.P09.S34 focused regression cadence
+- `2026-06-05-modelo-addressing-ux-w05-p09-s35-exec` - W05.P09.S35 architecture and semantic gates
+- `2026-06-05-modelo-addressing-ux-w05-p10-s36-exec` - W05.P10.S36 Final Residual Risk Matrix
+- `2026-06-05-modelo-addressing-ux-w05-p10-s37-exec` - W05.P10.S37 Final Code Review
+- `2026-06-05-modelo-addressing-ux-w05-p10-s38-exec` - W05.P10.S38 Follow-Up ADR Queue
+- `2026-06-05-modelo-addressing-ux-w05-p10-s39-exec` - W05.P10.S39 Final Plan Validation
+- `2026-06-05-modelo-addressing-ux-w05-p13-s48-exec` - W05.P13.S48 Centralized Addressing Migration
+- `2026-06-05-modelo-addressing-ux-w05-p13-s49-exec` - W05.P13.S49 Centralized Addressing Static Guard
+- `2026-06-05-modelo-addressing-ux-w05-p13-s50-exec` - W05.P13.S50 Exact Centralized Addressing Audit
+- `2026-06-05-modelo-addressing-ux-w05-p13-s51-exec` - W05.P13.S51 Semantic Centralized Addressing Audit
+- `2026-06-05-modelo-addressing-ux-w05-p13-s52-exec` - W05.P13.S52 Centralized Addressing Verification
+
+### plan
+
+- `2026-06-04-modelo-addressing-ux-plan` - `modelo-addressing-ux` implementation plan
+- `2026-06-05-modelo-addressing-ux-plan` - `modelo-addressing-ux` `modelo CLI decomposition continuous plan` plan
+
+### research
+
+- `2026-06-04-modelo-addressing-ux-research` - `modelo-addressing-ux` research: `human modelo addressing for CLI work surfaces`

@@ -6,8 +6,10 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:782546011f172106118fef1c7594ee72ccfe2e14328e704fcc7bd0096f0edb89'
+body_hash: 'sha256:6e29e3e92ff0467b2dd13af57c211d031d1ce538bea1ca372a36887904a4b4d3'
 related:
+  - '[[2026-08-16-m210-export-authority-adr]]'
+  - '[[2026-08-16-m210-export-authority-generator-envelope-bottleneck-audit]]'
   - '[[2026-08-16-m210-export-authority-research]]'
 ---
 
@@ -16,6 +18,14 @@ related:
 Auto-generated index of all documents tagged with `#m210-export-authority`.
 
 ## Documents
+
+### adr
+
+- `2026-08-16-m210-export-authority-adr` - `m210-export-authority` adr: `IRNR party-identity producer key family for the Modelo 210 export layout` | (**status:** `accepted`)
+
+### audit
+
+- `2026-08-16-m210-export-authority-generator-envelope-bottleneck-audit` - `m210-export-authority` audit: `Per-modelo envelope contracts block ten of thirteen remaining generatable revisions`
 
 ### research
 

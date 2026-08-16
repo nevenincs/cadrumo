@@ -1,0 +1,353 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#cli-action-envelope-hardening'
+date: '2026-08-16'
+modified: '2026-08-16'
+body_schema: 'body-v1'
+body_hash: 'sha256:c51471a7304235199dd84d5ebce0a02e10c3e3901ea7f35a97cef3878633c430'
+related:
+  - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S03]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S04]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S49]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S62]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W01-P02-S05]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W01-P02-S06]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W01-P02-S07]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W02-P03-S08]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W02-P03-S09]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W02-P03-S10]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W02-P03-summary]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W02-P04-S11]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W02-P04-S12]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W02-P04-S13]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W02-P04-S14]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W02-P04-S15]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W03-P05-S16]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W03-P05-S17]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W03-P05-S18]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W03-P05-S19]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W03-P05-S20]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W04-P06-S21]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W04-P06-S22]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W04-P06-S23]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W04-P06-summary]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W04-P07-S24]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W04-P07-S25]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W04-P07-S26]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W04-P07-S27]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S100]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S101]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S102]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S103]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S104]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S105]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S106]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S116]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S28]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S29]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S30]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S50]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S51]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S52]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S53]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S54]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S55]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S56]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S57]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S63]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S64]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S65]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S96]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S97]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S99]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S31]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S32]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S33]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S34]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S35]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S66]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S108]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S109]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S110]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S111]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S112]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S113]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S114]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S115]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S117]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S36]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S38]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S39]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S40]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S41]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S59]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S60]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S61]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S67]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S72]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S73]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S74]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S76]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S77]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S80]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S81]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S82]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S83]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S85]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S86]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S87]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S89]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S90]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S92]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S94]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-plan]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-research]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-s01-census-audit]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-s05-live-leaf-audit]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-s06-identity-reconciliation-audit]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-s07-live-identity-proof-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s02-fixed-point-census-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s03-disposition-contract-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s04-disposition-ledger-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s08-action-verdict-models-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s09-action-catalogue-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s10-action-contract-tests-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s11-wire-action-projection-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s12-error-envelope-action-projection-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s13-manifest-action-profile-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s14-action-schema-resolution-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s15-mcp-action-projection-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s16-storage-write-policy-verdict-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s17-root-guard-typed-projection-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s18-refusal-boundary-action-projection-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s19-storage-policy-proof-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s20-profile-guard-recovery-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s21-s23-integrated-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s21-workflow-persistence-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s22-workflow-action-verdicts-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s23-workflow-run-localization-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s24-modelo-preconditions-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s25-lifecycle-envelope-independent-review-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s26-canonical-action-chain-closure-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s27-modelo-recovery-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s28-error-default-preimage-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s29-exception-override-owner-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s30-error-recovery-contract-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-workflow-producers-renderer-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s116-schema-owner-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s33-provisioning-closure-rereview-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s35-closure-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s38-closure-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s38-s90-re-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s41-locale-leaves-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s50-rehoming-join-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s51-application-part1-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s52-application-part2-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s53-domain-part1-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s54-domain-part2-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s55-domain-part3-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s56-adapters-part1-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s57-adapters-part2-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s63-rationale-remediation-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s64-entrypoint-taxonomy-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s89-installed-public-console-proof-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s90-final-pass-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s94-closure-review-audit]]'
+  - '[[2026-08-12-cli-action-envelope-hardening-rehoming-ledger-owner-closed-audit]]'
+  - '[[2026-08-12-cli-action-envelope-hardening-s114-final-pass-audit]]'
+  - '[[2026-08-12-cli-action-envelope-hardening-s114-final-static-recheck-audit]]'
+  - '[[2026-08-12-cli-action-envelope-hardening-s66-final-pass-audit]]'
+  - '[[2026-08-12-cli-action-envelope-hardening-s89-reopened-full-scope-review-audit]]'
+  - '[[2026-08-12-cli-action-envelope-hardening-s89-s66-cutover-final-pass-audit]]'
+  - '[[2026-08-12-cli-action-envelope-hardening-s90-final-pass-audit]]'
+  - '[[2026-08-12-cli-action-envelope-hardening-s94-final-producer-scope-audit]]'
+---
+
+# `cli-action-envelope-hardening` feature index
+
+Auto-generated index of all documents tagged with `#cli-action-envelope-hardening`.
+
+## Documents
+
+### adr
+
+- `2026-08-09-cli-action-envelope-hardening-adr` - `cli-action-envelope-hardening` adr: `Application-owned precondition verdicts and schema-resolved action chains` | (**status:** `accepted`)
+
+### audit
+
+- `2026-08-09-cli-action-envelope-hardening-s01-census-audit` - `cli-action-envelope-hardening` audit: `S01 AST candidate census review`
+- `2026-08-09-cli-action-envelope-hardening-s05-live-leaf-audit` - `cli-action-envelope-hardening` audit: `S05 live leaf identity and input schema review`
+- `2026-08-09-cli-action-envelope-hardening-s06-identity-reconciliation-audit` - `cli-action-envelope-hardening` audit: `S06 operator surface identity reconciliation review`
+- `2026-08-09-cli-action-envelope-hardening-s07-live-identity-proof-audit` - `cli-action-envelope-hardening` audit: `S07 live operator identity proof review`
+- `2026-08-10-cli-action-envelope-hardening-s02-fixed-point-census-audit` - `cli-action-envelope-hardening` audit: `S02 fixed-point census review`
+- `2026-08-10-cli-action-envelope-hardening-s03-disposition-contract-audit` - `cli-action-envelope-hardening` audit: `S03 disposition contract review`
+- `2026-08-10-cli-action-envelope-hardening-s04-disposition-ledger-audit` - `cli-action-envelope-hardening` audit: `S04 disposition ledger review`
+- `2026-08-10-cli-action-envelope-hardening-s08-action-verdict-models-audit` - `cli-action-envelope-hardening` audit: `S08 action verdict models review`
+- `2026-08-10-cli-action-envelope-hardening-s09-action-catalogue-audit` - `cli-action-envelope-hardening` audit: `S09 action catalogue review`
+- `2026-08-10-cli-action-envelope-hardening-s10-action-contract-tests-audit` - `cli-action-envelope-hardening` audit: `S10 action contract tests review`
+- `2026-08-10-cli-action-envelope-hardening-s11-wire-action-projection-audit` - `cli-action-envelope-hardening` audit: `S11 wire action projection review`
+- `2026-08-10-cli-action-envelope-hardening-s12-error-envelope-action-projection-audit` - `cli-action-envelope-hardening` audit: `S12 error envelope action projection review`
+- `2026-08-10-cli-action-envelope-hardening-s13-manifest-action-profile-audit` - `cli-action-envelope-hardening` audit: `S13 manifest action profile contract`
+- `2026-08-10-cli-action-envelope-hardening-s14-action-schema-resolution-audit` - `cli-action-envelope-hardening` audit: `S14 action schema resolution`
+- `2026-08-10-cli-action-envelope-hardening-s15-mcp-action-projection-audit` - `cli-action-envelope-hardening` audit: `S15 MCP action projection`
+- `2026-08-10-cli-action-envelope-hardening-s16-storage-write-policy-verdict-audit` - `cli-action-envelope-hardening` audit: `S16 storage write-policy verdict`
+- `2026-08-10-cli-action-envelope-hardening-s17-root-guard-typed-projection-audit` - `cli-action-envelope-hardening` audit: `S17 root guard typed projection`
+- `2026-08-10-cli-action-envelope-hardening-s18-refusal-boundary-action-projection-audit` - `cli-action-envelope-hardening` audit: `S18 refusal boundary action projection`
+- `2026-08-10-cli-action-envelope-hardening-s19-storage-policy-proof-audit` - `cli-action-envelope-hardening` audit: `S19 storage-policy exact scenario proof`
+- `2026-08-10-cli-action-envelope-hardening-s20-profile-guard-recovery-audit` - `cli-action-envelope-hardening` audit: `S20 profile guard recovery code review`
+- `2026-08-10-cli-action-envelope-hardening-s21-s23-integrated-audit` - `cli-action-envelope-hardening` audit: `s21 s23 integrated`
+- `2026-08-10-cli-action-envelope-hardening-s21-workflow-persistence-audit` - `cli-action-envelope-hardening` audit: `S21 typed workflow persistence and locale neutrality`
+- `2026-08-10-cli-action-envelope-hardening-s22-workflow-action-verdicts-audit` - `cli-action-envelope-hardening` audit: `s22 workflow action verdicts`
+- `2026-08-10-cli-action-envelope-hardening-s23-workflow-run-localization-audit` - `cli-action-envelope-hardening` audit: `s23 workflow run localization`
+- `2026-08-10-cli-action-envelope-hardening-s24-modelo-preconditions-audit` - `cli-action-envelope-hardening` audit: `s24 modelo preconditions`
+- `2026-08-10-cli-action-envelope-hardening-s25-lifecycle-envelope-independent-review-audit` - `cli-action-envelope-hardening` audit: `S25 lifecycle envelope independent review`
+- `2026-08-10-cli-action-envelope-hardening-s26-canonical-action-chain-closure-audit` - `cli-action-envelope-hardening` audit: `S26 canonical action-chain closure`
+- `2026-08-10-cli-action-envelope-hardening-s27-modelo-recovery-audit` - 2026-08-10-cli-action-envelope-hardening-s27-modelo-recovery-audit
+- `2026-08-10-cli-action-envelope-hardening-s28-error-default-preimage-audit` - `cli-action-envelope-hardening` audit: `S28 error-code default preimage independent review`
+- `2026-08-10-cli-action-envelope-hardening-s29-exception-override-owner-audit` - 2026-08-10-cli-action-envelope-hardening-s29-exception-override-owner-audit
+- `2026-08-10-cli-action-envelope-hardening-s30-error-recovery-contract-audit` - `cli-action-envelope-hardening` audit: `S30 error recovery contract independent review`
+- `2026-08-10-cli-action-envelope-hardening-workflow-producers-renderer-audit` - `cli-action-envelope-hardening` audit: `S22-S23 typed workflow producer and renderer review`
+- `2026-08-11-cli-action-envelope-hardening-s116-schema-owner-review-audit` - `cli-action-envelope-hardening` audit: `S116 schema-owner lifecycle review`
+- `2026-08-11-cli-action-envelope-hardening-s33-provisioning-closure-rereview-audit` - `cli-action-envelope-hardening` audit: `S33 provisioning closure re-review`
+- `2026-08-11-cli-action-envelope-hardening-s35-closure-review-audit` - `cli-action-envelope-hardening` audit: `S35 independent closure review`
+- `2026-08-11-cli-action-envelope-hardening-s38-closure-review-audit` - `cli-action-envelope-hardening` audit: `S38 independent closure review`
+- `2026-08-11-cli-action-envelope-hardening-s38-s90-re-review-audit` - `cli-action-envelope-hardening` audit: `S38 and S90 typed ledger refusal re-review`
+- `2026-08-11-cli-action-envelope-hardening-s41-locale-leaves-audit` - `cli-action-envelope-hardening` audit: `S41 locale leaves independent review`
+- `2026-08-11-cli-action-envelope-hardening-s50-rehoming-join-review-audit` - `cli-action-envelope-hardening` audit: `S50 rehoming join review`
+- `2026-08-11-cli-action-envelope-hardening-s51-application-part1-review-audit` - `cli-action-envelope-hardening` audit: `S51 application-part1 lifecycle review`
+- `2026-08-11-cli-action-envelope-hardening-s52-application-part2-review-audit` - `cli-action-envelope-hardening` audit: `S52 application-part2 lifecycle review`
+- `2026-08-11-cli-action-envelope-hardening-s53-domain-part1-review-audit` - `cli-action-envelope-hardening` audit: `S53 domain-part1 lifecycle review`
+- `2026-08-11-cli-action-envelope-hardening-s54-domain-part2-review-audit` - `cli-action-envelope-hardening` audit: `S54 domain-part2 lifecycle review`
+- `2026-08-11-cli-action-envelope-hardening-s55-domain-part3-review-audit` - `cli-action-envelope-hardening` audit: `S55 domain-part3 lifecycle review`
+- `2026-08-11-cli-action-envelope-hardening-s56-adapters-part1-review-audit` - S56 adapters-part1 lifecycle review
+- `2026-08-11-cli-action-envelope-hardening-s57-adapters-part2-review-audit` - `cli-action-envelope-hardening` audit: `S57 adapters-part2 lifecycle review`
+- `2026-08-11-cli-action-envelope-hardening-s63-rationale-remediation-review-audit` - `cli-action-envelope-hardening` audit: `S63 rationale remediation lifecycle review`
+- `2026-08-11-cli-action-envelope-hardening-s64-entrypoint-taxonomy-audit` - `cli-action-envelope-hardening` audit: `S64 entrypoint taxonomy and owner reconciliation review`
+- `2026-08-11-cli-action-envelope-hardening-s89-installed-public-console-proof-audit` - `cli-action-envelope-hardening` audit: `S89 installed public-console action-envelope proof`
+- `2026-08-11-cli-action-envelope-hardening-s90-final-pass-audit` - `cli-action-envelope-hardening` audit: `S90 final independent PASS review`
+- `2026-08-11-cli-action-envelope-hardening-s94-closure-review-audit` - `cli-action-envelope-hardening` audit: `S94 independent closure review`
+- `2026-08-12-cli-action-envelope-hardening-rehoming-ledger-owner-closed-audit` - `cli-action-envelope-hardening` audit: `rehoming ledger owner closed`
+- `2026-08-12-cli-action-envelope-hardening-s114-final-pass-audit` - `cli-action-envelope-hardening` audit: `S114 final independent PASS review`
+- `2026-08-12-cli-action-envelope-hardening-s114-final-static-recheck-audit` - `cli-action-envelope-hardening` audit: `S114 final static-gate recheck`
+- `2026-08-12-cli-action-envelope-hardening-s66-final-pass-audit` - `cli-action-envelope-hardening` audit: `S66 final independent PASS review`
+- `2026-08-12-cli-action-envelope-hardening-s89-reopened-full-scope-review-audit` - `cli-action-envelope-hardening` audit: `S89 reopened full-scope independent review`
+- `2026-08-12-cli-action-envelope-hardening-s89-s66-cutover-final-pass-audit` - `cli-action-envelope-hardening` audit: `S89 S66 cutover final independent PASS review`
+- `2026-08-12-cli-action-envelope-hardening-s90-final-pass-audit` - `cli-action-envelope-hardening` audit: `S90 final independent PASS audit`
+- `2026-08-12-cli-action-envelope-hardening-s94-final-producer-scope-audit` - `cli-action-envelope-hardening` audit: `S94 final producer-scope independent review`
+
+### exec
+
+- `2026-08-09-cli-action-envelope-hardening-W01-P01-S01` - Add an AST-backed census emitting stable candidate records keyed by path, enclosing symbol, role, alias, and action identity
+- `2026-08-09-cli-action-envelope-hardening-W01-P02-S05` - Expose live Click leaf identity and complete required-input metadata for action binding validation
+- `2026-08-09-cli-action-envelope-hardening-W01-P02-S06` - Build the identity reconciliation across leaves, schemas, manifest declarations, policies, and MCP exposure
+- `2026-08-09-cli-action-envelope-hardening-W01-P02-S07` - Prove identity joins for callbacks, aliases, exclusions, and policy-filtered MCP leaves
+- `2026-08-09-cli-action-envelope-hardening-W01-P01-S02` - Add fixed-point vocabulary expansion and fail a closing pass that discovers a new semantic cluster
+- `2026-08-09-cli-action-envelope-hardening-W01-P01-S03` - Add the adjudicated disposition model with stale-exclusion detection and symbol-scoped reasons
+- `2026-08-09-cli-action-envelope-hardening-W01-P01-S04` - Require every census candidate to carry exactly one current disposition
+- `2026-08-09-cli-action-envelope-hardening-W01-P01-S49` - Expand migration Phases through the plan CLI with one exclusive Step per adjudicated producer cluster before execution
+- `2026-08-09-cli-action-envelope-hardening-W01-P01-S62` - Reconcile deleted and newly exposed census candidates after schema removal without retaining stale compatibility dispositions
+- `2026-08-09-cli-action-envelope-hardening-W02-P03-S08` - Define immutable action references, bindings, precondition verdicts, evidence, conditionality, and no-recovery records
+- `2026-08-09-cli-action-envelope-hardening-W02-P03-S09` - Define the canonical action catalogue without duplicating application guard predicates
+- `2026-08-09-cli-action-envelope-hardening-W02-P03-S10` - Prove strict action-model validation, catalogue uniqueness, binding sufficiency, and terminal outcomes
+- `2026-08-09-cli-action-envelope-hardening-W02-P03-summary` - `cli-action-envelope-hardening` `W02.P03` summary
+- `2026-08-09-cli-action-envelope-hardening-W02-P04-S11` - Project resolved typed actions through notices while keeping localized text derived
+- `2026-08-09-cli-action-envelope-hardening-W02-P04-S12` - Carry resolved precondition actions in error envelopes and retire default suggestions as authority
+- `2026-08-09-cli-action-envelope-hardening-W02-P04-S13` - Add manifest action-profile records that reference condition and action identities without predicates
+- `2026-08-09-cli-action-envelope-hardening-W02-P04-S14` - Resolve catalogue actions against live command and input schemas and reject insufficient bindings
+- `2026-08-09-cli-action-envelope-hardening-W02-P04-S15` - Use the shared action resolver for MCP action projection
+- `2026-08-09-cli-action-envelope-hardening-W03-P05-S16` - Replace storage write-policy recovery hints with typed failed-condition verdicts
+- `2026-08-09-cli-action-envelope-hardening-W03-P05-S17` - Preserve requested live leaf identity before root guards and migrate every profile and taxpayer policy refusal in the shared CLI boundary to typed verdicts
+- `2026-08-09-cli-action-envelope-hardening-W03-P05-S18` - Carry guarded command identity and verdict through the refusal boundary
+- `2026-08-09-cli-action-envelope-hardening-W03-P05-S19` - Prove every storage policy condition identity evidence action status and binding set
+- `2026-08-09-cli-action-envelope-hardening-W03-P05-S20` - Prove clean-root refusal recovery and retry through real CLI dispatch
+- `2026-08-09-cli-action-envelope-hardening-W04-P06-S21` - Delete the permissive persisted workflow-details compatibility shape and replace next-action details with closed typed action and precondition records
+- `2026-08-09-cli-action-envelope-hardening-W04-P06-S22` - Emit typed verdicts from workflow refusal branches
+- `2026-08-09-cli-action-envelope-hardening-W04-P06-S23` - Remove English string-equality recovery matching from work-run rendering
+- `2026-08-09-cli-action-envelope-hardening-W04-P06-summary` - `cli-action-envelope-hardening` `W04.P06` summary
+- `2026-08-09-cli-action-envelope-hardening-W04-P07-S24` - Migrate adjudicated modelo work and verification predicates to typed verdicts
+- `2026-08-09-cli-action-envelope-hardening-W04-P07-S25` - Replace lifecycle suggestion construction with resolved typed action notices
+- `2026-08-09-cli-action-envelope-hardening-W04-P07-S26` - Replace unknown-revision and verification continuations with bound or explicitly conditional actions
+- `2026-08-09-cli-action-envelope-hardening-W04-P07-S27` - 2026-08-09-cli-action-envelope-hardening-W04-P07-S27
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S28` - Delete ErrorCode.default_suggestion and define only the current catalogue-backed error action or explicit no-recovery projection
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S29` - Fail when an adjudicated exception-override producer lacks an exclusive migration Step
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S30` - Prove registered error recovery resolves against the live command and input surface
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S116` - 2026-08-09-cli-action-envelope-hardening-W05-P08-S116
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S50` - Build a fail-closed per-record historical-default rehoming join keyed by structural fingerprints before any registry-shard owner is retired
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S51` - 2026-08-09-cli-action-envelope-hardening-W05-P08-S51
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S52` - Prove the second application registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger and 62 migration_required rows exclusively owned by later producer steps
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S53` - Prove the first domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where 44 migration_required rows are exclusively owned by later producer steps and 3 rows are retired_or_unreachable
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S54` - Prove the second domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where 34 migration_required rows are exclusively owned by later producer steps and 5 rows are retired_or_unreachable while preserving the peer-owned M303RegimenSimplificadoEvidenceRequiredError taxonomy row
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S55` - Prove the third domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where three migration_required rows are exclusively owned by later producer steps
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S56` - Retire recovery-authority comments from the first adapter registry shard and prove its 59 tuple taxonomy remains canonical, retaining historical recovery only in the S50 ledger where eight migration_required rows are exclusively owned by later producer steps
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S57` - Retire recovery-authority comments from the second adapter registry shard and prove its 63 tuple taxonomy remains canonical, retaining historical recovery only in the S50 ledger where 16 migration_required rows are exclusively owned by later producer steps and 2 rows are retired_or_unreachable
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S63` - Retire CadrumoError suggestion compatibility and classify the two internal bare-root validation carriers explicitly so unmigrated user-facing producers remain loud
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S64` - Prove the entrypoint registry shard is taxonomy-only with no recovery authority, retaining its two historical defaults only in the S50 ledger where current fingerprints are exclusively owned by S88, S89, and S114
+- `2026-08-09-cli-action-envelope-hardening-W05-P09-S32` - Migrate diagnostic remediation records to resolved actions or explicit no-recovery outcomes
+- `2026-08-09-cli-action-envelope-hardening-W05-P09-S33` - W05.P09.S33 - Replace provisioning optional-extra recovery prose with typed failed-condition facts and explicit no-recovery outcomes including the local-model stored-without-extra row and hand the changed dependency projection to S89 without retained remediation compatibility
+- `2026-08-09-cli-action-envelope-hardening-W05-P09-S35` - Create the missing end-to-end negative JSON and text locale and recovery-retry proof for overview and provisioning action or no-recovery journeys, deriving each action against the live schema and rejecting raw command prose
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S38` - Consume the S33 typed reader-availability facts at _batch_ingest.py and _llm_classification.py within the exclusive ledger area, retain no MissingOptionalExtraError prose or compatibility bridge, and preserve only explicit typed reader-availability verdicts
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S41` - W05.P10.S41 - Own every new provisioning and optional-extra renderer key and template in all four locale catalogues, accepting only typed condition facts plus resolved action or no-recovery outcome and never feature identity, package command, or English prose
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S89` - Complete the config CLI consumer fixed point by removing ad hoc recovery prose, English translation fallbacks, and exception-string flattening in favor of catalogue-backed messages, typed producer errors, canonical actions, or explicit no-recovery outcomes
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S90` - Migrate ledger CLI action producers and co-located renderers without independently authored command prose, including direct typed-error consumer migration so canonical refusals reach the shared envelope intact.
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S100` - Migrate core corpus, access-gate, and active-profile exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S101` - Migrate application user-profile exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S102` - Migrate IVA-compensation exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S103` - Migrate application export exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S104` - Migrate calc-sheets exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S106` - Migrate config-reset exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S65` - After the atomic S33/S89 producer-consumer cutover and every S41, S38, S94, S114, and S117 consumer is proven removed, normalize ancillary core optional-extra and external-constants failures to locale keys and machine facts then delete raw install and repair prose plus install_hint with no application import or compatibility alias
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S96` - Migrate residual Modelo exception recovery producers and forwarding bridges including M303 profile-status, IVA-composition, and filing-evidence active-profile raw-English refusal producers through the canonical locale-neutral precondition/action contract or explicit terminal/no-recovery dispositions and record _preconditions.py as an upstream cross-feature dependency owned by open casilla-schema W01.P01.S01 for reconciliation after release, and migrate the newly introduced work-review exception and precondition producers under the same residual Modelo typed-action or explicit no-recovery contract
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S97` - Migrate workflow exception precondition and continuation producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S99` - Migrate justificante exception action forwarding through cooperative MRO to the retired-error boundary and canonical typed actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P09-S66` - Replace preflight remediation prose with locale-neutral facts and typed precondition verdicts
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S108` - Migrate application invoice-lifecycle recovery producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S109` - Migrate application setup recovery producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S110` - Migrate application state-projection recovery producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S111` - Migrate core output-rendering recovery producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S112` - Migrate core topics recovery producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S113` - Migrate domain-bucket recovery producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S114` - Unify shared CLI callback and terminal emitters around one typed projection mapping MissingOptionalExtraError and malformed aeat.pre303 CoreValidationError to exact machine-fact no-recovery outcomes through the CLI exception-precondition owner with no raw message matching or terminal bypass
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S117` - Replace financial OFX optional-extra forwarding and notice consumers with typed machine facts and explicit no-recovery outcomes preserving capability classification without raw installation prose or wrapper compatibility
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S59` - Remove stale lazy schema-owner-table claims from the config payload surface while S91 exclusively owns residual Modelo CLI action producers
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S60` - Migrate TUI recovery rendering to the shared resolved action projection
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S61` - Migrate shipped agent harness action citations to canonical action identities
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S67` - Migrate inbound censo parse-refusal action producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S73` - Migrate corpus-search recovery producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S74` - Migrate evidence-service recovery producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S76` - Migrate inventory recovery producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S77` - Replace operator-output suggestion producers with resolved typed action projections
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S80` - Migrate integrity-repair continuation producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S81` - Migrate review action producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S82` - Migrate storage-management recovery producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S83` - Migrate authorization-domain recovery producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S85` - Migrate taxpayer-domain recovery producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S94` - Update LLM action-envelope producers and failure boundaries with typed, locale-neutral outcomes.
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S105` - Migrate domain invoice, IVA, and portal exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions
+- `2026-08-09-cli-action-envelope-hardening-W05-P09-S31` - Migrate overview next-step producers and blank-state advisories to typed actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P09-S34` - Render overview text and JSON from one typed action projection
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S115` - Migrate the active-session diagnostics recovery producer to typed conditions and canonical action or explicit no-recovery outcome
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S36` - Migrate authentication and session recovery predicates and actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S39` - Migrate deadline recovery commands and overdue continuations
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S40` - Migrate live-read recovery producers with explicit safety dispositions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S72` - Migrate calculation recovery producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S86` - Migrate transaction-domain recovery producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S87` - Migrate user-profile-domain recovery producers to typed conditions and canonical actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S92` - Replace overview renderer action producers and co-located renderers with the shared resolved action projection
+
+### plan
+
+- `2026-08-09-cli-action-envelope-hardening-plan` - `cli-action-envelope-hardening` plan
+
+### reference
+
+- `2026-08-09-cli-action-envelope-hardening-reference` - `cli-action-envelope-hardening` reference: `Blast-radius census method and baseline`
+
+### research
+
+- `2026-08-09-cli-action-envelope-hardening-research` - `cli-action-envelope-hardening` research: `Canonical action chains and verb precondition envelopes`

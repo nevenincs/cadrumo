@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#test-harness-sanity'
-date: '2026-08-15'
-modified: '2026-08-15'
+date: '2026-08-16'
+modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:433d10cecfdbcb65a1ea38ea9f96ccb25b51ae89e0fe52205093a3db7eecb215'
+body_hash: 'sha256:caa4e7da69658ff1026d7625287c792b7d22d4036e1f8859db70b09d564d6c91'
 related:
   - '[[2026-08-14-test-harness-sanity-W06-P16-S47]]'
   - '[[2026-08-14-test-harness-sanity-W06-P16-S48]]'
@@ -81,6 +81,7 @@ related:
   - '[[2026-08-14-test-harness-sanity-w08-canonical-home-regressions-audit]]'
   - '[[2026-08-15-test-harness-sanity-fixture-census-audit]]'
   - '[[2026-08-15-test-harness-sanity-monkeypatch-criterion-deferral-audit]]'
+  - '[[2026-08-16-test-harness-sanity-suite-performance-baseline-reference]]'
 ---
 
 # `test-harness-sanity` feature index
@@ -172,6 +173,10 @@ Auto-generated index of all documents tagged with `#test-harness-sanity`.
 ### plan
 
 - `2026-08-14-test-harness-sanity-plan` - `test-harness-sanity` plan
+
+### reference
+
+- `2026-08-16-test-harness-sanity-suite-performance-baseline-reference` - 2026-08-16-test-harness-sanity-suite-performance-baseline-reference
 
 ### research
 

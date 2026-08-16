@@ -1,0 +1,2030 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#docstring-google-style'
+date: '2026-08-16'
+modified: '2026-08-16'
+body_schema: 'body-v1'
+body_hash: 'sha256:31b34d14b41f532fb6a0a55134c77e882193b562705fdb47698943139b5f49db'
+related:
+  - '[[2026-06-09-docstring-google-style-S01]]'
+  - '[[2026-06-09-docstring-google-style-S02]]'
+  - '[[2026-06-09-docstring-google-style-S03]]'
+  - '[[2026-06-09-docstring-google-style-S04]]'
+  - '[[2026-06-09-docstring-google-style-S05]]'
+  - '[[2026-06-09-docstring-google-style-S06]]'
+  - '[[2026-06-09-docstring-google-style-S07]]'
+  - '[[2026-06-09-docstring-google-style-S08]]'
+  - '[[2026-06-09-docstring-google-style-S09]]'
+  - '[[2026-06-09-docstring-google-style-S100]]'
+  - '[[2026-06-09-docstring-google-style-S101]]'
+  - '[[2026-06-09-docstring-google-style-S102]]'
+  - '[[2026-06-09-docstring-google-style-S103]]'
+  - '[[2026-06-09-docstring-google-style-S104]]'
+  - '[[2026-06-09-docstring-google-style-S105]]'
+  - '[[2026-06-09-docstring-google-style-S106]]'
+  - '[[2026-06-09-docstring-google-style-S107]]'
+  - '[[2026-06-09-docstring-google-style-S108]]'
+  - '[[2026-06-09-docstring-google-style-S109]]'
+  - '[[2026-06-09-docstring-google-style-S10]]'
+  - '[[2026-06-09-docstring-google-style-S110]]'
+  - '[[2026-06-09-docstring-google-style-S111]]'
+  - '[[2026-06-09-docstring-google-style-S112]]'
+  - '[[2026-06-09-docstring-google-style-S113]]'
+  - '[[2026-06-09-docstring-google-style-S114]]'
+  - '[[2026-06-09-docstring-google-style-S115]]'
+  - '[[2026-06-09-docstring-google-style-S116]]'
+  - '[[2026-06-09-docstring-google-style-S117]]'
+  - '[[2026-06-09-docstring-google-style-S118]]'
+  - '[[2026-06-09-docstring-google-style-S119]]'
+  - '[[2026-06-09-docstring-google-style-S11]]'
+  - '[[2026-06-09-docstring-google-style-S120]]'
+  - '[[2026-06-09-docstring-google-style-S121]]'
+  - '[[2026-06-09-docstring-google-style-S122]]'
+  - '[[2026-06-09-docstring-google-style-S123]]'
+  - '[[2026-06-09-docstring-google-style-S124]]'
+  - '[[2026-06-09-docstring-google-style-S125]]'
+  - '[[2026-06-09-docstring-google-style-S126]]'
+  - '[[2026-06-09-docstring-google-style-S127]]'
+  - '[[2026-06-09-docstring-google-style-S128]]'
+  - '[[2026-06-09-docstring-google-style-S129]]'
+  - '[[2026-06-09-docstring-google-style-S12]]'
+  - '[[2026-06-09-docstring-google-style-S130]]'
+  - '[[2026-06-09-docstring-google-style-S131]]'
+  - '[[2026-06-09-docstring-google-style-S132]]'
+  - '[[2026-06-09-docstring-google-style-S133]]'
+  - '[[2026-06-09-docstring-google-style-S134]]'
+  - '[[2026-06-09-docstring-google-style-S135]]'
+  - '[[2026-06-09-docstring-google-style-S136]]'
+  - '[[2026-06-09-docstring-google-style-S137]]'
+  - '[[2026-06-09-docstring-google-style-S138]]'
+  - '[[2026-06-09-docstring-google-style-S139]]'
+  - '[[2026-06-09-docstring-google-style-S13]]'
+  - '[[2026-06-09-docstring-google-style-S140]]'
+  - '[[2026-06-09-docstring-google-style-S141]]'
+  - '[[2026-06-09-docstring-google-style-S142]]'
+  - '[[2026-06-09-docstring-google-style-S143]]'
+  - '[[2026-06-09-docstring-google-style-S144]]'
+  - '[[2026-06-09-docstring-google-style-S145]]'
+  - '[[2026-06-09-docstring-google-style-S146]]'
+  - '[[2026-06-09-docstring-google-style-S147]]'
+  - '[[2026-06-09-docstring-google-style-S148]]'
+  - '[[2026-06-09-docstring-google-style-S149]]'
+  - '[[2026-06-09-docstring-google-style-S14]]'
+  - '[[2026-06-09-docstring-google-style-S150]]'
+  - '[[2026-06-09-docstring-google-style-S151]]'
+  - '[[2026-06-09-docstring-google-style-S152]]'
+  - '[[2026-06-09-docstring-google-style-S153]]'
+  - '[[2026-06-09-docstring-google-style-S154]]'
+  - '[[2026-06-09-docstring-google-style-S155]]'
+  - '[[2026-06-09-docstring-google-style-S156]]'
+  - '[[2026-06-09-docstring-google-style-S157]]'
+  - '[[2026-06-09-docstring-google-style-S158]]'
+  - '[[2026-06-09-docstring-google-style-S159]]'
+  - '[[2026-06-09-docstring-google-style-S15]]'
+  - '[[2026-06-09-docstring-google-style-S160]]'
+  - '[[2026-06-09-docstring-google-style-S161]]'
+  - '[[2026-06-09-docstring-google-style-S162]]'
+  - '[[2026-06-09-docstring-google-style-S163]]'
+  - '[[2026-06-09-docstring-google-style-S164]]'
+  - '[[2026-06-09-docstring-google-style-S165]]'
+  - '[[2026-06-09-docstring-google-style-S166]]'
+  - '[[2026-06-09-docstring-google-style-S167]]'
+  - '[[2026-06-09-docstring-google-style-S168]]'
+  - '[[2026-06-09-docstring-google-style-S169]]'
+  - '[[2026-06-09-docstring-google-style-S16]]'
+  - '[[2026-06-09-docstring-google-style-S170]]'
+  - '[[2026-06-09-docstring-google-style-S171]]'
+  - '[[2026-06-09-docstring-google-style-S172]]'
+  - '[[2026-06-09-docstring-google-style-S173]]'
+  - '[[2026-06-09-docstring-google-style-S174]]'
+  - '[[2026-06-09-docstring-google-style-S175]]'
+  - '[[2026-06-09-docstring-google-style-S176]]'
+  - '[[2026-06-09-docstring-google-style-S177]]'
+  - '[[2026-06-09-docstring-google-style-S178]]'
+  - '[[2026-06-09-docstring-google-style-S179]]'
+  - '[[2026-06-09-docstring-google-style-S17]]'
+  - '[[2026-06-09-docstring-google-style-S180]]'
+  - '[[2026-06-09-docstring-google-style-S181]]'
+  - '[[2026-06-09-docstring-google-style-S182]]'
+  - '[[2026-06-09-docstring-google-style-S183]]'
+  - '[[2026-06-09-docstring-google-style-S184]]'
+  - '[[2026-06-09-docstring-google-style-S185]]'
+  - '[[2026-06-09-docstring-google-style-S186]]'
+  - '[[2026-06-09-docstring-google-style-S187]]'
+  - '[[2026-06-09-docstring-google-style-S188]]'
+  - '[[2026-06-09-docstring-google-style-S189]]'
+  - '[[2026-06-09-docstring-google-style-S18]]'
+  - '[[2026-06-09-docstring-google-style-S190]]'
+  - '[[2026-06-09-docstring-google-style-S191]]'
+  - '[[2026-06-09-docstring-google-style-S192]]'
+  - '[[2026-06-09-docstring-google-style-S193]]'
+  - '[[2026-06-09-docstring-google-style-S194]]'
+  - '[[2026-06-09-docstring-google-style-S195]]'
+  - '[[2026-06-09-docstring-google-style-S196]]'
+  - '[[2026-06-09-docstring-google-style-S197]]'
+  - '[[2026-06-09-docstring-google-style-S198]]'
+  - '[[2026-06-09-docstring-google-style-S199]]'
+  - '[[2026-06-09-docstring-google-style-S19]]'
+  - '[[2026-06-09-docstring-google-style-S200]]'
+  - '[[2026-06-09-docstring-google-style-S201]]'
+  - '[[2026-06-09-docstring-google-style-S202]]'
+  - '[[2026-06-09-docstring-google-style-S203]]'
+  - '[[2026-06-09-docstring-google-style-S204]]'
+  - '[[2026-06-09-docstring-google-style-S205]]'
+  - '[[2026-06-09-docstring-google-style-S206]]'
+  - '[[2026-06-09-docstring-google-style-S207]]'
+  - '[[2026-06-09-docstring-google-style-S208]]'
+  - '[[2026-06-09-docstring-google-style-S209]]'
+  - '[[2026-06-09-docstring-google-style-S20]]'
+  - '[[2026-06-09-docstring-google-style-S210]]'
+  - '[[2026-06-09-docstring-google-style-S211]]'
+  - '[[2026-06-09-docstring-google-style-S212]]'
+  - '[[2026-06-09-docstring-google-style-S213]]'
+  - '[[2026-06-09-docstring-google-style-S214]]'
+  - '[[2026-06-09-docstring-google-style-S215]]'
+  - '[[2026-06-09-docstring-google-style-S216]]'
+  - '[[2026-06-09-docstring-google-style-S217]]'
+  - '[[2026-06-09-docstring-google-style-S218]]'
+  - '[[2026-06-09-docstring-google-style-S219]]'
+  - '[[2026-06-09-docstring-google-style-S21]]'
+  - '[[2026-06-09-docstring-google-style-S220]]'
+  - '[[2026-06-09-docstring-google-style-S221]]'
+  - '[[2026-06-09-docstring-google-style-S222]]'
+  - '[[2026-06-09-docstring-google-style-S223]]'
+  - '[[2026-06-09-docstring-google-style-S224]]'
+  - '[[2026-06-09-docstring-google-style-S225]]'
+  - '[[2026-06-09-docstring-google-style-S226]]'
+  - '[[2026-06-09-docstring-google-style-S227]]'
+  - '[[2026-06-09-docstring-google-style-S228]]'
+  - '[[2026-06-09-docstring-google-style-S229]]'
+  - '[[2026-06-09-docstring-google-style-S22]]'
+  - '[[2026-06-09-docstring-google-style-S230]]'
+  - '[[2026-06-09-docstring-google-style-S231]]'
+  - '[[2026-06-09-docstring-google-style-S232]]'
+  - '[[2026-06-09-docstring-google-style-S233]]'
+  - '[[2026-06-09-docstring-google-style-S234]]'
+  - '[[2026-06-09-docstring-google-style-S235]]'
+  - '[[2026-06-09-docstring-google-style-S236]]'
+  - '[[2026-06-09-docstring-google-style-S237]]'
+  - '[[2026-06-09-docstring-google-style-S238]]'
+  - '[[2026-06-09-docstring-google-style-S239]]'
+  - '[[2026-06-09-docstring-google-style-S23]]'
+  - '[[2026-06-09-docstring-google-style-S240]]'
+  - '[[2026-06-09-docstring-google-style-S241]]'
+  - '[[2026-06-09-docstring-google-style-S242]]'
+  - '[[2026-06-09-docstring-google-style-S243]]'
+  - '[[2026-06-09-docstring-google-style-S244]]'
+  - '[[2026-06-09-docstring-google-style-S245]]'
+  - '[[2026-06-09-docstring-google-style-S246]]'
+  - '[[2026-06-09-docstring-google-style-S247]]'
+  - '[[2026-06-09-docstring-google-style-S248]]'
+  - '[[2026-06-09-docstring-google-style-S249]]'
+  - '[[2026-06-09-docstring-google-style-S24]]'
+  - '[[2026-06-09-docstring-google-style-S250]]'
+  - '[[2026-06-09-docstring-google-style-S251]]'
+  - '[[2026-06-09-docstring-google-style-S252]]'
+  - '[[2026-06-09-docstring-google-style-S253]]'
+  - '[[2026-06-09-docstring-google-style-S254]]'
+  - '[[2026-06-09-docstring-google-style-S255]]'
+  - '[[2026-06-09-docstring-google-style-S256]]'
+  - '[[2026-06-09-docstring-google-style-S257]]'
+  - '[[2026-06-09-docstring-google-style-S258]]'
+  - '[[2026-06-09-docstring-google-style-S259]]'
+  - '[[2026-06-09-docstring-google-style-S25]]'
+  - '[[2026-06-09-docstring-google-style-S260]]'
+  - '[[2026-06-09-docstring-google-style-S261]]'
+  - '[[2026-06-09-docstring-google-style-S262]]'
+  - '[[2026-06-09-docstring-google-style-S263]]'
+  - '[[2026-06-09-docstring-google-style-S264]]'
+  - '[[2026-06-09-docstring-google-style-S265]]'
+  - '[[2026-06-09-docstring-google-style-S266]]'
+  - '[[2026-06-09-docstring-google-style-S267]]'
+  - '[[2026-06-09-docstring-google-style-S268]]'
+  - '[[2026-06-09-docstring-google-style-S269]]'
+  - '[[2026-06-09-docstring-google-style-S26]]'
+  - '[[2026-06-09-docstring-google-style-S270]]'
+  - '[[2026-06-09-docstring-google-style-S271]]'
+  - '[[2026-06-09-docstring-google-style-S272]]'
+  - '[[2026-06-09-docstring-google-style-S273]]'
+  - '[[2026-06-09-docstring-google-style-S274]]'
+  - '[[2026-06-09-docstring-google-style-S275]]'
+  - '[[2026-06-09-docstring-google-style-S276]]'
+  - '[[2026-06-09-docstring-google-style-S277]]'
+  - '[[2026-06-09-docstring-google-style-S278]]'
+  - '[[2026-06-09-docstring-google-style-S279]]'
+  - '[[2026-06-09-docstring-google-style-S27]]'
+  - '[[2026-06-09-docstring-google-style-S280]]'
+  - '[[2026-06-09-docstring-google-style-S281]]'
+  - '[[2026-06-09-docstring-google-style-S282]]'
+  - '[[2026-06-09-docstring-google-style-S283]]'
+  - '[[2026-06-09-docstring-google-style-S284]]'
+  - '[[2026-06-09-docstring-google-style-S285]]'
+  - '[[2026-06-09-docstring-google-style-S286]]'
+  - '[[2026-06-09-docstring-google-style-S287]]'
+  - '[[2026-06-09-docstring-google-style-S288]]'
+  - '[[2026-06-09-docstring-google-style-S289]]'
+  - '[[2026-06-09-docstring-google-style-S28]]'
+  - '[[2026-06-09-docstring-google-style-S290]]'
+  - '[[2026-06-09-docstring-google-style-S291]]'
+  - '[[2026-06-09-docstring-google-style-S292]]'
+  - '[[2026-06-09-docstring-google-style-S293]]'
+  - '[[2026-06-09-docstring-google-style-S294]]'
+  - '[[2026-06-09-docstring-google-style-S295]]'
+  - '[[2026-06-09-docstring-google-style-S296]]'
+  - '[[2026-06-09-docstring-google-style-S297]]'
+  - '[[2026-06-09-docstring-google-style-S298]]'
+  - '[[2026-06-09-docstring-google-style-S299]]'
+  - '[[2026-06-09-docstring-google-style-S29]]'
+  - '[[2026-06-09-docstring-google-style-S300]]'
+  - '[[2026-06-09-docstring-google-style-S301]]'
+  - '[[2026-06-09-docstring-google-style-S302]]'
+  - '[[2026-06-09-docstring-google-style-S303]]'
+  - '[[2026-06-09-docstring-google-style-S304]]'
+  - '[[2026-06-09-docstring-google-style-S305]]'
+  - '[[2026-06-09-docstring-google-style-S306]]'
+  - '[[2026-06-09-docstring-google-style-S307]]'
+  - '[[2026-06-09-docstring-google-style-S308]]'
+  - '[[2026-06-09-docstring-google-style-S309]]'
+  - '[[2026-06-09-docstring-google-style-S30]]'
+  - '[[2026-06-09-docstring-google-style-S310]]'
+  - '[[2026-06-09-docstring-google-style-S311]]'
+  - '[[2026-06-09-docstring-google-style-S312]]'
+  - '[[2026-06-09-docstring-google-style-S313]]'
+  - '[[2026-06-09-docstring-google-style-S314]]'
+  - '[[2026-06-09-docstring-google-style-S315]]'
+  - '[[2026-06-09-docstring-google-style-S316]]'
+  - '[[2026-06-09-docstring-google-style-S317]]'
+  - '[[2026-06-09-docstring-google-style-S318]]'
+  - '[[2026-06-09-docstring-google-style-S319]]'
+  - '[[2026-06-09-docstring-google-style-S31]]'
+  - '[[2026-06-09-docstring-google-style-S320]]'
+  - '[[2026-06-09-docstring-google-style-S321]]'
+  - '[[2026-06-09-docstring-google-style-S322]]'
+  - '[[2026-06-09-docstring-google-style-S323]]'
+  - '[[2026-06-09-docstring-google-style-S324]]'
+  - '[[2026-06-09-docstring-google-style-S325]]'
+  - '[[2026-06-09-docstring-google-style-S326]]'
+  - '[[2026-06-09-docstring-google-style-S327]]'
+  - '[[2026-06-09-docstring-google-style-S328]]'
+  - '[[2026-06-09-docstring-google-style-S329]]'
+  - '[[2026-06-09-docstring-google-style-S32]]'
+  - '[[2026-06-09-docstring-google-style-S330]]'
+  - '[[2026-06-09-docstring-google-style-S331]]'
+  - '[[2026-06-09-docstring-google-style-S332]]'
+  - '[[2026-06-09-docstring-google-style-S333]]'
+  - '[[2026-06-09-docstring-google-style-S334]]'
+  - '[[2026-06-09-docstring-google-style-S335]]'
+  - '[[2026-06-09-docstring-google-style-S336]]'
+  - '[[2026-06-09-docstring-google-style-S337]]'
+  - '[[2026-06-09-docstring-google-style-S338]]'
+  - '[[2026-06-09-docstring-google-style-S339]]'
+  - '[[2026-06-09-docstring-google-style-S33]]'
+  - '[[2026-06-09-docstring-google-style-S340]]'
+  - '[[2026-06-09-docstring-google-style-S341]]'
+  - '[[2026-06-09-docstring-google-style-S342]]'
+  - '[[2026-06-09-docstring-google-style-S343]]'
+  - '[[2026-06-09-docstring-google-style-S344]]'
+  - '[[2026-06-09-docstring-google-style-S345]]'
+  - '[[2026-06-09-docstring-google-style-S346]]'
+  - '[[2026-06-09-docstring-google-style-S347]]'
+  - '[[2026-06-09-docstring-google-style-S348]]'
+  - '[[2026-06-09-docstring-google-style-S349]]'
+  - '[[2026-06-09-docstring-google-style-S34]]'
+  - '[[2026-06-09-docstring-google-style-S350]]'
+  - '[[2026-06-09-docstring-google-style-S351]]'
+  - '[[2026-06-09-docstring-google-style-S352]]'
+  - '[[2026-06-09-docstring-google-style-S353]]'
+  - '[[2026-06-09-docstring-google-style-S354]]'
+  - '[[2026-06-09-docstring-google-style-S355]]'
+  - '[[2026-06-09-docstring-google-style-S356]]'
+  - '[[2026-06-09-docstring-google-style-S357]]'
+  - '[[2026-06-09-docstring-google-style-S358]]'
+  - '[[2026-06-09-docstring-google-style-S359]]'
+  - '[[2026-06-09-docstring-google-style-S35]]'
+  - '[[2026-06-09-docstring-google-style-S360]]'
+  - '[[2026-06-09-docstring-google-style-S361]]'
+  - '[[2026-06-09-docstring-google-style-S362]]'
+  - '[[2026-06-09-docstring-google-style-S363]]'
+  - '[[2026-06-09-docstring-google-style-S364]]'
+  - '[[2026-06-09-docstring-google-style-S365]]'
+  - '[[2026-06-09-docstring-google-style-S366]]'
+  - '[[2026-06-09-docstring-google-style-S367]]'
+  - '[[2026-06-09-docstring-google-style-S368]]'
+  - '[[2026-06-09-docstring-google-style-S369]]'
+  - '[[2026-06-09-docstring-google-style-S36]]'
+  - '[[2026-06-09-docstring-google-style-S370]]'
+  - '[[2026-06-09-docstring-google-style-S371]]'
+  - '[[2026-06-09-docstring-google-style-S372]]'
+  - '[[2026-06-09-docstring-google-style-S373]]'
+  - '[[2026-06-09-docstring-google-style-S374]]'
+  - '[[2026-06-09-docstring-google-style-S375]]'
+  - '[[2026-06-09-docstring-google-style-S376]]'
+  - '[[2026-06-09-docstring-google-style-S377]]'
+  - '[[2026-06-09-docstring-google-style-S378]]'
+  - '[[2026-06-09-docstring-google-style-S379]]'
+  - '[[2026-06-09-docstring-google-style-S37]]'
+  - '[[2026-06-09-docstring-google-style-S380]]'
+  - '[[2026-06-09-docstring-google-style-S381]]'
+  - '[[2026-06-09-docstring-google-style-S382]]'
+  - '[[2026-06-09-docstring-google-style-S383]]'
+  - '[[2026-06-09-docstring-google-style-S384]]'
+  - '[[2026-06-09-docstring-google-style-S385]]'
+  - '[[2026-06-09-docstring-google-style-S386]]'
+  - '[[2026-06-09-docstring-google-style-S387]]'
+  - '[[2026-06-09-docstring-google-style-S388]]'
+  - '[[2026-06-09-docstring-google-style-S389]]'
+  - '[[2026-06-09-docstring-google-style-S38]]'
+  - '[[2026-06-09-docstring-google-style-S390]]'
+  - '[[2026-06-09-docstring-google-style-S391]]'
+  - '[[2026-06-09-docstring-google-style-S392]]'
+  - '[[2026-06-09-docstring-google-style-S393]]'
+  - '[[2026-06-09-docstring-google-style-S394]]'
+  - '[[2026-06-09-docstring-google-style-S395]]'
+  - '[[2026-06-09-docstring-google-style-S396]]'
+  - '[[2026-06-09-docstring-google-style-S397]]'
+  - '[[2026-06-09-docstring-google-style-S398]]'
+  - '[[2026-06-09-docstring-google-style-S399]]'
+  - '[[2026-06-09-docstring-google-style-S39]]'
+  - '[[2026-06-09-docstring-google-style-S400]]'
+  - '[[2026-06-09-docstring-google-style-S401]]'
+  - '[[2026-06-09-docstring-google-style-S402]]'
+  - '[[2026-06-09-docstring-google-style-S403]]'
+  - '[[2026-06-09-docstring-google-style-S404]]'
+  - '[[2026-06-09-docstring-google-style-S405]]'
+  - '[[2026-06-09-docstring-google-style-S406]]'
+  - '[[2026-06-09-docstring-google-style-S407]]'
+  - '[[2026-06-09-docstring-google-style-S408]]'
+  - '[[2026-06-09-docstring-google-style-S409]]'
+  - '[[2026-06-09-docstring-google-style-S40]]'
+  - '[[2026-06-09-docstring-google-style-S410]]'
+  - '[[2026-06-09-docstring-google-style-S411]]'
+  - '[[2026-06-09-docstring-google-style-S412]]'
+  - '[[2026-06-09-docstring-google-style-S413]]'
+  - '[[2026-06-09-docstring-google-style-S414]]'
+  - '[[2026-06-09-docstring-google-style-S415]]'
+  - '[[2026-06-09-docstring-google-style-S416]]'
+  - '[[2026-06-09-docstring-google-style-S417]]'
+  - '[[2026-06-09-docstring-google-style-S418]]'
+  - '[[2026-06-09-docstring-google-style-S419]]'
+  - '[[2026-06-09-docstring-google-style-S41]]'
+  - '[[2026-06-09-docstring-google-style-S420]]'
+  - '[[2026-06-09-docstring-google-style-S421]]'
+  - '[[2026-06-09-docstring-google-style-S422]]'
+  - '[[2026-06-09-docstring-google-style-S423]]'
+  - '[[2026-06-09-docstring-google-style-S424]]'
+  - '[[2026-06-09-docstring-google-style-S425]]'
+  - '[[2026-06-09-docstring-google-style-S426]]'
+  - '[[2026-06-09-docstring-google-style-S427]]'
+  - '[[2026-06-09-docstring-google-style-S428]]'
+  - '[[2026-06-09-docstring-google-style-S429]]'
+  - '[[2026-06-09-docstring-google-style-S42]]'
+  - '[[2026-06-09-docstring-google-style-S430]]'
+  - '[[2026-06-09-docstring-google-style-S431]]'
+  - '[[2026-06-09-docstring-google-style-S432]]'
+  - '[[2026-06-09-docstring-google-style-S433]]'
+  - '[[2026-06-09-docstring-google-style-S434]]'
+  - '[[2026-06-09-docstring-google-style-S435]]'
+  - '[[2026-06-09-docstring-google-style-S436]]'
+  - '[[2026-06-09-docstring-google-style-S437]]'
+  - '[[2026-06-09-docstring-google-style-S438]]'
+  - '[[2026-06-09-docstring-google-style-S439]]'
+  - '[[2026-06-09-docstring-google-style-S43]]'
+  - '[[2026-06-09-docstring-google-style-S440]]'
+  - '[[2026-06-09-docstring-google-style-S441]]'
+  - '[[2026-06-09-docstring-google-style-S442]]'
+  - '[[2026-06-09-docstring-google-style-S443]]'
+  - '[[2026-06-09-docstring-google-style-S444]]'
+  - '[[2026-06-09-docstring-google-style-S445]]'
+  - '[[2026-06-09-docstring-google-style-S446]]'
+  - '[[2026-06-09-docstring-google-style-S447]]'
+  - '[[2026-06-09-docstring-google-style-S448]]'
+  - '[[2026-06-09-docstring-google-style-S449]]'
+  - '[[2026-06-09-docstring-google-style-S44]]'
+  - '[[2026-06-09-docstring-google-style-S450]]'
+  - '[[2026-06-09-docstring-google-style-S451]]'
+  - '[[2026-06-09-docstring-google-style-S452]]'
+  - '[[2026-06-09-docstring-google-style-S453]]'
+  - '[[2026-06-09-docstring-google-style-S454]]'
+  - '[[2026-06-09-docstring-google-style-S455]]'
+  - '[[2026-06-09-docstring-google-style-S456]]'
+  - '[[2026-06-09-docstring-google-style-S457]]'
+  - '[[2026-06-09-docstring-google-style-S458]]'
+  - '[[2026-06-09-docstring-google-style-S459]]'
+  - '[[2026-06-09-docstring-google-style-S45]]'
+  - '[[2026-06-09-docstring-google-style-S460]]'
+  - '[[2026-06-09-docstring-google-style-S461]]'
+  - '[[2026-06-09-docstring-google-style-S462]]'
+  - '[[2026-06-09-docstring-google-style-S463]]'
+  - '[[2026-06-09-docstring-google-style-S464]]'
+  - '[[2026-06-09-docstring-google-style-S465]]'
+  - '[[2026-06-09-docstring-google-style-S466]]'
+  - '[[2026-06-09-docstring-google-style-S467]]'
+  - '[[2026-06-09-docstring-google-style-S468]]'
+  - '[[2026-06-09-docstring-google-style-S469]]'
+  - '[[2026-06-09-docstring-google-style-S46]]'
+  - '[[2026-06-09-docstring-google-style-S470]]'
+  - '[[2026-06-09-docstring-google-style-S471]]'
+  - '[[2026-06-09-docstring-google-style-S472]]'
+  - '[[2026-06-09-docstring-google-style-S473]]'
+  - '[[2026-06-09-docstring-google-style-S474]]'
+  - '[[2026-06-09-docstring-google-style-S475]]'
+  - '[[2026-06-09-docstring-google-style-S476]]'
+  - '[[2026-06-09-docstring-google-style-S477]]'
+  - '[[2026-06-09-docstring-google-style-S478]]'
+  - '[[2026-06-09-docstring-google-style-S479]]'
+  - '[[2026-06-09-docstring-google-style-S47]]'
+  - '[[2026-06-09-docstring-google-style-S480]]'
+  - '[[2026-06-09-docstring-google-style-S481]]'
+  - '[[2026-06-09-docstring-google-style-S482]]'
+  - '[[2026-06-09-docstring-google-style-S483]]'
+  - '[[2026-06-09-docstring-google-style-S484]]'
+  - '[[2026-06-09-docstring-google-style-S485]]'
+  - '[[2026-06-09-docstring-google-style-S486]]'
+  - '[[2026-06-09-docstring-google-style-S487]]'
+  - '[[2026-06-09-docstring-google-style-S488]]'
+  - '[[2026-06-09-docstring-google-style-S489]]'
+  - '[[2026-06-09-docstring-google-style-S48]]'
+  - '[[2026-06-09-docstring-google-style-S490]]'
+  - '[[2026-06-09-docstring-google-style-S491]]'
+  - '[[2026-06-09-docstring-google-style-S492]]'
+  - '[[2026-06-09-docstring-google-style-S493]]'
+  - '[[2026-06-09-docstring-google-style-S494]]'
+  - '[[2026-06-09-docstring-google-style-S495]]'
+  - '[[2026-06-09-docstring-google-style-S496]]'
+  - '[[2026-06-09-docstring-google-style-S497]]'
+  - '[[2026-06-09-docstring-google-style-S498]]'
+  - '[[2026-06-09-docstring-google-style-S499]]'
+  - '[[2026-06-09-docstring-google-style-S49]]'
+  - '[[2026-06-09-docstring-google-style-S500]]'
+  - '[[2026-06-09-docstring-google-style-S501]]'
+  - '[[2026-06-09-docstring-google-style-S502]]'
+  - '[[2026-06-09-docstring-google-style-S503]]'
+  - '[[2026-06-09-docstring-google-style-S504]]'
+  - '[[2026-06-09-docstring-google-style-S505]]'
+  - '[[2026-06-09-docstring-google-style-S506]]'
+  - '[[2026-06-09-docstring-google-style-S507]]'
+  - '[[2026-06-09-docstring-google-style-S508]]'
+  - '[[2026-06-09-docstring-google-style-S509]]'
+  - '[[2026-06-09-docstring-google-style-S50]]'
+  - '[[2026-06-09-docstring-google-style-S510]]'
+  - '[[2026-06-09-docstring-google-style-S511]]'
+  - '[[2026-06-09-docstring-google-style-S512]]'
+  - '[[2026-06-09-docstring-google-style-S513]]'
+  - '[[2026-06-09-docstring-google-style-S514]]'
+  - '[[2026-06-09-docstring-google-style-S515]]'
+  - '[[2026-06-09-docstring-google-style-S516]]'
+  - '[[2026-06-09-docstring-google-style-S517]]'
+  - '[[2026-06-09-docstring-google-style-S518]]'
+  - '[[2026-06-09-docstring-google-style-S519]]'
+  - '[[2026-06-09-docstring-google-style-S51]]'
+  - '[[2026-06-09-docstring-google-style-S520]]'
+  - '[[2026-06-09-docstring-google-style-S521]]'
+  - '[[2026-06-09-docstring-google-style-S522]]'
+  - '[[2026-06-09-docstring-google-style-S523]]'
+  - '[[2026-06-09-docstring-google-style-S524]]'
+  - '[[2026-06-09-docstring-google-style-S525]]'
+  - '[[2026-06-09-docstring-google-style-S526]]'
+  - '[[2026-06-09-docstring-google-style-S527]]'
+  - '[[2026-06-09-docstring-google-style-S528]]'
+  - '[[2026-06-09-docstring-google-style-S529]]'
+  - '[[2026-06-09-docstring-google-style-S52]]'
+  - '[[2026-06-09-docstring-google-style-S530]]'
+  - '[[2026-06-09-docstring-google-style-S531]]'
+  - '[[2026-06-09-docstring-google-style-S532]]'
+  - '[[2026-06-09-docstring-google-style-S533]]'
+  - '[[2026-06-09-docstring-google-style-S534]]'
+  - '[[2026-06-09-docstring-google-style-S535]]'
+  - '[[2026-06-09-docstring-google-style-S536]]'
+  - '[[2026-06-09-docstring-google-style-S537]]'
+  - '[[2026-06-09-docstring-google-style-S538]]'
+  - '[[2026-06-09-docstring-google-style-S539]]'
+  - '[[2026-06-09-docstring-google-style-S53]]'
+  - '[[2026-06-09-docstring-google-style-S540]]'
+  - '[[2026-06-09-docstring-google-style-S541]]'
+  - '[[2026-06-09-docstring-google-style-S542]]'
+  - '[[2026-06-09-docstring-google-style-S543]]'
+  - '[[2026-06-09-docstring-google-style-S544]]'
+  - '[[2026-06-09-docstring-google-style-S545]]'
+  - '[[2026-06-09-docstring-google-style-S546]]'
+  - '[[2026-06-09-docstring-google-style-S547]]'
+  - '[[2026-06-09-docstring-google-style-S548]]'
+  - '[[2026-06-09-docstring-google-style-S549]]'
+  - '[[2026-06-09-docstring-google-style-S54]]'
+  - '[[2026-06-09-docstring-google-style-S550]]'
+  - '[[2026-06-09-docstring-google-style-S551]]'
+  - '[[2026-06-09-docstring-google-style-S552]]'
+  - '[[2026-06-09-docstring-google-style-S553]]'
+  - '[[2026-06-09-docstring-google-style-S554]]'
+  - '[[2026-06-09-docstring-google-style-S555]]'
+  - '[[2026-06-09-docstring-google-style-S556]]'
+  - '[[2026-06-09-docstring-google-style-S557]]'
+  - '[[2026-06-09-docstring-google-style-S558]]'
+  - '[[2026-06-09-docstring-google-style-S559]]'
+  - '[[2026-06-09-docstring-google-style-S55]]'
+  - '[[2026-06-09-docstring-google-style-S560]]'
+  - '[[2026-06-09-docstring-google-style-S561]]'
+  - '[[2026-06-09-docstring-google-style-S562]]'
+  - '[[2026-06-09-docstring-google-style-S563]]'
+  - '[[2026-06-09-docstring-google-style-S564]]'
+  - '[[2026-06-09-docstring-google-style-S565]]'
+  - '[[2026-06-09-docstring-google-style-S566]]'
+  - '[[2026-06-09-docstring-google-style-S567]]'
+  - '[[2026-06-09-docstring-google-style-S568]]'
+  - '[[2026-06-09-docstring-google-style-S569]]'
+  - '[[2026-06-09-docstring-google-style-S56]]'
+  - '[[2026-06-09-docstring-google-style-S570]]'
+  - '[[2026-06-09-docstring-google-style-S571]]'
+  - '[[2026-06-09-docstring-google-style-S572]]'
+  - '[[2026-06-09-docstring-google-style-S573]]'
+  - '[[2026-06-09-docstring-google-style-S574]]'
+  - '[[2026-06-09-docstring-google-style-S575]]'
+  - '[[2026-06-09-docstring-google-style-S576]]'
+  - '[[2026-06-09-docstring-google-style-S577]]'
+  - '[[2026-06-09-docstring-google-style-S578]]'
+  - '[[2026-06-09-docstring-google-style-S579]]'
+  - '[[2026-06-09-docstring-google-style-S57]]'
+  - '[[2026-06-09-docstring-google-style-S580]]'
+  - '[[2026-06-09-docstring-google-style-S581]]'
+  - '[[2026-06-09-docstring-google-style-S582]]'
+  - '[[2026-06-09-docstring-google-style-S583]]'
+  - '[[2026-06-09-docstring-google-style-S584]]'
+  - '[[2026-06-09-docstring-google-style-S585]]'
+  - '[[2026-06-09-docstring-google-style-S586]]'
+  - '[[2026-06-09-docstring-google-style-S587]]'
+  - '[[2026-06-09-docstring-google-style-S588]]'
+  - '[[2026-06-09-docstring-google-style-S589]]'
+  - '[[2026-06-09-docstring-google-style-S58]]'
+  - '[[2026-06-09-docstring-google-style-S590]]'
+  - '[[2026-06-09-docstring-google-style-S591]]'
+  - '[[2026-06-09-docstring-google-style-S592]]'
+  - '[[2026-06-09-docstring-google-style-S593]]'
+  - '[[2026-06-09-docstring-google-style-S594]]'
+  - '[[2026-06-09-docstring-google-style-S595]]'
+  - '[[2026-06-09-docstring-google-style-S596]]'
+  - '[[2026-06-09-docstring-google-style-S597]]'
+  - '[[2026-06-09-docstring-google-style-S598]]'
+  - '[[2026-06-09-docstring-google-style-S599]]'
+  - '[[2026-06-09-docstring-google-style-S59]]'
+  - '[[2026-06-09-docstring-google-style-S600]]'
+  - '[[2026-06-09-docstring-google-style-S601]]'
+  - '[[2026-06-09-docstring-google-style-S602]]'
+  - '[[2026-06-09-docstring-google-style-S603]]'
+  - '[[2026-06-09-docstring-google-style-S604]]'
+  - '[[2026-06-09-docstring-google-style-S605]]'
+  - '[[2026-06-09-docstring-google-style-S606]]'
+  - '[[2026-06-09-docstring-google-style-S607]]'
+  - '[[2026-06-09-docstring-google-style-S608]]'
+  - '[[2026-06-09-docstring-google-style-S609]]'
+  - '[[2026-06-09-docstring-google-style-S60]]'
+  - '[[2026-06-09-docstring-google-style-S610]]'
+  - '[[2026-06-09-docstring-google-style-S611]]'
+  - '[[2026-06-09-docstring-google-style-S612]]'
+  - '[[2026-06-09-docstring-google-style-S613]]'
+  - '[[2026-06-09-docstring-google-style-S614]]'
+  - '[[2026-06-09-docstring-google-style-S615]]'
+  - '[[2026-06-09-docstring-google-style-S616]]'
+  - '[[2026-06-09-docstring-google-style-S617]]'
+  - '[[2026-06-09-docstring-google-style-S618]]'
+  - '[[2026-06-09-docstring-google-style-S619]]'
+  - '[[2026-06-09-docstring-google-style-S61]]'
+  - '[[2026-06-09-docstring-google-style-S620]]'
+  - '[[2026-06-09-docstring-google-style-S621]]'
+  - '[[2026-06-09-docstring-google-style-S622]]'
+  - '[[2026-06-09-docstring-google-style-S623]]'
+  - '[[2026-06-09-docstring-google-style-S624]]'
+  - '[[2026-06-09-docstring-google-style-S625]]'
+  - '[[2026-06-09-docstring-google-style-S626]]'
+  - '[[2026-06-09-docstring-google-style-S627]]'
+  - '[[2026-06-09-docstring-google-style-S628]]'
+  - '[[2026-06-09-docstring-google-style-S629]]'
+  - '[[2026-06-09-docstring-google-style-S62]]'
+  - '[[2026-06-09-docstring-google-style-S630]]'
+  - '[[2026-06-09-docstring-google-style-S631]]'
+  - '[[2026-06-09-docstring-google-style-S632]]'
+  - '[[2026-06-09-docstring-google-style-S633]]'
+  - '[[2026-06-09-docstring-google-style-S634]]'
+  - '[[2026-06-09-docstring-google-style-S635]]'
+  - '[[2026-06-09-docstring-google-style-S636]]'
+  - '[[2026-06-09-docstring-google-style-S637]]'
+  - '[[2026-06-09-docstring-google-style-S638]]'
+  - '[[2026-06-09-docstring-google-style-S639]]'
+  - '[[2026-06-09-docstring-google-style-S63]]'
+  - '[[2026-06-09-docstring-google-style-S640]]'
+  - '[[2026-06-09-docstring-google-style-S641]]'
+  - '[[2026-06-09-docstring-google-style-S642]]'
+  - '[[2026-06-09-docstring-google-style-S643]]'
+  - '[[2026-06-09-docstring-google-style-S644]]'
+  - '[[2026-06-09-docstring-google-style-S645]]'
+  - '[[2026-06-09-docstring-google-style-S646]]'
+  - '[[2026-06-09-docstring-google-style-S647]]'
+  - '[[2026-06-09-docstring-google-style-S648]]'
+  - '[[2026-06-09-docstring-google-style-S649]]'
+  - '[[2026-06-09-docstring-google-style-S64]]'
+  - '[[2026-06-09-docstring-google-style-S650]]'
+  - '[[2026-06-09-docstring-google-style-S651]]'
+  - '[[2026-06-09-docstring-google-style-S652]]'
+  - '[[2026-06-09-docstring-google-style-S653]]'
+  - '[[2026-06-09-docstring-google-style-S654]]'
+  - '[[2026-06-09-docstring-google-style-S655]]'
+  - '[[2026-06-09-docstring-google-style-S656]]'
+  - '[[2026-06-09-docstring-google-style-S657]]'
+  - '[[2026-06-09-docstring-google-style-S658]]'
+  - '[[2026-06-09-docstring-google-style-S659]]'
+  - '[[2026-06-09-docstring-google-style-S65]]'
+  - '[[2026-06-09-docstring-google-style-S660]]'
+  - '[[2026-06-09-docstring-google-style-S661]]'
+  - '[[2026-06-09-docstring-google-style-S662]]'
+  - '[[2026-06-09-docstring-google-style-S663]]'
+  - '[[2026-06-09-docstring-google-style-S664]]'
+  - '[[2026-06-09-docstring-google-style-S665]]'
+  - '[[2026-06-09-docstring-google-style-S666]]'
+  - '[[2026-06-09-docstring-google-style-S667]]'
+  - '[[2026-06-09-docstring-google-style-S668]]'
+  - '[[2026-06-09-docstring-google-style-S669]]'
+  - '[[2026-06-09-docstring-google-style-S66]]'
+  - '[[2026-06-09-docstring-google-style-S670]]'
+  - '[[2026-06-09-docstring-google-style-S671]]'
+  - '[[2026-06-09-docstring-google-style-S672]]'
+  - '[[2026-06-09-docstring-google-style-S673]]'
+  - '[[2026-06-09-docstring-google-style-S674]]'
+  - '[[2026-06-09-docstring-google-style-S675]]'
+  - '[[2026-06-09-docstring-google-style-S676]]'
+  - '[[2026-06-09-docstring-google-style-S677]]'
+  - '[[2026-06-09-docstring-google-style-S678]]'
+  - '[[2026-06-09-docstring-google-style-S679]]'
+  - '[[2026-06-09-docstring-google-style-S67]]'
+  - '[[2026-06-09-docstring-google-style-S680]]'
+  - '[[2026-06-09-docstring-google-style-S681]]'
+  - '[[2026-06-09-docstring-google-style-S682]]'
+  - '[[2026-06-09-docstring-google-style-S683]]'
+  - '[[2026-06-09-docstring-google-style-S684]]'
+  - '[[2026-06-09-docstring-google-style-S685]]'
+  - '[[2026-06-09-docstring-google-style-S686]]'
+  - '[[2026-06-09-docstring-google-style-S687]]'
+  - '[[2026-06-09-docstring-google-style-S688]]'
+  - '[[2026-06-09-docstring-google-style-S689]]'
+  - '[[2026-06-09-docstring-google-style-S68]]'
+  - '[[2026-06-09-docstring-google-style-S690]]'
+  - '[[2026-06-09-docstring-google-style-S691]]'
+  - '[[2026-06-09-docstring-google-style-S692]]'
+  - '[[2026-06-09-docstring-google-style-S693]]'
+  - '[[2026-06-09-docstring-google-style-S694]]'
+  - '[[2026-06-09-docstring-google-style-S695]]'
+  - '[[2026-06-09-docstring-google-style-S696]]'
+  - '[[2026-06-09-docstring-google-style-S697]]'
+  - '[[2026-06-09-docstring-google-style-S698]]'
+  - '[[2026-06-09-docstring-google-style-S699]]'
+  - '[[2026-06-09-docstring-google-style-S69]]'
+  - '[[2026-06-09-docstring-google-style-S700]]'
+  - '[[2026-06-09-docstring-google-style-S701]]'
+  - '[[2026-06-09-docstring-google-style-S702]]'
+  - '[[2026-06-09-docstring-google-style-S703]]'
+  - '[[2026-06-09-docstring-google-style-S704]]'
+  - '[[2026-06-09-docstring-google-style-S705]]'
+  - '[[2026-06-09-docstring-google-style-S706]]'
+  - '[[2026-06-09-docstring-google-style-S707]]'
+  - '[[2026-06-09-docstring-google-style-S708]]'
+  - '[[2026-06-09-docstring-google-style-S709]]'
+  - '[[2026-06-09-docstring-google-style-S70]]'
+  - '[[2026-06-09-docstring-google-style-S710]]'
+  - '[[2026-06-09-docstring-google-style-S711]]'
+  - '[[2026-06-09-docstring-google-style-S712]]'
+  - '[[2026-06-09-docstring-google-style-S713]]'
+  - '[[2026-06-09-docstring-google-style-S714]]'
+  - '[[2026-06-09-docstring-google-style-S715]]'
+  - '[[2026-06-09-docstring-google-style-S716]]'
+  - '[[2026-06-09-docstring-google-style-S717]]'
+  - '[[2026-06-09-docstring-google-style-S718]]'
+  - '[[2026-06-09-docstring-google-style-S719]]'
+  - '[[2026-06-09-docstring-google-style-S71]]'
+  - '[[2026-06-09-docstring-google-style-S720]]'
+  - '[[2026-06-09-docstring-google-style-S721]]'
+  - '[[2026-06-09-docstring-google-style-S722]]'
+  - '[[2026-06-09-docstring-google-style-S723]]'
+  - '[[2026-06-09-docstring-google-style-S724]]'
+  - '[[2026-06-09-docstring-google-style-S725]]'
+  - '[[2026-06-09-docstring-google-style-S726]]'
+  - '[[2026-06-09-docstring-google-style-S727]]'
+  - '[[2026-06-09-docstring-google-style-S728]]'
+  - '[[2026-06-09-docstring-google-style-S729]]'
+  - '[[2026-06-09-docstring-google-style-S72]]'
+  - '[[2026-06-09-docstring-google-style-S730]]'
+  - '[[2026-06-09-docstring-google-style-S731]]'
+  - '[[2026-06-09-docstring-google-style-S732]]'
+  - '[[2026-06-09-docstring-google-style-S733]]'
+  - '[[2026-06-09-docstring-google-style-S734]]'
+  - '[[2026-06-09-docstring-google-style-S735]]'
+  - '[[2026-06-09-docstring-google-style-S736]]'
+  - '[[2026-06-09-docstring-google-style-S737]]'
+  - '[[2026-06-09-docstring-google-style-S738]]'
+  - '[[2026-06-09-docstring-google-style-S739]]'
+  - '[[2026-06-09-docstring-google-style-S73]]'
+  - '[[2026-06-09-docstring-google-style-S740]]'
+  - '[[2026-06-09-docstring-google-style-S741]]'
+  - '[[2026-06-09-docstring-google-style-S742]]'
+  - '[[2026-06-09-docstring-google-style-S743]]'
+  - '[[2026-06-09-docstring-google-style-S744]]'
+  - '[[2026-06-09-docstring-google-style-S745]]'
+  - '[[2026-06-09-docstring-google-style-S746]]'
+  - '[[2026-06-09-docstring-google-style-S747]]'
+  - '[[2026-06-09-docstring-google-style-S748]]'
+  - '[[2026-06-09-docstring-google-style-S749]]'
+  - '[[2026-06-09-docstring-google-style-S74]]'
+  - '[[2026-06-09-docstring-google-style-S750]]'
+  - '[[2026-06-09-docstring-google-style-S751]]'
+  - '[[2026-06-09-docstring-google-style-S752]]'
+  - '[[2026-06-09-docstring-google-style-S753]]'
+  - '[[2026-06-09-docstring-google-style-S754]]'
+  - '[[2026-06-09-docstring-google-style-S755]]'
+  - '[[2026-06-09-docstring-google-style-S756]]'
+  - '[[2026-06-09-docstring-google-style-S757]]'
+  - '[[2026-06-09-docstring-google-style-S758]]'
+  - '[[2026-06-09-docstring-google-style-S759]]'
+  - '[[2026-06-09-docstring-google-style-S75]]'
+  - '[[2026-06-09-docstring-google-style-S760]]'
+  - '[[2026-06-09-docstring-google-style-S761]]'
+  - '[[2026-06-09-docstring-google-style-S762]]'
+  - '[[2026-06-09-docstring-google-style-S763]]'
+  - '[[2026-06-09-docstring-google-style-S764]]'
+  - '[[2026-06-09-docstring-google-style-S765]]'
+  - '[[2026-06-09-docstring-google-style-S766]]'
+  - '[[2026-06-09-docstring-google-style-S767]]'
+  - '[[2026-06-09-docstring-google-style-S768]]'
+  - '[[2026-06-09-docstring-google-style-S769]]'
+  - '[[2026-06-09-docstring-google-style-S76]]'
+  - '[[2026-06-09-docstring-google-style-S770]]'
+  - '[[2026-06-09-docstring-google-style-S771]]'
+  - '[[2026-06-09-docstring-google-style-S772]]'
+  - '[[2026-06-09-docstring-google-style-S773]]'
+  - '[[2026-06-09-docstring-google-style-S774]]'
+  - '[[2026-06-09-docstring-google-style-S775]]'
+  - '[[2026-06-09-docstring-google-style-S776]]'
+  - '[[2026-06-09-docstring-google-style-S777]]'
+  - '[[2026-06-09-docstring-google-style-S778]]'
+  - '[[2026-06-09-docstring-google-style-S779]]'
+  - '[[2026-06-09-docstring-google-style-S77]]'
+  - '[[2026-06-09-docstring-google-style-S780]]'
+  - '[[2026-06-09-docstring-google-style-S781]]'
+  - '[[2026-06-09-docstring-google-style-S782]]'
+  - '[[2026-06-09-docstring-google-style-S783]]'
+  - '[[2026-06-09-docstring-google-style-S784]]'
+  - '[[2026-06-09-docstring-google-style-S785]]'
+  - '[[2026-06-09-docstring-google-style-S786]]'
+  - '[[2026-06-09-docstring-google-style-S787]]'
+  - '[[2026-06-09-docstring-google-style-S788]]'
+  - '[[2026-06-09-docstring-google-style-S789]]'
+  - '[[2026-06-09-docstring-google-style-S78]]'
+  - '[[2026-06-09-docstring-google-style-S790]]'
+  - '[[2026-06-09-docstring-google-style-S791]]'
+  - '[[2026-06-09-docstring-google-style-S792]]'
+  - '[[2026-06-09-docstring-google-style-S793]]'
+  - '[[2026-06-09-docstring-google-style-S794]]'
+  - '[[2026-06-09-docstring-google-style-S795]]'
+  - '[[2026-06-09-docstring-google-style-S796]]'
+  - '[[2026-06-09-docstring-google-style-S797]]'
+  - '[[2026-06-09-docstring-google-style-S798]]'
+  - '[[2026-06-09-docstring-google-style-S799]]'
+  - '[[2026-06-09-docstring-google-style-S79]]'
+  - '[[2026-06-09-docstring-google-style-S800]]'
+  - '[[2026-06-09-docstring-google-style-S801]]'
+  - '[[2026-06-09-docstring-google-style-S802]]'
+  - '[[2026-06-09-docstring-google-style-S803]]'
+  - '[[2026-06-09-docstring-google-style-S804]]'
+  - '[[2026-06-09-docstring-google-style-S805]]'
+  - '[[2026-06-09-docstring-google-style-S806]]'
+  - '[[2026-06-09-docstring-google-style-S807]]'
+  - '[[2026-06-09-docstring-google-style-S808]]'
+  - '[[2026-06-09-docstring-google-style-S809]]'
+  - '[[2026-06-09-docstring-google-style-S80]]'
+  - '[[2026-06-09-docstring-google-style-S810]]'
+  - '[[2026-06-09-docstring-google-style-S811]]'
+  - '[[2026-06-09-docstring-google-style-S812]]'
+  - '[[2026-06-09-docstring-google-style-S813]]'
+  - '[[2026-06-09-docstring-google-style-S814]]'
+  - '[[2026-06-09-docstring-google-style-S815]]'
+  - '[[2026-06-09-docstring-google-style-S816]]'
+  - '[[2026-06-09-docstring-google-style-S817]]'
+  - '[[2026-06-09-docstring-google-style-S818]]'
+  - '[[2026-06-09-docstring-google-style-S819]]'
+  - '[[2026-06-09-docstring-google-style-S81]]'
+  - '[[2026-06-09-docstring-google-style-S820]]'
+  - '[[2026-06-09-docstring-google-style-S821]]'
+  - '[[2026-06-09-docstring-google-style-S822]]'
+  - '[[2026-06-09-docstring-google-style-S823]]'
+  - '[[2026-06-09-docstring-google-style-S824]]'
+  - '[[2026-06-09-docstring-google-style-S825]]'
+  - '[[2026-06-09-docstring-google-style-S826]]'
+  - '[[2026-06-09-docstring-google-style-S827]]'
+  - '[[2026-06-09-docstring-google-style-S828]]'
+  - '[[2026-06-09-docstring-google-style-S829]]'
+  - '[[2026-06-09-docstring-google-style-S82]]'
+  - '[[2026-06-09-docstring-google-style-S830]]'
+  - '[[2026-06-09-docstring-google-style-S831]]'
+  - '[[2026-06-09-docstring-google-style-S832]]'
+  - '[[2026-06-09-docstring-google-style-S833]]'
+  - '[[2026-06-09-docstring-google-style-S834]]'
+  - '[[2026-06-09-docstring-google-style-S835]]'
+  - '[[2026-06-09-docstring-google-style-S836]]'
+  - '[[2026-06-09-docstring-google-style-S837]]'
+  - '[[2026-06-09-docstring-google-style-S838]]'
+  - '[[2026-06-09-docstring-google-style-S839]]'
+  - '[[2026-06-09-docstring-google-style-S83]]'
+  - '[[2026-06-09-docstring-google-style-S840]]'
+  - '[[2026-06-09-docstring-google-style-S841]]'
+  - '[[2026-06-09-docstring-google-style-S842]]'
+  - '[[2026-06-09-docstring-google-style-S843]]'
+  - '[[2026-06-09-docstring-google-style-S844]]'
+  - '[[2026-06-09-docstring-google-style-S845]]'
+  - '[[2026-06-09-docstring-google-style-S846]]'
+  - '[[2026-06-09-docstring-google-style-S847]]'
+  - '[[2026-06-09-docstring-google-style-S848]]'
+  - '[[2026-06-09-docstring-google-style-S849]]'
+  - '[[2026-06-09-docstring-google-style-S84]]'
+  - '[[2026-06-09-docstring-google-style-S850]]'
+  - '[[2026-06-09-docstring-google-style-S851]]'
+  - '[[2026-06-09-docstring-google-style-S852]]'
+  - '[[2026-06-09-docstring-google-style-S853]]'
+  - '[[2026-06-09-docstring-google-style-S854]]'
+  - '[[2026-06-09-docstring-google-style-S855]]'
+  - '[[2026-06-09-docstring-google-style-S856]]'
+  - '[[2026-06-09-docstring-google-style-S857]]'
+  - '[[2026-06-09-docstring-google-style-S858]]'
+  - '[[2026-06-09-docstring-google-style-S859]]'
+  - '[[2026-06-09-docstring-google-style-S85]]'
+  - '[[2026-06-09-docstring-google-style-S860]]'
+  - '[[2026-06-09-docstring-google-style-S861]]'
+  - '[[2026-06-09-docstring-google-style-S862]]'
+  - '[[2026-06-09-docstring-google-style-S863]]'
+  - '[[2026-06-09-docstring-google-style-S864]]'
+  - '[[2026-06-09-docstring-google-style-S865]]'
+  - '[[2026-06-09-docstring-google-style-S866]]'
+  - '[[2026-06-09-docstring-google-style-S867]]'
+  - '[[2026-06-09-docstring-google-style-S868]]'
+  - '[[2026-06-09-docstring-google-style-S869]]'
+  - '[[2026-06-09-docstring-google-style-S86]]'
+  - '[[2026-06-09-docstring-google-style-S870]]'
+  - '[[2026-06-09-docstring-google-style-S871]]'
+  - '[[2026-06-09-docstring-google-style-S872]]'
+  - '[[2026-06-09-docstring-google-style-S873]]'
+  - '[[2026-06-09-docstring-google-style-S874]]'
+  - '[[2026-06-09-docstring-google-style-S875]]'
+  - '[[2026-06-09-docstring-google-style-S876]]'
+  - '[[2026-06-09-docstring-google-style-S877]]'
+  - '[[2026-06-09-docstring-google-style-S878]]'
+  - '[[2026-06-09-docstring-google-style-S879]]'
+  - '[[2026-06-09-docstring-google-style-S87]]'
+  - '[[2026-06-09-docstring-google-style-S880]]'
+  - '[[2026-06-09-docstring-google-style-S881]]'
+  - '[[2026-06-09-docstring-google-style-S882]]'
+  - '[[2026-06-09-docstring-google-style-S883]]'
+  - '[[2026-06-09-docstring-google-style-S884]]'
+  - '[[2026-06-09-docstring-google-style-S885]]'
+  - '[[2026-06-09-docstring-google-style-S886]]'
+  - '[[2026-06-09-docstring-google-style-S887]]'
+  - '[[2026-06-09-docstring-google-style-S888]]'
+  - '[[2026-06-09-docstring-google-style-S889]]'
+  - '[[2026-06-09-docstring-google-style-S88]]'
+  - '[[2026-06-09-docstring-google-style-S890]]'
+  - '[[2026-06-09-docstring-google-style-S891]]'
+  - '[[2026-06-09-docstring-google-style-S892]]'
+  - '[[2026-06-09-docstring-google-style-S893]]'
+  - '[[2026-06-09-docstring-google-style-S894]]'
+  - '[[2026-06-09-docstring-google-style-S895]]'
+  - '[[2026-06-09-docstring-google-style-S896]]'
+  - '[[2026-06-09-docstring-google-style-S897]]'
+  - '[[2026-06-09-docstring-google-style-S898]]'
+  - '[[2026-06-09-docstring-google-style-S899]]'
+  - '[[2026-06-09-docstring-google-style-S89]]'
+  - '[[2026-06-09-docstring-google-style-S900]]'
+  - '[[2026-06-09-docstring-google-style-S901]]'
+  - '[[2026-06-09-docstring-google-style-S902]]'
+  - '[[2026-06-09-docstring-google-style-S903]]'
+  - '[[2026-06-09-docstring-google-style-S904]]'
+  - '[[2026-06-09-docstring-google-style-S905]]'
+  - '[[2026-06-09-docstring-google-style-S906]]'
+  - '[[2026-06-09-docstring-google-style-S907]]'
+  - '[[2026-06-09-docstring-google-style-S908]]'
+  - '[[2026-06-09-docstring-google-style-S909]]'
+  - '[[2026-06-09-docstring-google-style-S90]]'
+  - '[[2026-06-09-docstring-google-style-S910]]'
+  - '[[2026-06-09-docstring-google-style-S911]]'
+  - '[[2026-06-09-docstring-google-style-S912]]'
+  - '[[2026-06-09-docstring-google-style-S913]]'
+  - '[[2026-06-09-docstring-google-style-S914]]'
+  - '[[2026-06-09-docstring-google-style-S915]]'
+  - '[[2026-06-09-docstring-google-style-S916]]'
+  - '[[2026-06-09-docstring-google-style-S917]]'
+  - '[[2026-06-09-docstring-google-style-S918]]'
+  - '[[2026-06-09-docstring-google-style-S919]]'
+  - '[[2026-06-09-docstring-google-style-S91]]'
+  - '[[2026-06-09-docstring-google-style-S920]]'
+  - '[[2026-06-09-docstring-google-style-S921]]'
+  - '[[2026-06-09-docstring-google-style-S922]]'
+  - '[[2026-06-09-docstring-google-style-S923]]'
+  - '[[2026-06-09-docstring-google-style-S924]]'
+  - '[[2026-06-09-docstring-google-style-S925]]'
+  - '[[2026-06-09-docstring-google-style-S926]]'
+  - '[[2026-06-09-docstring-google-style-S927]]'
+  - '[[2026-06-09-docstring-google-style-S928]]'
+  - '[[2026-06-09-docstring-google-style-S929]]'
+  - '[[2026-06-09-docstring-google-style-S92]]'
+  - '[[2026-06-09-docstring-google-style-S930]]'
+  - '[[2026-06-09-docstring-google-style-S931]]'
+  - '[[2026-06-09-docstring-google-style-S932]]'
+  - '[[2026-06-09-docstring-google-style-S933]]'
+  - '[[2026-06-09-docstring-google-style-S934]]'
+  - '[[2026-06-09-docstring-google-style-S935]]'
+  - '[[2026-06-09-docstring-google-style-S936]]'
+  - '[[2026-06-09-docstring-google-style-S937]]'
+  - '[[2026-06-09-docstring-google-style-S938]]'
+  - '[[2026-06-09-docstring-google-style-S939]]'
+  - '[[2026-06-09-docstring-google-style-S93]]'
+  - '[[2026-06-09-docstring-google-style-S940]]'
+  - '[[2026-06-09-docstring-google-style-S941]]'
+  - '[[2026-06-09-docstring-google-style-S942]]'
+  - '[[2026-06-09-docstring-google-style-S943]]'
+  - '[[2026-06-09-docstring-google-style-S944]]'
+  - '[[2026-06-09-docstring-google-style-S945]]'
+  - '[[2026-06-09-docstring-google-style-S946]]'
+  - '[[2026-06-09-docstring-google-style-S947]]'
+  - '[[2026-06-09-docstring-google-style-S948]]'
+  - '[[2026-06-09-docstring-google-style-S949]]'
+  - '[[2026-06-09-docstring-google-style-S94]]'
+  - '[[2026-06-09-docstring-google-style-S950]]'
+  - '[[2026-06-09-docstring-google-style-S951]]'
+  - '[[2026-06-09-docstring-google-style-S952]]'
+  - '[[2026-06-09-docstring-google-style-S953]]'
+  - '[[2026-06-09-docstring-google-style-S954]]'
+  - '[[2026-06-09-docstring-google-style-S955]]'
+  - '[[2026-06-09-docstring-google-style-S956]]'
+  - '[[2026-06-09-docstring-google-style-S957]]'
+  - '[[2026-06-09-docstring-google-style-S958]]'
+  - '[[2026-06-09-docstring-google-style-S959]]'
+  - '[[2026-06-09-docstring-google-style-S95]]'
+  - '[[2026-06-09-docstring-google-style-S960]]'
+  - '[[2026-06-09-docstring-google-style-S961]]'
+  - '[[2026-06-09-docstring-google-style-S962]]'
+  - '[[2026-06-09-docstring-google-style-S963]]'
+  - '[[2026-06-09-docstring-google-style-S964]]'
+  - '[[2026-06-09-docstring-google-style-S965]]'
+  - '[[2026-06-09-docstring-google-style-S966]]'
+  - '[[2026-06-09-docstring-google-style-S967]]'
+  - '[[2026-06-09-docstring-google-style-S968]]'
+  - '[[2026-06-09-docstring-google-style-S969]]'
+  - '[[2026-06-09-docstring-google-style-S96]]'
+  - '[[2026-06-09-docstring-google-style-S970]]'
+  - '[[2026-06-09-docstring-google-style-S971]]'
+  - '[[2026-06-09-docstring-google-style-S972]]'
+  - '[[2026-06-09-docstring-google-style-S973]]'
+  - '[[2026-06-09-docstring-google-style-S974]]'
+  - '[[2026-06-09-docstring-google-style-S975]]'
+  - '[[2026-06-09-docstring-google-style-S976]]'
+  - '[[2026-06-09-docstring-google-style-S977]]'
+  - '[[2026-06-09-docstring-google-style-S978]]'
+  - '[[2026-06-09-docstring-google-style-S979]]'
+  - '[[2026-06-09-docstring-google-style-S97]]'
+  - '[[2026-06-09-docstring-google-style-S980]]'
+  - '[[2026-06-09-docstring-google-style-S981]]'
+  - '[[2026-06-09-docstring-google-style-S982]]'
+  - '[[2026-06-09-docstring-google-style-S983]]'
+  - '[[2026-06-09-docstring-google-style-S984]]'
+  - '[[2026-06-09-docstring-google-style-S985]]'
+  - '[[2026-06-09-docstring-google-style-S986]]'
+  - '[[2026-06-09-docstring-google-style-S987]]'
+  - '[[2026-06-09-docstring-google-style-S988]]'
+  - '[[2026-06-09-docstring-google-style-S989]]'
+  - '[[2026-06-09-docstring-google-style-S98]]'
+  - '[[2026-06-09-docstring-google-style-S990]]'
+  - '[[2026-06-09-docstring-google-style-S991]]'
+  - '[[2026-06-09-docstring-google-style-S992]]'
+  - '[[2026-06-09-docstring-google-style-S993]]'
+  - '[[2026-06-09-docstring-google-style-S994]]'
+  - '[[2026-06-09-docstring-google-style-S99]]'
+  - '[[2026-06-09-docstring-google-style-adr]]'
+  - '[[2026-06-09-docstring-google-style-plan]]'
+  - '[[2026-06-09-docstring-google-style-research]]'
+  - '[[2026-07-10-docstring-google-style-audit]]'
+  - '[[2026-08-06-docstring-google-style-exec-record-provenance-audit]]'
+---
+
+# `docstring-google-style` feature index
+
+Auto-generated index of all documents tagged with `#docstring-google-style`.
+
+## Documents
+
+### adr
+
+- `2026-06-09-docstring-google-style-adr` - `docstring-google-style` adr: `Enforce Google-style docstrings across src/cadrumo` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-10-docstring-google-style-audit` - `docstring-google-style` audit: `Docstring Google-style execution reconciliation`
+- `2026-08-06-docstring-google-style-exec-record-provenance-audit` - `docstring-google-style` audit: `993 of 994 execution records are empty scaffolds from a single unrelated commit`
+
+### exec
+
+- `2026-06-09-docstring-google-style-S01` - verify docs
+- `2026-06-09-docstring-google-style-S02` - verify docs
+- `2026-06-09-docstring-google-style-S03` - verify docs
+- `2026-06-09-docstring-google-style-S04` - verify docs
+- `2026-06-09-docstring-google-style-S05` - verify docs
+- `2026-06-09-docstring-google-style-S06` - verify docs
+- `2026-06-09-docstring-google-style-S07` - verify docs
+- `2026-06-09-docstring-google-style-S08` - verify docs
+- `2026-06-09-docstring-google-style-S09` - verify docs
+- `2026-06-09-docstring-google-style-S10` - verify docs
+- `2026-06-09-docstring-google-style-S100` - verify docs
+- `2026-06-09-docstring-google-style-S101` - verify docs
+- `2026-06-09-docstring-google-style-S102` - verify docs
+- `2026-06-09-docstring-google-style-S103` - verify docs
+- `2026-06-09-docstring-google-style-S104` - verify docs
+- `2026-06-09-docstring-google-style-S105` - verify docs
+- `2026-06-09-docstring-google-style-S106` - verify docs
+- `2026-06-09-docstring-google-style-S107` - verify docs
+- `2026-06-09-docstring-google-style-S108` - verify docs
+- `2026-06-09-docstring-google-style-S109` - verify docs
+- `2026-06-09-docstring-google-style-S11` - verify docs
+- `2026-06-09-docstring-google-style-S110` - verify docs
+- `2026-06-09-docstring-google-style-S111` - verify docs
+- `2026-06-09-docstring-google-style-S112` - verify docs
+- `2026-06-09-docstring-google-style-S113` - verify docs
+- `2026-06-09-docstring-google-style-S114` - verify docs
+- `2026-06-09-docstring-google-style-S115` - verify docs
+- `2026-06-09-docstring-google-style-S116` - verify docs
+- `2026-06-09-docstring-google-style-S117` - verify docs
+- `2026-06-09-docstring-google-style-S118` - verify docs
+- `2026-06-09-docstring-google-style-S119` - verify docs
+- `2026-06-09-docstring-google-style-S12` - verify docs
+- `2026-06-09-docstring-google-style-S120` - verify docs
+- `2026-06-09-docstring-google-style-S121` - verify docs
+- `2026-06-09-docstring-google-style-S122` - verify docs
+- `2026-06-09-docstring-google-style-S123` - verify docs
+- `2026-06-09-docstring-google-style-S124` - verify docs
+- `2026-06-09-docstring-google-style-S125` - verify docs
+- `2026-06-09-docstring-google-style-S126` - verify docs
+- `2026-06-09-docstring-google-style-S127` - verify docs
+- `2026-06-09-docstring-google-style-S128` - verify docs
+- `2026-06-09-docstring-google-style-S129` - verify docs
+- `2026-06-09-docstring-google-style-S13` - verify docs
+- `2026-06-09-docstring-google-style-S130` - verify docs
+- `2026-06-09-docstring-google-style-S131` - verify docs
+- `2026-06-09-docstring-google-style-S132` - verify docs
+- `2026-06-09-docstring-google-style-S133` - verify docs
+- `2026-06-09-docstring-google-style-S134` - verify docs
+- `2026-06-09-docstring-google-style-S135` - verify docs
+- `2026-06-09-docstring-google-style-S136` - verify docs
+- `2026-06-09-docstring-google-style-S137` - verify docs
+- `2026-06-09-docstring-google-style-S138` - verify docs
+- `2026-06-09-docstring-google-style-S139` - verify docs
+- `2026-06-09-docstring-google-style-S14` - verify docs
+- `2026-06-09-docstring-google-style-S140` - verify docs
+- `2026-06-09-docstring-google-style-S141` - verify docs
+- `2026-06-09-docstring-google-style-S142` - verify docs
+- `2026-06-09-docstring-google-style-S143` - verify docs
+- `2026-06-09-docstring-google-style-S144` - verify docs
+- `2026-06-09-docstring-google-style-S145` - verify docs
+- `2026-06-09-docstring-google-style-S146` - verify docs
+- `2026-06-09-docstring-google-style-S147` - verify docs
+- `2026-06-09-docstring-google-style-S148` - verify docs
+- `2026-06-09-docstring-google-style-S149` - verify docs
+- `2026-06-09-docstring-google-style-S15` - verify docs
+- `2026-06-09-docstring-google-style-S150` - verify docs
+- `2026-06-09-docstring-google-style-S151` - verify docs
+- `2026-06-09-docstring-google-style-S152` - verify docs
+- `2026-06-09-docstring-google-style-S153` - verify docs
+- `2026-06-09-docstring-google-style-S154` - verify docs
+- `2026-06-09-docstring-google-style-S155` - verify docs
+- `2026-06-09-docstring-google-style-S156` - verify docs
+- `2026-06-09-docstring-google-style-S157` - verify docs
+- `2026-06-09-docstring-google-style-S158` - verify docs
+- `2026-06-09-docstring-google-style-S159` - verify docs
+- `2026-06-09-docstring-google-style-S16` - verify docs
+- `2026-06-09-docstring-google-style-S160` - verify docs
+- `2026-06-09-docstring-google-style-S161` - verify docs
+- `2026-06-09-docstring-google-style-S162` - verify docs
+- `2026-06-09-docstring-google-style-S163` - verify docs
+- `2026-06-09-docstring-google-style-S164` - verify docs
+- `2026-06-09-docstring-google-style-S165` - verify docs
+- `2026-06-09-docstring-google-style-S166` - verify docs
+- `2026-06-09-docstring-google-style-S167` - verify docs
+- `2026-06-09-docstring-google-style-S168` - verify docs
+- `2026-06-09-docstring-google-style-S169` - verify docs
+- `2026-06-09-docstring-google-style-S17` - verify docs
+- `2026-06-09-docstring-google-style-S170` - verify docs
+- `2026-06-09-docstring-google-style-S171` - verify docs
+- `2026-06-09-docstring-google-style-S172` - verify docs
+- `2026-06-09-docstring-google-style-S173` - verify docs
+- `2026-06-09-docstring-google-style-S174` - verify docs
+- `2026-06-09-docstring-google-style-S175` - verify docs
+- `2026-06-09-docstring-google-style-S176` - verify docs
+- `2026-06-09-docstring-google-style-S177` - verify docs
+- `2026-06-09-docstring-google-style-S178` - verify docs
+- `2026-06-09-docstring-google-style-S179` - verify docs
+- `2026-06-09-docstring-google-style-S18` - verify docs
+- `2026-06-09-docstring-google-style-S180` - verify docs
+- `2026-06-09-docstring-google-style-S181` - verify docs
+- `2026-06-09-docstring-google-style-S182` - verify docs
+- `2026-06-09-docstring-google-style-S183` - verify docs
+- `2026-06-09-docstring-google-style-S184` - verify docs
+- `2026-06-09-docstring-google-style-S185` - verify docs
+- `2026-06-09-docstring-google-style-S186` - verify docs
+- `2026-06-09-docstring-google-style-S187` - verify docs
+- `2026-06-09-docstring-google-style-S188` - verify docs
+- `2026-06-09-docstring-google-style-S189` - verify docs
+- `2026-06-09-docstring-google-style-S19` - verify docs
+- `2026-06-09-docstring-google-style-S190` - verify docs
+- `2026-06-09-docstring-google-style-S191` - verify docs
+- `2026-06-09-docstring-google-style-S192` - verify docs
+- `2026-06-09-docstring-google-style-S193` - verify docs
+- `2026-06-09-docstring-google-style-S194` - verify docs
+- `2026-06-09-docstring-google-style-S195` - verify docs
+- `2026-06-09-docstring-google-style-S196` - verify docs
+- `2026-06-09-docstring-google-style-S197` - verify docs
+- `2026-06-09-docstring-google-style-S198` - verify docs
+- `2026-06-09-docstring-google-style-S199` - verify docs
+- `2026-06-09-docstring-google-style-S20` - verify docs
+- `2026-06-09-docstring-google-style-S200` - verify docs
+- `2026-06-09-docstring-google-style-S201` - verify docs
+- `2026-06-09-docstring-google-style-S202` - verify docs
+- `2026-06-09-docstring-google-style-S203` - verify docs
+- `2026-06-09-docstring-google-style-S204` - verify docs
+- `2026-06-09-docstring-google-style-S205` - verify docs
+- `2026-06-09-docstring-google-style-S206` - verify docs
+- `2026-06-09-docstring-google-style-S207` - verify docs
+- `2026-06-09-docstring-google-style-S208` - verify docs
+- `2026-06-09-docstring-google-style-S209` - verify docs
+- `2026-06-09-docstring-google-style-S21` - verify docs
+- `2026-06-09-docstring-google-style-S210` - verify docs
+- `2026-06-09-docstring-google-style-S211` - verify docs
+- `2026-06-09-docstring-google-style-S212` - verify docs
+- `2026-06-09-docstring-google-style-S213` - verify docs
+- `2026-06-09-docstring-google-style-S214` - verify docs
+- `2026-06-09-docstring-google-style-S215` - verify docs
+- `2026-06-09-docstring-google-style-S216` - verify docs
+- `2026-06-09-docstring-google-style-S217` - verify docs
+- `2026-06-09-docstring-google-style-S218` - verify docs
+- `2026-06-09-docstring-google-style-S219` - verify docs
+- `2026-06-09-docstring-google-style-S22` - verify docs
+- `2026-06-09-docstring-google-style-S220` - verify docs
+- `2026-06-09-docstring-google-style-S221` - verify docs
+- `2026-06-09-docstring-google-style-S222` - verify docs
+- `2026-06-09-docstring-google-style-S223` - verify docs
+- `2026-06-09-docstring-google-style-S224` - verify docs
+- `2026-06-09-docstring-google-style-S225` - verify docs
+- `2026-06-09-docstring-google-style-S226` - verify docs
+- `2026-06-09-docstring-google-style-S227` - verify docs
+- `2026-06-09-docstring-google-style-S228` - verify docs
+- `2026-06-09-docstring-google-style-S229` - verify docs
+- `2026-06-09-docstring-google-style-S23` - verify docs
+- `2026-06-09-docstring-google-style-S230` - verify docs
+- `2026-06-09-docstring-google-style-S231` - verify docs
+- `2026-06-09-docstring-google-style-S232` - verify docs
+- `2026-06-09-docstring-google-style-S233` - verify docs
+- `2026-06-09-docstring-google-style-S234` - verify docs
+- `2026-06-09-docstring-google-style-S235` - verify docs
+- `2026-06-09-docstring-google-style-S236` - verify docs
+- `2026-06-09-docstring-google-style-S237` - verify docs
+- `2026-06-09-docstring-google-style-S238` - verify docs
+- `2026-06-09-docstring-google-style-S239` - verify docs
+- `2026-06-09-docstring-google-style-S24` - verify docs
+- `2026-06-09-docstring-google-style-S240` - verify docs
+- `2026-06-09-docstring-google-style-S241` - verify docs
+- `2026-06-09-docstring-google-style-S242` - verify docs
+- `2026-06-09-docstring-google-style-S243` - verify docs
+- `2026-06-09-docstring-google-style-S244` - verify docs
+- `2026-06-09-docstring-google-style-S245` - verify docs
+- `2026-06-09-docstring-google-style-S246` - verify docs
+- `2026-06-09-docstring-google-style-S247` - verify docs
+- `2026-06-09-docstring-google-style-S248` - verify docs
+- `2026-06-09-docstring-google-style-S249` - verify docs
+- `2026-06-09-docstring-google-style-S25` - verify docs
+- `2026-06-09-docstring-google-style-S250` - verify docs
+- `2026-06-09-docstring-google-style-S251` - verify docs
+- `2026-06-09-docstring-google-style-S252` - verify docs
+- `2026-06-09-docstring-google-style-S253` - verify docs
+- `2026-06-09-docstring-google-style-S254` - verify docs
+- `2026-06-09-docstring-google-style-S255` - verify docs
+- `2026-06-09-docstring-google-style-S256` - verify docs
+- `2026-06-09-docstring-google-style-S257` - verify docs
+- `2026-06-09-docstring-google-style-S258` - verify docs
+- `2026-06-09-docstring-google-style-S259` - verify docs
+- `2026-06-09-docstring-google-style-S26` - verify docs
+- `2026-06-09-docstring-google-style-S260` - verify docs
+- `2026-06-09-docstring-google-style-S261` - verify docs
+- `2026-06-09-docstring-google-style-S262` - verify docs
+- `2026-06-09-docstring-google-style-S263` - verify docs
+- `2026-06-09-docstring-google-style-S264` - verify docs
+- `2026-06-09-docstring-google-style-S265` - verify docs
+- `2026-06-09-docstring-google-style-S266` - verify docs
+- `2026-06-09-docstring-google-style-S267` - verify docs
+- `2026-06-09-docstring-google-style-S268` - verify docs
+- `2026-06-09-docstring-google-style-S269` - verify docs
+- `2026-06-09-docstring-google-style-S27` - verify docs
+- `2026-06-09-docstring-google-style-S270` - verify docs
+- `2026-06-09-docstring-google-style-S271` - verify docs
+- `2026-06-09-docstring-google-style-S272` - verify docs
+- `2026-06-09-docstring-google-style-S273` - verify docs
+- `2026-06-09-docstring-google-style-S274` - verify docs
+- `2026-06-09-docstring-google-style-S275` - verify docs
+- `2026-06-09-docstring-google-style-S276` - verify docs
+- `2026-06-09-docstring-google-style-S277` - verify docs
+- `2026-06-09-docstring-google-style-S278` - verify docs
+- `2026-06-09-docstring-google-style-S279` - verify docs
+- `2026-06-09-docstring-google-style-S28` - verify docs
+- `2026-06-09-docstring-google-style-S280` - verify docs
+- `2026-06-09-docstring-google-style-S281` - verify docs
+- `2026-06-09-docstring-google-style-S282` - verify docs
+- `2026-06-09-docstring-google-style-S283` - verify docs
+- `2026-06-09-docstring-google-style-S284` - verify docs
+- `2026-06-09-docstring-google-style-S285` - verify docs
+- `2026-06-09-docstring-google-style-S286` - verify docs
+- `2026-06-09-docstring-google-style-S287` - verify docs
+- `2026-06-09-docstring-google-style-S288` - verify docs
+- `2026-06-09-docstring-google-style-S289` - verify docs
+- `2026-06-09-docstring-google-style-S29` - verify docs
+- `2026-06-09-docstring-google-style-S290` - verify docs
+- `2026-06-09-docstring-google-style-S291` - verify docs
+- `2026-06-09-docstring-google-style-S292` - verify docs
+- `2026-06-09-docstring-google-style-S293` - verify docs
+- `2026-06-09-docstring-google-style-S294` - verify docs
+- `2026-06-09-docstring-google-style-S295` - verify docs
+- `2026-06-09-docstring-google-style-S296` - verify docs
+- `2026-06-09-docstring-google-style-S297` - verify docs
+- `2026-06-09-docstring-google-style-S298` - verify docs
+- `2026-06-09-docstring-google-style-S299` - verify docs
+- `2026-06-09-docstring-google-style-S30` - verify docs
+- `2026-06-09-docstring-google-style-S300` - verify docs
+- `2026-06-09-docstring-google-style-S301` - verify docs
+- `2026-06-09-docstring-google-style-S302` - verify docs
+- `2026-06-09-docstring-google-style-S303` - verify docs
+- `2026-06-09-docstring-google-style-S304` - verify docs
+- `2026-06-09-docstring-google-style-S305` - verify docs
+- `2026-06-09-docstring-google-style-S306` - verify docs
+- `2026-06-09-docstring-google-style-S307` - verify docs
+- `2026-06-09-docstring-google-style-S308` - verify docs
+- `2026-06-09-docstring-google-style-S309` - verify docs
+- `2026-06-09-docstring-google-style-S31` - verify docs
+- `2026-06-09-docstring-google-style-S310` - verify docs
+- `2026-06-09-docstring-google-style-S311` - verify docs
+- `2026-06-09-docstring-google-style-S312` - verify docs
+- `2026-06-09-docstring-google-style-S313` - verify docs
+- `2026-06-09-docstring-google-style-S314` - verify docs
+- `2026-06-09-docstring-google-style-S315` - verify docs
+- `2026-06-09-docstring-google-style-S316` - verify docs
+- `2026-06-09-docstring-google-style-S317` - verify docs
+- `2026-06-09-docstring-google-style-S318` - verify docs
+- `2026-06-09-docstring-google-style-S319` - verify docs
+- `2026-06-09-docstring-google-style-S32` - verify docs
+- `2026-06-09-docstring-google-style-S320` - verify docs
+- `2026-06-09-docstring-google-style-S321` - verify docs
+- `2026-06-09-docstring-google-style-S322` - verify docs
+- `2026-06-09-docstring-google-style-S323` - verify docs
+- `2026-06-09-docstring-google-style-S324` - verify docs
+- `2026-06-09-docstring-google-style-S325` - verify docs
+- `2026-06-09-docstring-google-style-S326` - verify docs
+- `2026-06-09-docstring-google-style-S327` - verify docs
+- `2026-06-09-docstring-google-style-S328` - verify docs
+- `2026-06-09-docstring-google-style-S329` - verify docs
+- `2026-06-09-docstring-google-style-S33` - verify docs
+- `2026-06-09-docstring-google-style-S330` - verify docs
+- `2026-06-09-docstring-google-style-S331` - verify docs
+- `2026-06-09-docstring-google-style-S332` - verify docs
+- `2026-06-09-docstring-google-style-S333` - verify docs
+- `2026-06-09-docstring-google-style-S334` - verify docs
+- `2026-06-09-docstring-google-style-S335` - verify docs
+- `2026-06-09-docstring-google-style-S336` - verify docs
+- `2026-06-09-docstring-google-style-S337` - verify docs
+- `2026-06-09-docstring-google-style-S338` - verify docs
+- `2026-06-09-docstring-google-style-S339` - verify docs
+- `2026-06-09-docstring-google-style-S34` - verify docs
+- `2026-06-09-docstring-google-style-S340` - verify docs
+- `2026-06-09-docstring-google-style-S341` - verify docs
+- `2026-06-09-docstring-google-style-S342` - verify docs
+- `2026-06-09-docstring-google-style-S343` - verify docs
+- `2026-06-09-docstring-google-style-S344` - verify docs
+- `2026-06-09-docstring-google-style-S345` - verify docs
+- `2026-06-09-docstring-google-style-S346` - verify docs
+- `2026-06-09-docstring-google-style-S347` - verify docs
+- `2026-06-09-docstring-google-style-S348` - verify docs
+- `2026-06-09-docstring-google-style-S349` - verify docs
+- `2026-06-09-docstring-google-style-S35` - verify docs
+- `2026-06-09-docstring-google-style-S350` - verify docs
+- `2026-06-09-docstring-google-style-S351` - verify docs
+- `2026-06-09-docstring-google-style-S352` - verify docs
+- `2026-06-09-docstring-google-style-S353` - verify docs
+- `2026-06-09-docstring-google-style-S354` - verify docs
+- `2026-06-09-docstring-google-style-S355` - verify docs
+- `2026-06-09-docstring-google-style-S356` - verify docs
+- `2026-06-09-docstring-google-style-S357` - verify docs
+- `2026-06-09-docstring-google-style-S358` - verify docs
+- `2026-06-09-docstring-google-style-S359` - verify docs
+- `2026-06-09-docstring-google-style-S36` - verify docs
+- `2026-06-09-docstring-google-style-S360` - verify docs
+- `2026-06-09-docstring-google-style-S361` - verify docs
+- `2026-06-09-docstring-google-style-S362` - verify docs
+- `2026-06-09-docstring-google-style-S363` - verify docs
+- `2026-06-09-docstring-google-style-S364` - verify docs
+- `2026-06-09-docstring-google-style-S365` - verify docs
+- `2026-06-09-docstring-google-style-S366` - verify docs
+- `2026-06-09-docstring-google-style-S367` - verify docs
+- `2026-06-09-docstring-google-style-S368` - verify docs
+- `2026-06-09-docstring-google-style-S369` - verify docs
+- `2026-06-09-docstring-google-style-S37` - verify docs
+- `2026-06-09-docstring-google-style-S370` - verify docs
+- `2026-06-09-docstring-google-style-S371` - verify docs
+- `2026-06-09-docstring-google-style-S372` - verify docs
+- `2026-06-09-docstring-google-style-S373` - verify docs
+- `2026-06-09-docstring-google-style-S374` - verify docs
+- `2026-06-09-docstring-google-style-S375` - verify docs
+- `2026-06-09-docstring-google-style-S376` - verify docs
+- `2026-06-09-docstring-google-style-S377` - verify docs
+- `2026-06-09-docstring-google-style-S378` - verify docs
+- `2026-06-09-docstring-google-style-S379` - verify docs
+- `2026-06-09-docstring-google-style-S38` - verify docs
+- `2026-06-09-docstring-google-style-S380` - verify docs
+- `2026-06-09-docstring-google-style-S381` - verify docs
+- `2026-06-09-docstring-google-style-S382` - verify docs
+- `2026-06-09-docstring-google-style-S383` - verify docs
+- `2026-06-09-docstring-google-style-S384` - verify docs
+- `2026-06-09-docstring-google-style-S385` - verify docs
+- `2026-06-09-docstring-google-style-S386` - verify docs
+- `2026-06-09-docstring-google-style-S387` - verify docs
+- `2026-06-09-docstring-google-style-S388` - verify docs
+- `2026-06-09-docstring-google-style-S389` - verify docs
+- `2026-06-09-docstring-google-style-S39` - verify docs
+- `2026-06-09-docstring-google-style-S390` - verify docs
+- `2026-06-09-docstring-google-style-S391` - verify docs
+- `2026-06-09-docstring-google-style-S392` - verify docs
+- `2026-06-09-docstring-google-style-S393` - verify docs
+- `2026-06-09-docstring-google-style-S394` - verify docs
+- `2026-06-09-docstring-google-style-S395` - verify docs
+- `2026-06-09-docstring-google-style-S396` - verify docs
+- `2026-06-09-docstring-google-style-S397` - verify docs
+- `2026-06-09-docstring-google-style-S398` - verify docs
+- `2026-06-09-docstring-google-style-S399` - verify docs
+- `2026-06-09-docstring-google-style-S40` - verify docs
+- `2026-06-09-docstring-google-style-S400` - verify docs
+- `2026-06-09-docstring-google-style-S401` - verify docs
+- `2026-06-09-docstring-google-style-S402` - verify docs
+- `2026-06-09-docstring-google-style-S403` - verify docs
+- `2026-06-09-docstring-google-style-S404` - verify docs
+- `2026-06-09-docstring-google-style-S405` - verify docs
+- `2026-06-09-docstring-google-style-S406` - verify docs
+- `2026-06-09-docstring-google-style-S407` - verify docs
+- `2026-06-09-docstring-google-style-S408` - verify docs
+- `2026-06-09-docstring-google-style-S409` - verify docs
+- `2026-06-09-docstring-google-style-S41` - verify docs
+- `2026-06-09-docstring-google-style-S410` - verify docs
+- `2026-06-09-docstring-google-style-S411` - verify docs
+- `2026-06-09-docstring-google-style-S412` - verify docs
+- `2026-06-09-docstring-google-style-S413` - verify docs
+- `2026-06-09-docstring-google-style-S414` - verify docs
+- `2026-06-09-docstring-google-style-S415` - verify docs
+- `2026-06-09-docstring-google-style-S416` - verify docs
+- `2026-06-09-docstring-google-style-S417` - verify docs
+- `2026-06-09-docstring-google-style-S418` - verify docs
+- `2026-06-09-docstring-google-style-S419` - verify docs
+- `2026-06-09-docstring-google-style-S42` - verify docs
+- `2026-06-09-docstring-google-style-S420` - verify docs
+- `2026-06-09-docstring-google-style-S421` - verify docs
+- `2026-06-09-docstring-google-style-S422` - verify docs
+- `2026-06-09-docstring-google-style-S423` - verify docs
+- `2026-06-09-docstring-google-style-S424` - verify docs
+- `2026-06-09-docstring-google-style-S425` - verify docs
+- `2026-06-09-docstring-google-style-S426` - verify docs
+- `2026-06-09-docstring-google-style-S427` - verify docs
+- `2026-06-09-docstring-google-style-S428` - verify docs
+- `2026-06-09-docstring-google-style-S429` - verify docs
+- `2026-06-09-docstring-google-style-S43` - verify docs
+- `2026-06-09-docstring-google-style-S430` - verify docs
+- `2026-06-09-docstring-google-style-S431` - verify docs
+- `2026-06-09-docstring-google-style-S432` - verify docs
+- `2026-06-09-docstring-google-style-S433` - verify docs
+- `2026-06-09-docstring-google-style-S434` - verify docs
+- `2026-06-09-docstring-google-style-S435` - verify docs
+- `2026-06-09-docstring-google-style-S436` - verify docs
+- `2026-06-09-docstring-google-style-S437` - verify docs
+- `2026-06-09-docstring-google-style-S438` - verify docs
+- `2026-06-09-docstring-google-style-S439` - verify docs
+- `2026-06-09-docstring-google-style-S44` - verify docs
+- `2026-06-09-docstring-google-style-S440` - verify docs
+- `2026-06-09-docstring-google-style-S441` - verify docs
+- `2026-06-09-docstring-google-style-S442` - verify docs
+- `2026-06-09-docstring-google-style-S443` - verify docs
+- `2026-06-09-docstring-google-style-S444` - verify docs
+- `2026-06-09-docstring-google-style-S445` - verify docs
+- `2026-06-09-docstring-google-style-S446` - verify docs
+- `2026-06-09-docstring-google-style-S447` - verify docs
+- `2026-06-09-docstring-google-style-S448` - verify docs
+- `2026-06-09-docstring-google-style-S449` - verify docs
+- `2026-06-09-docstring-google-style-S45` - verify docs
+- `2026-06-09-docstring-google-style-S450` - verify docs
+- `2026-06-09-docstring-google-style-S451` - verify docs
+- `2026-06-09-docstring-google-style-S452` - verify docs
+- `2026-06-09-docstring-google-style-S453` - verify docs
+- `2026-06-09-docstring-google-style-S454` - verify docs
+- `2026-06-09-docstring-google-style-S455` - verify docs
+- `2026-06-09-docstring-google-style-S456` - verify docs
+- `2026-06-09-docstring-google-style-S457` - verify docs
+- `2026-06-09-docstring-google-style-S458` - verify docs
+- `2026-06-09-docstring-google-style-S459` - verify docs
+- `2026-06-09-docstring-google-style-S46` - verify docs
+- `2026-06-09-docstring-google-style-S460` - verify docs
+- `2026-06-09-docstring-google-style-S461` - verify docs
+- `2026-06-09-docstring-google-style-S462` - verify docs
+- `2026-06-09-docstring-google-style-S463` - verify docs
+- `2026-06-09-docstring-google-style-S464` - verify docs
+- `2026-06-09-docstring-google-style-S465` - verify docs
+- `2026-06-09-docstring-google-style-S466` - verify docs
+- `2026-06-09-docstring-google-style-S467` - verify docs
+- `2026-06-09-docstring-google-style-S468` - verify docs
+- `2026-06-09-docstring-google-style-S469` - verify docs
+- `2026-06-09-docstring-google-style-S47` - verify docs
+- `2026-06-09-docstring-google-style-S470` - verify docs
+- `2026-06-09-docstring-google-style-S471` - verify docs
+- `2026-06-09-docstring-google-style-S472` - verify docs
+- `2026-06-09-docstring-google-style-S473` - verify docs
+- `2026-06-09-docstring-google-style-S474` - verify docs
+- `2026-06-09-docstring-google-style-S475` - verify docs
+- `2026-06-09-docstring-google-style-S476` - verify docs
+- `2026-06-09-docstring-google-style-S477` - verify docs
+- `2026-06-09-docstring-google-style-S478` - verify docs
+- `2026-06-09-docstring-google-style-S479` - verify docs
+- `2026-06-09-docstring-google-style-S48` - verify docs
+- `2026-06-09-docstring-google-style-S480` - verify docs
+- `2026-06-09-docstring-google-style-S481` - verify docs
+- `2026-06-09-docstring-google-style-S482` - verify docs
+- `2026-06-09-docstring-google-style-S483` - verify docs
+- `2026-06-09-docstring-google-style-S484` - verify docs
+- `2026-06-09-docstring-google-style-S485` - verify docs
+- `2026-06-09-docstring-google-style-S486` - verify docs
+- `2026-06-09-docstring-google-style-S487` - verify docs
+- `2026-06-09-docstring-google-style-S488` - verify docs
+- `2026-06-09-docstring-google-style-S489` - verify docs
+- `2026-06-09-docstring-google-style-S49` - verify docs
+- `2026-06-09-docstring-google-style-S490` - verify docs
+- `2026-06-09-docstring-google-style-S491` - verify docs
+- `2026-06-09-docstring-google-style-S492` - verify docs
+- `2026-06-09-docstring-google-style-S493` - verify docs
+- `2026-06-09-docstring-google-style-S494` - verify docs
+- `2026-06-09-docstring-google-style-S495` - verify docs
+- `2026-06-09-docstring-google-style-S496` - verify docs
+- `2026-06-09-docstring-google-style-S497` - verify docs
+- `2026-06-09-docstring-google-style-S498` - verify docs
+- `2026-06-09-docstring-google-style-S499` - verify docs
+- `2026-06-09-docstring-google-style-S50` - verify docs
+- `2026-06-09-docstring-google-style-S500` - verify docs
+- `2026-06-09-docstring-google-style-S501` - verify docs
+- `2026-06-09-docstring-google-style-S502` - verify docs
+- `2026-06-09-docstring-google-style-S503` - verify docs
+- `2026-06-09-docstring-google-style-S504` - verify docs
+- `2026-06-09-docstring-google-style-S505` - verify docs
+- `2026-06-09-docstring-google-style-S506` - verify docs
+- `2026-06-09-docstring-google-style-S507` - verify docs
+- `2026-06-09-docstring-google-style-S508` - verify docs
+- `2026-06-09-docstring-google-style-S509` - verify docs
+- `2026-06-09-docstring-google-style-S51` - verify docs
+- `2026-06-09-docstring-google-style-S510` - verify docs
+- `2026-06-09-docstring-google-style-S511` - verify docs
+- `2026-06-09-docstring-google-style-S512` - verify docs
+- `2026-06-09-docstring-google-style-S513` - verify docs
+- `2026-06-09-docstring-google-style-S514` - verify docs
+- `2026-06-09-docstring-google-style-S515` - verify docs
+- `2026-06-09-docstring-google-style-S516` - verify docs
+- `2026-06-09-docstring-google-style-S517` - verify docs
+- `2026-06-09-docstring-google-style-S518` - verify docs
+- `2026-06-09-docstring-google-style-S519` - verify docs
+- `2026-06-09-docstring-google-style-S52` - verify docs
+- `2026-06-09-docstring-google-style-S520` - verify docs
+- `2026-06-09-docstring-google-style-S521` - verify docs
+- `2026-06-09-docstring-google-style-S522` - verify docs
+- `2026-06-09-docstring-google-style-S523` - verify docs
+- `2026-06-09-docstring-google-style-S524` - verify docs
+- `2026-06-09-docstring-google-style-S525` - verify docs
+- `2026-06-09-docstring-google-style-S526` - verify docs
+- `2026-06-09-docstring-google-style-S527` - verify docs
+- `2026-06-09-docstring-google-style-S528` - verify docs
+- `2026-06-09-docstring-google-style-S529` - verify docs
+- `2026-06-09-docstring-google-style-S53` - verify docs
+- `2026-06-09-docstring-google-style-S530` - verify docs
+- `2026-06-09-docstring-google-style-S531` - verify docs
+- `2026-06-09-docstring-google-style-S532` - verify docs
+- `2026-06-09-docstring-google-style-S533` - verify docs
+- `2026-06-09-docstring-google-style-S534` - verify docs
+- `2026-06-09-docstring-google-style-S535` - verify docs
+- `2026-06-09-docstring-google-style-S536` - verify docs
+- `2026-06-09-docstring-google-style-S537` - verify docs
+- `2026-06-09-docstring-google-style-S538` - verify docs
+- `2026-06-09-docstring-google-style-S539` - verify docs
+- `2026-06-09-docstring-google-style-S54` - verify docs
+- `2026-06-09-docstring-google-style-S540` - verify docs
+- `2026-06-09-docstring-google-style-S541` - verify docs
+- `2026-06-09-docstring-google-style-S542` - verify docs
+- `2026-06-09-docstring-google-style-S543` - verify docs
+- `2026-06-09-docstring-google-style-S544` - verify docs
+- `2026-06-09-docstring-google-style-S545` - verify docs
+- `2026-06-09-docstring-google-style-S546` - verify docs
+- `2026-06-09-docstring-google-style-S547` - verify docs
+- `2026-06-09-docstring-google-style-S548` - verify docs
+- `2026-06-09-docstring-google-style-S549` - verify docs
+- `2026-06-09-docstring-google-style-S55` - verify docs
+- `2026-06-09-docstring-google-style-S550` - verify docs
+- `2026-06-09-docstring-google-style-S551` - verify docs
+- `2026-06-09-docstring-google-style-S552` - verify docs
+- `2026-06-09-docstring-google-style-S553` - verify docs
+- `2026-06-09-docstring-google-style-S554` - verify docs
+- `2026-06-09-docstring-google-style-S555` - verify docs
+- `2026-06-09-docstring-google-style-S556` - verify docs
+- `2026-06-09-docstring-google-style-S557` - verify docs
+- `2026-06-09-docstring-google-style-S558` - verify docs
+- `2026-06-09-docstring-google-style-S559` - verify docs
+- `2026-06-09-docstring-google-style-S56` - verify docs
+- `2026-06-09-docstring-google-style-S560` - verify docs
+- `2026-06-09-docstring-google-style-S561` - verify docs
+- `2026-06-09-docstring-google-style-S562` - verify docs
+- `2026-06-09-docstring-google-style-S563` - verify docs
+- `2026-06-09-docstring-google-style-S564` - verify docs
+- `2026-06-09-docstring-google-style-S565` - verify docs
+- `2026-06-09-docstring-google-style-S566` - verify docs
+- `2026-06-09-docstring-google-style-S567` - verify docs
+- `2026-06-09-docstring-google-style-S568` - verify docs
+- `2026-06-09-docstring-google-style-S569` - verify docs
+- `2026-06-09-docstring-google-style-S57` - verify docs
+- `2026-06-09-docstring-google-style-S570` - verify docs
+- `2026-06-09-docstring-google-style-S571` - verify docs
+- `2026-06-09-docstring-google-style-S572` - verify docs
+- `2026-06-09-docstring-google-style-S573` - verify docs
+- `2026-06-09-docstring-google-style-S574` - verify docs
+- `2026-06-09-docstring-google-style-S575` - verify docs
+- `2026-06-09-docstring-google-style-S576` - verify docs
+- `2026-06-09-docstring-google-style-S577` - verify docs
+- `2026-06-09-docstring-google-style-S578` - verify docs
+- `2026-06-09-docstring-google-style-S579` - verify docs
+- `2026-06-09-docstring-google-style-S58` - verify docs
+- `2026-06-09-docstring-google-style-S580` - verify docs
+- `2026-06-09-docstring-google-style-S581` - verify docs
+- `2026-06-09-docstring-google-style-S582` - verify docs
+- `2026-06-09-docstring-google-style-S583` - verify docs
+- `2026-06-09-docstring-google-style-S584` - verify docs
+- `2026-06-09-docstring-google-style-S585` - verify docs
+- `2026-06-09-docstring-google-style-S586` - verify docs
+- `2026-06-09-docstring-google-style-S587` - verify docs
+- `2026-06-09-docstring-google-style-S588` - verify docs
+- `2026-06-09-docstring-google-style-S589` - verify docs
+- `2026-06-09-docstring-google-style-S59` - verify docs
+- `2026-06-09-docstring-google-style-S590` - verify docs
+- `2026-06-09-docstring-google-style-S591` - verify docs
+- `2026-06-09-docstring-google-style-S592` - verify docs
+- `2026-06-09-docstring-google-style-S593` - verify docs
+- `2026-06-09-docstring-google-style-S594` - verify docs
+- `2026-06-09-docstring-google-style-S595` - verify docs
+- `2026-06-09-docstring-google-style-S596` - verify docs
+- `2026-06-09-docstring-google-style-S597` - verify docs
+- `2026-06-09-docstring-google-style-S598` - verify docs
+- `2026-06-09-docstring-google-style-S599` - verify docs
+- `2026-06-09-docstring-google-style-S60` - verify docs
+- `2026-06-09-docstring-google-style-S600` - verify docs
+- `2026-06-09-docstring-google-style-S601` - verify docs
+- `2026-06-09-docstring-google-style-S602` - verify docs
+- `2026-06-09-docstring-google-style-S603` - verify docs
+- `2026-06-09-docstring-google-style-S604` - verify docs
+- `2026-06-09-docstring-google-style-S605` - verify docs
+- `2026-06-09-docstring-google-style-S606` - verify docs
+- `2026-06-09-docstring-google-style-S607` - verify docs
+- `2026-06-09-docstring-google-style-S608` - verify docs
+- `2026-06-09-docstring-google-style-S609` - verify docs
+- `2026-06-09-docstring-google-style-S61` - verify docs
+- `2026-06-09-docstring-google-style-S610` - verify docs
+- `2026-06-09-docstring-google-style-S611` - verify docs
+- `2026-06-09-docstring-google-style-S612` - verify docs
+- `2026-06-09-docstring-google-style-S613` - verify docs
+- `2026-06-09-docstring-google-style-S614` - verify docs
+- `2026-06-09-docstring-google-style-S615` - verify docs
+- `2026-06-09-docstring-google-style-S616` - verify docs
+- `2026-06-09-docstring-google-style-S617` - verify docs
+- `2026-06-09-docstring-google-style-S618` - verify docs
+- `2026-06-09-docstring-google-style-S619` - verify docs
+- `2026-06-09-docstring-google-style-S62` - verify docs
+- `2026-06-09-docstring-google-style-S620` - verify docs
+- `2026-06-09-docstring-google-style-S621` - verify docs
+- `2026-06-09-docstring-google-style-S622` - verify docs
+- `2026-06-09-docstring-google-style-S623` - verify docs
+- `2026-06-09-docstring-google-style-S624` - verify docs
+- `2026-06-09-docstring-google-style-S625` - verify docs
+- `2026-06-09-docstring-google-style-S626` - verify docs
+- `2026-06-09-docstring-google-style-S627` - verify docs
+- `2026-06-09-docstring-google-style-S628` - verify docs
+- `2026-06-09-docstring-google-style-S629` - verify docs
+- `2026-06-09-docstring-google-style-S63` - verify docs
+- `2026-06-09-docstring-google-style-S630` - verify docs
+- `2026-06-09-docstring-google-style-S631` - verify docs
+- `2026-06-09-docstring-google-style-S632` - verify docs
+- `2026-06-09-docstring-google-style-S633` - verify docs
+- `2026-06-09-docstring-google-style-S634` - verify docs
+- `2026-06-09-docstring-google-style-S635` - verify docs
+- `2026-06-09-docstring-google-style-S636` - verify docs
+- `2026-06-09-docstring-google-style-S637` - verify docs
+- `2026-06-09-docstring-google-style-S638` - verify docs
+- `2026-06-09-docstring-google-style-S639` - verify docs
+- `2026-06-09-docstring-google-style-S64` - verify docs
+- `2026-06-09-docstring-google-style-S640` - verify docs
+- `2026-06-09-docstring-google-style-S641` - verify docs
+- `2026-06-09-docstring-google-style-S642` - verify docs
+- `2026-06-09-docstring-google-style-S643` - verify docs
+- `2026-06-09-docstring-google-style-S644` - verify docs
+- `2026-06-09-docstring-google-style-S645` - verify docs
+- `2026-06-09-docstring-google-style-S646` - verify docs
+- `2026-06-09-docstring-google-style-S647` - verify docs
+- `2026-06-09-docstring-google-style-S648` - verify docs
+- `2026-06-09-docstring-google-style-S649` - verify docs
+- `2026-06-09-docstring-google-style-S65` - verify docs
+- `2026-06-09-docstring-google-style-S650` - verify docs
+- `2026-06-09-docstring-google-style-S651` - verify docs
+- `2026-06-09-docstring-google-style-S652` - verify docs
+- `2026-06-09-docstring-google-style-S653` - verify docs
+- `2026-06-09-docstring-google-style-S654` - verify docs
+- `2026-06-09-docstring-google-style-S655` - verify docs
+- `2026-06-09-docstring-google-style-S656` - verify docs
+- `2026-06-09-docstring-google-style-S657` - verify docs
+- `2026-06-09-docstring-google-style-S658` - verify docs
+- `2026-06-09-docstring-google-style-S659` - verify docs
+- `2026-06-09-docstring-google-style-S66` - verify docs
+- `2026-06-09-docstring-google-style-S660` - verify docs
+- `2026-06-09-docstring-google-style-S661` - verify docs
+- `2026-06-09-docstring-google-style-S662` - verify docs
+- `2026-06-09-docstring-google-style-S663` - verify docs
+- `2026-06-09-docstring-google-style-S664` - verify docs
+- `2026-06-09-docstring-google-style-S665` - verify docs
+- `2026-06-09-docstring-google-style-S666` - verify docs
+- `2026-06-09-docstring-google-style-S667` - verify docs
+- `2026-06-09-docstring-google-style-S668` - verify docs
+- `2026-06-09-docstring-google-style-S669` - verify docs
+- `2026-06-09-docstring-google-style-S67` - verify docs
+- `2026-06-09-docstring-google-style-S670` - verify docs
+- `2026-06-09-docstring-google-style-S671` - verify docs
+- `2026-06-09-docstring-google-style-S672` - verify docs
+- `2026-06-09-docstring-google-style-S673` - verify docs
+- `2026-06-09-docstring-google-style-S674` - verify docs
+- `2026-06-09-docstring-google-style-S675` - verify docs
+- `2026-06-09-docstring-google-style-S676` - verify docs
+- `2026-06-09-docstring-google-style-S677` - verify docs
+- `2026-06-09-docstring-google-style-S678` - verify docs
+- `2026-06-09-docstring-google-style-S679` - verify docs
+- `2026-06-09-docstring-google-style-S68` - verify docs
+- `2026-06-09-docstring-google-style-S680` - verify docs
+- `2026-06-09-docstring-google-style-S681` - verify docs
+- `2026-06-09-docstring-google-style-S682` - verify docs
+- `2026-06-09-docstring-google-style-S683` - verify docs
+- `2026-06-09-docstring-google-style-S684` - verify docs
+- `2026-06-09-docstring-google-style-S685` - verify docs
+- `2026-06-09-docstring-google-style-S686` - verify docs
+- `2026-06-09-docstring-google-style-S687` - verify docs
+- `2026-06-09-docstring-google-style-S688` - verify docs
+- `2026-06-09-docstring-google-style-S689` - verify docs
+- `2026-06-09-docstring-google-style-S69` - verify docs
+- `2026-06-09-docstring-google-style-S690` - verify docs
+- `2026-06-09-docstring-google-style-S691` - verify docs
+- `2026-06-09-docstring-google-style-S692` - verify docs
+- `2026-06-09-docstring-google-style-S693` - verify docs
+- `2026-06-09-docstring-google-style-S694` - verify docs
+- `2026-06-09-docstring-google-style-S695` - verify docs
+- `2026-06-09-docstring-google-style-S696` - verify docs
+- `2026-06-09-docstring-google-style-S697` - verify docs
+- `2026-06-09-docstring-google-style-S698` - verify docs
+- `2026-06-09-docstring-google-style-S699` - verify docs
+- `2026-06-09-docstring-google-style-S70` - verify docs
+- `2026-06-09-docstring-google-style-S700` - verify docs
+- `2026-06-09-docstring-google-style-S701` - verify docs
+- `2026-06-09-docstring-google-style-S702` - verify docs
+- `2026-06-09-docstring-google-style-S703` - verify docs
+- `2026-06-09-docstring-google-style-S704` - verify docs
+- `2026-06-09-docstring-google-style-S705` - verify docs
+- `2026-06-09-docstring-google-style-S706` - verify docs
+- `2026-06-09-docstring-google-style-S707` - verify docs
+- `2026-06-09-docstring-google-style-S708` - verify docs
+- `2026-06-09-docstring-google-style-S709` - verify docs
+- `2026-06-09-docstring-google-style-S71` - verify docs
+- `2026-06-09-docstring-google-style-S710` - verify docs
+- `2026-06-09-docstring-google-style-S711` - verify docs
+- `2026-06-09-docstring-google-style-S712` - verify docs
+- `2026-06-09-docstring-google-style-S713` - verify docs
+- `2026-06-09-docstring-google-style-S714` - verify docs
+- `2026-06-09-docstring-google-style-S715` - verify docs
+- `2026-06-09-docstring-google-style-S716` - verify docs
+- `2026-06-09-docstring-google-style-S717` - verify docs
+- `2026-06-09-docstring-google-style-S718` - verify docs
+- `2026-06-09-docstring-google-style-S719` - verify docs
+- `2026-06-09-docstring-google-style-S72` - verify docs
+- `2026-06-09-docstring-google-style-S720` - verify docs
+- `2026-06-09-docstring-google-style-S721` - verify docs
+- `2026-06-09-docstring-google-style-S722` - verify docs
+- `2026-06-09-docstring-google-style-S723` - verify docs
+- `2026-06-09-docstring-google-style-S724` - verify docs
+- `2026-06-09-docstring-google-style-S725` - verify docs
+- `2026-06-09-docstring-google-style-S726` - verify docs
+- `2026-06-09-docstring-google-style-S727` - verify docs
+- `2026-06-09-docstring-google-style-S728` - verify docs
+- `2026-06-09-docstring-google-style-S729` - verify docs
+- `2026-06-09-docstring-google-style-S73` - verify docs
+- `2026-06-09-docstring-google-style-S730` - verify docs
+- `2026-06-09-docstring-google-style-S731` - verify docs
+- `2026-06-09-docstring-google-style-S732` - verify docs
+- `2026-06-09-docstring-google-style-S733` - verify docs
+- `2026-06-09-docstring-google-style-S734` - verify docs
+- `2026-06-09-docstring-google-style-S735` - verify docs
+- `2026-06-09-docstring-google-style-S736` - verify docs
+- `2026-06-09-docstring-google-style-S737` - verify docs
+- `2026-06-09-docstring-google-style-S738` - verify docs
+- `2026-06-09-docstring-google-style-S739` - verify docs
+- `2026-06-09-docstring-google-style-S74` - verify docs
+- `2026-06-09-docstring-google-style-S740` - verify docs
+- `2026-06-09-docstring-google-style-S741` - verify docs
+- `2026-06-09-docstring-google-style-S742` - verify docs
+- `2026-06-09-docstring-google-style-S743` - verify docs
+- `2026-06-09-docstring-google-style-S744` - verify docs
+- `2026-06-09-docstring-google-style-S745` - verify docs
+- `2026-06-09-docstring-google-style-S746` - verify docs
+- `2026-06-09-docstring-google-style-S747` - verify docs
+- `2026-06-09-docstring-google-style-S748` - verify docs
+- `2026-06-09-docstring-google-style-S749` - verify docs
+- `2026-06-09-docstring-google-style-S75` - verify docs
+- `2026-06-09-docstring-google-style-S750` - verify docs
+- `2026-06-09-docstring-google-style-S751` - verify docs
+- `2026-06-09-docstring-google-style-S752` - verify docs
+- `2026-06-09-docstring-google-style-S753` - verify docs
+- `2026-06-09-docstring-google-style-S754` - verify docs
+- `2026-06-09-docstring-google-style-S755` - verify docs
+- `2026-06-09-docstring-google-style-S756` - verify docs
+- `2026-06-09-docstring-google-style-S757` - verify docs
+- `2026-06-09-docstring-google-style-S758` - verify docs
+- `2026-06-09-docstring-google-style-S759` - verify docs
+- `2026-06-09-docstring-google-style-S76` - verify docs
+- `2026-06-09-docstring-google-style-S760` - verify docs
+- `2026-06-09-docstring-google-style-S761` - verify docs
+- `2026-06-09-docstring-google-style-S762` - verify docs
+- `2026-06-09-docstring-google-style-S763` - verify docs
+- `2026-06-09-docstring-google-style-S764` - verify docs
+- `2026-06-09-docstring-google-style-S765` - verify docs
+- `2026-06-09-docstring-google-style-S766` - verify docs
+- `2026-06-09-docstring-google-style-S767` - verify docs
+- `2026-06-09-docstring-google-style-S768` - verify docs
+- `2026-06-09-docstring-google-style-S769` - verify docs
+- `2026-06-09-docstring-google-style-S77` - verify docs
+- `2026-06-09-docstring-google-style-S770` - verify docs
+- `2026-06-09-docstring-google-style-S771` - verify docs
+- `2026-06-09-docstring-google-style-S772` - verify docs
+- `2026-06-09-docstring-google-style-S773` - verify docs
+- `2026-06-09-docstring-google-style-S774` - verify docs
+- `2026-06-09-docstring-google-style-S775` - verify docs
+- `2026-06-09-docstring-google-style-S776` - verify docs
+- `2026-06-09-docstring-google-style-S777` - verify docs
+- `2026-06-09-docstring-google-style-S778` - verify docs
+- `2026-06-09-docstring-google-style-S779` - verify docs
+- `2026-06-09-docstring-google-style-S78` - verify docs
+- `2026-06-09-docstring-google-style-S780` - verify docs
+- `2026-06-09-docstring-google-style-S781` - verify docs
+- `2026-06-09-docstring-google-style-S782` - verify docs
+- `2026-06-09-docstring-google-style-S783` - verify docs
+- `2026-06-09-docstring-google-style-S784` - verify docs
+- `2026-06-09-docstring-google-style-S785` - verify docs
+- `2026-06-09-docstring-google-style-S786` - verify docs
+- `2026-06-09-docstring-google-style-S787` - verify docs
+- `2026-06-09-docstring-google-style-S788` - verify docs
+- `2026-06-09-docstring-google-style-S789` - verify docs
+- `2026-06-09-docstring-google-style-S79` - verify docs
+- `2026-06-09-docstring-google-style-S790` - verify docs
+- `2026-06-09-docstring-google-style-S791` - verify docs
+- `2026-06-09-docstring-google-style-S792` - verify docs
+- `2026-06-09-docstring-google-style-S793` - verify docs
+- `2026-06-09-docstring-google-style-S794` - verify docs
+- `2026-06-09-docstring-google-style-S795` - verify docs
+- `2026-06-09-docstring-google-style-S796` - verify docs
+- `2026-06-09-docstring-google-style-S797` - verify docs
+- `2026-06-09-docstring-google-style-S798` - verify docs
+- `2026-06-09-docstring-google-style-S799` - verify docs
+- `2026-06-09-docstring-google-style-S80` - verify docs
+- `2026-06-09-docstring-google-style-S800` - verify docs
+- `2026-06-09-docstring-google-style-S801` - verify docs
+- `2026-06-09-docstring-google-style-S802` - verify docs
+- `2026-06-09-docstring-google-style-S803` - verify docs
+- `2026-06-09-docstring-google-style-S804` - verify docs
+- `2026-06-09-docstring-google-style-S805` - verify docs
+- `2026-06-09-docstring-google-style-S806` - verify docs
+- `2026-06-09-docstring-google-style-S807` - verify docs
+- `2026-06-09-docstring-google-style-S808` - verify docs
+- `2026-06-09-docstring-google-style-S809` - verify docs
+- `2026-06-09-docstring-google-style-S81` - verify docs
+- `2026-06-09-docstring-google-style-S810` - verify docs
+- `2026-06-09-docstring-google-style-S811` - verify docs
+- `2026-06-09-docstring-google-style-S812` - verify docs
+- `2026-06-09-docstring-google-style-S813` - verify docs
+- `2026-06-09-docstring-google-style-S814` - verify docs
+- `2026-06-09-docstring-google-style-S815` - verify docs
+- `2026-06-09-docstring-google-style-S816` - verify docs
+- `2026-06-09-docstring-google-style-S817` - verify docs
+- `2026-06-09-docstring-google-style-S818` - verify docs
+- `2026-06-09-docstring-google-style-S819` - verify docs
+- `2026-06-09-docstring-google-style-S82` - verify docs
+- `2026-06-09-docstring-google-style-S820` - verify docs
+- `2026-06-09-docstring-google-style-S821` - verify docs
+- `2026-06-09-docstring-google-style-S822` - verify docs
+- `2026-06-09-docstring-google-style-S823` - verify docs
+- `2026-06-09-docstring-google-style-S824` - verify docs
+- `2026-06-09-docstring-google-style-S825` - verify docs
+- `2026-06-09-docstring-google-style-S826` - verify docs
+- `2026-06-09-docstring-google-style-S827` - verify docs
+- `2026-06-09-docstring-google-style-S828` - verify docs
+- `2026-06-09-docstring-google-style-S829` - verify docs
+- `2026-06-09-docstring-google-style-S83` - verify docs
+- `2026-06-09-docstring-google-style-S830` - verify docs
+- `2026-06-09-docstring-google-style-S831` - verify docs
+- `2026-06-09-docstring-google-style-S832` - verify docs
+- `2026-06-09-docstring-google-style-S833` - verify docs
+- `2026-06-09-docstring-google-style-S834` - verify docs
+- `2026-06-09-docstring-google-style-S835` - verify docs
+- `2026-06-09-docstring-google-style-S836` - verify docs
+- `2026-06-09-docstring-google-style-S837` - verify docs
+- `2026-06-09-docstring-google-style-S838` - verify docs
+- `2026-06-09-docstring-google-style-S839` - verify docs
+- `2026-06-09-docstring-google-style-S84` - verify docs
+- `2026-06-09-docstring-google-style-S840` - verify docs
+- `2026-06-09-docstring-google-style-S841` - verify docs
+- `2026-06-09-docstring-google-style-S842` - verify docs
+- `2026-06-09-docstring-google-style-S843` - verify docs
+- `2026-06-09-docstring-google-style-S844` - verify docs
+- `2026-06-09-docstring-google-style-S845` - verify docs
+- `2026-06-09-docstring-google-style-S846` - verify docs
+- `2026-06-09-docstring-google-style-S847` - verify docs
+- `2026-06-09-docstring-google-style-S848` - verify docs
+- `2026-06-09-docstring-google-style-S849` - verify docs
+- `2026-06-09-docstring-google-style-S85` - verify docs
+- `2026-06-09-docstring-google-style-S850` - verify docs
+- `2026-06-09-docstring-google-style-S851` - verify docs
+- `2026-06-09-docstring-google-style-S852` - verify docs
+- `2026-06-09-docstring-google-style-S853` - verify docs
+- `2026-06-09-docstring-google-style-S854` - verify docs
+- `2026-06-09-docstring-google-style-S855` - verify docs
+- `2026-06-09-docstring-google-style-S856` - verify docs
+- `2026-06-09-docstring-google-style-S857` - verify docs
+- `2026-06-09-docstring-google-style-S858` - verify docs
+- `2026-06-09-docstring-google-style-S859` - verify docs
+- `2026-06-09-docstring-google-style-S86` - verify docs
+- `2026-06-09-docstring-google-style-S860` - verify docs
+- `2026-06-09-docstring-google-style-S861` - verify docs
+- `2026-06-09-docstring-google-style-S862` - verify docs
+- `2026-06-09-docstring-google-style-S863` - verify docs
+- `2026-06-09-docstring-google-style-S864` - verify docs
+- `2026-06-09-docstring-google-style-S865` - verify docs
+- `2026-06-09-docstring-google-style-S866` - verify docs
+- `2026-06-09-docstring-google-style-S867` - verify docs
+- `2026-06-09-docstring-google-style-S868` - verify docs
+- `2026-06-09-docstring-google-style-S869` - verify docs
+- `2026-06-09-docstring-google-style-S87` - verify docs
+- `2026-06-09-docstring-google-style-S870` - verify docs
+- `2026-06-09-docstring-google-style-S871` - verify docs
+- `2026-06-09-docstring-google-style-S872` - verify docs
+- `2026-06-09-docstring-google-style-S873` - verify docs
+- `2026-06-09-docstring-google-style-S874` - verify docs
+- `2026-06-09-docstring-google-style-S875` - verify docs
+- `2026-06-09-docstring-google-style-S876` - verify docs
+- `2026-06-09-docstring-google-style-S877` - verify docs
+- `2026-06-09-docstring-google-style-S878` - verify docs
+- `2026-06-09-docstring-google-style-S879` - verify docs
+- `2026-06-09-docstring-google-style-S88` - verify docs
+- `2026-06-09-docstring-google-style-S880` - verify docs
+- `2026-06-09-docstring-google-style-S881` - verify docs
+- `2026-06-09-docstring-google-style-S882` - verify docs
+- `2026-06-09-docstring-google-style-S883` - verify docs
+- `2026-06-09-docstring-google-style-S884` - verify docs
+- `2026-06-09-docstring-google-style-S885` - verify docs
+- `2026-06-09-docstring-google-style-S886` - verify docs
+- `2026-06-09-docstring-google-style-S887` - verify docs
+- `2026-06-09-docstring-google-style-S888` - verify docs
+- `2026-06-09-docstring-google-style-S889` - verify docs
+- `2026-06-09-docstring-google-style-S89` - verify docs
+- `2026-06-09-docstring-google-style-S890` - verify docs
+- `2026-06-09-docstring-google-style-S891` - verify docs
+- `2026-06-09-docstring-google-style-S892` - verify docs
+- `2026-06-09-docstring-google-style-S893` - verify docs
+- `2026-06-09-docstring-google-style-S894` - verify docs
+- `2026-06-09-docstring-google-style-S895` - verify docs
+- `2026-06-09-docstring-google-style-S896` - verify docs
+- `2026-06-09-docstring-google-style-S897` - verify docs
+- `2026-06-09-docstring-google-style-S898` - verify docs
+- `2026-06-09-docstring-google-style-S899` - verify docs
+- `2026-06-09-docstring-google-style-S90` - verify docs
+- `2026-06-09-docstring-google-style-S900` - verify docs
+- `2026-06-09-docstring-google-style-S901` - verify docs
+- `2026-06-09-docstring-google-style-S902` - verify docs
+- `2026-06-09-docstring-google-style-S903` - verify docs
+- `2026-06-09-docstring-google-style-S904` - verify docs
+- `2026-06-09-docstring-google-style-S905` - verify docs
+- `2026-06-09-docstring-google-style-S906` - verify docs
+- `2026-06-09-docstring-google-style-S907` - verify docs
+- `2026-06-09-docstring-google-style-S908` - verify docs
+- `2026-06-09-docstring-google-style-S909` - verify docs
+- `2026-06-09-docstring-google-style-S91` - verify docs
+- `2026-06-09-docstring-google-style-S910` - verify docs
+- `2026-06-09-docstring-google-style-S911` - verify docs
+- `2026-06-09-docstring-google-style-S912` - verify docs
+- `2026-06-09-docstring-google-style-S913` - verify docs
+- `2026-06-09-docstring-google-style-S914` - verify docs
+- `2026-06-09-docstring-google-style-S915` - verify docs
+- `2026-06-09-docstring-google-style-S916` - verify docs
+- `2026-06-09-docstring-google-style-S917` - verify docs
+- `2026-06-09-docstring-google-style-S918` - verify docs
+- `2026-06-09-docstring-google-style-S919` - verify docs
+- `2026-06-09-docstring-google-style-S92` - verify docs
+- `2026-06-09-docstring-google-style-S920` - verify docs
+- `2026-06-09-docstring-google-style-S921` - verify docs
+- `2026-06-09-docstring-google-style-S922` - verify docs
+- `2026-06-09-docstring-google-style-S923` - verify docs
+- `2026-06-09-docstring-google-style-S924` - verify docs
+- `2026-06-09-docstring-google-style-S925` - verify docs
+- `2026-06-09-docstring-google-style-S926` - verify docs
+- `2026-06-09-docstring-google-style-S927` - verify docs
+- `2026-06-09-docstring-google-style-S928` - verify docs
+- `2026-06-09-docstring-google-style-S929` - verify docs
+- `2026-06-09-docstring-google-style-S93` - verify docs
+- `2026-06-09-docstring-google-style-S930` - verify docs
+- `2026-06-09-docstring-google-style-S931` - verify docs
+- `2026-06-09-docstring-google-style-S932` - verify docs
+- `2026-06-09-docstring-google-style-S933` - verify docs
+- `2026-06-09-docstring-google-style-S934` - verify docs
+- `2026-06-09-docstring-google-style-S935` - verify docs
+- `2026-06-09-docstring-google-style-S936` - verify docs
+- `2026-06-09-docstring-google-style-S937` - verify docs
+- `2026-06-09-docstring-google-style-S938` - verify docs
+- `2026-06-09-docstring-google-style-S939` - verify docs
+- `2026-06-09-docstring-google-style-S94` - verify docs
+- `2026-06-09-docstring-google-style-S940` - verify docs
+- `2026-06-09-docstring-google-style-S941` - verify docs
+- `2026-06-09-docstring-google-style-S942` - verify docs
+- `2026-06-09-docstring-google-style-S943` - verify docs
+- `2026-06-09-docstring-google-style-S944` - verify docs
+- `2026-06-09-docstring-google-style-S945` - verify docs
+- `2026-06-09-docstring-google-style-S946` - verify docs
+- `2026-06-09-docstring-google-style-S947` - verify docs
+- `2026-06-09-docstring-google-style-S948` - verify docs
+- `2026-06-09-docstring-google-style-S949` - verify docs
+- `2026-06-09-docstring-google-style-S95` - verify docs
+- `2026-06-09-docstring-google-style-S950` - verify docs
+- `2026-06-09-docstring-google-style-S951` - verify docs
+- `2026-06-09-docstring-google-style-S952` - verify docs
+- `2026-06-09-docstring-google-style-S953` - verify docs
+- `2026-06-09-docstring-google-style-S954` - verify docs
+- `2026-06-09-docstring-google-style-S955` - verify docs
+- `2026-06-09-docstring-google-style-S956` - verify docs
+- `2026-06-09-docstring-google-style-S957` - verify docs
+- `2026-06-09-docstring-google-style-S958` - verify docs
+- `2026-06-09-docstring-google-style-S959` - verify docs
+- `2026-06-09-docstring-google-style-S96` - verify docs
+- `2026-06-09-docstring-google-style-S960` - verify docs
+- `2026-06-09-docstring-google-style-S961` - verify docs
+- `2026-06-09-docstring-google-style-S962` - verify docs
+- `2026-06-09-docstring-google-style-S963` - verify docs
+- `2026-06-09-docstring-google-style-S964` - verify docs
+- `2026-06-09-docstring-google-style-S965` - verify docs
+- `2026-06-09-docstring-google-style-S966` - verify docs
+- `2026-06-09-docstring-google-style-S967` - verify docs
+- `2026-06-09-docstring-google-style-S968` - verify docs
+- `2026-06-09-docstring-google-style-S969` - verify docs
+- `2026-06-09-docstring-google-style-S97` - verify docs
+- `2026-06-09-docstring-google-style-S970` - verify docs
+- `2026-06-09-docstring-google-style-S971` - verify docs
+- `2026-06-09-docstring-google-style-S972` - verify docs
+- `2026-06-09-docstring-google-style-S973` - verify docs
+- `2026-06-09-docstring-google-style-S974` - verify docs
+- `2026-06-09-docstring-google-style-S975` - verify docs
+- `2026-06-09-docstring-google-style-S976` - verify docs
+- `2026-06-09-docstring-google-style-S977` - verify docs
+- `2026-06-09-docstring-google-style-S978` - verify docs
+- `2026-06-09-docstring-google-style-S979` - verify docs
+- `2026-06-09-docstring-google-style-S98` - verify docs
+- `2026-06-09-docstring-google-style-S980` - verify docs
+- `2026-06-09-docstring-google-style-S981` - verify docs
+- `2026-06-09-docstring-google-style-S982` - verify docs
+- `2026-06-09-docstring-google-style-S983` - verify docs
+- `2026-06-09-docstring-google-style-S984` - verify docs
+- `2026-06-09-docstring-google-style-S985` - verify docs
+- `2026-06-09-docstring-google-style-S986` - verify docs
+- `2026-06-09-docstring-google-style-S987` - verify docs
+- `2026-06-09-docstring-google-style-S988` - verify docs
+- `2026-06-09-docstring-google-style-S989` - verify docs
+- `2026-06-09-docstring-google-style-S99` - verify docs
+- `2026-06-09-docstring-google-style-S990` - verify docs
+- `2026-06-09-docstring-google-style-S991` - verify docs
+- `2026-06-09-docstring-google-style-S992` - verify docs
+- `2026-06-09-docstring-google-style-S993` - verify docs
+- `2026-06-09-docstring-google-style-S994` - verify docs
+
+### plan
+
+- `2026-06-09-docstring-google-style-plan` - `docstring-google-style` `Enforce Google Style Docstrings` plan
+
+### research
+
+- `2026-06-09-docstring-google-style-research` - `docstring-google-style` research: investigation backing the decision

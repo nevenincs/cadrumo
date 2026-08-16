@@ -1,0 +1,32 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#modelo-200-base-determination'
+date: '2026-08-16'
+modified: '2026-08-16'
+body_schema: 'body-v1'
+body_hash: 'sha256:1ab81df5baa40334574711bbda625b21e58752f1a4689ae84d0ddeccc8ee73b0'
+related:
+  - '[[2026-06-02-modelo-200-base-determination-adr]]'
+  - '[[2026-06-02-modelo-200-base-determination-reference]]'
+  - '[[2026-06-04-modelo-200-base-determination-research]]'
+---
+
+# `modelo-200-base-determination` feature index
+
+Auto-generated index of all documents tagged with `#modelo-200-base-determination`.
+
+## Documents
+
+### adr
+
+- `2026-06-02-modelo-200-base-determination-adr` - `modelo-200-base-determination` adr: `Modelo 200 IS base-determination soundness: prevent silent zero-base under-declaration` | (**status:** `accepted`)
+
+### reference
+
+- `2026-06-02-modelo-200-base-determination-reference` - `modelo-200-base-determination` reference: `Modelo 200 IS base-determination formula spec + registry-structure prerequisite (grounded)`
+
+### research
+
+- `2026-06-04-modelo-200-base-determination-research` - `modelo-200-base-determination` research: `retrospective research grounding`  ## Question  Which existing vault decision records need an explicit research node so schema validation, semantic search, and future developer briefings have a stable evidence path?  ## Findings  This note is a retrospective vault-curation grounding record. It does not introduce a new product behavior, architectural direction, or implementation mandate.  The linked ADR records in frontmatter are the decision sources that lacked an explicit research reference during the 2026-06-04 schema cleanup. The surrounding vault corpus for this feature already held the plan, audit, execution, or prior research trail; this document makes that grounding discoverable through the required research document edge.  The curation pass used semantic vault search and frontmatter linkage review. Body wiki-links are intentionally avoided so the body-link hygiene gate remains clean; authoritative navigation lives in frontmatter.  ## Recommendation  Keep this document as the research bridge for the linked ADR records until a deeper feature-specific research note supersedes it. Any future supersession must update the frontmatter related fields on the affected ADRs and on this document so semantic search points to the current source.
