@@ -4073,6 +4073,16 @@ cli:
         --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
       create_help: Initialize a new active profile.
+      delete:
+        help: Delete a profile and its local state; --yes confirms the deletion
+        name_help: Name of the profile to delete
+        notices:
+          deleted: Profile deleted along with its local state.
+          preflight: 'Preflight only: nothing was deleted. Re-run with --yes to delete.'
+        refusal:
+          active_profile: Cannot delete the active profile. Close the session with
+            'aeat config logout' and try again.
+        yes_help: Explicitly confirm the deletion
       delete_active_cleared: The deleted profile was the active one; the active-profile
         pointer has been cleared. Run aeat config login NAME or aeat config profile
         create NAME to resume work.

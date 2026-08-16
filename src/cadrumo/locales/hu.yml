@@ -4301,6 +4301,17 @@ cli:
         --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
       create_help: Új aktív profil inicializálása.
+      delete:
+        help: Töröl egy profilt és a helyi állapotát; a --yes megerősíti a törlést
+        name_help: A törlendő profil neve
+        notices:
+          deleted: A profil a helyi állapotával együtt törölve.
+          preflight: 'Csak előzetes ellenőrzés: semmi sem lett törölve. Futtassa
+            újra a --yes kapcsolóval a törléshez.'
+        refusal:
+          active_profile: Az aktív profil nem törölhető. Zárd le a munkamenetet az
+            'aeat config logout' paranccsal, majd próbáld újra.
+        yes_help: Kifejezetten megerősíti a törlést
       delete_active_cleared: A törölt profil volt az aktív; az aktív profil mutató
         törölve lett. Futtassa az aeat config login NÉV vagy az aeat config profile
         create NÉV parancsot a folytatáshoz.
