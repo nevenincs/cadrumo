@@ -54,7 +54,9 @@ def test_run_cli_in_process_emits_a_read_only_success_envelope() -> None:
 
 
 def test_dispatch_verb_in_process_reconstructs_the_argv_from_the_schema() -> None:
-    descriptor = next(candidate for candidate in build_tool_descriptors() if candidate.command_key == "registry.inspect")
+    descriptor = next(
+        candidate for candidate in build_tool_descriptors() if candidate.command_key == "registry.inspect"
+    )
     run = dispatch_verb_in_process(descriptor.verb_schema, {}, acquire_timeout_s=30.0)
     assert run is not None
     envelope, is_error = parse_cli_envelope(run)

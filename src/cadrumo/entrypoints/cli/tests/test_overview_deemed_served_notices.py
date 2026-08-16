@@ -87,7 +87,7 @@ def test_plain_notificacion_is_invisible_to_the_kind_keyed_notice() -> None:
     """The reason this notice exists: the pending-post-filing map cannot carry the row.
 
     A deemed-served plain ``notificacion`` reaches
-    :func:`actionable_post_filing_events` (P03.S07 widened it), so the pending
+    :func:`actionable_post_filing_events` (since widened), so the pending
     notice fires -- but its ``kinds`` list and its context map are both keyed on
     ``post_filing_kind``, which the row does not have. Without the dedicated
     notice the operator is told something needs attention and never told what.

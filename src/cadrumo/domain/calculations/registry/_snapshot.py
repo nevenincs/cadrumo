@@ -377,8 +377,7 @@ def _check_snapshot_revision_review_status(
         return
     status = getattr(revision.review_status, "value", revision.review_status)
     raise RegistryValidationError(
-        f"modelo {modelo.id} revision {revision.id} is {status!r}; "
-        "filing-grade snapshot requires a reviewed revision",
+        f"modelo {modelo.id} revision {revision.id} is {status!r}; filing-grade snapshot requires a reviewed revision",
     )
 
 

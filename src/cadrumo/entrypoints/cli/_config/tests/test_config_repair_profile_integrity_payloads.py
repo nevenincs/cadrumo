@@ -60,8 +60,9 @@ def _profile_record_status_payload() -> dict[str, object]:
         "bucket_id": "22222222-2222-4222-8222-222222222222",
         "display_name": "x",
         "registered_bucket": True,
-        "profile_record_present": True,
-        "status": "activo",
+        "profile_record_present": False,
+        "status": "profile_record_unreadable",
+        "error": "StorageDecryptionError",
     }
 
 
@@ -81,7 +82,8 @@ def test_repair_profile_result_projects_profile_record_status_branch() -> None:
     """The inspection branch's ad-hoc status row round-trips typed."""
     result = RepairProfileResult.model_validate(_profile_record_status_payload())
 
-    assert result.status == "activo"
+    assert result.status == "profile_record_unreadable"
+    assert result.error == "StorageDecryptionError"
     assert result.display_name == "x"
     assert result.before is None
 

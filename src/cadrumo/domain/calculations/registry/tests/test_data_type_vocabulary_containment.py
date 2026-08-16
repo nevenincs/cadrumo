@@ -29,6 +29,7 @@ from pydantic import BaseModel
 
 from .._binding_selector_utils import BindingExportDataType
 from .._bindings import _ManualInputDataType
+from .._errors import RegistryValidationError
 from .._schema_exports import ExportFieldDefinition
 from .._schema_formula import ParameterDefinition
 from .._schema_scalars import _REGISTRY_SCALAR_VALUE_TYPES, registry_scalar_value_type
@@ -104,7 +105,7 @@ def test_the_parameter_vocabulary_is_deliberately_not_a_scalar_narrowing() -> No
         "_SCALAR_NARROWINGS rather than leaving it excluded on a stale justification."
     )
     for member in beyond_scalars:
-        with pytest.raises(Exception, match="unsupported registry casilla data type"):
+        with pytest.raises(RegistryValidationError, match="unsupported registry casilla data type"):
             registry_scalar_value_type(member)
 
 

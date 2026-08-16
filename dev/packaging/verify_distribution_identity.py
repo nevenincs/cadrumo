@@ -1109,9 +1109,9 @@ def _mcp_projection(repo_root: Path, runtime_root: Path) -> dict[str, object]:
     ):
         raise ValueError("MCP projection imported Cadrumo from a different repository revision")
     harness_package_file = document.get("harness_package_file")
-    if not isinstance(harness_package_file, str) or not Path(harness_package_file).resolve(
-        strict=True
-    ).is_relative_to(repo_root / _HARNESS_SOURCE_ROOT / _HARNESS_PYTHON_PACKAGE):
+    if not isinstance(harness_package_file, str) or not Path(harness_package_file).resolve(strict=True).is_relative_to(
+        repo_root / _HARNESS_SOURCE_ROOT / _HARNESS_PYTHON_PACKAGE
+    ):
         raise ValueError("MCP projection imported the Cadrumo harness from a different repository revision")
     return document
 

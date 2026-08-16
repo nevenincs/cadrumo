@@ -595,9 +595,7 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
         encoding="utf-8",
     )
 
-    imported = _invoke(
-        ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "n26"]
-    )
+    imported = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "n26"])
 
     assert imported.exit_code == 0, imported.output
     import_envelope = json.loads(_json_output(imported))

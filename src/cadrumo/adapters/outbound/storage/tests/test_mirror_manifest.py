@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def test_remote_mirror_manifest_persists_ciphertext_hashes_and_revision_watermark(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="remote-mirror-manifest") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="6587f6e5-3b48-4347-ad19-2f0b297786e8") as profile:
         repo = profile.repository
         namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
         namespace = namespace_definition.namespace
@@ -473,7 +473,7 @@ def _single_object_manifest(tmp_path: Path) -> RemoteMirrorNamespaceManifest:
 
 
 def _single_object_manifest_with_payload(tmp_path: Path) -> tuple[RemoteMirrorNamespaceManifest, bytes]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="remote-mirror-single") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="aef4bd4b-2a08-454e-9e46-ad76d1928ac7") as profile:
         repo = profile.repository
         namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
         namespace = namespace_definition.namespace
@@ -508,7 +508,7 @@ def _rewrite_local_provider_sidecar(
 
 
 def _overwrite_manifest_pair(tmp_path: Path) -> tuple[RemoteMirrorNamespaceManifest, RemoteMirrorNamespaceManifest]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="remote-mirror-overwrite") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="84dd214d-8ad6-4e98-81b4-435834004934") as profile:
         repo = profile.repository
         namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
         namespace = namespace_definition.namespace
@@ -536,7 +536,7 @@ def _overwrite_manifest_pair(tmp_path: Path) -> tuple[RemoteMirrorNamespaceManif
 def _three_revision_manifest_pair(
     tmp_path: Path,
 ) -> tuple[RemoteMirrorNamespaceManifest, RemoteMirrorNamespaceManifest]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="remote-mirror-three-revisions") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="17368978-486e-4c41-9793-75a649bafb8b") as profile:
         repo = profile.repository
         namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
         namespace = namespace_definition.namespace

@@ -32,9 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _gate(revision: ModeloRevision, modelo_id: str = "303") -> list[str]:
     """Run the export-exemption gate over one revision and return its failures."""
-    return validate_export_exemption_declarations(
-        prefix="modelo T revision R", modelo_id=modelo_id, revision=revision
-    )
+    return validate_export_exemption_declarations(prefix="modelo T revision R", modelo_id=modelo_id, revision=revision)
 
 
 def _fixed_width_revisions(

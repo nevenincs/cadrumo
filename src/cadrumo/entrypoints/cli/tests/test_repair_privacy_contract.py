@@ -326,15 +326,15 @@ def test_config_repair_bootstrap_surfaces_do_not_require_active_profile() -> Non
 def _create_operator_profile() -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.tax_id": '00000000T',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Privacy',
-            "activities.description": 'design',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
-            "irpf.estimation_regime": 'directa_normal',
-            "iva.regime": 'GENERAL',
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.tax_id": "00000000T",
+            "identity.name": "Operator",
+            "identity.surnames": "Privacy",
+            "activities.description": "design",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "irpf.estimation_regime": "directa_normal",
+            "iva.regime": "GENERAL",
         },
     )

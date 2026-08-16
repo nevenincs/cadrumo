@@ -75,9 +75,7 @@ def test_the_assessment_names_the_records_the_flag_only_counts(tmp_path: Path) -
     # The operator can act on this: the whole set clears at the latest of the
     # per-record boundaries, which must lie beyond the assessment instant.
     assert assessment.latest_safe_erase_date > _NOW
-    assert assessment.latest_safe_erase_date == max(
-        record.earliest_safe_erase_date for record in assessment.retained
-    )
+    assert assessment.latest_safe_erase_date == max(record.earliest_safe_erase_date for record in assessment.retained)
 
 
 def test_the_detailed_and_gate_views_cannot_disagree(tmp_path: Path) -> None:

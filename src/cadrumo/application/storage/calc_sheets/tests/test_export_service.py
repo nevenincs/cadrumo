@@ -67,7 +67,7 @@ def test_a_failed_apply_still_persists_a_sync_run_record_and_reraises(tmp_path: 
     """
     plan = _m130_plan()
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="calc-sheets-export-failure") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f5d2c9d7-2ca0-4036-80c1-a9880b662b18") as profile:
         repository = SyncRunRecordRepository()
 
         with pytest.raises(OutboundStorageValidationError):

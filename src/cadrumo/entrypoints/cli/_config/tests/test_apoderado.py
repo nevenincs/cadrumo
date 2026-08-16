@@ -79,14 +79,14 @@ def test_apoderado_happy_path_against_active_profile(profile_storage_root: Path)
     from .....adapters.persistence.storage.sql.engine import dispose_engine
 
     register_cli_profile(
-        label='myco',
+        label="myco",
         facts={
-            "identity.tax_id": '12345678Z',
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.name": 'MyCo',
-            "identity.surnames": 'Operator',
-            "activities.description": 'design',
-            "iva.regime": 'GENERAL',
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "MyCo",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
         },
     )
 
@@ -149,14 +149,14 @@ def test_apoderado_happy_path_against_active_profile(profile_storage_root: Path)
 def _create_active_profile() -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='myco',
+        label="myco",
         facts={
-            "identity.tax_id": '12345678Z',
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.name": 'MyCo',
-            "identity.surnames": 'Operator',
-            "activities.description": 'design',
-            "iva.regime": 'GENERAL',
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "MyCo",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
         },
     )
 
@@ -231,14 +231,14 @@ def test_apoderado_configure_leaves_profile_facts_untouched(profile_storage_root
     from .._profile_readiness import _read_profile_record
 
     register_cli_profile(
-        label='myco',
+        label="myco",
         facts={
-            "identity.tax_id": '12345678Z',
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.name": 'MyCo',
-            "identity.surnames": 'Operator',
-            "activities.description": 'design',
-            "iva.regime": 'GENERAL',
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "MyCo",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
         },
     )
 

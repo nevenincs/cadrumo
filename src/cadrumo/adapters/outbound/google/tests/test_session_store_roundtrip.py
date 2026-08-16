@@ -74,7 +74,7 @@ def test_credential_source_selection_defaults_to_none_when_never_persisted(tmp_p
     missing record is a valid, expected state — never an error.
     """
     profile = "operator-no-selection"
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-session-no-selection"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1bf98a9a-4323-4b10-bcfb-55ba9fd13edc"):
         assert _session_store.load_credential_source_selection(profile) is None
 
 
@@ -82,7 +82,7 @@ def test_credential_source_selection_oauth_desktop_roundtrips(tmp_path: Path) ->
     profile = "operator-oauth-selection"
     selection = GoogleCredentialSourceSelection()
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-session-oauth-selection"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="76d277c7-f5f3-4d6a-923e-c8daeeabd36c"):
         _session_store.save_credential_source_selection(profile, selection)
 
         reloaded = _session_store.load_credential_source_selection(profile)
@@ -114,7 +114,7 @@ def test_credential_source_selection_impersonation_roundtrips_without_a_secret(t
         impersonation=config,
     )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-session-impersonation-selection"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="6e5dd772-a3e1-41d8-b135-7fe8182f9eae"):
         _session_store.save_credential_source_selection(profile, selection)
 
         reloaded = _session_store.load_credential_source_selection(profile)

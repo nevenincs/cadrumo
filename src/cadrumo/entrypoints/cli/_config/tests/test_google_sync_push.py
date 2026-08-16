@@ -65,7 +65,7 @@ def test_google_sync_probe_payload_refuses_unknown_provider_kind(provider_kind: 
 
 
 def test_google_sync_push_persists_manifest_matching_uploaded_ciphertext_objects(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-sync-push") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="003a1085-09ba-4bb7-b507-792b9aa74379") as profile:
         repository = profile.repository
         plaintext_by_key = {
             "google_oauth_client": b"push-path-client-secret-plaintext",
@@ -123,7 +123,7 @@ def test_google_sync_push_persists_manifest_matching_uploaded_ciphertext_objects
 
 
 def test_google_sync_push_reports_partial_upload_before_repairing_remote_manifest(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-sync-partial-upload") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="91284810-5de7-4586-8555-673b5384139b") as profile:
         repository = profile.repository
         namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
         namespace = namespace_definition.namespace
@@ -165,7 +165,7 @@ def test_google_sync_push_reports_partial_upload_before_repairing_remote_manifes
 
 
 def test_google_sync_push_reports_partial_download_before_repairing_remote_object(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-sync-partial-download") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="17252893-3010-4568-acfe-927ca590bc5b") as profile:
         repository = profile.repository
         namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
         namespace = namespace_definition.namespace
@@ -199,7 +199,7 @@ def test_google_sync_push_reports_partial_download_before_repairing_remote_objec
 
 
 def test_google_sync_push_reports_stale_remote_manifest_before_repairing_it(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-sync-stale-remote") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="448f713f-d59d-4478-a993-738d4e6e1521") as profile:
         repository = profile.repository
         namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
         namespace = namespace_definition.namespace
@@ -254,7 +254,7 @@ def test_google_sync_push_reports_stale_remote_manifest_before_repairing_it(tmp_
 
 
 def test_google_sync_push_refuses_remote_revision_conflict_before_overwriting_object(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-sync-revision-conflict") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="884c2da3-26bb-4317-89fb-8e6ab3d539b8") as profile:
         repository = profile.repository
         namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
         namespace = namespace_definition.namespace
@@ -349,7 +349,7 @@ def test_google_sync_push_blocks_a_namespace_whose_raw_row_lineage_recomputes_wr
     cleanly -- proving the block is scoped to the compromised namespace, not
     the whole preflight.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-sync-tampered-lineage") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="24b3f89e-6752-49e1-b93b-b25e81e9294a") as profile:
         repository = profile.repository
         tampered_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
         tampered_namespace = tampered_definition.namespace
@@ -413,7 +413,7 @@ def test_google_sync_push_blocks_a_namespace_whose_raw_row_lineage_recomputes_wr
 
 
 def test_google_sync_push_dry_run_counts_every_row_as_skipped_without_writing(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-sync-dry-run") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="9ce8825c-9620-4ebb-8097-63cf14fc514d") as profile:
         repository = profile.repository
         plaintext_by_key = {
             "google_oauth_client": b"dry-run-client-secret-plaintext",
@@ -456,7 +456,7 @@ def test_google_sync_push_dry_run_counts_every_row_as_skipped_without_writing(tm
 
 
 def test_google_sync_push_namespace_filter_restricts_pushed_rows(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-sync-namespace-filter") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="5a71781d-e8a9-4e01-8c5a-19442d44b402") as profile:
         repository = profile.repository
         plaintext_by_key = {
             "google_oauth_client": b"filter-client-secret-plaintext",
@@ -506,7 +506,7 @@ def test_google_sync_push_rolls_back_prior_objects_when_a_later_upload_fails(tmp
     scenario -- and the rollback must delete it: the namespace's manifest is
     withheld, and the provider must not retain any orphaned object for it.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-sync-partial-failure") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="db940db3-b347-4518-861b-e67c8dee653b") as profile:
         repository = profile.repository
         namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
         namespace = namespace_definition.namespace
@@ -558,7 +558,7 @@ def test_google_sync_push_rolls_back_prior_objects_when_a_later_upload_fails(tmp
 
 
 def test_google_sync_push_refuses_non_dry_run_limit_because_manifest_would_be_partial(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-sync-limit") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bf1dc908-d5a4-4384-8ff0-0e54b3be3e8b") as profile:
         provider = LocalFileSystemProvider(tmp_path / "mirror")
 
         with pytest.raises(OutboundStorageValidationError, match="--limit") as raised:

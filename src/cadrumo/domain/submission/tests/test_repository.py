@@ -32,6 +32,9 @@ from .. import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+#: The capsule authority resolves a bucket id as a UUID, so a readable slug
+#: cannot stand in for one. Matches the constant sibling suites declare.
+_BUCKET_ID = "3f2a91c4-6d5e-4a7b-9c81-0e4d2b6f8a13"
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 15, 30, 0, tzinfo=UTC)
 
@@ -76,7 +79,7 @@ def _save_two_filings(repo: SubmissionRepository) -> tuple[ModeloPresentado, Mod
 
 @pytest.fixture(autouse=True)
 def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="submission-test") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile
 
 

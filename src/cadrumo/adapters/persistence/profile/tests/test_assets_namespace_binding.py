@@ -71,7 +71,7 @@ def _asset() -> AssetRecord:
 def test_assets_and_amortizacion_rows_carry_registry_declared_metadata(tmp_path: Path) -> None:
     """Each assets ledger row persists the metadata its OWN registry def declares."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-ns-binding") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="07ad11f2-1869-491d-b4d4-9a86bc7e450a") as profile:
         asset = _asset()
         AssetsLedgerRepository().save(AssetsLedgerDocument(assets=(asset,)))
         AmortizacionLedgerRepository().save(

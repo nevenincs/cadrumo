@@ -116,7 +116,7 @@ def _activity_row(*, activity_id: str, slot: int) -> ProrrataActivityRow:
 
 def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
     """ProrrataRegister roundtrips through encrypted SQL, field-for-field."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-rt-survives"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="49a879c9-dab5-473a-a049-15d04aa31404"):
         repo = ProrrataRegisterRepository()
         original = _populated_register()
         repo.save(original)
@@ -164,7 +164,7 @@ def test_register_outer_secure_schema_matches_the_v2_document(tmp_path: Path) ->
     from ...storage.crypto import decrypt_secure_object_payload, secure_object_payload_aad
     from ...storage.sql import SecureObjectRow
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-rt-outer-v2") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f9d6d231-3774-48bb-a542-0a4bb1d1f5a6") as profile:
         engine = get_engine(profile.settings)
         ProrrataRegisterRepository().save(_populated_register())
 
@@ -199,7 +199,7 @@ def test_register_outer_v1_row_refuses_without_a_tolerant_read(tmp_path: Path) -
     )
     from ...storage.sql import SecureObjectRow
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-rt-outer-v1-refusal") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="c791265a-e7b5-4dcb-af93-d28e011972ca") as profile:
         engine = get_engine(profile.settings)
         repo = ProrrataRegisterRepository()
         repo.save(_populated_register())
@@ -231,7 +231,7 @@ def test_register_upsert_replaces_entry_by_key(tmp_path: Path) -> None:
     """Declaring an entry for an existing (ejercicio, sector) key replaces it in place."""
     from ..prorrata_register import declare_prorrata_entry
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-rt-upsert"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="789a648c-8348-42bc-b1b4-425b2de7d703"):
         first = ProrrataRegisterEntry(
             ejercicio=2024,
             regime=ProrrataRegisterRegime.GENERAL,
@@ -254,7 +254,7 @@ def test_register_upsert_replaces_entry_by_key(tmp_path: Path) -> None:
 
 def test_register_upserts_retain_encrypted_activity_rows(tmp_path: Path) -> None:
     """All singleton mutations retain the canonical per-activity row substrate."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-rt-activity-row"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="474448e1-88e9-469a-bba5-b1fc9f007dbd"):
         repo = ProrrataRegisterRepository()
         retail = _activity_row(activity_id="retail", slot=1)
         repo.upsert_activity_row(retail)
@@ -284,7 +284,7 @@ def test_register_upserts_retain_encrypted_activity_rows(tmp_path: Path) -> None
 
 def test_register_secure_object_write_keeps_a_conflicted_batch_atomic(tmp_path: Path) -> None:
     """The prorrata write remains composable in the real secure-object transaction."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-rt-transaction") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="a757428a-41a7-4da8-8018-28d3190a434a") as profile:
         repository = ProrrataRegisterRepository()
         write = repository.to_secure_object_write(_populated_register())
         conflicting = write.model_copy(update={"expected_revision_id": ABSENT_SECURE_OBJECT_REVISION_ID})
@@ -308,7 +308,7 @@ def test_register_corrupted_percentage_surfaces_at_load(tmp_path: Path) -> None:
     from ...storage import PROFILE_PRORRATA_REGISTER_NAMESPACE
     from ...storage.sql import SecureObjectRow
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-rt-corrupt") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="519ac791-622a-4e61-b3c0-84d953c7cfee") as profile:
         engine = get_engine(profile.settings)
         repo = ProrrataRegisterRepository()
         original = _populated_register()
@@ -343,7 +343,7 @@ def test_register_missing_regime_surfaces_at_load(tmp_path: Path) -> None:
     from ...storage import PROFILE_PRORRATA_REGISTER_NAMESPACE
     from ...storage.sql import SecureObjectRow
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-rt-missing") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="3db70f92-5cec-4355-a65b-62dc53f15ada") as profile:
         engine = get_engine(profile.settings)
         repo = ProrrataRegisterRepository()
         repo.save(_populated_register())
@@ -370,7 +370,7 @@ def test_register_v1_document_refuses_at_encrypted_load(tmp_path: Path) -> None:
     from ...storage import PROFILE_PRORRATA_REGISTER_NAMESPACE
     from ...storage.sql import SecureObjectRow
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-rt-v1-refusal") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="91ee6d98-f877-42b0-8e13-c783a6209b37") as profile:
         engine = get_engine(profile.settings)
         repo = ProrrataRegisterRepository()
         repo.save(_populated_register())

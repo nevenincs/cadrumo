@@ -82,7 +82,7 @@ def aggregate_iva_ledger_observations_from_repositories(
     period: Period,
     transaction_repository: TransactionCatalogueRepository,
 ):
-    """Exercise the injected-repository path with its explicit S54 asset authority."""
+    """Exercise the injected-repository path with its explicit asset authority."""
     return _aggregate_from_repositories(
         bucket_id=bucket_id,
         period=period,

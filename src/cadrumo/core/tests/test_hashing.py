@@ -74,7 +74,7 @@ def test_bounded_canonical_json_bytes_measures_encoded_bytes_not_characters() ->
     assert len(encoded) > scalar_count
 
     assert bounded_canonical_json_bytes(payload, maximum_bytes=len(encoded), subject="perfil") == encoded
-    with pytest.raises(ValueError, match="perfil exceeds its .*-byte canonical limit"):
+    with pytest.raises(ValueError, match=r"perfil exceeds its .*-byte canonical limit"):
         bounded_canonical_json_bytes(payload, maximum_bytes=len(encoded) - 1, subject="perfil")
 
 

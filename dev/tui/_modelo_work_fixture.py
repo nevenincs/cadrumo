@@ -103,7 +103,6 @@ def harness_modelo_work_storage() -> Iterator[str]:
             message = "the harness modelo-work-wizard profile did not activate after creation"
             raise RuntimeError(message)
 
-
         with open_test_profile_session(bucket_id):
             yield bucket_id
 

@@ -464,7 +464,7 @@ def test_calculation_revision_catalogue_unsupported_storage_version_is_localized
 def test_pre_s58_evidence_less_catalogue_is_rejected_at_encrypted_load(
     tmp_path: Path,
 ) -> None:
-    """The V2 cutover admits no evidence-less pre-S58 calculation catalogue."""
+    """The V2 cutover admits no evidence-less legacy calculation catalogue."""
 
     from ...storage import Envelope
 

@@ -56,7 +56,6 @@ _WORKSPACE_HASH = "d" * 64
 _CAPTURED_AT = "2026-07-04T00:00:00+00:00"
 
 
-
 def _payload() -> TelemetryEventPayload:
     return build_telemetry_payload(
         workspace_hash=_WORKSPACE_HASH,
@@ -66,6 +65,7 @@ def _payload() -> TelemetryEventPayload:
         succeeded=True,
         captured_at=_CAPTURED_AT,
     )
+
 
 def test_no_configured_endpoint_never_sends() -> None:
     """A sink built without an endpoint is permanently inert."""

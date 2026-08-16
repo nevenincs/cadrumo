@@ -84,7 +84,7 @@ def test_get_storage_provider_local_uses_active_profile_bucket_root(tmp_path: Pa
     payload = b"factory payload"
     object_key_hmac = "a" * 64
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-local") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="38b1affb-eebd-4a49-b6b8-5932de5a8e17") as profile:
         with override_settings(cadrumo_storage_provider_kind=ProviderKind.LOCAL_FILESYSTEM.value):
             provider = get_storage_provider()
 
@@ -134,7 +134,7 @@ def test_factory_rejects_unknown_provider_kind_with_localized_context() -> None:
 
 def test_factory_rejects_google_drive_without_root_before_loading_credentials(tmp_path: Path) -> None:
     with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-drive-missing-root"),
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="a5106137-0c0d-4f8f-9c58-606f5bd06dc8"),
         override_settings(
             cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
             cadrumo_google_drive_root_folder_id="",
@@ -145,11 +145,11 @@ def test_factory_rejects_google_drive_without_root_before_loading_credentials(tm
 
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.factory.errors.drive_root_missing"
-    assert exc.context == {"profile": "factory-drive-missing-root"}
+    assert exc.context == {"profile": "a5106137-0c0d-4f8f-9c58-606f5bd06dc8"}
 
 
 def test_drive_root_whitespace_override_uses_persisted_profile_configuration(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-drive-persisted-root") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="609a333e-f1cd-4f0e-a2d8-39f0d76e233d") as profile:
         save_drive_config(profile.bucket_id, DriveConfig(root_folder_id="persisted-drive-root"))
 
         with override_settings(cadrumo_google_drive_root_folder_id="   ") as settings:
@@ -160,7 +160,7 @@ def test_drive_root_whitespace_override_uses_persisted_profile_configuration(tmp
 
 def test_factory_rejects_google_drive_without_registered_client(tmp_path: Path) -> None:
     with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-drive-missing-client"),
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="2e31b7b3-12da-4ae7-abf1-d1fe71bd81d4"),
         override_settings(
             cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
             cadrumo_google_drive_root_folder_id="drive-root",
@@ -171,12 +171,12 @@ def test_factory_rejects_google_drive_without_registered_client(tmp_path: Path) 
 
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.factory.errors.google_client_missing"
-    assert exc.context == {"profile": "factory-drive-missing-client"}
+    assert exc.context == {"profile": "2e31b7b3-12da-4ae7-abf1-d1fe71bd81d4"}
 
 
 def test_factory_rejects_google_drive_without_persisted_token(tmp_path: Path) -> None:
     with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-drive-missing-token"),
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="893af7b9-9656-466c-9d8a-5d638b189a20"),
         override_settings(
             cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
             cadrumo_google_drive_root_folder_id="drive-root",
@@ -184,7 +184,7 @@ def test_factory_rejects_google_drive_without_persisted_token(tmp_path: Path) ->
         pytest.raises(OutboundStorageValidationError) as raised,
     ):
         save_client(
-            "factory-drive-missing-token",
+            "893af7b9-9656-466c-9d8a-5d638b189a20",
             OAuthClient(
                 client_id="desktop-client.apps.googleusercontent.com",
                 client_secret="client-secret",
@@ -199,7 +199,7 @@ def test_factory_rejects_google_drive_without_persisted_token(tmp_path: Path) ->
 
     exc = raised.value
     assert exc.translated_message == "adapters.outbound.storage.factory.errors.google_token_missing"
-    assert exc.context == {"profile": "factory-drive-missing-token"}
+    assert exc.context == {"profile": "893af7b9-9656-466c-9d8a-5d638b189a20"}
 
 
 # ---------------------------------------------------------------------------
@@ -218,9 +218,9 @@ def test_build_google_credentials_with_no_persisted_selection_defaults_to_oauth(
     `google_client_missing` refusal (unchanged translated_message and
     context) still fires when no OAuth client is registered.
     """
-    profile = "factory-dispatch-default-oauth"
+    profile = "21a18385-cc88-40ff-a877-43072fa35ca9"
     with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-dispatch-default-oauth"),
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="21a18385-cc88-40ff-a877-43072fa35ca9"),
         pytest.raises(OutboundStorageValidationError) as raised,
     ):
         build_google_credentials(profile=profile)
@@ -232,9 +232,9 @@ def test_build_google_credentials_with_no_persisted_selection_defaults_to_oauth(
 
 def test_build_google_credentials_with_oauth_desktop_selection_uses_oauth_path(tmp_path: Path) -> None:
     """An explicitly-persisted OAUTH_DESKTOP selection also dispatches to the OAuth path."""
-    profile = "factory-dispatch-explicit-oauth"
+    profile = "5ebf687e-3e08-46f4-b7b1-732ca5bc80be"
     with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-dispatch-explicit-oauth"),
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="5ebf687e-3e08-46f4-b7b1-732ca5bc80be"),
         pytest.raises(OutboundStorageValidationError) as raised,
     ):
         save_credential_source_selection(profile, GoogleCredentialSourceSelection())
@@ -258,7 +258,7 @@ def test_build_google_credentials_with_impersonation_selection_dispatches_to_imp
     impersonation resolver rather than the OAuth-Desktop path (which would
     instead raise `google_client_missing`).
     """
-    profile = "factory-dispatch-impersonation"
+    profile = "ee1d3218-58c9-40d2-bfbd-5050a82ee092"
     selection = GoogleCredentialSourceSelection(
         kind=GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION,
         impersonation=GoogleImpersonationConfig(target_principal=_TARGET_PRINCIPAL),
@@ -266,7 +266,7 @@ def test_build_google_credentials_with_impersonation_selection_dispatches_to_imp
 
     with (
         scoped_env_var("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json"),
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-dispatch-impersonation"),
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="ee1d3218-58c9-40d2-bfbd-5050a82ee092"),
         pytest.raises(GoogleAuthAdcUnavailableError) as raised,
     ):
         save_credential_source_selection(profile, selection)
@@ -285,7 +285,7 @@ def test_get_storage_provider_google_drive_dispatches_impersonation_selection_th
     real CLI/application callers use, not only the narrower unit under
     test above.
     """
-    profile = "factory-full-dispatch-impersonation"
+    profile = "f09cea6b-e8d3-458e-be9a-9db795214fe2"
     selection = GoogleCredentialSourceSelection(
         kind=GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION,
         impersonation=GoogleImpersonationConfig(target_principal=_TARGET_PRINCIPAL),
@@ -293,7 +293,7 @@ def test_get_storage_provider_google_drive_dispatches_impersonation_selection_th
 
     with (
         scoped_env_var("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/path/does-not-exist.json"),
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-full-dispatch-impersonation"),
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f09cea6b-e8d3-458e-be9a-9db795214fe2"),
         override_settings(
             cadrumo_storage_provider_kind=ProviderKind.GOOGLE_DRIVE.value,
             cadrumo_google_drive_root_folder_id="drive-root",

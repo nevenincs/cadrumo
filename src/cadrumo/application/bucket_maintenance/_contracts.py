@@ -14,8 +14,7 @@ from __future__ import annotations
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
-from ...core.identity import BucketId, ContentDigest
-from ...core.time import UtcInstant
+from ...core.identity import BucketId
 from ...domain.retention import RetentionFloorAssessment
 from ...domain.user_profile import ProfileSetupState
 from .._bucket_deletion_contracts import BucketDeletionFingerprint

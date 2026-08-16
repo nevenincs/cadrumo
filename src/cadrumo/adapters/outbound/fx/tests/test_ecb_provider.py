@@ -90,10 +90,17 @@ def test_observation_url_refuses_malformed_currency_before_constructing_the_ecb_
         _observation_url(currency, date(2025, 3, 1), date(2025, 3, 14))
 
 
+def _transport_that_must_not_be_reached(url: str) -> str:
+    """A :data:`RateFetch` proving the currency refusal precedes any transport call."""
+    raise AssertionError(f"provider issued a request for a refused currency: {url!r}")
+
+
 @pytest.mark.parametrize("currency", ("USD/../../EVIL", "USD?evil=1"))
 def test_provider_refuses_path_containing_currency_before_lookup(currency: str) -> None:
+    provider = EcbReferenceRateProvider(fetch=_transport_that_must_not_be_reached)
+
     with pytest.raises(ExchangeRateProviderError, match="three-letter ISO 4217 code"):
-        EcbReferenceRateProvider().get_eur_rate(currency, date(2025, 3, 14))
+        provider.get_eur_rate(currency, date(2025, 3, 14))
 
 
 def test_resolved_rates_are_memoized_per_currency_and_date() -> None:

@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def test_seed_iva_compensation_persists_available_end_amount(tmp_path: Path) -> None:
     """seed_iva_compensation_period stores state so prefill resolves the balance."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="58072ef9-4b9f-42b3-9f46-38f4239b1510"):
         state = seed_iva_compensation_period(
             taxpayer_nif=_NIF,
             period=Period.from_year_and_code(2024, "4T"),
@@ -49,7 +49,7 @@ def test_seed_iva_compensation_persists_available_end_amount(tmp_path: Path) -> 
 
 def test_seeded_state_surfaces_as_a_wallet_lot(tmp_path: Path) -> None:
     """A seeded opening balance shows up in iva-wallet balance."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="wallet-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f699b704-4c17-4682-ab50-7a2051ce4c52"):
         seed_iva_compensation_period(
             taxpayer_nif=_NIF,
             period=Period.from_year_and_code(2025, "4T"),
@@ -66,7 +66,7 @@ def test_seeded_state_surfaces_as_a_wallet_lot(tmp_path: Path) -> None:
 
 def test_zero_seed_surfaces_no_lot_anti_tautology(tmp_path: Path) -> None:
     """Anti-tautology: a zero-amount seed produces no lot."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="wallet-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f699b704-4c17-4682-ab50-7a2051ce4c52"):
         seed_iva_compensation_period(
             taxpayer_nif=_NIF,
             period=Period.from_year_and_code(2025, "1T"),
@@ -82,14 +82,14 @@ def test_zero_seed_surfaces_no_lot_anti_tautology(tmp_path: Path) -> None:
 
 def test_seed_iva_compensation_anti_tautology_different_amounts(tmp_path: Path) -> None:
     """Anti-tautology: seeding X vs Y produces different available_end_amount."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="58072ef9-4b9f-42b3-9f46-38f4239b1510"):
         state_a = seed_iva_compensation_period(
             taxpayer_nif=_NIF,
             period=Period.from_year_and_code(2024, "3T"),
             amount=Decimal("500.00"),
         )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test-b"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="3ba277a9-0812-47c5-9400-64768e433f06"):
         state_b = seed_iva_compensation_period(
             taxpayer_nif=_NIF,
             period=Period.from_year_and_code(2024, "3T"),
@@ -103,7 +103,7 @@ def test_seed_iva_compensation_anti_tautology_different_amounts(tmp_path: Path) 
 
 def test_seed_iva_compensation_refuses_duplicate(tmp_path: Path) -> None:
     """Seeding a period that already has a stored state raises IvaCompensationSeedConflictError."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="58072ef9-4b9f-42b3-9f46-38f4239b1510"):
         seed_iva_compensation_period(
             taxpayer_nif=_NIF,
             period=Period.from_year_and_code(2024, "2T"),
@@ -393,7 +393,7 @@ def test_carry_forward_lot_rejects_unbalanced_amounts_anti_tautology() -> None:
 
 def test_cli_seed_help_text_contains_liva_art_99_legal_grounding(tmp_path: Path) -> None:
     """The iva-wallet seed --help output must cite LIVA art. 99.5."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="help-text-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cb110a91-a9ee-4310-8690-818df2a5df78"):
         result = invoke_cached_cli(
             ["app", "modelo", "iva-wallet", "seed", "--help"],
             env={"CADRUMO_OUTPUT_LANGUAGE": "en"},

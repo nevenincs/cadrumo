@@ -14,6 +14,7 @@ registry-declared selector semantics, not a hand-copied expectation.
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from .....core.aggregation import BindingSourceKind
 from .._binding_selector_utils import (
@@ -116,7 +117,7 @@ def test_a_misspelled_boolean_encoding_key_is_refused_not_silently_dropped() -> 
     (not the constructor's) is what is under test.
     """
     with pytest.raises(
-        Exception,
+        ValidationError,
         match="violates _ManualInputSelector",
     ) as excinfo:
         DataBindingDefinition.model_validate(

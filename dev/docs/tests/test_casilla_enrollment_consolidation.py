@@ -41,6 +41,7 @@ from ._authority_fixtures import authority
 
 __all__ = ["authority"]
 
+
 @pytest.fixture(scope="module")
 def projected(
     authority: ValidatedRegistryAuthority,

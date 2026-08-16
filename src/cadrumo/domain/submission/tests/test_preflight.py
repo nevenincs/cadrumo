@@ -2,7 +2,7 @@
 
 No dedicated test file existed for :class:`Preflight` before this one.
 Exercises the four-gate validator with hand-rolled Protocol-conforming
-fakes, per this package's own documented testing philosophy (``_protocols.py``:
+classes, per this package's own documented testing philosophy (``_protocols.py``:
 "no mocks, no patches"). Gates 3 and 4 are skipped in every test here since
 gate-2 -- the subject of this file -- runs before either.
 """
@@ -21,14 +21,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 class _UnusedDeadlineChecker:
-    """A ``DeadlineWindowChecker`` fake that must never be called (gate-3 is skipped)."""
+    """A ``DeadlineWindowChecker`` conformer that must never be called (gate-3 is skipped)."""
 
     def is_window_open(self, modelo: str, period: Period, today: date) -> bool:
         raise AssertionError("gate-3 must not run when skip_deadline_window=True")
 
 
 class _UnusedAuthProvider:
-    """An ``AuthProviderProbe`` fake that must never be called (gate-4 is skipped)."""
+    """An ``AuthProviderProbe`` conformer that must never be called (gate-4 is skipped)."""
 
     @property
     def kind(self) -> str:
@@ -38,8 +38,8 @@ class _UnusedAuthProvider:
         raise AssertionError("gate-4 must not run when skip_auth_readiness=True")
 
 
-class _FakeDraft:
-    """A ``ModeloDraftLike`` fake carrying an arbitrary findings tuple."""
+class _DraftWithFindings:
+    """A ``ModeloDraftLike`` conformer carrying an arbitrary findings tuple."""
 
     def __init__(self, findings: tuple[object, ...]) -> None:
         self._findings = findings
@@ -77,13 +77,13 @@ def _preflight() -> Preflight:
     return Preflight(deadline_checker=_UnusedDeadlineChecker(), auth_provider=_UnusedAuthProvider())
 
 
-def _check(draft: _FakeDraft) -> None:
+def _check(draft: _DraftWithFindings) -> None:
     _preflight().check(draft, today=date(2025, 6, 1), skip_deadline_window=True, skip_auth_readiness=True)
 
 
 def test_a_clean_draft_with_only_non_error_findings_passes_gate_2() -> None:
     """The legitimate path: warning/info findings never block submission."""
-    draft = _FakeDraft(
+    draft = _DraftWithFindings(
         findings=(
             ModeloFinding(severity=BaseSeverity.WARNING, message="a warning"),
             ModeloFinding(severity=BaseSeverity.INFO, message="an info note"),
@@ -94,7 +94,7 @@ def test_a_clean_draft_with_only_non_error_findings_passes_gate_2() -> None:
 
 def test_a_real_error_severity_finding_blocks_gate_2() -> None:
     """The legitimate path: a genuine ERROR-severity finding does block."""
-    draft = _FakeDraft(findings=(ModeloFinding(severity=BaseSeverity.ERROR, message="a real error"),))
+    draft = _DraftWithFindings(findings=(ModeloFinding(severity=BaseSeverity.ERROR, message="a real error"),))
     with pytest.raises(SubmissionPreflightError, match="error-severity findings"):
         _check(draft)
 
@@ -119,7 +119,7 @@ def test_a_dropped_severity_field_is_refused_not_silently_treated_as_clean() -> 
     """
     drifted = ModeloFinding(severity=BaseSeverity.ERROR, message="a real error, drifted selector")
     del drifted.__dict__["severity"]
-    draft = _FakeDraft(findings=(drifted,))
+    draft = _DraftWithFindings(findings=(drifted,))
 
     with pytest.raises(AttributeError, match="severity"):
         _check(draft)

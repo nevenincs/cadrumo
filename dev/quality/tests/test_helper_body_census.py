@@ -299,7 +299,7 @@ def test_non_underscore_export_from_a_private_support_module_is_a_candidate(tmp_
 def test_closed_over_module_constant_is_labeled_and_still_reported(tmp_path: Path) -> None:
     """A body-identical group that closes over a same-named constant is FLAGGED, not silenced.
 
-    W09.P30.S141's real-world proof: `_READY_PROFILE_FACTS` carried a
+    A real-world proof: `_READY_PROFILE_FACTS` carried a
     different taxpayer surname per file, and `_WORKFLOW` pointed at a
     different CI YAML file per file, while both functions' bodies were
     genuinely identical. This is that shape in miniature -- two files declare
@@ -434,7 +434,7 @@ def test_a_parameter_shadowing_a_module_constant_is_not_flagged(tmp_path: Path) 
 
 
 def test_delegating_wrapper_closing_over_a_constant_is_not_counted_as_duplication(tmp_path: Path) -> None:
-    """W09.P30.S141's real-tree finding, in miniature: a thin per-file wrapper is the SOLUTION.
+    """A real-tree finding, in miniature: a thin per-file wrapper is the SOLUTION.
 
     `_write_modelo`/`_load_revision` in `domain/calculations/registry/tests/`
     were reported as CONSTANT-DEPENDENT duplication until this test's

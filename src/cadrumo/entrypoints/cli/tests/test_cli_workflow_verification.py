@@ -199,14 +199,14 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
     tests assert against the JSON payloads only.
     """
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "identity.tax_id": '12345678Z',
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Workflow',
-            "activities.description": 'design',
-            "iva.regime": 'GENERAL',
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Operator",
+            "identity.surnames": "Workflow",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
         },
     )
     status = _invoke(["--format", "json", "config", "profile", "status"])
@@ -304,7 +304,9 @@ _REVIEW_ROW_EXPECTATIONS = (
 
 
 @pytest.mark.parametrize(("key", "expected"), _REVIEW_ROW_EXPECTATIONS)
-def test_config_app_round_trip_review_row_records_field(_certificate_bearing_cli_backend: Path, key: str, expected: str) -> None:
+def test_config_app_round_trip_review_row_records_field(
+    _certificate_bearing_cli_backend: Path, key: str, expected: str
+) -> None:
     outcome = _drive_workflow_round_trip(_certificate_bearing_cli_backend)
     assert _review_rows(outcome)[0][key] == expected
 

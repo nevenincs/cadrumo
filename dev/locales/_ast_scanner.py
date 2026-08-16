@@ -211,8 +211,7 @@ def _extract_locale_constant_keys(tree: ast.AST) -> set[str]:
         if isinstance(node, ast.Assign):
             named = any(_declares_locale_key_constant(target) for target in node.targets)
             shaped = any(
-                isinstance(target, ast.Name) and flow_confirmed.get(target.id) is node.value
-                for target in node.targets
+                isinstance(target, ast.Name) and flow_confirmed.get(target.id) is node.value for target in node.targets
             )
             if named or shaped:
                 _collect_dotted_literals(node.value, findings)

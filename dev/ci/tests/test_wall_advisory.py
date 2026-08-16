@@ -12,7 +12,7 @@ pass a green suite. It can be unfalsifiable -- never fire, so the wedge class
 stays as unwatched as a straight conversion would have left it. Or it can be
 indiscriminate -- fire whenever the box is busy, which on this machine is most
 runs, and an advisory that fires on every run is one every reader learns to
-skip, the decorative-guard decay this campaign has already documented twice.
+skip, the decorative-guard decay already documented twice in this suite.
 So both directions are asserted here, against the site-derived figures the two
 consumers actually pass rather than against round numbers chosen to pass.
 

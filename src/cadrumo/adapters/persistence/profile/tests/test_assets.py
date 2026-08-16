@@ -39,7 +39,7 @@ def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     # Distinct bucket_id (not the shared default) so the bucket-scoped master-key
     # session does not collide with other assets test modules sharing a bucket in
     # the same run — a previously-observed cross-module empty-load flake.
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-unit-bucket") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="eab5682c-b62e-4dd7-9480-b7761fdb62af") as profile:
         yield profile
 
 

@@ -142,7 +142,7 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
 def test_unreachable_reader_preserves_the_provisioning_refusal(
     profile: TestRuntimeProfile,
 ) -> None:
-    """A real reader connection failure carries S33 facts and its exact verdict."""
+    """A real reader connection failure carries its machine facts and exact verdict."""
     settings = profile.settings.model_copy(
         update={
             "cadrumo_llm_ollama_chat_url": "http://127.0.0.1:1/api/chat",

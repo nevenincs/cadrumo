@@ -44,11 +44,11 @@ def _create_profile(name: str, *, tax_id: str) -> Result:
         label=name,
         facts={
             "identity.tax_id": tax_id,
-            "activities.description": 'design',
-            "taxpayer_type.entity_type": 'natural_person',
-            "iva.regime": 'GENERAL',
-            "identity.name": 'Archive',
-            "identity.surnames": 'Roundtrip',
+            "activities.description": "design",
+            "taxpayer_type.entity_type": "natural_person",
+            "iva.regime": "GENERAL",
+            "identity.name": "Archive",
+            "identity.surnames": "Roundtrip",
         },
     )
 

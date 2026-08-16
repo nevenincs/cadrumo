@@ -32,7 +32,6 @@ from ..smoke_absent_llm import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-
 def test_the_guard_symbol_comes_from_the_registry_not_a_literal() -> None:
     """A renamed registry record must fail here rather than yield an empty guarded set."""
     assert _guard_symbol_for_the_extra(REPO_ROOT) == f"{_EXTRA.upper()}_EXTRA"

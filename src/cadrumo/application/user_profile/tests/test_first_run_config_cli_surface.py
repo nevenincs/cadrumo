@@ -132,13 +132,13 @@ def test_setup_status_reports_missing_and_ready_steps(tmp_path: Path) -> None:
 def test_setup_auth_rejects_unsupported_provider(tmp_path: Path) -> None:
     env = _env(tmp_path)
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "activities.description": 'design',
-            "identity.tax_id": '12345678Z',
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Example',
+            "activities.description": "design",
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Operator",
+            "identity.surnames": "Example",
         },
     )
 

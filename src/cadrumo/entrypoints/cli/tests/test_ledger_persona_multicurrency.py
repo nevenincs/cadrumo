@@ -39,9 +39,7 @@ from click.testing import Result
 from ....tests import FIXTURES_DIR
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.ledger_cli import list_ledger_rows_via_cli as _list_rows
-from ._isolated_profile_storage_fixtures import (  # noqa: F401 - autouse fixture bound by import
-    live_fx_isolated_backend as _isolated_backend,
-)
+from ._isolated_profile_storage_fixtures import live_fx_seeded_backend
 from ._ledger_corpus_support import _match, _oracle_rules
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -66,6 +64,13 @@ def _import_revolut() -> None:
     assert result.exit_code == 0, result.output
 
 
+# The imported multi-currency statement is the starting state every test reads
+# or disposes from, not the subject. Seeded once and copied per test, so each
+# test keeps its own storage root and nothing it changes escapes.
+_seeded_origin, live_fx_seeded_world = live_fx_seeded_backend(seed=_import_revolut)
+__all__ = ["_seeded_origin", "live_fx_seeded_world"]
+
+
 def _uk_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
     result = []
     for r in rows:
@@ -87,7 +92,6 @@ def _us_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
 # --- import + currency preservation -----------------------------------------
 def test_import_succeeds_and_persists_revolut_rows() -> None:
     """The operator imports the multi-currency Revolut export cleanly."""
-    _import_revolut()
     rows = _list_rows()
     assert rows, "import must persist the Revolut multicurrency rows"
 
@@ -99,7 +103,6 @@ def test_native_currency_is_preserved_on_import() -> None:
     -- a GBP invoice reads GBP, a USD invoice reads USD, the EUR top-up
     reads EUR. The currency axis is honest end to end.
     """
-    _import_revolut()
     rows = _list_rows()
     currencies = {r.get("currency") for r in rows}
     assert {"EUR", "GBP", "USD"} <= currencies, currencies
@@ -112,7 +115,6 @@ def test_native_currency_is_preserved_on_import() -> None:
 
 def test_uk_and_us_client_receipts_are_incoming_foreign_income() -> None:
     """The UK/US client receipts land as INCOMING foreign-currency rows."""
-    _import_revolut()
     rows = _list_rows()
     uk = _uk_rows(rows)
     us = _us_rows(rows)
@@ -134,7 +136,6 @@ def test_classify_uk_us_receipts_as_export_business_income() -> None:
     The operator classifies them through the real CLI and the persisted
     classification reflects it.
     """
-    _import_revolut()
     rules = _oracle_rules()
     rows = _list_rows()
     targets = _uk_rows(rows)[:1] + _us_rows(rows)[:1]
@@ -180,7 +181,6 @@ def test_list_json_surfaces_eur_equivalent_and_fx_rate() -> None:
     currency=GBP plus its EUR-equivalent and the applied rate, so the
     operator can audit the conversion from the list surface.
     """
-    _import_revolut()
     rows = _list_rows()
     uk = _uk_rows(rows)[0]
     # The native currency/amount are present...
@@ -197,7 +197,6 @@ def test_export_json_surfaces_eur_equivalent_and_fx_rate(tmp_path: Path) -> None
     figure and FX provenance alongside the native GBP/USD amount -- the
     downstream reader does not have to re-source the rates independently.
     """
-    _import_revolut()
     out = tmp_path / "revolut-export.jsonl"
     exported = _invoke(["app", "ledger", "export", "--output", str(out), "--export-format", "jsonl"])
     assert exported.exit_code == 0, exported.output
@@ -216,7 +215,6 @@ def test_import_computes_eur_equivalent_for_foreign_rows() -> None:
     by re-loading the persisted catalogue through the real repository and
     inspecting the domain field directly.
     """
-    _import_revolut()
     from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 
     repo = TransactionCatalogueRepository(bucket_id="00000000-0000-4000-8000-000000000000")

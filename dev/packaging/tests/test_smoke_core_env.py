@@ -68,7 +68,7 @@ def test_isolated_product_env_refuses_host_settings_and_former_state(tmp_path: P
     }
     result = subprocess.run(  # noqa: S603 - fixed interpreter and test-authored worker source.
         [sys.executable, "-c", worker, str(isolated_storage)],
-        cwd = REPO_ROOT,
+        cwd=REPO_ROOT,
         env=host_env,
         capture_output=True,
         text=True,

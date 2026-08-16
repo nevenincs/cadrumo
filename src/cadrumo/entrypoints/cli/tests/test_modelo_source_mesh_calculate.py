@@ -46,14 +46,14 @@ _IVA_WALLET_DECIDED_AT = datetime(2026, 5, 28, 16, 10, tzinfo=UTC)
 def _create_profile() -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "identity.tax_id": '12345678Z',
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Operator',
-            "activities.description": 'design',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
         },
     )
 

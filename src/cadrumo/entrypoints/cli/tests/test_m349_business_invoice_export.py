@@ -33,14 +33,14 @@ def _invoke(args: Sequence[str]) -> Result:
 def _create_profile() -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='m349-business-invoices',
+        label="m349-business-invoices",
         facts={
-            "identity.tax_id": '12345678Z',
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.name": 'Ana',
-            "identity.surnames": 'Operadora',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
-            "activities.description": 'consultoria intracomunitaria',
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Ana",
+            "identity.surnames": "Operadora",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "activities.description": "consultoria intracomunitaria",
         },
     )
 

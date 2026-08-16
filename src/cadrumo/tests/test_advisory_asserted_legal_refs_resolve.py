@@ -11,7 +11,7 @@ message could never carry, because nothing validates a string.
 Two proofs, and closure rests on the second rather than the first. The
 refusal firing on a fabricated id proves the mechanism catches a defect; on
 its own that proves nothing about whether it over-reaches on real advisory
-claims. The CONTROL is the ids drawn from the ADR's own measurement -- real
+claims. The CONTROL is the ids drawn from the governing decision's own measurement -- real
 articles a legal-catalogue entry was independently confirmed to carry at the
 exact granularity an advisory would assert -- all still resolving against the
 live bundled catalogue.
@@ -59,7 +59,7 @@ def test_the_evidenced_legitimate_population_still_resolves() -> None:
     """The CONTROL that decides closure, not the refusal below.
 
     Every id an advisory would legitimately declare today -- drawn from the
-    ADR's own hand-checked measurement rather than fabricated for this test --
+    governing decision's own hand-checked measurement rather than fabricated for this test --
     must still resolve against the live bundled legal catalogue now that the
     refusal exists. A legitimate id failing here would mean the catalogue is
     incomplete for that provision, which is a stop-and-report finding, never a

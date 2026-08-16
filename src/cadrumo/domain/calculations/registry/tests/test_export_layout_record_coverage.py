@@ -33,6 +33,7 @@ import re
 import pytest
 
 from .....core import ExportLayoutFormat
+from .._errors import RegistryValidationError
 from .._export import derive_export_layouts_from_bindings
 from .._record_design import extract_record_design
 from .._record_design_schema import (
@@ -415,7 +416,7 @@ def test_a_partial_design_read_refuses_instead_of_reporting_coverage(
         sheets=whole.sheets[:-1],
         skipped=(RecordDesignSkippedSheet(name=whole.sheets[-1].name, reason="dropped for this test"),),
     )
-    with pytest.raises(Exception, match="PARTIAL design"):
+    with pytest.raises(RegistryValidationError, match="PARTIAL design"):
         partial.require_complete()
 
 
@@ -874,11 +875,7 @@ def test_a_position_two_cited_editions_share_is_counted_once(
                 if _belongs_to_layout(sheet, layout.records)
                 for position in _required_positions(sheet)
             }
-            raw = sum(
-                len(_required_positions(sheet))
-                for sheet in sheets
-                if _belongs_to_layout(sheet, layout.records)
-            )
+            raw = sum(len(_required_positions(sheet)) for sheet in sheets if _belongs_to_layout(sheet, layout.records))
             if raw == len(distinct):
                 continue
             checked += 1

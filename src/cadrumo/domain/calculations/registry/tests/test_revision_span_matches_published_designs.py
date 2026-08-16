@@ -859,7 +859,7 @@ def _all_declared_revisions() -> list[tuple[ModeloDefinition, str, object]]:
     business-rule or filing-grade validation to answer. Coupling it to
     :class:`ValidatedRegistryAuthority` would make this gate's own
     reliability hostage to an unrelated validation defect anywhere else in
-    the tree -- the exact silent-failure shape this campaign exists to
+    the tree -- the exact silent-failure shape this gate exists to
     remove, now reproduced as "the coverage gate didn't even run" instead of
     "the coverage gate reported clean".
     """

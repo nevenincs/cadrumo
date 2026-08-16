@@ -102,9 +102,7 @@ _M111_CASILLAS: dict[CasillaId, str] = {
 
 def _build_package(tmp_path: Path, *, name: str = "review-package.zip") -> tuple[Path, str, str]:
     _set_export_profile_name()
-    return build_review_package_via_cli(
-        tmp_path, invoke=_invoke, input_values_by_casilla_id=_M111_CASILLAS, name=name
-    )
+    return build_review_package_via_cli(tmp_path, invoke=_invoke, input_values_by_casilla_id=_M111_CASILLAS, name=name)
 
 
 def _register_originator(recipient_id: str) -> str:

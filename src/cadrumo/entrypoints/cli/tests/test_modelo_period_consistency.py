@@ -33,16 +33,16 @@ def _assert_payload_period(payload: dict[str, object], *, year: int, code: str) 
 def _create_profile() -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "identity.tax_id": 'B12345674',
-            "taxpayer_type.entity_type": 'legal_entity',
-            "taxpayer_type.legal_entity_form": 'sl',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Operator SL',
-            "identity.legal_name": 'Operator SL',
-            "activities.description": 'design',
-            "taxpayer_type.incn_prior_12_months": '7500000.00',
+            "identity.tax_id": "B12345674",
+            "taxpayer_type.entity_type": "legal_entity",
+            "taxpayer_type.legal_entity_form": "sl",
+            "identity.name": "Operator",
+            "identity.surnames": "Operator SL",
+            "identity.legal_name": "Operator SL",
+            "activities.description": "design",
+            "taxpayer_type.incn_prior_12_months": "7500000.00",
         },
     )
 

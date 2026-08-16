@@ -30,14 +30,14 @@ def _seed_workflow_state() -> None:
     """
 
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.name": 'Test',
-            "identity.surnames": 'Operator',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
-            "identity.tax_id": '00000000T',
-            "activities.description": 'Servicios',
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Test",
+            "identity.surnames": "Operator",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "identity.tax_id": "00000000T",
+            "activities.description": "Servicios",
         },
     )
 

@@ -93,14 +93,14 @@ class TestOverviewCalendarRequiresProfileCreate:
 
     def test_overview_calendar_for_general_iva_includes_modelo_303(self) -> None:
         register_cli_profile(
-            label='operator',
+            label="operator",
             facts={
-                "taxpayer_type.entity_type": 'natural_person',
-                "identity.name": 'Operator',
-                "identity.surnames": 'Operator',
-                "identity.tax_id": '12345678Z',
-                "activities.description": 'software development',
-                "iva.regime": 'GENERAL',
+                "taxpayer_type.entity_type": "natural_person",
+                "identity.name": "Operator",
+                "identity.surnames": "Operator",
+                "identity.tax_id": "12345678Z",
+                "activities.description": "software development",
+                "iva.regime": "GENERAL",
             },
         )
 

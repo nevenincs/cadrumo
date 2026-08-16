@@ -1,4 +1,4 @@
-"""Prove the ``applicability`` schema family (W01.P03.S08).
+"""Prove the ``applicability`` schema family.
 
 Covers the whole chain a fragment family needs: SCHEMA_FAMILY enrolment,
 real fragmented-directory loading, the inline-manifest refusal every section

@@ -148,7 +148,7 @@ _build_package = functools.partial(
 
 def test_ensure_keypair_mints_then_persists_and_is_idempotent(tmp_path: Path) -> None:
     """A second call against the same bucket returns the SAME keypair (no rotation)."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="review-pkg-sign-a") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f1671beb-ff26-411d-b81c-76ccfb3af59c") as profile:
         first = ensure_review_package_signing_keypair(bucket_id=profile.bucket_id, repository=profile.repository)
         second = ensure_review_package_signing_keypair(bucket_id=profile.bucket_id, repository=profile.repository)
 
@@ -165,7 +165,7 @@ def test_ensure_keypair_mints_then_persists_and_is_idempotent(tmp_path: Path) ->
 
 def test_private_key_is_never_stored_as_plaintext(tmp_path: Path) -> None:
     """The persisted row is real ciphertext: the raw private-key bytes never appear on disk."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="review-pkg-sign-b") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="225abfcd-a133-4652-8f32-18f7494de580") as profile:
         keypair = ensure_review_package_signing_keypair(bucket_id=profile.bucket_id, repository=profile.repository)
 
         raw_record = profile.repository.load(
@@ -198,14 +198,14 @@ def test_private_key_is_never_stored_as_plaintext(tmp_path: Path) -> None:
 
 def test_load_without_ensure_raises_key_not_found(tmp_path: Path) -> None:
     with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="review-pkg-sign-c") as profile,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="a441deaf-8144-4c36-8d07-2de6681ac224") as profile,
         pytest.raises(ReviewPackageSigningKeyNotFoundError),
     ):
         load_review_package_signing_keypair(bucket_id=profile.bucket_id, repository=profile.repository)
 
 
 def test_sign_then_verify_with_correct_public_key_passes(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="review-pkg-sign-d") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f457d34b-e650-41f6-b5ec-446e06eb34c7") as profile:
         package_path = _build_package(tmp_path, bucket_id=profile.bucket_id)
         keypair = ensure_review_package_signing_keypair(bucket_id=profile.bucket_id, repository=profile.repository)
 
@@ -234,7 +234,7 @@ def test_sign_then_verify_with_correct_public_key_passes(tmp_path: Path) -> None
 )
 def test_sign_refuses_a_naive_or_non_utc_envelope_timestamp(tmp_path: Path, signed_at: datetime) -> None:
     """A signature envelope must carry one explicit UTC instant."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="review-pkg-sign-time") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="8b08f119-2674-41be-819f-5a2908bc97d4") as profile:
         package_path = _build_package(tmp_path, bucket_id=profile.bucket_id)
         keypair = ensure_review_package_signing_keypair(bucket_id=profile.bucket_id, repository=profile.repository)
 
@@ -246,7 +246,7 @@ def test_verify_fails_when_package_tampered_after_signing(tmp_path: Path) -> Non
     """Tampering the archive after signing must fail verification (integrity-then-signature)."""
     import zipfile
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="review-pkg-sign-e") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="b161bbf5-9bfd-4bcd-b60f-34262a65619b") as profile:
         package_path = _build_package(tmp_path, bucket_id=profile.bucket_id)
         keypair = ensure_review_package_signing_keypair(bucket_id=profile.bucket_id, repository=profile.repository)
         signed = sign_review_package(package_path, keypair=keypair)
@@ -270,7 +270,7 @@ def test_verify_fails_when_package_tampered_after_signing(tmp_path: Path) -> Non
 
 
 def test_verify_fails_with_wrong_public_key(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="review-pkg-sign-f") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="6b74a0b8-1ccf-4d16-9b5a-61b769ad9121") as profile:
         package_path = _build_package(tmp_path, bucket_id=profile.bucket_id)
         keypair = ensure_review_package_signing_keypair(bucket_id=profile.bucket_id, repository=profile.repository)
         signed = sign_review_package(package_path, keypair=keypair)
@@ -288,7 +288,7 @@ def test_verify_fails_with_wrong_public_key(tmp_path: Path) -> None:
 
 def test_verify_fails_when_signature_bytes_are_corrupted(tmp_path: Path) -> None:
     """A structurally-valid but wrong signature (same length, different bytes) must fail."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="review-pkg-sign-g") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="4bc084cf-35e1-4023-9b27-8f400c615326") as profile:
         package_path = _build_package(tmp_path, bucket_id=profile.bucket_id)
         keypair = ensure_review_package_signing_keypair(bucket_id=profile.bucket_id, repository=profile.repository)
         signed = sign_review_package(package_path, keypair=keypair)
@@ -301,13 +301,13 @@ def test_verify_fails_when_signature_bytes_are_corrupted(tmp_path: Path) -> None
 
 def test_two_buckets_mint_independent_keypairs(tmp_path: Path) -> None:
     """Two profiles' signing keys never collide -- confirming the per-bucket object key grammar."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="review-pkg-sign-h1") as profile_one:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="6e572448-849d-487e-adcb-de9c2f6fb3b3") as profile_one:
         keypair_one = ensure_review_package_signing_keypair(
             bucket_id=profile_one.bucket_id,
             repository=profile_one.repository,
         )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="review-pkg-sign-h2") as profile_two:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="83a9a3da-d37f-4e1e-a338-9c5bdd5601ec") as profile_two:
         keypair_two = ensure_review_package_signing_keypair(
             bucket_id=profile_two.bucket_id,
             repository=profile_two.repository,

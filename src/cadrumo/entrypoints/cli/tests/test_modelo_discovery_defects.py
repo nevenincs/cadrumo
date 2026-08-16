@@ -40,14 +40,14 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def _create_profile() -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Operator',
-            "activities.description": 'design',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
         },
     )
 
@@ -55,17 +55,17 @@ def _create_profile() -> None:
 def _create_legal_entity_profile() -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='company',
+        label="company",
         facts={
-            "taxpayer_type.entity_type": 'legal_entity',
-            "taxpayer_type.legal_entity_form": 'sl',
-            "identity.tax_id": 'B12345674',
-            "identity.name": 'Company',
-            "identity.surnames": 'Company SL',
-            "identity.legal_name": 'Company SL',
-            "activities.description": 'consulting',
-            "taxpayer_type.incn_prior_12_months": '7500000.00',
-            "taxpayer_type.new_entity_first_two_profit_periods": 'false',
+            "taxpayer_type.entity_type": "legal_entity",
+            "taxpayer_type.legal_entity_form": "sl",
+            "identity.tax_id": "B12345674",
+            "identity.name": "Company",
+            "identity.surnames": "Company SL",
+            "identity.legal_name": "Company SL",
+            "activities.description": "consulting",
+            "taxpayer_type.incn_prior_12_months": "7500000.00",
+            "taxpayer_type.new_entity_first_two_profit_periods": "false",
         },
     )
 

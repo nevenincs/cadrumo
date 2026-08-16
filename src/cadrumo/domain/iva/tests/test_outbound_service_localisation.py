@@ -8,8 +8,8 @@ taxed here.
 
 The row this suite gates read establishment alone, so both limbs reached the
 not-subject outcome and every B2C service outside the Comunidad was booked
-outside Spanish IVA. Two populations under-declared, and the second was made by
-this campaign: the row read ``THIRD_COUNTRY`` until the art. 3 definitional
+outside Spanish IVA. Two populations under-declared, and the second was
+self-inflicted: the row read ``THIRD_COUNTRY`` until the art. 3 definitional
 chain widened it to every territory outside the Comunidad -- right for goods and
 for the B2B limb, and straight into the paragraph that excepts Canarias, Ceuta
 and Melilla by name.

@@ -503,11 +503,17 @@ def test_custody_passphrase_strings_are_held_by_the_family_register() -> None:
     The catalogue strings for ``config passphrase`` are neither live nor prunable:
     the operator surface declares the family and records that credential rotation
     exists at no layer. That disposition lives in ``MOUNTED_COMMAND_FAMILIES``, so
-    this pins that the register is what answers, and that the answer is currently
-    ``DECLARED_UNIMPLEMENTED`` rather than silently absent.
+    the register is read here directly and the answer is currently
+    ``DECLARED_UNIMPLEMENTED`` rather than silently absent. The resolver's own
+    refusal path is pinned below; its happy path is covered by every namespace
+    the parity assertions route through it.
     """
 
-    assert _declared_family_mount_state(_CUSTODY_PASSPHRASE_NAMESPACE) is FamilyMountState.DECLARED_UNIMPLEMENTED
+    declared_states = {
+        ("cli", family.root.value, family.child): family.mount_state for family in MOUNTED_COMMAND_FAMILIES
+    }
+
+    assert declared_states[_CUSTODY_PASSPHRASE_NAMESPACE] is FamilyMountState.DECLARED_UNIMPLEMENTED
 
     with pytest.raises(AssertionError, match="resolves to no declared command family"):
         _declared_family_mount_state(("cli", "config", "recover"))

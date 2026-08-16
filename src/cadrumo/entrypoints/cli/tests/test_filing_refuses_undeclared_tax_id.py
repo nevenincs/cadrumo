@@ -60,13 +60,13 @@ def _invoke(args: list[str]):
 def _create_profile() -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
+            "taxpayer_type.entity_type": "natural_person",
             "identity.tax_id": _TAX_ID,
-            "identity.name": 'Operator',
-            "identity.surnames": 'Identity',
-            "activities.description": 'design',
+            "identity.name": "Operator",
+            "identity.surnames": "Identity",
+            "activities.description": "design",
         },
     )
 

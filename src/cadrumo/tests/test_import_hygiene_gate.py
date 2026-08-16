@@ -766,11 +766,10 @@ def test_family4_no_underscore_named_entries_in_any_facade_all() -> None:
 # symbol from cadrumo.domain.calculations.registry
 # ---------------------------------------------------------------------------
 #
-# W01.P04.S10 demoted four raw-loader names (ModeloRevisionSource, ModeloSource,
-# discover_modelo_sources, load_modelo_source) and W01.P04.S34 demoted
-# build_snapshot -- "the same unguarded-entry-point class as the raw loader
-# family", per the plan's own text -- from the registry package's public
-# __all__. Every one of the five had zero cross-package PRODUCTION consumers
+# Four raw-loader names (ModeloRevisionSource, ModeloSource,
+# discover_modelo_sources, load_modelo_source) were demoted from the registry
+# package's public __all__, and build_snapshot followed as the same
+# unguarded-entry-point class as the raw loader family. Every one of the five had zero cross-package PRODUCTION consumers
 # at demotion time (build_snapshot's sole external caller is a test fixture).
 # The Python import itself still succeeds -- __all__ only governs star-imports
 # and introspection -- so this family is the actual enforcement: it reds a NEW
@@ -810,8 +809,8 @@ def test_no_production_import_of_a_demoted_registry_loader_symbol() -> None:
 def test_the_registry_loader_gate_catches_a_planted_production_import(tmp_path: Path) -> None:
     """Anti-tautology: a planted production import of a demoted symbol MUST be caught.
 
-    Covers both demotion rows in one proof: ``load_modelo_source`` (S10's raw
-    loader family) and ``build_snapshot`` (S34's unguarded entry point).
+    Covers both demotion rows in one proof: ``load_modelo_source`` (the raw
+    loader family) and ``build_snapshot`` (the unguarded entry point).
     """
     planted = _plant_module(
         tmp_path,

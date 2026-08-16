@@ -12,7 +12,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="test") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="78804f92-b6f7-4daf-9ddf-a8ce3829dbb1") as profile:
         yield profile.repository
 
 

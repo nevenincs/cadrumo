@@ -484,8 +484,8 @@ def _write_isolated_generated_authority_tree(
     """Materialise only fresh target material plus real catalogue authority.
 
     The fixture never copies an export directory.  It writes the target's
-    ``export/`` directory solely through the S08 renderer so S10 cannot pass by
-    loading an older fragment tree from the installed registry.
+    ``export/`` directory solely through the export-tree renderer, so generated-tree
+    validation cannot pass by loading an older fragment tree from the installed registry.
     """
     registry_root = tmp_path / "candidate" / "registry" / "aeat"
     legal_dir = registry_root / "legal"
@@ -732,7 +732,7 @@ def test_generated_tree_validation_refuses_wrong_period_and_provenance_drift(
 
 
 def test_generated_tree_validation_module_has_no_legacy_loader_surface() -> None:
-    """The S10 boundary must not reintroduce legacy reader or fallback APIs."""
+    """The generated-tree validation boundary must not reintroduce legacy reader or fallback APIs."""
     from .. import _generated_tree_validation
 
     module = ast.parse(inspect.getsource(_generated_tree_validation))
@@ -968,7 +968,7 @@ def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_f
 
 
 def test_direct_manifest_emission_and_real_loader_verification(m200_inspection_snapshot, tmp_path) -> None:
-    """The public S09 emitter and verifier operate on a real fresh tree only."""
+    """The public provenance-manifest emitter and verifier operate on a real fresh tree only."""
     revision_dir = _write_modelo_shell(tmp_path / "modelos" / "200")
     semantic_map = _semantic_map()
     joined = _joined(m200_inspection_snapshot)
@@ -1040,7 +1040,7 @@ def test_manifest_writer_refuses_a_target_that_already_exists(tmp_path) -> None:
 
 
 def test_renderer_refuses_mismatched_map_without_emitting_a_manifest(m200_inspection_snapshot, tmp_path) -> None:
-    """S09 never leaves a partial sibling attestation when map authority drifts."""
+    """Manifest emission never leaves a partial sibling attestation when map authority drifts."""
     revision_dir = _write_modelo_shell(tmp_path / "modelos" / "200")
     semantic_map = _semantic_map()
     mismatched_map = semantic_map.model_copy(

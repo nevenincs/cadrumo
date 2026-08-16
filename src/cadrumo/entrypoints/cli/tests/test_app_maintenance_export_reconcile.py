@@ -40,13 +40,13 @@ _RECONCILE_ARGV = ("--format", "json", "app", "maintenance", "reconcile")
 def _create_profile() -> str:
     """Register the profile through the shared CLI registration door."""
     return register_cli_profile(
-        label='subject',
+        label="subject",
         facts={
-            "identity.tax_id": '12345678Z',
-            "activities.description": 'design',
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.name": 'Subject',
-            "identity.surnames": 'Access',
+            "identity.tax_id": "12345678Z",
+            "activities.description": "design",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Subject",
+            "identity.surnames": "Access",
         },
     )
 

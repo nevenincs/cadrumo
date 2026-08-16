@@ -114,7 +114,7 @@ def test_overview_status_returns_envelope_on_empty_bucket() -> None:
 def test_overview_status_actions_match_fresh_resolution_in_one_bounded_invocation() -> None:
     """One real overview invocation shares its inventory without changing actions.
 
-    S38 separately proves the one-inventory-per-root lifecycle. This test uses
+    A sibling test separately proves the one-inventory-per-root lifecycle. This test uses
     the first full invocation as its live baseline and holds the next equivalent
     invocation to the canonical CPU-contention margin. Wall time is reported
     separately for operator diagnostics but deliberately does not decide this
@@ -164,7 +164,7 @@ def test_overview_status_actions_match_fresh_resolution_in_one_bounded_invocatio
 
     fresh_result = CliRunner().invoke(fresh_resolution_root)
     assert fresh_result.exit_code == 0, fresh_result.output
-    print(f"P03.S39 overview timing: {timing}")
+    print(f"overview timing: {timing}")
     fresh_actions = tuple(fresh)
     assert actions == fresh_actions
     assert tuple(action.model_dump_json() for action in actions) == tuple(

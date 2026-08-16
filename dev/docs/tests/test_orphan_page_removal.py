@@ -89,7 +89,7 @@ def test_localized_site_roots_survive_an_apex_sweep(tmp_path: Path) -> None:
     docnames one level down. Resolved against ``docs/`` those docnames find
     nothing, so before the exemption every localized page was an orphan by this
     function's own test and an apex build deleted all of them -- leaving exactly
-    the residue this campaign spent two sessions mis-diagnosing: a language
+    the residue that was long mis-diagnosed: a language
     directory holding asset subdirectories and not one rendered page.
 
     The assertion is paired with a real orphan in the same tree, so an exemption

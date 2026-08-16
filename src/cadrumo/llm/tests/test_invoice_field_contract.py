@@ -218,7 +218,9 @@ class TestTheAntiDriftGateBitesInBothDirections:
         poisoned = definition.model_copy(update={"template": definition.template + "\n- the IVA rate is 21."})
         mutated_registry = type(registry)()
         mutated_registry.register(poisoned)
-        with scoped_attribute(_invoice_extraction_prompt, "invoice_extraction_prompt_registry", lambda: mutated_registry):
+        with scoped_attribute(
+            _invoice_extraction_prompt, "invoice_extraction_prompt_registry", lambda: mutated_registry
+        ):
             assert template_numeric_literals() == ("21",)
 
     def test_neither_mutation_is_visible_to_the_other_direction(self) -> None:

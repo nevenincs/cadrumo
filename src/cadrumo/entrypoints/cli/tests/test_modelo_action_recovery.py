@@ -150,15 +150,15 @@ def _dispatch_action(
 def _create_natural_profile(environment: dict[str, str]) -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='operadora-s27',
+        label="operadora-s27",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Operadora',
-            "identity.surnames": 'Prueba',
-            "activities.description": 'actividad',
-            "withholding.has_employees": 'true',
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Operadora",
+            "identity.surnames": "Prueba",
+            "activities.description": "actividad",
+            "withholding.has_employees": "true",
         },
     )
 
@@ -166,17 +166,17 @@ def _create_natural_profile(environment: dict[str, str]) -> None:
 def _create_legal_profile(environment: dict[str, str]) -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
-        label='entidad-s27',
+        label="entidad-s27",
         facts={
-            "taxpayer_type.entity_type": 'legal_entity',
-            "taxpayer_type.legal_entity_form": 'sl',
-            "identity.tax_id": 'B12345674',
-            "identity.legal_name": 'Entidad de prueba SL',
-            "activities.description": 'actividad',
-            "taxpayer_type.incn_prior_12_months": '500000',
-            "censo.activity_start_date": '2024-01-15',
-            "tax_residence.ccaa": 'madrid',
-            "iva.regime": 'GENERAL',
+            "taxpayer_type.entity_type": "legal_entity",
+            "taxpayer_type.legal_entity_form": "sl",
+            "identity.tax_id": "B12345674",
+            "identity.legal_name": "Entidad de prueba SL",
+            "activities.description": "actividad",
+            "taxpayer_type.incn_prior_12_months": "500000",
+            "censo.activity_start_date": "2024-01-15",
+            "tax_residence.ccaa": "madrid",
+            "iva.regime": "GENERAL",
         },
     )
 

@@ -45,15 +45,15 @@ def _create_natural_person() -> None:
     """Create a declared natural-person profile (autónomo)."""
 
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Guard',
-            "activities.description": 'design',
-            "taxpayer_type.entity_type": 'natural_person',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
-            "irpf.estimation_regime": 'directa_normal',
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Operator",
+            "identity.surnames": "Guard",
+            "activities.description": "design",
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "irpf.estimation_regime": "directa_normal",
         },
     )
 
@@ -62,14 +62,14 @@ def _create_legal_entity() -> None:
     """Create a declared legal-entity profile (sociedad limitada)."""
 
     register_cli_profile(
-        label='company',
+        label="company",
         facts={
-            "identity.tax_id": 'B12345674',
-            "identity.name": 'Company',
-            "identity.legal_name": 'Company SL',
-            "activities.description": 'consulting',
-            "taxpayer_type.entity_type": 'legal_entity',
-            "taxpayer_type.legal_entity_form": 'sl',
+            "identity.tax_id": "B12345674",
+            "identity.name": "Company",
+            "identity.legal_name": "Company SL",
+            "activities.description": "consulting",
+            "taxpayer_type.entity_type": "legal_entity",
+            "taxpayer_type.legal_entity_form": "sl",
         },
     )
 
@@ -78,17 +78,17 @@ def _create_non_resident_irnr_natural_person() -> None:
     """Create a declared NON_RESIDENT_IRNR natural-person profile."""
 
     register_cli_profile(
-        label='nonresident',
+        label="nonresident",
         facts={
-            "identity.tax_id": 'X1234567L',
-            "identity.name": 'Non Resident',
-            "identity.surnames": 'Guard',
-            "activities.description": 'design',
-            "taxpayer_type.entity_type": 'natural_person',
-            "taxpayer_type.irpf_income_categories": 'actividad_economica',
-            "irpf.estimation_regime": 'directa_normal',
-            "fiscal_residency.status": 'non_resident_irnr',
-            "fiscal_residency.country": 'FR',
+            "identity.tax_id": "X1234567L",
+            "identity.name": "Non Resident",
+            "identity.surnames": "Guard",
+            "activities.description": "design",
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "irpf.estimation_regime": "directa_normal",
+            "fiscal_residency.status": "non_resident_irnr",
+            "fiscal_residency.country": "FR",
         },
     )
 

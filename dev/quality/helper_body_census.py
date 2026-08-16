@@ -358,20 +358,13 @@ class _HelperVisitor(ast.NodeVisitor):
                     sorted(
                         name
                         for decorator in node.decorator_list
-                        if (
-                            name := _dotted_name(decorator.func if isinstance(decorator, ast.Call) else decorator)
-                        )
+                        if (name := _dotted_name(decorator.func if isinstance(decorator, ast.Call) else decorator))
                         is not None
                     )
                 )
                 parameters = frozenset(
-                    argument.arg
-                    for argument in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
-                ) | {
-                    argument.arg
-                    for argument in (node.args.vararg, node.args.kwarg)
-                    if argument is not None
-                }
+                    argument.arg for argument in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
+                ) | {argument.arg for argument in (node.args.vararg, node.args.kwarg) if argument is not None}
                 self.records.append(
                     HelperRecord(
                         path=self.path,
@@ -433,10 +426,7 @@ def _bound_names(body: list[ast.stmt]) -> frozenset[str]:
         return set()
 
     def _arg_names(arguments: ast.arguments) -> set[str]:
-        names = {
-            argument.arg
-            for argument in (*arguments.posonlyargs, *arguments.args, *arguments.kwonlyargs)
-        }
+        names = {argument.arg for argument in (*arguments.posonlyargs, *arguments.args, *arguments.kwonlyargs)}
         if arguments.vararg is not None:
             names.add(arguments.vararg.arg)
         if arguments.kwarg is not None:

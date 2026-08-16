@@ -37,7 +37,6 @@ class BuiltCohort:
     release_base: str
 
 
-
 @pytest.fixture(scope="module")
 def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
     """Build the real root and companion source distributions."""

@@ -18,6 +18,7 @@ re-declaration baseline with no error.
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from .._bindings_previous_filing import previous_filing_binding_source_casilla_ids
 from .._errors import RegistryValidationError
@@ -120,7 +121,7 @@ def test_a_renamed_source_casilla_id_key_is_refused_not_silently_read_as_empty()
     selector so the fixed function's OWN validation (not the constructor's)
     is what is under test.
     """
-    with pytest.raises(Exception, match="violates PreviousModeloSelector") as excinfo:
+    with pytest.raises(ValidationError, match="violates PreviousModeloSelector") as excinfo:
         DataBindingDefinition.model_validate(
             {
                 "id": "modelo-720-prior-year-cuentas-valoracion",

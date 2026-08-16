@@ -239,10 +239,9 @@ def test_profile_readiness_reports_the_lock_rather_than_no_profile_configured(tm
     """
     from ...core.i18n import tr
 
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        with suspend_active_session():
-            assert not has_active_bucket_session()
-            report = build_config_repair_report()
+    with isolated_runtime_profile(tmp_path=tmp_path), suspend_active_session():
+        assert not has_active_bucket_session()
+        report = build_config_repair_report()
 
     profile_readiness = next(check for check in report.checks if check.name == "profile.readiness")
 

@@ -31,7 +31,7 @@ from typing import NamedTuple
 import pytest
 
 from ..core import scan_directory
-from ._inventory import PROJECT_TEST_ROOTS, ast_for_path, project_test_modules, repo_relative
+from ._inventory import PROJECT_TEST_ROOTS, ast_for_path, project_test_modules, qualified_name, repo_relative
 from ._marker_metadata_patterns import CAMPAIGN_METADATA_CASES as _CAMPAIGN_METADATA_CASES
 from ._marker_metadata_patterns import CAMPAIGN_METADATA_PATTERNS as _CAMPAIGN_METADATA_PATTERNS
 from ._marker_metadata_patterns import PROCESS_PLAN_CASE as _PROCESS_PLAN_CASE
@@ -129,20 +129,10 @@ _LIVE_POLICY_SUBPROCESS_TIMEOUT_SECONDS = 60
 #: — see the boundary drawn in the user_profile tests conftest.
 _EXPECTED_OS_KEYCHAIN_TEST_IDS = frozenset(
     {
-        "src/cadrumo/application/user_profile/tests/test_login_session.py"
-        "::TestFirstLogin::test_first_login_mints_a_resumable_persisted_session",
-        "src/cadrumo/application/user_profile/tests/test_login_session.py"
-        "::TestIdempotentGuard::test_valid_session_retry_is_a_no_op",
-        "src/cadrumo/application/user_profile/tests/test_login_session.py"
-        "::TestIdempotentGuard::test_retry_with_a_wrong_passphrase_still_no_ops",
-        "src/cadrumo/application/user_profile/tests/test_logout_strong_close.py"
-        "::TestStrongClose::test_logout_removes_the_keychain_half_of_the_session",
         "src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py"
         "::TestSilentResume::test_valid_session_resumes_with_no_authentication",
         "src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py"
         "::TestSilentResume::test_resume_advances_the_idle_deadline",
-        "src/cadrumo/tests/test_secure_sql.py"
-        "::TestHarnessReapsSessionKeys::test_login_inside_the_harness_leaves_no_keychain_entry",
         # The destroy-path reaps. Each asserts on the KEYCHAIN half of the
         # split-knowledge session specifically — that the UUID-paired
         # keychain receipt is absent once the profile is gone — so a host
@@ -152,12 +142,64 @@ _EXPECTED_OS_KEYCHAIN_TEST_IDS = frozenset(
         # default lane (``test_tombstone_removes_the_persisted_record``), so
         # the reap stays covered everywhere; only the custody-bound halves
         # carry the marker.
-        "src/cadrumo/application/user_profile/tests/test_destroy_reaps_session_artefacts.py"
-        "::TestTombstoneReapsTheSession::test_tombstone_removes_the_keychain_half",
-        "src/cadrumo/application/user_profile/tests/test_destroy_reaps_session_artefacts.py"
-        "::TestDirectoryRemovalReapsTheSession::test_removing_the_bucket_directory_removes_the_keychain_key",
-        "src/cadrumo/application/user_profile/tests/test_destroy_reaps_session_artefacts.py"
-        "::TestDirectoryRemovalReapsTheSession::test_the_key_is_reaped_even_when_the_directory_is_already_gone",
+        # The acceleration-receipt and DEK-wipe custody suites. Each mints, reads or
+        # revokes a real profile-session receipt in the OS credential store, so the
+        # store IS the subject: on a host without one every case fails at
+        # KeyringUnavailableError before reaching its assertion.
+        "src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py"
+        "::TestProfileSessionAcceleration::test_custody_rotation_revokes_old_receipt",
+        "src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py"
+        "::TestProfileSessionAcceleration::test_expired_receipt_removes_only_its_own_keychain_entry",
+        "src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py"
+        "::TestProfileSessionAcceleration::test_mint_then_resume_binds_exact_current_envelope_metadata",
+        "src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py"
+        "::TestProfileSessionAcceleration::test_mint_uses_random_session_id_and_exact_keychain_account",
+        "src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py"
+        "::TestProfileSessionAcceleration::test_nonpositive_windows_refuse_before_keychain_write",
+        "src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py"
+        "::TestProfileSessionAcceleration::test_receipt_never_writes_plaintext_dek",
+        "src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py"
+        "::TestProfileSessionAcceleration::test_tampered_aad_record_is_refused_and_cleaned",
+        "src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py"
+        "::test_revocation_refuses_when_the_receipt_survives_the_clear",
+        "src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py"
+        "::test_revocation_returns_normally_when_the_receipt_is_cleared",
+        "src/cadrumo/adapters/persistence/storage/custody/tests/test_unwrapped_dek_is_wipeable.py"
+        "::test_the_resumed_key_is_a_buffer_whose_wipe_reaches_the_material",
+        # Reaps a discovered bucket key from the credential store; the absence it
+        # asserts cannot be established where the key could never be minted.
+        "src/cadrumo/adapters/persistence/storage/tests/test_test_support_runtime_context_lifecycle.py"
+        "::test_isolated_profile_storage_root_reaps_a_discovered_bucket_key",
+        # Owner-receipt durability across the custody transaction journal. The
+        # receipts are credential-store records, so the journal's resume and
+        # idempotence contracts are unprovable without custody.
+        "src/cadrumo/application/user_profile/tests/test_custody_transactions.py"
+        "::test_create_orchestration_journals_stages_verifies_and_publishes_pointer_last",
+        "src/cadrumo/application/user_profile/tests/test_custody_transactions.py"
+        "::test_delete_owner_receipts_are_durable_and_idempotent",
+        "src/cadrumo/application/user_profile/tests/test_custody_transactions.py"
+        "::test_owner_receipts_resume_after_owner_effect_precedes_journal_state",
+        # Fail-closed CLI refusals reached through a REAL profile session: the
+        # absent/expired states under test are states OF the keychain-backed
+        # session half, so establishing them needs a store to have held one.
+        "src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py"
+        "::TestFailClosedRefusals::test_absent_session_login_action_keeps_the_executable_profile_label",
+        "src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py"
+        "::TestFailClosedRefusals::test_absent_session_refuses_naming_login",
+        "src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py"
+        "::TestFailClosedRefusals::test_absent_session_root_refusal_carries_the_login_action",
+        "src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py"
+        "::TestFailClosedRefusals::test_absolute_cap_refuses",
+        "src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py"
+        "::TestFailClosedRefusals::test_explicit_history_reads_the_requested_profile_repository",
+        "src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py"
+        "::TestFailClosedRefusals::test_explicit_validate_is_not_preempted_by_the_active_profile_gate",
+        "src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py"
+        "::TestFailClosedRefusals::test_idle_expiry_refuses",
+        "src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py"
+        "::TestFailClosedRefusals::test_unnamed_history_reads_the_authenticated_active_profile",
+        "src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py"
+        "::TestFailClosedRefusals::test_unnamed_validate_is_gated_as_an_active_profile_read",
     },
 )
 _LEGACY_READ_MARKER = "live_" + "read"
@@ -1281,6 +1323,99 @@ def test_live_test_opt_in_token_is_not_used_by_production_aeat_live_paths() -> N
     """The live-test opt-in env var must remain test/core-gate infrastructure only."""
     violations = _production_live_test_opt_in_violations()
     assert not violations, "production modules must not gate live reads on the pytest opt-in:\n" + "\n".join(violations)
+
+
+#: Tests naming a live-transport ECB door that provably never issues a request,
+#: keyed by ``(module path, enclosing function)`` rather than by line number so a
+#: reordering cannot silently move the exemption onto a different test. Every
+#: entry states why the door it opens cannot reach the network.
+_LIVE_ECB_DOOR_EXEMPTIONS: dict[tuple[str, str], str] = {
+    (
+        "src/cadrumo/adapters/outbound/fx/tests/test_ecb_provider.py",
+        "test_default_provider_is_cached",
+    ): (
+        "asserts the lru_cache identity contract of default_ecb_rate_provider only; it "
+        "constructs the provider and never calls a lookup, so no transport is reached. The "
+        "cached accessor takes no fetch argument, so injection cannot close this door."
+    ),
+}
+
+
+def _live_ecb_door_violations() -> tuple[list[str], int]:
+    """Return deterministic tests opening a default-transport ECB door, and the door count.
+
+    A door is ``EcbReferenceRateProvider(...)`` built without an injected
+    ``fetch=`` transport, or any call to ``default_ecb_rate_provider``. Both bind
+    the live European Central Bank host, so a test opening one either declares
+    ``aeat_live`` -- selected by the live lane alone -- or states in
+    :data:`_LIVE_ECB_DOOR_EXEMPTIONS` why it cannot reach the network.
+    """
+    violations: list[str] = []
+    doors = 0
+    for path in _modules():
+        tree = ast_for_path(path)
+        if tree is None:
+            continue
+        relative = repo_relative(path)
+        enclosing: dict[ast.AST, str] = {}
+        for function in ast.walk(tree):
+            if isinstance(function, ast.FunctionDef | ast.AsyncFunctionDef):
+                for descendant in ast.walk(function):
+                    enclosing.setdefault(descendant, function.name)
+        module_markers, _error = _extract_pytestmark_names(path)
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            callee = (qualified_name(node.func) or "").rsplit(".", 1)[-1]
+            if callee == "EcbReferenceRateProvider":
+                if any(keyword.arg == "fetch" for keyword in node.keywords):
+                    continue
+            elif callee != "default_ecb_rate_provider":
+                continue
+            doors += 1
+            if "aeat_live" in module_markers:
+                continue
+            owner = enclosing.get(node, "<module level>")
+            if _LIVE_ECB_DOOR_EXEMPTIONS.get((relative, owner)):
+                continue
+            violations.append(
+                f"{relative}::{owner}:{node.lineno}: opens a default-transport ECB door "
+                f"({callee}) without the `aeat_live` marker; inject a RateFetch transport "
+                "(tests.ecb_stub.ecb_csv_fetch) or declare the test live"
+            )
+    return violations, doors
+
+
+def test_deterministic_tests_do_not_open_a_live_ecb_transport_door() -> None:
+    """Reaching the live ECB host is an ``aeat_live`` concern, not a production branch.
+
+    The provider carries no test-awareness: its default transport reaches the
+    European Central Bank unconditionally, because that is what the adapter is
+    for. What holds a deterministic suite off that host is this marker contract
+    plus the injectable ``RateFetch`` boundary.
+    """
+    violations, doors = _live_ecb_door_violations()
+
+    assert doors, (
+        "no ECB transport door was found in any test module; the provider was renamed or "
+        "relocated, so an empty violation list would mean 'nothing was checked'"
+    )
+    assert not violations, "deterministic tests open a live ECB transport door:\n" + "\n".join(violations)
+
+
+def test_every_live_ecb_door_exemption_still_names_a_real_test() -> None:
+    """A stale exemption must fail rather than silently excusing nothing."""
+    known = {
+        (repo_relative(path), node.name)
+        for path in _modules()
+        if (tree := ast_for_path(path)) is not None
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
+    }
+    stale = sorted(entry for entry in _LIVE_ECB_DOOR_EXEMPTIONS if entry not in known)
+
+    assert not stale, f"live-ECB door exemptions naming no such test: {stale}"
+    assert all(_LIVE_ECB_DOOR_EXEMPTIONS.values()), "every live-ECB door exemption must state its reason"
 
 
 def test_test_modules_live_under_tests_directories_and_use_test_prefix() -> None:

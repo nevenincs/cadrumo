@@ -46,7 +46,7 @@ _LIVE_SESSION_AT = datetime(2099, 5, 28, 14, 30, 0, tzinfo=UTC)
 
 @pytest.fixture(autouse=True)
 def _isolated_secure_session_backend(tmp_path: Path):
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="clave-movil-translated-message-test"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="ec1d3c04-ba69-4586-a19d-b27e834a2dcd"):
         yield
 
 

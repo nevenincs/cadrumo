@@ -34,14 +34,14 @@ def test_malformed_active_pointer_error_documents_spanish_pre_profile_fallback(t
     storage_root = Path(env["CADRUMO_LOCAL_STORAGE_ROOT"] or "")
 
     register_cli_profile(
-        label='catala',
+        label="catala",
         facts={
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.tax_id": '00000000T',
-            "identity.name": 'Catala',
-            "identity.surnames": 'Test',
-            "activities.description": 'Serveis',
-            "preferences.output_language": 'ca',
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.tax_id": "00000000T",
+            "identity.name": "Catala",
+            "identity.surnames": "Test",
+            "activities.description": "Serveis",
+            "preferences.output_language": "ca",
         },
     )
 

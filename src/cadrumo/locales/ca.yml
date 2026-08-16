@@ -4385,6 +4385,17 @@ cli:
         --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
       create_help: Inicialitza un perfil actiu nou.
+      delete:
+        help: Elimina un perfil i el seu estat local; --yes confirma l'eliminació
+        name_help: Nom del perfil que vols eliminar
+        notices:
+          deleted: Perfil eliminat juntament amb el seu estat local.
+          preflight: 'Comprovació prèvia: no s''ha eliminat res. Torna a executar
+            amb --yes per eliminar.'
+        refusal:
+          active_profile: No pots eliminar el perfil actiu. Tanca la sessió amb 'aeat
+            config logout' i torna-ho a provar.
+        yes_help: Confirma explícitament l'eliminació
       delete_active_cleared: El perfil eliminat era l'actiu; el punter de perfil actiu
         s'ha esborrat. Executa aeat config login NAME o aeat config profile create
         NAME per tornar a treballar.

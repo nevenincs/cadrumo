@@ -167,12 +167,12 @@ def test_profile_create_refuses_case_insensitive_duplicate_label(
     create_profile_via_cli("operator")
 
     register_cli_profile(
-        label='OPERATOR',
+        label="OPERATOR",
         facts={
-            "identity.tax_id": '12345678Z',
-            "identity.name": 'Operator2',
-            "activities.description": 'design',
-            "iva.regime": 'GENERAL',
+            "identity.tax_id": "12345678Z",
+            "identity.name": "Operator2",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
         },
     )
 
@@ -428,14 +428,14 @@ def test_deleted_profile_name_is_reusable_by_create_and_rename(
     assert _invoke(("config", "profile", "delete", "operator", "--yes")).exit_code == 0
 
     register_cli_profile(
-        label='operator',
+        label="operator",
         facts={
-            "identity.tax_id": '12345678Z',
-            "taxpayer_type.entity_type": 'natural_person',
-            "identity.name": 'Operator',
-            "identity.surnames": 'Operator',
-            "activities.description": 'design',
-            "iva.regime": 'GENERAL',
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "identity.name": "Operator",
+            "identity.surnames": "Operator",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
         },
     )
 
