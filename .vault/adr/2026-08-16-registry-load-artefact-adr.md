@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:81126836962a3fe4a09f5b43e4d0d35289f17fa87d58a2b435997486b5a3f8e1'
+body_hash: 'sha256:52f5bfb2608c3e8eb4ebfe9b837f5d6ca4ef139804141c6d2a329abf10fef405'
 related:
   - "[[2026-08-14-test-harness-sanity-harness-performance-audit]]"
   - "[[2026-07-17-mcp-call-latency-adr]]"
@@ -44,8 +44,9 @@ detection that makes any of them safe.
   phase, and it yields both a staleness refusal and the census the compiled
   projections are built from — so the remedy must ship the census, not a digest:
   same research.
-- The identity walk runs twice, and the fold of the two is measured for neither
-  cost nor saving: same research, "not investigated".
+- The identity walk runs twice on an authoring tree, at ~4.4s each, because a
+  mutable tree's fingerprints are deliberately never memoised: same research,
+  "O5 measured".
 - `2026-07-17-mcp-call-latency-adr` already established the governing inversion
   in its D1 — the build and continuous integration are the gate, the runtime
   asserts identity — and already accepted its risk: a corrupted install that
@@ -74,7 +75,7 @@ already exists. Sizes are per-process, warm, from the research decomposition.
 | **O2** | replace the pickle with a randomly-indexed artefact built at release | up to ~0.7-0.95s warm, proportional to what is read | **large** — artefact format, release pipeline, loader | no |
 | **O3** | stamped identity for an immutable install; keep the walk for authoring trees | **3.1s measured** on installs, 0s on authoring trees | medium | **yes** — the verdict stamp shape |
 | **O4** | move the annual-Orden extraction to build time; runtime loads the shipped census | **1.59s measured** parse, warm, everywhere | medium | **yes** — same inversion as D1 |
-| **O5** | fold the two identity walks into one | unmeasured | medium | no |
+| **O5** | fold the two identity walks into one | **~4.4s measured**, authoring trees only | medium | no |
 | **O6** | warm in-process serving | everything, for MCP only | large | already decided |
 | **O7** | keep micro-optimising the walk and the loader | ceiling measured at ~0.26s | small | n/a |
 
@@ -109,11 +110,21 @@ the result removes the work rather than moving it. Had that split gone the other
 way this option would have been worthless, which is why it was checked before
 anything was built.
 
-**O5 — deferred, not rejected.** It is the only lever available to an authoring
-tree, and it is the one lever here with no number attached. The audit's 0.26s
-dedup ceiling bounds a different pair of walks and must not be cited for this
-one. Deferred pending its own measurement; re-entering this record when it has
-one.
+**O5 — measured, and promoted from deferred to accepted.** It is the only lever
+available to an authoring tree, and it was the one lever here with no number.
+Measurement puts it at **~4.4s per authority load**: a mutable tree's
+fingerprints are deliberately never memoised, so the authority collects them and
+`load_registry_tree` then collects the identical set again at full price. The
+authority already holds them; passing them down removes a walk and is strictly
+fresher than a second independent walk rather than less fresh.
+
+The refusal to borrow the audit's 0.26s ceiling is vindicated: that ceiling
+bounds a different pair, and the real figure is roughly seventeen times it.
+Citing it would have under-valued this by more than an order of magnitude and
+very likely retired the option. Scope is honest, though — a stamped install
+skips all of this under D1, so O5 buys nothing there and everything in the tree
+developers actually work in. Figures in
+`2026-08-16-registry-load-artefact-research`.
 
 **O6 — out of scope.** Already decided as D4 of `2026-07-17-mcp-call-latency-adr`
 and orthogonal: it amortises the per-process cost for MCP and leaves the
@@ -149,6 +160,19 @@ independent forms. Not to be re-chased.
   compiled projections are built FROM is never committed. A digest assertion
   would leave the authority with nothing to compile. Measured decomposition and
   the structural reason are in `2026-08-16-registry-load-artefact-research`.
+
+  **Amended again, in the implementation's favour: the runtime staleness
+  refusal STAYS.** This record originally traded it away — "the staleness
+  refusal moves to a build and continuous-integration gate". Implementing it
+  showed the trade was unnecessary. Every field of the committed manifest is
+  derived from the censuses, so a runtime holding the shipped censuses rebuilds
+  the manifest and re-runs the identical comparison against the committed bytes
+  for microseconds. Nothing is given up for the speed: the refusal fires exactly
+  where it did before, and only its cost disappears. The build gate is therefore
+  an ADDITION rather than a relocation — it is the only check that can catch a
+  census which is internally consistent, version-correct, and simply wrong about
+  the BOE text, because re-deriving that truth is the parse the artefact exists
+  to remove.
 - **D3 — randomly-indexed compiled artefact, built at release.** The compiled
   registry becomes a plain-data, randomly-addressable file — SQLite is the
   intended fit — built by the release pipeline and shipped, replacing the
@@ -292,9 +316,23 @@ production code from outside the repository and confirming the red.
 7. **Cold install.** No artefact present and a read-only package directory: the
    load still succeeds by compiling, and writes nothing into the package
    directory. Extends `dev/packaging/tests/test_release_cohort_integration.py`.
-8. **Orden staleness still refuses.** The build gate regenerates and refuses a
-   deliberately stale committed manifest, and the runtime digest assertion
-   refuses a mismatched digest. New gate under `dev/registry/tests/`.
+8. **Orden staleness still refuses.** Landed as
+   `test_m303_orden_census_artefact.py`. The build half regenerates from the
+   pinned BOE corpus and refuses a deliberately stale committed artefact; the
+   runtime half refuses every way a shipped census can be wrong — a source
+   digest disagreeing with the pinned source, a per-census or envelope extractor
+   version, a schema version, an unknown or duplicated source ref, a foreign
+   field — and falls back to extracting rather than raising, so tampering costs
+   speed and never correctness. Both halves were proven to bite by breaking
+   them. Two controls keep it from passing vacuously: an untampered copy must
+   load, and the committed artefact must satisfy the build gate. The strongest
+   assertion is that the shipped censuses compare equal, as whole models, to a
+   live extraction.
+
+   It sits in the registry test package rather than `dev/registry/tests/`
+   because the check it drives is registry-owned; the suite IS the continuous-
+   integration enforcement point, and it has to be, since this check cannot run
+   on the load path without paying the parse D2 removes.
 
 Items 1-5 are reconstructed from the deliverable brief, whose enumeration
 reached this record truncated between items 5 and 6; items 6 and 7 are its own

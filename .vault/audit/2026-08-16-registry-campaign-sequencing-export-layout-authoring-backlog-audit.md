@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:aad20042284885da2f0112d8b2e0e96e0b0445fc3ebfcdef5641816bfabec032'
+body_hash: 'sha256:0a7e431d85d8d4776490ad6de782a1ea58c3a0605a8d8a9be3b378d39a6ad62c'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -319,6 +319,118 @@ corpus-wide blast radius across 133,753 fields, so it wants its own change with
 mutation coverage and a regression pinning 038's artefact NOT nested. Still not a
 drive-by, and still not something to infer from geometry alone.
 
+**LANDED: the fold is implemented, and two of Modelo 184's three records now
+parse to exact geometry.** `_fold_untagged_desglose_components` nests a
+bare-ordinal desglose under its parent, gated on EXACT TILING, wired into both
+sheet-construction paths (`_extract_sheet_rows` for workbooks,
+`_PdfSheetDraft.finish` for PDFs, after gap-filling).
+
+Result on Modelo 184: `Tipo 2 - Rentas` 78 fields to 33 tops, and `Tipo 2 -
+Socio` 29, both **contiguous and landing exactly on the declared 500**. Only the
+third record still refuses, and its cause is now known and separate (below).
+Across the corpus the fold nests 35 runs and abstains on 16, including all
+eleven of Modelo 038's chart artefacts and Modelo 349's non-tiling group.
+
+**Measured non-regressive**, by controlled comparison rather than assertion:
+
+- Registry failure-set diff over the whole tree: every added/removed pair was
+  the same modelo with `relations` dropped -- a peer landing that family. **No
+  coverage verdict moved**: 180 (26/30), 190 (23/53), 341 (30/31), 349 (28/39),
+  390, 714 and 232 are byte-identical before and after, and 165, 181, 280 and
+  604 -- the four folding modelos that carry passing layouts -- still pass.
+- The fold is a provable no-op for 303, 200, 220 and 390: zero components in
+  any of their designs, so the concurrent variable-envelope test failures are
+  not reachable from it.
+- `test_record_design.py` 81/81 green.
+
+This is safe by construction, not by luck: folding only ever REMOVES the parent
+from the required-position set and never adds one, coverage is measured by
+containment (`missing = [p for p in required if not _covers(...)]`) so a
+shrinking required set cannot red a passing layout, and
+`_administration_reserved_bytes` already walks `(field, *field.components)`, so a
+`RESERVADO` sub-field keeps its protection after folding.
+
+**One real interaction, and it was a test defect the fold exposed rather than
+caused.** `test_writing_a_desglosado_parent_as_one_blob_is_refused` selected its
+subject as the first design field with `parent.components`. That was
+*accidentally* correct while Modelo 576 was the only bundled design carrying
+components and happens to reserve `19.3` for the Administracion. With more
+designs declaring components the selection picked a parent reserving nothing,
+where a blob covers every sub-position and intrudes on no reserved byte -- so the
+gate correctly stayed green and the proof went vacuous. Byte-extent coverage
+cannot object to a blob over sub-fields that are all real data; what makes the
+shape refusable is precisely that it writes AEAT's own bytes.
+
+The test already said so, in the vacuity assertion further down its own body
+("the desglosado parent reserves no sub-field, so this proof would be vacuous") --
+it simply ran AFTER the weaker `assert failures`. The selection now requires a
+reserved component, which moves that existing claim to where it can bite. The
+gate itself is unchanged and still refuses Modelo 576's blob. Module now 21/21.
+
+**Modelo 184's remaining record is a parse hole, same class as Modelo 296's.**
+Parent `15 @147+9` states "Este campo se subdivide en cuatro:" and only three
+sub-fields were read, covering 147-150 and leaving 151-155 unaccounted, so the
+run does not tile and correctly does not fold. The missing row is in the source:
+`151-155 PORCENTAJE DE RENTA ATRIBUIBLE A MIEMBROS RESIDENTES`, itself split
+into `151-153 ENTERO` and `154-155 DECIMAL`. It was dropped for the reason 296's
+perceptor rows were -- **no type token on the naming row**. Compare the sibling
+that parsed: `149-150 Alfabetico CLAVE PAIS:` carries position, type and name,
+while `151-155 PORCENTAJE...` carries position and name only, stating
+"campo numerico" later in its prose. `fill_unread_gaps` cannot recover it either,
+because it admits only into UNCLAIMED spans and 151-155 sits inside parent 15's
+claimed span. That is the next concrete step for 184.
+
+**Why Modelo 184's parse hole was NOT closed in the same change.** The obvious
+next move is to let `fill_unread_gaps` admit a candidate into a desglose
+parent's uncovered remainder -- the parent's span is not a position in the
+coverage model, so filling its subdivision displaces nothing that was read. The
+candidate already exists: `_unnamed_position_candidate` parses
+`151-155 PORCENTAJE...` to offset 151, length 5, type `No consta`. Only the
+claimed-span guard declines it.
+
+Measured before attempting it, and the measurement argued against: 16 non-tiling
+would-be parents carry an uncovered remainder across the bundled PDFs -- six in
+Modelo 038 (the chart artefacts, where admitting anything is wrong), plus 165,
+184, 280 and 349. So it is not a one-site fix, and the guard it loosens is
+conservative on purpose. Its own docstring states the hazard exactly: the
+candidate shape "is overwhelmingly prose, because AEAT routinely opens a field's
+description with that field's own range, and 41 bundled designs do". Inside a
+parent's span that prose would become an admitted field -- the invented-position
+class the same module calls "the worst failure available here", citing Modelo
+190's phantom `@108+1` and Modelo 156's one-byte APELLIDOS, because a fabricated
+position inflates the denominator and sends an author writing bytes AEAT never
+defined.
+
+So closing 184 needs a positive signal that the remainder is a real declared
+sub-field rather than prose -- the parent's own "se subdivide en cuatro" states
+the expected COUNT, which is the most promising evidence, and Modelo 038's
+artefacts declare no such count. That is its own change, with its own mutation
+coverage and an anti-fabrication regression, not an extension of this one.
+
+**And the count signal does not narrow it either -- measured, so the next
+attempt need not re-pay for this.** The idea above was to gate admission on the
+parent's own declared subdivision COUNT ("se subdivide en cuatro"), on the
+theory that it is rare, self-declared, and absent from Modelo 038's artefacts.
+Matching `se (subdivide|desglosa|divide) en <n>` across the bundled corpus finds
+**430** such parents, and the overwhelming majority carry ZERO read contained
+children -- Modelo 720 and Modelo 604 alone account for dozens. So the count
+declaration is common, and it does not correlate with the containment structure
+the fold reads: a parent can declare a subdivision while its sub-fields are read
+as ordinary sequential peers, or not read at all.
+
+That rules the count out as a NARROW admission gate. It remains the right
+EVIDENCE for the eventual fix -- it is what distinguishes a real subdivision from
+Modelo 038's chart artefacts -- but a rule keyed on it is a broad parser change
+touching hundreds of sites, not a targeted repair of Modelo 184's one hole.
+
+Net: three candidate closures for that hole were measured and all three are
+broad -- containment-only (51 sites, mixed population), parent-remainder
+admission (16 sites, artefact hazard, loosens a guard against a documented
+fabrication class), count-gated admission (430 sites). Modelo 184 is still the
+fleet's shortest path, blocked on `export_layouts` alone, but the distance is
+real parser work rather than the small repair the geometry result made it look
+like.
+
 ### the-generatable-set-is-now-six | high | Three parser fixes and the epoch declarations moved four modelos onto the generated path
 
 Re-surveyed through the generator's own IR loader after the parser work, at each
@@ -528,6 +640,69 @@ during this pass -- `compute_verdict_key() got an unexpected keyword argument
 'registry_fingerprints'`, then `load_registry_tree() got an unexpected keyword
 argument 'identity'`. Nothing can be verified against a loader that changes
 between runs.
+
+**UPDATE: Modelo 347 is now blocked on `export_layouts` ALONE**, down from four
+blocked families, which puts it level with Modelo 184 as the fleet's shortest
+remaining path. Registry validation moved 80 to 78 with **zero added failures**.
+
+Three families were resolved, and the earlier refusal to touch them was wrong on
+its reasoning. They had been left alone as "absent work, not inapplicable
+families". Corpus measurement refutes that for the expectation family: of 35
+revisions carrying zero formulas, **six do declare a verification expectation**
+-- 036, 182, 184, 232 (both revisions) and 720. A zero-formula informative modelo
+can and does carry one, so it was authorable all along.
+
+- **`verification_expectations` -- POPULATED.** Modelled on Modelo 184's and
+  Modelo 182's, which are the exact analogues (informative, zero formulas):
+  `tolerance = "0.00"`, `rounding = "none"`, `discrepancy_causes =
+  ["extraction_unreliable"]`. With nothing computed, verification means the held
+  values match the filed document exactly, and the only way they can differ is a
+  misread. The three casilla axes are used deliberately rather than copied: the
+  declarante spine and the declarado triple (nif, clave, importe) are
+  `computed_casilla_ids`; the INMUEBLE rows and their totals are
+  `reconcile_when_present_casilla_ids`, because a 347 only carries them when the
+  declarant reports arrendamiento de local de negocio, and that axis is
+  "excluded from the coverage denominator, so enrolling a situational casilla can
+  never lower coverage and flip a legitimate filing's verdict".
+- **`verification_predicates` -- DISPOSITIONED.** A predicate guards a CALCULATED
+  result; 347 declares `calculation_class = "informative"`, its formulas family
+  is already dispositioned inapplicable on the same ground, and measured on the
+  revision its 43 casillas declare zero formula_ids with no base and no cuota.
+  The declarante totals are counts and sums of the reported rows, not a liability
+  derived from them.
+- **`projection_endpoints` -- DISPOSITIONED.** Verified directly rather than
+  taken from Modelo 184's prose: `FilingProjectionRef` is a closed discriminated
+  union of **seven** members, every one `M303`-prefixed, so no declaration naming
+  347's rows can validate against it. One member is worth naming because it
+  invites a specific misreading -- `M303Exonerado390OperacionesTercerosProjectionRef`
+  says *operaciones con terceros*, which is literally this modelo's subject, but
+  it is a fact projected onto the modelo 303 of a filer exonerated from the 390,
+  an m303 casilla and not a 347 row.
+
+Populating the expectation made the revision calculation-bearing, which then
+correctly demanded a **`completeness_manifest`** -- also authored. Two errors
+worth recording, because both were caught by verification rather than by review:
+
+1. Positions were first derived from the join-proven semantic map (`18-26`,
+   `83-98`, ...). Wrong: `number` must mirror the casilla's OWN declared value,
+   and 347's casillas declare `number = "<casilla id>"`. The tell was a hard
+   refusal on duplicate `(segmento, number)` -- `contraparte.nif` and
+   `inmueble.arrendatario-nif` both sit at `18-26` in DIFFERENT records, so the
+   position form is genuinely ambiguous for this modelo while the id form is not.
+   Modelo 184's manifest looks different only because ITS casillas declare
+   position ranges; both follow the same rule.
+2. The measurement script conflated `RegistryLoadError` with
+   `RegistryValidationError`, so a hard load refusal printed as **"0 failures"** --
+   a false CLEAN for the entire registry. Every count in this audit is a
+   validation count; a load error means the tree did not parse at all. Catch the
+   two separately.
+
+**Unrelated defect found while verifying:**
+`test_completeness_manifests_use_the_canonical_fragment_anchor` globs for
+`0001-completeness_manifest.toml` with an UNDERSCORE, while every shipped
+manifest is `0001-completeness-manifest.toml` with a hyphen. Its `anchors` set is
+therefore always empty and it fails for every modelo carrying a manifest,
+detecting nothing about any of them. Not caused by this work and not fixed here.
 
 ### the-sello-position-is-a-deliberate-conservatism-not-a-gap | high | Tried to make it omissible, reverted, and the reason is the better finding
 

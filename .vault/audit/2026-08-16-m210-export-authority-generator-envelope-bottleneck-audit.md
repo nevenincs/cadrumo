@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:d12cb9e85af73875acef7094a88fa2dcafbc1a8b2134a89c3ddfe3258dd4624e'
+body_hash: 'sha256:0f93eaf8427a4ce29e6cd16db9d64cff913107a5caf94a48d057b8614ecda1f9'
 related:
   - "[[2026-08-16-m210-export-authority-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -349,3 +349,77 @@ Neither recommendation should be actioned by loosening a refusal without the
 corresponding proof. The refusals in question are the ones that stop a structurally thin
 fixed-width return being written behind a valid digest, which is the failure this whole
 generator exists to prevent.
+
+## Modelo 353: the first envelope-bearing modelo outside 303, and what it found
+
+The variable-envelope generalisation landed, so Modelo 353 was authored end to end
+against it: both revisions now generate, validate and reproduce byte-for-byte, and both
+are enrolled in the one parameterised generated-tree gate. Authoring it surfaced four
+defects in shared generator machinery, each of which would have blocked the NEXT
+envelope-bearing modelo identically.
+
+### The envelope sheet was joined to a body record
+
+`_validate_export_layout_coverage.py:804` decided the envelope branch AFTER the content
+join. The join matches on declared constants, and an envelope opens with the same `<T`
+and modelo bytes its page records do, so it agrees with every one of them. With a single
+body record that agreement is trivially a unique maximum, and the envelope was "joined"
+to a page whose fields sit at unrelated offsets - reporting the page's identificación
+block as intruding on the envelope's own reserved run, at 82.2% coverage.
+
+Modelo 353's 2008-2025 edition, which has exactly one body record, is what exposed it.
+The 2026 edition passed only by luck: with two body records the agreement TIED, the join
+failed, and the weaker any-record fallback covered the envelope's bytes from page 1.
+A passing verdict reached through a tie is not a verdict.
+
+The fix decides `is_envelope_sheet` before the join and skips the join entirely for it.
+Proven by two runtime probes from outside the repo: the envelope sheet never reaches the
+join, and emptying the bytes the envelope branch reports as written reds the gate with
+the gap attributed to the envelope itself.
+
+### Render-profile evidence could not read a legacy `.xls`
+
+A `Width17MembershipRule` REQUIRES `OfficialSourceEvidence` by schema, and the evidence
+resolver accepted only OOXML. AEAT still publishes many diseños as pre-OOXML `.xls`, and
+the record-design parser already reads them through xlrd - so every such modelo's render
+profile was unauthorable while its design parsed perfectly. The resolver now dispatches
+on suffix and reads the same binaries the rest of the pipeline does.
+
+### Every signed width-17 amount was unrepresentable
+
+`_profile_width_17_derivation` passed `decimals=rule.decimal_digits` unconditionally,
+while the schema refuses a field declaring decimals beside any data_type but `decimal`.
+A signed rule maps to `money`, so EVERY `N` width-17 amount raised at build. Modelo 200's
+committed profile carries 45 such fragments and has no generated tree yet, so nothing had
+executed the path.
+
+### One closed value set, a third spelling
+
+`1 -Sí, 2 -No` - no space after the dash - fell outside the dash-enumeration reader and
+refused as ambiguous content. Widened to admit no space while still refusing a digit on
+the dash's right, because `01-12` is a RANGE and reading it as a set would emit two
+members where the design means twelve. Both directions are gated.
+
+## A recargo omission carried from Modelo 322 into Modelo 353
+
+Modelo 322's ledger-direct `iva.cuota-devengada-total` sums the general, reducido and
+super-reducido repercutido tiers plus the autorepercutido cuota, and NO recargo de
+equivalencia tier. `aeat-calculation-grounding` requires an IVA total cuota devengada to
+enumerate the recargo tiers of LIVA art. 161 alongside the rest. Modelo 353's 2008-2025
+revision carries the same chain, and its group aggregate sums 322's results, so the
+omission propagates from the member's return into the group return that reconciles
+against it.
+
+This is recorded, not fixed: closing it means binding 322's recargo boxes into the chain
+on both modelos and both editions, and it is a distinct change from the export-authority
+work above. It is named here so it is actioned rather than rediscovered.
+
+## What the standing goal still asks that this segment did not deliver
+
+Modelo 322's 2008-2025 revision still declares no export layout. It cites TWO editions of
+its diseño, has 240 anchors across four records and only ten casillas authored, so it
+needs the full casilla, binding, map and profile pass rather than a mirror of a sibling.
+Until it lands, check mode refuses for both Modelo 353 trees - not because 353 is
+incomplete, but because 322 is staged beside it as the modelo 353 folds in. Both entries
+are recorded in the gate's pending table with that exact reason, so closing 322 is what
+removes them.
