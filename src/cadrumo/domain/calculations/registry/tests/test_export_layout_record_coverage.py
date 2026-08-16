@@ -912,7 +912,7 @@ def test_an_eedd_delegated_position_is_excused_only_with_its_note_body(
     delegated = {
         (field.offset, field.length)
         for field in sheet.fields
-        if _omissible_reason(field, sheet) == "delegated to the entidad desarrolladora by Nota 1"
+        if _omissible_reason(field, sheet) == "delegated to the entidad desarrolladora by the design's own footnote"
     }
 
     assert delegated == {(93, 4), (101, 9)}, (

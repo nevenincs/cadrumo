@@ -555,7 +555,18 @@ def _scan_sheet_rows(
     return parsed_rows
 
 
-_NOTE_DEFINITION_RE = re.compile(r"^Nota\s*(?P<ordinal>\d{1,2})[.:\s-]*(?P<body>.+)$", re.IGNORECASE)
+#: A footnote definition row printed beneath a field table. AEAT marks these
+#: three ways across its designs: "Nota 1 ...", "(**) ..." and -- where the
+#: marker was simply not typed -- an unmarked body. The marker is captured
+#: when present and left empty when it is not, never invented.
+_NOTE_DEFINITION_RE = re.compile(
+    r"^(?:Nota\s*(?P<ordinal>\d{1,2})|\((?P<symbol>[*]{1,3})\))[.:\s-]*(?P<body>.+)$",
+    re.IGNORECASE,
+)
+
+#: A body that delegates its positions to the software house that produced
+#: the file. Only a body matching this is worth retaining unmarked.
+_DELEGATION_BODY_RE = re.compile(r"entidades\s+desarrolladoras|\(EEDD\)", re.IGNORECASE)
 
 
 def _consume_note_definition_row(parsed_rows: _WorkbookSheetRows, values: tuple[object, ...]) -> bool:
@@ -567,10 +578,24 @@ def _consume_note_definition_row(parsed_rows: _WorkbookSheetRows, values: tuple[
     """
     joined = " ".join(str(value).strip() for value in values if value is not None and str(value).strip())
     match = _NOTE_DEFINITION_RE.match(joined)
-    if match is None:
-        return False
-    parsed_rows.notes.setdefault(match.group("ordinal"), match.group("body").strip())
-    return True
+    if match is not None:
+        body = match.group("body").strip()
+        # A marker row carrying no prose is a LABEL, not a definition: several
+        # designs print "Nota 1 :" with the sentence itself elsewhere. Recording
+        # it would occupy the marker with punctuation and hide the real body.
+        if sum(character.isalpha() for character in body) < 3:
+            return True
+        marker = match.group("ordinal") or match.group("symbol") or ""
+        parsed_rows.notes.setdefault(marker, body)
+        return True
+    # An unmarked delegation body: AEAT prints the sentence without typing its
+    # marker on some designs. Retained under the empty marker so a citation on
+    # the same sheet can still resolve it; nothing else is kept unmarked, so a
+    # stray sentence cannot become a note.
+    if _DELEGATION_BODY_RE.search(joined):
+        parsed_rows.notes.setdefault("", joined)
+        return True
+    return False
 
 
 def _consume_total_row(

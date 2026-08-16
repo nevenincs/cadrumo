@@ -283,7 +283,10 @@ def _administration_reserved(field: RecordDesignField) -> bool:
 
 
 #: A ``Nota N`` citation inside a field's own naming cell.
-_NOTE_CITATION = re.compile(r"\(\s*Nota\s*(?P<ordinal>\d{1,2})\s*\)", re.IGNORECASE)
+_NOTE_CITATION = re.compile(
+    r"\(\s*(?:Nota\s*(?P<ordinal>\d{1,2})|(?P<symbol>[*]{1,3}))\s*\)",
+    re.IGNORECASE,
+)
 
 #: The note body that delegates a position to the software house. AEAT prints
 #: this verbatim beneath the field table: "A cumplimentar por las entidades
@@ -307,10 +310,16 @@ def _eedd_delegated_reason(field: RecordDesignField, sheet: RecordDesignSheet) -
     citation = _NOTE_CITATION.search(field.description or "")
     if citation is None:
         return None
-    body = sheet.note_body(citation.group("ordinal"))
+    marker = citation.group("ordinal") or citation.group("symbol") or ""
+    body = sheet.note_body(marker)
+    if body is None:
+        # AEAT does not always type the marker on the definition row it prints.
+        # An unmarked delegation body is accepted only when the sheet prints
+        # exactly one, so the mapping from citation to body stays unambiguous.
+        body = sheet.note_body("")
     if body is None or not _EEDD_DELEGATED.search(body):
         return None
-    return f"delegated to the entidad desarrolladora by Nota {citation.group('ordinal')}"
+    return "delegated to the entidad desarrolladora by the design's own footnote"
 
 
 def _omissible_reason(field: RecordDesignField, sheet: RecordDesignSheet | None = None) -> str | None:
