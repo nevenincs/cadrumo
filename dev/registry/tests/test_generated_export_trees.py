@@ -19,9 +19,11 @@ their maps and profiles.
 from __future__ import annotations
 
 import filecmp
+import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -38,7 +40,11 @@ from .._generated_tree_check import GeneratedExportTreeCheckContext, check_gener
 from .._generated_tree_validation import GeneratedExportTreeValidationContext
 from .._provenance_manifest import ExportFragmentTarget
 from .._record_design_ir import load_record_design_intermediate
-from .._render_profile import RenderProfileSourceEvidence, load_render_profile
+from .._render_profile import (
+    RenderProfileSourceEvidence,
+    load_render_profile,
+    load_render_profile_source_evidence,
+)
 from .._semantic_map_join import join_record_design_semantics
 from .._semantic_map_loader import load_semantic_map
 
@@ -72,6 +78,8 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     _GeneratedTree("210", "2025", "aeat-dr-210-2022", "2022", 2025, "0A"),
     _GeneratedTree("232", "2018-y-siguientes", "aeat-dr-232-2018", "2018", 2018, "0A"),
     _GeneratedTree("232", "2016-2017", "aeat-dr-232-2016", "2016", 2016, "0A"),
+    _GeneratedTree("353", "2026-y-siguientes", "aeat-dr-353-2026", "2026", 2026, "01"),
+    _GeneratedTree("353", "2008-2025", "aeat-dr-353-2021-2025", "2021", 2021, "01"),
 )
 
 
@@ -101,7 +109,40 @@ def _isolated_authority(tree: _GeneratedTree, root: Path) -> Path:
     assert not (modelo_root / "revisions" / tree.revision / "export").exists(), (
         f"{tree}: the isolated candidate must not carry a copied export tree"
     )
+    # Every modelo the target REFERENCES comes along too. A cross-modelo binding
+    # or dependency classification resolves against the loaded registry, so a
+    # candidate holding only the target refuses with "references unknown source
+    # modelo" -- a refusal the isolation created, indistinguishable in the
+    # pending table from a real authoring gap. Modelo 353's per-member fan-in
+    # over Modelo 322 is the worked case.
+    for referenced in _supporting_modelos(tree):
+        shutil.copytree(
+            bundled_path("registry", "aeat", "modelos", referenced),
+            registry_root / "modelos" / referenced,
+        )
     return registry_root
+
+
+#: How a revision names another modelo it folds a value in from.
+_SOURCE_MODELO_RE: Final[re.Pattern[str]] = re.compile(r'^\s*source_modelo\s*=\s*"(?P<modelo>[^"]+)"', re.MULTILINE)
+
+
+def _supporting_modelos(tree: _GeneratedTree) -> frozenset[str]:
+    """The modelos staged beside the target because the target folds them in."""
+    referenced = _referenced_modelos(bundled_path("registry", "aeat", "modelos", tree.modelo))
+    return frozenset(
+        modelo
+        for modelo in referenced - {tree.modelo}
+        if bundled_path("registry", "aeat", "modelos", modelo).is_dir()
+    )
+
+
+def _referenced_modelos(modelo_root: Path) -> frozenset[str]:
+    return frozenset(
+        match.group("modelo")
+        for path in modelo_root.rglob("*.toml")
+        for match in _SOURCE_MODELO_RE.finditer(path.read_text(encoding="utf-8"))
+    )
 
 
 def _authorities(tree: _GeneratedTree):
@@ -124,13 +165,6 @@ def _authorities(tree: _GeneratedTree):
         design_epoch=tree.epoch,
     )
     joined = join_record_design_semantics(semantic_map, intermediate, inspection)
-    # Every rule in these profiles is a reviewed policy decision, so there is no
-    # official cell to resolve. Asserted rather than assumed: a later rule that
-    # DOES claim a source cell must not slip through with its claim unread.
-    claimed = [
-        rule.evidence for rule in render_profile.singleton_rules if rule.evidence.authority_kind != "reviewed_policy"
-    ]
-    assert claimed == [], f"{tree}: profile claims official source cells; evidence must be read from the binary"
     transport = ExportTreeTransportProfile(
         modelo=tree.modelo,
         design_epoch=tree.epoch,
@@ -142,7 +176,22 @@ def _authorities(tree: _GeneratedTree):
         line_ending="crlf",
         serializer_convention="rtoml-pretty-v1",
     )
-    evidence = RenderProfileSourceEvidence(design_identity=render_profile.design_identity, entries=())
+    # A width-17 membership rule REQUIRES official-source evidence by schema, so
+    # a profile carrying one only validates against text actually read back out
+    # of the hash-verified design binary. A profile whose every rule is a
+    # reviewed policy claims no cell, and reading the workbook for it would be
+    # both pointless and a refusal, since the resolver rejects an empty claim set.
+    claims_official = any(
+        rule.evidence.authority_kind != "reviewed_policy"
+        for rule in (*render_profile.singleton_rules, *render_profile.width_17_rules)
+    )
+    evidence = (
+        load_render_profile_source_evidence(
+            bundled_path() / catalogues.sources[tree.source_ref].corpus_path, render_profile
+        )
+        if claims_official
+        else RenderProfileSourceEvidence(design_identity=render_profile.design_identity, entries=())
+    )
     return semantic_map, render_profile, joined, evidence, transport
 
 
@@ -155,6 +204,14 @@ _CHECK_MODE_PENDING: dict[str, str] = {
     "m210-2025": "pending_review",
     "m232-2018-y-siguientes": "registry validation failed",
     "m232-2016-2017": "registry validation failed",
+    # 353 itself validates on both revisions. What check mode still refuses is
+    # Modelo 322, staged beside it because 353's per-member fan-in reads it:
+    # 322 declares no export layout on 2008-2025 and leaves families blocked on
+    # both. That is a real gap in a supporting modelo, not one 353 can close,
+    # and naming it here is what will force this entry to be removed when 322
+    # is authored.
+    "m353-2026-y-siguientes": "modelo 322 revision",
+    "m353-2008-2025": "modelo 322 revision",
 }
 
 
@@ -214,6 +271,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
             ),
             filing_year=tree.filing_year,
             period=tree.period,
+            supporting_modelos=_supporting_modelos(tree),
         ),
         temporary_root=candidate_root,
         target_registry_root=bundled_path("registry", "aeat"),

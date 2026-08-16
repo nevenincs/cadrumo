@@ -811,15 +811,27 @@ def _missing_report(
         )
         counted.update((sheet.name, position.offset, position.length) for position in required)
         required_total += len(required)
-        joined = _join_record(sheet, records)
-        if joined is not None:
-            consulted = tuple(joined.fields)
-            written = _written_bytes(consulted, data_only=True)
-            emitted = _written_bytes(consulted, data_only=False)
-        elif envelope is not None and sheet.name == envelope.record_identity:
+        is_envelope_sheet = envelope is not None and sheet.name == envelope.record_identity
+        # The envelope sheet is decided BEFORE the content join, never after it.
+        # The join matches on declared constants, and an envelope opens with the
+        # same `<T` and modelo bytes its page records do, so it agrees with every
+        # one of them. With a single body record that agreement is trivially a
+        # unique maximum, and the envelope is "joined" to a page whose fields sit
+        # at unrelated offsets -- reporting the page's identificación block as
+        # intruding on the envelope's own reserved run. Modelo 353's 2008-2025
+        # edition, which has exactly one body record, showed that. The envelope
+        # is emitted by the envelope contract and is never an authored record, so
+        # its coverage question has one correct answer regardless of the join.
+        joined = None if is_envelope_sheet else _join_record(sheet, records)
+        if is_envelope_sheet:
+            assert envelope is not None
             consulted = ()
             written = _envelope_written_bytes(envelope)
             emitted = written
+        elif joined is not None:
+            consulted = tuple(joined.fields)
+            written = _written_bytes(consulted, data_only=True)
+            emitted = _written_bytes(consulted, data_only=False)
         elif sheet.auxiliary_envelope_header is not None:
             # An auxiliary header is NOT a fixed record and no authored record
             # renders it, so the generic fallback below is actively wrong here:
@@ -853,10 +865,10 @@ def _missing_report(
             lines.append(f"design record {sheet.name!r}: {'; '.join(intrusions)}")
         if not missing:
             continue
-        if joined is not None:
+        if is_envelope_sheet:
+            scope = f"filing envelope {sheet.name!r}"
+        elif joined is not None:
             scope = f"authored record {joined.id!r} (record_type {joined.record_type!r})"
-        elif envelope is not None and sheet.name == envelope.record_identity:
-            scope = f"filing envelope {envelope.record_identity!r}"
         elif sheet.auxiliary_envelope_header is not None:
             scope = (
                 f"auxiliary envelope header {sheet.name!r}, which this layout does not emit: the "

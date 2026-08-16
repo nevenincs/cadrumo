@@ -11,6 +11,11 @@ from ....core import Modelo, scan_directory
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._ids import LegalRefId, SourceRefId
 from ._loader_cache import toml_file_fingerprint
+from ._m303_orden_census_artefact import (
+    M303_ORDEN_CENSUS_ARTEFACT_FILENAME,
+    load_m303_annual_orden_censuses,
+    render_m303_annual_orden_censuses,
+)
 from ._m303_orden_constants import EXTRACTOR_VERSION, SUPPORTED_EJERCICIOS
 from ._m303_orden_legal import compile_annual_orden_legal_references
 from ._m303_orden_projection_compiler import compile_m303_annual_orden_projection
@@ -34,7 +39,12 @@ def generate_m303_annual_orden_manifest(
     source_root: Path,
     sources: Mapping[SourceRefId, SourceReference],
 ) -> M303AnnualOrdenGeneratedManifest:
-    """Derive the exact source-integrity manifest from the pinned BOE corpus."""
+    """Derive the exact source-integrity manifest from the pinned BOE corpus.
+
+    Takes no ``registry_root``, so it always EXTRACTS. That is what the generator
+    needs: an artefact regenerated from a shipped copy of itself would agree with
+    that copy by construction and could never detect drift.
+    """
     return _generate_manifest_with_censuses(source_root=source_root, sources=sources)[0]
 
 
@@ -42,51 +52,80 @@ def _generate_manifest_with_censuses(
     *,
     source_root: Path,
     sources: Mapping[SourceRefId, SourceReference],
+    registry_root: Path | None = None,
 ) -> tuple[M303AnnualOrdenGeneratedManifest, dict[SourceRefId, M303AnnualOrdenSourceCensus]]:
     """Derive the manifest AND hand back the censuses it was derived from.
 
     Extracting one annual Orden means a full BeautifulSoup parse of its BOE
     HTML, so a caller that needs both the manifest row and the census behind it
     should take both from one pass rather than extracting twice.
+
+    ``registry_root`` opts into the build-generated census artefact: when it is
+    supplied and the artefact validates against the pinned sources, the censuses
+    are read rather than extracted, and the manifest is rebuilt from them. The
+    staleness comparison downstream is unaffected and still runs — it simply
+    stops costing a BOE parse. Omitted (the generator's own path), every census
+    is extracted afresh, which is what makes the generator able to detect drift
+    at all.
     """
     generated_sources: list[M303AnnualOrdenGeneratedSource] = []
     censuses: dict[SourceRefId, M303AnnualOrdenSourceCensus] = {}
+    shipped = load_m303_annual_orden_censuses(registry_root, sources=sources) if registry_root is not None else None
     for ejercicio in SUPPORTED_EJERCICIOS:
         source = _single_annual_orden_source_for_year(sources, ejercicio=ejercicio)
-        census = extract_m303_annual_orden_source(
-            ejercicio=ejercicio,
-            source=source,
-            source_root=source_root,
-        )
-        censuses[source.id] = census
-        generated_sources.append(
-            M303AnnualOrdenGeneratedSource(
+        census = None if shipped is None else shipped.get(source.id)
+        if census is None or census.ejercicio != ejercicio:
+            census = extract_m303_annual_orden_source(
                 ejercicio=ejercicio,
-                source_ref=source.id,
-                source_content_digest=census.source_content_digest,
-                activity_table_count=len(census.activities),
-                module_row_count=sum(len(activity.modules) for activity in census.activities),
-                module_distribution=tuple(
-                    sum(len(activity.modules) == size for activity in census.activities) for size in range(1, 8)
-                ),
-                agricultural_index_row_count=len(census.agricultural_indexes),
-                agricultural_ingreso_a_cuenta_row_count=len(census.agricultural_ingresos_a_cuenta),
-                non_agricultural_ingreso_a_cuenta_row_count=len(census.non_agricultural_ingresos_a_cuenta),
-                seasonal_index_day_bands=tuple(
-                    (item.minimum_days, item.maximum_days) for item in census.seasonal_indexes
-                ),
-                seasonal_index_coefficients=tuple(item.coefficient for item in census.seasonal_indexes),
-                difficult_justification_pct=census.difficult_justification.percentage,
-                lorca_2022_reduction_pct=(
-                    None if census.lorca_2022_reduction is None else census.lorca_2022_reduction.percentage
-                ),
-            ),
-        )
+                source=source,
+                source_root=source_root,
+            )
+        censuses[source.id] = census
+        generated_sources.append(_generated_source_from_census(census, ejercicio=ejercicio, source_ref=source.id))
     manifest = M303AnnualOrdenGeneratedManifest(
         extractor_version=EXTRACTOR_VERSION,
         sources=tuple(generated_sources),
     )
     return manifest, censuses
+
+
+def _generated_source_from_census(
+    census: M303AnnualOrdenSourceCensus,
+    *,
+    ejercicio: int,
+    source_ref: SourceRefId,
+) -> M303AnnualOrdenGeneratedSource:
+    """Project one census into the manifest row it implies.
+
+    Pure, and named rather than inlined, because it is what makes the shipped
+    census artefact sufficient: every field of the committed manifest is derived
+    from the census, so a runtime holding the censuses can rebuild the manifest
+    and re-run the staleness comparison WITHOUT parsing any BOE HTML. The
+    comparison therefore stays at runtime and costs microseconds, instead of
+    being traded away for the speed.
+
+    Returns:
+        The generated manifest row for ``census``.
+    """
+    return M303AnnualOrdenGeneratedSource(
+        ejercicio=ejercicio,
+        source_ref=source_ref,
+        source_content_digest=census.source_content_digest,
+        activity_table_count=len(census.activities),
+        module_row_count=sum(len(activity.modules) for activity in census.activities),
+        module_distribution=tuple(
+            sum(len(activity.modules) == size for activity in census.activities) for size in range(1, 8)
+        ),
+        agricultural_index_row_count=len(census.agricultural_indexes),
+        agricultural_ingreso_a_cuenta_row_count=len(census.agricultural_ingresos_a_cuenta),
+        non_agricultural_ingreso_a_cuenta_row_count=len(census.non_agricultural_ingresos_a_cuenta),
+        seasonal_index_day_bands=tuple((item.minimum_days, item.maximum_days) for item in census.seasonal_indexes),
+        seasonal_index_coefficients=tuple(item.coefficient for item in census.seasonal_indexes),
+        difficult_justification_pct=census.difficult_justification.percentage,
+        lorca_2022_reduction_pct=(
+            None if census.lorca_2022_reduction is None else census.lorca_2022_reduction.percentage
+        ),
+    )
 
 
 def render_m303_annual_orden_manifest(
@@ -98,6 +137,56 @@ def render_m303_annual_orden_manifest(
     return _render_generated_manifest(
         generate_m303_annual_orden_manifest(source_root=source_root, sources=sources),
     )
+
+
+def render_m303_annual_orden_census_artefact(
+    *,
+    source_root: Path,
+    sources: Mapping[SourceRefId, SourceReference],
+) -> str:
+    """Extract every pinned annual Orden and render the committed census artefact.
+
+    Lives here rather than beside the artefact's other serialisation because it
+    is the one direction that needs the EXTRACTOR, and the artefact module is
+    deliberately free of that import edge. The rendering itself still belongs to
+    the artefact module, so there remains exactly one place that decides what the
+    committed bytes look like.
+
+    Returns:
+        The artefact text, exactly as the generator commits it.
+    """
+    _manifest, censuses = _generate_manifest_with_censuses(source_root=source_root, sources=sources)
+    return render_m303_annual_orden_censuses(tuple(censuses[key] for key in sorted(censuses)))
+
+
+def check_m303_annual_orden_census_artefact(
+    *,
+    artefact_path: Path,
+    source_root: Path,
+    sources: Mapping[SourceRefId, SourceReference],
+) -> None:
+    """Refuse a missing, hand-edited, or stale committed census artefact.
+
+    The build-side half of the annual-Orden proof. It re-extracts from the pinned
+    BOE corpus and compares against the committed bytes, so it is the only thing
+    standing between a stale census and every runtime that now trusts one. The
+    runtime cannot perform this check itself without paying the parse this
+    artefact exists to remove, which is exactly why it is a build and
+    continuous-integration gate.
+
+    Raises:
+        RegistryLoadError: When the artefact is absent, unreadable, or does not
+            equal a fresh extraction.
+    """
+    if not artefact_path.is_file():
+        raise RegistryLoadError(f"annual Orden census artefact is missing: {artefact_path}")
+    expected = render_m303_annual_orden_census_artefact(source_root=source_root, sources=sources)
+    try:
+        actual = artefact_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise RegistryLoadError(f"annual Orden census artefact cannot be read: {artefact_path}") from exc
+    if actual != expected:
+        raise RegistryLoadError(f"annual Orden census artefact is stale: regenerate {artefact_path}")
 
 
 def _render_generated_manifest(manifest: M303AnnualOrdenGeneratedManifest) -> str:
@@ -164,13 +253,25 @@ def _check_manifest_with_censuses(
     manifest_path: Path,
     source_root: Path,
     sources: Mapping[SourceRefId, SourceReference],
+    registry_root: Path | None = None,
 ) -> tuple[M303AnnualOrdenGeneratedManifest, dict[SourceRefId, M303AnnualOrdenSourceCensus]]:
-    """Run the staleness refusal and hand back the censuses it already extracted."""
+    """Run the staleness refusal and hand back the censuses behind it.
+
+    ``registry_root`` lets the censuses come from the build-generated artefact
+    instead of a BOE parse. The refusal is identical either way: the manifest is
+    rebuilt from whichever censuses were obtained and its rendered text compared
+    against the committed bytes. What changes is only the cost of obtaining them.
+    """
     try:
         directory_entries = scan_directory(manifest_path.parent, require_root=True)
     except OSError as exc:
         raise RegistryLoadError(f"annual Orden generated directory cannot be read: {manifest_path.parent}") from exc
-    unexpected_entries = tuple(entry for entry in directory_entries if entry.name != manifest_path.name)
+    # The generated directory admits exactly the artefacts the generator writes.
+    # The census artefact is named through its owning module rather than spelled
+    # here, so a rename there cannot leave this guard refusing the very file the
+    # build produces.
+    generated_names = frozenset({manifest_path.name, M303_ORDEN_CENSUS_ARTEFACT_FILENAME})
+    unexpected_entries = tuple(entry for entry in directory_entries if entry.name not in generated_names)
     if unexpected_entries:
         names = ", ".join(sorted(entry.name for entry in unexpected_entries))
         raise RegistryLoadError(f"annual Orden generated directory contains unexpected entries: {names}")
@@ -180,7 +281,11 @@ def _check_manifest_with_censuses(
     # manifest are the same derivation of the same corpus, so deriving them
     # separately cost a second full extraction of every pinned annual Orden
     # and could not have disagreed.
-    manifest, censuses = _generate_manifest_with_censuses(source_root=source_root, sources=sources)
+    manifest, censuses = _generate_manifest_with_censuses(
+        source_root=source_root,
+        sources=sources,
+        registry_root=registry_root,
+    )
     expected = _render_generated_manifest(manifest)
     try:
         actual = manifest_path.read_text(encoding="utf-8")
@@ -209,6 +314,7 @@ def load_m303_annual_orden_authority(
         manifest_path=manifest_path,
         source_root=source_root,
         sources=sources,
+        registry_root=root.resolve(),
     )
     modelo_303 = _single_m303_modelo(modelos)
     annual_source_refs = frozenset(source.source_ref for source in manifest.sources)
@@ -328,9 +434,17 @@ def _merge_annual_orden_legal_refs(
 
 
 def collect_m303_annual_orden_fingerprints(root: Path) -> tuple[tuple[str, int, int, str], ...]:
-    """Fingerprint the generated manifest and no hand-authored annual rows."""
+    """Fingerprint every generated annual-Orden artefact and no hand-authored rows.
+
+    Deliberately NOT ``pattern="*.toml"``. The generated directory carries the
+    invariants manifest as TOML and the census artefact as JSON, and a TOML-only
+    glob would leave the census outside the cache key entirely -- so an edit to
+    it would be served from a compiled cache that still looked valid. Both files
+    are generated by the same tool from the same corpus and both must move the
+    key.
+    """
     directory = root.resolve() / "m303_orden_anual"
-    return tuple(toml_file_fingerprint(path.resolve()) for path in scan_directory(directory, pattern="*.toml"))
+    return tuple(toml_file_fingerprint(path.resolve()) for path in scan_directory(directory))
 
 
 def _single_annual_orden_source_for_year(

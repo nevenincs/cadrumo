@@ -50,10 +50,27 @@ class GeneratedExportTreeValidationContext:
     filing_year: int
     period: str
     on: date | None = None
+    #: Modelos other than the target that the candidate root is allowed to hold.
+    #:
+    #: The target's own validation resolves its cross-modelo folds against the
+    #: LOADED registry, so a candidate holding only the target refuses every
+    #: revision that reads another modelo -- Modelo 353's per-member fan-in over
+    #: Modelo 322 is the worked case, and it refused with "references unknown
+    #: source modelo" from an isolation the caller created, not an authoring gap.
+    #: Naming them keeps the isolation bounded and auditable: anything staged
+    #: beyond the target and this set is still refused, and the checks that
+    #: actually pin the verdict -- the target directory loading exactly one
+    #: revision, and the authority selecting exactly that modelo and revision --
+    #: are unchanged and unaffected by a supporting modelo being present.
+    supporting_modelos: frozenset[str] = frozenset()
 
     def __post_init__(self) -> None:
         if not self.period.strip():
             raise RegistryValidationError("generated-tree validation requires a non-empty filing period")
+        if str(self.target.modelo) in self.supporting_modelos:
+            raise RegistryValidationError(
+                "generated-tree validation must not name the target modelo as a supporting modelo",
+            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,6 +110,7 @@ def validate_generated_export_tree(
         registry_root,
         modelo_id=modelo_id,
         revision_id=revision_id,
+        supporting_modelos=context.supporting_modelos,
     )
     _require_exact_generated_outputs(export_root, rendered.output_files)
 
@@ -154,12 +172,13 @@ def _require_isolated_target_context(
     *,
     modelo_id: str,
     revision_id: str,
+    supporting_modelos: frozenset[str] = frozenset(),
 ) -> tuple[Path, Path, Path]:
     modelos_root = _require_directory(registry_root / "modelos", subject="generated registry modelos root")
     modelo_root = modelos_root / modelo_id
     _require_exact_children(
         modelos_root,
-        expected={modelo_id},
+        expected={modelo_id, *supporting_modelos},
         subject="generated registry modelos root",
     )
     _require_directory(modelo_root, subject="generated modelo directory")
