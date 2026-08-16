@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:b394dcd998e24e1d04afbfe15397f041dd35c5d966ff5d125c804f6fa24999c8'
+body_hash: 'sha256:86eee7fd4b7aba93c121766d51516f4066c937e955942004fd661878c5300ddb'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -2280,3 +2280,56 @@ the server and client halves plateau after one use.
 
 So the ledger slice gets a clean bill on all four channels, and the instrument
 is now cheap enough to point at the whole suite.
+
+## Full-suite resource sweep: no leaks, and a 4x correction to the memory figure
+
+The trimmed probe swept `src/cadrumo` plus `src/cadrumo-harness` under `-n auto`.
+
+### Threads and handles: clean, definitively
+
+    thread retainers across ~28,000 tests : 0
+    tests with any handle growth          : 416 (~1.5%), across 241 modules
+    handles per worker, min -> max        : ~222 -> 307..413
+
+A worker ends a full run holding three to four hundred handles. That is bounded
+and small, and it settles the handle question that two earlier rounds circled:
+there is no leak. The 416 growth events are first-touch initialisation --
+loopback reader, hardware probe, browser capture, notifications -- spread across
+modules, and the per-worker totals never accumulate.
+
+Zero thread retainers across the whole suite is the stronger result of the two,
+because a stranded thread is the leak that most often turns a clean suite
+order-dependent.
+
+### Memory: peak RSS is 4.0-5.7 GB PER WORKER
+
+    gw0 4,418 MB   gw1 4,563 MB   gw2 4,015 MB
+    gw3 4,217 MB   gw4 5,748 MB   gw5 4,258 MB
+
+At the six-worker default that is roughly **24-34 GB of peak resident set** for
+one suite run.
+
+This corrects a figure used repeatedly in this document. The worker-count
+trade-off was argued from the session AST prime alone -- 1,216 MB per worker,
+"7.3 GB at six workers" -- and treated as the memory cost of raising
+`DEFAULT_WORKER_COUNT`. The measured peak is four to five times that. The prime
+is a component, not the total; the rest is registry snapshots, compiled
+authorities, cached catalogues and per-test stores.
+
+The consequence is concrete: raising the worker cap from 6 to 12 on this box
+would mean roughly 48-69 GB of peak RSS against 137 GB total, with peers already
+holding a share. That is a materially different decision from the one the 7.3 GB
+figure implied, and it is the only remaining wall-clock lever, so getting its
+cost right matters.
+
+Not called a leak: these are peaks, sampled at the tests that showed handle
+growth, so the trajectory within a worker is not established. What is
+established is the ceiling, which is what the worker-count decision needs.
+
+### What the sweep bought
+
+Three channels closed with measurements rather than argument -- threads clean,
+handles bounded, and the memory ceiling now known instead of estimated from one
+of its parts. The operator asked for instrumentation to find leaks and resource
+misuse; the honest answer is that this suite has no leaks in the classic
+channels, and its real resource story is a memory ceiling nobody had measured.
