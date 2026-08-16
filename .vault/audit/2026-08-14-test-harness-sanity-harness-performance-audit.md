@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:6a75a998c54c57dee2028c1b77d6658b0c965a5e9fda9f497e2cdf2db40d01ae'
+body_hash: 'sha256:d7d478baaa02fa39af49347f371b7d257f9ad1efeaa0cb0b70a730e7fcba7ad0'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1665,3 +1665,54 @@ immediately after extracting the one number that had been planned for. Each
 re-run cost half an hour of wall clock for data that had already existed. The
 log is a few tens of kilobytes with `--tb=no`; the analysis is cheap and
 iterative and the collection is not.
+
+## The CLI mass, attributed: subprocesses are 28% of it, not the story
+
+The previous entry recorded the CLI suite's 3,356s as UNATTRIBUTED and named the
+measurement that would settle it. Taken:
+
+    CLI test time (all workers) : 2,921s
+    time inside spawned children:   824s   = 28.2% of CLI test time
+    spawns                      : 2,541 outermost, mean 0.32s each
+    in-process CLI work         : ~2,097s = the other 71.8%
+
+Against the whole suite's 9,351s, subprocess time is **8.8%**. So eliminating
+every spawn in the CLI suite -- which is impossible, since they exist to prove
+cold-process behaviour -- would return under a tenth of the suite's CPU.
+
+The hypothesis was directionally right and quantitatively wrong, which is
+exactly why it was recorded as unattributed rather than acted on. The real mass
+is the CLI's IN-PROCESS work: roughly 2,097s, about 22% of the entire suite, and
+2.5x the spawn time.
+
+Note also the mean spawn is 0.32s, BELOW the 0.70s `--help` floor measured
+earlier. A floor measured on one command is not the mean of a population of
+commands, and reasoning "at least 0.70s each x N spawns" would have overstated
+the total by more than double.
+
+### The instrument was wrong twice before it was right
+
+Worth recording, because the errors were opposite and both plausible:
+
+- Timing `subprocess.run` AND `Popen.wait` charged the same seconds twice:
+  63.66s against a 67.50s module.
+- Timing only `Popen.wait` reported 0.099s, because `subprocess.run` blocks in
+  `Popen.communicate()` and reaches `wait` after the child has already exited.
+
+The fix times only the OUTERMOST spawn, via a re-entrancy depth counter, and
+wraps `communicate` as well. Validated at 63.08s of 66.69s (94.6%) on a module
+already known to be subprocess-bound -- a known answer chosen precisely because
+a wrong instrument would be visible against it.
+
+Both errors would have produced a confident number. The first would have said
+subprocesses are ~94% of CLI time and sent the next round chasing them; the
+second would have said they are ~0% and retired them. The measured answer, 28%,
+is between the two lies and matches neither.
+
+### What this leaves
+
+A precise next question rather than a lever: what does the CLI suite's ~2,097s
+of IN-PROCESS work consist of? That is the largest single identified block of
+CPU in the suite. It is NOT claimed here to be shared or reducible -- this
+campaign has learned what happens to unmeasured claims -- only that it is now
+located.
