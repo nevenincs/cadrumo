@@ -2803,3 +2803,27 @@ optimised against. **Do not re-chase this until the registry validates.**
 - **A red tree is not an optimisable tree.** With 636 of 3,126 CLI-lane tests
   failing, much of the tail measures failure paths. Timings taken now describe a
   program that is not the one that will ship.
+
+### Verified: the copy-per-test fixture really does copy, and the clones are reclaimed
+
+Checking the disk cost of `seeded_isolated_backend_fixture` nearly produced a
+false alarm. The seeded origin is **7.4 MB / 18 files**, but a basetemp tree
+after a completed run contains ONLY `seeded-origin0` -- **zero** per-test
+`seeded-world` clones. Read naively that says the function-scoped fixture never
+ran, which would mean the suite had no per-test isolation at all.
+
+`--setup-show` settles it:
+
+```
+SETUP    M _isolated_backend_origin (fixtures used: tmp_path_factory)
+    SETUP    F _isolated_backend (fixtures used: tmp_path)
+    TEARDOWN F _isolated_backend
+```
+
+Both run, in the right order and scopes. The clones are created per test and
+then reclaimed by the harness's `_release_settings_storage_directories`
+teardown, so the finished tree shows none. Disk cost is one 7.4 MB copy live at
+a time, measured at 0.04s.
+
+**An empty directory tree is not evidence that a fixture did not run** when the
+harness cleans up after itself. Ask the fixture graph, not the filesystem.
