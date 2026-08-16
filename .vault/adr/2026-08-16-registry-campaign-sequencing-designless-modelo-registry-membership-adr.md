@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:1d07d1ab38c56f505dec38e0a5f23ac118cd4ebebaa0814ff17011dd35ea3cff'
+body_hash: 'sha256:6163bab1bbe30f81a05fb805b412a81f876a5bbb8c6189bac2bc9fe8e824d90e'
 related:
   - "[[2026-08-14-registry-campaign-sequencing-adr]]"
   - "[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]"
@@ -95,10 +95,15 @@ The decision needed is not an exemption. It is what registry membership *means*.
 - The parent ADR is `accepted` and is not superseded or amended by this record.
   This record narrows what the registry *contains*; the parent governs what a
   revision inside it must declare. Both hold simultaneously.
-- `UNMODELED_OBLIGATIONS` may not be populated by this work. Its human tax-review
-  gate is a deliberate refusal to infer a taxpayer duty from a form's absence,
-  and the taxpayer-facing subset below is exactly the population that gate exists
-  for. This record identifies the candidates and stops.
+- `UNMODELED_OBLIGATIONS` stays EMPTY. Enrolling M721 there was tried and
+  reverted: the mapping asserts a duty the application does not model, and M721
+  is modelled — it has foreign-asset threshold and redeclaration resolvers and a
+  cross-year E2E fidelity suite. The gate held; what it caught was a
+  misclassification, not a missing signature.
+- A modelo's calculation machinery is part of the membership question, not a
+  detail of it. Deleting a definition deletes formulas, resolvers and their
+  tests, so "no published design" is necessary but not sufficient for
+  relocation.
 - Relocation is not free of blast radius: `NON_REGISTRY_MODELOS` membership makes
   `validate_modelo` raise, and the core parity gate binds the enum's registry-
   backed members to `application.modelo.registry_modelo_codes`. Each relocation
@@ -136,14 +141,71 @@ done — that fix would only apply had the modelo stayed in the registry, and
 recording it as a live-through-2023 revision the application still cannot file
 would reintroduce the exact state this record removes.
 
-**Group W — identified, deliberately not decided (eight).** M121, M136, M140,
-M143, M361, M380, M721, M848 are live, taxpayer-facing, and web-form-only. They
-are the population `UNMODELED_OBLIGATIONS`'s human tax-review gate governs.
-This record names them and hands them to that gate; it does not populate the
-mapping and does not delete their definitions.
+**Group W — resolved, and it split in two.** The eight live web-form-only
+modelos were reviewed per entry against official AEAT and BOE sources, and they
+do not share one answer.
 
-Group W leaves the registry red until that review lands. That is the parent
-ADR's intended behaviour and is not worked around here.
+*Relocated (six),* each out of scope by filer or by election rather than by
+format: M121, M140 and M143 are elective IRPF deduction trámites resolved in the
+annual campaign, not standing obligations; M361 serves empresarios **no
+establecidos** in the TAI, confirmed from its own bundled procedure page, so a
+Spanish-established filer never files it; M380 covers LIVA art. 19 abandonment
+of the arts. 23/24 regimes — zonas francas and depósitos distintos del aduanero
+— which is sector-operator territory; M848 is filed only by IAE-liable
+non-exempt taxpayers and only when the INCN is not already reported through IS,
+IRNR or M184, and AEAT accepts it in person or by post with no electronic file
+at all.
+
+*Kept (two), and this is the category this record did not anticipate.* M136 and
+M721 have no published design either, but both carry real calculation
+machinery the application exercises: M136 declares base-imponible,
+cuota-gravamen-especial and resultado-a-ingresar formulas; M721 has the
+foreign-asset threshold and cross-year redeclaration resolvers, the €50,000 and
+€20,000 art. 42-quater thresholds, and a two-cycle E2E data-fidelity suite.
+Relocating them would delete working, tested capability in order to record an
+absence — a strictly worse outcome than the red they cause.
+
+So the criterion needs its second half stated: a modelo leaves the registry when
+AEAT publishes no machine-readable format **and** the application has no
+modelled capability that would be destroyed by its removal. M136 and M721 are
+**calculate-capable but unfileable**.
+
+**The no-layout refusal is therefore scoped, and this does narrow the parent
+ADR.** Its condition becomes "declares no export layout AND AEAT publishes a
+record design for this modelo". The parent's refusal instructs the reader to
+"author the revision's export layout from its official record design"; where no
+such design exists the instruction is not a task but an impossibility, so the
+refusal would stand forever and carry no information.
+
+This is not the declarable exemption rejected above, and the difference is
+mechanical rather than rhetorical. The condition is a property of the source
+catalogue — does any source this modelo cites carry `kind = "record_design"` —
+not a field a revision author sets. No revision reaches the quiet side by
+declaring anything. Over the bundled corpus the property separates exactly two
+modelos from the other forty-six, and that partition was measured before the
+change was written, not asserted after it.
+
+**One residual escape is open, and it is named rather than papered over.** A
+modelo could in principle reach the quiet side by citing no record-design source
+at all. The structural answer to that is
+`test_every_bundled_record_design_is_registered`, which refuses a bundled design
+no source registers — but that gate is currently RED on 97 of 218 bundled files,
+across modelos untouched by this work (714, 390, 200, 190, 180 and others), so a
+new omission would land in existing noise rather than stand out. The escape is
+therefore guarded in principle and not in practice today. Closing it means
+fixing that registration backlog, which is its own acquisition-and-authoring
+task and is not folded into this decision. Recorded here so the guarantee is not
+read as stronger than it is.
+
+The predicate is deliberately read at MODELO scope, across every revision, not
+at revision scope. M185 forced that: its 2026 design is bundled while its
+`2003-2025` revision cites none, and a per-revision reading quietly excused that
+epoch — which is an ACQUISITION gap, the exact shape the refusal exists to
+surface. Modelo scope keeps it red. A `form_spec` does not count either: M721
+cites its approving orden's anexo at `layout_authority` tier under an id ending
+`-layout`, and keying on tier or name rather than kind would have made the whole
+distinction fictional. Both of those are pinned by tests that fail if the
+predicate drifts to the weaker reading.
 
 ## Rationale
 
@@ -170,20 +232,32 @@ owe these filings.
 
 ## Consequences
 
-- The 48-revision refusal list loses eight entries by relocation and one by
-  retirement, and the remaining excluded eight are named with an owner. The 31
-  revisions with bundled designs are unaffected: their answer was always to
-  author the layout, and this record does not soften that.
-- `core/_modelo.py` gains eight mapping entries and loses eight registry
-  directories. The obligation-coverage reconciliation continues to account for
-  every one, moving them from *surfaced* to *out of scope* with a stated reason
-  rather than dropping them.
-- Real authored grounding is deleted with the Group R directories — deadline
-  windows and legal citations for eight modelos. This is a genuine loss and the
-  reason relocation is per-modelo and reversible from git rather than a sweep.
+- Measured against a real authority load, not estimated: registry validation
+  failures fell from 137 to 108, and revisions refused for declaring no export
+  layout fell from 48 to 32, across 43 modelos down to 27. Fifteen modelos left
+  the registry; nothing was newly broken in either pass, and the failure-set diff
+  was checked both times rather than inferred from the totals.
+- `CANONICAL_MODELO_FLEET` derives from `NON_REGISTRY_MODELOS`, so the
+  authorization denominator moved by construction, 73 to 58, with no list to
+  edit. Its pinned assertion is a deliberate tripwire and was updated as the
+  conscious decision it demands, with the reasoning added to its narrative.
+- The 31 revisions with bundled designs are untouched. Their answer was always to
+  author the layout, and nothing here softens that.
+- Real authored grounding went with the relocated directories — deadline windows
+  and legal citations, and for M289 twenty legal refs tracking thirteen amending
+  ordenes. That is a genuine loss, recoverable from history, and the reason
+  relocation is per-modelo rather than a sweep.
 - The XSD channel question is deferred, not answered. If the product later
-  commits to rendering DAC-family submissions, Group R members return to the
-  registry, and that return is a normal enrollment rather than an exemption
-  being revoked.
-- Group W is a standing red. Anyone tempted to clear it should read the parent
-  ADR's rejected-options section first.
+  commits to rendering DAC-family submissions, those modelos return by normal
+  enrollment rather than by an exemption being revoked.
+- M136 and M721 go green as calculate-capable, unfileable modelos, and the
+  no-layout refusal now means something narrower and truer: *a design exists and
+  the layout has not been authored*. Every one of the remaining refusals is
+  actionable, which the previous reading could not claim.
+- The scoping is a real narrowing of the parent ADR's unconditional refusal, and
+  is recorded as such rather than presented as a clarification. What it does not
+  narrow: the refusal keeps full force over all forty-six modelos with a
+  published design, and no author-settable field can turn it off.
+- The membership criterion generalises to any modelo AEAT moves off fixed-width,
+  which is the direction of travel for the DAC and CESOP families. Enrollment
+  now has a stated property to test rather than a precedent to match.

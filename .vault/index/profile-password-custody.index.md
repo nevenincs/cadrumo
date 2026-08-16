@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#profile-password-custody'
-date: '2026-08-15'
-modified: '2026-08-15'
+date: '2026-08-16'
+modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:feae1bccfb0158777c5cef6a2bb3261c9615364582c66dc35e44a53cf3983e86'
+body_hash: 'sha256:7f27bc2e6345c8b072efea4fe797074d15549c6dd675ec228051b4271190232f'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -17,9 +17,14 @@ related:
   - '[[2026-08-13-profile-password-custody-W02-P03-S07]]'
   - '[[2026-08-13-profile-password-custody-W02-P03-S08]]'
   - '[[2026-08-13-profile-password-custody-W02-P03-S09]]'
+  - '[[2026-08-13-profile-password-custody-W02-P04-S102]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S10]]'
+  - '[[2026-08-13-profile-password-custody-W02-P04-S119]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S11]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S12]]'
+  - '[[2026-08-13-profile-password-custody-W02-P04-S174]]'
+  - '[[2026-08-13-profile-password-custody-W02-P04-S176]]'
+  - '[[2026-08-13-profile-password-custody-W02-P04-S193]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S26]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S27]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S43]]'
@@ -31,32 +36,94 @@ related:
   - '[[2026-08-13-profile-password-custody-W02-P04-S82]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S89]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S90]]'
+  - '[[2026-08-13-profile-password-custody-W02-P04-S92]]'
   - '[[2026-08-13-profile-password-custody-W02-P04-S95]]'
   - '[[2026-08-13-profile-password-custody-W03-P05-S13]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S104]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S108]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S113]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S122]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S125]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S128]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S129]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S135]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S136]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S139]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S140]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S146]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S151]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S152]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S168]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S16]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S170]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S17]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S18]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S42]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S59]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S60]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S66]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S75]]'
   - '[[2026-08-13-profile-password-custody-W03-P06-S88]]'
+  - '[[2026-08-13-profile-password-custody-W03-P06-S93]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S101]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S107]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S109]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S110]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S111]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S112]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S114]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S115]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S116]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S117]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S118]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S120]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S121]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S123]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S124]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S126]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S127]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S130]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S131]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S132]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S133]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S141]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S142]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S143]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S144]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S145]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S148]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S149]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S150]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S158]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S159]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S160]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S161]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S164]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S166]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S167]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S169]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S171]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S172]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S175]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S177]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S178]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S180]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S181]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S186]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S189]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S191]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S192]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S196]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S197]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S19]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S28]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S29]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S31]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S32]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S33]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S34]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S35]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S36]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S37]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S38]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S39]]'
@@ -65,6 +132,8 @@ related:
   - '[[2026-08-13-profile-password-custody-W04-P07-S44]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S45]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S46]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S47]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S48]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S49]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S50]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S53]]'
@@ -73,19 +142,42 @@ related:
   - '[[2026-08-13-profile-password-custody-W04-P07-S62]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S63]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S64]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S65]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S67]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S69]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S70]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S71]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S72]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S73]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S77]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S78]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S80]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S83]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S84]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S86]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S87]]'
   - '[[2026-08-13-profile-password-custody-W04-P07-S91]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S94]]'
+  - '[[2026-08-13-profile-password-custody-W04-P07-S97]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S105]]'
   - '[[2026-08-13-profile-password-custody-W05-P08-S134]]'
   - '[[2026-08-13-profile-password-custody-W05-P08-S137]]'
   - '[[2026-08-13-profile-password-custody-W05-P08-S138]]'
   - '[[2026-08-13-profile-password-custody-W05-P08-S147]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S154]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S155]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S156]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S157]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S162]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S163]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S165]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S173]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S187]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S188]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S198]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S199]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S205]]'
+  - '[[2026-08-13-profile-password-custody-W05-P08-S207]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -100,10 +192,16 @@ related:
   - '[[2026-08-14-profile-password-custody-s11-session-review-audit]]'
   - '[[2026-08-14-profile-password-custody-s12-phase-review-audit]]'
   - '[[2026-08-14-profile-password-custody-s43-absence-gate-independent-review-audit]]'
+  - '[[2026-08-15-profile-password-custody-bucket-key-enrolment-custody-adr]]'
   - '[[2026-08-15-profile-password-custody-bucket-key-schedule-custody-mismatch-adr]]'
   - '[[2026-08-15-profile-password-custody-capabilities-removed-without-a-decision-audit]]'
+  - '[[2026-08-15-profile-password-custody-cross-campaign-positional-message-escalation-audit]]'
+  - '[[2026-08-15-profile-password-custody-deletion-without-consumer-sweep-detectability-audit]]'
+  - '[[2026-08-15-profile-password-custody-nested-persisted-format-boundary-adr]]'
+  - '[[2026-08-15-profile-password-custody-per-profile-recovery-mnemonic-adr]]'
   - '[[2026-08-15-profile-password-custody-s12-phase-review-close-audit]]'
   - '[[2026-08-15-profile-password-custody-s12-phase-review-rerun-audit]]'
+  - '[[2026-08-15-profile-password-custody-unrecorded-ruling-closure-audit]]'
 ---
 
 # `profile-password-custody` feature index
@@ -115,7 +213,10 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 ### adr
 
 - `2026-08-13-profile-password-custody-rollup-adr` - `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
+- `2026-08-15-profile-password-custody-bucket-key-enrolment-custody-adr` - `profile-password-custody` adr: `bucket key enrolment custody` | (**status:** `accepted`)
 - `2026-08-15-profile-password-custody-bucket-key-schedule-custody-mismatch-adr` - `profile-password-custody` adr: `the bucket key schedule must report enrolled custody, not capsule existence` | (**status:** `rejected`)
+- `2026-08-15-profile-password-custody-nested-persisted-format-boundary-adr` - `profile-password-custody` adr: `nested persisted format boundary` | (**status:** `accepted`)
+- `2026-08-15-profile-password-custody-per-profile-recovery-mnemonic-adr` - `profile-password-custody` adr: `per profile recovery mnemonic` | (**status:** `accepted`)
 
 ### audit
 
@@ -131,8 +232,11 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-14-profile-password-custody-s12-phase-review-audit` - `profile-password-custody` audit: `s12 phase review`
 - `2026-08-14-profile-password-custody-s43-absence-gate-independent-review-audit` - `profile-password-custody` audit: `s43 absence gate independent review`
 - `2026-08-15-profile-password-custody-capabilities-removed-without-a-decision-audit` - `profile-password-custody` audit: `capabilities removed without a decision`
+- `2026-08-15-profile-password-custody-cross-campaign-positional-message-escalation-audit` - `profile-password-custody` audit: `cross campaign positional message escalation`
+- `2026-08-15-profile-password-custody-deletion-without-consumer-sweep-detectability-audit` - `profile-password-custody` audit: `deletion without consumer sweep detectability`
 - `2026-08-15-profile-password-custody-s12-phase-review-close-audit` - `profile-password-custody` audit: `s12 phase review close`
 - `2026-08-15-profile-password-custody-s12-phase-review-rerun-audit` - `profile-password-custody` audit: `s12 phase review rerun`
+- `2026-08-15-profile-password-custody-unrecorded-ruling-closure-audit` - `profile-password-custody` audit: `unrecorded ruling closure`
 
 ### exec
 
@@ -173,47 +277,140 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W04-P07-S64` - Have Terra XHigh open the core facade as the next import-cost lever
 - `2026-08-13-profile-password-custody-W04-P07-S70` - Have Sol Medium triage the rehoming-ledger findings the repaired gate can now report
 - `2026-08-13-profile-password-custody-W04-P07-S72` - Have Terra XHigh make the settings-override test control its own environment instead of inheriting the operator's
+- `2026-08-13-profile-password-custody-W02-P04-S102` - Have Sol Medium attribute the standing locale parity red that nobody owns, being forty-two catalogue keys with no call site anywhere in the tree and fifteen to sixteen codebase keys absent from every catalogue, symmetric across all four so no single addition produced it, and rule that a catalogue key must land in the same change as the code that consumes it
+- `2026-08-13-profile-password-custody-W02-P04-S119` - Have Terra XHigh widen the resume return type to match the wipeable material it now yields, since the unwrap was changed to return a mutable buffer while the enclosing signature still promises immutable bytes, so every caller is typed to receive material it cannot wipe and the call sites lose the property the change existed to give them
+- `2026-08-13-profile-password-custody-W02-P04-S174` - Have Terra XHigh repair the interrupted-handover recovery that refuses a second profile registration in one process, since the pointer is judged against two witnessed handover states and matches neither on an ordinary sequential registration, so every surface that must stand up two live profiles is blocked including the whole duplicate-label ambiguity refusal suite, and the failure reproduces in test modules that were never touched by the manifest retirement
+- `2026-08-13-profile-password-custody-W02-P04-S176` - Have Terra XHigh repair the five standing parity-suite failures the locale attribution left named but unowned, being a lookup of custody passphrase keys the cutover removed while the test was never swept, two operator-surface heading assertions hardcoded against text that has since changed, and one residual inter-locale key drift
+- `2026-08-13-profile-password-custody-W02-P04-S193` - Have Terra XHigh retire the displaced profile's session material inside the registration transaction itself, since registration selects the new profile by pointer compare-and-swap and retires nothing, so the previously active profile keeps a resumable acceleration receipt until some later login happens to observe the boundary, leaving its bucket key recoverable with no passphrase across the whole window and permanently for a registration no login ever follows, which is the same leak the handover revocation was rebuilt to close reached through the creation door instead
 - `2026-08-13-profile-password-custody-W02-P04-S26` - Have Terra XHigh restore wipeable key material across the current custody surface so recovery and password unwrap return zeroise-reachable buffers, noting the primitive is reachable today only through the forwarding port and must land after the surviving session package is renamed
 - `2026-08-13-profile-password-custody-W02-P04-S81` - Have Terra XHigh revoke the retired profile's session material on the durable pointer unioned with the live session
 - `2026-08-13-profile-password-custody-W02-P04-S82` - Have Terra XHigh re-site the non-resurrection proof across separate processes
 - `2026-08-13-profile-password-custody-W02-P04-S89` - Have Terra XHigh make the operator status projection report a verdict for an unregistered pointer
 - `2026-08-13-profile-password-custody-W02-P04-S90` - Have Terra XHigh make the cold-pointer logout refusal name what it could not do and re-author the nine tests
+- `2026-08-13-profile-password-custody-W02-P04-S92` - Have Terra XHigh restore dedicated coverage for the strong logout close and for session-artefact reaping on profile destruction, since both test modules exist now only as stale compiled artefacts after their sources were deleted in a committed change, leaving the strong close with no dedicated module in its owning package and the deletion invisible to anyone reading the directory
 - `2026-08-13-profile-password-custody-W02-P04-S95` - Have Terra XHigh make the receipt deletion honour the clear outcome it already computes, since the discard helper returns whether the compare-and-clear succeeded and the resume path branches on it, while the revocation entry point calls the same helper bare and returns nothing, so a refused clear is silent and a login can report the prior profile as closed while its acceleration receipt survives on disk, the reachability being narrow because the bytes must change under a held per-profile lock but the reporting value already existing
+- `2026-08-13-profile-password-custody-W03-P06-S104` - Have Sol Medium rule per family whether the capabilities the capsule cutover removed should be restored, the sandbox and archive families being wiring rather than building because their application layer survived, the four single profile verbs being unassessed, and the subject-access-request surface being recoverable from history rather than greenfield since its test module still asserts a working implementation and the cutover commit is what deleted it
 - `2026-08-13-profile-password-custody-W03-P06-S108` - Have Terra XHigh re-found the label ambiguity refusal test on the custody label authority rather than retire it, since the refusal itself was restored as real operator-facing work and is live, while only the test's mechanism is stale in manufacturing two casefold-equal labels by rewriting the retired plaintext bucket manifest, and the restored refusal already ships five tests that manufacture the same collision correctly
+- `2026-08-13-profile-password-custody-W03-P06-S113` - Have Terra XHigh carry the login-gating principle recovered from a deleted allowlist comment into the archive export restore work, that a verb whose output leaves the encrypted store must stay login-gated because a target-scoped unlock does not establish recency, the principle having been justified by a cited test that does not exist and now being recorded nowhere else
+- `2026-08-13-profile-password-custody-W03-P06-S122` - Have Terra XHigh re-found the setup-incomplete surface tests on the current custody authority, since they manufacture a bucket without a committed capsule by writing the retired plaintext manifest and the system now refuses that artefact by name, noting the collision fixture built for the label-ambiguity module does not fit because this one wants an uncommitted bucket rather than two colliding labels
+- `2026-08-13-profile-password-custody-W03-P06-S125` - Have Sol Medium rule whether the retired-member refusal should stay whole-store, since one leftover plaintext manifest in any bucket directory makes the profile listing verb exit two with destructive-reset guidance and an operator cannot then enumerate their profiles to find the offending file, which may be intended under the no-legacy regime but currently leaves no path from the refusal to its cause
+- `2026-08-13-profile-password-custody-W03-P06-S128` - Have Terra XHigh correct the production listing docstring that names the per-bucket plaintext manifest as the canonical source of profile-existence truth written by every creation path, since nothing writes one and listing projects committed capsules, this being the fourth false stated reason found today and the first describing the system's own source of truth in production rather than in a test or an allowlist
+- `2026-08-13-profile-password-custody-W03-P06-S129` - Have Sol Medium rule whether a bucket carrying a manifest and no profile record is still a reachable torn state worth testing, since listing and resolution are capsule-only so such a bucket is invisible to every operator path, which would make the premise of the tests named for it obsolete rather than merely awkward
 - `2026-08-13-profile-password-custody-W03-P06-S135` - Have Terra XHigh name the capsules root path in the retired-custody refusal
 - `2026-08-13-profile-password-custody-W03-P06-S136` - Have Terra XHigh finish the creation-door conversion enumerated by CALL SITE of the creation verb rather than by named helper
 - `2026-08-13-profile-password-custody-W03-P06-S139` - Have Terra XHigh re-found the four modules whose subject IS the creation surface rather than converting them
 - `2026-08-13-profile-password-custody-W03-P06-S140` - Have Terra XHigh resolve the three creation flags that have no mapped fact path by reading the profile schema rather than inferring one
+- `2026-08-13-profile-password-custody-W03-P06-S146` - Have Terra XHigh read the thirty-six creation call sites that assert no exit code and decide each individually, since they assert on output or on later state rather than on success and therefore cannot be swept, this being a reading job whose size should be stated honestly before it starts rather than a mechanical conversion
+- `2026-08-13-profile-password-custody-W03-P06-S151` - Have Terra XHigh render the next-action guidance on the surviving registration surfaces, since the projection mapping a non-resident IRNR taxpayer to the modelo describe route is live and reached only from the edit path while the creation path refuses before it, so a newly registered IRNR taxpayer is steered nowhere until they happen to run edit and the registration screens render no next action at all
+- `2026-08-13-profile-password-custody-W03-P06-S152` - Have Terra XHigh repair the profile edit path that crashes with an internal error because two production sites stamp an event-type string the bucket event enum does not contain, noting that a contract test already documents the divergence as a missing catalogued emitter while nobody recorded that the string is rejected at validation, so its own suggested remedy assumes a validity the string does not have
+- `2026-08-13-profile-password-custody-W03-P06-S16` - Have Terra XHigh expose canonical profile restore, restore-recover, and delete verbs through action envelopes and one-shot secrets-fd
+- `2026-08-13-profile-password-custody-W03-P06-S168` - Have Terra XHigh finish the bucket-event taxonomy repair on the five command-line profile-fact doors the wizard-scoped repair did not reach, since they call the same fact-writing authority with a free string the closed event enum does not contain and therefore crash the operator's manager edit path exactly as the wizard doors did, the ruling that a profile-fact write emits the values-updated lifecycle member and carries its door identity in the payload being already settled and needing only application
+- `2026-08-13-profile-password-custody-W03-P06-S17` - Have Terra XHigh update root bootstrap, TUI login, locales, and status projection to remove old environment and provider channels
+- `2026-08-13-profile-password-custody-W03-P06-S170` - Have Sol Medium correct the two remaining docstrings that assert the retired plaintext manifest as the current mechanism, one describing a label-to-identifier resolution as reading manifest files and one describing the active-profile pointer as derived from them, both consuming resolvers that are now capsule-only, this being the same false-stated-reason class already corrected on the listing surface
+- `2026-08-13-profile-password-custody-W03-P06-S18` - Have Sol Medium review CLI and TUI secret handling, typed outcomes, bootstrap exemptions, and local-only operator guarantees
 - `2026-08-13-profile-password-custody-W03-P06-S59` - Have Sol Medium rule on the seventeen operator command subtrees the capsule cutover left unresolved
+- `2026-08-13-profile-password-custody-W03-P06-S60` - Have Sol Medium rule whether scripted profile creation is permitted, since the wizard persistence layer refuses it by explicit design as credential registration being the only creation door while the command, its quiet and accept-defaults flags and two tests all still assume it works, so the operator meets a refusal from a verb the surface advertises as scriptable
+- `2026-08-13-profile-password-custody-W03-P06-S66` - Have Sol Medium rule on the profile bundle transfer surface and delete the two tests that prove nothing, since the interactive collection flow serves two verbs that do not resolve, a second narrower interactive collection path for the same operation is live in the manager actions with the transport hardcoded, and two tests invoke the unregistered verb asserting only a non-zero exit so they pass on the unknown-command error and would pass forever whatever happened to the verb
 - `2026-08-13-profile-password-custody-W03-P06-S75` - Have Terra XHigh clear the six dead entries in the runtime bootstrap-exempt allowlist that name operator verbs the tree no longer registers, since each entry grants exemption from the active-profile session gate matched by command chain, so a future verb registered under one of those names silently inherits an exemption nobody consciously granted, which matters most for the profile deletion verb, and note one further non-resolving entry is a deliberate exemption for a separate module entrypoint rather than a defect
 - `2026-08-13-profile-password-custody-W03-P06-S88` - Have Terra XHigh resolve the command-line lifecycle module that asserts custody verbs are mounted
+- `2026-08-13-profile-password-custody-W03-P06-S93` - Have Terra XHigh retire or rewrite the two hundred and ninety-four tests asserting a wizard profile-creation capability this campaign deliberately removed, which is the single largest cause of failure in the whole integration lane at roughly twenty-three percent of it and is stale tests rather than broken code, sequencing the work behind the ruling on whether scripted profile creation is permitted at all so the rewrite is not done twice
+- `2026-08-13-profile-password-custody-W04-P07-S101` - Have Sol Medium close the custody path builder's runtime validation gap, which accepts a profile identifier only by type annotation and would silently create a custody directory named for a system sentinel if one reached it, the honest bound being that the boundary is type-blocked rather than runtime-blocked with no live path found and none exhaustively searched for
 - `2026-08-13-profile-password-custody-W04-P07-S107` - Have Terra XHigh rule whether the master key and derived key encryption key should become wipeable like the two data encryption key unwraps now are, since six provider implementations and the derivation helper all return immutable material, or record why the master key is deliberately out of scope given each provider carries its own lifetime and a mutable buffer changes what every consumer holds
+- `2026-08-13-profile-password-custody-W04-P07-S109` - Have Terra XHigh extend the re-export bridge and orphan detector to walk the test tree, since it currently skips it entirely and a whole class of orphaned export module is therefore invisible, which is how an adapter export survived its only consumer's deletion with zero importers anywhere
+- `2026-08-13-profile-password-custody-W04-P07-S110` - Have Sol Medium rule on the bucket key enrolment ordering defect, since a bucket counts as registered purely because its capsule exists rather than by any stored enrolment, and registration permanently refuses minting by tested design, so the only window to mint the wrapped bucket key closes at capsule publication while the enrolment flag that opens it defaults false and is passed true by no production code anywhere, leaving no path that creates a bucket the storage layer will open
+- `2026-08-13-profile-password-custody-W04-P07-S111` - Have Sol Medium author the decision record for which custody a bucket is enrolled in and pin the defect with a failing regression that reaches an actual record read through the sanctioned door, stating both the resolver-reads-stored-custody option and the rejected mint-a-second-wrapped-copy option with the exposure-widening argument that defeats it, and establishing whether any profile on real disk is currently in the unopenable state since that decides whether a migration question exists at all
+- `2026-08-13-profile-password-custody-W04-P07-S112` - Have Sol Medium give a verb's existence one authoritative declaration, since six independent surfaces must currently agree that a verb exists and none of them is the authority, so the operator manifest declared none of seventeen verbs while five other surfaces still described them and each surface broke in turn as the previous was repaired
+- `2026-08-13-profile-password-custody-W04-P07-S114` - Have Terra XHigh repair the two stale schema tests the build crash was masking, one asserting a required profile argument on a command whose parameters are all optional and which resolves to a different verb, the other parametrised against a command key carrying zero production declarations, both unreachable while the coverage gate crashed and neither attributable to the step that revealed them
 - `2026-08-13-profile-password-custody-W04-P07-S115` - Have Sol Medium decide whether per-profile session windows survive the cutover as a capsule field or drop to settings only
+- `2026-08-13-profile-password-custody-W04-P07-S116` - Have Terra XHigh delete the bucket manifest digest and deletion fingerprint helpers, exported from the maintenance package with zero production callers, being dead capacity rather than a dependency
 - `2026-08-13-profile-password-custody-W04-P07-S117` - Have Terra XHigh remove the bucket manifest reader now that the retirement is ruled, taking its per-bucket session-window override with it
+- `2026-08-13-profile-password-custody-W04-P07-S118` - Have Terra XHigh re-derive every stated reason in the runtime bootstrap-exempt allowlist against the tree, since two of its justifications were found false in one day, one citing a test that was never written and one asserting a manifest read that no longer happens, and the entries were correct in both cases so the defect is that a reader inherits a false reason rather than re-deriving it, which is worse than a file carrying no comments at all
 - `2026-08-13-profile-password-custody-W04-P07-S120` - Have Terra XHigh repair the rotation crash-window test module broken at HEAD, which imports a keystore filename constant whose definition the deletion removed and which it is now the only referent of, this being a collection error that can abort a whole run rather than a single failing test
 - `2026-08-13-profile-password-custody-W04-P07-S121` - Have Sol Medium rule on the bucket deletion assessment contract, since the fingerprint type is now producerless and its only consumer is the populated branch requiring label and fingerprint and retention together
 - `2026-08-13-profile-password-custody-W04-P07-S123` - Have Terra XHigh make the persisted-format inventory detect an enrolled format whose code no longer exists
 - `2026-08-13-profile-password-custody-W04-P07-S124` - Have Terra XHigh reconstruct the rotation crash-window coverage against the two surviving stores after the module was deleted whole to unblock collection
 - `2026-08-13-profile-password-custody-W04-P07-S126` - Have Sol Medium enrol the custody capsule formats in the governed persisted-format inventory
+- `2026-08-13-profile-password-custody-W04-P07-S127` - Have Terra XHigh restore the deliberately empty compatibility fixture directory a peer deleted, which ships empty so the durability harness has a home before the release flip, and whose absence now fails the corpus-root gate
+- `2026-08-13-profile-password-custody-W04-P07-S130` - Have Sol Medium rule whether the private retirement sidecar in the custody package should be enrolled in the durability inventory, since it carries its own schema version and reads regenerable as a crash-window artefact for an interrupted session-key swap, but is private and unrecognised by the storage taxonomy so enrolling it would assert a format boundary nothing else acknowledges, and it is exactly the kind of neighbour that gets enrolled by pattern-matching because the formats beside it just were
+- `2026-08-13-profile-password-custody-W04-P07-S131` - Have Sol Medium argue a durability class for the active-profile pointer, which reads regenerable because an operator can re-select a profile, except that a lost pointer on a multi-profile store requires the operator to know which profile was active and the application cannot rebuild that knowledge
+- `2026-08-13-profile-password-custody-W04-P07-S132` - Have Sol Medium argue a durability class for the AEAT authority session record and the two Cl@ave metadata records, which are the artefacts on the far side of the session vocabulary split and carry real recovery cost when unreadable, each needing its own class rather than one ruling covering the trio
 - `2026-08-13-profile-password-custody-W04-P07-S133` - Have Sol Medium classify the roughly one dozen genuine persisted formats the binding gate found unbound
 - `2026-08-13-profile-password-custody-W04-P07-S141` - Have Terra XHigh complete the half-landed harness extraction that currently breaks collection tree-wide
+- `2026-08-13-profile-password-custody-W04-P07-S142` - Have Terra XHigh repair the telemetry producer test that imports a private helper from a sibling test module which no longer defines it, the helper having been removed rather than renamed with no equivalent surviving, and rule on the shape independently since a test module importing another test module's private helper is fragile by construction
+- `2026-08-13-profile-password-custody-W04-P07-S143` - Have Sol Medium rule where companion distributions built from this repository live, since two established companions sit under one directory and a third was placed elsewhere, which is one concept in two homes and the fragmentation this campaign exists to remove
+- `2026-08-13-profile-password-custody-W04-P07-S144` - Have Sol Medium rule whether a deletion landing without its consumer sweep should be mechanically detectable, since three separate removals in one session each shipped the deletion in one commit and the consumer repair in another or not at all, blocking collection tree-wide for every agent until somebody noticed, which makes the split the norm on this tree rather than the exception
+- `2026-08-13-profile-password-custody-W04-P07-S145` - Have Terra XHigh sever the dependency cycle between the core distribution and the extracted harness by moving the four harness-delivery surfaces into the harness package and dropping the core dependency, since the harness project file states that it consumes the core library and never the reverse while a repair added exactly that reverse edge, making the current shape a deliberate temporary the sever supersedes
 - `2026-08-13-profile-password-custody-W04-P07-S148` - Have Terra XHigh reconcile the two enrolment gates whose key spaces disagree, adding the four standalone capsule and pointer files to the independent path discovery source rather than to the hand list, and narrowing the namespace pin so it excludes namespaces without excluding a payload grammar that carries its own version constant
+- `2026-08-13-profile-password-custody-W04-P07-S149` - Have Sol Medium triage the forty-two persisted models whose schema version defaults to a bare literal rather than a named constant, since the binding gate discovers formats by constant name so a version that never gets a name is invisible to it entirely, and establish which of the forty-two are genuine persisted formats before naming any of them
+- `2026-08-13-profile-password-custody-W04-P07-S150` - Have Sol Medium rule on the three remaining error classes that are defined and exported and registered but never raised, each on its own justification rather than on the retention-floor refusal's, since that one was a missing guard while these may be genuine dead code
+- `2026-08-13-profile-password-custody-W04-P07-S158` - Have Sol Medium remove the duplicate bundle schema version literal on the portable export model, which defaults to a bare three while its own named constant declares three in the module beside it, so an already-enrolled format states its current version twice with nothing comparing them, this being the smallest instance of the double-declaration class and the one whose correct shape already exists to copy
+- `2026-08-13-profile-password-custody-W04-P07-S159` - Have Sol Medium resolve which side owns the schema version for the five fincas concepts that each declare it twice, once on the domain model and once on the ORM row as two independent literals nothing compares, deciding ownership from where the format is enrolled rather than sweeping both into one name, since two declarations of one record's current version is drift with no detector and this carries taxpayer data
+- `2026-08-13-profile-password-custody-W04-P07-S160` - Have Terra XHigh make a persisted format declaring its current version in more than one place mechanically detectable, since the fincas five and the portable export bundle were each found by reading rather than by any gate, and a second literal that silently disagrees with the first is exactly the drift the durability inventory exists to prevent
+- `2026-08-13-profile-password-custody-W04-P07-S161` - Have Sol Medium state the boundary the persisted-format discriminator currently lacks, ruling whether a versioned shape nested inside a persisted record is itself a format, since the question has now arrived three times from different directions and each was answered locally, and the answer decides whether the custody hold evidence and the legal-hold and retention snapshots enrol or stay out
+- `2026-08-13-profile-password-custody-W04-P07-S164` - Have Terra XHigh collapse the storage layer's two live custody packages to one canonical home, since a forty-three module master_key package and a thirty-seven module custody package coexist at HEAD with production runtime and blob-store and crypto and envelope all importing the former, establishing first from the code whether this is a relocation that moved part of a package and stopped or an old-and-new split the cutover has not collapsed, and then landing the completed relocation atomically with every consumer in one commit rather than leaving the split documented and standing
+- `2026-08-13-profile-password-custody-W04-P07-S166` - Have Terra XHigh compose the full-corpus collectability proof into a lane that is actually run, since the harness that would have caught two test packages being uncollectable is real and mutation-tested but is enrolled only in a standalone recipe every other lane ignores and in a single separately-named continuous-integration job, so every routine local and integration run stayed green throughout the window those packages could not import, and a green lane structurally unable to see a collection error is what makes one read as infrastructure noise and get scrolled past
+- `2026-08-13-profile-password-custody-W04-P07-S167` - Have Terra XHigh restore the hard-cutover absence gate's anti-tautology proof, whose fixture now trips the retired-name net as well as the package net so the two are no longer isolated and the proof asserts less than it reads as asserting, the gate's substantive absence assertions all passing while this one case is red at HEAD and was red before any current work touched it
+- `2026-08-13-profile-password-custody-W04-P07-S169` - Have Sol Medium repair the command-line test helper that still constructs the retired bucket manifest inside a deferred function-local import, which hides it from collection so it passes every collect-only proof and fails only at run time, and which needs the capsule discovery-marker replacement rather than a manifest write
+- `2026-08-13-profile-password-custody-W04-P07-S171` - Have Sol Medium regenerate the two generated quality manifests that still name the retired workspace-initialisation package and its three symbols, once the tree is quiet enough that regeneration does not sweep concurrent peer work into the change, neither manifest sitting inside the test paths so neither reds collection and both therefore drifting silently
+- `2026-08-13-profile-password-custody-W04-P07-S172` - Have Terra XHigh re-root the five production exception classes that inherit a bare builtin rather than the project error taxonomy, two in the M303 simplified-regime calculation path and three in the profile record and custody crypto paths, since the hygiene gate that forbids an unregistered builtin root is red on exactly them and an unregistered root escapes the registry that gives every refusal its code, its operator suggestion and its four-locale text
+- `2026-08-13-profile-password-custody-W04-P07-S175` - Have Terra XHigh restore the supervisor declaration guards that now fail open, since three contract tests asserting a refusal of undeclared event claims and undeclared resource ownership all report that no refusal was raised at all, every production module in the package being byte-identical to the recorded baseline so the guards were not removed but stopped biting, and a guard that fails open is a worse failure mode than the crash whose investigation surfaced it
+- `2026-08-13-profile-password-custody-W04-P07-S177` - Have Sol Medium make a catalogue key co-land with the code that consumes it, since every shipped locale gate is a state comparison rather than a change comparison and therefore cannot see the moment a key is orphaned or a call site left uncatalogued, catching drift only after it lands, which is how two unrelated single commits each silently orphaned keys and created missing ones in the same move
+- `2026-08-13-profile-password-custody-W04-P07-S178` - Have Terra XHigh restore the anti-tautology proof for the filing-time snapshot persistence boundary, whose coverage was deleted alongside the profile-record proof in the same cutover commit but which no row has claimed since, its shape being unrelated to the capsule cutover and still live, and which today carries equality roundtrips with no mutation proof at all so a save-drops-field regression there stays invisible
+- `2026-08-13-profile-password-custody-W04-P07-S180` - Have Terra XHigh strike the two second version literals the new single-declaration detector found mechanically and name the one persisted format that still authors its number anonymously, the remote mirror namespace manifest and the custody owner receipt each defaulting a version beside a constant their own siblings already bind, and the custody hold evidence carrying a bare literal that leaves it unbindable into the enrolment tables despite its class already being argued
+- `2026-08-13-profile-password-custody-W04-P07-S181` - Have Sol Medium switch the repair-policy coverage denominator from a hand-maintained module list to the live command tree, since a declared-but-unmounted command currently satisfies the check and the list had entries naming deleted files that raised from inside the coverage assertion as an error rather than a failure, and rule an owner domain and namespace policy for the four registered commands a live-tree denominator surfaces with no policy row
+- `2026-08-13-profile-password-custody-W04-P07-S186` - Have Sol Medium land the two enrolment consequences of striking the duplicate version literals, retiring the three detector-table entries whose literals no longer exist and binding the newly named hold-evidence constant into the durability inventory as regenerable, since the detector and the binding gate each now fail on the tidier state they themselves demanded
+- `2026-08-13-profile-password-custody-W04-P07-S189` - Have Sol Medium sweep the three evaluation-harness consumers onto the renamed profile snapshot repository, since the application layer renamed the lifecycle repository without carrying its development-tree consumers, leaving three modules unable to import while every lane reported green, this being the first defect the newly enrolled collectability verdict caught and precisely the class it was enrolled to catch
 - `2026-08-13-profile-password-custody-W04-P07-S19` - Have Terra XHigh dissolve the forwarding port package in five ordered parts
+- `2026-08-13-profile-password-custody-W04-P07-S191` - Have Sol Medium re-root the supervisor declaration refusal onto the project error taxonomy and register it, since it was introduced rooting at a bare builtin while restoring guards that had failed open and is now the sole remaining violation of the unregistered-builtin-root gate, and an unregistered root escapes the registry that gives every refusal its code and its four-locale text
+- `2026-08-13-profile-password-custody-W04-P07-S192` - Have Terra XHigh narrow the persisted command event onto the closed bucket-event enum across all four of its sites in one change, since the record model is strict so an enum field refuses even a valid member's raw string value and every construction must pass a member in the same commit or the tree refuses every profile-record write, the durable bytes being byte-identical either way because the command event is never serialised and the shape that reaches disk is already typed, and retire in the same action the comment that describes the gap as pending
+- `2026-08-13-profile-password-custody-W04-P07-S196` - Have Terra XHigh reconcile which fixture owns a test bucket directory, since the shared capsule seeding door and the isolated command-line runtime fixture both provision the same per-profile bucket path so the capsule's no-replace rename always refuses that destination as already existing, which reds the established reference pattern several suites were written against and is currently masked in some of them by an unrelated stale version literal
+- `2026-08-13-profile-password-custody-W04-P07-S197` - Have Sol Medium rule whether the extracted harness distribution ships in the published release cohort and at which version, since three release lanes still install a retired extra and then probe for a launcher it no longer supplies, the cohort wheel enumeration does not name the harness at all, and the harness sits on its own version line while the other three are version-locked by a parity gate, so no rename can resolve it
 - `2026-08-13-profile-password-custody-W04-P07-S28` - Have Terra XHigh relocate the surviving per-profile session, wipe and identity residue into the custody package that the accepted decision names as sole authority, in one atomic move, so no surviving primitive is left behind a shared-master name
+- `2026-08-13-profile-password-custody-W04-P07-S29` - Have Terra XHigh extend the existence-only retired-path detector to recognise retired keystore members alongside the plaintext manifest, so a retired shared-master store is detected and routed to re-enrolment rather than read
+- `2026-08-13-profile-password-custody-W04-P07-S31` - Have Terra XHigh fold the three unconstrained kibibyte Argon2 parameter models onto the ADR-canonical mebibyte custody record and dissolve the shared-bounds module whose only purpose was holding an import cycle open between two of them
+- `2026-08-13-profile-password-custody-W04-P07-S33` - Have Terra XHigh re-establish the strict roundtrip and anti-tautology proof for the profile-record persistence boundary that the discovery step deleted, populating every defaultable field with a non-default value and proving load refuses a mutated on-disk payload
+- `2026-08-13-profile-password-custody-W04-P07-S34` - Have Terra XHigh give bucket rename, bucket delete, retention-floor enforcement and archive inspect a successor owner after their removal from the maintenance service, or record each as deliberately retired with the operator route that replaces it
+- `2026-08-13-profile-password-custody-W04-P07-S36` - Have Sol Medium first rule whether per-profile recovery will adopt the mnemonic at all, since the codec and its canonical wordlist currently have no consumer anywhere, then either split them out as their own home or delete both halves with the wordlist and its wheel pin, rather than preserving a survivor with nobody to serve
 - `2026-08-13-profile-password-custody-W04-P07-S39` - Have Terra XHigh delete the re-export bridge module in the custody package and repoint its sole consumer at the two modules it forwards to, in one commit
+- `2026-08-13-profile-password-custody-W04-P07-S47` - Have Terra XHigh make a dead operator instruction structurally impossible by enrolling the retired custody verb spellings in the scan that already walks source, the four catalogues, the documentation and the sequence contracts, after sweeping the sixteen surfaces that still cite them including a whole protect-data-access workflow and the repair-policy inventory
+- `2026-08-13-profile-password-custody-W04-P07-S48` - Have Sol Medium rule whether the profile values updated lifecycle event should have a production emitter, since the operator edit path writes facts while stamping strings that are not members of the event taxonomy, leaving the declared event with no emitter anywhere
 - `2026-08-13-profile-password-custody-W04-P07-S61` - Have Terra XHigh bring the integration test lane under a standing watch
 - `2026-08-13-profile-password-custody-W04-P07-S62` - Have Sol Medium rule which layer owns the bucket manifest
+- `2026-08-13-profile-password-custody-W04-P07-S65` - Have Sol Medium give the M303 per-activity prorrata completeness refusal one home, since the invariant is genuinely enforced on the live export path but raises an untranslated internal registry error, while an orphaned second implementation that can never fire carries the operator-facing typed refusal whose localisation key already ships in all four catalogues, so the better surface and the better position are currently in different objects and deleting either loses something real
+- `2026-08-13-profile-password-custody-W04-P07-S67` - Have Terra XHigh delete the retired workspace-initialisation package in one atomic commit, its entry point being an unconditional refusal with no callers kept alive only by two string references, re-homing the four genuinely valuable tests it hosts onto the package that owns active-profile registration and deleting the typing test that keeps a retired contract alive, the atomicity mattering because removing the package without updating both string references reds the import-smoke inventory
 - `2026-08-13-profile-password-custody-W04-P07-S69` - Have Terra XHigh remove the second bucket-root creator that survives as dead production code
+- `2026-08-13-profile-password-custody-W04-P07-S71` - Have Sol Medium rule on the rehoming analyser asymmetry that accepts a module attribute fetched through a guarded variable while refusing the same fetch through a string literal, even though a literal is strictly the more determinate of the two, since that inversion is what made a genuinely closed command-line loader look unprovable and two independent pinned tests currently enshrine it, so overturning it means changing deliberately authored cases rather than fixing an oversight
 - `2026-08-13-profile-password-custody-W04-P07-S73` - Have Sol Medium reconcile the two accepted decision records that now assert incompatible things about the bucket manifest
 - `2026-08-13-profile-password-custody-W04-P07-S77` - Have Sol Medium rule on the four error classes that are defined, exported and registered but never raised anywhere in production, taking the retention-floor refusal FIRST and separately
+- `2026-08-13-profile-password-custody-W04-P07-S78` - Have Sol Medium escalate to the owning campaign that nine of its plan steps were closed while producers inside their own declared scope still author raw sentences positionally, one readiness-gate module carrying migrated and unmigrated raise sites side by side under a single checked step that accounts for twenty-four of the forty-two findings, this being the recorded-but-not-implemented checkbox failure the orchestration rules name, and do not silently repair another campaign's plan
 - `2026-08-13-profile-password-custody-W04-P07-S80` - Have Terra XHigh restore lane reachability for the eight keychain-marked tests placed where no keychain lane names them
 - `2026-08-13-profile-password-custody-W04-P07-S83` - Have Terra XHigh make the session-receipt tamper test actually reach the authenticated-data check it exists to cover
+- `2026-08-13-profile-password-custody-W04-P07-S84` - Have Terra XHigh resolve the deterministic identity-anchoring refusal in the isolated storage-root reaping test, which reproduces alone in seconds and is therefore neither an ordering nor a parallelism artefact, the unconfirmed hypothesis being that it anchors on a storage root whose parent directory was never materialised where the passing sibling tests anchor on an already-existing path, and establish the mechanism by measurement rather than adopting that inference
+- `2026-08-13-profile-password-custody-W04-P07-S86` - Have Sol Medium rule on the two test modules that cannot be collected in ANY lane because they raise a registry validation error at import, several modelos declaring neither an export layout nor an authority grade, so those tests have not run for as long as that has been true while a collection error reads as infrastructure noise and gets scrolled past, and establish whether this is expected transient state of the registry buildout or a defect that needs its own owner
 - `2026-08-13-profile-password-custody-W04-P07-S87` - Have Terra XHigh stop the configuration-reset retention decision failing OPEN when no assessment is supplied
 - `2026-08-13-profile-password-custody-W04-P07-S91` - Have Sol Medium rule on the overloaded session vocabulary that caused a wrong architectural premise to survive two rounds of review
+- `2026-08-13-profile-password-custody-W04-P07-S94` - Have Terra XHigh unwedge the supervisor-lifecycle cleanup-timeout test that hangs in an asyncio loop and takes the entire session with it under the thread-based timeout on this platform, since one wedging test denies the whole repository any sequential integration run and is therefore upstream of every measurement anyone tries to take of that lane
+- `2026-08-13-profile-password-custody-W04-P07-S97` - Have Terra XHigh remove the private duplicate of the canonical bucket-identity primitive that the authority package carries beside the one being relocated into custody, since two implementations of one identity rule can disagree about which strings name the same bucket, and fold its consumers onto the surviving canonical home
+- `2026-08-13-profile-password-custody-W05-P08-S105` - Have Sol Medium close the gap that lets a decision be made without a record, since a ruling delivered as a report and never persisted is indistinguishable from no ruling and cost a full search to establish, which is the campaign-close discipline failing in the direction nobody watches
 - `2026-08-13-profile-password-custody-W05-P08-S134` - Have Sol Medium rule what the destructive profile deletion surface should be, since both of its primitives have zero definitions anywhere in the tree
 - `2026-08-13-profile-password-custody-W05-P08-S137` - Have Terra XHigh restore the retention detail to the hold projection so the deletion preflight can answer a count and a floor and a safe-erase date rather than two booleans
 - `2026-08-13-profile-password-custody-W05-P08-S138` - Have Terra XHigh make the delete hold guard compare the owner facts its docstring names rather than the whole assessment object
 - `2026-08-13-profile-password-custody-W05-P08-S147` - Have Terra XHigh retire the manifest digest field from the bucket deletion contract and complete the retirement half of the deletion supersession
+- `2026-08-13-profile-password-custody-W05-P08-S154` - Have Terra XHigh wire the filing retention assessment into the deletion preflight, since the contract is now fully answerable but the producer still refuses every existing target for want of an authenticated retention assessment, which is the sole cause of fifteen failing reset recovery and concurrency modules
+- `2026-08-13-profile-password-custody-W05-P08-S155` - Have Terra XHigh have the filing persistence path record the retention snapshot at the moment a revision is filed
+- `2026-08-13-profile-password-custody-W05-P08-S156` - Have Sol Medium rule how open legal cases reach the application
+- `2026-08-13-profile-password-custody-W05-P08-S157` - Have Terra XHigh write an empty filing catalogue snapshot at profile creation so that never-filed is a recorded fact rather than an absent one
+- `2026-08-13-profile-password-custody-W05-P08-S162` - Have Terra XHigh establish whether an out-of-process test can reach a profile provisioned through the surviving in-process creation door, since twenty-four subprocess tests assert on a return code from a CLI that now refuses to create a profile on a console-less host, leaving cold-process behaviour untestable end to end, and no new production creation path may be built to answer it
+- `2026-08-13-profile-password-custody-W05-P08-S163` - Have Terra XHigh establish which side of the profile-record visibility split is lying, since the same record reads valid in the process that created it and reports missing_profile_record in a subprocess against the same storage root, and the evidence fits two incompatible readings — a record durably written but invisible across the boundary, or a record served from the creating process's cache and never durably written at all — the second being a custody defect of the first order that the first reading would conceal
+- `2026-08-13-profile-password-custody-W05-P08-S165` - Have Terra XHigh establish why a durably written profile record fails its object-key comparison in a fresh process when the digest is deterministic given the DEK, testing first whether the record is written under the short-lived staging session the capsule repository opens before a capsule is published and therefore keyed under a digest the later published session cannot reproduce, and correct the refusal message which reports only the count half of a two-part condition while the key half is what fails
+- `2026-08-13-profile-password-custody-W05-P08-S173` - Have Terra XHigh distinguish an absent profile record from an absent session in the health projection, since a fresh process with no authenticated session raises a session-required refusal that the workflow state catches and converts to a null record, which the projection then reports as a missing record, so an operator whose profile is merely locked is told their record is gone, this being the false diagnostic that sent an earlier investigation hunting a durability defect that did not exist
+- `2026-08-13-profile-password-custody-W05-P08-S187` - Have Sol Medium rule how a reset clears authority state for a target it has not unlocked, since revoking the authority browser session genuinely requires the key because that session is an encrypted row inside the bucket, while a reset holds locks on targets whose key nobody holds, making the auth phase structurally unreachable in exactly the way the retention assessment was before it was rewired, and seventeen reset failures now rest on this one refusal
+- `2026-08-13-profile-password-custody-W05-P08-S188` - Have Terra XHigh make the shared test seeding door record the empty retention snapshot that the production registration door records, since a seeded profile is otherwise indistinguishable from one whose filing owner was never asked and every deletion preflight against it refuses correctly for a reason unrelated to the test's subject, which is the fail-open shape the campaign closed in production reappearing in the surface every suite seeds through
+- `2026-08-13-profile-password-custody-W05-P08-S198` - Have Terra XHigh stop the profile deletion transaction invalidating its own preflight, since a live login holds the capsule database open so its write-ahead and shared-memory sidecars are inventoried into the prepared deletion marker, and the first act of execution revokes the session which checkpoints and removes exactly those sidecars, so the source-marker re-inventory can never match its own prepared digest and a profile the operator is signed into cannot be deleted at all, which the configuration reset path reaches directly by running prepare and confirm and delete with no prior session close
+- `2026-08-13-profile-password-custody-W05-P08-S199` - Have Sol Medium carry the newly distinguished locked-profile state into the diagnostics summary, where a locked profile keys off neither status set and falls through to a no-profile-configured sentence that is untrue of it, the surface still warning so nothing passes silently but telling the operator the wrong thing, and note the two authority gates first suspected of the same gap are in fact unreachable because both open the encrypted workflow state before consulting the verdict
+- `2026-08-13-profile-password-custody-W05-P08-S205` - Have Terra XHigh settle whether a seeded profile should also carry an empty legal-hold snapshot, since the seeding door now records the empty filing-retention snapshot registration records but deletion still refuses three reset targets on a legal or filing hold, and an absent legal-hold snapshot means nobody has been asked rather than no holds exist so the refusal is the fail-closed design working, which makes this a question about what the seeding door owes rather than a defect in the guard
+- `2026-08-13-profile-password-custody-W05-P08-S207` - Have Terra XHigh give the legal-hold evidence arm a production producer, since the custody hold authority joins a filing projection that has two real writers with a legal projection that has none, the recorder having zero callers anywhere outside its own module so its snapshot file never exists, its projection raises on the absence and the transaction converts that to a refusal, which means no profile can be deleted by any route today and the all-profile reset shares the same three primitives so the campaign's closing destructive step is blocked behind it as well
+- `2026-08-16-profile-password-custody-exec` - S55 executed import graph and concealed cycle
 
 ### plan
 
