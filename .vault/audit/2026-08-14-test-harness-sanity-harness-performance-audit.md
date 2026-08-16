@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:f00112193de238f6c0b7817af979155f46023a5f681da6cd7ac2af7f42f4448a'
+body_hash: 'sha256:2614ab221199b2353600a6a3cfbd563888c30b991dca3aa99ac782541f5d057f'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -3415,3 +3415,58 @@ Counting connections found the first caller. It could not have found the second:
 after the probe cache landed, the count merely said 40 remained. **Attributing
 each connection to its call site is what turned "still slow" into a named
 function.** Where a cost survives a fix, instrument WHO pays it, not how much.
+
+## Follow-up: the failure cache verified against the one test that could expose it
+
+The endpoint failure cache remembers "this URL refused" for 10s. The hazard is a
+test that stands up a REAL reader at a URL a previous test just recorded as
+refusing. Exactly one test in the suite is that shape:
+`TestInferencePacing::test_a_document_needing_a_reader_is_read_when_one_is_there`.
+
+Checked directly rather than argued:
+
+| | result |
+|---|---|
+| the test alone | 1 passed, 4.83s / 4.91s |
+| the test after the whole module has cached failures ahead of it | 21 passed, 34.60s / 34.05s |
+
+It is safe because it binds an **ephemeral** port, so its URL is a different
+cache key from the default endpoint. That is now confirmed by measurement rather
+than inferred from how ports are usually allocated.
+
+## Durations mining is blocked by the red tree in both remaining lanes
+
+Fresh durations at this HEAD:
+
+| lane | result | tail |
+|---|---|---|
+| `application` (integration) | 118 failed / 285 passed | 42.74s, 38.56s, 28.34s, 26.16s -- **every one a FAILING test** |
+| `adapters` (integration) | 105 failed / 113 passed (48% red) | 27.19s + 19.73s in `test_modelo_work_review_screen`, which is 11-failed / 1-passed |
+
+The application tail is entirely `minimo_descendientes` / `guarderia` /
+`anualidades` modules failing on `RegistryValidationError`, each paying a full
+registry load-and-validate before refusing. **Those timings are the cost of
+failing, not the cost of working**, and they will change shape when the registry
+campaign lands -- optimising against them would be optimising a program that is
+about to stop existing.
+
+This is self-correcting rather than a defect to chase: those tests each
+re-validate only because no verdict can be certified while validation fails
+(see the verdict-cache section above).
+
+## Ruled out: the login-screen backoff wait
+
+`test_login_screen` is green (8 passed, 22.03s) and its slowest test,
+`test_the_operator_can_retry_on_the_same_screen_once_the_backoff_clears`, spends
+2.5s in `asyncio.sleep`. A performance pass would reach for the throttle
+authority and clear the backoff instead.
+
+**The author already considered and rejected that**, in the constant's own
+docstring: the wait is "waited in real time rather than cleared through the
+throttle authority: what is being proved is that an operator who mistypes can get
+back in on the same screen, and stepping past the control they would actually
+meet would prove something weaker."
+
+**Do not re-chase.** The sleep is the test's subject, not its overhead. A
+deliberate, documented real-time wait is not a performance defect, and removing
+it would trade a proven behaviour for 2.5s.
