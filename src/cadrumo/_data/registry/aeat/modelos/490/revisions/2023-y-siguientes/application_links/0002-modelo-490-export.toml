@@ -1,0 +1,11 @@
+# Export surface for the 2023 era, which is the only Modelo 490 revision that
+# declares an export layout. The earlier eras carry no export link because they
+# carry no layout.
+
+[[revisions."2023-y-siguientes".application_links]]
+id = "modelo-490-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-hac-590-2021:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-490-2023"]
