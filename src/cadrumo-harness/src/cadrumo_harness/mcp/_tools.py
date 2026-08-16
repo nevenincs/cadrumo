@@ -13,6 +13,7 @@ is unit-tested.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import cache
 from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -112,8 +113,22 @@ def _merge_schema_definitions(*definition_sets: dict[str, Any]) -> dict[str, Any
     return merged
 
 
+@cache
 def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
     """Build the exposed MCP tool descriptors from the live manifest + registry.
+
+    Built once per process. The descriptor set is a pure function of the loaded
+    command tree, which cannot change while a process runs: the manifest, the
+    registry and the CLI argument vectors are all fixed at import. Profiled, one
+    build costs 7.7s and renders ~285 output schemas, and the MCP test modules
+    were paying it once per test -- 107.3s of a 144s module across 14 rebuilds
+    of an identical answer. ``_hitl.py`` also calls it per query.
+
+    Sharing one tuple is safe by construction rather than by convention:
+    ``McpToolDescriptor`` is declared with the strict FROZEN config, so a
+    caller cannot mutate what the next caller receives. The descriptions are
+    deliberately English rather than localised, so no cached value can pin a
+    locale either.
 
     Reuses the CLI's own payload-discovery so the registry is fully populated, then
     emits one descriptor per operator-callable command key, skipping group-callback
