@@ -150,19 +150,21 @@ def test_canonical_fleet_is_seventy_three_distinct_modelos() -> None:
     numerosa/discapacidad, Orden HFP/105/2017) were promoted windowless. It
     became 73 when Modelo 145 was added as a registry-backed local payer
     communication, out of scope for the overview filing calendar but still part
-    of the authorization fleet denominator. It fell to 57 when the sixteen modelos
-    for which AEAT publishes no machine-readable submission format left the
-    registry: 179 (suppressed from ejercicio 2024, absorbed into 238 under DAC7),
-    the eight filed by third parties or specialised filers (186, 231, 233, 234,
-    238, 289, 379, 592), six elective or non-established trámites (121, 140, 143,
-    361, 380, 848) and 721, which moved to UNMODELED_OBLIGATIONS as a real duty
-    the application cannot file. The fleet is derived from
+    of the authorization fleet denominator. It fell to 58 when the fifteen modelos for
+    which AEAT publishes no machine-readable submission format left the registry:
+    179 (suppressed from ejercicio 2024, absorbed into 238 under DAC7), eight
+    filed by third parties or specialised filers (186, 231, 233, 234, 238, 289,
+    379, 592), and six elective, non-established or IAE-liable-only tramites
+    (121, 140, 143, 361, 380, 848). The fleet derives from
     :data:`cadrumo.core.NON_REGISTRY_MODELOS`, so that relocation moved the
-    denominator by construction rather than by editing a list.
+    denominator by construction rather than by editing a list. Modelos 136 and
+    721 were deliberately KEPT despite having no published design: both carry
+    real calculation machinery this application exercises, so removing them would
+    destroy working capability rather than record an absent one.
     """
     assert len(CANONICAL_MODELO_FLEET) == FLEET_SIZE
     assert len(set(CANONICAL_MODELO_FLEET)) == FLEET_SIZE
-    assert FLEET_SIZE == 57
+    assert FLEET_SIZE == 58
 
 
 def test_canonical_fleet_covers_every_loadable_modelo() -> None:
