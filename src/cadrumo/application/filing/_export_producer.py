@@ -83,6 +83,12 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
         # an entity carries legal_name and no surnames -- so this resolves to
         # whichever the filer actually has, and stays absent only when both are.
         FilingProducerKey.TAXPAYER_SURNAMES_OR_LEGAL_NAME: identity.surnames or identity.legal_name,
+        # Read from the declaration's own contact fact, never from the taxpayer
+        # or the presenter: under a gestor the persona con quien relacionarse is
+        # routinely neither, and substituting either would name the wrong person
+        # in AEAT's informativa header.
+        FilingProducerKey.CONTACT_PERSON_PHONE: snapshot.declaration_contact.phone,
+        FilingProducerKey.CONTACT_PERSON_NAME: snapshot.declaration_contact.full_name,
         FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA: amendment.is_rectificativa if amendment else None,
         FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: amendment.is_complementaria if amendment else None,
         FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT: amendment.original_aeat_receipt if amendment else None,

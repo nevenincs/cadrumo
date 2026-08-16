@@ -22,6 +22,14 @@ class FilingProducerKey(StrEnum):
     TAXPAYER_GIVEN_NAME = "taxpayer.given_name"
     TAXPAYER_SURNAMES = "taxpayer.surnames"
     TAXPAYER_FULL_NAME = "taxpayer.full_name"
+    #: The "persona con quien relacionarse" AEAT reserves in the declarante
+    #: header of every informativa (Modelo 180/190/270/349 positions 59-107,
+    #: subdivided 59-67 telefono and 68-107 apellidos y nombre). This is the
+    #: contact for the DECLARATION, which AEAT models separately from both the
+    #: taxpayer and the presenter, so it is its own pair of identities rather
+    #: than a reuse of either.
+    CONTACT_PERSON_PHONE = "contact_person.phone"
+    CONTACT_PERSON_NAME = "contact_person.full_name"
     #: Apellidos for a persona fisica, razon social for an entidad -- the ONE
     #: slot of a two-slot identity design. AEAT labels it "Apellidos o Razon
     #: Social" and pairs it with a separate "Nombre (solo personas fisicas)"

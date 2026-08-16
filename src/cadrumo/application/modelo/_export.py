@@ -160,7 +160,11 @@ from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
 from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_scope_for_profile
 from ._preconditions import build_modelo_precondition_failure
 from ._prior_domiciliation import resolve_prior_domiciliation_election
-from ._profile_export_binding import resolve_export_identity, resolve_profile_export_values
+from ._profile_export_binding import (
+    resolve_declaration_contact,
+    resolve_export_identity,
+    resolve_profile_export_values,
+)
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
@@ -740,6 +744,10 @@ def _build_export_producer_snapshot(
             refund_account=iva_profile.refund_account if iva_profile is not None else None,
             charge_account=iva_profile.charge_account if iva_profile is not None else None,
             m303_filing_facts=m303_filing_facts,
+            # Read separately from the identity pair: AEAT's "persona con quien
+            # relacionarse" is a third party, and under a gestor it is routinely
+            # neither the taxpayer nor the presenter.
+            declaration_contact=resolve_declaration_contact(bucket_id=str(work_unit.bucket_id)),
         )
     except (FilingProducerSnapshotError, ValueError) as exc:
         raise ModeloExportError(

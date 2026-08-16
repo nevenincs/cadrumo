@@ -25,7 +25,7 @@ from ...domain.user_profile import (
     UserProfileFactValue,
     load_user_profile_schema,
 )
-from ..filing import PresenterIdentity, TaxpayerIdentityFacts
+from ..filing import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentityFacts
 
 # Intra-package reuse of this package's own resolver internals, which the
 # architecture rule permits; the cross-package boundary has its own gate.
@@ -39,6 +39,8 @@ _IDENTITY_TAX_ID_KEY = "identity.tax_id"
 _IDENTITY_NAME_KEY = "identity.name"
 _IDENTITY_SURNAMES_KEY = "identity.surnames"
 _ENTITY_TYPE_KEY = "taxpayer_type.entity_type"
+_CONTACT_PERSON_PHONE_KEY = "contact.contact_person_phone"
+_CONTACT_PERSON_NAME_KEY = "contact.contact_person_name"
 _NATURAL_PERSON_ENTITY_TYPE = "natural_person"
 
 
@@ -231,6 +233,40 @@ def _load_profile_record(*, bucket_id: str, profile_record: object | None) -> ob
         return ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     except ProfileNotFoundError:
         return None
+
+
+def resolve_declaration_contact(
+    *,
+    bucket_id: str,
+    profile_record: object | None = None,
+    schema: ProfileSchemaDefinition | None = None,
+) -> DeclarationContactFacts:
+    """Read the "persona con quien relacionarse" the informativa header declares.
+
+    Resolved separately from :func:`resolve_export_identity` rather than folded
+    into its tuple: this is a THIRD party in AEAT's model, distinct from both
+    the taxpayer and the presenter, and under a gestor it is routinely neither
+    of them. Keeping it its own read also leaves both existing callers of the
+    identity pair untouched.
+
+    Args:
+        bucket_id: Active profile bucket.
+        profile_record: Already-loaded record, when the caller holds one.
+        schema: Already-loaded schema, when the caller holds one.
+
+    Returns:
+        The declared contact. Absent halves stay absent -- AEAT writes an
+        unfilled alphanumeric header field to blancos, so a profile that
+        declares no contact still produces a legal filing.
+    """
+    record = _load_profile_record(bucket_id=bucket_id, profile_record=profile_record)
+    if record is None:
+        return DeclarationContactFacts()
+    resolved_schema = schema if schema is not None else load_user_profile_schema()
+    facts = _profile_fact_index(record, resolved_schema)
+    phone = str(facts.get(_CONTACT_PERSON_PHONE_KEY) or "").strip()
+    full_name = str(facts.get(_CONTACT_PERSON_NAME_KEY) or "").strip()
+    return DeclarationContactFacts(phone=phone or None, full_name=full_name or None)
 
 
 def _identity_from_profile_facts(

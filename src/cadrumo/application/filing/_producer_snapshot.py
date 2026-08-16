@@ -142,6 +142,27 @@ class TaxpayerIdentityFacts(BaseModel):
     full_name: _NonBlankName | None
 
 
+class DeclarationContactFacts(BaseModel):
+    """The "persona con quien relacionarse" AEAT asks for on an informativa.
+
+    Distinct from both :class:`TaxpayerIdentityFacts` and
+    :class:`PresenterIdentity`: AEAT reserves this pair for whoever it should
+    contact ABOUT the declaration, which under a gestor is routinely neither
+    the taxpayer nor the transmitting presenter. Filling it from either would
+    name the wrong person on a live filing, which is why it is its own fact.
+
+    Both halves are optional and absent stays absent -- AEAT's global rule for
+    the informativa header is that an alphanumeric field with no content is
+    written to blancos, so an unsupplied contact is a legal filing rather than
+    a defect.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    phone: _NonBlankName | None = None
+    full_name: _NonBlankName | None = None
+
+
 class Modelo111ProfileFacts(BaseModel):
     """Stable Modelo 111 profile facts consumed by a filing producer."""
 
@@ -360,6 +381,11 @@ class FilingProducerSnapshot(BaseModel):
     taxpayer_tax_id: SubjectTaxId
     taxpayer_identity: TaxpayerIdentityFacts
     presenter: PresenterIdentity
+    #: Defaulted rather than required: every existing caller predates this fact
+    #: and none of them can supply it, so demanding it would refuse filings that
+    #: are legal without it. An absent contact renders as blancos, which is what
+    #: AEAT's own header rule prescribes.
+    declaration_contact: DeclarationContactFacts = DeclarationContactFacts()
     model_profile: FilingModelProfileFacts
     elections: FilingElectionFacts
     amendment_evidence: AmendmentEvidence | None
@@ -474,8 +500,14 @@ def build_filing_producer_snapshot(
     refund_account: RefundAccount | None,
     charge_account: ChargeAccount | None,
     m303_filing_facts: M303FilingFacts | None,
+    declaration_contact: DeclarationContactFacts | None = None,
 ) -> FilingProducerSnapshot:
-    """Build a snapshot retaining only the account selected by disposition."""
+    """Build a snapshot retaining only the account selected by disposition.
+
+    ``declaration_contact`` is optional so every caller that predates the
+    informativa contact fact keeps working unchanged; an absent contact renders
+    as blancos, which is what AEAT's own header rule prescribes.
+    """
     safe_model_profile = _without_embedded_accounts(model_profile)
     selected_account: SelectedFilingAccount | None
     if elections.result_disposition is ResultDisposition.DOMICILIACION:
@@ -500,6 +532,7 @@ def build_filing_producer_snapshot(
             amendment_evidence=amendment_evidence,
             selected_account=selected_account,
             m303_filing_facts=m303_filing_facts,
+            declaration_contact=declaration_contact or DeclarationContactFacts(),
         )
     except ValueError as exc:
         raise FilingProducerSnapshotError(str(exc)) from exc
