@@ -875,11 +875,7 @@ def test_a_position_two_cited_editions_share_is_counted_once(
                 if _belongs_to_layout(sheet, layout.records)
                 for position in _required_positions(sheet)
             }
-            raw = sum(
-                len(_required_positions(sheet))
-                for sheet in sheets
-                if _belongs_to_layout(sheet, layout.records)
-            )
+            raw = sum(len(_required_positions(sheet)) for sheet in sheets if _belongs_to_layout(sheet, layout.records))
             if raw == len(distinct):
                 continue
             checked += 1
