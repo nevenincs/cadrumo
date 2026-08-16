@@ -4,11 +4,11 @@
 
 [[revisions."2022-2t-4t".workbook_parity_refs]]
 id = "modelo-490-2022-2t-4t-static-layout"
-workbook_source = "enrolled-modelo-490-layout"
+workbook_source = "aeat-dr-490-2022-2t"
 fixture_id = "modelo-490-orden-hac-590-2021-layout"
 formula_coverage = "static_layout"
 runner_required = false
 tolerance = "0.00"
 legal_refs = ["orden-hac-590-2021:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-490-layout"]
+source_refs = ["aeat-dr-490-2022-2t"]
 
