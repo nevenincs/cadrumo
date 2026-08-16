@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:2614ab221199b2353600a6a3cfbd563888c30b991dca3aa99ac782541f5d057f'
+body_hash: 'sha256:228d4e397ad6db1ddb9357659192df317ea2dc9e331f837625d8d793b288d5d1'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -3547,3 +3547,72 @@ authority -- the most load-bearing surface in the application. It is an ADR, not
 a sweep. The prize, from the numbers above: a warm authority load of ~3.8s
 (0.93s identity + 2.9s hydration) becomes a read plus a partial hydration, and
 the 33s cold CLI loses its compile entirely.
+
+## The combined-period gate: measured, three levers tried, none shipped
+
+`core/tests/test_period_combined_string_gate.py::test_repo_has_no_unallowlisted_combined_period_strings`
+is the slowest test in the largely-green unit lane (3,856 passed / 50 failed in
+160.31s) at **25.21s**. Phase split, repeated twice and stable:
+
+| phase | seconds | share |
+|---|---|---|
+| git index parse (no subprocess -- already efficient) | 0.035 | -- |
+| enumeration incl. a `Path.is_file()` per candidate | 2.9 | 13.5% |
+| read + decode 403.1 MB across 26,824 files | 3.6-3.8 | 17% |
+| **regex, 2 whole-text patterns** | **14.5-15.0** | **69.7%** |
+
+### Ruled out: merging the two whole-text patterns into one alternation
+
+Both patterns share the century prefix `(?:19|20|21|22)\d{2}` and differ only in
+their tail (`Q[1-4]` versus `-[1-4]T`), so the corpus is walked twice to find the
+same prefix. Merging them looked free.
+
+Equivalence was proven first -- the alternation built AUTOMATICALLY from the
+declared patterns as `(?P<p0>...)|(?P<p1>...)`, so it cannot drift from them --
+and compared as finding sets over every file: **0 mismatching files of 26,824,
+530 findings both ways.**
+
+It is **slower**: 20.974s against 15.078s.
+
+Python's `re` extracts a literal-prefix scan from each standalone pattern; a
+top-level alternation destroys that and tries both branches at each position.
+**Do not merge these patterns.** More generally: **restructuring a regex to
+"share work" can remove an optimisation the engine was already applying.**
+
+### Ruled out: memoising the corpus enumeration
+
+`_tracked_text_files()` is called by both tests in the module and costs 2.9s
+standalone, so `@cache` looked like a free 2.9s. Measured: **26.62s median of
+three (25.72-30.30) against a 25.21s baseline -- no win**, because the second
+call is already cheap in-test (module total ~26s, main test ~25s, so the second
+test's whole share is ~1s). **Reverted rather than kept**: a semantically safe
+change with no demonstrated benefit is still an unjustified change.
+
+### Not taken unilaterally: the scan corpus is 74% third-party document text
+
+| tree | bytes | share |
+|---|---|---|
+| `_data/corpus` (bundled BOE/AEAT documents) | 239.2 MB | **62.8%** |
+| `_data/manual_corpus_text` | 43.0 MB | **11.3%** |
+| `_data/registry` | 28.8 MB | 7.6% |
+| all first-party source under `src/cadrumo` | the remaining ~18% | |
+
+The gate exists to stop THIS REPO writing combined period strings. A combined
+period string inside bundled BOE text is AEAT's wording, is byte-exact evidence,
+and could not be fixed if found -- and the allowlist already excuses that class
+("external HTML/PDF corpus and fixture generation material preserves
+official/source labels"). Excluding `_data/corpus` and `_data/manual_corpus_text`
+would cut ~282 MB of the 403 MB scanned, taking the regex phase from ~15s to
+~4.5s and the read from ~3.7s to ~1.1s: **25.21s -> roughly 7s.**
+
+**This is a gate-scope narrowing and is left as an owner decision.** What it would
+exclude, stated plainly as the rule requires: the gate would no longer notice a
+combined period string appearing in bundled corpus text. That is judged
+unactionable rather than harmless -- the files are external evidence -- but it is
+a real reduction in what the gate sees, and the module already carries an
+anti-vacuity floor (`len(corpus) > 500`) precisely because someone worried about
+this corpus collapsing.
+
+**Four consecutive levers on this file measured no better or worse than the
+baseline.** The remaining one that would work is the scope decision, not a
+technique.
