@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
+from typing import Literal
 
 import pytest
 
@@ -26,18 +27,22 @@ llm_profile_isolated_backend = active_profile_isolated_backend_fixture(
 )
 
 
-_LIVE_FX_BACKEND: dict[str, object] = {
-    "bucket_id": "00000000-0000-4000-8000-000000000000",
-    "dispose_engine_around": True,
-    "settings_overrides": {"cadrumo_output_language": "en", "cadrumo_live_tests_enabled": "1"},
-}
+def _live_fx_backend(*, scope: Literal["function", "module"]) -> Callable[..., Iterator[None]]:
+    """Build the live-FX backend fixture at the requested scope.
 
-live_fx_isolated_backend = active_profile_isolated_backend_fixture(**_LIVE_FX_BACKEND)  # type: ignore[arg-type]
+    Both scopes are built here rather than from two literal call sites so the
+    bucket id and settings overrides cannot drift apart between them.
+    """
+    return active_profile_isolated_backend_fixture(
+        bucket_id="00000000-0000-4000-8000-000000000000",
+        dispose_engine_around=True,
+        settings_overrides={"cadrumo_output_language": "en", "cadrumo_live_tests_enabled": "1"},
+        scope=scope,
+    )
+
+
+live_fx_isolated_backend = _live_fx_backend(scope="function")
 
 #: The same seeded world, built once per file instead of once per test, for
-#: suites whose every test only reads it. The parameters are shared with the
-#: function-scoped fixture above so the two cannot drift apart.
-live_fx_isolated_backend_per_module = active_profile_isolated_backend_fixture(
-    **_LIVE_FX_BACKEND,  # type: ignore[arg-type]
-    scope="module",
-)
+#: suites whose every test only reads it.
+live_fx_isolated_backend_per_module = _live_fx_backend(scope="module")
