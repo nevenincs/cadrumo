@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:61a5e5779263bfd299c4d1cfda88486f7ba9f41d28361d03f0455f2b1afa6389'
+body_hash: 'sha256:b9abbc4c3eeb3f69a77c581b718e4a5b9fc6dd162f58191f68fa6a2f86118980'
 related:
   - "[[2026-08-14-test-harness-sanity-harness-performance-audit]]"
 ---
@@ -98,3 +98,48 @@ owner's decision:
    tracks `CPU / workers`, so this is the ONLY remaining wall-clock lever -- and
    it is coupled to the 1,216 MB-per-worker AST prime, so raising it trades
    memory for time.
+
+## Isolated per-file baselines
+
+The shape above comes from `-n auto` runs, whose per-file figures carry
+contention and therefore cannot support a regression CLAIM. These are
+contention-free: each file run alone, `-n0`, private `--basetemp`, twice.
+
+    file                                      run1    run2  spread   in-table
+    test_config_custody_profile_lifecycle    153.7   153.2    0.3%      171.0
+    test_login_handover                      115.4   116.6    1.1%      132.9
+    test_acceptance_wall_catalogue            98.5    97.5    1.1%      111.7
+    test_ledger_corpus_batch_transform       110.3   112.2    1.7%      103.1
+    test_cli_workflow_verification           103.2   131.2   27.0%       95.0
+    test_wheel_content_boundary               96.1    96.2    0.1%       94.8
+    test_batch_ingest_runner                 107.4   106.5    0.8%       93.8
+
+Six of the seven repeat within 2%, which is what makes them usable as a
+baseline. `test_cli_workflow_verification` spread 27% across two runs and is
+recorded as UNSTABLE rather than given a figure: comparing anything against a
+number that moves by a quarter between consecutive runs would manufacture
+regressions and hide real ones.
+
+### These are NOT comparable to the per-file durations sums above
+
+The two columns measure different things and the difference is not noise.
+
+An isolated figure is the WALL CLOCK of a whole pytest run: collection, session
+fixtures (including the ~68s AST prime where the file requests it), the tests,
+and teardown. A per-file durations sum is only the recorded call/setup/teardown
+phases of that file's tests, with session overhead attributed wherever it first
+fired.
+
+That is why three files read HIGHER isolated than in-table
+(`test_batch_ingest_runner` 107.4 against 93.8), which no amount of contention
+could explain -- the isolated run is simply paying for session work the
+durations sum never counted. Compare isolated against isolated, and in-table
+against in-table; a cross-comparison is meaningless in both directions.
+
+### How to use these
+
+Run the file alone, `-n0`, private `--basetemp`, twice. A repeat within a few
+percent of the figure above is unchanged. A reproducible move beyond ~10% is a
+real regression and worth a `cProfile` before anything else, because this
+campaign's experience is that the cause is usually a newly unshared computation
+rather than a slower one.
