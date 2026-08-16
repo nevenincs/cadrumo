@@ -24,6 +24,7 @@ from sqlalchemy import Engine, text
 from ......core.config import override_settings
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ... import SensitivityClass
+from ..._runtime_readiness import StorageRuntimeReadinessCode
 from ...errors import EnvelopeVersionError, SecureObjectUnreadableError, StorageValidationError
 from ...sql import SecureObjectRepository
 from ...sql.secure_objects import SecureObjectRecord, SecureObjectUnreadable
@@ -132,11 +133,18 @@ def test_secure_bound_repository_default_refuses_active_profile_without_session(
     with (
         override_settings(
             cadrumo_local_storage_root=tmp_path,
-            cadrumo_active_profile="secure-bound-bucket",
+            cadrumo_active_profile="9a1c4f2e-6d0b-4d7a-8b3e-1c5f7a2d9e04",
         ),
-        pytest.raises(StorageValidationError, match="no active bucket session"),
+        pytest.raises(StorageValidationError) as raised,
     ):
         _RoundtripRepository()
+
+    # The refusal is localised, so its prose belongs to the locale catalogues.
+    # The typed readiness code is the contract, and it discriminates the
+    # absent session from every other unready state a prose match would accept.
+    assert raised.value.translated_message == "errors.storage.runtime.not_ready"
+    assert raised.value.context is not None
+    assert raised.value.context["readiness_code"] == StorageRuntimeReadinessCode.NO_ACTIVE_SESSION.value
 
 
 def test_secure_bound_repository_rejects_future_schema_version(

@@ -6,7 +6,6 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
 
 from ....adapters.persistence.storage.bucket import bucket_paths
 from ....core.config import Settings, override_settings
@@ -419,12 +418,20 @@ class TestCanonicalBucketEquivalence:
         isolated_settings: Settings,
         bad: str,
     ) -> None:
-        """A blank or overlength bucket cannot silently address a repository."""
+        """A blank or overlength bucket cannot silently address a repository.
+
+        The refusal is the property under test, not its exception class. This
+        surface now defers to :func:`~cadrumo.core.identity.canonical_bucket_id`
+        rather than re-deriving the rule, and that shared helper deliberately
+        raises the plain builtin so it does not impose one consumer's error
+        class on every other. ``ValidationError`` subclasses ``ValueError``, so
+        this still holds whichever the boundary raises.
+        """
         svc = ApoderadoService(settings=isolated_settings)
 
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValueError):
             svc.status(bucket_id=bad)
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValueError):
             svc.clear(bucket_id=bad)
 
     def test_distinct_buckets_stay_distinct(self) -> None:

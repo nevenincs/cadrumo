@@ -30,7 +30,11 @@ _HARDENING_TEST_SURFACES = (
     "src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key.py",
     "src/cadrumo/adapters/persistence/storage/tests/test_runtime.py",
     "src/cadrumo/adapters/persistence/storage/master_key/tests/test_kdf_params.py",
-    "src/cadrumo/application/user_profile/tests/test_profile_repository.py",
+    # Successor of `test_profile_repository.py`, which no longer exists: the
+    # profile repository's test module in that package is now `test_repository`.
+    # The stale name silently dropped a surface from the environment-mutation
+    # guard, because an unreadable path yields no AST to scan.
+    "src/cadrumo/application/user_profile/tests/test_repository.py",
     "src/cadrumo/core/tests/test_storage_route_classification.py",
     "src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py",
 )
@@ -41,44 +45,34 @@ _ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS = {
     "src/cadrumo/adapters/persistence/storage/runtime_repository.py",
 }
 _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
-    "src/cadrumo/adapters/persistence/storage/envelope/tests/test_secure_bound_repository.py",
     "src/cadrumo/adapters/persistence/storage/envelope/tests/test_secure_bound_repository_contract.py",
     "src/cadrumo/adapters/persistence/storage/envelope/tests/_repository_contract_support.py",
     "src/cadrumo/adapters/persistence/storage/master_key/tests/test_adverse_sessions.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/test_apply_batch.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/test_archive_bundle_roundtrip.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/test_constraints.py",
     "src/cadrumo/adapters/persistence/storage/sql/tests/test_engine.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/test_repository.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_absent_revision.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_decode_order.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_digest_identity.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_integrity_agreement.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_revision_lineage_coverage.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_write_batching.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part1.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part2.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part3.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_schema_lineage.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/_secure_objects_support.py",
-    "src/cadrumo/adapters/persistence/storage/sql/tests/test_session.py",
-    "src/cadrumo/adapters/persistence/storage/tests/test_ephemeral_key_hygiene.py",
-    "src/cadrumo/adapters/persistence/storage/tests/test_hardening_convention_guards.py",
     "src/cadrumo/adapters/persistence/storage/tests/test_runtime.py",
     "src/cadrumo/application/tests/test_diagnostics.py",
     "src/cadrumo/application/modelo/tests/test_export_iva_wallet.py",
     "src/cadrumo/application/tests/test_repair_integrity.py",
     "src/cadrumo/application/tests/test_state_projection.py",
     "src/cadrumo/application/tests/test_storage_write_policy.py",
-    "src/cadrumo/application/user_profile/tests/test_repository.py",
     "src/cadrumo/application/workflow/tests/test_runtime_defaults.py",
     "src/cadrumo/core/tests/test_storage_route_classification.py",
-    "src/cadrumo/entrypoints/cli/tests/test_cold_start_no_profile.py",
-    "src/cadrumo/entrypoints/cli/tests/test_repair_bootstrap_exempt.py",
     "src/cadrumo/entrypoints/cli/tests/test_root_fallback_write_guard.py",
     "src/cadrumo/tests/secure_sql.py",
-    "src/cadrumo/tests/test_config.py",
-    "src/cadrumo/tests/test_secure_sql.py",
+    # Approved on the same ground as every entry above: the explicit database
+    # route is the SUBJECT of these modules, not convenience setup they could
+    # have avoided. The first two exercise the engine's own route handling --
+    # `test_bucket_root_is_capsule_owned` is the dedicated module for the
+    # refusal that a bucket root is never created by opening an engine, which
+    # cannot be reached without pointing a route at an unpublished bucket, and
+    # `engine_bootstrap` is the shared plumbing the already-approved `sql/` and
+    # `envelope/` suites build their engines with. The last two assert the
+    # operator-facing guard that REFUSES an explicit route, alongside the
+    # already-approved `test_root_fallback_write_guard`.
+    "src/cadrumo/adapters/persistence/storage/sql/tests/test_bucket_root_is_capsule_owned.py",
+    "src/cadrumo/adapters/persistence/storage/tests/engine_bootstrap.py",
+    "src/cadrumo/entrypoints/cli/tests/test_refusal_boundary_action_projection.py",
+    "src/cadrumo/entrypoints/cli/tests/test_root_guard_typed_projection.py",
 }
 
 
@@ -135,18 +129,23 @@ def test_named_bucket_settings_derivation_stays_in_core_settings_boundary() -> N
     assert "cadrumo_database_url" in config_segment
 
 
-def test_profile_repository_kdf_defaults_flow_from_canonical_master_key_model() -> None:
-    path = repo_path("src/cadrumo/application/user_profile/_profile_repository.py")
-    function = _function_named(path, "_default_kdf_params")
-    calls = [node for node in ast.walk(function) if isinstance(node, ast.Call)]
-
-    assert any(_is_kdf_default_to_manifest_call(call) for call in calls)
-    assert not any(leaf_name(call.func) == "ManifestKdfParams" for call in calls)
-    assert not any(
-        keyword.arg in {"algorithm", "version", "memory_cost", "time_cost", "parallelism", "salt", "output_length"}
-        for call in calls
-        for keyword in call.keywords
-    )
+# The profile-repository KDF-defaults guard was RETIRED here rather than
+# repaired. It asserted that `_default_kdf_params` in
+# `application/user_profile/_profile_repository.py` derived its Argon2 fields
+# from `KdfParams.default().to_manifest_params()` instead of restating them.
+# Every noun in that sentence is gone: the shared-master `ManifestKdfParams`
+# model and `to_manifest_params` no longer exist in production anywhere, the
+# function is gone, and the module is now a committed-capsule label projection
+# that holds no KDF concern. Reinstating the function to satisfy the guard
+# would be a shim for a retired surface.
+#
+# The property has no successor subject either, and that is the reason it needs
+# no successor guard: `ProfileCustodyKdfParameters` is constructed at exactly
+# two production sites, both inside `custody/_kdf_supervision.py` -- the
+# calibration grid and its one documented fallback -- so the defect shape the
+# guard watched for (a consuming module restating KDF fields and drifting from
+# the canonical model) has nowhere left to occur. If a second package ever
+# constructs that record, this is the guard to bring back.
 
 
 def test_production_secure_object_repository_construction_stays_runtime_owned(
@@ -190,6 +189,46 @@ def test_every_allowed_repository_constructor_still_needs_its_entry() -> None:
         if not any("direct SecureObjectRepository construction" in offence for offence in offences):
             stale.append(f"{relative} (no longer constructs a SecureObjectRepository; drop the entry)")
     assert not stale, "Stale _ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS entries:\n" + "\n".join(
+        f"  {entry}" for entry in stale
+    )
+
+
+def test_every_hardening_test_surface_resolves_to_a_real_module() -> None:
+    """Every enumerated hardening surface must exist, or it is silently unscanned.
+
+    The environment-mutation guard iterates this fixed list. A path that no
+    longer resolves contributes no AST, so the surface drops out of the scan
+    while the list still reads as covering it -- the same fail-open shape the
+    approval lists above each carry their own liveness check for.
+    """
+    absent = [relative for relative in _HARDENING_TEST_SURFACES if not repo_path(relative).is_file()]
+    assert absent == [], f"_HARDENING_TEST_SURFACES entries resolve to nothing and are therefore unscanned: {absent}"
+
+
+def test_every_approved_explicit_route_surface_still_needs_its_entry() -> None:
+    """Each approved route surface must exist and still set an explicit route.
+
+    The sibling of the constructor liveness check above, and it was missing:
+    one entry already named a module that no longer exists, so the approval
+    list had begun pre-authorising a path nobody was watching. An approval that
+    outlives its subject is worse than no approval, because whatever later
+    occupies the path inherits an exemption nobody granted it.
+
+    Liveness rather than mere presence: drop the entry, re-run the real
+    detector over the module, and require it to report the explicit route the
+    entry was approving.
+    """
+    stale: list[str] = []
+    for relative in sorted(_APPROVED_EXPLICIT_ROUTE_TEST_SURFACES):
+        path = repo_path(relative)
+        if not path.is_file():
+            stale.append(f"{relative} (file absent)")
+            continue
+        tree = ast_for_path(path)
+        assert tree is not None, f"{relative}: source must be parseable"
+        if not _uses_explicit_database_route(tree):
+            stale.append(f"{relative} (no longer sets an explicit database route; drop the entry)")
+    assert not stale, "Stale _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES entries:\n" + "\n".join(
         f"  {entry}" for entry in stale
     )
 
@@ -418,19 +457,6 @@ def _is_logger_call(node: ast.AST, method: str) -> bool:
 
 def _call_has_keyword(node: ast.Call, keyword_name: str) -> bool:
     return any(keyword.arg == keyword_name for keyword in node.keywords)
-
-
-def _is_kdf_default_to_manifest_call(node: ast.Call) -> bool:
-    if not isinstance(node.func, ast.Attribute) or node.func.attr != "to_manifest_params":
-        return False
-    default_call = node.func.value
-    return (
-        isinstance(default_call, ast.Call)
-        and isinstance(default_call.func, ast.Attribute)
-        and default_call.func.attr == "default"
-        and isinstance(default_call.func.value, ast.Name)
-        and default_call.func.value.id == "KdfParams"
-    )
 
 
 def _collect_string_bindings(tree: ast.AST) -> dict[str, str]:

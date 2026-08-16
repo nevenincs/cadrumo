@@ -630,7 +630,13 @@ def build_live_auth_preflight_report(
     except AuthOperationRequiresCustodySessionError:
         if profile_current_bucket_session() is not None:
             raise
-        return LiveAuthPreflightReport(provider=_provider_kind_or_none(provider).value if provider else "")
+        # Guard the RESOLVED kind, not the supplied string: the resolver
+        # returns None for a provider it does not implement, so a non-empty
+        # but unrecognised value passes a truthiness check on the input and
+        # then raises on the attribute. The empty projection is the same
+        # answer either way -- there is no session to report a provider for.
+        kind = _provider_kind_or_none(provider)
+        return LiveAuthPreflightReport(provider=kind.value if kind is not None else "")
 
 
 def _build_live_auth_preflight_report(

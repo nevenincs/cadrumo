@@ -10,9 +10,9 @@ from __future__ import annotations
 import pytest
 
 from .....core import errors, logging
+from ... import storage as storage_package
 from .. import RepositoryError, StorageError
 from .. import __all__ as storage_all
-from .. import __dict__ as storage_namespace
 from .. import __doc__ as storage_doc
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -31,9 +31,16 @@ def test_smoke_storage() -> None:
 
 
 def test_public_surface_is_complete() -> None:
-    """Every name in ``__all__`` must be importable from the package root."""
-    for name in storage_all:
-        assert name in storage_namespace, f"missing public export: {name}"
+    """Every name in ``__all__`` must resolve on the package root.
+
+    The facade resolves most of its surface lazily through :pep:`562`, so a
+    name is legitimately absent from the module namespace until first access.
+    Resolution through :func:`getattr` is what the contract actually promises,
+    and it proves more than a namespace probe: the owning submodule must
+    import and must genuinely define the name.
+    """
+    unresolved = sorted(name for name in storage_all if not hasattr(storage_package, name))
+    assert not unresolved, f"missing public exports: {unresolved}"
 
 
 def test_runtime_master_key_and_namespace_boundaries_are_public() -> None:
@@ -55,4 +62,5 @@ def test_runtime_master_key_and_namespace_boundaries_are_public() -> None:
     }
 
     assert expected_exports <= set(storage_all)
-    assert expected_exports <= storage_namespace.keys()
+    unresolved = sorted(name for name in expected_exports if not hasattr(storage_package, name))
+    assert not unresolved, f"declared but unresolvable boundaries: {unresolved}"

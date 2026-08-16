@@ -7,11 +7,18 @@ storage namespace or key material themselves.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+from typing import TYPE_CHECKING
+
 from ....core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .errors import StorageValidationError
 from .runtime import StorageRuntimeReadinessCode, inspect_bucket_storage_runtime, runtime_not_ready_error
 from .sql import SecureObjectRepository
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from pathlib import Path
 
 
 def _active_bucket_id_for_source(
@@ -105,9 +112,66 @@ def secure_object_repository_for_cold_bootstrap_state(
     return SecureObjectRepository(engine=get_engine(source), namespace_registry=STORAGE_NAMESPACE_REGISTRY)
 
 
+@contextmanager
+def secure_object_repository_for_staged_bucket(
+    bucket_id: str,
+    *,
+    database_file: Path,
+) -> Iterator[SecureObjectRepository]:
+    """Yield a repository for a bucket's database BEFORE its capsule is published.
+
+    The one route the storage runtime cannot serve, and the reason is
+    structural rather than an oversight.
+    :meth:`~adapters.persistence.storage.StorageRuntime.secure_object_repository`
+    rebuilds its settings from a storage root plus an active profile, so it
+    always resolves the FINAL ``buckets/<bucket_id>/`` path; and capsule
+    creation writes revision one into a staging directory that becomes that
+    bucket only at the publishing rename. The cold-bootstrap factory is no
+    substitute either -- it refuses an explicit database route by design,
+    because its own job is the no-pointer-yet case rather than this one.
+
+    So the staging database is addressed explicitly. What stays runtime-owned
+    is everything that made a direct construction worth forbidding: the
+    namespace registry, the session-bucket binding, the secure-session
+    requirement, and the engine's lifetime. A caller receives an open
+    repository and cannot leak the engine behind it.
+
+    The caller still owns binding the DEK that opens these rows: the staged
+    capsule's key exists only in the creating transaction, which is precisely
+    why no ambient session serves this bucket yet.
+
+    Args:
+        bucket_id: The profile UUID the staged rows will belong to. Bound as
+            the repository's session bucket, so a session serving a different
+            profile refuses rather than writing across capsules.
+        database_file: The staging database's path. Directory creation is left
+            to the engine deliberately: it refuses to bring a bucket root into
+            existence -- a bucket exists only once its capsule is published --
+            and creates the parents only after that check. Creating them here
+            first would satisfy the guard by making its subject exist, which is
+            exactly the second bucket creator the refusal is written against.
+
+    Yields:
+        A :class:`SecureObjectRepository` open on the staged database.
+    """
+    from .sql.engine import create_engine_from_settings
+
+    engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{database_file.as_posix()}"))
+    try:
+        yield SecureObjectRepository(
+            engine=engine,
+            namespace_registry=STORAGE_NAMESPACE_REGISTRY,
+            active_session_bucket_id=bucket_id,
+            require_secure_active_session=True,
+        )
+    finally:
+        engine.dispose()
+
+
 __all__ = [
     "secure_object_repository_for_active_bucket",
     "secure_object_repository_for_active_bucket_or_default_route",
     "secure_object_repository_for_bucket",
     "secure_object_repository_for_cold_bootstrap_state",
+    "secure_object_repository_for_staged_bucket",
 ]

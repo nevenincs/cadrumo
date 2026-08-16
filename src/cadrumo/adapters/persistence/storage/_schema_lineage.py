@@ -32,12 +32,17 @@ inventory keyed on the raise could not find them; the AST gate in
 ``tests/test_classification_enrollment_inventory.py`` is keyed on the
 comparison instead, for exactly that reason.
 
-The upgrader registry is EMPTY while every registered namespace sits at
-schema version 1. A future schema bump MUST land the one-hop upgrader for
-its namespace in the same change, or the lineage gate
-(``tests/test_schema_lineage.py``) fails — that gate is what makes "a
-version bump strands years-old taxpayer data" structurally impossible. That
-upgrader in turn MUST re-stamp the payload's inner envelope version; see
+Namespaces version INDEPENDENTLY: most sit at schema version 1, several at 2,
+and one at 3. The upgrader registry below is therefore not empty — two
+namespaces landed a real one-hop upgrader alongside their bump. Those two are
+ahead of the current obligation rather than meeting it: while the
+compatibility regime is pre-release, each namespace's durability floor chases
+its own current version, older shapes are deleted rather than migrated, and
+the lineage gate (``tests/test_schema_lineage.py``) does not demand a chain.
+At the checkpoint flip the floors freeze and that gate starts requiring the
+one-hop upgrader for every namespace above the frozen floor, in the same
+change as the bump. An upgrader MUST re-stamp the payload's inner envelope
+version; see
 :func:`register_secure_object_schema_upgrader` for the obligation and why
 forgetting it is silent at layer one and loud only at layer two.
 :data:`SECURE_OBJECT_DURABILITY_FLOOR` moves forward only deliberately, once

@@ -32,6 +32,9 @@ from ._capsule_data import (
     read_sentinel_fd as _read_sentinel_fd,
 )
 from ._capsule_data import (
+    replace_capsule_file as _replace_capsule_file,
+)
+from ._capsule_data import (
     replace_data_file as _replace_data_file,
 )
 from ._capsule_data import (
@@ -151,7 +154,12 @@ from ._inventory import (
     inventory_profile_custody_capsule as _inventory_profile_custody_capsule,
 )
 from ._paths import profile_custody_path
-from ._records import ProfileCustodyEnvelope
+from ._records import (
+    PROFILE_CUSTODY_ENVELOPE_FILENAME,
+    PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
+    ProfileCustodyEnvelope,
+    parse_profile_custody_envelope,
+)
 from ._recovery import (
     PROFILE_CUSTODY_RECOVERY_FILENAME,
     ProfileCustodyRecoveryEnvelope,
@@ -451,7 +459,9 @@ def publish_profile_custody_capsule(
             data_root.mkdir(mode=0o700)
             _anchor_directory(content_anchors, custody_root)
             _anchor_directory(content_anchors, data_root)
-            _write_exclusive_fsynced(custody_root / "envelope.v1.json", password_envelope.canonical_json_bytes())
+            _write_exclusive_fsynced(
+                custody_root / PROFILE_CUSTODY_ENVELOPE_FILENAME, password_envelope.canonical_json_bytes()
+            )
             if recovery_envelope is not None:
                 _write_exclusive_fsynced(
                     custody_root / PROFILE_CUSTODY_RECOVERY_FILENAME, recovery_envelope.canonical_json_bytes()
@@ -534,7 +544,9 @@ def _publish_profile_custody_capsule_posix(
             custody_fd = _posix_mkdir_child_directory(stage_fd, "custody")
             data_fd = _posix_mkdir_child_directory(stage_fd, "data")
             try:
-                _write_exclusive_fsynced_fd(custody_fd, "envelope.v1.json", password_envelope.canonical_json_bytes())
+                _write_exclusive_fsynced_fd(
+                    custody_fd, PROFILE_CUSTODY_ENVELOPE_FILENAME, password_envelope.canonical_json_bytes()
+                )
                 if recovery_envelope is not None:
                     _write_exclusive_fsynced_fd(
                         custody_fd,
@@ -796,6 +808,75 @@ def replace_committed_profile_custody_data_file(
         _replace_data_file(data_path, relative_name, payload, expected_sha256=expected_sha256)
 
 
+def replace_committed_profile_custody_envelope(
+    profile_id: UUID,
+    payload: bytes,
+    *,
+    expected_sha256: str,
+    settings: Settings | None = None,
+    root: Path | None = None,
+) -> None:
+    """CAS-replace a committed capsule's password envelope, preserving its DEK epoch.
+
+    The write a passphrase rotation makes. Rotation re-wraps the SAME data key
+    under a key derived from the new password, so exactly one capsule member
+    changes: ``custody/envelope.v1.json``. The caller holds the custody
+    transaction lock and supplies the digest of the envelope it authenticated.
+
+    **The DEK sentinel is deliberately not touched.** Its associated data binds
+    only ``(profile_id, dek_epoch)``, so an envelope that preserves the epoch
+    leaves the committed sentinel -- and every outstanding recovery artifact
+    minted against that epoch -- valid. Rewriting the sentinel here would
+    invalidate an operator's recovery mnemonic for a password change that never
+    touched the key it protects.
+
+    That is why the epoch is enforced rather than trusted. A payload carrying a
+    different ``dek_epoch`` describes a re-key, not a rotation: it would leave a
+    sentinel and recovery artifacts silently unopenable while every surface
+    still reported success. It is refused here, at the write boundary, so the
+    invariant cannot be lost by a caller that forgets it.
+
+    Args:
+        profile_id: The committed capsule's profile UUID.
+        payload: Canonical JSON bytes of the re-wrapped envelope.
+        expected_sha256: Prefixed digest of the envelope being replaced.
+        settings: Optional settings override.
+        root: Optional storage-root override.
+
+    Raises:
+        ProfileCustodyRecordError: When no committed capsule is recognized, the
+            payload is not a valid envelope for this profile, the payload
+            changes the DEK epoch, or the compare-and-swap witness is stale.
+    """
+    capsule_path = recognize_current_profile_capsule(profile_id, settings=settings, root=root)
+    if capsule_path is None:
+        raise ProfileCustodyRecordError("profile custody rotation requires a committed capsule")
+    custody_path = capsule_path / "custody"
+    with ExitStack() as anchors:
+        _anchor_directory(anchors, capsule_path)
+        _anchor_directory(anchors, custody_path)
+        committed = _read_password_envelope(custody_path / PROFILE_CUSTODY_ENVELOPE_FILENAME, trace=[])
+        try:
+            replacement = parse_profile_custody_envelope(payload)
+        except (ProfileCustodyRecordError, ValueError, TypeError) as exc:
+            raise ProfileCustodyRecordError("profile custody rotation payload is not a valid envelope") from exc
+        if replacement.profile_id != profile_id:
+            raise ProfileCustodyRecordError("profile custody rotation envelope names a different profile")
+        if replacement.dek_epoch != committed.dek_epoch:
+            raise ProfileCustodyRecordError(
+                "profile custody rotation envelope changes the DEK epoch; a rotation re-wraps the same "
+                "data key, and a new epoch would leave the committed sentinel and every recovery "
+                "artifact unopenable",
+            )
+        _replace_capsule_file(
+            custody_path,
+            PROFILE_CUSTODY_ENVELOPE_FILENAME,
+            payload,
+            expected_sha256=expected_sha256,
+            maximum_bytes=PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
+        )
+
+
 def load_staged_profile_custody_label_record(
     profile_id: UUID,
     transaction_id: UUID,
@@ -886,7 +967,7 @@ def load_committed_profile_password_material(
                 )
                 envelope = _read_password_envelope_fd(
                     custody_fd,
-                    display_path=capsule_path / "custody" / "envelope.v1.json",
+                    display_path=capsule_path / "custody" / PROFILE_CUSTODY_ENVELOPE_FILENAME,
                     trace=trace,
                 )
                 sentinel = _read_sentinel_fd(
@@ -905,7 +986,9 @@ def load_committed_profile_password_material(
             commit = parse_profile_custody_commit(
                 _read_regular_file(marker_path, maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES, trace=trace)
             )
-            envelope = _read_password_envelope(capsule_path / "custody" / "envelope.v1.json", trace=trace)
+            envelope = _read_password_envelope(
+                capsule_path / "custody" / PROFILE_CUSTODY_ENVELOPE_FILENAME, trace=trace
+            )
             sentinel = _read_sentinel(capsule_path / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME, trace=trace)
     if envelope.profile_id != profile_id or sentinel.profile_id != profile_id:
         raise ProfileCustodyRecordError("normal password custody identity does not match its committed capsule")

@@ -24,6 +24,7 @@ from .._namespace_registry import (
     StorageHierarchyRegistry,
     is_former_product_namespace,
 )
+from .._runtime_readiness import StorageRuntimeReadinessCode, runtime_not_ready_error
 from .._schema_lineage import ensure_schema_version_readable, inner_envelope_classification_is_expected
 from ..crypto import (
     encrypt_secure_object_payload,
@@ -325,7 +326,6 @@ class SecureObjectRepository:
 
         from ..errors import SessionExpiredError
         from ..master_key import current_active_bucket_session, evaluate_idle, session_serves_bucket
-        from ..runtime import StorageRuntimeReadinessCode, runtime_not_ready_error
 
         session = current_active_bucket_session()
         if session is None:

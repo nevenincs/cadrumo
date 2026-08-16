@@ -25,9 +25,11 @@ from ......core.external_constants import UTF_8_ENCODING
 from ......tests.bucket_layout import provision_bucket_directory
 from .._errors import BucketBusyError, BucketValidationError
 from .._layout import (
+    BucketPaths,
     bucket_paths,
 )
 from .._lockfile import (
+    BucketLockTarget,
     acquire_lock,
     lock_path,
     release_lock,
@@ -554,3 +556,50 @@ def test_acquire_does_not_surface_a_sharing_violation_from_a_stale_reclaim(
         inspector.close()
         if lock_path(paths).exists():
             release_lock(paths)
+
+
+def test_the_lock_target_protocol_states_exactly_what_the_lock_reads(tmp_path: Path) -> None:
+    """A narrowed bucket view locks and unlocks without being re-widened.
+
+    The lock's parameter is :class:`BucketLockTarget` rather than the whole
+    :class:`BucketPaths` record because those two fields are all it reads. That
+    matters beyond tidiness: a caller holding a narrowed view of a bucket had to
+    re-widen it back to the concrete record before delegating here, and that
+    round trip could only be guarded by a runtime identity check standing in for
+    a boundary the signature now states directly.
+
+    Driving the real lock with a stand-in that is emphatically NOT a
+    ``BucketPaths`` is what proves the widening is genuine rather than cosmetic.
+    """
+    directory = tmp_path / "narrowed-bucket"
+    directory.mkdir()
+
+    class _NarrowedBucketView:
+        """The two fields the lock declares, and nothing else."""
+
+        bucket_dir = directory
+        bucket_id = "0e5c9b41-77a2-4d38-9f60-2b18ac3e7d54"
+
+    view = _NarrowedBucketView()
+    assert not isinstance(view, BucketPaths)
+
+    acquire_lock(view, wait_seconds=0.0)
+    try:
+        assert lock_path(view).is_file()
+    finally:
+        release_lock(view)
+    assert not lock_path(view).is_file()
+
+
+def test_a_view_missing_the_declared_fields_is_not_a_lock_target(tmp_path: Path) -> None:
+    """Anti-vacuity: the protocol would be worthless if it admitted anything.
+
+    ``bucket_id`` is the field a symmetry-minded reader would drop, so the
+    stand-in here omits exactly that one -- the lock reads it on every refusal
+    path, and a target without it fails late with an unattributed message.
+    """
+
+    class _MissingBucketId:
+        bucket_dir = tmp_path / "no-identity"
+
+    assert not isinstance(_MissingBucketId(), BucketLockTarget)

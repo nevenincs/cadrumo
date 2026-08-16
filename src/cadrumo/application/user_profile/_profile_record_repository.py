@@ -19,7 +19,11 @@ from uuid import UUID
 from ...core.paths import effective_storage_root
 from ...domain.buckets import BucketEventType
 from ...domain.user_profile import ProfileNotFoundError, ProfileSetupState, UserProfileFact, UserProfileRecord
-from ..profile_custody import profile_custody_record_session_material
+from ..profile_custody import (
+    profile_current_bucket_session,
+    profile_custody_record_session_material,
+    profile_session_serves_bucket,
+)
 from ._capsule_record import (
     ProfileRecordCommandEvent,
     ProfileRecordConflictError,
@@ -31,14 +35,33 @@ _ACTIVE_RECORD_SESSION: ContextVar[ProfileRecordSession | None] = ContextVar(
     "active_profile_record_session", default=None
 )
 
+_ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED: ContextVar[bool] = ContextVar(
+    "active_profile_record_session_is_session_derived", default=False
+)
+"""Whether the latched authority was derived from a live custody session.
+
+The two ways an authority becomes current are not the same kind of fact. One
+is DERIVED: a login opens a custody session and the authority is minted from
+it, so the session is what makes the authority true and the authority cannot
+outlive it. The other is BOUND: a caller holding a record session it opened
+itself installs it explicitly, and owns its lifetime end to end.
+
+Only the derived kind is retired by the disappearance of a custody session,
+which is why the distinction is recorded rather than inferred -- inferring it
+from "is a custody session live?" alone would revoke every explicitly bound
+authority the moment no profile happened to be logged in.
+"""
+
 
 @contextmanager
 def bound_profile_record_session(session: ProfileRecordSession) -> Generator[None]:
     """Bind one authenticated record session for the duration of a command."""
     token: Token[ProfileRecordSession | None] = _ACTIVE_RECORD_SESSION.set(session)
+    derived_token: Token[bool] = _ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED.set(False)
     try:
         yield
     finally:
+        _ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED.reset(derived_token)
         _ACTIVE_RECORD_SESSION.reset(token)
 
 
@@ -54,6 +77,7 @@ def activate_profile_record_session(session: ProfileRecordSession) -> None:
     if previous is not None and previous is not session:
         previous.close()
     _ACTIVE_RECORD_SESSION.set(session)
+    _ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED.set(True)
 
 
 def bind_active_profile_record_session(session: ProfileRecordSession) -> ProfileRecordSession | None:
@@ -67,6 +91,11 @@ def bind_active_profile_record_session(session: ProfileRecordSession) -> Profile
     """
     previous = _ACTIVE_RECORD_SESSION.get()
     _ACTIVE_RECORD_SESSION.set(session)
+    # Session-derived like the activating door: handover binds the candidate's
+    # authority beside the candidate's bucket session, and restores the prior
+    # authority beside the prior bucket session on rollback. Both halves are
+    # backed by a custody session, so both must retire when it goes.
+    _ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED.set(True)
     return previous
 
 
@@ -79,6 +108,7 @@ def clear_active_profile_record_session_binding(expected: ProfileRecordSession) 
     """
     if _ACTIVE_RECORD_SESSION.get() is expected:
         _ACTIVE_RECORD_SESSION.set(None)
+        _ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED.set(False)
 
 
 def close_active_profile_record_session() -> None:
@@ -87,6 +117,7 @@ def close_active_profile_record_session() -> None:
     if session is not None:
         session.close()
     _ACTIVE_RECORD_SESSION.set(None)
+    _ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED.set(False)
 
 
 def profile_record_session_if_authenticated(profile_id: str | UUID) -> ProfileRecordSession | None:
@@ -128,6 +159,28 @@ def profile_record_session_if_authenticated(profile_id: str | UUID) -> ProfileRe
     declining path: a read that declines should not mutate process state, and a
     successful later derivation replaces the dead reference anyway.
 
+    A SESSION-DERIVED authority must also still be BACKED. Login mints it from
+    a live custody session and latches it, and nothing re-checked that
+    derivation afterwards, so closing the bucket session by any path other than
+    the strong logout left the authority behind and facts readable through it:
+    within one process, "logged out" and "record authority gone" were different
+    states, and a health check after a logout still read facts through the
+    survivor. The custody session is therefore consulted on every resolution of
+    a derived authority -- an in-memory check, no capsule read -- and one whose
+    session is gone declines exactly as an absent one does.
+
+    An EXPLICITLY BOUND authority is untouched by this. A caller that opened a
+    record session itself and installed it owns its lifetime; requiring a live
+    custody session behind it would revoke every such binding the moment no
+    profile happened to be logged in, which is a different behaviour, not a
+    stricter one.
+
+    Declining does not zeroise it. The record authority and the bucket session
+    are bound together and rebound together during the login handover's
+    rollback window, so a reader is not the owner that may destroy either;
+    :func:`~cadrumo.application.user_profile.logout_active_profile`, which is
+    the close owner, wipes it there.
+
     A ``profile_id`` that is not a canonical UUID still raises: that is a
     caller defect rather than a lock state, and returning ``None`` for it would
     let a malformed identity read as a merely locked profile.
@@ -138,7 +191,11 @@ def profile_record_session_if_authenticated(profile_id: str | UUID) -> ProfileRe
         raise ProfileNotFoundError("profile identity is not a canonical UUID") from exc
     session = _ACTIVE_RECORD_SESSION.get()
     if session is not None and session.profile_id == identity and not session.closed:
-        return session
+        if not _ACTIVE_RECORD_SESSION_IS_SESSION_DERIVED.get():
+            return session
+        if _live_custody_session_backs(identity):
+            return session
+        return None
     derived = _record_session_from_live_custody_session(identity)
     if derived is None:
         return None
@@ -161,6 +218,24 @@ def require_profile_record_session(profile_id: str | UUID) -> ProfileRecordSessi
     if session is None:
         raise ProfileNotFoundError("profile facts require an authenticated session for this committed capsule")
     return session
+
+
+def _live_custody_session_backs(profile_id: UUID) -> bool:
+    """Return whether a custody session is both serving and still usable.
+
+    Two questions, deliberately asked together. Identity alone is what the
+    substrate's own reuse predicate answers, and it is not sufficient here: a
+    session is sealed IN PLACE, so a closed one keeps naming its bucket and
+    keeps satisfying an identity comparison long after its key is zeroised.
+    Reading the seal is what turns "a session exists for this profile" into
+    "a session that can still decrypt exists for this profile", which is the
+    property a record authority actually depends on.
+
+    Both are in-memory reads; nothing is opened and no capsule file is
+    touched, so this is cheap enough to ask on every resolution.
+    """
+    live = profile_current_bucket_session()
+    return profile_session_serves_bucket(live, str(profile_id)) and not live.sealed
 
 
 def _record_session_from_live_custody_session(profile_id: UUID) -> ProfileRecordSession | None:

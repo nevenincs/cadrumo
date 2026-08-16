@@ -155,6 +155,7 @@ from .._namespace_registry import LLM_USAGE_NAMESPACE
 from ..master_key import BucketSession, activate_session
 from ..runtime_repository import secure_object_repository_for_active_bucket
 from ..sql.engine import dispose_engine
+from .registered_bucket import ensure_registered_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -239,6 +240,11 @@ _CALCULATION_OUTPUT_CASILLA: CasillaId = validated_casilla_id("casilla-01")
 
 @contextmanager
 def _active_runtime(tmp_path: Path, bucket_id: str) -> Iterator[None]:
+    # The repositories below open a real engine inside the bucket root, and the
+    # engine refuses to create that root: a bucket exists only once its profile
+    # capsule is published. Registering here is that publication, so every span
+    # runs against a bucket directory an operator's profile could actually own.
+    ensure_registered_bucket(tmp_path, bucket_id)
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=bucket_id) as settings:
         dispose_engine(settings)
         with EphemeralMasterKeyProvider(key=_MASTER_KEY):

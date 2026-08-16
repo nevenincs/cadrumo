@@ -70,7 +70,15 @@ _SENSITIVE_SURFACES = (
     SRC_CADRUMO / "application" / "review",
     SRC_CADRUMO / "application" / "workflow" / "_persistence.py",
     SRC_CADRUMO / "application" / "auth",
-    SRC_CADRUMO / "application" / "setup",
+    # Successors of the vanished `application/setup`, caught by the non-vacuity
+    # assertion below. The setup surface did not shrink, it split: the operator
+    # flow that collects profile facts is now `application/wizard`, and the
+    # records it produces are persisted by `application/user_profile`. Both are
+    # enrolled rather than one, because either alone would cover less than the
+    # package it replaces -- and covering less while reading as fixed is the
+    # exact failure this entry already suffered once.
+    SRC_CADRUMO / "application" / "wizard",
+    SRC_CADRUMO / "application" / "user_profile",
     SRC_CADRUMO / "application" / "filing" / "_history_repository.py",
     # Four entries below were repointed after the non-vacuity assertion above
     # caught them resolving to nothing: `domain/{attachments,justificante,
@@ -116,7 +124,18 @@ _FORBIDDEN_TEXT = (
     ".meta.json",
     "NamedTemporaryFile",
 )
-_SENSITIVE_DIRECT_WRITE_EXCEPTIONS: dict[tuple[str, str, str], str] = {}
+_SENSITIVE_DIRECT_WRITE_EXCEPTIONS: dict[tuple[str, str, str], str] = {
+    (
+        "src/cadrumo/application/user_profile/_lifecycle.py",
+        "_stage_and_validate_restore_database",
+        "database.write_bytes",
+    ): (
+        "restore staging writes the bucket's own already-encrypted database file into the "
+        "capsule staging directory, which publication then renames into place; the bytes are "
+        "ciphertext the secure store produced, not plaintext escaping it, and the staged file "
+        "is authenticated before it is published"
+    ),
+}
 _REVIEWED_PRODUCTION_FILE_WRITES = {
     (
         "src/cadrumo/core/atomic_write.py",
@@ -143,11 +162,11 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "atomic_write_stream",
         "tempfile.NamedTemporaryFile",
     ): "shared streaming atomic-write primitive; writes caller-supplied chunks only, no data of its own",
-    (
-        "src/cadrumo-harness/src/cadrumo_harness/mcp/_telemetry.py",
-        "record",
-        "self.path.open",
-    ): "payload-free local session telemetry; appends per-call trajectory metadata JSON lines, no sensitive/user data",
+    # The MCP telemetry writer was NOT deleted -- it moved out of the shipped
+    # `cadrumo` package into the sibling `cadrumo-harness` distribution, which
+    # this inventory's scan root no longer walks. It is retired from the list
+    # because the list may only name what the scan can see; a reviewed entry
+    # over an unscanned file is the same silent green this tier already suffered.
     (
         "src/cadrumo/adapters/persistence/storage/bucket/_sealed_archive_writer.py",
         "write_sealed_archive",
@@ -194,16 +213,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "write_text",
     ): "operator-enabled IVA wallet diagnostic writes redacted structural metadata only",
     (
-        "src/cadrumo/agent/_workspace.py",
-        "_write",
-        "write_text",
-    ): "agent-harness workspace materialiser writes shipped static rules/personas/skills markdown only, no user data",
-    (
-        "src/cadrumo/agent/_workspace.py",
-        "_write_json",
-        "write_text",
-    ): "agent-harness workspace materialiser writes shipped static JSON manifests only, no user data",
-    (
         "src/cadrumo/application/modelo/_review_package.py",
         "build_review_package",
         "write_bytes",
@@ -246,6 +255,169 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "output.write_bytes",
     ): "explicit operator-directed recovered review-package export to a caller-chosen path, mirroring the existing "
     "review-package build/export write pattern",
+    # --- profile custody filesystem substrate -------------------------------
+    #
+    # The capsule machinery is built from raw descriptors on purpose. It must
+    # create exactly once (O_EXCL), pin a directory's IDENTITY rather than its
+    # name while it works, and fsync both file and parent before a publication
+    # rename is allowed to count. `pathlib` offers none of that, so every entry
+    # below is the secure store's own hardened writer -- the thing this policy
+    # exists to route data INTO -- rather than a path around it. What they
+    # write is ciphertext, custody metadata, or nothing at all in the cases
+    # that open a descriptor purely to hold an identity.
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "_fsync_directory",
+        "os.open",
+    ): "opens a directory descriptor to fsync it; writes no bytes",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "_fsync_windows_published_commit",
+        "os.open",
+    ): "opens the published commit file to fsync it; writes no bytes",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "_posix_open_exclusive_file",
+        "os.open",
+    ): "O_EXCL create of one capsule file, the publish-once primitive the capsule contract rests on",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "_profile_custody_posix_lock",
+        "os.open",
+    ): "custody transaction lock file; carries no data, only exclusion",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "_read_regular_file_open",
+        "os.open",
+    ): "read path; opened O_RDONLY with a regular-file identity check, writes nothing",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "_write_descriptor_fsynced",
+        "os.write",
+    ): "writes custody record bytes to a descriptor the caller already created O_EXCL, then fsyncs",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "_write_windows_local_stage",
+        "os.open",
+    ): "Windows staging create for the local custody record, published by rename",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "clear_profile_custody_local_record",
+        "os.open",
+    ): "opens the local custody record to truncate it under a held lock; clears custody state, stores none",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py",
+        "write_profile_custody_local_record",
+        "os.open",
+    ): "creates the local custody record, which holds capsule pointers and no financial data",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_filesystem_primitives.py",
+        "_write_exclusive_descriptor_fsynced",
+        "os.write",
+    ): "shared exclusive-create writer; writes caller-supplied custody bytes to its own O_EXCL descriptor",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_filesystem_primitives.py",
+        "posix_directory_fd",
+        "os.open",
+    ): "O_DIRECTORY identity anchor; writes no bytes",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_filesystem_primitives.py",
+        "posix_open_child_directory",
+        "os.open",
+    ): "O_DIRECTORY anchor for one child, opened relative to a pinned parent; writes no bytes",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_filesystem_primitives.py",
+        "write_exclusive_fsynced",
+        "os.open",
+    ): "shared O_EXCL create used by every custody file writer",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_filesystem_primitives.py",
+        "write_exclusive_fsynced_fd",
+        "os.open",
+    ): "the parent-relative form of the same O_EXCL create, so the target cannot be swapped under it",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_inventory.py",
+        "_inventory_posix_file",
+        "os.open",
+    ): "read path; opens each capsule file no-follow to fingerprint it, writes nothing",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_kdf_codec.py",
+        "_write_all",
+        "os.write",
+    ): "writes to the supervised KDF child's PIPE descriptor, never to a file",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py",
+        "profile_kdf_lease",
+        "os.open",
+    ): "the OS-released KDF permit lock file; an abnormal death releases it at the kernel boundary",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py",
+        "profile_kdf_lease",
+        "os.write",
+    ): "writes the permit holder marker into that lock file; carries no secret and no financial data",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_recovery_artifact.py",
+        "_posix_external_directory_fd",
+        "os.open",
+    ): "anchors the operator-chosen export parent so the write cannot be redirected after the checks; writes no bytes",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_recovery_artifact.py",
+        "_read_posix_regular_file",
+        "os.open",
+    ): "read path for importing a recovery artifact back; writes nothing",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_recovery_artifact.py",
+        "_write_export_descriptor",
+        "os.write",
+    ): "the one sanctioned external export; writes the wrapped recovery artifact the operator explicitly requested, "
+    "gated by the store-separately refusal that keeps it out of the storage root",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_recovery_artifact.py",
+        "_write_external_exclusive",
+        "os.open",
+    ): "O_EXCL create for that same export, so it can never silently overwrite an existing artifact",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_sentinel.py",
+        "_read_regular_file",
+        "os.open",
+    ): "read path for the DEK sentinel; writes nothing",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_sentinel.py",
+        "_write_exclusive_fsynced",
+        "os.open",
+    ): "O_EXCL create of the DEK sentinel, which proves a key without storing one",
+    (
+        "src/cadrumo/adapters/persistence/storage/custody/_sentinel.py",
+        "_write_exclusive_fsynced",
+        "os.write",
+    ): "writes those sentinel proof bytes; the sentinel is a verifier, never key material",
+    # --- operator-facing secret display -------------------------------------
+    (
+        "src/cadrumo/entrypoints/cli/_config/_secure_input.py",
+        "write_to_controlling_terminal",
+        "open",
+    ): "opens the controlling terminal DEVICE (CONOUT$ / /dev/tty) to show a recovery mnemonic, "
+    "deliberately bypassing stdout so a bearer credential cannot land in a redirected stream, a JSON "
+    "envelope or a log; a device is not a durable artefact and the function refuses outright when no "
+    "terminal is attached rather than degrading to a capturable stream",
+    # --- shared atomic-write primitives -------------------------------------
+    (
+        "src/cadrumo/core/atomic_write.py",
+        "atomic_write_publish_once_bytes",
+        "os.open",
+    ): "shared publish-once primitive; O_EXCL create of caller-supplied bytes, holds no data of its own",
+    (
+        "src/cadrumo/core/atomic_write.py",
+        "hardened_staged_publication",
+        "os.open",
+    ): "shared hardened staging primitive; same pattern, holds no data of its own",
+    # --- profile restore staging --------------------------------------------
+    (
+        "src/cadrumo/application/user_profile/_lifecycle.py",
+        "_stage_and_validate_restore_database",
+        "database.write_bytes",
+    ): "stages the bucket's own already-encrypted database file for publication; the bytes are ciphertext the secure "
+    "store produced, and the staged file is authenticated before the publishing rename",
 }
 
 
