@@ -2586,3 +2586,53 @@ through production code. Where the hazard is "this test reaches the network",
 the honest instrument observes the SOCKET, not the source text. Any future gate
 phrased as "tests do not do X" should be checked against the transitive path
 before its green is believed.
+
+### Correction: "47% of a test" does not generalise, and the runtime cost is small
+
+The 47% figure above is real but was measured on a SINGLE-test run, where that
+one test bore the whole per-process cost. Measuring the full CLI integration
+lane with a socket counter gives the honest picture:
+
+| measure | value |
+|---|---|
+| tests opening a remote socket | **5** (of 3,126 run) |
+| total remote connections | 270 (54 each, one host: 80.90.16.29) |
+| total `connect()` seconds | 11 |
+| lane wall clock | 642.56s |
+
+`connect()` is roughly a fifth of the network time (the profile splits 8.90s
+read / 2.30s handshake / 2.14s connect), so the lane pays on the order of ~55s,
+about **1-2% of the CLI lane -- not 47%**.
+
+The reason is `default_ecb_rate_provider`'s `lru_cache(maxsize=1)` plus the
+provider's own per-(currency, date) memo: the first FX-bearing import in a
+worker process pays, and every later one in that process is free. With six
+workers the suite pays it at most six times, and exactly five modules did.
+
+**The performance claim was wrong; the correctness claim is not.** All five tests
+carry `integration`, not `aeat_live`, so the lane genuinely depends on an
+external host being reachable and correct, and expected EUR values still derive
+from live market data. What that buys in practice is variance rather than bulk
+cost: `test_ledger_persona_multicurrency` ran 14.63s, 14.89s, 14.99s, 22.67s and
+32.48s on **identical code** -- a 2.2x spread with no code change between runs.
+
+### That variance invalidates the before/after deltas quoted earlier
+
+The single-run figures recorded above for the seed-once/copy work sit inside
+that noise band and must not be read as measurements:
+
+| module | quoted before -> after | re-measured median (3 runs) |
+|---|---|---|
+| `test_ledger_persona_asesor_review` | 74.03s -> 48.10s | **52.59s** (44.74-54.73) |
+| `test_ledger_persona_yearend_m100` | 101.22s -> 80.50s | **37.25s** (36.29-44.02) |
+| `test_ledger_persona_multicurrency` | 38.08s -> 32.48s | **14.89s** (14.63-22.67) |
+
+The yearend "after" of 80.50s is more than twice its own median. Every one of
+those numbers was a single sample of a bimodal distribution.
+
+What survives is the STRUCTURAL claim, which is deterministic and needs no
+timer: the number of corpus seedings per module went from one-per-test to one
+(10 -> 1, 9 -> 1, 7 -> 1), and isolation is unchanged because each test still
+gets its own storage root. Prefer that metric here. **Any runtime comparison in
+a module that imports FX-bearing rows needs medians over at least three runs;
+a single before/after pair cannot clear the network noise.**
