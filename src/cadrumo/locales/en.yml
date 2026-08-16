@@ -72321,11 +72321,6 @@ modelo:
             label: Modelo 353 tax years 2008 to 2025 (Orden EHA/3434/2007)
         2008-y-siguientes:
           casilla:
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              label: VAT charged at the reduced rate (10%) - group aggregate
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: VAT charged at the super-reduced rate (4%) - group aggregate
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
               label: Group result (aggregate VAT due minus aggregate deductible VAT)
