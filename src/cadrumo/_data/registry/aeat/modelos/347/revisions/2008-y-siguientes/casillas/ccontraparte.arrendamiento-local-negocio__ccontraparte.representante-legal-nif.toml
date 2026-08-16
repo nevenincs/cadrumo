@@ -1,0 +1,170 @@
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.representante-legal-nif"
+number = "contraparte.representante-legal-nif"
+section = ["contraparte", "identificacion"]
+data_type = "nif"
+semantic_role = "representante_legal_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.importe-anual"
+number = "contraparte.importe-anual"
+section = ["contraparte", "importes"]
+data_type = "money"
+semantic_role = "importe_anual_operaciones"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.operacion-seguro"
+number = "contraparte.operacion-seguro"
+section = ["contraparte", "operacion"]
+data_type = "text"
+semantic_role = "operacion_seguro"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.arrendamiento-local-negocio"
+number = "contraparte.arrendamiento-local-negocio"
+section = ["contraparte", "operacion"]
+data_type = "text"
+semantic_role = "arrendamiento_local_negocio"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.importe-metalico"
+number = "contraparte.importe-metalico"
+section = ["contraparte", "importes"]
+data_type = "money"
+semantic_role = "importe_percibido_metalico"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.importe-transmisiones-inmuebles"
+number = "contraparte.importe-transmisiones-inmuebles"
+section = ["contraparte", "importes"]
+data_type = "money"
+semantic_role = "importe_transmisiones_inmuebles"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.ejercicio-operacion"
+number = "contraparte.ejercicio-operacion"
+section = ["contraparte", "operacion"]
+data_type = "year"
+semantic_role = "ejercicio_operacion"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.importe-transmisiones-Q1"
+number = "contraparte.importe-transmisiones-Q1"
+section = ["contraparte", "importes"]
+data_type = "money"
+semantic_role = "importe_transmisiones_q1"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.importe-transmisiones-Q2"
+number = "contraparte.importe-transmisiones-Q2"
+section = ["contraparte", "importes"]
+data_type = "money"
+semantic_role = "importe_transmisiones_q2"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.importe-transmisiones-Q3"
+number = "contraparte.importe-transmisiones-Q3"
+section = ["contraparte", "importes"]
+data_type = "money"
+semantic_role = "importe_transmisiones_q3"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.importe-transmisiones-Q4"
+number = "contraparte.importe-transmisiones-Q4"
+section = ["contraparte", "importes"]
+data_type = "money"
+semantic_role = "importe_transmisiones_q4"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.nif-operador-comunitario"
+number = "contraparte.nif-operador-comunitario"
+section = ["contraparte", "identificacion"]
+data_type = "text"
+semantic_role = "nif_operador_comunitario"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.criterio-caja"
+number = "contraparte.criterio-caja"
+section = ["contraparte", "operacion"]
+data_type = "text"
+semantic_role = "operacion_criterio_caja_iva"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.inversion-sujeto-pasivo"
+number = "contraparte.inversion-sujeto-pasivo"
+section = ["contraparte", "operacion"]
+data_type = "text"
+semantic_role = "operacion_inversion_sujeto_pasivo"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.bienes-vinculados"
+number = "contraparte.bienes-vinculados"
+section = ["contraparte", "operacion"]
+data_type = "text"
+semantic_role = "operacion_bienes_vinculados"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.importe-criterio-caja"
+number = "contraparte.importe-criterio-caja"
+section = ["contraparte", "importes"]
+data_type = "money"
+semantic_role = "importe_anual_criterio_caja"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.numero-convocatoria-bdns"
+number = "contraparte.numero-convocatoria-bdns"
+section = ["contraparte", "operacion"]
+data_type = "text"
+semantic_role = "numero_convocatoria_bdns"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]

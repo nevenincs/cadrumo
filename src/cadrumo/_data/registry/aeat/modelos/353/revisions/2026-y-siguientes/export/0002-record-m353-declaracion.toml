@@ -1,0 +1,536 @@
+[[revisions.2026-y-siguientes.export_layouts]]
+id = 'generated-modelo-353-2026-y-siguientes-fichero'
+
+[[revisions.2026-y-siguientes.export_layouts.records]]
+id = 'm353-declaracion'
+record_type = 'declaracion'
+order = 0
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f098'
+offset = 900
+length = 5
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.900-904.entidad-16-ent-depndtes-de-participac-al-final-del'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f099'
+offset = 905
+length = 13
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.905-917.entidad-16-entidades-dependientes-numero-de-justifi'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f100'
+offset = 918
+length = 3
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f101'
+offset = 921
+length = 9
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.921-929.entidad-17-entidades-dependientes-n-i-f'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f102'
+offset = 930
+length = 17
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.930-946.entidad-17-entidades-dependientes-resultado'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f103'
+offset = 947
+length = 5
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.947-951.entidad-17-ent-depndtes-de-participac-al-final-del'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f104'
+offset = 952
+length = 13
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.952-964.entidad-17-entidades-dependientes-numero-de-justifi'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f105'
+offset = 965
+length = 3
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f106'
+offset = 968
+length = 9
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.968-976.entidad-18-entidades-dependientes-n-i-f'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f107'
+offset = 977
+length = 17
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.977-993.entidad-18-entidades-dependientes-resultado'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f108'
+offset = 994
+length = 5
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.994-998.entidad-18-ent-depndtes-de-participac-al-final-del'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f109'
+offset = 999
+length = 13
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.999-1011.entidad-18-entidades-dependientes-numero-de-justifi'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f110'
+offset = 1012
+length = 3
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f111'
+offset = 1015
+length = 9
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.1015-1023.entidad-19-entidades-dependientes-n-i-f'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f112'
+offset = 1024
+length = 17
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.1024-1040.entidad-19-entidades-dependientes-resultado'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f113'
+offset = 1041
+length = 5
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.1041-1045.entidad-19-ent-depndtes-de-participac-al-final-del'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f114'
+offset = 1046
+length = 13
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.1046-1058.entidad-19-entidades-dependientes-numero-de-justifi'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f115'
+offset = 1059
+length = 3
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f116'
+offset = 1062
+length = 9
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.1062-1070.entidad-20-entidades-dependientes-n-i-f'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f117'
+offset = 1071
+length = 17
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.1071-1087.entidad-20-entidades-dependientes-resultado'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f118'
+offset = 1088
+length = 5
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.1088-1092.entidad-20-ent-depndtes-de-participac-al-final-del'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f119'
+offset = 1093
+length = 13
+kind = 'binding'
+binding = 'modelo-353-2026.page_01.1093-1105.entidad-20-entidades-dependientes-numero-de-justifi'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f120'
+offset = 1106
+length = 3
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f121'
+offset = 1109
+length = 17
+kind = 'casilla'
+casilla_id = '01'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f122'
+offset = 1126
+length = 17
+kind = 'casilla'
+casilla_id = '02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f123'
+offset = 1143
+length = 17
+kind = 'casilla'
+casilla_id = '08'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f124'
+offset = 1160
+length = 17
+kind = 'casilla'
+casilla_id = '09'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f125'
+offset = 1177
+length = 17
+kind = 'casilla'
+casilla_id = '03'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f126'
+offset = 1194
+length = 17
+kind = 'casilla'
+casilla_id = '04'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f127'
+offset = 1211
+length = 17
+kind = 'casilla'
+casilla_id = '10'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f128'
+offset = 1228
+length = 17
+kind = 'casilla'
+casilla_id = '05'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f129'
+offset = 1245
+length = 1
+kind = 'header'
+producer_key = 'amendment_evidence.is_complementaria'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f130'
+offset = 1246
+length = 13
+kind = 'header'
+producer_key = 'amendment_evidence.original_aeat_receipt'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f131'
+offset = 1259
+length = 1
+kind = 'header'
+producer_key = 'm353.sin_actividad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f132'
+offset = 1260
+length = 416
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f133'
+offset = 1676
+length = 13
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[[revisions.2026-y-siguientes.export_layouts.records.fields]]
+id = 'm353-2026.pagina01.f134'
+offset = 1689
+length = 12
+kind = 'literal'
+literal = '</T35301000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3434-2007:art-8']
+source_refs = ['aeat-dr-353-2026']
+
+[revisions.2026-y-siguientes.export_layouts.records.row_field_casilla_ids]

@@ -10,14 +10,15 @@ legal_refs = [
 ]
 dictionary_path_overrides = []
 
-[revisions.2025.export_layouts.m303_filing_envelope]
+[revisions.2025.export_layouts.filing_envelope]
 schema_version = 1
 source_ref = 'aeat-dr-303-2025'
 source_sha256 = '6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6'
 record_identity = 'DP30300'
+prefix_extent = 328
 product_identity_requirement = 'aeat-product-software-identity-v1'
-closer_derivation = 'm303-relative-closer-v1'
-total_derivation = 'm303-emitted-byte-total-v1'
+closer_derivation = 'relative-closer-v1'
+total_derivation = 'emitted-byte-total-v1'
 body_record_ids = [
     'm303-declaration',
     'm303-regimen-simplificado',
@@ -27,54 +28,54 @@ body_record_ids = [
     'm303-domiciliacion',
 ]
 
-[[revisions.2025.export_layouts.m303_filing_envelope.prefix_fields]]
+[[revisions.2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'opening_tag'
 length = 2
 
-[[revisions.2025.export_layouts.m303_filing_envelope.prefix_fields]]
+[[revisions.2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'modelo'
 length = 3
 
-[[revisions.2025.export_layouts.m303_filing_envelope.prefix_fields]]
+[[revisions.2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'discriminant'
 length = 1
 
-[[revisions.2025.export_layouts.m303_filing_envelope.prefix_fields]]
+[[revisions.2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'filing_year'
 length = 4
 
-[[revisions.2025.export_layouts.m303_filing_envelope.prefix_fields]]
+[[revisions.2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'period'
 length = 2
 
-[[revisions.2025.export_layouts.m303_filing_envelope.prefix_fields]]
+[[revisions.2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'record_type'
 length = 5
 
-[[revisions.2025.export_layouts.m303_filing_envelope.prefix_fields]]
+[[revisions.2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'aux_opening_tag'
 length = 5
 
-[[revisions.2025.export_layouts.m303_filing_envelope.prefix_fields]]
+[[revisions.2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'pre_program_filler'
 length = 70
 
-[[revisions.2025.export_layouts.m303_filing_envelope.prefix_fields]]
+[[revisions.2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'program_identifier'
 length = 4
 
-[[revisions.2025.export_layouts.m303_filing_envelope.prefix_fields]]
+[[revisions.2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'between_identities_filler'
 length = 4
 
-[[revisions.2025.export_layouts.m303_filing_envelope.prefix_fields]]
+[[revisions.2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'developer_tax_id'
 length = 9
 
-[[revisions.2025.export_layouts.m303_filing_envelope.prefix_fields]]
+[[revisions.2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'post_developer_filler'
 length = 213
 
-[[revisions.2025.export_layouts.m303_filing_envelope.prefix_fields]]
+[[revisions.2025.export_layouts.filing_envelope.prefix_fields]]
 role = 'aux_closing_tag'
 length = 6

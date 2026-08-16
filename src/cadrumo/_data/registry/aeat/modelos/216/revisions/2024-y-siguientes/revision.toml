@@ -31,3 +31,17 @@ source_refs = [
     "boe-modelo-216-form-layout",
     "aeat-dr-216-2024",
 ]
+
+[revisions."2024-y-siguientes".family_dispositions.projection_endpoints]
+reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-216-2024-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
+legal_refs = [
+    "orden-hac-56-2024:art-1",
+    "orden-eha-3290-2008:art-1",
+    "orden-eha-3290-2008:art-4",
+    "trlirnr-rdleg-5-2004:art-24",
+]
+source_refs = [
+    "aeat-modelo-216-procedure",
+    "boe-modelo-216-form-layout",
+    "aeat-dr-216-2024",
+]

@@ -1,0 +1,29 @@
+# Modelo 210 applicability.
+#
+# The mirror of the Modelo 100 rule, which already names this modelo as the
+# non-resident counterpart: a NON_RESIDENT_IRNR contribuyente tributa por el
+# IRNR y presenta el Modelo 210, no el Modelo 100.
+#
+# Entity type is deliberately NOT gated. TRLIRNR art. 5 makes both personas
+# físicas and entidades no residentes contribuyentes of the IRNR, and the
+# official design carries an F/J discriminator on the contribuyente precisely
+# because either may file. Gating on natural_person would silently refuse a
+# non-resident company's Modelo 210, which is a real filing.
+#
+# Fiscal residency IS the gate, and it is the only one: the modelo applies to a
+# non-resident irrespective of income category or estimation régimen, because
+# those axes belong to the resident IRPF regime and have no counterpart here.
+
+[[revisions."2025".applicability]]
+id = "modelo-210-2025-non-resident-irnr"
+applicable_entity_types = ["natural_person", "legal_entity", "attribution_entity"]
+applicable_fiscal_residencies = ["non_resident_irnr"]
+applicable_reason = "Modelo 210: un contribuyente no residente sin establecimiento permanente que obtiene rentas de fuente española es contribuyente del IRNR y presenta la autoliquidación de dicha renta en el Modelo 210. Aplica tanto a personas físicas como a entidades no residentes, y también a la renta imputada de inmuebles urbanos situados en España."
+not_applicable_reason = "Modelo 210 no aplica: la autoliquidación del IRNR sin establecimiento permanente corresponde únicamente a contribuyentes no residentes. El contribuyente declarado es residente fiscal en España, por lo que tributa por el IRPF (Modelo 100) o por el Impuesto sobre Sociedades (Modelo 200), no por el IRNR."
+cuota_bearing = true
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-2",
+    "trlirnr-rdleg-5-2004:art-13.1",
+    "trlirnr-rdleg-5-2004:art-24",
+    "orden-eha-3316-2010:art-1",
+]

@@ -22,3 +22,22 @@ source_refs = [
     "boe-modelo-100-2022-form",
     "aeat-modelo-100-procedure",
 ]
+
+[revisions."2022".family_dispositions.projection_endpoints]
+reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-100-2022-xml-dictionary) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "orden-hfp-310-2023:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2022-dictionary",
+    "aeat-dr-100-2022-input-dictionary",
+    "aeat-dr-100-2022-xsd",
+    "aeat-renta-2022-manual-parte1",
+    "boe-modelo-100-2022-form",
+    "aeat-modelo-100-procedure",
+]

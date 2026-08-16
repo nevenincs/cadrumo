@@ -84,3 +84,18 @@ source_refs = [
     "aeat-modelo-145-form",
     "aeat-dr-145-v20",
 ]
+
+[revisions."2012-01-31-y-siguientes".family_dispositions.projection_endpoints]
+reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-145-dr-v20-fixed-width) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
+legal_refs = [
+    "rd-439-2007:art-88",
+    "resolucion-dgt-2011-01-03-modelo-145:aprobacion",
+    "resolucion-dgt-2013-12-17-modelo-145:amendment",
+    "resolucion-dgt-2014-12-18-modelo-145:amendment",
+]
+source_refs = [
+    "aeat-modelo-145-procedure",
+    "aeat-modelo-145-obligaciones-retenedor",
+    "aeat-modelo-145-form",
+    "aeat-dr-145-v20",
+]

@@ -47,3 +47,19 @@ source_refs = [
     "aeat-modelo-714-procedure",
     "boe-modelo-714-layout",
 ]
+
+[revisions."2021".family_dispositions.projection_endpoints]
+reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-714-fichero-aeat) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."
+legal_refs = [
+    "ley-19-1991:art-28",
+    "ley-19-1991:art-30",
+    "ley-19-1991:art-31",
+    "ley-19-1991:art-4-9",
+    "orden-hfp-207-2022:art-2",
+    "orden-hfp-207-2022:art-4",
+]
+source_refs = [
+    "aeat-modelo-714-procedure",
+    "boe-modelo-714-layout",
+    "aeat-dr-714-2021",
+]

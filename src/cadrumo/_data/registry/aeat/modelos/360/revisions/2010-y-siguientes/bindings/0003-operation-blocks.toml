@@ -1,0 +1,678 @@
+# Modelo 360 `Pag. 2` operation-block bindings.
+#
+# Two operation blocks, each with its invoice header, ten bienes-y-servicios
+# triples and its supplier. Every id carries the exact byte range the design
+# prints, so the export map claims each anchor by span. AEAT declares the
+# repetition itself, printing slots 2-10 as "Igual campo 8/9/10".
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.11-15.operacion-1-numero-de-operacion"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-numero-de-operacion", offset = 11, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.17-19.operacion-1-tipo-de-operacion"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-tipo-de-operacion", offset = 17, length = 3, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.20-69.operacion-1-numero-factura-o-doc-importacion"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-numero-factura-o-doc-importacion", offset = 20, length = 50, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.70-77.operacion-1-fecha-de-emision-factura-o-doc-importacion"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-fecha-de-emision-factura-o-doc-importacion", offset = 70, length = 8, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.78-87.operacion-1-bienes-y-servicios-adquiridos-codigo"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-codigo", offset = 78, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.88-89.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d", offset = 88, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.90-339.operacion-1-bienes-y-servicios-adquiridos-descripcion"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-descripcion", offset = 90, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.340-349.operacion-1-bienes-y-servicios-adquiridos-codigo-2"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-codigo-2", offset = 340, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.350-351.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-2"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-2", offset = 350, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.352-601.operacion-1-bienes-y-servicios-adquiridos-descripcion-2"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-descripcion-2", offset = 352, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.602-611.operacion-1-bienes-y-servicios-adquiridos-codigo-3"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-codigo-3", offset = 602, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.612-613.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-3"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-3", offset = 612, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.614-863.operacion-1-bienes-y-servicios-adquiridos-descripcion-3"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-descripcion-3", offset = 614, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.864-873.operacion-1-bienes-y-servicios-adquiridos-codigo-4"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-codigo-4", offset = 864, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.874-875.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-4"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-4", offset = 874, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.876-1125.operacion-1-bienes-y-servicios-adquiridos-descripcion-4"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-descripcion-4", offset = 876, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.1126-1135.operacion-1-bienes-y-servicios-adquiridos-codigo-5"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-codigo-5", offset = 1126, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.1136-1137.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-5"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-5", offset = 1136, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.1138-1387.operacion-1-bienes-y-servicios-adquiridos-descripcion-5"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-descripcion-5", offset = 1138, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.1388-1397.operacion-1-bienes-y-servicios-adquiridos-codigo-6"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-codigo-6", offset = 1388, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.1398-1399.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-6"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-6", offset = 1398, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.1400-1649.operacion-1-bienes-y-servicios-adquiridos-descripcion-6"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-descripcion-6", offset = 1400, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.1650-1659.operacion-1-bienes-y-servicios-adquiridos-codigo-7"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-codigo-7", offset = 1650, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.1660-1661.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-7"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-7", offset = 1660, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.1662-1911.operacion-1-bienes-y-servicios-adquiridos-descripcion-7"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-descripcion-7", offset = 1662, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.1912-1921.operacion-1-bienes-y-servicios-adquiridos-codigo-8"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-codigo-8", offset = 1912, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.1922-1923.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-8"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-8", offset = 1922, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.1924-2173.operacion-1-bienes-y-servicios-adquiridos-descripcion-8"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-descripcion-8", offset = 1924, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2174-2183.operacion-1-bienes-y-servicios-adquiridos-codigo-9"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-codigo-9", offset = 2174, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2184-2185.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-9"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-9", offset = 2184, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2186-2435.operacion-1-bienes-y-servicios-adquiridos-descripcion-9"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-descripcion-9", offset = 2186, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2436-2445.operacion-1-bienes-y-servicios-adquiridos-codigo-10"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-codigo-10", offset = 2436, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2446-2447.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-10"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-10", offset = 2446, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2448-2697.operacion-1-bienes-y-servicios-adquiridos-descripcion-10"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-bienes-y-servicios-adquiridos-descripcion-10", offset = 2448, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2698-2712.operacion-1-base-imponible"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-base-imponible", offset = 2698, length = 15, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2713-2727.operacion-1-cuota-iva"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-cuota-iva", offset = 2713, length = 15, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2728-2732.operacion-1-prorrata"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-prorrata", offset = 2728, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2733-2747.operacion-1-importe-solicitado-a-devolver"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-importe-solicitado-a-devolver", offset = 2733, length = 15, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2748-2750.operacion-1-divisa"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-divisa", offset = 2748, length = 3, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2751-2751.operacion-1-indicador-de-simplificada"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-indicador-de-simplificada", offset = 2751, length = 1, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2752-2753.operacion-1-datos-del-proveeedor-de-bienes-prestador-de"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-datos-del-proveeedor-de-bienes-prestador-de", offset = 2752, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2754-2768.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-2"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-datos-del-proveeedor-de-bienes-prestador-de-2", offset = 2754, length = 15, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2769-2770.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-3"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-datos-del-proveeedor-de-bienes-prestador-de-3", offset = 2769, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2771-2820.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-4"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-datos-del-proveeedor-de-bienes-prestador-de-4", offset = 2771, length = 50, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2821-2945.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-5"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-datos-del-proveeedor-de-bienes-prestador-de-5", offset = 2821, length = 125, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.2946-3093.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-6"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-datos-del-proveeedor-de-bienes-prestador-de-6", offset = 2946, length = 148, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3094-3108.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-7"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-datos-del-proveeedor-de-bienes-prestador-de-7", offset = 3094, length = 15, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3109-3110.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-8"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-1-datos-del-proveeedor-de-bienes-prestador-de-8", offset = 3109, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3111-3115.operacion-2-numero-de-operacion"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-numero-de-operacion", offset = 3111, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3117-3119.operacion-2-tipo-de-operacion"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-tipo-de-operacion", offset = 3117, length = 3, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3120-3169.operacion-2-numero-factura-o-doc-importacion"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-numero-factura-o-doc-importacion", offset = 3120, length = 50, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3170-3177.operacion-2-fecha-de-emision-factura-o-doc-importacion"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-fecha-de-emision-factura-o-doc-importacion", offset = 3170, length = 8, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3178-3187.operacion-2-bienes-y-servicios-adquiridos-codigo"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-codigo", offset = 3178, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3188-3189.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d", offset = 3188, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3190-3439.operacion-2-bienes-y-servicios-adquiridos-descripcion"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-descripcion", offset = 3190, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3440-3449.operacion-2-bienes-y-servicios-adquiridos-codigo-2"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-codigo-2", offset = 3440, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3450-3451.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-2"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-2", offset = 3450, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3452-3701.operacion-2-bienes-y-servicios-adquiridos-descripcion-2"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-descripcion-2", offset = 3452, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3702-3711.operacion-2-bienes-y-servicios-adquiridos-codigo-3"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-codigo-3", offset = 3702, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3712-3713.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-3"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-3", offset = 3712, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3714-3963.operacion-2-bienes-y-servicios-adquiridos-descripcion-3"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-descripcion-3", offset = 3714, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3964-3973.operacion-2-bienes-y-servicios-adquiridos-codigo-4"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-codigo-4", offset = 3964, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3974-3975.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-4"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-4", offset = 3974, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.3976-4225.operacion-2-bienes-y-servicios-adquiridos-descripcion-4"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-descripcion-4", offset = 3976, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.4226-4235.operacion-2-bienes-y-servicios-adquiridos-codigo-5"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-codigo-5", offset = 4226, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.4236-4237.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-5"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-5", offset = 4236, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.4238-4487.operacion-2-bienes-y-servicios-adquiridos-descripcion-5"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-descripcion-5", offset = 4238, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.4488-4497.operacion-2-bienes-y-servicios-adquiridos-codigo-6"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-codigo-6", offset = 4488, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.4498-4499.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-6"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-6", offset = 4498, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.4500-4749.operacion-2-bienes-y-servicios-adquiridos-descripcion-6"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-descripcion-6", offset = 4500, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.4750-4759.operacion-2-bienes-y-servicios-adquiridos-codigo-7"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-codigo-7", offset = 4750, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.4760-4761.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-7"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-7", offset = 4760, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.4762-5011.operacion-2-bienes-y-servicios-adquiridos-descripcion-7"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-descripcion-7", offset = 4762, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5012-5021.operacion-2-bienes-y-servicios-adquiridos-codigo-8"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-codigo-8", offset = 5012, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5022-5023.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-8"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-8", offset = 5022, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5024-5273.operacion-2-bienes-y-servicios-adquiridos-descripcion-8"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-descripcion-8", offset = 5024, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5274-5283.operacion-2-bienes-y-servicios-adquiridos-codigo-9"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-codigo-9", offset = 5274, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5284-5285.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-9"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-9", offset = 5284, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5286-5535.operacion-2-bienes-y-servicios-adquiridos-descripcion-9"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-descripcion-9", offset = 5286, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5536-5545.operacion-2-bienes-y-servicios-adquiridos-codigo-10"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-codigo-10", offset = 5536, length = 10, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5546-5547.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-10"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-10", offset = 5546, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5548-5797.operacion-2-bienes-y-servicios-adquiridos-descripcion-10"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-bienes-y-servicios-adquiridos-descripcion-10", offset = 5548, length = 250, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5798-5812.operacion-2-base-imponible"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-base-imponible", offset = 5798, length = 15, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5813-5827.operacion-2-cuota-iva"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-cuota-iva", offset = 5813, length = 15, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5828-5832.operacion-2-prorrata"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-prorrata", offset = 5828, length = 5, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5833-5847.operacion-2-importe-solicitado-a-devolver"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-importe-solicitado-a-devolver", offset = 5833, length = 15, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5848-5850.operacion-2-divisa"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-divisa", offset = 5848, length = 3, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5851-5851.operacion-2-indicador-de-simplificada"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-indicador-de-simplificada", offset = 5851, length = 1, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5852-5853.operacion-2-datos-del-proveeedor-de-bienes-prestador-de"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-datos-del-proveeedor-de-bienes-prestador-de", offset = 5852, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5854-5868.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-2"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-datos-del-proveeedor-de-bienes-prestador-de-2", offset = 5854, length = 15, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5869-5870.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-3"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-datos-del-proveeedor-de-bienes-prestador-de-3", offset = 5869, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5871-5920.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-4"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-datos-del-proveeedor-de-bienes-prestador-de-4", offset = 5871, length = 50, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.5921-6045.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-5"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-datos-del-proveeedor-de-bienes-prestador-de-5", offset = 5921, length = 125, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.6046-6193.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-6"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-datos-del-proveeedor-de-bienes-prestador-de-6", offset = 6046, length = 148, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.6194-6208.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-7"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-datos-del-proveeedor-de-bienes-prestador-de-7", offset = 6194, length = 15, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-360-2010.page_02.6209-6210.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-8"
+source = "manual_input"
+selector = { record = "page_02", field = "operacion-2-datos-del-proveeedor-de-bienes-prestador-de-8", offset = 6209, length = 2, data_type = "text" }
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-360-2010"]

@@ -1,0 +1,104 @@
+# Modelo 360 declared content: the amount claimed and the prorrata communication.
+#
+# These are casillas rather than producer keys because they are values the
+# claimant DECLARES on the solicitud, grounded in Ley 37/1992 art. 117 bis and
+# the content the Orden fixes for the record. Byte ranges are the design's own.
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "devolucion.importe-solicitado"
+number = "1853-1867"
+section = ["devolucion"]
+data_type = "money"
+semantic_role = "importe_devolucion_solicitado"
+required = true
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "devolucion.divisa"
+number = "1868-1870"
+section = ["devolucion"]
+data_type = "text"
+semantic_role = "divisa_devolucion"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "devolucion.numero-facturas"
+number = "1871-1875"
+section = ["devolucion"]
+data_type = "integer"
+semantic_role = "numero_facturas_relacionadas"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "devolucion.numero-documentos-importacion"
+number = "1876-1880"
+section = ["devolucion"]
+data_type = "integer"
+semantic_role = "numero_documentos_importacion_relacionados"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "devolucion.periodo-fecha-inicio"
+number = "1881-1888"
+section = ["devolucion"]
+data_type = "date"
+semantic_role = "periodo_devolucion_fecha_inicio"
+required = true
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "devolucion.periodo-fecha-fin"
+number = "1889-1896"
+section = ["devolucion"]
+data_type = "date"
+semantic_role = "periodo_devolucion_fecha_fin"
+required = true
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "devolucion.declaracion-no-entrega-bienes"
+number = "1902"
+section = ["devolucion"]
+data_type = "text"
+semantic_role = "declaracion_no_entrega_bienes_ni_servicios"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-117-bis"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "prorrata.ejercicio"
+number = "1903-1906"
+section = ["prorrata"]
+data_type = "year"
+semantic_role = "prorrata_ejercicio_modificado"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]
+
+[[revisions."2010-y-siguientes".casillas]]
+id = "prorrata.definitiva"
+number = "1907-1911"
+section = ["prorrata"]
+data_type = "ratio"
+semantic_role = "prorrata_definitiva"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-789-2010:art-4"]
+source_refs = ["aeat-dr-360-2010"]

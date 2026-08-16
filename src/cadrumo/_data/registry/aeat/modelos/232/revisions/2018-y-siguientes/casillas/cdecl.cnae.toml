@@ -9,6 +9,7 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-hfp-816-2017:art-1", "orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018"]
+export_refs = ["m232-2018.dr23201.f015"]
 
 # Per-related-party transaction-volume threshold per RD 634/2015
 # art. 13.4: declaration of operaciones vinculadas is mandatory when

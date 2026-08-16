@@ -1,0 +1,1388 @@
+[[revisions.2018-y-siguientes.export_layouts]]
+id = 'generated-modelo-232-2018-y-siguientes-fichero'
+
+[[revisions.2018-y-siguientes.export_layouts.records]]
+id = 'm232-paraisos-fiscales'
+record_type = 'paraisos-fiscales'
+order = 1
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f001'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f002'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '232'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f003'
+offset = 6
+length = 2
+kind = 'literal'
+literal = '02'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f004'
+offset = 8
+length = 4
+kind = 'literal'
+literal = '000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f005'
+offset = 12
+length = 1
+kind = 'computed'
+computed_key = 'complementaria_page_marker'
+data_type = 'text'
+required = true
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f006'
+offset = 13
+length = 50
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.13-62.paraiso-operacion-1-descripcion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f007'
+offset = 63
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.63-122.paraiso-operacion-1-persona'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f008'
+offset = 123
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.123-142.paraiso-operacion-1-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f009'
+offset = 143
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.143-143.paraiso-operacion-1-fjo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f010'
+offset = 144
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.144-145.paraiso-operacion-1-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f011'
+offset = 146
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.146-162.paraiso-operacion-1-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f012'
+offset = 163
+length = 50
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.163-212.paraiso-operacion-2-descripcion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f013'
+offset = 213
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.213-272.paraiso-operacion-2-persona'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f014'
+offset = 273
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.273-292.paraiso-operacion-2-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f015'
+offset = 293
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.293-293.paraiso-operacion-2-fjo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f016'
+offset = 294
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.294-295.paraiso-operacion-2-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f017'
+offset = 296
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.296-312.paraiso-operacion-2-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f018'
+offset = 313
+length = 50
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.313-362.paraiso-operacion-3-descripcion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f019'
+offset = 363
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.363-422.paraiso-operacion-3-persona'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f020'
+offset = 423
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.423-442.paraiso-operacion-3-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f021'
+offset = 443
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.443-443.paraiso-operacion-3-fjo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f022'
+offset = 444
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.444-445.paraiso-operacion-3-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f023'
+offset = 446
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.446-462.paraiso-operacion-3-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f024'
+offset = 463
+length = 50
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.463-512.paraiso-operacion-4-descripcion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f025'
+offset = 513
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.513-572.paraiso-operacion-4-persona'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f026'
+offset = 573
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.573-592.paraiso-operacion-4-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f027'
+offset = 593
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.593-593.paraiso-operacion-4-fjo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f028'
+offset = 594
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.594-595.paraiso-operacion-4-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f029'
+offset = 596
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.596-612.paraiso-operacion-4-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f030'
+offset = 613
+length = 50
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.613-662.paraiso-operacion-5-descripcion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f031'
+offset = 663
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.663-722.paraiso-operacion-5-persona'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f032'
+offset = 723
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.723-742.paraiso-operacion-5-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f033'
+offset = 743
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.743-743.paraiso-operacion-5-fjo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f034'
+offset = 744
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.744-745.paraiso-operacion-5-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f035'
+offset = 746
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.746-762.paraiso-operacion-5-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f036'
+offset = 763
+length = 50
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.763-812.paraiso-operacion-6-descripcion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f037'
+offset = 813
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.813-872.paraiso-operacion-6-persona'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f038'
+offset = 873
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.873-892.paraiso-operacion-6-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f039'
+offset = 893
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.893-893.paraiso-operacion-6-fjo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f040'
+offset = 894
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.894-895.paraiso-operacion-6-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f041'
+offset = 896
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.896-912.paraiso-operacion-6-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f042'
+offset = 913
+length = 50
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.913-962.paraiso-operacion-7-descripcion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f043'
+offset = 963
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.963-1022.paraiso-operacion-7-persona'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f044'
+offset = 1023
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1023-1042.paraiso-operacion-7-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f045'
+offset = 1043
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1043-1043.paraiso-operacion-7-fjo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f046'
+offset = 1044
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1044-1045.paraiso-operacion-7-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f047'
+offset = 1046
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1046-1062.paraiso-operacion-7-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f048'
+offset = 1063
+length = 50
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1063-1112.paraiso-operacion-8-descripcion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f049'
+offset = 1113
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1113-1172.paraiso-operacion-8-persona'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f050'
+offset = 1173
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1173-1192.paraiso-operacion-8-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f051'
+offset = 1193
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1193-1193.paraiso-operacion-8-fjo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f052'
+offset = 1194
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1194-1195.paraiso-operacion-8-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f053'
+offset = 1196
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1196-1212.paraiso-operacion-8-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f054'
+offset = 1213
+length = 50
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1213-1262.paraiso-operacion-9-descripcion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f055'
+offset = 1263
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1263-1322.paraiso-operacion-9-persona'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f056'
+offset = 1323
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1323-1342.paraiso-operacion-9-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f057'
+offset = 1343
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1343-1343.paraiso-operacion-9-fjo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f058'
+offset = 1344
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1344-1345.paraiso-operacion-9-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f059'
+offset = 1346
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1346-1362.paraiso-operacion-9-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f060'
+offset = 1363
+length = 50
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1363-1412.paraiso-operacion-10-descripcion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f061'
+offset = 1413
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1413-1472.paraiso-operacion-10-persona'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f062'
+offset = 1473
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1473-1492.paraiso-operacion-10-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f063'
+offset = 1493
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1493-1493.paraiso-operacion-10-fjo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f064'
+offset = 1494
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1494-1495.paraiso-operacion-10-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f065'
+offset = 1496
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1496-1512.paraiso-operacion-10-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f066'
+offset = 1513
+length = 50
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1513-1562.paraiso-operacion-11-descripcion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f067'
+offset = 1563
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1563-1622.paraiso-operacion-11-persona'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f068'
+offset = 1623
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1623-1642.paraiso-operacion-11-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f069'
+offset = 1643
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1643-1643.paraiso-operacion-11-fjo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f070'
+offset = 1644
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1644-1645.paraiso-operacion-11-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f071'
+offset = 1646
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1646-1662.paraiso-operacion-11-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f072'
+offset = 1663
+length = 50
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1663-1712.paraiso-operacion-12-descripcion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f073'
+offset = 1713
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1713-1772.paraiso-operacion-12-persona'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f074'
+offset = 1773
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1773-1792.paraiso-operacion-12-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f075'
+offset = 1793
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1793-1793.paraiso-operacion-12-fjo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f076'
+offset = 1794
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1794-1795.paraiso-operacion-12-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f077'
+offset = 1796
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1796-1812.paraiso-operacion-12-importe'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f078'
+offset = 1813
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1813-1813.paraiso-valor-1-tipo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f079'
+offset = 1814
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1814-1873.paraiso-valor-1-entidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f080'
+offset = 1874
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1874-1893.paraiso-valor-1-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f081'
+offset = 1894
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1894-1895.paraiso-valor-1-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f082'
+offset = 1896
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1896-1912.paraiso-valor-1-valor-adquisicion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f083'
+offset = 1913
+length = 5
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1913-1917.paraiso-valor-1-porcentaje-participacion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f084'
+offset = 1918
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1918-1918.paraiso-valor-2-tipo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f085'
+offset = 1919
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1919-1978.paraiso-valor-2-entidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f086'
+offset = 1979
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1979-1998.paraiso-valor-2-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f087'
+offset = 1999
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.1999-2000.paraiso-valor-2-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f088'
+offset = 2001
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.2001-2017.paraiso-valor-2-valor-adquisicion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f089'
+offset = 2018
+length = 5
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.2018-2022.paraiso-valor-2-porcentaje-participacion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f090'
+offset = 2023
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.2023-2023.paraiso-valor-3-tipo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f091'
+offset = 2024
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.2024-2083.paraiso-valor-3-entidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f092'
+offset = 2084
+length = 20
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.2084-2103.paraiso-valor-3-reservado-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f093'
+offset = 2104
+length = 2
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.2104-2105.paraiso-valor-3-clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f094'
+offset = 2106
+length = 17
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.2106-2122.paraiso-valor-3-valor-adquisicion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f095'
+offset = 2123
+length = 5
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.2123-2127.paraiso-valor-3-porcentaje-participacion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f096'
+offset = 2128
+length = 1
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.2128-2128.paraiso-valor-4-tipo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[[revisions.2018-y-siguientes.export_layouts.records.fields]]
+id = 'm232-2018.dr23202.f097'
+offset = 2129
+length = 60
+kind = 'binding'
+binding = 'modelo-232-2018.page_02.2129-2188.paraiso-valor-4-entidad'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-816-2017:art-1']
+source_refs = ['aeat-dr-232-2018']
+
+[revisions.2018-y-siguientes.export_layouts.records.row_field_casilla_ids]

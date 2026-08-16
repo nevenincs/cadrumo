@@ -1,0 +1,28 @@
+# Modelo 353 silent-under-declaration guards.
+#
+# 353 is the aggregated autoliquidación the entidad dominante files for the
+# whole IVA group. Its [01] is the sum of every member's own resultado, taken
+# from their Modelo 322 filings, and the chain [01] -> [03] -> [05] carries that
+# sum to the amount actually paid. A positive [01] reaching a zero [05] means
+# the group declared activity and then filed for nothing, which is the exact
+# shape no-silent-under-declaration exists to surface.
+#
+# ADVISORY, not blocking, on both rungs, because a zero consequent has
+# legitimate readings: [03] is [01] - [08], so pending cuotas a compensar from
+# earlier ejercicios can absorb a positive [01] entirely, and [05] is
+# [03] - [04], so autoliquidaciones the group already presented for the same
+# period can absorb the rest. Each is a real filing the operator made; refusing
+# them would block correct returns. The antecedent-at-or-below-zero case holds
+# trivially, so a group with a net negative aggregate raises nothing.
+
+[[revisions."2026-y-siguientes".verification_predicates]]
+predicate_id = "modelo-353-2026-resultado-total-implica-resultado"
+expression = 'implies_nonzero(["01", "03"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
+
+[[revisions."2026-y-siguientes".verification_predicates]]
+predicate_id = "modelo-353-2026-resultado-implica-resultado-autoliquidacion"
+expression = 'implies_nonzero(["03", "05"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-8"]

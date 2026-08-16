@@ -1,0 +1,6 @@
+[[revisions.2018-y-siguientes.export_layouts]]
+id = 'generated-modelo-232-2018-y-siguientes-fichero'
+format = 'fixed_width'
+source_refs = ['aeat-dr-232-2018']
+legal_refs = ['orden-hfp-816-2017:art-1']
+dictionary_path_overrides = []

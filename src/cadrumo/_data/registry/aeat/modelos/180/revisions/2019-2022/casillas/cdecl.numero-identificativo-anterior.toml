@@ -1,0 +1,10 @@
+[[revisions.2019-2022.casillas]]
+id = "decl.numero-identificativo-anterior"
+number = "123-135"
+section = ["declarante", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-180-decl-numero-identificativo-anterior"]
+legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2014"]
