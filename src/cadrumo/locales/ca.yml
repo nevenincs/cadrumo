@@ -72829,12 +72829,6 @@ modelo:
             label: Model 353 exercicis 2008 a 2025 (Ordre EHA/3434/2007)
         2008-y-siguientes:
           casilla:
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              label: Quota d'IVA repercutit al tipus reduït (10%) - agregat del grup
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: Quota d'IVA repercutit al tipus superreduït (4%) - agregat del
-                grup
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
               label: Resultat del grup (quota meritada agregada - quota deduïble agregada)

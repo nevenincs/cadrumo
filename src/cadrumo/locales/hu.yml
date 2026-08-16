@@ -72871,11 +72871,6 @@ modelo:
             x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4cli7aor9c9m6ab9j68p0:
               label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
                 levonható összeg
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              label: Csökkentett kulcs (10%) szerint felszámított ÁFA - csoportösszesítés
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: Szuperkedvezményes kulcs (4%) szerint felszámított ÁFA - csoportösszesítés
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
               label: A csoport eredménye (összesített keletkezett ÁFA mínusz összesített

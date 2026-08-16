@@ -75233,10 +75233,6 @@ modelo:
             label: Modelo 353 ejercicios 2008 a 2025 (Orden EHA/3434/2007)
         2008-y-siguientes:
           casilla:
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
-              label: Cuota IVA repercutido al tipo super-reducido (4%) - agregado
-                del grupo
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: null
               label: Resultado del grupo (cuota devengada agregada - cuota deducible
