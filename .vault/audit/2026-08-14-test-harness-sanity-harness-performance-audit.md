@@ -2691,3 +2691,61 @@ Two things are worth carrying forward regardless of the timing:
   change to every CLI help surface, so it belongs in a decision record rather
   than in a performance sweep, and its value is operator-facing startup latency
   (`aeat --help`) more than suite time.
+
+## `aeat app modelo list` takes 33.6s, and 90% of it is loading the registry authority
+
+Taken from the durations tail rather than by inference:
+`test_cli_startup_smoke::test_app_modelo_list_starts_without_unlocking_active_profile`
+is 29.70s in the CLI lane, and the module makes exactly ONE `subprocess.run`.
+So a single cold `aeat app modelo list` IS the test. Timed directly against an
+empty storage root: **33.62s, 33.67s, 33.80s, 33.31s, 33.44s** -- one CLI
+command listing modelo codes.
+
+Split by a sampling profiler (see the correction below for why not cProfile):
+
+```
+import=1.31s   run=31.93s
+CUMULATIVE  90.6%  domain/calculations/registry/_authority.py:98(load)
+                   via core/resources/_repos/modelos.py:38(_resolve_authority)
+SELF        17.2%  pathlib open
+            16.2%  ntpath.realpath
+            10.3%  read_text
+             9.7%  pathlib stat
+             7.7%  core/_directory_scan.py:307(_read_entries)
+             4.5%  zipfile read      4.1%  bs4/lxml feed
+             1.8%  pypdfium2 get_page  1.3%  pypdfium2 get_textpage
+```
+
+Listing modelos resolves the **full validated registry authority**: thousands of
+TOML fragment reads, `realpath` on each, zip archive reads, HTML legal-corpus
+parsing through lxml, and PDF text extraction through pypdfium2. None of that is
+needed to print `code / title / cadence / domain / revisions`.
+
+This is the shape of the operator complaint that opened this thread: a command
+scaffold should not pull a corpus. The remedy direction is a lightweight
+metadata projection for listing surfaces, or deferring corpus and PDF evidence
+until a verb actually needs it -- an architecture decision, not a sweep, and
+recorded here for one.
+
+### Correction: cProfile blamed the wrong function by two orders of magnitude
+
+cProfile attributed ~30s of the 33.6s run to `_normalise_header_cell`
+(16,149,174 calls) and its 97,432,518 `str.replace` calls. **That was an
+instrumentation artifact.** cProfile charges per CALL, and the run took 78.28s
+under it against 33.6s real -- roughly 45s of overhead, landing almost entirely
+on the highest-call-count frames.
+
+The disconfirming test was direct: memoising the function changed the real cold
+run by **nothing** (33.80 / 33.31 / 33.44 against 33.62 / 33.67). Sampling then
+put the frame at **1.4%**, not 90%.
+
+The memoisation was kept, but on its own evidence rather than that profile: 2.50x
+on the function (385ns -> 154ns per call), 71,994 cache hits against 6 misses,
+byte-identical output across 5,527 inputs. Its contribution to the cold run is
+below wall-clock noise.
+
+**Standing lesson: on a call-count-heavy workload, cProfile measures the
+profiler.** Any hot spot it reports with millions of calls must be confirmed by
+sampling, or by removing the work and re-timing, before it is believed -- and
+certainly before it is reported. Both false headlines in this campaign (the ECB
+47%, and this) came from reading a profile without checking the instrument.
