@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:477402a74b51f3981ca31ac62e3f590f1071e9df570441f368db8ec91482eb44'
+body_hash: 'sha256:023c82ed8f751c3fbdb71f102a91d119e5c0b87c72e679e010e1c576556328fc'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -2951,3 +2951,63 @@ The five tests reaching the live ECB Data Portal are marked `integration`. They
 are neither deterministic (14.63-32.48s on identical code) nor free of external
 services. This is not an unwritten convention being bent -- it is the declared
 meaning of the marker they carry, and `aeat_live` exists for exactly this case.
+
+## The seeding worklist, corrected twice, is worth about 1% -- stop grinding it
+
+The worklist recorded earlier (194 modules, 1,294 per-test seedings) was an
+overcount, for two reasons found by trying to convert its top entries.
+
+**First correction -- parameterised seeding is not repeated seeding.**
+`test_clave_credential_resolution` is 17-of-17 seeded and green, which put it at
+the top of the "clean" candidates. 16 of those 17 calls pass **per-test
+overrides**: each test registers a differently-configured profile. There is no
+shared world to seed once. Re-running the scan with argument-shape awareness
+(a site counts as uniform only when every call passes identical literal
+arguments):
+
+| | sites | seedings |
+|---|---|---|
+| uniform -- convertible | 132 | **722** |
+| parameterised -- NOT convertible | 111 | **703** |
+
+**Roughly half the original figure was never convertible.**
+
+**Second correction -- absence-dependent tests are invisible to the metric**, as
+recorded above for `test_operator`. A test requiring a missing precondition
+looks identical to one that merely does not seed.
+
+### And the surviving half is not worth bespoke conversion
+
+Measured seed costs across the campaign:
+
+| seed | cost each |
+|---|---|
+| four-CSV ledger corpus import | 4-5s |
+| `register_minimal_profile` | 0.276s |
+| `isolated_runtime_profile` per-test fixture | 0.257s |
+| `test_manual_add_idempotency` seeds | negligible (whole module 1.31s / 15 tests) |
+
+The three conversions already landed took the expensive head of that
+distribution -- full-corpus imports, 10/9/7 per module. What remains is
+~722 seedings at roughly 0.25s, so on the order of **180s of CPU, of which
+perhaps half is recoverable: ~1% of the 9,351s suite**, spread over 132 modules.
+
+Each conversion is also bespoke, not mechanical. Three different isolation
+families are in play -- `active_profile_isolated_backend_fixture`,
+`bucket_session_storage_fixture` and `isolated_runtime_profile` -- and a
+copy-per-test variant must be built per family. Every candidate additionally
+needs checking for absence-dependent tests and for parameterised seeds, both
+invisible to the count.
+
+**Ruled out: do not convert the seeding tail module by module.** The lever is
+exhausted at the head. It becomes worth revisiting only if a GENERIC
+copy-per-test wrapper is built over the shared shape (a context manager that
+roots storage at `tmp_path`), which would cover all three families at once --
+and that is worth doing only alongside a target bigger than 1%.
+
+Candidates verified and rejected this round, so they are not re-tried:
+`test_maternidad_meses_reach_the_calculate_path` (25 uniform seedings, RED:
+22 failed), `test_certificate_sources_check` (24, 2 failed), `test_amend_flow`
+(13, 26 failed), `test_llm_review_workflow` (9, red), `test_operator` (21,
+green but absence-dependent), `test_clave_credential_resolution` (17, green but
+parameterised), `test_manual_add_idempotency` (10, green but seeds are free).
