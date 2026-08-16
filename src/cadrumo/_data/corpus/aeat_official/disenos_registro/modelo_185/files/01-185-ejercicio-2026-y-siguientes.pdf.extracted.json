@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "corpus_pdf",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf",
+  "source_sha256": "102dc91b4e9484b830c81e790cf08569be95e2854fee1138f63f363d35d2bcae",
+  "preprocessor_id": "corpus-pdf",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Reused with attribution. Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR185_2025.pdf",
+  "units": [
+    {
+      "text": "Modelo 185.\nDeclaración Informativa. Declaración informativa mensual de cotizaciones de\nafiliados y mutualistas.\nAgencia Tributaria\nModelo 185.\nDeclaración Informativa. Declaración informativa mensual de cotizaciones de\nafiliados y mutualistas.\n1\nEjercicio 2026",
+      "title": "Pag. 1",
+      "section": "Pag. 1",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 185.\nDeclaración Informativa. Declaración informativa mensual de cotizaciones de\nafiliados y mutualistas.\nAgencia Tributaria\nMODELO 185\nDISEÑOS DE REGISTRO\nA.- TIPO DE REGISTRO 1: REGISTRO DE DECLARANTE.\nPOSICIONES NATURALEZA DESCRIPCIÓN DE LOS CAMPOS\n1 Numérico TIPO DE REGISTRO.\nConstante número '1'.\n2-4 Numérico MODELO DECLARACIÓN.\nConstante '185'.\n5-8 Numérico EJERCICIO\nLas cuatro cifras del ejercicio al que corresponde la\ndeclaración.\n9-17 Alfanumérico N.I.F. DEL DECLARANTE.\nSe consignará el N.I.F. del declarante.\nEste campo deberá estar ajustado a la derecha, siendo la\núltima posición el carácter de control y rellenando con ceros\nlas posiciones de la izquierda, de acuerdo con las reglas\nprevistas en el Real Decreto 1065/2007, de 27 de julio, por\nel que se aprueba el Reglamento general de las\nactuaciones y los procedimientos de gestión e inspección\ntributaria y de desarrollo de las normas comunes de los\nprocedimientos de aplicación de los tributos, (BOE del 5 de\nseptiembre)\n18-57 Alfanumérico RAZÓN SOCIAL DEL DECLARANTE\nSe consignará la razón social completa, sin anagrama.\n58 ______ BLANCOS.\n.\n59-107 Alfanumérico PERSONA CON QUIÉN RELACIONARSE\nDatos de la persona con quién relacionarse. Este campo se\nsubdivide en dos:\n59-67 TELÉFONO: Campo numérico de 9 posiciones.\n2\nEjercicio 2026",
+      "title": "Pag. 2",
+      "section": "Pag. 2",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 185.\nDeclaración Informativa. Declaración informativa mensual de cotizaciones de\nafiliados y mutualistas.\nAgencia Tributaria\n68-107 APELLIDOS Y NOMBRE: Se consignará el primer\napellido, un espacio, el segundo apellido, un espacio y el\nnombre completo, necesariamente en este orden.\n108- 120 Numérico NUMERO IDENTIFICATIVO DE LA DECLARACIÓN.\nSe consignará el número identificativo correspondiente a la\ndeclaración. Campo de contenido numérico de 13\nposiciones.\nEl número de identificativo que habrá de figurar, será un\nnúmero secuencial cuyos tres primeros dígitos se\ncorresponderán con el código 185.\n121- 122 Alfabético DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA.\nEn el caso excepcional de segunda o posterior\npresentación de declaraciones, deberá cumplimentarse\nobligatoriamente uno de los siguientes campos:\n121 DECLARACIÓN COMPLEMENTARIA: Se consignará\nuna “C” si la presentación de esta declaración tiene por\nobjeto incluir registros que, debiendo haber figurado en otra\ndeclaración del mismo ejercicio presentada anteriormente,\nhubieran sido completamente omitidos en la misma.\n122 DECLARACIÓN SUSTITUTIVA: Se consignará una\n“S” si la presentación tiene como objeto anular y sustituir\ncompletamente a otra declaración anterior, del mismo\nejercicio. Una declaración sustitutiva sólo puede anular a\nuna única declaración anterior.\n123-135 Numérico NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN\nANTERIOR\nEn el caso de que se haya consignado una “C” en el campo\n“Declaración complementaria” o en caso de que se haya\nconsignado “S” en el campo “Declaración sustitutiva”, se\nconsignará el número de identificativo correspondiente a la\ndeclaración a la que complementa o sustituye.\nEn cualquier otro caso deberá rellenarse a CEROS.\n136-137 Numérico PERÍODO.\nSe hará constar el mes natural al que corresponde la\ndeclaración, con el código numérico que corresponda\nsegún el siguiente detalle:\n01 Enero\n02 Febrero\n03 Marzo\n3\nEjercicio 2026",
+      "title": "Pag. 3",
+      "section": "Pag. 3",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 185.\nDeclaración Informativa. Declaración informativa mensual de cotizaciones de\nafiliados y mutualistas.\nAgencia Tributaria\n04 Abril\n05 Mayo\n06 Junio\n07 Julio\n08 Agosto\n09 Septiembre\n10 Octubre\n11 Noviembre\n12 Diciembre\n138-146 Numérico NÚMERO TOTAL DE REGISTROS.\nSe consignará el número total de declarados para este\ndeclarante (Número de registros tipo 2).\n147-500 ------------ BLANCOS\n* Los campos numéricos que no tengan contenido se rellenarán a ceros.\n* Los campos alfanuméricos/alfabéticos que no tengan contenido se rellenarán a\nblancos.\n* Todos los campos numéricos ajustados a la derecha y rellenos de ceros por la\nizquierda.\n* Todos los campos alfanuméricos/alfabéticos ajustados a la izquierda y rellenos de\nblancos por la derecha, en mayúsculas, sin caracteres especiales y sin vocales\nacentuadas, excepto que se especifique lo contrario en la descripción del campo.\n4\nEjercicio 2026",
+      "title": "Pag. 4",
+      "section": "Pag. 4",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 185.\nDeclaración Informativa. Declaración informativa mensual de cotizaciones de\nafiliados y mutualistas.\nAgencia Tributaria\nB.- TIPO DE REGISTRO 2: REGISTRO DE DECLARADO.\nPOSICIONES NATURALEZA DESCRIPCIÓN DE LOS CAMPOS\n1 Numérico TIPO DE REGISTRO.\nConstante '2'\n2-4 Numérico MODELO DECLARACIÓN.\nConstante '185'.\n5-8 Numérico EJERCICIO.\nConsignar lo contenido en estas mismas posiciones del\nregistro de tipo 1.\n9-17 Alfanumérico N.I.F. DEL DECLARANTE.\nConsignar lo contenido en estas mismas posiciones del\nregistro de tipo 1.\n18-26 Alfanumérico N.I.F. DEL DECLARADO.\nSe consignará el N.I.F. del declarado de acuerdo con las\nreglas previstas en el Real Decreto 1065/2007, de 27 de\njulio, por el que se aprueba el Reglamento General de las\nactuaciones y los procedimientos de gestión e inspección\ntributaria y de desarrollo de las normas comunes de los\nprocedimientos de aplicación de los tributos, (B.O.E del 5\nde septiembre).\n27-35 ________ BLANCOS\n36-75 Alfabético APELLIDOS Y NOMBRE DEL DECLARADO.\nSe consignará el primer apellido, un espacio, el segundo\napellido, un espacio y el nombre completo, necesariamente\nen este mismo orden.\n76-87 Alfanumérico NUMERO DE AFILIACIÓN\nSe consignará el NÚMERO de AFILIACIÓN.\nEste campo deberá ser ajustado a la derecha, rellenando\ncon blancos las posiciones a la izquierda.\n5\nEjercicio 2026",
+      "title": "Pag. 5",
+      "section": "Pag. 5",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 185.\nDeclaración Informativa. Declaración informativa mensual de cotizaciones de\nafiliados y mutualistas.\nAgencia Tributaria\n88 Alfabético PLURIACTIVIDAD.\nSe consignará una de las siguientes claves:\nClave Descripción\nS El declarado está en varios\nregímenes en el periodo de\ndeclaración.\nN El declarado está en un solo\nrégimen en el periodo objeto\nde declaración.\nEste campo tendrá contenido cuando el declarante\nsea la Seguridad Social. En otro caso, no se\ncumplimentará.\n89 Alfabético SITUACIÓN MES.\nEn función de la situación de alta o de baja durante el\nmes, se consignará una de las claves siguientes. La\nclave de alta se cumplimentará cuando el declarado\nesté, al menos un día, de alta en el mes considerado.\nClave Descripción\nA Alta\nB Baja\n90 Alfabético RÉGIMEN DE COTIZACION DEL MES.\nEn función del régimen del mes, se consignará una de las\nsiguientes:\nClave Descripción\nA Agrario cuenta ajena\nB Agrario cuenta propia\nC Autónomos\nE Empleados del hogar\nG General\nM Mar por cuenta propia\nN Mar por cuenta ajena\nP Minería del Carbón\nO Otros\nEste campo tendrá contenido cuando el declarante sea la\nSeguridad Social. En otro caso, no se cumplimentará.\n6\nEjercicio 2026",
+      "title": "Pag. 6",
+      "section": "Pag. 6",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 185.\nDeclaración Informativa. Declaración informativa mensual de cotizaciones de\nafiliados y mutualistas.\nAgencia Tributaria\n91-92 Numérico NÚMERO DE DÍAS DE ALTA EN EL MES.\nSe consignarán los días de alta cotizados durante\nel mes objeto de declaración.\nSe presentarán alineados a la derecha y\ncumplimentados a ceros por la izquierda.\n93 Numérico TIPO JORNADA MES\nEn función de la jornada realizada durante el mes\nobjeto de declaración, se consignará una de las\nclaves siguientes:\nClave Descripción\n0 Sin valor\n1 Completa\n2 Parcial ≥ 50%\n3 Parcial < 50%\n4 Inaplicable\nEste campo tendrá contenido cuando el declarante\nsea la Seguridad Social. En otro caso, no se\ncumplimentará.\n94 Alfabético SITUACIÓN MES -1 .\nEn función de la situación de alta o baja durante el\nmes, se consignará una de las claves siguientes.\nLa clave de alta de cumplimentará cuando el\ndeclarando esté, al menos, un día de alta durante\nel mes considerado.\nClave Descripción\nA Alta\nB Baja\nEste campo tendrá contenido cuando el declarante\nsea la Seguridad Social. En otro caso, no se\ncumplimentará.\n95 Alfabético RÉGIMEN DE COTIZACION DEL MES -1.\nEn función del régimen del mes, se consignará una\nde las siguientes:\n7\nEjercicio 2026",
+      "title": "Pag. 7",
+      "section": "Pag. 7",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 185.\nDeclaración Informativa. Declaración informativa mensual de cotizaciones de\nafiliados y mutualistas.\nAgencia Tributaria\nClave Descripción\nA Agrario cuenta ajena\nB Agrario cuenta propia\nC Autónomos\nE Empleados del hogar\nG General\nM Mar por cuenta propia\nN Mar por cuenta ajena\nP Minería del Carbón\nO Otros\nEste campo tendrá contenido cuando el declarante\nsea la Seguridad Social. En otro caso, no se\ncumplimentará.\n96-97 Numérico NÚMEROS DÍAS DE ALTA MES -1.\nSe consignarán los días de alta cotizados durante\nel mes -1. Se presentarán alineados a la derecha y\ncumplimentados a ceros por la izquierda.\n98 Numérico TIPO JORNADA MES -1.\nEn función de la jornada realizada durante el mes -\n1, se consignará una de las claves siguientes:\nClave Descripción\n0 Sin valor\n1 Completa\n2 Parcial ≥ 50%\n3 Parcial < 50%\n4 Inaplicable\nEste campo tendrá contenido cuando el declarante\nsea la Seguridad Social. En otro caso, no se\ncumplimentará.\n99 Alfabético SITUACION MES -2 .\nEn función de la situación de alta o baja durante el\nmes, se consignará una de las claves siguientes.\nLa clave de alta de cumplimentará cuando el\ndeclarado esté, al menos, un día de alta durante el\nmes considerado.\n8\nEjercicio 2026",
+      "title": "Pag. 8",
+      "section": "Pag. 8",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 185.\nDeclaración Informativa. Declaración informativa mensual de cotizaciones de\nafiliados y mutualistas.\nAgencia Tributaria\nClave Descripción\nA Alta\nB Baja\nEste campo tendrá contenido cuando el declarante\nsea la Seguridad Social. En otro caso, no se\ncumplimentará.\n100 Alfabético RÉGIMEN DE COTIZACIÓN DEL MES -2\nEn función del régimen de cotización del mes-2, se\nconsignará una de las siguientes:\nClave Descripción\nA Agrario cuenta ajena\nB Agrario cuenta propia\nC Autónomos\nE Empleados del hogar\nG General\nM Mar por cuenta propia\nN Mar por cuenta ajena\nP Minería del Carbón\nO Otros\nEste campo tendrá contenido cuando el declarante\nsea la Seguridad Social. En otro caso, no se\ncumplimentará.\n101-102 Numérico NÚMEROS DÍAS DE ALTA MES -2.\nSe consignarán los días de alta cotizados durante\nel mes -2. Se presentarán alineados a la derecha y\ncumplimentados a ceros por la izquierda.\n103 Numérico TIPO JORNADA MES -2.\nEn función de la jornada realizada durante el mes -\n2, se consignará una de las claves siguientes:\nClave Descripción\n0 Sin valor\n1 Completa\n2 Parcial ≥ 50%\n9\nEjercicio 2026",
+      "title": "Pag. 9",
+      "section": "Pag. 9",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 185.\nDeclaración Informativa. Declaración informativa mensual de cotizaciones de\nafiliados y mutualistas.\nAgencia Tributaria\n3 Parcial < 50%\n4 Inaplicable\nEste campo tendrá contenido cuando el declarante\nsea la Seguridad Social. En otro caso, no se\ncumplimentará.\n104-500 ------------ BLANCOS\n* Los campos numéricos que no tengan contenido se rellenarán a ceros.\n* Los campos alfanuméricos/alfabéticos que no tengan contenido se rellenarán a\nblancos.\n* Todos los campos numéricos ajustados a la derecha y rellenos de ceros por la\nizquierda.\n* Todos los campos alfanuméricos/alfabéticos ajustados a la izquierda y rellenos de\nblancos por la derecha, en mayúsculas, sin caracteres especiales y sin vocales\nacentuadas, excepto que se especifique lo contrario en la descripción del campo.\n10\nEjercicio 2026",
+      "title": "Pag. 10",
+      "section": "Pag. 10",
+      "anchor": null
+    }
+  ]
+}

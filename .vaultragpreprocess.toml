@@ -27,7 +27,7 @@ version = 2
 pattern = "src/cadrumo/_data/corpus/normatives/html/*.html"
 command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
 target = "code"
-extractor_version = "1.1"
+extractor_version = "1.3"
 on_error = "skip"
 timeout_s = 120
 

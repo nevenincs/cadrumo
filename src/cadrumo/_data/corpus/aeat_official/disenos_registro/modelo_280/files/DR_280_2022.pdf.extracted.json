@@ -1,0 +1,144 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "corpus_pdf",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_280/files/DR_280_2022.pdf",
+  "source_sha256": "45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701",
+  "preprocessor_id": "corpus-pdf",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Reused with attribution. Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_22/DR_280_2022.pdf",
+  "units": [
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\nModelo 280.\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\n1\nEjercicio 2022",
+      "title": "Pag. 1",
+      "section": "Pag. 1",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\nMODELO 280\nDISEÑOS DE REGISTRO\nANEXO\nDiseños de registro a los que deben ajustarse los ficheros que se generen para la\npresentación del modelo 280\nDescripción de los registros\nPara cada declarante se incluirán dos tipos diferentes de registro, que se distinguen por\nla primera posición, con arreglo a los siguientes criterios:\nTipo 1: Registro del declarante: Datos identificativos y resumen de la declaración. Diseño\nde tipo de registro 1 de los recogidos más adelante en estos mismos apartados de la\npresente Orden.\nTipo 2: Registro de declarado. Diseño de tipo de registro 2 de los recogidos más adelante\nen estos mismos apartados de la presente Orden.\nEl orden de presentación será el del tipo de registro, existiendo un único registro del tipo\n1 y tantos registros del tipo 2 como titulares de un Plan de Ahorro a Largo Plazo contenga\nla declaración.\nTodos los campos alfanuméricos y alfabéticos se presentarán alineados a la izquierda y\nrellenos de blancos por la derecha, en mayúsculas sin caracteres especiales, y sin\nvocales acentuadas, salvo que se especifique otra cosa en la descripción del campo.\nPara los caracteres específicos del idioma se utilizará la codificación ISO-8859-1. De esta\nforma la letra «Ñ» tendrá el valor ASCII 209 (Hex. D1) y la «Ç» (cedilla mayúscula) el\nvalor ASCII 199 (Hex. C7).\nTodos los campos numéricos se presentarán alineados a la derecha y rellenos a ceros\npor la izquierda sin signos y sin empaquetar.\n2\nEjercicio 2022",
+      "title": "Pag. 2",
+      "section": "Pag. 2",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\nTodos los campos tendrán contenido, a no ser que se especifique lo contrario en la\ndescripción del campo. Si no lo tuvieran, los campos numéricos se rellenarán a ceros y\ntanto los alfanuméricos como los alfabéticos a blancos.\n3\nEjercicio 2022",
+      "title": "Pag. 3",
+      "section": "Pag. 3",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\nA. TIPO DE REGISTRO 1: REGISTRO DE DECLARANTE\nPOSICIONES NATURALEZA DESCRIPCIÓN DE LOS CAMPOS\n1 Numérico TIPO DE REGISTRO.\nConstante número '1'.\n2-4 Numérico MODELO DECLARACIÓN\nConstante '280'.\n5-8 Numérico EJERCICIO.\nLas cuatro cifras del ejercicio fiscal al que\ncorresponde la declaración.\n9-17 Alfanumérico NIF DEL DECLARANTE\nSe consignará el NIF del declarante. Este\ncampo deberá estar ajustado a la derecha,\nsiendo la última posición el carácter de\ncontrol y rellenando con ceros las posiciones\nde la izquierda, de acuerdo con las reglas\nprevistas en el Reglamento General de las\nactuaciones y los procedimientos de Gestión\ne Inspección tributaria y de desarrollo de las\nnormas comunes de los procedimientos de\naplicación de los tributos, aprobado por Real\nDecreto 1065/2007, de 27 de julio.\n18-57 Alfanumérico RAZÓN SOCIAL DEL DECLARANTE\nSe consignará la denominación completa de\nla entidad declarante, sin anagrama.\nEn ningún caso podrá figurar en este campo\nun nombre comercial.\n58 TIPO DE SOPORTE\n4\nEjercicio 2022",
+      "title": "Pag. 4",
+      "section": "Pag. 4",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\nSe cumplimentará la siguiente clave:\n'T': Transmisión telemática.\n59-107 Alfanumérico PERSONA CON QUIÉN RELACIONARSE\nDatos de la persona con quién relacionarse.\nEste campo se subdivide en dos:\n59-67 TELÉFONO: Campo numérico de\n9 posiciones.\n68-107 APELLIDOS Y NOMBRE: Se\nconsignará el primer apellido, un\nespacio, el segundo apellido, un\nespacio y el nombre completo,\nnecesariamente en este orden.\n108-120 Numérico NUMERO IDENTIFICATIVO DE LA DECLARACION\nSe consignará el número identificativo\ncorrespondiente a la declaración.\nEl número identificativo que habrá de figurar\nen el modelo 280, será un número\nsecuencial cuyos tres primeros dígitos se\ncorresponderán con el código 280.\n121-122 Alfabético DECLARACION COMPLEMENTARIA O SUSTITUTIVA\nEn el caso de segunda o ulterior\npresentación de declaraciones, deberá\ncumplimentarse obligatoriamente uno de los\nsiguientes campos:\n5\nEjercicio 2022",
+      "title": "Pag. 5",
+      "section": "Pag. 5",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\n121 DECLARACIÓN\nCOMPLEMENTARIA:\nSe consignará una \"C\" si la presentación de\nesta declaración tiene por objeto incluir\nregistros de declarados que, debiendo haber\nfigurado en otra declaración del mismo\nejercicio presentada anteriormente, hubieran\nsido completamente omitidos en la misma.\nLa modificación del contenido de datos\ndeclarados en otra declaración del mismo\nejercicio presentada anteriormente, se\nrealizará desde el servicio de consulta y\nmodificación de declaraciones informativas\nen la Sede Electrónica de la Agencia Estatal\nde Administración Tributaria\n(www.agenciatributaria.gob.es).\n122 DECLARACIÓN SUSTITUTIVA:\nSe consignará una \"S\" si la presentación\ntiene como objeto anular y sustituir\ncompletamente a otra declaración anterior,\ndel mismo ejercicio, en la cual se hubieran\nconsignado datos inexactos o erróneos. Una\ndeclaración sustitutiva sólo puede anular a\nuna única declaración anterior.\n123-135 Numérico NUMERO IDENTIFICATIVO DE LA\nDECLARACIÓN ANTERIOR\nEn caso de que se haya consignado una “C”\nen el campo “Declaración Complementaria”\nse consignará el número identificativo\ncorrespondiente a la declaración a la que\ncomplementa.\n6\nEjercicio 2022",
+      "title": "Pag. 6",
+      "section": "Pag. 6",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\nEn el caso de que se haya consignado una\n\"S\" en el campo \"Declaración sustitutiva\", se\nconsignará el número identificativo\ncorrespondiente a la declaración que\nsustituye.\nEn cualquier otro caso deberá rellenarse a\nceros.\n136-144 Numérico NUMERO TOTAL DE DECLARADOS\nSe consignará el número total de registros\nde declarados, registros de detalle de tipo 2\nque conforman la declaración.\n145-164 Numérico IMPORTE TOTAL DE APORTACIONES\nSe consignará la suma total de las\ncantidades reflejadas en el campo\nAPORTACIONES EFECTUADAS EN EL\nEJERCICIO, posiciones 111 a 116 del\nregistro de tipo 2.\nLos importes deben consignarse en\nEUROS. El importe no irá precedido de\nsigno alguno (+/-), ni incluirá coma decimal.\nEste campo se subdivide en dos:\n145-162: Numérico. ENTERO: Parte entera.\nSe consignará la parte entera de las\naportaciones.\n7\nEjercicio 2022",
+      "title": "Pag. 7",
+      "section": "Pag. 7",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\n163-164: Numérico. DECIMAL: Parte\ndecimal. Se consignará la parte decimal de\nlas aportaciones.\n165-184 Numérico BASE DE RETENCIONES\nSe consignará la suma de los importes\nincluidos en el campo del registro de tipo 2,\nBASE DE LA RETENCIÓN PRACTICADA,\nposiciones 166 a 175.\nLos importes deben consignarse en\nEUROS. El importe no irá precedido de\nsigno alguno (+/-), ni incluirá coma decimal.\nEste campo se subdivide en dos:\n165-182: Numérico. ENTERO: Parte entera.\nSe consignará la parte entera de la base de\nretenciones.\n183-184: Numérico. DECIMAL: Parte\ndecimal. Se consignará la parte decimal de\nla base de retenciones.\n185-500 ------------ BLANCOS\n* Los campos numéricos que no tengan contenido se rellenarán a ceros.\n* Los campos alfanuméricos/alfabéticos que no tengan contenido se rellenarán\na blancos.\n* Todos los campos numéricos ajustados a la derecha y rellenos de ceros por\nla izquierda.\n8\nEjercicio 2022",
+      "title": "Pag. 8",
+      "section": "Pag. 8",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\n* Todos los campos alfanuméricos/alfabéticos ajustados a la izquierda y\nrellenos de blancos por la derecha, en mayúsculas, sin caracteres especiales\ny sin vocales acentuadas, excepto que se especifique lo contrario en la\ndescripción del campo.\n9\nEjercicio 2022",
+      "title": "Pag. 9",
+      "section": "Pag. 9",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\nB.- TIPO DE REGISTRO 2: REGISTRO DE DECLARADO.\nPOSICIONES NATURALEZA DESCRIPCIÓN DE LOS CAMPOS\n1 Numérico TIPO DE REGISTRO\nConstante '2'\n2-4 Numérico MODELO DECLARACIÓN\nConstante '280'.\n5-8 Numérico EJERCICIO\nConsignar lo contenido en estas mismas\nposiciones del registro de tipo 1.\n9-17 Alfanumérico NIF DEL DECLARANTE\nConsignar lo contenido en estas mismas\nposiciones del registro de tipo 1.\n18-26 Alfanumérico NIF DEL DECLARADO\nCon carácter general, se consignará el\nnúmero de identificación fiscal del\ndeclarado de acuerdo con las reglas\nprevistas en el Reglamento General de las\nactuaciones y los procedimientos de\ngestión e inspección tributaria y de\ndesarrollo de las normas comunes de los\nprocedimientos de aplicación de los\ntributos, aprobado por Real Decreto\n1065/2007, de 27 de julio.\n10\nEjercicio 2022",
+      "title": "Pag. 10",
+      "section": "Pag. 10",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\nEste campo deberá estar ajustado a la\nderecha, siendo la última posición el\ncarácter de control y rellenando con ceros\nlas posiciones a la izquierda.\n27-35 Alfanumérico NIF DEL REPRESENTANTE LEGAL\nSi el declarado es menor de 14 años, se\nconsignará en este campo el número de\nidentificación fiscal de su representante\nlegal (padre, madre o tutor), de\nconformidad con las reglas previstas en el\nReglamento General de las actuaciones y\nlos procedimientos de gestión e inspección\ntributaria y de desarrollo de las normas\ncomunes de los procedimientos de\naplicación de los tributos, aprobado por\nReal Decreto 1065/2007, de 27 de julio.\nEn cualquier otro caso el contenido de este\ncampo se rellenará a espacios.\n36-75 Alfanumérico APELLIDOS Y NOMBRE DEL DECLARADO\nSe consignará el primer apellido, un\nespacio, el segundo apellido, un espacio y\nel nombre completo, necesariamente en\neste mismo orden.\n76 Numérico TIPO DE PLAN DE AHORRO A LARGO PLAZO\nSe consignará una de las claves\nsiguientes:\n11\nEjercicio 2022",
+      "title": "Pag. 11",
+      "section": "Pag. 11",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\n1. SIALP: Seguro Individual de Ahorro a\nLargo Plazo.\n2. CIALP: Cuenta Individual de Ahorro a\nLargo Plazo.\n77 Alfabético TIPO DE IDENTIFICADOR\nSe consignará una de las siguientes\nclaves:\nI: Si el Plan de Ahorro a Largo Plazo se\nidentifica mediante un código IBAN.\nO: Si se aporta otro identificador, por\nejemplo, el número de referencia de un\ncontrato de seguro.\n78-101 Alfanumérico IDENTIFICADOR DEL PRODUCTO CONTRATADO\nSe consignará el código identificativo del\nCIALP o SIALP cuya titularidad\ncorresponda al declarado.\n102-109 Numérico FECHA DE APERTURA\nEste campo se subdivide en 3:\n102-105 Numérico: Año\n106-107 Numérico: Mes\n108-109 Numérico: Día\nEn caso de movilización de los\nderechos económicos del Plan de Ahorro a\n12\nEjercicio 2022",
+      "title": "Pag. 12",
+      "section": "Pag. 12",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\nLargo Plazo, se tomará la fecha original de\nsu apertura.\n110 Alfabético CLAVE DE ALTA\nSe consignará una de las claves\nsiguientes:\nA. Plan de Ahorro a Largo Plazo\nconstituido en el ejercicio al que se\nrefiere la declaración o en un ejercicio\nanterior.\nB. Baja de un Plan de Ahorro a Largo\nplazo por movilización a otra entidad\naseguradora o de crédito.\nC. Alta de un Plan de Ahorro a Largo\nPlazo por movilización desde otra\nEntidad Aseguradora o de Crédito.\nD. Alta de un Plan de Ahorro a Largo\nPlazo y movilización a otra entidad\naseguradora o de crédito en el mismo\nejercicio de la apertura.\n111-116 Numérico APORTACIONES EFECTUADAS EN EL EJERCICIO\nImporte de las aportaciones efectuadas durante\nel ejercicio al Plan de Ahorro a Largo Plazo.\nEn caso de que en el campo “CLAVE DE\nALTA”, posición 110 del registro de tipo 2, se\nhaya consignado “B” o “D” se consignarán las\naportaciones efectuadas hasta la movilización.\n13\nEjercicio 2022",
+      "title": "Pag. 13",
+      "section": "Pag. 13",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\nEn caso de que en el campo “CLAVE DE\nALTA”, posición 110 del registro de tipo 2, se\nhaya consignado “C”, se consignarán las\naportaciones efectuadas desde la movilización.\nLos importes deben consignarse en EUROS. El\nimporte no irá precedido de signo alguno (+/-),\nni incluirá coma decimal.\nEste campo se subdivide en dos:\n111-114 Numérico ENTERO: Parte entera.\nSe consignará la parte entera de las\naportaciones efectuadas durante el ejercicio.\n115-116 Numérico DECIMAL: Parte\ndecimal. Se consignará la parte decimal de las\naportaciones efectuadas durante el ejercicio.\n117-126 Numérico RENDIMIENTOS POSITIVOS OBTENIDOS\nDURANTE EL EJERCICIO\nSe consignará el importe de los\nrendimientos de capital mobiliario positivos\ngenerados por el Plan de Ahorro a Largo\nPlazo en el ejercicio al que se refiera la\ndeclaración.\nEn caso de que en el campo “CLAVE DE\nALTA”, posición 110 del registro de tipo 2,\nse haya consignado “B” o “D”, se\nconsignarán los rendimientos generados\nhasta la movilización, incluidos los que\n14\nEjercicio 2022",
+      "title": "Pag. 14",
+      "section": "Pag. 14",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\npudieran producirse con motivo de la\nmisma.\nEn caso de que en el campo “CLAVE DE\nALTA”, posición 110 del registro de tipo 2,\nse haya consignado “C”, se consignarán\nlos rendimientos generados desde la\nmovilización.\nLos importes deben consignarse en\nEUROS. El importe no irá precedido de\nsigno alguno (+/-), ni incluirá coma decimal.\nEste campo se subdivide en dos:\n117-124 Numérico ENTERO: Parte\nentera. Se consignará la parte entera de\nlos rendimientos positivos obtenidos\ndurante el ejercicio.\n125-126 Numérico DECIMAL: Parte\ndecimal. Se consignará la parte decimal de\nlos rendimientos positivos obtenidos\ndurante el ejercicio.\n127-136 Numérico RENDIMIENTOS NEGATIVOS\nOBTENIDOS DURANTE EL EJERCICIO\nSe consignará el importe de los\nrendimientos de capital mobiliario\nnegativos generados por el Plan de Ahorro\na Largo Plazo en el ejercicio al que se\nrefiera la declaración.\n15\nEjercicio 2022",
+      "title": "Pag. 15",
+      "section": "Pag. 15",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\nEn caso de que en el campo “CLAVE DE\nALTA”, posición 110 del registro de tipo 2,\nse haya consignado “B” o “D”, se\nconsignarán los rendimientos negativos\ngenerados hasta la movilización, incluidos\nlos que pudieran producirse con motivo de\nla misma.\nEn caso de que en el campo “CLAVE DE\nALTA”, posición 110 del registro de tipo 2,\nse haya consignado “C”, se consignarán\nlos rendimientos negativos generados\ndesde la movilización.\nLos importes deben consignarse en\nEUROS. El importe no irá precedido de\nsigno alguno (+/-), ni incluirá coma decimal.\nEste campo se subdivide en dos:\n127-134 Numérico ENTERO: Parte\nentera. Se consignará la parte entera de\nlos rendimientos negativos obtenidos\ndurante el ejercicio.\n135-136 Numérico DECIMAL: Parte\ndecimal. Se consignará la parte decimal de\nlos rendimientos negativos obtenidos\ndurante el ejercicio.\n137 Numérico EXTINCIÓN DEL PLAN DE AHORRO A\nLARGO PLAZO\n16\nEjercicio 2022",
+      "title": "Pag. 16",
+      "section": "Pag. 16",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\nEn caso de extinción del Plan de Ahorro a\nLargo Plazo durante el ejercicio, deberá\nconsignarse alguna de las siguientes\nclaves:\n1: Extinción del Plan de Ahorro a Largo\nPlazo por disposición de las cantidades\nintegradas en el mismo antes de que\nhayan transcurrido 5 años desde su\napertura o por incumplimiento del límite\nde aportaciones de la letra c) del\napartado 1 de la Disposición adicional\nvigésima sexta de la Ley del IRPF.\n2: Extinción del Plan de Ahorro a Largo\nPlazo en circunstancias distintas a las\ndefinidas a las definidas en las claves 1\ny 3.\n3: Extinción del Plan de Ahorro a Largo\nPlazo por fallecimiento del tomador.\nSi el Plan de Ahorro a Largo Plazo no se\nha extinguido durante el ejercicio al que\ncorresponda la declaración, este campo\ndeberá dejarse vacío. No se entenderá\nproducida la extinción del Plan de Ahorro a\nLargo Plazo en caso de movilización de los\nderechos económicos incorporados al\nmismo en los términos establecidos en la\nDisposición adicional octava del\nReglamento del Impuesto sobre la Renta\nde las Personas Físicas, aprobado por\nReal Decreto 439/2007, de 30 de marzo.\n17\nEjercicio 2022",
+      "title": "Pag. 17",
+      "section": "Pag. 17",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\nPor tanto, en caso de que en el campo\n“CLAVE DE ALTA”, que ocupa la posición\n110 del registro de tipo 2, se hubiera\nconsignado “B”, o “D”, este campo no\ntendrá contenido.\n138-145 Numérico FECHA DE EXTINCIÓN\nEn caso de que el campo “EXTINCIÓN\nDEL PLAN DE AHORRO A LARGO\nPLAZO”, posición 137 del registro de tipo\n2, tenga contenido, deberá consignarse la\nfecha de su extinción.\n138-141 Numérico: Año\n142-143 Numérico: Mes\n144-145 Numérico: Día\n146-155 Numérico RENDIMIENTOS POSITIVOS ACUMULADOS\nEn caso de que el campo “EXTINCIÓN\nDEL PLAN DE AHORRO A LARGO\nPLAZO”, posición 137 del registro de tipo\n2, tenga contenido, deberá consignarse el\nimporte total de los rendimientos de capital\nmobiliario positivos obtenidos desde la\nfecha de su apertura.\nLos importes deben consignarse en\nEUROS. El importe no irá precedido de\nsigno alguno (+/-), ni incluirá coma decimal.\nEste campo se subdivide en dos:\n18\nEjercicio 2022",
+      "title": "Pag. 18",
+      "section": "Pag. 18",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\n146-153 Numérico ENTERO: Parte\nentera. Se consignará la parte entera de\nlos rendimientos positivos acumulados\nobtenidos desde la fecha de apertura.\n154-155 Numérico DECIMAL: Parte\ndecimal. Se consignará la parte decimal de\nlos rendimientos positivos acumulados\nobtenidos desde la fecha de apertura.\n156-165 Numérico RENDIMIENTOS NEGATIVOS ACUMULADOS\nEn caso de que el campo “EXTINCIÓN\nDEL PLAN DE AHORRO A LARGO\nPLAZO”, posición 137 del registro de tipo\n2, tenga contenido, deberá consignarse el\nimporte total de los rendimientos de capital\nmobiliario negativos obtenidos desde la\nfecha de su apertura.\nLos importes deben consignarse en\nEUROS. El importe no irá precedido de\nsigno alguno (+/-), ni incluirá coma decimal.\nEste campo se subdivide en dos:\n156-163 Numérico ENTERO: Parte\nentera. Se consignará la parte entera de\nlos rendimientos negativos acumulados\nobtenidos desde la fecha de apertura.\n164-165 Numérico DECIMAL: Parte\ndecimal. Se consignará la parte decimal de\n19\nEjercicio 2022",
+      "title": "Pag. 19",
+      "section": "Pag. 19",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\nlos rendimientos negativos acumulados\nobtenidos desde la fecha de apertura.\n166-175 Numérico BASE DE LA RETENCIÓN PRACTICADA\nEn caso de que en el campo “EXTINCIÓN\nDEL PLAN DE AHORRO A LARGO\nPLAZO”, posición 137 del registro de tipo\n2, se hubiera declarado la clave 1, deberá\nconsignarse la base de la retención\npracticada conforme a lo dispuesto en el\napartado 6 de la Disposición adicional\nvigésima sexta de la Ley del IRPF.\nLos importes deben consignarse en\nEUROS. El importe no irá precedido de\nsigno alguno (+/-), ni incluirá coma decimal.\nEste campo se subdivide en dos:\n166-173 Numérico ENTERO: Parte\nentera. Se consignará la parte entera de la\nbase de retención practicada.\n174-175 Numérico DECIMAL: Parte\ndecimal. Se consignará la parte decimal de\nla base de retención practicada.\n176-186 Alfanumérico RENDIMIENTOS NEGATIVOS IMPUTABLES\nEn caso de que en el campo «EXTINCIÓN\nDEL PLAN DE AHORRO A LARGO\nPLAZO», posición 137 del registro de tipo\n2, se hubiera declarado la clave 2, deberá\n20\nEjercicio 2022",
+      "title": "Pag. 20",
+      "section": "Pag. 20",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\nconsignarse el importe de los rendimientos\nnegativos del capital mobiliario que\nproceda imputar al ejercicio de la extinción\nconforme a lo dispuesto en el apartado 7\nde la Disposición adicional vigésima sexta\nde la Ley del IRPF. En otro caso el campo\nse rellenará a ceros.\nEste campo se subdivide en dos:\n176. SIGNO: Campo alfabético: se\nconsignará siempre una “N”\n177-186: RENDIMIENTO NEGATIVO:\nCampo numérico de diez posiciones.\nLos importes deben consignarse en\nEUROS. El importe no irá precedido de\nsigno alguno (+/-), ni incluirá coma decimal.\nEste campo se subdivide en dos:\n177-184 Numérico ENTERO: Parte\nentera. Se consignará la parte entera de\nlos rendimientos negativos imputables.\n185-186 Numérico DECIMAL: Parte\ndecimal. Se consignará la parte decimal de\nlos rendimientos negativos imputables.\n187-500 ------------ BLANCOS\n* Los campos numéricos que no tengan contenido se rellenarán a ceros.\n* Los campos alfanuméricos/alfabéticos que no tengan contenido se rellenarán\na blancos.\n21\nEjercicio 2022",
+      "title": "Pag. 21",
+      "section": "Pag. 21",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 280\nDeclaración informativa anual de Planes de Ahorro a Largo Plazo\n* Todos los campos numéricos ajustados a la derecha y rellenos de ceros por\nla izquierda.\n* Todos los campos alfanuméricos/alfabéticos ajustados a la izquierda y\nrellenos de blancos por la derecha, en mayúsculas, sin caracteres especiales\ny sin vocales acentuadas, excepto que se especifique lo contrario en la\ndescripción del campo.\n22\nEjercicio 2022",
+      "title": "Pag. 22",
+      "section": "Pag. 22",
+      "anchor": null
+    }
+  ]
+}
