@@ -1241,8 +1241,9 @@ application:
       idempotency_key_conflict: La clau d'idempotència ja identifica una transacció
         emmagatzemada amb dades diferents. Useu una clau d'idempotència nova per a
         un moviment diferent, o ometeu la clau per afegir un duplicat deliberat.
-      purchase_evidence_already_set: La transacció del llibre diari ja té un purchase_invoice_evidence_id;
-        elimineu-lo o substituïu-lo a través del flux d'adjunts.
+      purchase_evidence_already_set: 'La transacció del llibre ja té un purchase_invoice_evidence_id
+        i no es pot substituir in situ. Desvincular l''evidència no està implementat:
+        elimineu la transacció i torneu a afegir-la amb l''evidència correcta.'
       transaction_id_prefix_ambiguous: 'el prefix d''id de transacció %{prefix} coincideix
         amb %{count} transaccions: %{matches}'
       transaction_id_prefix_empty: el prefix d'id de transacció és buit
@@ -1977,6 +1978,10 @@ application:
       lifecycle_schema_validation_failed: Les dades del perfil no coincideixen amb
         l'esquema de perfil d'usuari.
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
+      passphrase_confirmation_mismatch: La nova contrasenya i la seva confirmació
+        no coincideixen
+      passphrase_current_rejected: La contrasenya actual no és correcta; la contrasenya
+        no s'ha canviat
       profile_already_exists: El perfil '%{profile}' ja existeix; executa aeat config
         login NAME per activar-lo o aeat config profile delete NAME primer.
       registration_displaced_session_not_retired: No s'ha pogut crear el perfil. No
@@ -4054,12 +4059,16 @@ cli:
         recipient_id_help: Etiqueta estable triada per l'operador (p. ex. 'el-meu-gestor').
         remove_help: Elimina un destinatari de confiança pel seu id del perfil actiu.
     custody:
+      current_passphrase_prompt: 'Contrasenya actual del perfil: '
       data_loss_warning: Anota ara aquesta clau de recuperació. AEAT no desa la clau
         de recuperació en clar i no la pot tornar a mostrar.
       errors:
         echo_suppression_unavailable: Aquest terminal no pot ocultar el que s'escriu,
           de manera que el secret quedaria visible a la pantalla; utilitzeu --secrets-stdin.
         new_passphrase_mismatch: La nova contrasenya i la confirmació no coincideixen.
+        no_controlling_terminal_for_secret: Aquest secret només es pot mostrar en
+          un terminal i no n'hi ha cap de connectat. Torna a executar l'ordre des
+          d'una sessió interactiva.
         non_interactive_secret_required: Cal un secret però no hi ha cap terminal
           interactiu; utilitza --secrets-stdin.
         secrets_stdin_invalid_json: El contingut de --secrets-stdin no és un objecte
@@ -4288,6 +4297,12 @@ cli:
       help: Tanca la sessió del perfil i esborra el seu punter local
       notices:
         already_logged_out: Cap perfil tenia la sessió iniciada; no hi ha res a tancar.
+    passphrase:
+      change_help: Canvia la contrasenya sense tornar a xifrar els registres ni invalidar
+        una frase de recuperació.
+      help: Gestiona la contrasenya que protegeix el perfil actiu.
+      no_active_profile: No hi ha cap perfil actiu. Inicia la sessió amb 'aeat config
+        login NOM' abans de canviar-ne la contrasenya.
     profile:
       already_exists: El perfil %{name} ja existeix. Tria un altre identificador de
         destinació.
@@ -4377,6 +4392,7 @@ cli:
         refresh_help: Descàrrega d'AEAT l'últim cens i desa un snapshot
         show_help: Mostra l'últim cens informat per AEAT per a aquest perfil
         snapshot_id_help: Id de snapshot concret (s'accepten prefixos)
+      create_confirm_passphrase_prompt: 'Confirma la contrasenya del nou perfil: '
       create_epilog: 'Perfil mínim per a autònom: aeat config profile create PROFILE
         --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME> --surnames
         <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
@@ -4385,6 +4401,17 @@ cli:
         --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
       create_help: Inicialitza un perfil actiu nou.
+      create_name_required: Cal un nom de perfil. Executa 'aeat config profile create
+        NOM'.
+      create_passphrase_channel_absent: No hi ha cap canal de contrasenya disponible.
+        Executa aquest verb en un terminal o defineix CADRUMO_SECRET_PASSPHRASE per
+        a una execució desatesa.
+      create_passphrase_mismatch: La contrasenya i la seva confirmació no coincideixen;
+        no s'ha creat cap perfil.
+      create_passphrase_prompt: 'Contrasenya del nou perfil: '
+      create_recovery_not_enrolled: 'No s''ha creat cap frase de recuperació: aquesta
+        execució no tenia cap terminal on mostrar-la. La contrasenya és ara l''única
+        via d''accés a aquest perfil i la recuperació no es pot afegir més tard.'
       delete:
         help: Elimina un perfil i el seu estat local; --yes confirma l'eliminació
         name_help: Nom del perfil que vols eliminar
@@ -5673,6 +5700,7 @@ cli:
           CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
           i CADRUMO_SECRET_PASSPHRASE; els logs queden per defecte sota aquest directori
           d'emmagatzematge.
+        passphrase_change: Canvia la contrasenya que protegeix el perfil actiu.
         profile_history: Inspecciona l'historial append-only d'esdeveniments del perfil.
         profile_list: Llistar els perfils de contribuent disponibles.
         profile_login: Inicia la sessió en un perfil i el converteix en l'actiu.
@@ -7350,6 +7378,7 @@ errors:
       config login NAME` i torna-ho a provar.
     profile_name_collision: El nom de perfil indicat ja s'està utilitzant. Tria un
       nom diferent.
+    profile_passphrase_rotation: No s'ha pogut canviar la contrasenya del perfil.
     profile_registration: No s'ha pogut registrar el perfil.
     reconciliation_cross_bucket: La unitat de treball apuntada pertany a un bucket
       diferent del perfil actiu. La conciliació només opera dins el bucket del perfil
@@ -51296,6 +51325,12 @@ modelo:
             x-chim6r1ec9gn6p9dehnn8obc:
               help: null
               label: Base total de retencions i ingressos a compte
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              label: Declaració complementària o substitutiva
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              label: Número identificatiu de la declaració
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              label: Número identificatiu de la declaració anterior
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: null
               label: Retencions i ingressos a compte totals
@@ -51394,6 +51429,12 @@ modelo:
             x-chim6r1ec9gn6p9dehnn8obc:
               help: null
               label: Base total de retencions i ingressos a compte
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              label: Declaració complementària o substitutiva
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              label: Número identificatiu de la declaració
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              label: Número identificatiu de la declaració anterior
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: null
               label: Retencions i ingressos a compte totals
