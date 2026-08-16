@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:4da7741804dea19b59a07fdf889e1ad945d115887f0e87f696fbcb12f10de222'
+body_hash: 'sha256:3b55cb41177dba4ec6926664fdfab3c489701f2b8348f4d59c4a7e21b447c4ca'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -2192,3 +2192,53 @@ experiment, not a fix.
 Recorded as a lead with its measurement and its limits, deliberately NOT as a
 diagnosis, because the previous entry in this document was a confident diagnosis
 that instrumentation then refuted.
+
+## The handle-retention lead is refuted too, and that rules something out
+
+The lead recorded above -- two reader-using tests each retaining ~22 handles,
+suggesting a per-invocation client that is never closed -- was tested directly
+by exercising each half N times in one process.
+
+Server lifecycle, `serving_loopback` opened and closed six times:
+
+    baseline                      174
+    after start/stop 1            198   (+24)
+    after start/stop 2..6         198   (unchanged)
+
+Client side, eight requests through a fresh `httpx.Client` each time:
+
+    server up                     202
+    after request 1               214   (+12)
+    after requests 2..8           214   (one blip to 217, back to 214)
+
+Both PLATEAU. The cost is one-time initialisation of the socket, threading and
+HTTP machinery -- paid by whichever test touches it first -- and it does not
+grow with use. There is no leak.
+
+That also explains the original observation without a leak: the two tests that
+each showed ~+22 are the first to touch two DIFFERENT subsystems, not two
+payments for the same one.
+
+### What this buys
+
+A negative result, and a useful one. Resource exhaustion is now ruled OUT as the
+cause of this module's intermittent failures, which is worth more than another
+plausible story: the remaining hypotheses no longer include the one that would
+have been most expensive to chase on Windows.
+
+The wider bill of health from the probe stands: zero threads and zero inet
+sockets retained after teardown across 35 tests, RSS flat, and handle growth
+bounded and explained.
+
+### Two refuted leads in two rounds
+
+The endpoint-leak diagnosis and the handle-leak lead were both killed by
+instrumentation within a round of being written down. Both fitted every
+observation available at the time. The difference between them is only that the
+second was recorded AS a lead with its limits stated, so retracting it costs a
+paragraph rather than a correction notice.
+
+That is the working rule this campaign has converged on: a story that explains
+the data is not a finding until it has predicted something falsifiable and
+survived the test. Writing it down as a lead, with the experiment that would
+kill it named, makes the retraction cheap and the discipline visible.
