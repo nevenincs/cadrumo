@@ -2827,3 +2827,60 @@ a time, measured at 0.04s.
 
 **An empty directory tree is not evidence that a fixture did not run** when the
 harness cleans up after itself. Ask the fixture graph, not the filesystem.
+
+## The suite is ~1/5 red, and that bounds what this loop can measure
+
+Measured at `d9844e789b`, both lanes:
+
+| lane | red |
+|---|---|
+| CLI integration | 636 failed + 60 errors of 3,126 -- **20.3%** |
+| unit (first 10,944 outcomes) | 1,112 failed + 718 errors -- **16.8%** |
+
+The cause is the same registry authority-grade campaign recorded above.
+`test_cli_workflow_verification` is still 18/20 red at this HEAD.
+
+**A red test measures its error path, not its work.** Roughly one test in five in
+this tree currently times something that will not exist once the campaign lands,
+so any tail mined now is partly fiction, and any before/after spanning those
+tests is uninterpretable. This is a bound on the loop, not a reason to stop: it
+means prefer STRUCTURAL metrics (seedings removed, calls avoided) over wall
+clock, and prefer modules verified green individually.
+
+## Suite-wide worklist for seed-once/copy-per-test
+
+Derived statically, so it does not depend on the tree being green. A module
+qualifies when a module-level helper whose name suggests seeding
+(import/seed/register/create/add/populate) is called from at least three of its
+own test functions:
+
+**194 modules, 1,294 per-test seedings.** The head of the list:
+
+| seeded / tests | module :: helper |
+|---|---|
+| 25 / 25 | `entrypoints/cli/.../test_maternidad_meses_reach_the_calculate_path.py :: _seed_natural_person_profile` |
+| 23 / 29 | `application/auth/tests/test_certificate_sources_check.py :: _register_operator_profile` |
+| 22 / 31 | `entrypoints/cli/.../test_ledger_bulk_classify.py :: _import_two_transactions` |
+| 21 / 31 | `application/auth/tests/test_operator.py :: _register_operator_profile` |
+| 18 / 18 | `entrypoints/cli/.../test_modelo_100_descendiente_entry_surface.py :: _seed_natural_person_profile` |
+| 17 / 17 | `application/auth/tests/test_clave_credential_resolution.py :: _register_profile` |
+| 16 / 20 | `application/tests/test_state_projection.py :: _register_active_profile` |
+| 16 / 17 | `entrypoints/cli/.../test_ledger_evidence_confirm_cli.py :: _add_structured_evidence` |
+
+Two things make this list better than the CLI-only view it replaces:
+
+- The `application/auth` cluster seeds by **registering a profile**, which this
+  campaign already measured as the single most expensive fixture step (17.44s
+  before the KDF-calibration fix, 2.20s after). Those modules sit outside the
+  CLI lane, so they are candidates for being green and measurable while the
+  registry campaign is in flight.
+- `test_maternidad_meses_reach_the_calculate_path` seeds in **25 of 25** tests
+  and is already in the CLI durations tail at 24.33s.
+
+**Method and its limits:** the helper must be module-level and matched by NAME,
+so this misses seeding written inline in each test, seeding through an imported
+shared helper, and any helper named outside the hint list; and it counts a
+two-row CSV the same as a 514-row corpus. It is a ranked candidate list, not a
+saving. Each entry still needs its seed cost measured before conversion --
+`test_ledger_bulk_classify` seeds two inline EUR-only rows, so its 22 seedings
+may be worth far less than the eight full-corpus imports already converted.
