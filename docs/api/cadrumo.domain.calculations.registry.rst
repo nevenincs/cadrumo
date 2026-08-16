@@ -57,6 +57,7 @@ Submodules
    cadrumo.domain.calculations.registry._groi_oracle
    cadrumo.domain.calculations.registry._handoff_paths
    cadrumo.domain.calculations.registry._handoffs
+   cadrumo.domain.calculations.registry._identity
    cadrumo.domain.calculations.registry._ids
    cadrumo.domain.calculations.registry._invoice_bindings
    cadrumo.domain.calculations.registry._irnr_ledger_bindings

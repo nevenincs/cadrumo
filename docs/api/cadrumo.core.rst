@@ -36,6 +36,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.core._action_argument_resolution
+   cadrumo.core._address_components
    cadrumo.core._aeat_csv
    cadrumo.core._amendment_kind_regime
    cadrumo.core._auth_provider
