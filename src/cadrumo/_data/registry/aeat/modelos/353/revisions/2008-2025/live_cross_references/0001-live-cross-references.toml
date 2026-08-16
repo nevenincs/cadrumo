@@ -1,0 +1,44 @@
+[[revisions."2008-2025".live_cross_references]]
+id = "modelo-353-static-documentation"
+evidence_tier = "official_source_guidance"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-353-static-only"
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
+
+[[revisions."2008-2025".live_cross_references]]
+id = "modelo-353-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-353-filed-declarations-read-only"
+allowed_hosts = ["www1.agenciatributaria.gob.es", "www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-modelo-353-procedure"]
+

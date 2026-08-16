@@ -4,12 +4,7 @@
 # files/DR_280_2022.pdf, sha256
 # 45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701).
 #
-# Six of these fifteen carry no semantic_role. The role the naming convention
-# would give them (m280_<id>) scores above the typo-twin gate's 0.92 similarity
-# threshold against Modelo 189's or Modelo 345's role for the same concept, so
-# declaring it would make the gate report a defect on a modelo that has none.
-# The role is an optional cross-revision index; each campo is fully identified
-# by its id, number and span without one.
+# Every casilla carries its canonical m280_<id> semantic_role.
 
 # --- REGISTRO DE TIPO 1: REGISTRO DE DECLARANTE ---
 
@@ -20,6 +15,7 @@ id = "declarante-razon-social"
 number = "tipo1.18-57"
 section = ["identificacion_declaracion"]
 data_type = "name"
+semantic_role = "m280_declarante_razon_social"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-280-t1-razon-social"]
@@ -48,6 +44,7 @@ id = "numero-identificativo-declaracion"
 number = "tipo1.108-120"
 section = ["identificacion_declaracion"]
 data_type = "integer"
+semantic_role = "m280_numero_identificativo_declaracion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-280-t1-numero-identificativo"]
@@ -61,6 +58,7 @@ id = "declaracion-complementaria-sustitutiva"
 number = "tipo1.121-122"
 section = ["identificacion_declaracion"]
 data_type = "text"
+semantic_role = "m280_declaracion_complementaria_sustitutiva"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-280-t1-complementaria-sustitutiva"]
@@ -75,6 +73,7 @@ id = "numero-identificativo-anterior"
 number = "tipo1.123-135"
 section = ["identificacion_declaracion"]
 data_type = "integer"
+semantic_role = "m280_numero_identificativo_anterior"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-280-t1-numero-identificativo-anterior"]
@@ -88,6 +87,7 @@ id = "numero-total-declarados"
 number = "tipo1.136-144"
 section = ["identificacion_declaracion"]
 data_type = "integer"
+semantic_role = "m280_numero_total_declarados"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-280-t1-numero-total-declarados"]
@@ -138,6 +138,7 @@ id = "representante-legal-nif"
 number = "tipo2.27-35"
 section = ["declarado"]
 data_type = "nif"
+semantic_role = "m280_representante_legal_nif"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-280-t2-representante-legal-nif"]

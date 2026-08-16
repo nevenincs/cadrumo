@@ -1,7 +1,11 @@
 [[revisions."2003-y-siguientes".constructs]]
 id = "modelo-186-informative"
 legal_refs = ["orden-hac-539-2003:art-1", "orden-hac-539-2003:art-4", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-186-procedure", "enrolled-modelo-186-layout"]
+source_refs = [
+    "enrolled-modelo-186-procedure",
+    "enrolled-modelo-186-layout",
+    "boe-modelo-186-anexo-i-tipo1",
+]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
 application_links = ["modelo-186-filing", "modelo-186-deadline"]
 workbook_parity_refs = ["modelo-186-orden-static-layout"]

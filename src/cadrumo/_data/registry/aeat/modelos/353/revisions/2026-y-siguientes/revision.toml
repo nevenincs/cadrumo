@@ -1,0 +1,41 @@
+[revisions."2026-y-siguientes"]
+authority_grade = "filing"
+# Split from the former single "2008-y-siguientes" revision so the ejercicio-2026
+# diseno de registro can be modelled as AEAT publishes it: page 1 grows 1500 ->
+# 1700 bytes and a third record (35302, 400 bytes, IBAN + SWIFT-BIC) appears.
+# The boundary is grounded in reviewed source metadata the registry already
+# carried: aeat-dr-353-2021-2025 closes 2025-12-31, aeat-dr-353-2026 opens
+# 2026-01-01 with no applies_to.
+valid_from = 2026-01-01
+period_selector = { year_from = 2026, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
+legal_refs = [
+    "orden-eha-3434-2007:art-2",
+    "orden-eha-3434-2007:art-8",
+    "rd-1624-1992:art-71",
+]
+orden_aplicabilidad = [
+    "orden-eha-3434-2007:art-2",
+]
+source_refs = [
+    "aeat-dr-353-2026",
+    "aeat-modelo-353-procedure",
+    "boe-modelo-353-2007-form",
+    "aeat-calendario-contribuyente-2026-hasta-2-marzo",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]
+
+
+[revisions."2026-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). This revision DOES have a strictly-earlier sibling (2008-2025), so it could in principle be the landing point of a within-modelo continuity transition. It declares none because the numbered casillas it introduces are NEW identities rather than renumberings: the 2008-2025 sibling declares no numbered casilla at all, so there is no prior identity for [01], [02], [03], [04], [05], [08], [09] or [10] to have evolved from."
+legal_refs = [
+    "orden-eha-3434-2007:art-2",
+    "orden-eha-3434-2007:art-8",
+    "rd-1624-1992:art-71",
+]
+source_refs = [
+    "aeat-dr-353-2026",
+    "aeat-modelo-353-procedure",
+    "boe-modelo-353-2007-form",
+    "aeat-calendario-contribuyente-2026-hasta-2-marzo",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]

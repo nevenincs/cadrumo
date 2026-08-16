@@ -1,0 +1,117 @@
+# Modelo 353 numbered liquidacion casillas, transcribed from the bundled Diseno de
+# Registro aeat-dr-353-2026, sha256
+# cb1374a79a87b7c8282ff3c964d78b250bedfa11750decfa0e5e7f90e8f97380, record 35301.
+#
+# These are the boxes Modelo 353 ACTUALLY has. Until now this revision declared
+# none of them: it carried only a ledger-direct IVA cuota breakdown
+# (repercutido/soportado/autorepercutido and their totals) copied from the Modelo
+# 303/322 vocabulary, for which this design has no slot at all -- a search of both
+# bundled 353 designs for devengad|repercut|recargo|deducib|soportad|equivalencia
+# returns zero hits. Modelo 353 is the GROUP AGGREGATE return: its result is the
+# sum of the members' Modelo 322 resultados, not a cuota liquidation of its own.
+#
+# [01] is therefore bound to the existing per_grupo_member fan-in over each
+# member's Modelo 322 resultado -- which is exactly what AEAT's own label says,
+# "sumatorio del resultado de entidades" -- rather than recomputed from the
+# filer's ledger. The arithmetic on [09], [03] and [05] is AEAT's own, printed in
+# the design's field descriptions; nothing is inferred. Note [05] is
+# ([03] - [04]) as the design states: it does NOT subtract [10], and no such
+# subtraction is invented here.
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "01"
+number = "01"
+section = ["iva", "grupo_entidades", "liquidacion"]
+semantic_role = "m353_resultado_total_entidades"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The design declares one aggregate-of-members slot, [01] at position 1109, and Modelo 353 has exactly one group whose member results it sums. Singleton by the design's construction, not by a missing sibling."
+data_type = "money"
+required = false
+input_kind = "bound"
+binding = "modelo-353-prev-322-resultado-regimen-general"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "02"
+number = "02"
+section = ["iva", "grupo_entidades", "compensacion"]
+semantic_role = "m353_cuotas_a_compensar"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "08"
+number = "08"
+section = ["iva", "grupo_entidades", "compensacion"]
+semantic_role = "m353_cuotas_a_compensar"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "09"
+number = "09"
+section = ["iva", "grupo_entidades", "compensacion"]
+semantic_role = "m353_cuotas_a_compensar"
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-353-2026-compensar-pendientes-posteriores"
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "03"
+number = "03"
+section = ["iva", "grupo_entidades", "liquidacion"]
+semantic_role = "m353_resultado"
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-353-2026-resultado"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "04"
+number = "04"
+section = ["iva", "grupo_entidades", "liquidacion"]
+semantic_role = "m353_a_deducir_autoliquidaciones_anteriores"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The design declares one prior-autoliquidacion deduction slot, [04] at position 1194, used only on a complementaria. Singleton by the design's construction, not by a missing sibling."
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "10"
+number = "10"
+section = ["iva", "grupo_entidades", "liquidacion"]
+semantic_role = "m353_pago_a_cuenta_deposito_distinto_del_aduanero"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The design declares one pago-a-cuenta slot, [10] at position 1211, for gasolinas/gasoleos/biocarburantes leaving the deposito distinto del aduanero. Singleton by the design's construction, not by a missing sibling."
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "05"
+number = "05"
+section = ["iva", "grupo_entidades", "liquidacion"]
+semantic_role = "m353_resultado"
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-353-2026-resultado-autoliquidacion"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026"]

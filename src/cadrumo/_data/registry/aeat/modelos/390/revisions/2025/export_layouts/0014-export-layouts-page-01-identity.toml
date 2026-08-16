@@ -1,0 +1,80 @@
+[[revisions."2025".export_layouts]]
+id = "modelo-390-2025-fichero-boe"
+
+# Pagina 1 identity facts whose existing producer key renders exactly the
+# alphabet AEAT declares. The three flags below are '"0" - blanco, "1" -
+# Si, "2" .- No' and `yes_no` renders "1"/"2", so they agree.
+#
+# @109, @110, @118, @119, @133 and @134 are NOT wired: AEAT declares them
+# '"0" o "1"', a BINARY alphabet, while the only available carriers render
+# "1"/"2". Writing m303.redeme_enrolled into @109 would emit "2" where the
+# design defines only "0" or "1", so they are left unwritten instead.
+#
+# Offsets transcribed from aeat-dr-390-2025 (sha256 6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252).
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-390-page-01"
+record_type = "page_01"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+
+# 1. Sujeto pasivo - Concurso acreedores en este ejercicio
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-01-concurso-acreedores"
+offset = 130
+length = 1
+kind = "header"
+producer_key = "m303.insolvency.declared"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 1. Sujeto pasivo - Regimen especial del criterio de caja
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-01-criterio-caja-enrolled"
+offset = 131
+length = 1
+kind = "header"
+producer_key = "m303.cash_accounting_regime_enrolled"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 1. Sujeto pasivo - Ha sido destinatario del régimen especial del criterio de caja
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-01-criterio-caja-destinatario"
+offset = 132
+length = 1
+kind = "header"
+producer_key = "m303.recipient_of_cash_accounting_operations"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025"]
+
+# 2. Devengo - Nº justificante declaración anterior
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-01-justificante-anterior"
+offset = 135
+length = 13
+kind = "header"
+producer_key = "amendment_evidence.original_aeat_receipt"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025"]

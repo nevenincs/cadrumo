@@ -4,12 +4,9 @@
 # 01-156-diseno-de-registro-vigente.pdf, sha256
 # d387cfeb7254e49d539d5c3a731c0bd6bf275c8c1fdae80e6faa5a1006d5d068).
 #
-# Thirteen of these casillas carry no semantic_role. The twelve monthly
-# cotizacion roles are near-duplicates of each other under the typo-twin gate
-# (m156_cotizacion_julio vs _junio differ by one character), and
-# m156_declarante_razon_social is a near-duplicate of Modelo 189's and Modelo
-# 345's role for the same concept. Each campo is fully identified by its id and
-# number; the role is an optional cross-revision index.
+# Every casilla carries its canonical m156_<id> semantic_role, including the
+# twelve monthly cotizacion roles, which the typo-twin gate's calendar-month
+# axis recognises as deliberate siblings rather than misspellings.
 
 # Campo 5. Positions 18-57, alfanumerico. "Se consignara la razon social
 # completa, sin anagrama."
@@ -18,6 +15,7 @@ id = "declarante-razon-social"
 number = "tipo1.18-57"
 section = ["declarante"]
 data_type = "name"
+semantic_role = "m156_declarante_razon_social"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t1-razon-social"]
@@ -60,6 +58,7 @@ id = "declaracion-complementaria-sustitutiva"
 number = "tipo1.121-122"
 section = ["declarante"]
 data_type = "text"
+semantic_role = "m156_declaracion_complementaria_sustitutiva"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t1-complementaria-sustitutiva"]
@@ -74,6 +73,7 @@ id = "numero-identificativo-anterior"
 number = "tipo1.123-135"
 section = ["declarante"]
 data_type = "integer"
+semantic_role = "m156_numero_identificativo_anterior"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t1-numero-identificativo-anterior"]
@@ -153,6 +153,7 @@ id = "cotizacion-enero"
 number = "tipo2.88-96"
 section = ["afiliado", "cotizaciones"]
 data_type = "text"
+semantic_role = "m156_cotizacion_enero"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-enero"]
@@ -172,6 +173,7 @@ id = "cotizacion-febrero"
 number = "tipo2.97-105"
 section = ["afiliado", "cotizaciones"]
 data_type = "text"
+semantic_role = "m156_cotizacion_febrero"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-febrero"]
@@ -191,6 +193,7 @@ id = "cotizacion-marzo"
 number = "tipo2.106-114"
 section = ["afiliado", "cotizaciones"]
 data_type = "text"
+semantic_role = "m156_cotizacion_marzo"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-marzo"]
@@ -210,6 +213,7 @@ id = "cotizacion-abril"
 number = "tipo2.115-123"
 section = ["afiliado", "cotizaciones"]
 data_type = "text"
+semantic_role = "m156_cotizacion_abril"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-abril"]
@@ -229,6 +233,7 @@ id = "cotizacion-mayo"
 number = "tipo2.124-132"
 section = ["afiliado", "cotizaciones"]
 data_type = "text"
+semantic_role = "m156_cotizacion_mayo"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-mayo"]
@@ -248,6 +253,7 @@ id = "cotizacion-junio"
 number = "tipo2.133-141"
 section = ["afiliado", "cotizaciones"]
 data_type = "text"
+semantic_role = "m156_cotizacion_junio"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-junio"]
@@ -267,6 +273,7 @@ id = "cotizacion-julio"
 number = "tipo2.142-150"
 section = ["afiliado", "cotizaciones"]
 data_type = "text"
+semantic_role = "m156_cotizacion_julio"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-julio"]
@@ -286,6 +293,7 @@ id = "cotizacion-agosto"
 number = "tipo2.151-159"
 section = ["afiliado", "cotizaciones"]
 data_type = "text"
+semantic_role = "m156_cotizacion_agosto"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-agosto"]
@@ -305,6 +313,7 @@ id = "cotizacion-septiembre"
 number = "tipo2.160-168"
 section = ["afiliado", "cotizaciones"]
 data_type = "text"
+semantic_role = "m156_cotizacion_septiembre"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-septiembre"]
@@ -324,6 +333,7 @@ id = "cotizacion-octubre"
 number = "tipo2.169-177"
 section = ["afiliado", "cotizaciones"]
 data_type = "text"
+semantic_role = "m156_cotizacion_octubre"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-octubre"]
@@ -343,6 +353,7 @@ id = "cotizacion-noviembre"
 number = "tipo2.178-186"
 section = ["afiliado", "cotizaciones"]
 data_type = "text"
+semantic_role = "m156_cotizacion_noviembre"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-noviembre"]
@@ -362,6 +373,7 @@ id = "cotizacion-diciembre"
 number = "tipo2.187-195"
 section = ["afiliado", "cotizaciones"]
 data_type = "text"
+semantic_role = "m156_cotizacion_diciembre"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-156-t2-cotizacion-diciembre"]

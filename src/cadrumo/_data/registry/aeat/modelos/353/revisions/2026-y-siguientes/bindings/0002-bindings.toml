@@ -1,0 +1,46 @@
+# Modelo 353 (agregado del grupo) cross-member previous_filing bindings.
+#
+# 353<-322 grupo-entidades aggregation: each grupo member files its
+# own monthly Modelo 322; the entidad dominante's 353 aggregates them. These
+# three previous_filing bindings sum each of the three shared result casillas
+# across ALL members for the same month via the per_grupo_member grouping axis
+# (the resolver enumerates every member-322 observation for
+# (322, filing_year, period) and sums). filing_year_delta = 0, period bound at
+# resolve time. op = sum. Grounded in Orden EHA/3434/2007 art. 2 + LIVA arts.
+# 88/92/84 (the same casilla shapes 322 and 353 share).
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-prev-322-cuota-devengada-total"
+source = "previous_filing"
+selector = { source_modelo = "322", filing_year_delta = 0, source_period_offset_from_target = 0, grouping = "per_grupo_member", source_casilla_ids = ["iva.cuota-devengada-total"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
+
+[[revisions."2026-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-353-procedure"
+required_text = ["modelo 353"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-prev-322-cuota-deducible-total"
+source = "previous_filing"
+selector = { source_modelo = "322", filing_year_delta = 0, source_period_offset_from_target = 0, grouping = "per_grupo_member", source_casilla_ids = ["iva.cuota-deducible-total"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
+
+[[revisions."2026-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-353-procedure"
+required_text = ["modelo 353"]
+
+[[revisions."2026-y-siguientes".bindings]]
+id = "modelo-353-prev-322-resultado-regimen-general"
+source = "previous_filing"
+selector = { source_modelo = "322", filing_year_delta = 0, source_period_offset_from_target = 0, grouping = "per_grupo_member", source_casilla_ids = ["iva.resultado-regimen-general"] }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
+
+[[revisions."2026-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-353-procedure"
+required_text = ["modelo 353"]

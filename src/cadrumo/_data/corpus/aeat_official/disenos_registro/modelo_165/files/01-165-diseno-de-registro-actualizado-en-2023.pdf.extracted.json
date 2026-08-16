@@ -1,0 +1,84 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "corpus_pdf",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_165/files/01-165-diseno-de-registro-actualizado-en-2023.pdf",
+  "source_sha256": "bcc94b07d695703cfa66a3d8cbbb176841906ebf8cef57e2acd3e3fee452a263",
+  "preprocessor_id": "corpus-pdf",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Reused with attribution. Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_165_2023.pdf",
+  "units": [
+    {
+      "text": "Modelo 165.\nDeclaración Informativa de certificaciones individuales emitidas a los\nsocios o partícipes de entidades de nueva o reciente creación.\nAgencia Tributaria\nModelo 165.\nDeclaración Informativa de certificaciones individuales emitidas a los\nsocios o partícipes de entidades de nueva o reciente creación.\n1\nEjercicio 2026",
+      "title": "Pag. 1",
+      "section": "Pag. 1",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 165.\nDeclaración Informativa de certificaciones individuales emitidas a los\nsocios o partícipes de entidades de nueva o reciente creación.\nAgencia Tributaria\nMODELO 165\nDISEÑOS DE REGISTRO\nA. TIPO DE REGISTRO 1: REGISTRO DE DECLARANTE\nPOSIC. NATURALEZA DESCRIPCIÓN DE LOS CAMPOS\n1 Numérico TIPO DE REGISTRO\nConstante número \"1\"\n2-4 Numérico MODELO DECLARACIÓN\nConstante \"165\"\n5-8 Numérico EJERCICIO\nLas cuatro cifras del ejercicio fiscal al que corresponde la\ndeclaración\n9-17 Alfanumérico NIF DEL DECLARANTE\nSe consignará el NIF de la entidad de nueva o reciente\ncreación. (Sociedad Anónima, Sociedad de\nResponsabilidad Limitada, Sociedad Anónima Laboral o\nSociedad de Responsabilidad Limitada Laboral, en los\ntérminos previstos en el Texto Refundido de la Ley de\nSociedades de Capital, aprobado por el Real Decreto\nLegislativo 1/2010, de 2 de julio, y en la Ley 4/1997, de\n24 de marzo, de Sociedades Laborales, y no estar\nadmitida a negociación en ningún mercado organizado).\n2\nEjercicio 2026",
+      "title": "Pag. 2",
+      "section": "Pag. 2",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 165.\nDeclaración Informativa de certificaciones individuales emitidas a los\nsocios o partícipes de entidades de nueva o reciente creación.\nAgencia Tributaria\nEste campo deberá estar ajustado a la derecha, siendo\nla última posición el carácter de control y rellenando con\nceros las posiciones de la izquierda, de acuerdo con las\nreglas previstas en el Real Decreto 1065/2007, de 27 de\njulio, por el que se aprueba el Reglamento General de\nlas actuaciones y los procedimientos de gestión e\ninspección tributaria y de desarrollo de las normas\ncomunes de los procedimientos de aplicación de los\ntributos.\n18-57 Alfanumérico DENOMINACIÓN O RAZÓN SOCIAL DEL DECLARANTE\nPara las entidades de nueva o reciente creación se\nconsignará la razón social completa, sin anagrama.\nEn ningún caso podrá figurar en este campo un nombre\ncomercial.\n58 Alfabético TIPO DE SOPORTE\nSe cumplimentará:\n\"T\": Transmisión telemática\n59-107 Alfanumérico PERSONA CON QUIÉN RELACIONARSE\nDatos de la persona con quién relacionarse, este campo\nse subdivide en dos:\n59-67 TELÉFONO: Campo numérico de nueve\nposiciones\n68-107 APELLIDOS Y NOMBRE: Se consignará\nel primer apellido, un espacio, el segundo apellido, un\n3\nEjercicio 2026",
+      "title": "Pag. 3",
+      "section": "Pag. 3",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 165.\nDeclaración Informativa de certificaciones individuales emitidas a los\nsocios o partícipes de entidades de nueva o reciente creación.\nAgencia Tributaria\nespacio y el nombre completo necesariamente en este\norden.\n108-120 Numérico NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN\nSe consignará el número identificativo correspondiente a\nla declaración. Campo de contenido numérico de 13\nposiciones.\nEl número identificativo que habrá de figurar será un\nnúmero secuencial cuyos tres primeros dígitos se\ncorresponderán con el código 165.\n121-122 Alfabético DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA\nEn el caso excepcional de segunda o posterior\npresentación de declaraciones, deberá cumplimentarse\nobligatoriamente uno de los siguientes campos:\n121 DECLARACIÓN COMPLEMENTARIA: Se\nconsignará una \"C\" si la presentación de esta declaración\ntiene por objeto incluir nuevos registros de tipo 2 que,\ndebiendo haber figurado en otra declaración del mismo\nejercicio presentada anteriormente, hubieran sido\ncompletamente omitidas en la misma.\nLa modificación del contenido de datos declarados en\notra declaración del mismo ejercicio presentada\nanteriormente, se realizará desde el servicio de consulta\ny modificación de declaraciones informativas en la\nOficina Virtual de la Agencia Tributaria\n(www.agenciatributaria.gob.es )\n4\nEjercicio 2026",
+      "title": "Pag. 4",
+      "section": "Pag. 4",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 165.\nDeclaración Informativa de certificaciones individuales emitidas a los\nsocios o partícipes de entidades de nueva o reciente creación.\nAgencia Tributaria\n122 DECLARACIÓN SUSTITUTIVA: Se consignará\nuna \"S\" si la presentación tiene por objeto anular y\nsustituir completamente a otra declaración anterior, del\nmismo ejercicio. Una declaración sustitutiva sólo puede\nanular a una única declaración anterior.\n123-135 Numérico NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN\nANTERIOR\nEn el caso de que se haya consignado una “C” en el\ncampo “Declaración complementaria” o en caso de que\nse haya consignado \"S\" en el campo \"Declaración\nsustitutiva\", se consignará el número identificativo\ncorrespondiente a la declaración a la que complementa o\nsustituye.\nCampo de contenido numérico de 13 posiciones.\nEn cualquier otro caso deberá rellenarse a CEROS\n136-144 Numérico NÚMERO TOTAL DE DECLARADOS\nSe consignará el número total de registros de socios o\npartícipes (Registro de tipo 2) declarados por el\ndeclarante.\n145-159 Numérico IMPORTE TOTAL DE LAS SUSCRIPCIONES O\nADQUISICIONES DE ACCIONES O\nPARTICIPACIONES\nSe consignará sin signo y sin coma decimal, la suma total\nde las cantidades reflejadas en los campos “Importe de la\n5\nEjercicio 2026",
+      "title": "Pag. 5",
+      "section": "Pag. 5",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 165.\nDeclaración Informativa de certificaciones individuales emitidas a los\nsocios o partícipes de entidades de nueva o reciente creación.\nAgencia Tributaria\nadquisición“(posiciones 76-88) correspondientes a los\nregistros de socios o partícipes.\nEste campo se subdivide en dos:\n145-157 Numérico ENTERO: Parte entera del\nimporte total de la adquisición.\n158-159 Numérico DECIMAL: Parte decimal del\nimporte total de la adquisición.\n160-167 Numérico FECHA DE CONSTITUCIÓN\nSe hará constar la fecha de constitución de la empresa de\nnueva o reciente creación.\nEste campo se subdivide en otros tres:\n160-163 Numérico AÑO\n164-165 Numérico MES\n166-167 Numérico DÍA\n168-183 Alfanumérica IMPORTE FONDOS PROPIOS\nSe hará constar el importe de los fondos propios de la\nentidad en el inicio del período impositivo de la misma en\nel que el contribuyente adquiera las acciones o\nparticipaciones.\nEste campo se subdivide en dos:\n168 SIGNO: campo alfabético que se cumplimentará\ncuando la cuantía de los fondos propios a que se acaba de\nhacer referencia sea menor que 0 (cero); en este caso se\n6\nEjercicio 2026",
+      "title": "Pag. 6",
+      "section": "Pag. 6",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 165.\nDeclaración Informativa de certificaciones individuales emitidas a los\nsocios o partícipes de entidades de nueva o reciente creación.\nAgencia Tributaria\nconsignará una “N”. En cualquier otro caso el contenido del\ncampo será un espacio.\n169- 183 IMPORTE: Campo numérico de 15 posiciones.\nSe consignará el importe resultante de los fondos propios a\nque se ha hecho referencia más arriba.\nLos importes deben consignarse en EUROS. El importe no\nirá precedido de signo alguno (+/-), ni incluirá coma\ndecimal.\nEste campo se subdivide en dos:\n169-181 Numérico ENTERO: Parte entera. Se\nconsignará la parte entera del importe de los fondos\npropios.\n182-183 Numérico DECIMAL: Parte decimal. Se\nconsignará la parte decimal del importe de los fondos\npropios.\n184 Alfabético EMPRESA EMERGENTE\nSe consignará “X” cuando el declarante tenga la\nconsideración de empresa emergente, según lo establecido\nen el apartado 1 del artículo 3 de la Ley 28/2022, de 21 de\ndiciembre, de fomento del ecosistema de las empresas\nemergentes.\nEn el supuesto de que el declarante no tenga la\nconsideración de empresa emergente, este campo irá a\nblanco.\n185-500 ------------ BLANCOS\n7\nEjercicio 2026",
+      "title": "Pag. 7",
+      "section": "Pag. 7",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 165.\nDeclaración Informativa de certificaciones individuales emitidas a los\nsocios o partícipes de entidades de nueva o reciente creación.\nAgencia Tributaria\n* Todos los importes serán positivos.\n* Los campos numéricos que no tengan contenido se rellenarán a ceros.\n* Los campos alfanuméricos/alfabéticos que no tengan contenido se rellenarán\na blancos.\n* Todos los campos numéricos ajustados a la derecha y rellenos de ceros por\nla izquierda.\n* Todos los campos alfanuméricos/alfabéticos ajustados a la izquierda y\nrellenos de blancos por la derecha, en mayúsculas, sin caracteres especiales\ny sin vocales acentuadas, excepto que se especifique lo contrario en la\ndescripción del campo.\n8\nEjercicio 2026",
+      "title": "Pag. 8",
+      "section": "Pag. 8",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 165.\nDeclaración Informativa de certificaciones individuales emitidas a los\nsocios o partícipes de entidades de nueva o reciente creación.\nAgencia Tributaria\nRegistro de tipo 2. Registro de socios o partícipes\nSe consignará un registro por cada adquisición o suscripción que realice cada uno de\nlos socios o partícipes que hubieran solicitado certificación de la adquisición de\nacciones o participaciones de la entidad de nueva o reciente creación.\nPOSICIONES NATURALEZA DESCRIPCIÓN DE LOS CAMPOS\n1 Numérico TIPO DE REGISTRO\nConstante '2'\n2-4 Numérico MODELO DECLARACIÓN\nConstante '165'.\n5-8 Numérico EJERCICIO\nConsignar lo contenido en estas mismas posiciones del\nregistro de tipo 1.\n9-17 Alfanumérico N.I.F. DEL DECLARANTE\nConsignar lo contenido en estas mismas posiciones del\nregistro de tipo 1.\n18-26 Alfanumérico N.I.F. DEL SOCIO O PARTÍCIPE\nSe consignará el N.I.F. del socio o partícipe de la entidad\nnueva o de reciente creación.\n9\nEjercicio 2026",
+      "title": "Pag. 9",
+      "section": "Pag. 9",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 165.\nDeclaración Informativa de certificaciones individuales emitidas a los\nsocios o partícipes de entidades de nueva o reciente creación.\nAgencia Tributaria\nEste campo deberá estar ajustado a la derecha, siendo la\núltima posición el carácter de control y rellenando con\nceros las posiciones de la izquierda, de acuerdo con las\nreglas previstas en el Real Decreto 1065/2007, de 27 de\njulio, por el que se aprueba el Reglamento General de las\nactuaciones y los procedimientos de gestión e inspección\ntributaria y de desarrollo de las normas comunes de los\nprocedimientos de aplicación de los tributos (BOE del 5 de\nseptiembre).\n27-35 Alfanumérico NIF DEL REPRESENTANTE LEGAL.\nSi el perceptor es menor de 14 años se consignará en este\ncampo el número de identificación fiscal de su\nrepresentante legal (padre, madre o tutor).\nEn cualquier otro caso el contenido de este campo se\nrellenará a espacios.\nEste campo deberá estar ajustado a la derecha, siendo la\núltima posición el carácter de control y rellenando con\nceros las posiciones a la izquierda.\n36-75 Alfanumérico APELLIDOS Y NOMBRE DEL SOCIO O PARTÍCIPE\nSe consignará el primer apellido, un espacio, el segundo\napellido, un espacio y el nombre completo necesariamente\nen este orden.\n76-88 Numérico IMPORTE DE LA SUSCRIPCIÓN O ADQUISICIÓN\nSe hará constar sin signo y sin coma decimal, el importe\nde la adquisición o suscripción de las acciones o\nparticipaciones correspondientes al socio o partícipe.\n10\nEjercicio 2026",
+      "title": "Pag. 10",
+      "section": "Pag. 10",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 165.\nDeclaración Informativa de certificaciones individuales emitidas a los\nsocios o partícipes de entidades de nueva o reciente creación.\nAgencia Tributaria\nEste campo se subdivide en dos:\n76-86 Numérico ENTERO: Parte entera. Se consignará la\nparte entera del importe total de la adquisición.\n87-88 Numérico DECIMAL: Parte decimal. Se consignará\nla parte decimal del importe total de la adquisición (si no\ntiene, consignar CEROS).\n89-96 Numérico FECHA DE ADQUISICIÓN DE LAS\nACCIONES/PARTICIPACIONES\nSe hará constar la fecha de adquisición de las acciones o\nparticipaciones adquiridas.\nEste campo se subdivide en otros tres:\n89-92 Numérico AÑO\n93-94 Numérico MES\n95-96 Numérico DÍA\n97-101 Numérico PORCENTAJE DE PARTICIPACIÓN.\nSe consignará el porcentaje de participación en el capital\nsocial que corresponda al socio o partícipe. Dicho\nporcentaje, cuando no sea un número entero, se expresará\ncon dos decimales.\nEste campo se subdivide en otros dos:\n11\nEjercicio 2026",
+      "title": "Pag. 11",
+      "section": "Pag. 11",
+      "anchor": null
+    },
+    {
+      "text": "Modelo 165.\nDeclaración Informativa de certificaciones individuales emitidas a los\nsocios o partícipes de entidades de nueva o reciente creación.\nAgencia Tributaria\n97-99 Numérico ENTERO: Parte entera. Se\nconsignará la parte entera del porcentaje (si no tiene,\nconsignar CEROS).\n100-101 Numérico DECIMAL: Parte decimal. Se\nconsignará la parte decimal del porcentaje (si no tiene,\nconsignar CEROS).\n102-500 ---------- BLANCOS\n* Todos los importes serán positivos.\n* Los campos numéricos que no tengan contenido se rellenarán a ceros.\n* Los campos alfanuméricos/alfabéticos que no tengan contenido se rellenarán\na blancos.\n* Todos los campos numéricos ajustados a la derecha y rellenos de ceros por\nla izquierda.\n* Todos los campos alfanuméricos/alfabéticos ajustados a la izquierda y\nrellenos de blancos por la derecha, en mayúsculas, sin caracteres especiales\ny sin vocales acentuadas, excepto que se especifique lo contrario en la\ndescripción del campo.\n12\nEjercicio 2026",
+      "title": "Pag. 12",
+      "section": "Pag. 12",
+      "anchor": null
+    }
+  ]
+}

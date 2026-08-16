@@ -4,9 +4,7 @@
 # 01-165-diseno-de-registro-actualizado-en-2023.pdf, sha256
 # bcc94b07d695703cfa66a3d8cbbb176841906ebf8cef57e2acd3e3fee452a263).
 #
-# Seven casillas carry no semantic_role: the role the naming convention would
-# give them scores above the typo-twin gate's similarity threshold against
-# another modelo's role for the same concept.
+# Every casilla carries its canonical m165_<id> semantic_role.
 
 # Campo 5. Positions 18-57, alfanumerico. "Se consignara la razon social
 # completa, sin anagrama."
@@ -15,6 +13,7 @@ id = "declarante-razon-social"
 number = "tipo1.18-57"
 section = ["declarante"]
 data_type = "name"
+semantic_role = "m165_declarante_razon_social"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-165-t1-razon-social"]
@@ -29,6 +28,7 @@ id = "persona-relacion"
 number = "tipo1.59-107"
 section = ["declarante"]
 data_type = "text"
+semantic_role = "m165_persona_relacion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-165-t1-persona-relacion"]
@@ -42,6 +42,7 @@ id = "numero-identificativo-declaracion"
 number = "tipo1.108-120"
 section = ["declarante"]
 data_type = "integer"
+semantic_role = "m165_numero_identificativo_declaracion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-165-t1-numero-identificativo"]
@@ -55,6 +56,7 @@ id = "declaracion-complementaria-sustitutiva"
 number = "tipo1.121-122"
 section = ["declarante"]
 data_type = "text"
+semantic_role = "m165_declaracion_complementaria_sustitutiva"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-165-t1-complementaria-sustitutiva"]
@@ -68,6 +70,7 @@ id = "numero-identificativo-anterior"
 number = "tipo1.123-135"
 section = ["declarante"]
 data_type = "integer"
+semantic_role = "m165_numero_identificativo_anterior"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-165-t1-numero-identificativo-anterior"]
@@ -81,6 +84,7 @@ id = "numero-total-declarados"
 number = "tipo1.136-144"
 section = ["declarante"]
 data_type = "integer"
+semantic_role = "m165_numero_total_declarados"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-165-t1-numero-total-declarados"]
@@ -174,6 +178,7 @@ id = "representante-legal-nif"
 number = "tipo2.27-35"
 section = ["socio"]
 data_type = "nif"
+semantic_role = "m165_representante_legal_nif"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-165-t2-representante-legal-nif"]
@@ -230,6 +235,7 @@ id = "porcentaje-participacion"
 number = "tipo2.97-101"
 section = ["socio", "adquisicion"]
 data_type = "decimal"
+semantic_role = "m165_porcentaje_participacion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-165-t2-porcentaje-participacion"]
