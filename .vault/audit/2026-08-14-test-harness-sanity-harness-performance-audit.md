@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:3b55cb41177dba4ec6926664fdfab3c489701f2b8348f4d59c4a7e21b447c4ca'
+body_hash: 'sha256:b394dcd998e24e1d04afbfe15397f041dd35c5d966ff5d125c804f6fa24999c8'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -2242,3 +2242,41 @@ That is the working rule this campaign has converged on: a story that explains
 the data is not a finding until it has predicted something falsifiable and
 survived the test. Writing it down as a lead, with the experiment that would
 kill it named, makes the retraction cheap and the discipline visible.
+
+## The probe cost more than what it watched, and then swept a slice
+
+The first attempt at a suite-wide leak sweep reached 9% in ten minutes. The
+cause was the probe's own `gc.collect()` on every test: a full collection on
+this heap costs around 100ms, and twenty-two thousand of them would have added
+roughly 37 minutes to a 31-minute run.
+
+That is precisely the failure the probe's own comment warns about -- it had been
+written into the socket-counting branch and then violated two lines above. The
+collection was there so an object merely awaiting collection would not be
+counted as a leak; the trade is not worth it, because OS handles are held by
+live objects and released on close, so collection timing barely moves them. A
+few collectable stragglers are cheaper noise than distorting the run being
+measured. Removed, along with the expensive `net_connections` call, which had
+read zero on every test measured.
+
+The trimmed probe runs 1,390 ledger tests in 122s, which is a tolerable
+instrument.
+
+### What the slice shows
+
+    thread retainers                  : 0 of 1,390
+    tests with any handle growth      : 50 of 1,390  (3.6%)
+    top: +66 test_the_read_actually_reaches_the_loopback_endpoint
+         +35 test_extracts_by_evidence_id_from_a_real_stored_pdf
+         +31 test_an_unrepresentable_rate_refuses_and_names_the_accepted_rate
+         +31 test_an_issued_document_records_the_billed_party_not_the_issuer
+
+No thread leaks. The handle distribution is what per-worker first-touch
+initialisation looks like: six workers, each paying independently for the first
+socket, the first PDF reader, the first stored-evidence read, and so on. A leak
+would show growth spread across MANY tests of the same kind rather than
+concentrated in 3.6% of them, and the controlled experiment already showed both
+the server and client halves plateau after one use.
+
+So the ledger slice gets a clean bill on all four channels, and the instrument
+is now cheap enough to point at the whole suite.
