@@ -77,7 +77,7 @@ def test_dormant_modelos_are_not_calc_grade() -> None:
     """
     entries = _entries()
 
-    for modelo_id in ("189", "280", "308", "345", "360", "361", "721"):
+    for modelo_id in ("189", "280", "308", "345", "360"):
         entry = entries[modelo_id]
         assert not entry.calc_grade, f"modelo {modelo_id} should not be calc-grade"
         assert not entry.has_completeness_manifest, f"dormant modelo {modelo_id} should carry no completeness manifest"

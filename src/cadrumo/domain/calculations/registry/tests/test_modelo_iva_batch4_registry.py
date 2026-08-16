@@ -49,7 +49,6 @@ _MODELOS = [
         "BOE-A-2000-22794",
         True,
     ),
-    ("380", "2005-y-siguientes", "orden-eha-1308-2005:art-1", "orden-eha-1308-2005:art-4", "BOE-A-2005-7775", False),
 ]
 
 
@@ -88,16 +87,8 @@ def test_modelo_341_reagp_quarterly_windows_20_days_with_january_30_day_q4() -> 
     assert windows["2025 4T"].closes_on == date(2026, 1, 30)
 
 
-def test_modelo_380_delegated_plazo_has_no_calendar_windows() -> None:
-    """380's plazo is the ordinary IVA plazo (art 4); no fixed date is fabricated."""
-    modelo, _ = _committed_modelo("380")
-    assert not modelo.revisions["2005-y-siguientes"].deadline_windows
-    authority = bundled_authority()
-    assert [w.id for _, _, w in authority.deadline_windows(2025, modelos=("380",))] == []
-
-
-def test_both_are_registry_backed() -> None:
+def test_341_is_registry_backed() -> None:
+    """380 relocated out of the registry (web-form-only, no AEAT machine format)."""
     from .....core.access_gate import CANONICAL_MODELO_FLEET
 
-    for mid in ("341", "380"):
-        assert mid in CANONICAL_MODELO_FLEET
+    assert "341" in CANONICAL_MODELO_FLEET
