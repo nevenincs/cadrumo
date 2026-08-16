@@ -21,6 +21,7 @@ it".
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from .....core.aggregation import BindingSourceKind
 from .._binding_selector_utils import (
@@ -130,7 +131,7 @@ def test_a_renamed_record_field_key_is_refused_not_silently_read_as_casilla_shap
     for that drifted-schema selector so the fixed function's OWN validation
     (not the constructor's) is what is under test.
     """
-    with pytest.raises(Exception, match="violates _ManualInputSelector") as excinfo:
+    with pytest.raises(ValidationError, match="violates _ManualInputSelector") as excinfo:
         DataBindingDefinition.model_validate(
             {
                 "id": "modelo-131-2025.page1.109-109.discapacidad-33",

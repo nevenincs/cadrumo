@@ -17,6 +17,7 @@ at all.
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from .._detail_record_bindings import foreign_asset_binding_row_field
 from .._errors import RegistryValidationError
@@ -114,7 +115,7 @@ def test_a_renamed_row_field_key_is_refused_not_silently_read_as_absent() -> Non
     standing in for that drifted-schema selector so the fixed function's OWN
     validation (not the constructor's) is what is under test.
     """
-    with pytest.raises(Exception, match="violates _ForeignAssetSelector") as excinfo:
+    with pytest.raises(ValidationError, match="violates _ForeignAssetSelector") as excinfo:
         DataBindingDefinition.model_validate(
             {
                 "id": "modelo-720-asset-row-class",
