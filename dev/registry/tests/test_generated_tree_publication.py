@@ -62,7 +62,7 @@ def _non_export_authority_bytes(revision_root: Path) -> dict[str, bytes]:
 
 
 def _publication_inputs(tmp_path: Path, snapshot, *, existing_export: bool, legacy_export: bool = False):
-    """Build independent candidates through S08, never from a shipped tree."""
+    """Build independent candidates through the export-tree renderer, never from a shipped tree."""
     temporary_root = tmp_path / "temporary-root"
     validation, joined, semantic_map, rendered, _candidate_export = _write_isolated_generated_authority_tree(
         temporary_root,
@@ -188,7 +188,7 @@ def test_publication_refuses_invalid_candidate_without_changing_live_export(
     tmp_path,
     defect: str,
 ) -> None:
-    """The final S10 gate leaves a live export byte-identical on incomplete or extra output."""
+    """The final validation gate leaves a live export byte-identical on incomplete or extra output."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
         m200_inspection_snapshot,
@@ -336,7 +336,7 @@ def test_publication_restores_live_export_after_real_windows_locked_candidate_fa
 
 
 def test_publication_completes_a_real_interrupted_verified_candidate(m200_inspection_snapshot, tmp_path) -> None:
-    """Journal recovery completes a candidate S10 had already proved before a crash."""
+    """Journal recovery completes a candidate validation had already proved before a crash."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
         m200_inspection_snapshot,
@@ -421,7 +421,7 @@ def test_interrupted_recovery_refuses_current_profile_or_evidence_drift_without_
 
 
 def test_internal_json_provenance_is_required_but_ignored_by_toml_loader(m200_inspection_snapshot, tmp_path) -> None:
-    """The loader accepts the generated tree while S10 refuses a missing internal attestation."""
+    """The loader accepts the generated tree while validation refuses a missing internal attestation."""
     context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
         tmp_path,
         m200_inspection_snapshot,

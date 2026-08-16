@@ -221,7 +221,7 @@ def test_check_refuses_candidate_reuse_without_changing_published_hashes(m200_in
 
 
 def test_check_refuses_linked_candidate_ancestor_before_rendering(m200_inspection_snapshot, tmp_path) -> None:
-    """A directory link cannot redirect candidate rendering before the S10 boundary."""
+    """A directory link cannot redirect candidate rendering before the validation boundary."""
     context, joined, semantic_map, target_export_root = _check_inputs(tmp_path, m200_inspection_snapshot)
     candidate_modelos_root = context.validation.registry_root / "modelos"
     redirected_modelos_root = tmp_path / "redirected-modelos"
