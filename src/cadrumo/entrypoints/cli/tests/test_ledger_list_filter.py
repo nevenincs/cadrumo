@@ -232,19 +232,23 @@ def test_unknown_filter_key_is_rejected() -> None:
 
     The unknown key is refused with a non-zero exit (it does not silently
     pass through and list every row). The offending token's exact rendering is
-    governed by the shared error-boundary box layout, so this asserts the
-    refusal itself rather than the echoed substring.
+    governed by the shared error-boundary box layout, so this asserts the typed
+    failed condition rather than the echoed substring: a bare exit-code check
+    would also be satisfied by an unrelated failure, which is the way this test
+    could pass while the filter catalogue stopped refusing.
     """
-    _import_corpus()
     result = invoke_cached_cli(["app", "ledger", "list", "--filter", "bogus=1"])
+
     assert result.exit_code != 0
+    assert 'action.failed_condition_id: "cli.ledger.filter.valid"' in result.output
 
 
 def test_malformed_filter_token_is_rejected() -> None:
     """A ``--filter`` token without ``=`` is a parse error, not a silent pass."""
-    _import_corpus()
     result = invoke_cached_cli(["app", "ledger", "list", "--filter", "period"])
+
     assert result.exit_code != 0
+    assert 'action.failed_condition_id: "cli.ledger.filter.valid"' in result.output
 
 
 def test_period_filter_combined_shape_refuses_with_typed_no_recovery() -> None:
