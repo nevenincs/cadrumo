@@ -33,6 +33,35 @@ _MONTH_AXIS_TOKENS: Final[frozenset[str]] = frozenset(
 )
 
 
+#: Quarter tokens AEAT uses to enumerate the per-trimestre columns of a single
+#: concept. The same closed-calendar-axis argument as :data:`_MONTH_AXIS_TOKENS`,
+#: one period grain up: Modelo 347's Tipo 2 record declares "IMPORTE PERCIBIDO
+#: POR TRANSMISIONES DE INMUEBLES SUJETAS A IVA {PRIMER,SEGUNDO,TERCER,CUARTO}
+#: TRIMESTRE" as four sixteen-byte columns, so the four roles carrying them are
+#: deliberate siblings rather than four spellings of one name. They differ by
+#: exactly one digit, which is what drew the typo detector to them.
+_QUARTER_AXIS_TOKENS: Final[frozenset[str]] = frozenset(("q1", "q2", "q3", "q4"))
+
+
+def semantic_roles_are_quarter_axis_siblings(left: str, right: str) -> bool:
+    """Return whether two roles differ only in a trailing calendar-quarter token."""
+    return _differ_only_in_trailing_token(left, right, _QUARTER_AXIS_TOKENS)
+
+
+def _differ_only_in_trailing_token(left: str, right: str, axis_tokens: frozenset[str]) -> bool:
+    """Return whether two roles share a stem and end in two distinct axis tokens."""
+    left_parts = left.split("_")
+    right_parts = right.split("_")
+    return (
+        len(left_parts) > 1
+        and len(right_parts) > 1
+        and left_parts[:-1] == right_parts[:-1]
+        and left_parts[-1] in axis_tokens
+        and right_parts[-1] in axis_tokens
+        and left_parts[-1] != right_parts[-1]
+    )
+
+
 def semantic_roles_are_modelo_prefix_siblings(left: str, right: str) -> bool:
     """Return whether two roles are the same concept scoped to different modelos.
 
@@ -68,16 +97,7 @@ def _split_modelo_prefix(role: str) -> tuple[str | None, str | None]:
 
 def semantic_roles_are_month_axis_siblings(left: str, right: str) -> bool:
     """Return whether two roles differ only in a trailing calendar-month token."""
-    left_parts = left.split("_")
-    right_parts = right.split("_")
-    return (
-        len(left_parts) > 1
-        and len(right_parts) > 1
-        and left_parts[:-1] == right_parts[:-1]
-        and left_parts[-1] in _MONTH_AXIS_TOKENS
-        and right_parts[-1] in _MONTH_AXIS_TOKENS
-        and left_parts[-1] != right_parts[-1]
-    )
+    return _differ_only_in_trailing_token(left, right, _MONTH_AXIS_TOKENS)
 
 
 def semantic_roles_are_tax_domain_siblings(left: str, right: str) -> bool:

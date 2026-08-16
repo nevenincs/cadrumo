@@ -429,15 +429,53 @@ class RecordDesignHeaderCellCorrection(RegistryModel):
     editions_read: tuple[str, ...] = Field(min_length=1)
 
 
+class RecordDesignSinglePositionCorrection(RegistryModel):
+    """A declared, sourced admission of ONE naturaleza-less single-position row.
+
+    Subject is one PDF position row that AEAT printed without its naturaleza and
+    without a range -- ``58 TIPO DE SOPORTE`` in Modelo 280's declarante record,
+    whose type column is simply absent and whose description continues on the
+    next page.
+
+    Separate from :class:`RecordDesignFieldTypeCorrection` rather than a widening
+    of it, for the same reason the header-cell correction is separate: that model
+    keys on a workbook ``source_row`` and asserts the row was READ with a blank
+    type cell, whereas this one asserts a row was not read at all and names the
+    position instead. Folding them together would mean loosening the row-based
+    model to admit a row-less entry, weakening every existing type correction's
+    guarantee that it names one real data row.
+
+    The narrow gate is deliberate. A single position with no naturaleza is
+    otherwise indistinguishable from a numbered prose sentence -- AEAT routinely
+    opens a description with the field's own range, and 41 bundled designs do --
+    so the parser refuses the shape outright and only a declaration for this
+    exact ``(sheet, position)`` admits one. Admission is still subject to the
+    gap-fill containment test, so a declared correction can fill a genuine hole
+    and can never displace, override, or duplicate a row that WAS read.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    kind: Literal["single_position"] = "single_position"
+    sheet: str = Field(min_length=1)
+    #: One-based start position of the unread single-byte row.
+    position: int = Field(gt=0)
+    corrected_type: str = Field(min_length=1)
+    #: The field name AEAT printed, with the naturaleza column absent.
+    description: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+    editions_read: tuple[str, ...] = Field(min_length=1)
+
+
 #: One concept, one collection: a design reads only because of a declared,
-#: sourced correction whether the correction fixed a data cell or a header
-#: cell, so both feed the SAME :attr:`RecordDesignExtraction.corrections`
-#: tuple through this discriminated union. A worklist reading ``corrections``
-#: needs no per-kind branch to keep treating "corrected" as distinct from
-#: "complete" -- see ``_classify()`` in
-#: ``test_every_bundled_design_is_read_or_reported.py``.
+#: sourced correction whether the correction fixed a data cell, a header
+#: cell, or admitted a row the parser could not safely infer, so all three feed
+#: the SAME :attr:`RecordDesignExtraction.corrections` tuple through this
+#: discriminated union. A worklist reading ``corrections`` needs no per-kind
+#: branch to keep treating "corrected" as distinct from "complete" -- see
+#: ``_classify()`` in ``test_every_bundled_design_is_read_or_reported.py``.
 RecordDesignCorrection = Annotated[
-    RecordDesignFieldTypeCorrection | RecordDesignHeaderCellCorrection,
+    RecordDesignFieldTypeCorrection | RecordDesignHeaderCellCorrection | RecordDesignSinglePositionCorrection,
     Field(discriminator="kind"),
 ]
 

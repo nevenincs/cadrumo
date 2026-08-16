@@ -132,7 +132,7 @@ from ._schema import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
-    M303FilingEnvelopeDefinition,
+    FilingEnvelopeDefinition,
     ModeloRevision,
     SourceReference,
 )
@@ -336,6 +336,58 @@ def _eedd_delegated_reason(field: RecordDesignField, sheet: RecordDesignSheet) -
     return "delegated to the entidad desarrolladora by the design's own footnote"
 
 
+#: AEAT naming the electronic-seal slot in the cell that NAMES the field.
+#: Necessary but not sufficient on its own -- see
+#: :func:`_aeat_program_sealed_reason` for the second signal that decides it.
+_SELLO_ELECTRONICO_NAMED: Final = re.compile(r"\bsello\s+electr[oó]nico\b", re.IGNORECASE)
+
+#: AEAT delegating a position to its OWN programs: "que será cumplimentado
+#: exclusivamente por los programas oficiales de la A.E.A.T.". Read from the
+#: CONTENT cell, because that is where these designs put the delegation while
+#: the description carries only the bare field name.
+#:
+#: ``[^.;]`` bounds it to one clause for the same reason
+#: :data:`_RESERVED_FOR_ADMINISTRATION` does: it must not reach across a
+#: sentence break and pair a "cumplimentado por" from one statement with an
+#: "AEAT" from the next.
+_AEAT_PROGRAM_COMPLETED: Final = re.compile(
+    r"cumplimentad[oa]\s+(?:[^.;]{0,30}?\s+)?por\s+(?:los\s+)?programas[^.;]{0,40}?a\.?e\.?a\.?t\.?",
+    re.IGNORECASE,
+)
+
+
+def _aeat_program_sealed_reason(field: RecordDesignField) -> str | None:
+    """Return a reason when the design reserves this slot for AEAT's own seal.
+
+    Two independent signals must agree, the same shape
+    :func:`_eedd_delegated_reason` uses: the field's own naming cell calls it the
+    ``sello electrónico``, and its content cell delegates completion to AEAT's
+    official programs. Neither alone decides it -- "sello electrónico" appears
+    in prose about other slots, and "cumplimentado por los programas" is not by
+    itself a statement about whose bytes these are.
+
+    Separate from :func:`_administration_reserved` rather than a widening of it,
+    because that predicate deliberately reads the DESCRIPTION only: Modelo 720's
+    ``TIPO DE DERECHO REAL SOBRE INMUEBLE`` carries 25 bytes of taxpayer data and
+    explains itself with "en el espacio reservado", so admitting content prose
+    there once excused a real datum. These designs put the delegation in content
+    while naming only ``SELLO ELECTRÓNICO`` in the description, so the pairing is
+    what makes reading content safe here.
+
+    Measured across the bundled corpus: 96 positions name the sello, 78 of them
+    already omissible through the owner rule, and exactly 18 are reclassified by
+    this one -- every one a declarante-record seal slot in Modelos 180, 182, 184,
+    188, 190, 193, 194, 296 and 347. Modelo 347's 2008 design names the sello but
+    carries a chart-geometry placeholder instead of the delegation, and correctly
+    stays required.
+    """
+    if not _SELLO_ELECTRONICO_NAMED.search(field.description or ""):
+        return None
+    if not _AEAT_PROGRAM_COMPLETED.search(field.content or ""):
+        return None
+    return "reserved for AEAT's own programs by the design's own content declaration"
+
+
 def _omissible_reason(field: RecordDesignField, sheet: RecordDesignSheet | None = None) -> str | None:
     """Return why the DESIGN says this position may go unwritten, else ``None``.
 
@@ -353,6 +405,8 @@ def _omissible_reason(field: RecordDesignField, sheet: RecordDesignSheet | None 
         return None
     if _administration_reserved(field):
         return "reserved for the Administración"
+    if (sealed := _aeat_program_sealed_reason(field)) is not None:
+        return sealed
     for text in (field.description, field.content):
         if text and _DECLARED_FILL.match(text.strip()):
             return "declared fill"
@@ -695,7 +749,7 @@ def _read_design_sheets(source: SourceReference) -> tuple[RecordDesignSheet, ...
         )
 
 
-def _envelope_written_positions(envelope: M303FilingEnvelopeDefinition) -> set[tuple[int, int]]:
+def _envelope_written_positions(envelope: FilingEnvelopeDefinition) -> set[tuple[int, int]]:
     written: set[tuple[int, int]] = set()
     offset = 1
     for field in envelope.prefix_fields:
@@ -704,7 +758,7 @@ def _envelope_written_positions(envelope: M303FilingEnvelopeDefinition) -> set[t
     return written
 
 
-def _envelope_written_bytes(envelope: M303FilingEnvelopeDefinition) -> set[int]:
+def _envelope_written_bytes(envelope: FilingEnvelopeDefinition) -> set[int]:
     """Return every byte the filing envelope's prefix fields write.
 
     The byte-extent counterpart of :func:`_envelope_written_positions`. Every
@@ -723,7 +777,7 @@ def _missing_report(
     sheets: Sequence[RecordDesignSheet],
     records: Sequence[ExportRecordDefinition],
     *,
-    envelope: M303FilingEnvelopeDefinition | None = None,
+    envelope: FilingEnvelopeDefinition | None = None,
 ) -> tuple[int, int, list[str]]:
     """Return ``(required, missing, per-sheet lines)`` for one design against one layout."""
     layout_written: set[int] = set()
@@ -766,6 +820,22 @@ def _missing_report(
             consulted = ()
             written = _envelope_written_bytes(envelope)
             emitted = written
+        elif sheet.auxiliary_envelope_header is not None:
+            # An auxiliary header is NOT a fixed record and no authored record
+            # renders it, so the generic fallback below is actively wrong here:
+            # it asks whether ANY record writes the coordinate, and the other
+            # records' fields sit at the same low offsets, so a header position
+            # gets "covered" by an unrelated record's field or -- worse --
+            # reported as that field intruding on the header's reserved run.
+            # Modelo 232 showed exactly that, blaming dr23201 fields for writing
+            # into DR23200's administración bytes.
+            #
+            # Consulting nothing states the truth: this layout emits no bytes for
+            # the header, so every required header position is genuinely missing
+            # and is attributed to the header itself.
+            consulted = ()
+            written = set()
+            emitted = set()
         else:
             consulted = tuple(field for record in records for field in record.fields)
             written = layout_written
@@ -787,6 +857,12 @@ def _missing_report(
             scope = f"authored record {joined.id!r} (record_type {joined.record_type!r})"
         elif envelope is not None and sheet.name == envelope.record_identity:
             scope = f"filing envelope {envelope.record_identity!r}"
+        elif sheet.auxiliary_envelope_header is not None:
+            scope = (
+                f"auxiliary envelope header {sheet.name!r}, which this layout does not emit: the "
+                "header is a source-proved 328-byte composition outside the fixed-record totals, so "
+                "it needs its own emission contract rather than an authored fixed record"
+            )
         else:
             scope = (
                 "NO authored record could be identified for this design record, so the check fell "
@@ -828,7 +904,7 @@ def _layout_failure(
         if isinstance(read, str):
             return f"{prefix}: fixed-width export layout {layout.id!r} cannot be checked because {read}"
         sheets.extend(read)
-    required, missing, lines = _missing_report(sheets, layout.records, envelope=layout.m303_filing_envelope)
+    required, missing, lines = _missing_report(sheets, layout.records, envelope=layout.filing_envelope)
     if not missing:
         return None
     coverage = 100.0 * (required - missing) / required if required else 0.0

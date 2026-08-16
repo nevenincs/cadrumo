@@ -24,6 +24,13 @@ from ....core.access_gate import (
 from ....core.resources import bundled_path as _bundled_path
 from ._convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
 from ._errors import RegistrySnapshotError, RegistryValidationError
+from ._identity import (
+    FingerprintTuples,
+    RegistryIdentity,
+    registry_identity_stamp_location,
+    resolve_registry_identity,
+    write_registry_identity_stamp,
+)
 from ._ids import RevisionId
 from ._loader import collect_registry_tree_fingerprints, load_registry_tree
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
@@ -41,6 +48,26 @@ from ._verdict_cache import (
     shipped_verdict_location,
     stamp_bundled_verdict,
 )
+
+
+def collect_registry_identity_fingerprints(resolved_root: Path) -> FingerprintTuples:
+    """Collect every fingerprint group that constitutes registry-tree identity.
+
+    The tree itself, the convenio treaty tree, and the supplementary annual
+    Orden set -- the three groups the authority compiles from. Kept as one named
+    collector rather than an inline concatenation so the release stamper and the
+    runtime walk provably fingerprint the SAME groups: a stamp computed over a
+    narrower set than the runtime walks would certify a tree nobody checked.
+
+    Returns:
+        The concatenated fingerprint tuples for ``resolved_root``.
+    """
+    return (
+        collect_registry_tree_fingerprints(resolved_root)
+        + collect_convenio_fingerprints(resolved_root)
+        + collect_supplementary_orden_fingerprints(resolved_root)
+    )
+
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None]
 _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
@@ -103,10 +130,9 @@ class ValidatedRegistryAuthority:
         return _load_authority(
             resolved_root,
             resolved_source_root,
-            _fingerprint_key(
-                collect_registry_tree_fingerprints(resolved_root)
-                + collect_convenio_fingerprints(resolved_root)
-                + collect_supplementary_orden_fingerprints(resolved_root),
+            resolve_registry_identity(
+                resolved_root,
+                collect_fingerprints=collect_registry_identity_fingerprints,
             ),
             _fingerprint_key(collect_source_evidence_fingerprints(resolved_source_root)),
         )
@@ -362,7 +388,7 @@ def bundled_revision_inspection(
 #: Caching the refusal changes nothing about the verdict -- the same error, with
 #: the same enumeration, is raised on every call -- it is computed once.
 _AUTHORITY_LOAD_FAILURES: dict[
-    tuple[Path, Path, _FingerprintKey[_RegistryFingerprints], _FingerprintKey[_SourceEvidenceFingerprints]],
+    tuple[Path, Path, RegistryIdentity, _FingerprintKey[_SourceEvidenceFingerprints]],
     Exception,
 ] = {}
 
@@ -370,16 +396,16 @@ _AUTHORITY_LOAD_FAILURES: dict[
 def _load_authority(
     root: Path,
     source_root: Path,
-    registry_key: _FingerprintKey[_RegistryFingerprints],
+    identity: RegistryIdentity,
     source_evidence_key: _FingerprintKey[_SourceEvidenceFingerprints],
 ) -> ValidatedRegistryAuthority:
     """Load and validate one authority, memoising refusal as well as success."""
-    failure_key = (root, source_root, registry_key, source_evidence_key)
+    failure_key = (root, source_root, identity, source_evidence_key)
     cached_failure = _AUTHORITY_LOAD_FAILURES.get(failure_key)
     if cached_failure is not None:
         raise cached_failure
     try:
-        return _load_validated_authority(root, source_root, registry_key, source_evidence_key)
+        return _load_validated_authority(root, source_root, identity, source_evidence_key)
     except Exception as exc:
         _AUTHORITY_LOAD_FAILURES[failure_key] = exc
         raise
@@ -403,25 +429,24 @@ _load_authority.cache_clear = _clear_authority_load_caches  # type: ignore[attr-
 def _load_validated_authority(
     root: Path,
     source_root: Path,
-    registry_key: _FingerprintKey[_RegistryFingerprints],
+    identity: RegistryIdentity,
     source_evidence_key: _FingerprintKey[_SourceEvidenceFingerprints],
 ) -> ValidatedRegistryAuthority:
-    _registry_fingerprint = registry_key.fingerprints
     _source_evidence_fingerprint = source_evidence_key.fingerprints
-    authority = _construct_authority(root, source_root, _source_evidence_fingerprint)
-    # A persisted green verdict keyed by the exact fingerprint tuples this
-    # lru_cache keys a digest of lets an immutable tree skip the multi-second
-    # re-validation. The build and continuous integration are the validation
-    # gate; the runtime asserts fingerprint identity only. A mismatch or a
-    # foreign verdict re-validates in full and rewrites the verdict.
+    authority = _construct_authority(root, source_root, _source_evidence_fingerprint, identity=identity)
+    # A persisted green verdict keyed by the same tree identity this lru_cache
+    # keys on lets an immutable tree skip the multi-second re-validation. The
+    # build and continuous integration are the validation gate; the runtime
+    # asserts identity only. A mismatch or a foreign verdict re-validates in
+    # full and rewrites the verdict.
     verdict_key = compute_verdict_key(
-        registry_fingerprints=_registry_fingerprint,
+        identity_digest=identity.digest,
         source_evidence_fingerprints=_source_evidence_fingerprint,
     )
     if registry_validation_is_certified(
         root,
         verdict_key=verdict_key,
-        registry_fingerprints=_registry_fingerprint,
+        identity=identity,
     ):
         authority.mark_registry_validated()
     else:
@@ -434,9 +459,11 @@ def _construct_authority(
     root: Path,
     source_root: Path,
     source_evidence_fingerprint: tuple[tuple[str, int, int], ...],
+    *,
+    identity: RegistryIdentity,
 ) -> ValidatedRegistryAuthority:
     """Compile registry material before either filing or inspection admission."""
-    modelos, catalogues = load_registry_tree(root)
+    modelos, catalogues = load_registry_tree(root, identity=identity)
     # Compile the cross-cutting Convenio doble imposición treaty tree and fold it
     # onto the shared catalogues so every snapshot projects the same authority.
     # Grounding gate: every treaty override must cite a treaty article defined in
@@ -485,31 +512,52 @@ def _construct_authority(
     return authority
 
 
-def stamp_bundled_registry_verdict(registry_root: Path, *, package_version: str = __version__) -> Path:
-    """Stamp the install-stable bundled-tree verdict beside ``registry_root``.
+@dataclass(frozen=True, slots=True)
+class StampedRegistryRelease:
+    """The two records the release build stamps beside a packaged registry tree."""
 
-    The release build calls this against the registry tree it is packaging so
-    the first end-user touch of an install of this release skips runtime
-    validation. It collects the same registry-tree and convenio fingerprints
-    the authority keys on, computes the install-stable bundled key, and writes
-    the shipped verdict to the sibling location the runtime reads. The verdict
-    certifies only that the build validated this release's immutable tree green;
-    a fingerprint or version mismatch at runtime re-validates in full.
+    identity_path: Path
+    verdict_path: Path
+
+
+def stamp_bundled_registry_release(
+    registry_root: Path,
+    *,
+    package_version: str = __version__,
+) -> StampedRegistryRelease:
+    """Stamp the install-stable identity and verdict beside ``registry_root``.
+
+    The release build calls this -- and only this -- against the registry tree
+    it is packaging. Both records are written here, in this order, from ONE
+    fingerprint collection, because they are not independent: the verdict is
+    keyed on the identity, so a caller free to write them separately could
+    certify one tree with another's identity. Fusing them removes that ordering
+    hazard rather than documenting it.
+
+    The fingerprints come from
+    :func:`collect_registry_identity_fingerprints`, the same collector the
+    runtime walk uses, so the stamp cannot describe a narrower set than the
+    runtime would check. The identity states which tree this is; the verdict
+    states that the build found it green. A mismatch of either at runtime falls
+    back to the full walk and a full re-validation.
 
     Returns:
-        The path the shipped verdict was written to.
+        The paths both records were written to.
     """
     resolved = registry_root.expanduser().resolve()
-    fingerprints = (
-        collect_registry_tree_fingerprints(resolved)
-        + collect_convenio_fingerprints(resolved)
-        + collect_supplementary_orden_fingerprints(resolved)
-    )
-    output_path = shipped_verdict_location(resolved)
-    stamp_bundled_verdict(
+    fingerprints = collect_registry_identity_fingerprints(resolved)
+    stamp = write_registry_identity_stamp(
         registry_fingerprints=fingerprints,
         registry_root=resolved,
-        output_path=output_path,
         package_version=package_version,
     )
-    return output_path
+    verdict_path = shipped_verdict_location(resolved)
+    stamp_bundled_verdict(
+        identity_digest=stamp.tree_digest,
+        output_path=verdict_path,
+        package_version=package_version,
+    )
+    return StampedRegistryRelease(
+        identity_path=registry_identity_stamp_location(resolved),
+        verdict_path=verdict_path,
+    )

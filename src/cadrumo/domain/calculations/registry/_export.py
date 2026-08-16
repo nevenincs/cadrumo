@@ -25,6 +25,7 @@ from ._binding_selector_utils import (
     BindingFixedExportSelector,
     BindingRowExportSelector,
     binding_export_selector,
+    selector_as_dict,
 )
 from ._casilla_membership import casillas_by_id
 from ._errors import RegistryValidationError
@@ -113,8 +114,32 @@ def derive_export_layouts_from_bindings(revision: ModeloRevision) -> tuple[Expor
     """
     if not revision.export_layouts:
         return ()
+    # Parsed LAZILY, over the records a layout actually claims through
+    # ``binding_record``, because the selector key that marks an export
+    # projection is overloaded. ``record`` names an export record in one
+    # authored sense (``page_1``, ``page_01``, ``page_02``) and a SOURCE row-set
+    # in another (``perceptor``, ``donante``, ``m347_declarante_summary``), and
+    # only the first carries wire coordinates. Parsing every binding eagerly
+    # demanded coordinates from the second the moment a revision gained any
+    # export layout, so the first modelo to hold both refused -- with the
+    # informativa group behind it, since 182, 184, 190, 193, 232 and 360 all
+    # carry source-sense bindings.
+    #
+    # Narrowing here changes nothing for a claimed record: the loop below
+    # already consults ``bindings_by_record`` only for records declaring
+    # ``binding_record``, so a binding no record claims could never have
+    # contributed a field. What it stops is demanding a wire projection from a
+    # binding that was never asked to provide one.
+    claimed_records = {
+        record.binding_record
+        for layout in revision.export_layouts
+        for record in layout.records
+        if record.binding_record is not None
+    }
     bindings_by_record: dict[str, list[_BindingExportMember]] = {}
     for binding in revision.bindings:
+        if selector_as_dict(binding).get("record") not in claimed_records:
+            continue
         selector = binding_export_selector(binding, revision=revision)
         if selector is None:
             continue

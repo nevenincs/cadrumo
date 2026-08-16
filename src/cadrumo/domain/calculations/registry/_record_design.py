@@ -51,6 +51,10 @@ from ._record_design_coverage import (
     derive_diseno_coverage_casillas,
 )
 from ._record_design_schema import (
+    AUXILIARY_ENVELOPE_HEADER_CONTENT,
+    AUXILIARY_ENVELOPE_HEADER_LENGTHS,
+    AUXILIARY_ENVELOPE_HEADER_ORDINALS,
+    AUXILIARY_ENVELOPE_HEADER_ROWS,
     RecordDesignAuxiliaryEnvelopeHeader,
     RecordDesignAuxiliaryEnvelopeHeaderField,
     RecordDesignAuxiliaryEnvelopeHeaderRole,
@@ -63,10 +67,12 @@ from ._record_design_schema import (
     RecordDesignNote,
     RecordDesignRelativeSuffixMarker,
     RecordDesignSheet,
+    RecordDesignSinglePositionCorrection,
     RecordDesignSkippedSheet,
     RecordDesignVariableBodyMarker,
     RecordDesignVariableEnvelope,
     RecordDesignVariableTotalMarker,
+    validate_auxiliary_envelope_header_contents,
 )
 
 _log = get_logger(__name__)
@@ -113,6 +119,7 @@ class _WorkbookSheetRows:
 
 type _TypeCorrectionIndex = Mapping[tuple[str, int], RecordDesignFieldTypeCorrection]
 type _HeaderCorrectionIndex = Mapping[tuple[str, int, str], RecordDesignHeaderCellCorrection]
+type _SinglePositionCorrectionIndex = Mapping[tuple[str, int], RecordDesignSinglePositionCorrection]
 
 _CORRECTION_SUFFIX: Final[str] = ".record-design-correction.json"
 _CORRECTION_ADAPTER: Final[TypeAdapter[RecordDesignCorrection]] = TypeAdapter(RecordDesignCorrection)
@@ -126,13 +133,20 @@ class _CorrectionIndex:
     ``header_corrections`` keys on ``(sheet, header_row, column_role)`` -- one
     header column, since a header row's blank cell is looked up by ROLE
     (``"length"``) at probe time, not by a data row number.
+    ``single_position_corrections`` keys on ``(sheet, position)`` -- one PDF row
+    that was never read, so it has no source row to be keyed by.
     """
 
     type_corrections: _TypeCorrectionIndex
     header_corrections: _HeaderCorrectionIndex
+    single_position_corrections: _SinglePositionCorrectionIndex = field(default_factory=dict)
 
 
-_EMPTY_CORRECTIONS: Final[_CorrectionIndex] = _CorrectionIndex(type_corrections={}, header_corrections={})
+_EMPTY_CORRECTIONS: Final[_CorrectionIndex] = _CorrectionIndex(
+    type_corrections={},
+    header_corrections={},
+    single_position_corrections={},
+)
 
 
 def _load_corrections(source_path: Path) -> _CorrectionIndex:
@@ -158,6 +172,7 @@ def _load_corrections(source_path: Path) -> _CorrectionIndex:
         raise RegistryValidationError(f"{sidecar_path}: correction sidecar must declare a 'corrections' list")
     type_corrections: dict[tuple[str, int], RecordDesignFieldTypeCorrection] = {}
     header_corrections: dict[tuple[str, int, str], RecordDesignHeaderCellCorrection] = {}
+    single_position_corrections: dict[tuple[str, int], RecordDesignSinglePositionCorrection] = {}
     for entry in entries:
         # ``strict=False`` here only: JSON has no tuple literal, so the sidecar's
         # ``editions_read`` array arrives as a ``list`` and needs the ordinary
@@ -172,6 +187,14 @@ def _load_corrections(source_path: Path) -> _CorrectionIndex:
                     f"row {correction.source_row}",
                 )
             type_corrections[type_key] = correction
+        elif isinstance(correction, RecordDesignSinglePositionCorrection):
+            position_key = (correction.sheet, correction.position)
+            if position_key in single_position_corrections:
+                raise RegistryValidationError(
+                    f"{sidecar_path}: duplicate single-position correction for sheet "
+                    f"{correction.sheet!r} position {correction.position}",
+                )
+            single_position_corrections[position_key] = correction
         else:
             header_key = (correction.sheet, correction.header_row, correction.column_role)
             if header_key in header_corrections:
@@ -180,7 +203,11 @@ def _load_corrections(source_path: Path) -> _CorrectionIndex:
                     f"row {correction.header_row} role {correction.column_role!r}",
                 )
             header_corrections[header_key] = correction
-    return _CorrectionIndex(type_corrections=type_corrections, header_corrections=header_corrections)
+    return _CorrectionIndex(
+        type_corrections=type_corrections,
+        header_corrections=header_corrections,
+        single_position_corrections=single_position_corrections,
+    )
 
 
 _DECLARED_NON_RECORD_SHEETS_FILENAME: Final[str] = "declared-non-record-sheets.json"
@@ -413,8 +440,13 @@ def _extract_record_design_pdf_cached(
 ) -> RecordDesignExtraction:
     del byte_count, modified_ns
     source_path = Path(path)
+    corrections = _load_corrections(source_path)
     with source_path.open("rb") as pdf_file:
-        return _extract_record_design_pdf_stream(pdf_file, source_label=str(source_path))
+        return _extract_record_design_pdf_stream(
+            pdf_file,
+            source_label=str(source_path),
+            corrections=corrections,
+        )
 
 
 def extract_record_design_pdf_bytes(
@@ -434,6 +466,7 @@ def _extract_record_design_pdf_stream(
     stream: BufferedReader | BytesIO,
     *,
     source_label: str,
+    corrections: _CorrectionIndex = _EMPTY_CORRECTIONS,
 ) -> RecordDesignExtraction:
     import pdfplumber
 
@@ -444,12 +477,12 @@ def _extract_record_design_pdf_stream(
     if not any(line.strip() for line in lines):
         raise RegistryValidationError(f"no text extracted from record-design PDF {source_label}")
     try:
-        return _extract_pdf_lines(lines, source_label=source_label)
+        return _extract_pdf_lines(lines, source_label=source_label, corrections=corrections)
     except ValueError as pdfium_exc:
         text_fallback_error = pdfium_exc
         try:
             fallback_lines = _extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label)
-            return _extract_pdf_lines(fallback_lines, source_label=source_label)
+            return _extract_pdf_lines(fallback_lines, source_label=source_label, corrections=corrections)
         except ValueError as fallback_exc:
             text_fallback_error = fallback_exc
         if "did not contain parseable field rows" not in str(text_fallback_error):
@@ -520,6 +553,7 @@ def _extract_sheet_rows(
     parsed_rows = _scan_sheet_rows(sheet_name, header, rows, corrections.type_corrections)
     if header_correction is not None:
         parsed_rows.corrections_applied.insert(0, header_correction)
+    parsed_rows.fields[:] = _fold_untagged_desglose_components(parsed_rows.fields)
     terminal_extent = _require_contiguous_field_geometry(sheet_name, parsed_rows.fields)
     if parsed_rows.total_positions is not None and terminal_extent != parsed_rows.total_positions:
         raise RegistryValidationError(
@@ -727,6 +761,76 @@ def _matching_component_parent_index(
     if offset < parent.offset or offset + length > parent.offset + parent.length:
         return None
     return parent_index
+
+
+def _fold_untagged_desglose_components(fields: list[RecordDesignField]) -> list[RecordDesignField]:
+    """Nest a desglose AEAT printed WITHOUT dotted ordinals under its parent.
+
+    :func:`_matching_component_parent_index` nests on a dotted ordinal, which is
+    the discriminator that correctly keeps Modelo 303's ``14bis`` a peer of
+    ``14``. But AEAT does not always dot them: Modelo 184 prints ``12 @145+2
+    "Este campo se subdivide en dos:"`` and then numbers its two sub-fields
+    ``13`` and ``14``, as bare consecutive peers. Those rows arrive here as flat
+    siblings, so ``components`` stays empty and every consumer sees the parent
+    span as a position in its own right -- exactly what
+    ``_required_positions`` documents as the wrong thing to ask a layout to
+    write.
+
+    Containment alone must NOT be the rule. Across the bundled corpus (1,702
+    sheets, 133,753 fields) 51 bare-ordinal contained runs exist, and they are a
+    mixed population: real desglose, and artefacts. Every one of Modelo 038's
+    eleven comes from :func:`_extract_visual_chart_sheet`, whose merged
+    chart-geometry fragments leave a small span loose inside a large one -- one
+    of them reads ``OILOF )N.ICAUNITNOC( ED OREM.N``, mirrored text from a
+    misread chart. Nesting those would reparent real fields under garbage.
+
+    So the signal is EXACT TILING: the run must start on the parent's first
+    byte, each row must resume precisely where the previous one ended, and the
+    last must land on the parent's final byte. A printed row subdivided into
+    parts is covered completely by those parts; a fragment sitting loose inside
+    a larger one is not. That separates the corpus cleanly -- 35 runs tile and
+    fold, 16 do not and are left exactly as they were, including all eleven of
+    Modelo 038's.
+
+    Folding only ever REMOVES the parent from the required-position set and
+    never adds one, and the reserved-byte scan already walks
+    ``(field, *field.components)``, so a ``RESERVADO`` sub-field keeps its
+    protection after folding.
+    """
+    folded: list[RecordDesignField] = []
+    index = 0
+    while index < len(fields):
+        parent = fields[index]
+        run: list[RecordDesignField] = []
+        cursor = index + 1
+        while cursor < len(fields):
+            candidate = fields[cursor]
+            inside = (
+                candidate.offset >= parent.offset
+                and candidate.offset + candidate.length <= parent.offset + parent.length
+                and (candidate.offset, candidate.length) != (parent.offset, parent.length)
+            )
+            if not inside:
+                break
+            run.append(candidate)
+            cursor += 1
+        if run and not parent.components and _tiles_exactly(parent, run):
+            folded.append(parent.model_copy(update={"components": tuple(run)}))
+            index = cursor
+            continue
+        folded.append(parent)
+        index += 1
+    return folded
+
+
+def _tiles_exactly(parent: RecordDesignField, run: list[RecordDesignField]) -> bool:
+    """Return whether ``run`` covers ``parent``'s span end to end with no gap."""
+    expected = parent.offset
+    for component in run:
+        if component.offset != expected:
+            return False
+        expected = component.offset + component.length
+    return expected == parent.offset + parent.length
 
 
 def _variable_body_marker(
@@ -1453,7 +1557,20 @@ _NARRATIVE_PDF_ROW_RE = re.compile(
     r"(?P<text>.*)$",
     re.IGNORECASE,
 )
-_PDF_PAGE_RECORD_RE = re.compile(r"^P[áa]g\s+(?P<page>\d+)\s+DISE[ÑN]O DE REGISTRO\b", re.IGNORECASE)
+#: ``Pag`` is abbreviated WITH a period in some designs and without in others
+#: -- Modelo 360 heads its page two "Pag. 2 DISENO DE REGISTRO 25/03/2021" --
+#: and requiring whitespace straight after the stem lost every period-form
+#: heading, leaving that record body unidentified and the design partly read.
+_PDF_PAGE_RECORD_RE = re.compile(r"^P[áa]g\.?\s+(?P<page>\d+)\s+DISE[ÑN]O DE REGISTRO\b", re.IGNORECASE)
+#: Some designs head a further record "Anexo" in the SAME running-header shape
+#: their numbered pages use, rather than as the quoted `ANEXO <<...>>` title
+#: :data:`_PDF_RECORD_ANEXO_HEADING_RE` recognises. Modelo 840 writes
+#: "Pag 1 DISENO DE REGISTRO", "Pag 2 DISENO DE REGISTRO" and then
+#: "Anexo DISENO DE REGISTRO" for its third record, whose own opening tag is
+#: `<T840030>` beside the pages' `<T840010>` and `<T840020>`. Without this the
+#: third record has no read identity and the whole design reports PARTIAL --
+#: correctly, because a real record body was going unread.
+_PDF_ANEXO_PAGE_RECORD_RE = re.compile(r"^Anexo\s+DISE[ÑN]O DE REGISTRO\b", re.IGNORECASE)
 _PDF_RECORD_HEADING_RE = re.compile(
     r"^(?:[A-Z]\.?\s*-?\s*)?(?:TIPO DE REGISTRO|Tipo de registro|RECORD TYPE|Record [Tt]ype)\s+"
     r"(?P<record>\d+)\s*:\s*(?P<title>.+)$",
@@ -1481,6 +1598,23 @@ _PDF_RECORD_HEADING_REVERSED_RE = re.compile(
 #: is decided by geometry, in :meth:`_PdfParseState._begins_a_new_record_body`.
 _PDF_RECORD_HEADING_TYPE_LAST_RE = re.compile(
     r"^(?:[A-Z]\.?\s*-?\s*)?REGISTRO DE TIPO\s+(?P<record>\d+)\s*[:.]\s*(?P<title>\S.*)$",
+    re.IGNORECASE,
+)
+
+
+#: A FOURTH shape: an annex record headed by its own quoted title, which is how
+#: Modelo 296 heads the two anexos that follow its perceptor record --
+#: ``ANEXO <<VALORES NEGOCIABLES. RELACION DE PAGO A CONTRIBUYENTES`` and
+#: ``ANEXO <<VALORES NEGOCIABLES. RELACION DE CERTIFICADOS DE PAGO``, each with
+#: its hoja discriminator on the following line. Both were read as prose, so both
+#: record bodies arrived unidentified and the design never read whole.
+#:
+#: The opening quotation mark is REQUIRED, and that is what separates a titled
+#: annex record from a prose reference to a numbered annex ("... que figuran en
+#: el anexo II de la Orden EHA/3496/2011"). Like the type-last shape above this
+#: only STAGES a name; geometry decides whether a record starts.
+_PDF_RECORD_ANEXO_HEADING_RE = re.compile(
+    r"^ANEXO\s+[«“\"'](?P<title>[^»”\"']{4,120})",
     re.IGNORECASE,
 )
 
@@ -1556,6 +1690,14 @@ class _PdfSheetDraft:
     #: The source row at which this body's first position was seen, used to name
     #: an unidentified body by where it is rather than by what it might be.
     opened_at_row: int | None = None
+    #: Rows carrying a position RANGE and a description but no naturaleza, held
+    #: for :meth:`fill_unread_gaps`. Staged rather than admitted on sight because
+    #: the shape is dominated by prose; see :func:`_unnamed_position_candidate`.
+    unnamed_candidates: list[_PdfRow] = field(default_factory=list)
+    #: Declared corrections that authorised a staged candidate, recorded so a
+    #: design read only BECAUSE of a declaration is never reported as one AEAT
+    #: published cleanly.
+    applied_corrections: list[RecordDesignSinglePositionCorrection] = field(default_factory=list)
 
     def has_started(self) -> bool:
         """Whether any field of this record body has been seen yet."""
@@ -1579,10 +1721,60 @@ class _PdfSheetDraft:
         self.fields.append(self.current.finish())
         self.current = None
 
+    def fill_unread_gaps(self) -> None:
+        """Admit staged candidates that fall wholly inside a span no row claims.
+
+        A fixed-width record is contiguous, so an interior span no read row
+        covers is a row that was dropped, not a span AEAT left undescribed. Where
+        a staged candidate covers exactly such a span it is the dropped row, and
+        admitting it is the only reading that makes the record whole.
+
+        The containment test is what keeps this safe. A candidate overlapping any
+        claimed position is discarded, so a prose line restating a field's own
+        range -- the shape this parser must keep refusing -- can never be
+        admitted: its range is claimed by the very field it describes. Only a
+        genuine hole can absorb one.
+
+        Modelo 296 is the worked case: its perceptor record declares 500
+        positions and read none of 413-432, because AEAT printed
+        ``413-432 CODIGO LEI DEL PERCEPTOR`` with no naturaleza while its
+        neighbour ``433-452 Alfanumerico NIF EN EL PAIS...`` carries one.
+        """
+        if not self.unnamed_candidates or not self.fields:
+            return
+        claimed: set[int] = set()
+        for read in self.fields:
+            claimed.update(range(read.offset, read.offset + read.length))
+        admitted: list[RecordDesignField] = []
+        for candidate in self.unnamed_candidates:
+            span = range(candidate.offset, candidate.offset + candidate.length)
+            if claimed.isdisjoint(span):
+                admitted.append(
+                    RecordDesignField(
+                        sheet=self.name,
+                        row=candidate.source_row,
+                        ordinal=None,
+                        offset=candidate.offset,
+                        length=candidate.length,
+                        type_code=candidate.type_code,
+                        description=candidate.description,
+                    ),
+                )
+                claimed.update(span)
+        if admitted:
+            self.fields = sorted([*self.fields, *admitted], key=lambda read: read.offset)
+
     def finish(self, *, source_label: str) -> RecordDesignSheet:
         self.finish_current()
+        self.fill_unread_gaps()
+        self.fields = _fold_untagged_desglose_components(self.fields)
         total_positions = max((field.offset + field.length - 1 for field in self.fields), default=None)
-        sheet = RecordDesignSheet(name=self.name, fields=tuple(self.fields), total_positions=total_positions)
+        sheet = RecordDesignSheet(
+            name=self.name,
+            fields=tuple(self.fields),
+            total_positions=total_positions,
+            corrections=tuple(self.applied_corrections),
+        )
         _validate_pdf_sheet(sheet, source_label=source_label)
         return sheet
 
@@ -1722,15 +1914,24 @@ class _PdfParseState:
     them without threading out-parameters through every helper.
     """
 
-    __slots__ = ("current", "in_table", "pending_name", "pending_record_name", "results", "source_label")
+    __slots__ = (
+        "corrections",
+        "current",
+        "in_table",
+        "pending_name",
+        "pending_record_name",
+        "results",
+        "source_label",
+    )
 
-    def __init__(self, *, source_label: str) -> None:
+    def __init__(self, *, source_label: str, corrections: _CorrectionIndex = _EMPTY_CORRECTIONS) -> None:
         self.results: list[_PdfSheetResult] = []
         self.current: _PdfSheetDraft | None = None
         self.in_table: bool = False
         self.pending_name: str | None = None
         self.pending_record_name: str | None = None
         self.source_label = source_label
+        self.corrections = corrections
 
     def finalise(self) -> RecordDesignExtraction:
         """Return the parsed records, naming every one the parser did not read.
@@ -1787,7 +1988,35 @@ class _PdfParseState:
             return
         if self._consume_field_row(line, row_number):
             return
+        self._stage_unnamed_position_candidate(line, row_number)
         self._consume_field_continuation(line)
+
+    def _stage_unnamed_position_candidate(self, line: str, row_number: int) -> None:
+        """Hold a range-carrying row whose naturaleza AEAT omitted, for the gap fill.
+
+        Staged even though the line ALSO reaches
+        :meth:`_consume_field_continuation`, which is deliberate: the two are not
+        alternatives, because at this point nothing knows whether the line is a
+        dropped row or the continuation prose it far more often is. The gap fill
+        decides later on geometry. Where it admits one, the text appears both on
+        the admitted field and on the neighbouring description it was absorbed
+        into -- accepted, because a duplicated description is visible and
+        harmless while a dropped field is neither.
+        """
+        if self.current is None:
+            return
+        candidate = _unnamed_position_candidate(
+            line,
+            row_number,
+            sheet=self.current.name,
+            single_position_corrections=self.corrections.single_position_corrections,
+        )
+        if candidate is None:
+            return
+        self.current.unnamed_candidates.append(candidate)
+        declared = self.corrections.single_position_corrections.get((self.current.name, candidate.offset))
+        if declared is not None and candidate.length == 1:
+            self.current.applied_corrections.append(declared)
 
     def _close_current_body(self) -> None:
         if self.current is None:
@@ -1909,8 +2138,13 @@ def _skipped_record_reason(result: _PdfSheetResult) -> str:
     )
 
 
-def _extract_pdf_lines(lines: tuple[str, ...], *, source_label: str) -> RecordDesignExtraction:
-    state = _PdfParseState(source_label=source_label)
+def _extract_pdf_lines(
+    lines: tuple[str, ...],
+    *,
+    source_label: str,
+    corrections: _CorrectionIndex = _EMPTY_CORRECTIONS,
+) -> RecordDesignExtraction:
+    state = _PdfParseState(source_label=source_label, corrections=corrections)
     for row_number, raw_line in enumerate(lines, start=1):
         state.feed(_clean_pdf_line(raw_line), row_number)
     return state.finalise()
@@ -2066,6 +2300,60 @@ def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
     )
 
 
+
+def _unnamed_position_candidate(
+    line: str,
+    source_row: int,
+    *,
+    sheet: str = "",
+    single_position_corrections: _SinglePositionCorrectionIndex | None = None,
+) -> _PdfRow | None:
+    """Return a position row whose naturaleza AEAT omitted, else ``None``.
+
+    Deliberately NOT consulted by :func:`_parse_pdf_row`, which must keep
+    refusing these outright: the same shape is overwhelmingly prose, because AEAT
+    routinely opens a field's description with that field's own range, and 41
+    bundled designs do. A candidate returned here is admitted only by
+    :meth:`_PdfSheetDraft.fill_unread_gaps`, and only into a span no read row
+    claims -- so it can add a field the sheet was missing entirely and can never
+    displace, override or duplicate one that was read.
+    """
+    narrative = _NARRATIVE_PDF_ROW_RE.match(line)
+    if narrative is None or _naturaleza_or_none(narrative.group("type")) is not None:
+        return None
+    start = int(narrative.group("start"))
+    end_group = narrative.group("end")
+    if end_group is None:
+        # A single position with no naturaleza is indistinguishable from a
+        # numbered prose sentence; only an explicit range is evidence of
+        # extent, or a declared correction naming this exact position. See
+        # :class:`RecordDesignSinglePositionCorrection` for why the declaration
+        # is the only admissible substitute for the missing range.
+        declared = (single_position_corrections or {}).get((sheet, start))
+        if declared is None:
+            return None
+        return _PdfRow(
+            source_row=source_row,
+            ordinal=None,
+            offset=start,
+            length=1,
+            type_code=declared.corrected_type,
+            description=declared.description,
+        )
+    end = int(end_group)
+    if end < start:
+        return None
+    text = (narrative.group("type") + " " + narrative.group("text")).strip()
+    return _PdfRow(
+        source_row=source_row,
+        ordinal=None,
+        offset=start,
+        length=end - start + 1,
+        type_code=_ABSENT_NATURALEZA_TYPE_CODE,
+        description=text,
+    )
+
+
 def _naturaleza_or_none(value: str) -> str | None:
     """Return the canonical naturaleza ``value`` names, or ``None`` if it names none.
 
@@ -2125,9 +2413,11 @@ def _naturaleza_or_none(value: str) -> str | None:
 
 def _pdf_page_name(line: str) -> str | None:
     match = _PDF_PAGE_RECORD_RE.match(line)
-    if match is None:
-        return None
-    return f"Pág. {match.group('page')}"
+    if match is not None:
+        return f"Pág. {match.group('page')}"
+    if _PDF_ANEXO_PAGE_RECORD_RE.match(line) is not None:
+        return "Anexo"
+    return None
 
 
 def _pdf_record_heading_name(line: str) -> str | None:
@@ -2148,6 +2438,9 @@ def _pdf_candidate_record_name(line: str) -> str | None:
     tag = _PDF_RECORD_MODELO_PAGE_TAG_RE.match(line.strip())
     if tag is not None:
         return tag.group("tag")
+    anexo = _PDF_RECORD_ANEXO_HEADING_RE.match(line.strip())
+    if anexo is not None:
+        return "Anexo - " + _normalise_pdf_sheet_name(anexo.group("title"))
     match = _PDF_RECORD_HEADING_TYPE_LAST_RE.match(line)
     if match is None:
         return None
@@ -2470,6 +2763,15 @@ _VISUAL_CHART_HEADER_RE = re.compile(
     re.IGNORECASE,
 )
 _VISUAL_CHART_TYPE_CODE = "No consta en gráfico"
+
+#: The naturaleza a row carries when AEAT printed a position range and a
+#: description but omitted the type token between them. Distinct from
+#: :data:`_VISUAL_CHART_TYPE_CODE`, which marks a design that has no type column
+#: at all: here the column exists and this one row is blank in it. Never a
+#: guess -- an inferred "Alfanumerico" would be indistinguishable from one AEAT
+#: actually printed.
+_ABSENT_NATURALEZA_TYPE_CODE = "No consta"
+
 _REVERSED_VISUAL_CHART_WORDS = {
     "AICNIVORP",
     "AJOH",
@@ -2495,6 +2797,10 @@ _REVERSED_VISUAL_CHART_TOKENS = {
 
 
 __all__ = [
+    "AUXILIARY_ENVELOPE_HEADER_CONTENT",
+    "AUXILIARY_ENVELOPE_HEADER_LENGTHS",
+    "AUXILIARY_ENVELOPE_HEADER_ORDINALS",
+    "AUXILIARY_ENVELOPE_HEADER_ROWS",
     "DerivedDisenoCasilla",
     "DisenoCoverageReport",
     "RecordDesignCompositeRelativeClosing",
@@ -2519,4 +2825,5 @@ __all__ = [
     "extract_record_design_pdf",
     "extract_record_design_pdf_bytes",
     "extract_record_design_workbook",
+    "validate_auxiliary_envelope_header_contents",
 ]

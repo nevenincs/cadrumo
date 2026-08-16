@@ -28,6 +28,7 @@ from ....core import (
 from ._compiled_cache import load_compiled_registry_cache, store_compiled_registry_cache
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._export_semantics import ExportComputedKey, ExportDraftAttribute
+from ._identity import RegistryIdentity, resolve_registry_identity, stamped_cache_key_tuples
 from ._ids import RevisionId
 from ._loader_cache import (
     BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
@@ -1058,7 +1059,11 @@ def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:
     return parameters
 
 
-def load_registry_tree(root: Path) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
+def load_registry_tree(
+    root: Path,
+    *,
+    identity: RegistryIdentity | None = None,
+) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     """Load all registry files from ``root``.
 
     Discovers modelos in two layouts:
@@ -1068,10 +1073,31 @@ def load_registry_tree(root: Path) -> tuple[tuple[ModeloDefinition, ...], Regist
     A single modelo cannot exist in both layouts simultaneously; the
     loader raises ``RegistryLoadError`` if both forms are present.
 
+    ``identity`` is the caller's already-resolved tree identity, passed by the
+    authority so one stamp read serves both. It is a HINT about the tree, never
+    a key the caller chooses: on a walked tree this function collects its own
+    tree-scoped fingerprints regardless, because the compiled-artefact key must
+    be identical for every caller of this function or the cross-process share
+    the artefact exists to deliver fragments per call site. Omitted, the
+    identity is resolved here through the same canonical resolver.
+
+    On a STAMPED tree the structural discovery pass is skipped along with the
+    fingerprint walk. That pass exists so a malformed tree is refused even when
+    the compiled artefact hits; on a stamped install the build already proved
+    the structure, and on an artefact MISS the compile re-discovers and refuses
+    anyway, so the refusal is preserved wherever it can still fire.
+
     Returns:
         A tuple of all :class:`ModeloDefinition` objects and the merged :class:`RegistryCatalogues`.
     """
     resolved = root.resolve()
+    if identity is None:
+        identity = resolve_registry_identity(
+            resolved,
+            collect_fingerprints=_collect_registry_tree_fingerprints,
+        )
+    if identity.is_stamped:
+        return _load_registry_tree_cached(str(resolved), stamped_cache_key_tuples(identity))
     _validate_legal_directory(resolved / "legal")
     discover_modelo_sources(resolved / "modelos")
     fingerprints = _collect_registry_tree_fingerprints(resolved)
