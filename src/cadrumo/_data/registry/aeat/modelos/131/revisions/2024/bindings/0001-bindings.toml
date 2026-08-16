@@ -13,7 +13,7 @@ source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
 id = "modelo-131-2024.page1.114-130.actividad-1-rendimiento-neto"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-1-rendimiento-neto", offset = 114, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-1-rendimiento-neto", offset = 114, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
@@ -25,7 +25,7 @@ source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
 id = "modelo-131-2024.page1.136-152.actividad-1-resultado"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-1-resultado", offset = 136, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-1-resultado", offset = 136, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
@@ -37,7 +37,7 @@ source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
 id = "modelo-131-2024.page1.157-173.actividad-2-rendimiento-neto"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-2-rendimiento-neto", offset = 157, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-2-rendimiento-neto", offset = 157, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
@@ -49,7 +49,7 @@ source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
 id = "modelo-131-2024.page1.179-195.actividad-2-resultado"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-2-resultado", offset = 179, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-2-resultado", offset = 179, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
@@ -61,7 +61,7 @@ source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
 id = "modelo-131-2024.page1.200-216.actividad-3-rendimiento-neto"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-3-rendimiento-neto", offset = 200, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-3-rendimiento-neto", offset = 200, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
@@ -73,7 +73,7 @@ source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
 id = "modelo-131-2024.page1.222-238.actividad-3-resultado"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-3-resultado", offset = 222, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-3-resultado", offset = 222, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
@@ -85,7 +85,7 @@ source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
 id = "modelo-131-2024.page1.243-259.actividad-4-rendimiento-neto"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-4-rendimiento-neto", offset = 243, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-4-rendimiento-neto", offset = 243, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
@@ -97,7 +97,7 @@ source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
 id = "modelo-131-2024.page1.265-281.actividad-4-resultado"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-4-resultado", offset = 265, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-4-resultado", offset = 265, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
@@ -109,7 +109,7 @@ source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
 id = "modelo-131-2024.page1.286-302.actividad-5-rendimiento-neto"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-5-rendimiento-neto", offset = 286, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-5-rendimiento-neto", offset = 286, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
@@ -121,7 +121,7 @@ source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
 id = "modelo-131-2024.page1.308-324.actividad-5-resultado"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-5-resultado", offset = 308, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-5-resultado", offset = 308, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2024"]
 [[revisions."2024".bindings]]
