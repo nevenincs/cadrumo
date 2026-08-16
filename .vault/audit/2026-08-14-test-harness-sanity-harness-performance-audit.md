@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#test-harness-sanity'
 date: '2026-08-14'
-modified: '2026-08-15'
+modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:b7113f9b0baebe21ddd8e7bfb5f13e3a11e3c81454954611ce845cff9aadd9d9'
+body_hash: 'sha256:e8d4d9fa59cabbfa80720ab09e59907f45ae732666721b996c1b9f71594d262f'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1454,3 +1454,47 @@ the cold-start round.
 `test_import_hygiene_gate` means an earlier fix in this campaign is being reused
 by a module it was not written for. That is the shape worth preferring: the win
 compounds where a per-module fixture would not have.
+
+## Round: the last two targets, and confirmation the KDF fix cascaded
+
+**`test_enrollment_wraps_the_profiles_own_key_under_a_minted_mnemonic`** was
+33.35s of SETUP in the full profile. Isolated now: **1.85s setup, 8.76s for the
+whole module of 16 tests**. Nothing was done to this module. It registers
+profiles, so the KDF change collected it.
+
+That is the confirmation the previous rounds could only predict. The KDF lever
+was measured on the doors it was applied to; this is a module nobody touched,
+carrying an 18x drop, which is what a cascade looks like from the outside. It
+also re-validates the reading rule: a large SETUP figure is a bill, and this
+bill was being paid by a calibration that no longer runs.
+
+**`test_pdf_corpus_text_sidecars_equal_current_production_extraction`** --
+33.87s in-table, **32.25s isolated**, so genuine work with no contention
+inflation. It re-extracts text from every PDF in the corpus and compares against
+the committed sidecars. It is the only PDF-extracting test in its module (the
+siblings cover HTML normatives at 4.02s and source matching at 1.37s), so there
+is no second caller to share with. The cost IS the extraction the gate exists to
+verify.
+
+### State of the durations-driven phase
+
+Every entry above ~30s isolated, across all three slices, has now been examined.
+The tally for this phase:
+
+- FIXED where work was genuinely duplicated: KDF calibration (three doors),
+  locale catalogue parsing, import-hygiene scanning, IVA stem passes, the audit
+  shadowing dimension, the drift census, the packaging cohort build, the
+  registry accessor migration, `get_codebase_keys`.
+- RULED OUT with a measurement, and recorded so they are not re-chased: fifteen
+  or so targets whose cost is either already shared downstream, irreducible work
+  the gate exists to perform, or an oracle whose duplication IS the measurement.
+
+The ratio has inverted. Early rounds found duplication in most targets; the last
+four rounds produced one fix and eleven rule-outs. That is the signal that this
+phase is done rather than merely slow: the remaining cost in this suite is work
+the tests are for.
+
+Two items with real headroom remain, both recorded above and both requiring an
+owner's decision rather than more profiling: the nineteen production
+`load_registry_tree` sites, and the teardown `PermissionError` that destroys a
+completed run's entire report.
