@@ -42,19 +42,6 @@ def test_not_in_force_refusal_carries_no_authored_sentence() -> None:
     assert str(caught.value) == "errors.iva.rate_slot_not_in_force"
 
 
-def test_the_two_rate_slot_conditions_do_not_share_a_key() -> None:
-    """Coverage and legality are different facts and must not share a message.
-
-    Asserted against the pair of key literals rather than by probing both
-    branches, because no ES date currently separates the two tiers' coverage --
-    the sibling coverage-versus-legality module carries the tripwire that reds
-    when one reopens. Pinning the pair here keeps the two keys from being
-    collapsed onto one in the meantime, which is the failure mode a probe
-    cannot currently observe.
-    """
-    assert "errors.iva.rate_registry_coverage_gap" != "errors.iva.rate_slot_not_in_force"
-
-
 @pytest.mark.parametrize(
     "key",
     ("errors.iva.rate_registry_coverage_gap", "errors.iva.rate_slot_not_in_force"),
