@@ -15,6 +15,7 @@ from ....application.live.tests._notification_document_support import build_serv
 from ....core import require_active_bucket_id
 from ....core.hashing import sha256_hex
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
+from ....tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
 from ....tests.cli_envelope import unwrap_cli_result, unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli
 
@@ -74,7 +75,7 @@ def test_notification_snapshot_payloads_refuse_malformed_identity_time_url_and_c
 # assertion wants would prove only that the assertion was written.
 
 _CERT = "2699101808461"
-_DETAIL_URL = "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/DetalleSede?ncc=2699101808461"
+_DETAIL_URL = f"{NOTIFICATION_DETALLE_SEDE_URL_FIXTURE}?ncc=2699101808461"
 
 
 class _NotificationDocumentShared(TypedDict):

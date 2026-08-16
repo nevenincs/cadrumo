@@ -69,6 +69,7 @@ from ....domain.modelos import (
     m303_rectificativa_motive_is_applicable,
     m303_rectificativa_record_design_from_inspection,
 )
+from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.filing_evidence import general_m303_filing_evidence_from_regimen_snapshot
 from ....tests.secure_sql import isolated_runtime_profile
@@ -196,7 +197,7 @@ def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RE
         presentation_id=_RECEIPT,
         presented_at=_NOW,
         tax_id=_TAX_ID,
-        verification_url="https://sede.agenciatributaria.gob.es/",
+        verification_url=SEDE_ROOT_URL_FIXTURE,
         source_pdf_path=Path("sha256/s92-justificante.pdf"),
         source_pdf_sha256="a" * 64,
         parsed_at=_NOW,

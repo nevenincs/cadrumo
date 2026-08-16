@@ -41,6 +41,7 @@ from ....application.live import (
 from ....core.config import load_settings
 from ....core.hashing import sha256_hex
 from ....domain.attachments import AttachmentStoreProtocol
+from ....tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.secure_sql import TestRuntimeProfile
 
@@ -51,7 +52,7 @@ BUCKET_ID = "61616161-6161-4161-8161-616161616161"
 DOCUMENT_NAMESPACE = "cadrumo.application.live.notification_document"
 CERT_READ = "2699101808461"
 CERT_UNREAD = "2596230606502"
-DETAIL_URL = "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/DetalleSede?ncc=2699101808461"
+DETAIL_URL = f"{NOTIFICATION_DETALLE_SEDE_URL_FIXTURE}?ncc=2699101808461"
 
 SANCION_TEXT_LINES = (
     "Clave de liquidacion: A2860024500012345",

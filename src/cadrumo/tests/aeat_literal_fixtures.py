@@ -15,6 +15,29 @@ from ..core.config import Settings
 _AEAT = Settings.external_constants().aeat
 
 AEAT_HOST_SUFFIX_EXPECTED = _AEAT.domains.host_suffix
+
+# ── Sede/www6 URLs test modules previously owned inline ──────────────────────
+#
+# Assembled from ``_AEAT.domains`` rather than spelled out, so a domain change
+# moves them with the constants instead of leaving nine test modules pinned to
+# a host the product no longer uses.
+SEDE_ROOT_URL_FIXTURE = f"{_AEAT.domains.sede}/"
+IVA_WALLET_SOURCE_URL_FIXTURE = f"{_AEAT.domains.sede}/wallet"
+COTEJO_VERIFICATION_URL_FIXTURE = f"{_AEAT.domains.sede}/cotejo/A1B2C3D4E5F6G7H8"
+NOTIFICATION_DETALLE_SEDE_PATH_FIXTURE = "/wlpl/GNNO-JDIT/DetalleSede"
+#: Notification paths the same-host guard must REFUSE: a comparecencia surface
+#: that is mutation-shaped, and an acknowledge surface reached by redirect.
+#: Both are canaries -- the guard proving it rejects them is the whole point.
+NOTIFICATION_COMPARECER_PATH_CANARY = "/wlpl/GNNO-JDIT/comparecer"
+NOTIFICATION_ACKNOWLEDGE_PATH_CANARY = "/wlpl/GNNO-JDIT/acknowledge"
+NOTIFICATION_DETALLE_SEDE_URL_FIXTURE = f"{_AEAT.domains.www6}{NOTIFICATION_DETALLE_SEDE_PATH_FIXTURE}"
+
+#: Redaction canaries: a Sede URL carrying a secret in its query string, which
+#: the envelope funnel must strip. The secret is the point, so these stay
+#: whole-URL rather than being assembled at each call site.
+REDACTION_SESSION_QUERY_URL_CANARY = f"{_AEAT.domains.sede}/path?session=secret"
+REDACTION_TOKEN_QUERY_URL_CANARY = f"{_AEAT.domains.sede}/private?token=correct-horse"
+
 AEAT_LEGACY_APEX_CANARY = "aeat.es"
 AEAT_LEGACY_SEDE_CANARY = f"sede.{AEAT_LEGACY_APEX_CANARY}"
 CLAVE_MOVIL_BROWSER_GLOBAL_EXPECTED = _AEAT.clave_movil.obtener_clave_movil_browser_global

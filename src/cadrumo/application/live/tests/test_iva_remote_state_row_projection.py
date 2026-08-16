@@ -19,6 +19,7 @@ from ....domain.iva_compensation import (
     IvaCompensationCarryForwardLot,
     IvaCompensationExpiryReviewState,
 )
+from ....tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE
 from .._iva_remote_state import _carry_forward_lot_row, _taxpayer_ref
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -110,7 +111,7 @@ def test_the_blank_subject_is_reachable_through_the_wallet_observation() -> None
         target_year=2026,
         target_period=Period.model_validate({"filing_year": 2026, "code": "1T"}),
         total_pending=Decimal("0"),
-        source_url="https://sede.agenciatributaria.gob.es/wallet",
+        source_url=IVA_WALLET_SOURCE_URL_FIXTURE,
         captured_at=datetime(2026, 4, 1, tzinfo=UTC),
     )
 
