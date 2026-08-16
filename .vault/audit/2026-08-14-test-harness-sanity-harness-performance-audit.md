@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:a3f094dfa0e29c2261e267a973ee3b3197324dc0b9ef77399726efe3da3779f0'
+body_hash: 'sha256:f00112193de238f6c0b7817af979155f46023a5f681da6cd7ac2af7f42f4448a'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -3342,3 +3342,76 @@ this per document, not once.
   and telemetry dirs -- is declared in `core/_config_llm_fields.py`. The Ollama
   endpoint alone sits in `core/_config_runtime_fields.py:18`. It is a normal
   Settings field with the normal env override; only its home is wrong.
+
+## Fixed: the endpoint is asked once, not once per document
+
+Two commits, driven by the diagnosis above. Both cache the answer to "is the
+local model runtime reachable?", which is a property of the machine rather than
+of the work, and was being rediscovered constantly at ~0.94s per refused
+connection.
+
+**1. `probe_ollama_vision`** now caches its `DependencyStatus` per
+`(endpoint, model)` for `OLLAMA_PROBE_CACHE_TTL_S` (10s, matching
+`BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS` rather than inventing a cadence).
+Keyed on the endpoint, so a suite standing up its own reader on an ephemeral
+port asks a different question and is unaffected. Probes fell 65 -> 6.
+
+**2. `_read_runtime_json`** -- found only because the first fix left the module
+still slow, and the socket counter was extended to record the CALL SITE of every
+connection. That attribution showed **41 of the remaining connections came from
+`read_runtime_residents`**, a second endpoint reader with no memory of its own
+failures. It now remembers per base URL when the endpoint last refused and
+returns the same `None`, without the wait.
+
+**Only failure is cached, and the asymmetry is the design.** A successful read is
+answered live every time, so a resident-model set is never stale and contention
+is never assessed against a snapshot -- the moment the runtime answers, the cache
+stops participating. Only the answer that does not change, and costs most to
+obtain, is remembered.
+
+### Measured
+
+| | before | after |
+|---|---|---|
+| `test_batch_ingest_runner` | 97.85s, 98.61s | **34.30, 34.71, 34.89, 35.61, 35.79s (-65%)** |
+| its connections / connect time | 76 / 71.5s | **12 / 8.2s** |
+| application integration lane, connect time | 78.6s | **9.2s (-88%)** |
+| that lane's wall clock | 211.44s | 205.31s |
+
+The lane wall clock moves only ~6s because it runs six-wide: 69s of saved connect
+time divides across workers and the lane is bounded by its slowest one. **The 65%
+is what a serial run gets** -- one developer running one file, and every
+subprocess CLI invocation.
+
+### Deliberately not done
+
+**No blanket per-test cache clearing.** Caching ACROSS tests is exactly where the
+win is; clearing per test would restore the original cost.
+`clear_ollama_vision_probe_cache` and `clear_runtime_endpoint_failure_cache` are
+exported for a suite that needs a live answer, and the loopback-reader suites
+stand up servers on ephemeral ports, so their URLs are distinct keys and they are
+safe by construction rather than by luck.
+
+**The TTL was not lengthened** to chase the residual 12 connections. A longer
+window trades away the operator-responsiveness the bound exists to protect: a
+model server started mid-session must appear without a restart.
+
+### Verification, and two scares that were not the change
+
+- Five consecutive clean runs, 21 passed each.
+- A run showing 8 failures occurred only under the socket-counting plugin, which
+  patches `socket.connect` and walks the stack on every connection -- intrusive
+  enough to trip the module's documented pre-existing flakiness. Four clean runs
+  followed without it.
+- 96 unit failures across the wider ledger tree are `RegistryValidationError` on
+  modelo authority grades: the peer registry campaign, unrelated. Confirmed by
+  reading the first failure rather than assuming.
+- Both loopback-reader suites, which stand up real servers, stay green
+  (34 unit + 3 integration).
+
+### The instrument lesson, twice over
+
+Counting connections found the first caller. It could not have found the second:
+after the probe cache landed, the count merely said 40 remained. **Attributing
+each connection to its call site is what turned "still slow" into a named
+function.** Where a cost survives a fix, instrument WHO pays it, not how much.
