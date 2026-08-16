@@ -1439,3 +1439,48 @@ def test_renderer_module_has_no_old_tree_or_approximate_admission_surface() -> N
         "read_text",
     ):
         assert forbidden not in source
+
+
+@pytest.mark.parametrize(
+    ("content", "expected"),
+    [
+        # The two spellings AEAT actually ships for one closed value set.
+        ("1 - Sí  2 - No", ("1", "2")),
+        ("1 -Sí, 2 -No", ("1", "2")),
+        ("3 -Mensual, 6 -Trimestral, 12 -Anual", ("3", "6", "12")),
+        # A RANGE states an interval, not a set. Reading "01-12" as two members
+        # would emit an enumeration of {1, 12} and silently refuse every month
+        # between them, so the separator refuses a digit on its right.
+        ("01-12", ()),
+        ("Periodos 01-12 del ejercicio", ()),
+        # A single dash-labelled value is not enough to call it an enumeration;
+        # the caller requires more than one member before taking this reading.
+        ("1 - Sí", ("1",)),
+    ],
+)
+def test_dash_numeric_enumeration_reads_labels_and_refuses_ranges(
+    content: str,
+    expected: tuple[str, ...],
+) -> None:
+    """The dash-enumeration reader admits AEAT's label spellings, never a range."""
+    values = tuple(
+        match.group("value") for match in _export_tree._DASH_NUMERIC_ENUMERATION_TOKEN_RE.finditer(content)
+    )
+
+    assert values == expected
+
+
+def test_bare_record_closing_tag_is_recognised_without_a_constante_label() -> None:
+    """A record's closing identifier is readable even when printed unlabelled.
+
+    Modelo 353 prints `</T35301000>` with neither the `Constante` label nor
+    quotes its own opening tag carries. The pattern keys on the tag's SHAPE, so
+    widening it cannot turn an arbitrary unlabelled cell into a mandated literal.
+    """
+    matcher = _export_tree._OFFICIAL_BARE_RECORD_CLOSING_TAG_RE
+
+    assert matcher.fullmatch("</T35301000>") is not None
+    assert matcher.fullmatch("</T303DID>") is not None
+    assert matcher.fullmatch("<T35301000>") is None
+    assert matcher.fullmatch("blanco o 'C' (compl.)") is None
+    assert matcher.fullmatch("BLANCOS") is None

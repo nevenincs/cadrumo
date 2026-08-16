@@ -9,8 +9,10 @@ renderer can observe it when any authority, anchor, or representation drifts.
 from __future__ import annotations
 
 import json
+import re
 import unicodedata
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Annotated, Final, Literal
 
@@ -376,6 +378,70 @@ def load_render_profile(profile_directory: Path) -> RenderProfile:
     return profile
 
 
+#: An `A1`-style reference, which is the only shape `OfficialSourceEvidence`
+#: admits. openpyxl resolves it natively; xlrd is index-addressed, so the legacy
+#: reader below converts it.
+_CELL_REFERENCE_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<column>[A-Z]+)(?P<row>[1-9][0-9]*)$")
+
+
+def _cell_indices(cell: str) -> tuple[int, int]:
+    match = _CELL_REFERENCE_RE.fullmatch(cell)
+    if match is None:
+        raise RegistryValidationError(f"render profile evidence locator is not an A1 cell reference: {cell!r}")
+    column = 0
+    for character in match.group("column"):
+        column = column * 26 + (ord(character) - ord("A") + 1)
+    return int(match.group("row")) - 1, column - 1
+
+
+@contextmanager
+def _ooxml_cell_reader(source_path: Path) -> Iterator[Callable[[str, str], object]]:
+    from openpyxl import load_workbook
+
+    workbook = load_workbook(source_path, read_only=True, data_only=True)
+    try:
+
+        def read(sheet_name: str, cell: str) -> object:
+            if sheet_name not in workbook.sheetnames:
+                raise RegistryValidationError(f"render profile evidence sheet does not exist: {sheet_name!r}")
+            return workbook[sheet_name][cell].value
+
+        yield read
+    finally:
+        workbook.close()
+
+
+@contextmanager
+def _legacy_xls_cell_reader(source_path: Path) -> Iterator[Callable[[str, str], object]]:
+    """Read evidence cells out of a legacy binary XLS design.
+
+    AEAT still publishes many diseños de registro in the pre-OOXML format, and
+    the record-design parser already reads them through xlrd. Refusing them only
+    here would leave every such modelo's render profile unauthorable while its
+    design parses perfectly, so the evidence path reads exactly the same binaries
+    the rest of the pipeline does.
+    """
+    import xlrd
+
+    workbook = xlrd.open_workbook(str(source_path), on_demand=True)
+    try:
+
+        def read(sheet_name: str, cell: str) -> object:
+            if sheet_name not in workbook.sheet_names():
+                raise RegistryValidationError(f"render profile evidence sheet does not exist: {sheet_name!r}")
+            sheet = workbook.sheet_by_name(sheet_name)
+            row, column = _cell_indices(cell)
+            if row >= sheet.nrows or column >= sheet.ncols:
+                raise RegistryValidationError(
+                    f"render profile evidence locator does not exist: {(sheet_name, cell)!r}",
+                )
+            return sheet.cell_value(row, column)
+
+        yield read
+    finally:
+        workbook.release_resources()
+
+
 def load_render_profile_source_evidence(
     source_path: Path,
     profile: RenderProfile,
@@ -388,12 +454,11 @@ def load_render_profile_source_evidence(
         raise RegistryValidationError(
             "render profile source binary SHA-256 does not match the exact design identity",
         )
-    if source_path.suffix.lower() not in {".xlsx", ".xlsm"}:
+    suffix = source_path.suffix.lower()
+    if suffix not in {".xlsx", ".xlsm", ".xls"}:
         raise RegistryValidationError(
-            f"render profile source evidence requires an OOXML workbook: {source_path}",
+            f"render profile source evidence requires a spreadsheet workbook: {source_path}",
         )
-
-    from openpyxl import load_workbook
 
     official_evidence = tuple(
         evidence
@@ -406,15 +471,11 @@ def load_render_profile_source_evidence(
     if not official_evidence:
         raise RegistryValidationError("render profile contains no official-source evidence to resolve")
     locators = tuple(dict.fromkeys((item.source_sheet, item.source_cell) for item in official_evidence))
-    workbook = load_workbook(source_path, read_only=True, data_only=True)
-    try:
+    read_cell = _legacy_xls_cell_reader(source_path) if suffix == ".xls" else _ooxml_cell_reader(source_path)
+    with read_cell as cell_value:
         entries: list[RenderProfileSourceEvidenceEntry] = []
         for sheet_name, cell in locators:
-            if sheet_name not in workbook.sheetnames:
-                raise RegistryValidationError(
-                    f"render profile evidence sheet does not exist: {sheet_name!r}",
-                )
-            value = workbook[sheet_name][cell].value
+            value = cell_value(sheet_name, cell)
             normalized = _normalize_source_statement(value)
             if not normalized:
                 raise RegistryValidationError(
@@ -427,8 +488,6 @@ def load_render_profile_source_evidence(
                     normalized_statement=normalized,
                 ),
             )
-    finally:
-        workbook.close()
     return RenderProfileSourceEvidence(
         design_identity=profile.design_identity,
         entries=tuple(entries),

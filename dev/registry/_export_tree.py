@@ -125,7 +125,13 @@ _QUOTED_NUMERIC_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r'"(?P<value>\d+)"
 # dentro del año natural  2 - 12 meses (365 días)  3 - inferior a 12 meses").
 # Both are one enumeration and are derived through the one enumeration path, so
 # a design that changes only its spelling cannot change the emitted contract.
-_DASH_NUMERIC_ENUMERATION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r"(?:^|\s)(?P<value>\d+)\s*-\s+")
+#
+# The label may follow the dash with no space at all ("1 -Sí, 2 -No"), so the
+# separator admits none. What it does NOT admit is a digit after the dash: that
+# is a numeric RANGE ("01-12"), which states an interval rather than a closed
+# set, and reading it as an enumeration would emit two members where the design
+# means twelve.
+_DASH_NUMERIC_ENUMERATION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r"(?:^|\s)(?P<value>\d+)\s*-\s*(?=\D)")
 _DATE_FORMAT_BY_POLICY: Final[Mapping[ExportValuePolicy, str]] = {
     ExportValuePolicy.YYYYMMDD: "aaaammdd",
     ExportValuePolicy.DDMMYYYY: "ddmmaaaa",
@@ -159,6 +165,13 @@ _OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)\.?\s*$",
     re.IGNORECASE,
 )
+#: A record's closing identifier is the one constant some designs print BARE --
+#: Modelo 353 writes `</T35301000>` in the Contenido cell with neither the
+#: `Constante` label nor quotes, where its own opening tag on the same sheet
+#: carries both. The shape is what makes it unambiguous, so this pattern matches
+#: the tag itself rather than relaxing the labelled-constant pattern, which
+#: would turn every unlabelled cell on every design into a mandated literal.
+_OFFICIAL_BARE_RECORD_CLOSING_TAG_RE: Final[re.Pattern[str]] = re.compile(r"</T[0-9A-Z]+>")
 #: The quotation marks AEAT wraps a constant in. A workbook prints straight
 #: quotes; a PDF design prints guillemets, and typographic pairs appear in both
 #: -- "Constante «D»." is Modelo 347's, and it read as an ambiguous
@@ -601,13 +614,17 @@ def _literal_derivation(
     if blank_source_marker:
         official_literal = ""
     else:
-        match = _OFFICIAL_LITERAL_RE.fullmatch(official_content.translate(_OFFICIAL_QUOTE_FOLD))
-        if match is None:
+        folded_content = official_content.translate(_OFFICIAL_QUOTE_FOLD)
+        match = _OFFICIAL_LITERAL_RE.fullmatch(folded_content)
+        if match is not None:
+            official_literal = match.group("literal")
+        elif _OFFICIAL_BARE_RECORD_CLOSING_TAG_RE.fullmatch(folded_content) is not None:
+            official_literal = folded_content
+        else:
             raise RegistryValidationError(
                 f"literal field {joined_field.semantic_entry.export_field_id!r} has ambiguous official constant "
                 f"content {official_content!r}",
             )
-        official_literal = match.group("literal")
     try:
         literal_bytes = literal.encode(profile.encoding)
         official_literal_bytes = official_literal.encode(profile.encoding)
@@ -862,15 +879,20 @@ def _profile_width_17_derivation(
     *,
     export_record_id: str,
 ) -> ExportFieldDerivation:
+    signed = rule.sign_policy == "n-prefix-negative-blank-nonnegative"
     return _schema_field(
         joined_field,
-        data_type="money" if rule.sign_policy == "n-prefix-negative-blank-nonnegative" else "decimal",
+        data_type="money" if signed else "decimal",
         required=_is_required(joined_field.parser_field.validation),
         padding=ExportPadding.LEFT_ZERO,
         justification=ExportJustification.RIGHT,
-        signed=rule.sign_policy == "n-prefix-negative-blank-nonnegative",
+        signed=signed,
         export_record_id=export_record_id,
-        decimals=rule.decimal_digits,
+        # `money` carries its scale in the type; only `decimal` declares one, and
+        # the schema refuses a field that declares decimals beside any other
+        # data_type. Passing the rule's scale unconditionally would make every
+        # signed width-17 amount unrepresentable.
+        decimals=None if signed else rule.decimal_digits,
         derivation_code="render-profile-width-17-v1",
     )
 

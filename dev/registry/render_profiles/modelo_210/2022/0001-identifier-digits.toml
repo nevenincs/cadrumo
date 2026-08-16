@@ -1,0 +1,309 @@
+schema_version = 1
+fragment_id = "identifier-digits"
+width_17_rules = []
+
+[design_identity]
+modelo = "210"
+design_epoch = "2022"
+source_ref = "aeat-dr-210-2022"
+source_sha256 = "dce167991abaf547f31b38d7a5e51892ff6e8bd49a27a539432ab504891a0c00"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Página 01"
+source_row = 51
+source_cell = "A51"
+ordinal = "46"
+record_identity = "Página 01"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m210-2022-representante-numero-casa-identifier-digits"
+decision_statement = "The representante domicilio house number renders as unsigned identifier digits with no decimal component."
+justification = "A house number identifies a doorway; it is never summed or scaled, and AEAT's own five-character extent admits no separator, so the identifier-digits policy is the only reading the export codec offers that preserves leading zeros."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Página 01"
+source_row = 51
+source_cell = "A51"
+ordinal = "46"
+record_identity = "Página 01"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Página 01"
+source_row = 60
+source_cell = "A60"
+ordinal = "55"
+record_identity = "Página 01"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m210-2022-representante-codigo-postal-identifier-digits"
+decision_statement = "The representante domicilio codigo postal renders as unsigned identifier digits with no decimal component."
+justification = "A Spanish codigo postal is a five-digit identifier whose leading zero is significant (01001 Alava), so it must not be rendered through any numeric policy that would strip it."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Página 01"
+source_row = 60
+source_cell = "A60"
+ordinal = "55"
+record_identity = "Página 01"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Página 01"
+source_row = 62
+source_cell = "A62"
+ordinal = "57"
+record_identity = "Página 01"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m210-2022-representante-codigo-ine-municipio-identifier-digits"
+decision_statement = "The representante domicilio INE municipal code renders as unsigned identifier digits."
+justification = "The INE municipal code is a fixed five-digit census identifier with significant leading zeros; it denotes a municipality, not a quantity."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Página 01"
+source_row = 62
+source_cell = "A62"
+ordinal = "57"
+record_identity = "Página 01"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Página 01"
+source_row = 63
+source_cell = "A63"
+ordinal = "58"
+record_identity = "Página 01"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m210-2022-representante-codigo-provincia-identifier-digits"
+decision_statement = "The representante domicilio province code renders as unsigned identifier digits."
+justification = "The two-digit province code is an INE identifier with a significant leading zero (01 Alava through 52 Melilla) and admits no arithmetic."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Página 01"
+source_row = 63
+source_cell = "A63"
+ordinal = "58"
+record_identity = "Página 01"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Página 01"
+source_row = 73
+source_cell = "A73"
+ordinal = "68"
+record_identity = "Página 01"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m210-2022-inmueble-numero-casa-identifier-digits"
+decision_statement = "The inmueble situacion house number renders as unsigned identifier digits with no decimal component."
+justification = "Same reading as the representante house number: a doorway identifier at the same five-character extent, decided separately because it governs a different anchor."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Página 01"
+source_row = 73
+source_cell = "A73"
+ordinal = "68"
+record_identity = "Página 01"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Página 01"
+source_row = 82
+source_cell = "A82"
+ordinal = "77"
+record_identity = "Página 01"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m210-2022-inmueble-codigo-postal-identifier-digits"
+decision_statement = "The inmueble situacion codigo postal renders as unsigned identifier digits."
+justification = "Same reading as the representante codigo postal: a five-digit identifier whose leading zero is significant, decided separately because it governs a different anchor."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Página 01"
+source_row = 82
+source_cell = "A82"
+ordinal = "77"
+record_identity = "Página 01"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Página 01"
+source_row = 84
+source_cell = "A84"
+ordinal = "79"
+record_identity = "Página 01"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m210-2022-inmueble-codigo-ine-municipio-identifier-digits"
+decision_statement = "The inmueble situacion INE municipal code renders as unsigned identifier digits."
+justification = "Same reading as the representante INE code, decided separately because it governs a different anchor."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Página 01"
+source_row = 84
+source_cell = "A84"
+ordinal = "79"
+record_identity = "Página 01"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Página 01"
+source_row = 85
+source_cell = "A85"
+ordinal = "80"
+record_identity = "Página 01"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m210-2022-inmueble-codigo-provincia-identifier-digits"
+decision_statement = "The inmueble situacion province code renders as unsigned identifier digits."
+justification = "Same reading as the representante province code, decided separately because it governs a different anchor."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Página 01"
+source_row = 85
+source_cell = "A85"
+ordinal = "80"
+record_identity = "Página 01"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 15
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Página 01"
+source_row = 126
+source_cell = "A126"
+ordinal = "121"
+record_identity = "Página 01"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m210-2022-contacto-telefono-1-identifier-digits"
+decision_statement = "The first contact telephone renders as unsigned identifier digits."
+justification = "A telephone number is a dialling identifier, not a quantity; its fifteen-character extent accommodates an international number, and leading zeros and country prefixes must survive verbatim."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Página 01"
+source_row = 126
+source_cell = "A126"
+ordinal = "121"
+record_identity = "Página 01"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 15
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Página 01"
+source_row = 127
+source_cell = "A127"
+ordinal = "122"
+record_identity = "Página 01"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m210-2022-contacto-telefono-2-identifier-digits"
+decision_statement = "The second contact telephone renders as unsigned identifier digits."
+justification = "Same reading as the first contact telephone, decided separately because it governs a different anchor."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Página 01"
+source_row = 127
+source_cell = "A127"
+ordinal = "122"
+record_identity = "Página 01"

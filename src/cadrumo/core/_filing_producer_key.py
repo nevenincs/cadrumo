@@ -46,6 +46,20 @@ class FilingProducerKey(StrEnum):
     TAXPAYER_SURNAMES_OR_LEGAL_NAME = "taxpayer.surnames_or_legal_name"
     AMENDMENT_IS_RECTIFICATIVA = "amendment_evidence.is_rectificativa"
     AMENDMENT_IS_COMPLEMENTARIA = "amendment_evidence.is_complementaria"
+    #: One official slot holding "S" (sustitutiva), "C" (complementaria) or blank.
+    #: It is ONE anchor deciding between two amendment kinds, so it cannot be the
+    #: pair of booleans above: an export field resolves exactly one owner, and
+    #: rendering "S" from `is_complementaria` being false would assert a
+    #: substitution nobody declared.
+    AMENDMENT_SUSTITUTIVA_OR_COMPLEMENTARIA_MARKER = "amendment_evidence.sustitutiva_or_complementaria_marker"
+    #: The entidad desarrolladora (EEDD) identity block AEAT reserves at @93+4 and
+    #: @101+9 of the auxiliary header, footnoted "A cumplimentar por las entidades
+    #: desarrolladoras". Cadrumo IS the entidad desarrolladora, so these carry
+    #: Cadrumo's own identity and no AEAT document can supply their values --
+    #: which is why they are producer keys (the slot is named here; the value
+    #: arrives from product identity at render time) rather than literals.
+    ENTIDAD_DESARROLLADORA_VERSION_PROGRAMA = "entidad_desarrolladora.version_programa"
+    ENTIDAD_DESARROLLADORA_TAX_ID = "entidad_desarrolladora.tax_id"
     AMENDMENT_ORIGINAL_AEAT_RECEIPT = "amendment_evidence.original_aeat_receipt"
     AMENDMENT_M303_MOTIVE_RECTIFICACIONES = "amendment_evidence.m303_motive.rectificaciones"
     AMENDMENT_M303_MOTIVE_DISCREPANCIA_CRITERIO_ADMINISTRATIVO = (
@@ -76,6 +90,115 @@ class FilingProducerKey(StrEnum):
         "m303.hydrocarbon_deposit_advance_payment_deduction_entitled"
     )
     M111_COLEGIO_CONCERTADO = "m111.colegio_concertado"
+    #: Modelo 360's solicitante: an empresario not established in the territory
+    #: of application of the tax, asking to recover Spanish input VAT. Its address
+    #: components are named from the ONE canonical vocabulary in
+    #: `core._address_components`, which is what stops a second spelling of an
+    #: AEAT component appearing beside the IRNR one.
+    #:
+    #: Deliberately NOT merged with `irnr.representante.domicilio.*`. AEAT asks
+    #: Modelo 210 for the municipio's five-digit INE CODE and the provincia's
+    #: two-digit code; it asks Modelo 360 for the municipio's NAME in thirty
+    #: characters and the provincia as text. Thirteen components agree and two do
+    #: not, so one shape's constraints are not a superset of the other's and a
+    #: shared family would let a name reach a numeric slot.
+    #: Modelo 360 datos bancarios. The IBAN and BIC reuse the generic
+    #: `selected_account` family; only the account HOLDER facts, which that
+    #: family has no member for, are minted here.
+    M360_CUENTA_TITULAR_NOMBRE = "m360.cuenta.titular_nombre"
+    M360_CUENTA_TITULAR_EN_CALIDAD_DE = "m360.cuenta.titular_en_calidad_de"
+    M360_CUENTA_DIVISA = "m360.cuenta.divisa"
+    M360_SOLICITANTE_TAX_ID = "m360.solicitante.tax_id"
+    M360_SOLICITANTE_FULL_NAME = "m360.solicitante.full_name"
+    M360_SOLICITANTE_EMAIL = "m360.solicitante.email"
+    M360_SOLICITANTE_PHONE = "m360.solicitante.phone"
+    M360_SOLICITANTE_DOMICILIO_TIPO_VIA = "m360.solicitante.domicilio.tipo_via"
+    M360_SOLICITANTE_DOMICILIO_NOMBRE_VIA = "m360.solicitante.domicilio.nombre_via"
+    M360_SOLICITANTE_DOMICILIO_TIPO_NUMERACION = "m360.solicitante.domicilio.tipo_numeracion"
+    M360_SOLICITANTE_DOMICILIO_NUMERO_CASA = "m360.solicitante.domicilio.numero_casa"
+    M360_SOLICITANTE_DOMICILIO_CALIFICADOR_NUMERO = "m360.solicitante.domicilio.calificador_numero"
+    M360_SOLICITANTE_DOMICILIO_BLOQUE = "m360.solicitante.domicilio.bloque"
+    M360_SOLICITANTE_DOMICILIO_PORTAL = "m360.solicitante.domicilio.portal"
+    M360_SOLICITANTE_DOMICILIO_ESCALERA = "m360.solicitante.domicilio.escalera"
+    M360_SOLICITANTE_DOMICILIO_PLANTA = "m360.solicitante.domicilio.planta"
+    M360_SOLICITANTE_DOMICILIO_PUERTA = "m360.solicitante.domicilio.puerta"
+    M360_SOLICITANTE_DOMICILIO_DATOS_COMPLEMENTARIOS = "m360.solicitante.domicilio.datos_complementarios"
+    M360_SOLICITANTE_DOMICILIO_LOCALIDAD = "m360.solicitante.domicilio.localidad"
+    M360_SOLICITANTE_DOMICILIO_CODIGO_POSTAL = "m360.solicitante.domicilio.codigo_postal"
+    #: The NAME, not the INE code -- this is the axis on which Modelo 360 and
+    #: Modelo 210 genuinely differ.
+    M360_SOLICITANTE_DOMICILIO_NOMBRE_MUNICIPIO = "m360.solicitante.domicilio.nombre_municipio"
+    M360_SOLICITANTE_DOMICILIO_PROVINCIA = "m360.solicitante.domicilio.provincia"
+    M360_SOLICITANTE_FOREIGN_ADDRESS_STREET = "m360.solicitante.foreign_address.street"
+    M360_SOLICITANTE_FOREIGN_ADDRESS_CITY = "m360.solicitante.foreign_address.city"
+    M360_SOLICITANTE_FOREIGN_ADDRESS_POSTAL_CODE = "m360.solicitante.foreign_address.postal_code"
+    M360_SOLICITANTE_FOREIGN_ADDRESS_REGION = "m360.solicitante.foreign_address.region"
+    M360_SOLICITANTE_FOREIGN_ADDRESS_COUNTRY_CODE = "m360.solicitante.foreign_address.country_code"
+    M360_REPRESENTANTE_FOREIGN_ADDRESS_STREET = "m360.representante.foreign_address.street"
+    M360_REPRESENTANTE_FOREIGN_ADDRESS_CITY = "m360.representante.foreign_address.city"
+    M360_REPRESENTANTE_FOREIGN_ADDRESS_POSTAL_CODE = "m360.representante.foreign_address.postal_code"
+    M360_REPRESENTANTE_FOREIGN_ADDRESS_REGION = "m360.representante.foreign_address.region"
+    M360_REPRESENTANTE_FOREIGN_ADDRESS_COUNTRY_CODE = "m360.representante.foreign_address.country_code"
+    M360_REPRESENTANTE_APARTADO_CORREOS_NUMERO = "m360.representante.apartado_correos.numero"
+    M360_REPRESENTANTE_APARTADO_CORREOS_LOCALIDAD = "m360.representante.apartado_correos.localidad"
+    M360_REPRESENTANTE_APARTADO_CORREOS_CODIGO_POSTAL = "m360.representante.apartado_correos.codigo_postal"
+    M360_REPRESENTANTE_APARTADO_CORREOS_NOMBRE_MUNICIPIO = "m360.representante.apartado_correos.nombre_municipio"
+    M360_REPRESENTANTE_APARTADO_CORREOS_PROVINCIA = "m360.representante.apartado_correos.provincia"
+    #: The representante the solicitante may appoint. Same party shape as the
+    #: solicitante above and named from the same canonical vocabulary, because
+    #: AEAT prints the two blocks identically -- identity, contact, Spanish
+    #: address -- rather than because one was copied from the other.
+    M360_REPRESENTANTE_TAX_ID = "m360.representante.tax_id"
+    M360_REPRESENTANTE_FULL_NAME = "m360.representante.full_name"
+    M360_REPRESENTANTE_EMAIL = "m360.representante.email"
+    M360_REPRESENTANTE_PHONE = "m360.representante.phone"
+    M360_REPRESENTANTE_DOMICILIO_TIPO_VIA = "m360.representante.domicilio.tipo_via"
+    M360_REPRESENTANTE_DOMICILIO_NOMBRE_VIA = "m360.representante.domicilio.nombre_via"
+    M360_REPRESENTANTE_DOMICILIO_TIPO_NUMERACION = "m360.representante.domicilio.tipo_numeracion"
+    M360_REPRESENTANTE_DOMICILIO_NUMERO_CASA = "m360.representante.domicilio.numero_casa"
+    M360_REPRESENTANTE_DOMICILIO_CALIFICADOR_NUMERO = "m360.representante.domicilio.calificador_numero"
+    M360_REPRESENTANTE_DOMICILIO_BLOQUE = "m360.representante.domicilio.bloque"
+    M360_REPRESENTANTE_DOMICILIO_PORTAL = "m360.representante.domicilio.portal"
+    M360_REPRESENTANTE_DOMICILIO_ESCALERA = "m360.representante.domicilio.escalera"
+    M360_REPRESENTANTE_DOMICILIO_PLANTA = "m360.representante.domicilio.planta"
+    M360_REPRESENTANTE_DOMICILIO_PUERTA = "m360.representante.domicilio.puerta"
+    M360_REPRESENTANTE_DOMICILIO_DATOS_COMPLEMENTARIOS = "m360.representante.domicilio.datos_complementarios"
+    M360_REPRESENTANTE_DOMICILIO_LOCALIDAD = "m360.representante.domicilio.localidad"
+    M360_REPRESENTANTE_DOMICILIO_CODIGO_POSTAL = "m360.representante.domicilio.codigo_postal"
+    M360_REPRESENTANTE_DOMICILIO_NOMBRE_MUNICIPIO = "m360.representante.domicilio.nombre_municipio"
+    M360_REPRESENTANTE_DOMICILIO_PROVINCIA = "m360.representante.domicilio.provincia"
+    #: The apartado de correos AEAT offers as an ALTERNATIVE to the street
+    #: address, not a component of it: it carries its own localidad, codigo
+    #: postal, municipio and provincia, so it is its own scope rather than four
+    #: more members inside `domicilio`.
+    M360_SOLICITANTE_APARTADO_CORREOS_NUMERO = "m360.solicitante.apartado_correos.numero"
+    M360_SOLICITANTE_APARTADO_CORREOS_LOCALIDAD = "m360.solicitante.apartado_correos.localidad"
+    M360_SOLICITANTE_APARTADO_CORREOS_CODIGO_POSTAL = "m360.solicitante.apartado_correos.codigo_postal"
+    M360_SOLICITANTE_APARTADO_CORREOS_NOMBRE_MUNICIPIO = "m360.solicitante.apartado_correos.nombre_municipio"
+    M360_SOLICITANTE_APARTADO_CORREOS_PROVINCIA = "m360.solicitante.apartado_correos.provincia"
+    #: Establishment facts that decide which administration handles the refund.
+    M360_SOLICITANTE_ESTABLECIDO_EN_TAI = "m360.solicitante.establecido_en_tai"
+    M360_SOLICITANTE_HACIENDA_FORAL = "m360.solicitante.hacienda_foral"
+    M360_SOLICITANTE_DELEGACION_CANARIAS_CEUTA_MELILLA = "m360.solicitante.delegacion_canarias_ceuta_melilla"
+    #: Header facts of the solicitud itself.
+    M360_PAIS_DESTINO_SOLICITUD = "m360.solicitud.pais_destino"
+    M360_CAUSA_PRESENTACION = "m360.solicitud.causa_presentacion"
+    M360_COMUNICACION_PRORRATA_DEFINITIVA = "m360.solicitud.comunicacion_prorrata_definitiva"
+    M360_NUMERO_REGISTRO_DECLARACION_ANTERIOR = "m360.solicitud.numero_registro_declaracion_anterior"
+    M360_PRESENTACION_EN_PRUEBAS = "m360.solicitud.presentacion_en_pruebas"
+    M360_NIVEL_CALIDAD_DATOS = "m360.solicitud.nivel_calidad_datos"
+    #: Modelo 353 is the IVA group's aggregated autoliquidación, so its
+    #: identification block asks facts about the GROUP that no per-taxpayer key
+    #: can answer: which grupo the entidad dominante files for, whether the
+    #: advanced regime of LIVA art. 163 sexies.cinco is elected, whether the
+    #: group is enrolled in the monthly-refund register, and whether it is taxed
+    #: under foral rules. `m303.*` counterparts exist for the single-filer forms
+    #: and deliberately are not reused: the answers are group-scoped facts.
+    M353_NUMERO_GRUPO = "m353.numero_grupo"
+    M353_REGIMEN_ESPECIAL_AVANZADO_ELECTED = "m353.regimen_especial.avanzado_elected"
+    M353_REGIMEN_ESPECIAL_INSCRITO_REDEME = "m353.regimen_especial.inscrito_redeme"
+    M353_GRUPO_NORMATIVA_FORAL = "m353.grupo_normativa_foral"
+    M353_SIN_ACTIVIDAD = "m353.sin_actividad"
     #: IRNR party identities. Modelo 210 separates the person who FILES from the
     #: person the income belongs to, and records in which of six capacities the
     #: filer acts, so neither `taxpayer.*` nor `presenter.*` can carry these:

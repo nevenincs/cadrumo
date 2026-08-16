@@ -70,8 +70,8 @@ from ...domain.calculations.registry import (
     BindingId,
     CasillaFieldKind,
     ExportLayoutDefinition,
-    M303EnvelopePrefixRole,
-    M303FilingEnvelopeDefinition,
+    FilingEnvelopeDefinition,
+    FilingEnvelopePrefixRole,
     RecordId,
     RegistrySnapshot,
     RegistryValidationError,
@@ -87,6 +87,7 @@ from ...domain.filing import (
     registry_schema_version,
 )
 from ...domain.submission import ModeloDraftStatus
+from ._envelope_modelo_policy import filing_envelope_modelo_policy
 from ._export_parity import (
     assert_export_mirrors_manifest,
     assert_rate_boxes_account_for_total,
@@ -98,7 +99,6 @@ from ._export_xml_dictionary import (
     read_xml_dictionary_root_identity,
     render_xml_dictionary_layout,
 )
-from ._m303_export_applicability import validate_m303_export_applicability
 from ._producer_snapshot import (
     FilingProducerSnapshot,
 )
@@ -146,7 +146,37 @@ _SHA256_HEX_LENGTH = 64
 """Length of a hex-encoded SHA-256 digest used by export receipts."""
 
 
-class M303FilingEnvelopeOccurrence(BaseModel):
+#: The AEAT constants every bundled variable-envelope design prints verbatim.
+#:
+#: Shared GRAMMAR rather than one modelo's literals: the discriminant ``"0"``,
+#: the ``0000>`` record-type terminator, and the ``<AUX>`` pair are identical in
+#: all thirty-five bundled 328-byte designs. A design that prints something else
+#: -- Modelo 220's conditional ``(*)[A|E|I|0]`` discriminant is the known one --
+#: is refused by the static generator's source-content check before its layout
+#: can ever reach this renderer, so a divergent design cannot be emitted here
+#: under a constant it does not declare.
+_ENVELOPE_GRAMMAR_LITERALS: Mapping[FilingEnvelopePrefixRole, str] = {
+    FilingEnvelopePrefixRole.OPENING_TAG: "<T",
+    FilingEnvelopePrefixRole.DISCRIMINANT: "0",
+    FilingEnvelopePrefixRole.RECORD_TYPE: "0000>",
+    FilingEnvelopePrefixRole.AUX_OPENING_TAG: "<AUX>",
+    FilingEnvelopePrefixRole.AUX_CLOSING_TAG: "</AUX>",
+}
+
+#: ``</T`` + three modelo + one discriminant + four year + two period + ``0000>``.
+_ENVELOPE_CLOSER_EXTENT: int = 18
+
+#: Roles whose emitted bytes are reserved blanks of the field's declared width.
+_ENVELOPE_FILLER_ROLES: frozenset[FilingEnvelopePrefixRole] = frozenset(
+    {
+        FilingEnvelopePrefixRole.PRE_PROGRAM_FILLER,
+        FilingEnvelopePrefixRole.BETWEEN_IDENTITIES_FILLER,
+        FilingEnvelopePrefixRole.POST_DEVELOPER_FILLER,
+    },
+)
+
+
+class FilingEnvelopeOccurrence(BaseModel):
     """One source-ordered occurrence emitted through the canonical record renderer."""
 
     model_config = _STRICT_FROZEN
@@ -157,18 +187,23 @@ class M303FilingEnvelopeOccurrence(BaseModel):
     payload_sha256: str = Field(min_length=_SHA256_HEX_LENGTH, max_length=_SHA256_HEX_LENGTH)
 
     @model_validator(mode="after")
-    def _require_payload_digest(self) -> M303FilingEnvelopeOccurrence:
+    def _require_payload_digest(self) -> FilingEnvelopeOccurrence:
         if self.payload_sha256 != sha256_hex(self.payload):
-            raise ValueError("M303 filing-envelope occurrence digest must be derived from its emitted bytes")
+            raise ValueError("filing-envelope occurrence digest must be derived from its emitted bytes")
         return self
 
 
-class M303FilingEnvelopeRenderRequest(BaseModel):
-    """Closed public authority required to render one DP30300 filing envelope.
+class FilingEnvelopeRenderRequest(BaseModel):
+    """Closed public authority required to render one modelo's filing envelope.
 
     Projection plans, body members, casilla maps, headers, and opaque bytes are
     intentionally absent.  The renderer derives them internally from the
     approved draft and snapshot-owned layout through the canonical resolver.
+
+    The MODELO is not a field: it is read from the selected snapshot, which the
+    validators below prove agrees with the draft, the producer snapshot, and the
+    layout's owning revision. A second spelling of it here would be a fact that
+    can drift from the authority that selected the layout.
     """
 
     model_config = _STRICT_FROZEN
@@ -180,14 +215,24 @@ class M303FilingEnvelopeRenderRequest(BaseModel):
     prior_domiciliation_election: PriorDomiciliationElection
     product_software_identity: AeatProductSoftwareIdentity
 
+    @property
+    def modelo(self) -> Modelo:
+        """Return the one modelo the whole request is proved to agree on."""
+        return Modelo(self.registry_snapshot.modelo.id)
+
     @model_validator(mode="after")
-    def _require_one_coherent_m303_filing_instance(self) -> M303FilingEnvelopeRenderRequest:
-        _validate_m303_filing_draft(self.draft)
+    def _require_one_coherent_filing_instance(self) -> FilingEnvelopeRenderRequest:
         snapshot = self.registry_snapshot
-        _validate_m303_filing_snapshot(self.draft, snapshot)
-        _validate_m303_filing_layout(self.layout, snapshot)
-        _validate_m303_filing_producer(self.draft, self.producer_snapshot, self.prior_domiciliation_election)
-        validate_m303_export_applicability(
+        _validate_envelope_filing_draft(self.draft, snapshot)
+        _validate_envelope_filing_snapshot(self.draft, snapshot)
+        _validate_envelope_filing_layout(self.layout, snapshot)
+        _validate_envelope_filing_producer(self.draft, snapshot, self.producer_snapshot)
+        policy = filing_envelope_modelo_policy(self.modelo)
+        if policy.requires_prior_domiciliation_election and (
+            self.producer_snapshot.elections.prior_domiciliation is not self.prior_domiciliation_election
+        ):
+            raise ValueError("filing-envelope election must match the immutable producer snapshot election")
+        policy.validate_applicability(
             period=self.draft.period,
             registry_snapshot=snapshot,
             layout=self.layout,
@@ -196,73 +241,95 @@ class M303FilingEnvelopeRenderRequest(BaseModel):
         return self
 
 
-def _validate_m303_filing_draft(draft: ModeloDraft) -> None:
-    if draft.modelo != Modelo.M303.value:
-        raise ValueError("M303 filing-envelope rendering requires a Modelo 303 draft")
+def _validate_envelope_filing_draft(draft: ModeloDraft, snapshot: RegistrySnapshot) -> None:
+    if draft.modelo != snapshot.modelo.id:
+        raise ValueError("filing-envelope draft modelo must match the selected registry snapshot")
     if draft.status is not ModeloDraftStatus.APROBADO:
-        raise ValueError("M303 filing-envelope rendering requires an approved draft")
+        raise ValueError("filing-envelope rendering requires an approved draft")
 
 
-def _validate_m303_filing_snapshot(draft: ModeloDraft, snapshot: RegistrySnapshot) -> None:
-    if snapshot.modelo.id != Modelo.M303.value or snapshot.filing_period is None:
-        raise ValueError("M303 filing-envelope rendering requires a concrete Modelo 303 registry snapshot period")
+def _validate_envelope_filing_snapshot(draft: ModeloDraft, snapshot: RegistrySnapshot) -> None:
+    if snapshot.filing_period is None:
+        raise ValueError("filing-envelope rendering requires a concrete registry snapshot period")
     if snapshot.filing_period != draft.period:
-        raise ValueError("M303 filing-envelope draft period must match the selected registry snapshot")
+        raise ValueError("filing-envelope draft period must match the selected registry snapshot")
     if (
         draft.snapshot_ref.modelo != snapshot.modelo.id
         or draft.snapshot_ref.revision_id != snapshot.revision.id
         or draft.snapshot_ref.modelo_year != snapshot.filing_year
         or draft.snapshot_ref.period != snapshot.period
     ):
-        raise ValueError("M303 filing-envelope draft snapshot reference must match the selected registry snapshot")
+        raise ValueError("filing-envelope draft snapshot reference must match the selected registry snapshot")
     expected_schema_version = registry_schema_version(
         modelo=snapshot.modelo.id,
         revision_id=snapshot.revision.id,
     )
     if draft.schema_version != expected_schema_version:
-        raise ValueError("M303 filing-envelope draft schema marker must match the selected registry revision")
+        raise ValueError("filing-envelope draft schema marker must match the selected registry revision")
 
 
-def _validate_m303_filing_layout(layout: ExportLayoutDefinition, snapshot: RegistrySnapshot) -> None:
+def _validate_envelope_filing_layout(layout: ExportLayoutDefinition, snapshot: RegistrySnapshot) -> None:
     if not any(candidate is layout for candidate in snapshot.revision.export_layouts):
-        raise ValueError("M303 filing-envelope layout must be owned by the selected registry snapshot")
-    envelope = layout.m303_filing_envelope
+        raise ValueError("filing-envelope layout must be owned by the selected registry snapshot")
+    envelope = layout.filing_envelope
     if envelope is None:
-        raise ValueError("M303 filing-envelope layout must carry a typed DP30300 declaration")
+        raise ValueError("filing-envelope layout must carry a typed envelope declaration")
     if envelope.source_ref not in snapshot.revision.source_refs:
-        raise ValueError("M303 filing-envelope source must belong to the selected registry revision")
+        raise ValueError("filing-envelope source must belong to the selected registry revision")
     try:
         source = snapshot.sources[envelope.source_ref]
     except KeyError as exc:
-        raise ValueError("M303 filing-envelope source is absent from the selected registry snapshot") from exc
+        raise ValueError("filing-envelope source is absent from the selected registry snapshot") from exc
     if source.sha256 != envelope.source_sha256:
-        raise ValueError("M303 filing-envelope source SHA-256 must match the selected registry snapshot source")
+        raise ValueError("filing-envelope source SHA-256 must match the selected registry snapshot source")
 
 
-def _validate_m303_filing_producer(
+def _validate_envelope_filing_producer(
     draft: ModeloDraft,
+    snapshot: RegistrySnapshot,
     producer_snapshot: FilingProducerSnapshot,
-    prior_domiciliation_election: PriorDomiciliationElection,
 ) -> None:
-    if producer_snapshot.modelo is not Modelo.M303:
-        raise ValueError("M303 filing-envelope producer snapshot must be Modelo 303")
+    if producer_snapshot.modelo.value != snapshot.modelo.id:
+        raise ValueError("filing-envelope producer snapshot must be the selected snapshot's modelo")
     if producer_snapshot.taxpayer_tax_id != draft.subject_tax_id:
-        raise ValueError("M303 filing-envelope producer taxpayer must match the approved draft subject")
-    if producer_snapshot.elections.prior_domiciliation is not prior_domiciliation_election:
-        raise ValueError("M303 filing-envelope election must match the immutable producer snapshot election")
+        raise ValueError("filing-envelope producer taxpayer must match the approved draft subject")
 
 
-class M303FilingEnvelopeRenderResult(BaseModel):
-    """Measured bytes and ordered occurrence evidence for one DP30300 filing envelope."""
+def envelope_closer_bytes(*, modelo: Modelo, period: Period) -> bytes:
+    """Derive one envelope's relative closing identifier from the filing period.
+
+    The single home for ``relative-closer-v1``: the same six semantics the
+    prefix opens with -- tag, modelo, discriminant, year, period, record type --
+    re-spelled as a closing tag. Declared once so the render path and the
+    result's own byte proof cannot disagree about it.
+    """
+    discriminant = _ENVELOPE_GRAMMAR_LITERALS[FilingEnvelopePrefixRole.DISCRIMINANT]
+    record_type = _ENVELOPE_GRAMMAR_LITERALS[FilingEnvelopePrefixRole.RECORD_TYPE]
+    closer = f"</T{modelo.value}{discriminant}{period.filing_year:04d}{period.registry_token}{record_type}".encode(
+        "ascii"
+    )
+    # A real guard rather than a restatement: the closer is built from the
+    # period, so a period formatting to the wrong width is reachable, while the
+    # ``closer_derivation`` member itself is unconstructible in any other value.
+    if len(closer) != _ENVELOPE_CLOSER_EXTENT:
+        raise FilingExportValidationError(
+            f"filing-envelope closer must render to the declared {_ENVELOPE_CLOSER_EXTENT}-byte extent",
+        )
+    return closer
+
+
+class FilingEnvelopeRenderResult(BaseModel):
+    """Measured bytes and ordered occurrence evidence for one filing envelope."""
 
     model_config = _STRICT_FROZEN
 
     draft_id: str = Field(min_length=1)
     revision_id: str = Field(min_length=1)
     layout_id: str = Field(min_length=1)
+    modelo: Modelo
     period: Period
-    envelope: M303FilingEnvelopeDefinition
-    occurrences: tuple[M303FilingEnvelopeOccurrence, ...]
+    envelope: FilingEnvelopeDefinition
+    occurrences: tuple[FilingEnvelopeOccurrence, ...]
     prefix: bytes = Field(min_length=1)
     closer: bytes = Field(min_length=1)
     payload: bytes = Field(min_length=1)
@@ -270,22 +337,21 @@ class M303FilingEnvelopeRenderResult(BaseModel):
     total_length: int = Field(gt=0)
 
     @model_validator(mode="after")
-    def _require_exact_envelope_byte_derivation(self) -> M303FilingEnvelopeRenderResult:
-        _require_m303_occurrence_order(self.envelope, self.occurrences)
-        if len(self.prefix) != 328:
-            raise ValueError("M303 filing-envelope prefix must retain its declared 328-byte extent")
-        expected_closer = (
-            f"</T{Modelo.M303.value}0{self.period.filing_year:04d}{self.period.registry_token}0000>".encode("ascii")
-        )
-        if self.closer != expected_closer:
-            raise ValueError("M303 filing-envelope closer must be derived from the selected filing period")
+    def _require_exact_envelope_byte_derivation(self) -> FilingEnvelopeRenderResult:
+        _require_envelope_occurrence_order(self.envelope, self.occurrences)
+        if len(self.prefix) != self.envelope.prefix_extent:
+            raise ValueError(
+                f"filing-envelope prefix must retain its declared {self.envelope.prefix_extent}-byte extent",
+            )
+        if self.closer != envelope_closer_bytes(modelo=self.modelo, period=self.period):
+            raise ValueError("filing-envelope closer must be derived from the selected modelo and filing period")
         body = b"".join(item.payload for item in self.occurrences)
         if self.payload != self.prefix + body + self.closer:
-            raise ValueError("M303 filing-envelope payload must be the exact prefix, occurrences, and closer bytes")
+            raise ValueError("filing-envelope payload must be the exact prefix, occurrences, and closer bytes")
         if self.payload_sha256 != sha256_hex(self.payload):
-            raise ValueError("M303 filing-envelope payload digest must be derived from emitted bytes")
+            raise ValueError("filing-envelope payload digest must be derived from emitted bytes")
         if self.total_length != len(self.payload):
-            raise ValueError("M303 filing-envelope total must be derived from emitted bytes")
+            raise ValueError("filing-envelope total must be derived from emitted bytes")
         return self
 
 
@@ -482,7 +548,7 @@ class _PreparedExportDraft:
     layout: ExportLayoutDefinition
     producer_values: Mapping[FilingProducerKey, object]
     prior_domiciliation_election: PriorDomiciliationElection
-    is_m303: bool
+    renders_filing_envelope: bool
 
 
 def _require_current_export_schema(draft: ModeloDraft, subview: RegistryModeloSubview) -> None:
@@ -524,21 +590,38 @@ def _select_export_layout(
 
 def _validate_export_options(
     *,
-    is_m303: bool,
+    modelo: Modelo,
+    renders_filing_envelope: bool,
     dictionary_values: Mapping[str, object] | None,
     prior_domiciliation_election: PriorDomiciliationElection | None,
     product_software_identity: AeatProductSoftwareIdentity | None,
 ) -> PriorDomiciliationElection:
-    if is_m303:
-        if prior_domiciliation_election is None:
-            raise FilingExportValidationError("M303 export requires an explicit prior-domiciliation election")
-        if product_software_identity is None:
-            raise FilingExportValidationError("M303 export requires explicit product/software identity authority")
-        if dictionary_values is not None:
-            raise FilingExportValidationError("M303 export does not admit XML dictionary values")
-    elif product_software_identity is not None:
+    """Admit exactly the options the SELECTED LAYOUT's composition needs.
+
+    Keyed on whether the layout declares a filing envelope rather than on the
+    modelo id: the product/software identity is required by the envelope prefix
+    itself, so every modelo whose layout carries one needs it and no modelo
+    without one may pass it. The prior-domiciliation election is different -- it
+    is one modelo's record applicability, so it stays a registered per-modelo
+    policy rather than a property of the envelope.
+    """
+    if not renders_filing_envelope:
+        if product_software_identity is not None:
+            raise FilingExportValidationError(
+                "product/software identity is only admitted for a layout that renders a filing envelope",
+            )
+        return prior_domiciliation_election or PriorDomiciliationElection.KEEP
+    if product_software_identity is None:
         raise FilingExportValidationError(
-            "product/software identity is only admitted for the Modelo 303 filing envelope",
+            "a filing-envelope export requires explicit product/software identity authority",
+        )
+    if dictionary_values is not None:
+        raise FilingExportValidationError("a filing-envelope export does not admit XML dictionary values")
+    if filing_envelope_modelo_policy(modelo).requires_prior_domiciliation_election and (
+        prior_domiciliation_election is None
+    ):
+        raise FilingExportValidationError(
+            f"Modelo {modelo.value} export requires an explicit prior-domiciliation election",
         )
     return prior_domiciliation_election or PriorDomiciliationElection.KEEP
 
@@ -558,9 +641,10 @@ def _prepare_export_draft(
     _require_current_export_schema(draft, subview)
     _require_approved_export_draft(draft)
     layout = _select_export_layout(draft, subview=subview, registry_snapshot=registry_snapshot)
-    is_m303 = draft.modelo == Modelo.M303.value
+    renders_filing_envelope = layout.filing_envelope is not None
     resolved_prior_domiciliation_election = _validate_export_options(
-        is_m303=is_m303,
+        modelo=Modelo(draft.modelo),
+        renders_filing_envelope=renders_filing_envelope,
         dictionary_values=dictionary_values,
         prior_domiciliation_election=prior_domiciliation_election,
         product_software_identity=product_software_identity,
@@ -574,7 +658,7 @@ def _prepare_export_draft(
         layout=layout,
         producer_values=_filing_producer_values(producer_snapshot),
         prior_domiciliation_election=resolved_prior_domiciliation_election,
-        is_m303=is_m303,
+        renders_filing_envelope=renders_filing_envelope,
     )
 
 
@@ -587,11 +671,11 @@ def _render_prepared_export(
     prior_domiciliation_election: PriorDomiciliationElection | None,
     product_software_identity: AeatProductSoftwareIdentity | None,
 ) -> bytes:
-    if prepared.is_m303:
+    if prepared.renders_filing_envelope:
         assert prior_domiciliation_election is not None
         assert product_software_identity is not None
-        return render_m303_filing_envelope(
-            M303FilingEnvelopeRenderRequest(
+        return render_filing_envelope(
+            FilingEnvelopeRenderRequest(
                 registry_snapshot=prepared.registry_snapshot,
                 layout=prepared.layout,
                 draft=draft,
@@ -656,7 +740,7 @@ def _write_prepared_export(
     casilla_provenance: tuple[ModeloCasillaProvenance, ...],
 ) -> DeclaracionExportResult:
     atomic_write_bytes(output_path, payload)
-    if not prepared.is_m303:
+    if not prepared.renders_filing_envelope:
         _verify_written_export(
             draft,
             file_path=output_path,
@@ -1208,11 +1292,11 @@ def _render_layout_occurrences(
     )
 
 
-def render_m303_filing_envelope(request: M303FilingEnvelopeRenderRequest) -> M303FilingEnvelopeRenderResult:
-    """Render DP30300 only from the closed, validated application request."""
-    envelope = request.layout.m303_filing_envelope
+def render_filing_envelope(request: FilingEnvelopeRenderRequest) -> FilingEnvelopeRenderResult:
+    """Render one modelo's variable envelope from the closed, validated request."""
+    envelope = request.layout.filing_envelope
     if envelope is None:  # The request validator makes this unreachable; retain type narrowing at the public boundary.
-        raise FilingExportValidationError("M303 filing-envelope layout declaration is absent")
+        raise FilingExportValidationError("filing-envelope layout declaration is absent")
     headers = _filing_producer_values(request.producer_snapshot)
     rendered_occurrences = _render_layout_occurrences(
         request.layout,
@@ -1223,7 +1307,7 @@ def render_m303_filing_envelope(request: M303FilingEnvelopeRenderRequest) -> M30
         prior_domiciliation_election=request.prior_domiciliation_election,
     )
     occurrences = tuple(
-        M303FilingEnvelopeOccurrence(
+        FilingEnvelopeOccurrence(
             record_id=item.record_id,
             occurrence=item.occurrence,
             payload=item.payload,
@@ -1231,18 +1315,20 @@ def render_m303_filing_envelope(request: M303FilingEnvelopeRenderRequest) -> M30
         )
         for item in rendered_occurrences
     )
-    _require_m303_required_occurrences(request.layout, occurrences)
-    prefix = _render_m303_envelope_prefix(
+    _require_envelope_required_occurrences(request.layout, occurrences)
+    prefix = _render_envelope_prefix(
         envelope,
+        modelo=request.modelo,
         period=request.draft.period,
         product_software_identity=request.product_software_identity,
     )
-    closer = _render_m303_envelope_closer(period=request.draft.period)
+    closer = envelope_closer_bytes(modelo=request.modelo, period=request.draft.period)
     payload = prefix + b"".join(item.payload for item in occurrences) + closer
-    return M303FilingEnvelopeRenderResult(
+    return FilingEnvelopeRenderResult(
         draft_id=request.draft.draft_id,
         revision_id=str(request.registry_snapshot.revision.id),
         layout_id=str(request.layout.id),
+        modelo=request.modelo,
         period=request.draft.period,
         envelope=envelope,
         occurrences=occurrences,
@@ -1254,21 +1340,21 @@ def render_m303_filing_envelope(request: M303FilingEnvelopeRenderRequest) -> M30
     )
 
 
-def _require_m303_required_occurrences(
+def _require_envelope_required_occurrences(
     layout: ExportLayoutDefinition,
-    occurrences: tuple[M303FilingEnvelopeOccurrence, ...],
+    occurrences: tuple[FilingEnvelopeOccurrence, ...],
 ) -> None:
     present = {item.record_id for item in occurrences}
     missing = tuple(str(record.id) for record in layout.records if record.required and record.id not in present)
     if missing:
         raise FilingExportValidationError(
-            f"M303 filing-envelope required record families have no emitted occurrence: {missing!r}",
+            f"filing-envelope required record families have no emitted occurrence: {missing!r}",
         )
 
 
-def _require_m303_occurrence_order(
-    envelope: M303FilingEnvelopeDefinition,
-    occurrences: tuple[M303FilingEnvelopeOccurrence, ...],
+def _require_envelope_occurrence_order(
+    envelope: FilingEnvelopeDefinition,
+    occurrences: tuple[FilingEnvelopeOccurrence, ...],
 ) -> None:
     """Preserve zero/one/many record families in reviewed layout order."""
     declaration_order = {record_id: index for index, record_id in enumerate(envelope.body_record_ids)}
@@ -1278,91 +1364,112 @@ def _require_m303_occurrence_order(
         try:
             family = declaration_order[item.record_id]
         except KeyError as exc:
-            raise ValueError(f"M303 filing-envelope emitted an undeclared record family {item.record_id!r}") from exc
+            raise ValueError(f"filing envelope emitted an undeclared record family {item.record_id!r}") from exc
         if family < last_family:
-            raise ValueError("M303 filing-envelope occurrences must retain reviewed record-family order")
+            raise ValueError("filing-envelope occurrences must retain reviewed record-family order")
         expected_occurrence = next_occurrence.get(item.record_id, 1)
         if item.occurrence != expected_occurrence:
             raise ValueError(
-                f"M303 filing-envelope occurrences for {item.record_id!r} must be positive, contiguous, "
-                "and uncollapsed",
+                f"filing-envelope occurrences for {item.record_id!r} must be positive, contiguous, and uncollapsed",
             )
         next_occurrence[item.record_id] = expected_occurrence + 1
         last_family = family
 
 
-def _render_m303_envelope_prefix(
-    envelope: M303FilingEnvelopeDefinition,
+def _render_envelope_prefix(
+    envelope: FilingEnvelopeDefinition,
     *,
+    modelo: Modelo,
     period: Period,
     product_software_identity: AeatProductSoftwareIdentity,
 ) -> bytes:
-    """Derive the source-declared DP30300 prefix from filing-instance authority."""
-    parts = tuple(
-        _render_m303_prefix_field(
+    """Derive the source-declared envelope prefix from filing-instance authority."""
+    prefix = b"".join(
+        _render_envelope_prefix_field(
             field.role,
             length=field.length,
+            modelo=modelo,
             period=period,
             product_software_identity=product_software_identity,
         )
         for field in envelope.prefix_fields
     )
-    prefix = b"".join(parts)
-    if len(prefix) != 328:
-        raise FilingExportValidationError("M303 filing-envelope prefix must render to its declared 328-byte extent")
+    if len(prefix) != envelope.prefix_extent:
+        raise FilingExportValidationError(
+            f"filing-envelope prefix must render to its declared {envelope.prefix_extent}-byte extent",
+        )
     return prefix
 
 
-def _render_m303_prefix_field(
-    role: M303EnvelopePrefixRole,
+def _envelope_prefix_role_value(
+    role: FilingEnvelopePrefixRole,
     *,
     length: int,
+    modelo: Modelo,
+    period: Period,
+    product_software_identity: AeatProductSoftwareIdentity,
+) -> str:
+    """Resolve one prefix role's emitted text from typed filing authority.
+
+    Every role resolves from exactly one authority: AEAT grammar constants, the
+    selected modelo, the filing period, the product/software identity, or the
+    field's own declared width. A role with no resolution refuses by name rather
+    than emitting a plausible blank, so a design carrying a role this renderer
+    cannot ground is visible instead of silently mis-filed.
+    """
+    if (literal := _ENVELOPE_GRAMMAR_LITERALS.get(role)) is not None:
+        return literal
+    if role in _ENVELOPE_FILLER_ROLES:
+        return " " * length
+    match role:
+        case FilingEnvelopePrefixRole.MODELO:
+            return modelo.value
+        case FilingEnvelopePrefixRole.FILING_YEAR:
+            return f"{period.filing_year:04d}"
+        case FilingEnvelopePrefixRole.PERIOD:
+            return period.registry_token
+        case FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG:
+            return (
+                f"{_ENVELOPE_GRAMMAR_LITERALS[FilingEnvelopePrefixRole.OPENING_TAG]}"
+                f"{modelo.value}"
+                f"{_ENVELOPE_GRAMMAR_LITERALS[FilingEnvelopePrefixRole.DISCRIMINANT]}"
+                f"{period.filing_year:04d}{period.registry_token}"
+                f"{_ENVELOPE_GRAMMAR_LITERALS[FilingEnvelopePrefixRole.RECORD_TYPE]}"
+            )
+        case FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER:
+            return product_software_identity.program_identifier
+        case FilingEnvelopePrefixRole.DEVELOPER_TAX_ID:
+            return str(product_software_identity.developer_tax_id)
+        case _:
+            raise FilingExportValidationError(
+                f"filing-envelope prefix role {role.value!r} has no declared value authority",
+            )
+
+
+def _render_envelope_prefix_field(
+    role: FilingEnvelopePrefixRole,
+    *,
+    length: int,
+    modelo: Modelo,
     period: Period,
     product_software_identity: AeatProductSoftwareIdentity,
 ) -> bytes:
-    values = {
-        M303EnvelopePrefixRole.OPENING_TAG: "<T",
-        M303EnvelopePrefixRole.MODELO: Modelo.M303.value,
-        M303EnvelopePrefixRole.DISCRIMINANT: "0",
-        M303EnvelopePrefixRole.FILING_YEAR: f"{period.filing_year:04d}",
-        M303EnvelopePrefixRole.PERIOD: period.registry_token,
-        M303EnvelopePrefixRole.RECORD_TYPE: "0000>",
-        M303EnvelopePrefixRole.AUX_OPENING_TAG: "<AUX>",
-        M303EnvelopePrefixRole.PRE_PROGRAM_FILLER: " " * length,
-        M303EnvelopePrefixRole.PROGRAM_IDENTIFIER: product_software_identity.program_identifier,
-        M303EnvelopePrefixRole.BETWEEN_IDENTITIES_FILLER: " " * length,
-        M303EnvelopePrefixRole.DEVELOPER_TAX_ID: str(product_software_identity.developer_tax_id),
-        M303EnvelopePrefixRole.POST_DEVELOPER_FILLER: " " * length,
-        M303EnvelopePrefixRole.AUX_CLOSING_TAG: "</AUX>",
-    }
-    value = values[role]
+    value = _envelope_prefix_role_value(
+        role,
+        length=length,
+        modelo=modelo,
+        period=period,
+        product_software_identity=product_software_identity,
+    )
     try:
         payload = value.encode("ascii")
     except UnicodeEncodeError as exc:
-        raise FilingExportValidationError(f"M303 filing-envelope prefix role {role.value!r} is not ASCII") from exc
+        raise FilingExportValidationError(f"filing-envelope prefix role {role.value!r} is not ASCII") from exc
     if len(payload) != length:
         raise FilingExportValidationError(
-            f"M303 filing-envelope prefix role {role.value!r} renders to {len(payload)} bytes, expected {length}",
+            f"filing-envelope prefix role {role.value!r} renders to {len(payload)} bytes, expected {length}",
         )
     return payload
-
-
-def _render_m303_envelope_closer(*, period: Period) -> bytes:
-    """Render the 18-byte DP30300 closer for one filing period.
-
-    The envelope's ``closer_derivation`` is deliberately not re-checked here.
-    It is a required single-valued ``Literal`` on a frozen model, so pydantic
-    refuses any other value at construction and the value cannot change
-    afterwards; comparing it again at render time tests a condition that was
-    already unconstructible, in a branch that can never be taken.
-
-    The extent check below is a real guard by contrast: the closer is built from
-    the period, so a period that formats to the wrong width is reachable.
-    """
-    closer = f"</T{Modelo.M303.value}0{period.filing_year:04d}{period.registry_token}0000>".encode("ascii")
-    if len(closer) != 18:
-        raise FilingExportValidationError("M303 filing-envelope closer must render to the declared 18-byte extent")
-    return closer
 
 
 def _projection_plan_for_layout(

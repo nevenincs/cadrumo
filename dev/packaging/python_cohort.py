@@ -10,7 +10,7 @@ import tarfile
 import zipfile
 from dataclasses import dataclass
 from email.parser import Parser
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Final
 
 from packaging.requirements import Requirement
@@ -33,19 +33,60 @@ _MANIFEST_NAME: Final[str] = "python-cohort.json"
 # unmanifested wheel or sdist, which a broader pattern would stop doing.
 _BUILD_TOOL_EMITTED_FILES: Final[frozenset[str]] = frozenset({".gitignore"})
 _BUILD_TREE_SOURCE_DIR: Final[str] = "src"
-COHORT_STAMPED_WHEEL_DATA_PATHS: Final[frozenset[str]] = frozenset(
-    {"cadrumo/_data/registry/aeat-validation-verdict.json"},
-)
-"""Wheel-relative data members a cohort build stamps in beyond the tracked source set.
+_WHEEL_REGISTRY_ROOT: Final[str] = "cadrumo/_data/registry/aeat"
+"""Where the registry tree sits inside the wheel. A packaging fact, owned here.
 
-``_stamp_bundled_verdict_into_build_tree`` writes the install-stable registry
-verdict into the extracted build tree before ``uv build``, so a cohort wheel
-carries one data member that no tracked source path can account for. The wheel
-payload check derives its expectation from tracked sources, so it must union
-this set for a cohort wheel — a plain ``uv build`` wheel is never stamped and
-stays strictly tracked-only. Pinned against a real stamp by
-``test_cohort_stamped_paths.py`` so it cannot drift from what the build writes.
+Deliberately only the ROOT. What the stamped records beside it are called, and
+that they sit beside rather than within, belong to the registry package's
+identity module, and are read from it below rather than respelled — a second
+spelling is how the build comes to write a name the runtime never looks for.
 """
+
+
+def cohort_stamped_wheel_data_paths() -> frozenset[str]:
+    """Return the wheel-relative data members a cohort build stamps in.
+
+    ``_stamp_bundled_registry_records_into_build_tree`` writes the install-stable
+    registry identity and its verdict into the extracted build tree before
+    ``uv build``, so a cohort wheel carries data members that no tracked source
+    path can account for. The wheel payload check derives its expectation from
+    tracked sources, so it must union this set for a cohort wheel — a plain
+    ``uv build`` wheel is never stamped and stays strictly tracked-only.
+
+    Derived by asking the registry package where it puts each record, so a
+    rename or a relocation there moves this expectation automatically instead of
+    surfacing as an ``unexpected`` wheel member in CI. Pinned against a real
+    stamp by ``test_cohort_stamped_paths.py``.
+
+    Returns:
+        The wheel-relative paths of every stamped member.
+    """
+    from cadrumo.domain.calculations.registry import (
+        registry_identity_stamp_location,
+        shipped_verdict_location,
+    )
+
+    root = PurePosixPath(_WHEEL_REGISTRY_ROOT)
+    return frozenset(
+        locate(Path(root.as_posix())).as_posix()
+        for locate in (registry_identity_stamp_location, shipped_verdict_location)
+    )
+
+
+def __getattr__(name: str) -> object:
+    """Resolve ``COHORT_STAMPED_WHEEL_DATA_PATHS`` lazily.
+
+    Kept as a module attribute so its consumers read unchanged, but resolved on
+    access rather than at import. Deriving it reaches the registry facade, which
+    is a heavy import this module otherwise takes only inside the one function
+    that needs it; binding the value at import time would pull the whole
+    registry package into every tool that merely reads a cohort manifest.
+    """
+    if name == "COHORT_STAMPED_WHEEL_DATA_PATHS":
+        return cohort_stamped_wheel_data_paths()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 _DISTRIBUTIONS: Final[tuple[str, ...]] = (
     "cadrumo",
     "cadrumo-data-manuals",
@@ -268,28 +309,35 @@ def source_snapshot_drift(repo_root: Path) -> tuple[str, ...]:
     return tuple(line for line in completed.stdout.splitlines() if line.strip())
 
 
-def _stamp_bundled_verdict_into_build_tree(build_root: Path) -> str:
-    """Stamp the install-stable registry-validation verdict into the wheel tree.
+def _stamp_bundled_registry_records_into_build_tree(build_root: Path) -> frozenset[str]:
+    """Stamp the install-stable registry identity and verdict into the wheel tree.
 
-    Written before ``uv build`` so the cadrumo wheel ships
-    ``_data/registry/aeat-validation-verdict.json`` beside the registry tree; a
-    fingerprint-matched install then skips runtime registry validation on its
-    very first touch. Computed against the extracted
-    build tree, which is byte-identical to what the wheel packages, so the
-    install-stable (relative-path + size + version) key matches at runtime. The
-    verdict certifies only that the build validated this release's immutable
-    tree green; a fingerprint or version mismatch at runtime re-validates fully.
+    Written before ``uv build`` so the cadrumo wheel ships both records beside
+    the registry tree: the identity lets a matching install establish which tree
+    it has without walking seventeen thousand files, and the verdict — keyed on
+    that identity — lets it skip runtime registry validation on its very first
+    touch. Computed against the extracted build tree, which is byte-identical to
+    what the wheel packages, so the install-stable key matches at runtime.
+
+    Both records come from ONE call into the registry package's own release
+    stamper. This function derives neither the digest, the filenames, nor the
+    locations: doing any of that here would be a second derivation that could
+    drift from what the runtime reads, which is exactly the failure the single
+    canonical identity module exists to prevent.
 
     Returns:
-        The wheel-relative path of the stamped member, as the archive carries it.
+        The wheel-relative paths of the stamped members, as the archive carries them.
     """
     from cadrumo import __version__
-    from cadrumo.domain.calculations.registry import stamp_bundled_registry_verdict
+    from cadrumo.domain.calculations.registry import stamp_bundled_registry_release
 
     source_root = build_root / _BUILD_TREE_SOURCE_DIR
     registry_root = source_root / "cadrumo" / "_data" / "registry" / "aeat"
-    written = stamp_bundled_registry_verdict(registry_root, package_version=__version__)
-    return written.relative_to(source_root.resolve()).as_posix()
+    stamped = stamp_bundled_registry_release(registry_root, package_version=__version__)
+    resolved_source_root = source_root.resolve()
+    return frozenset(
+        path.relative_to(resolved_source_root).as_posix() for path in (stamped.identity_path, stamped.verdict_path)
+    )
 
 
 def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
@@ -321,7 +369,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
         )
         with zipfile.ZipFile(archive) as bundle:
             bundle.extractall(build_root)  # noqa: S202 - archive is produced by local Git.
-        _stamp_bundled_verdict_into_build_tree(build_root)
+        _stamp_bundled_registry_records_into_build_tree(build_root)
         uv = shutil.which("uv")
         if uv is None:
             raise SystemExit("uv is required to build the Python cohort")

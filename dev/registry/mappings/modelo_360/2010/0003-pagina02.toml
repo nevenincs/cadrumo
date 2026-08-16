@@ -1,0 +1,1227 @@
+schema_version = 1
+fragment_id = "pagina02"
+modelo = "360"
+design_epoch = "2010"
+source_ref = "aeat-dr-360-2010"
+source_sha256 = "1361d004c0156d99555e0257b269ae379cbae420a454cdb90b9c37e0abc28950"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f001"
+kind = "literal"
+literal = "<T360020>"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 239
+ordinal = "1"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f002"
+kind = "computed"
+computed_key = "complementaria_page_marker"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 240
+ordinal = "2"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f003"
+kind = "binding"
+binding = "modelo-360-2010.page_02.11-15.operacion-1-numero-de-operacion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 241
+ordinal = "3"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f004"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 242
+ordinal = "4"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f005"
+kind = "binding"
+binding = "modelo-360-2010.page_02.17-19.operacion-1-tipo-de-operacion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 243
+ordinal = "5"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f006"
+kind = "binding"
+binding = "modelo-360-2010.page_02.20-69.operacion-1-numero-factura-o-doc-importacion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 247
+ordinal = "6"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f007"
+kind = "binding"
+binding = "modelo-360-2010.page_02.70-77.operacion-1-fecha-de-emision-factura-o-doc-importacion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 248
+ordinal = "7"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f008"
+kind = "binding"
+binding = "modelo-360-2010.page_02.78-87.operacion-1-bienes-y-servicios-adquiridos-codigo"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 249
+ordinal = "8"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f009"
+kind = "binding"
+binding = "modelo-360-2010.page_02.88-89.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 250
+ordinal = "9"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f010"
+kind = "binding"
+binding = "modelo-360-2010.page_02.90-339.operacion-1-bienes-y-servicios-adquiridos-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 251
+ordinal = "10"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f011"
+kind = "binding"
+binding = "modelo-360-2010.page_02.340-349.operacion-1-bienes-y-servicios-adquiridos-codigo-2"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 252
+ordinal = "11"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f012"
+kind = "binding"
+binding = "modelo-360-2010.page_02.350-351.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-2"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 253
+ordinal = "12"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f013"
+kind = "binding"
+binding = "modelo-360-2010.page_02.352-601.operacion-1-bienes-y-servicios-adquiridos-descripcion-2"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 254
+ordinal = "13"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f014"
+kind = "binding"
+binding = "modelo-360-2010.page_02.602-611.operacion-1-bienes-y-servicios-adquiridos-codigo-3"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 255
+ordinal = "14"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f015"
+kind = "binding"
+binding = "modelo-360-2010.page_02.612-613.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-3"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 256
+ordinal = "15"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f016"
+kind = "binding"
+binding = "modelo-360-2010.page_02.614-863.operacion-1-bienes-y-servicios-adquiridos-descripcion-3"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 257
+ordinal = "16"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f017"
+kind = "binding"
+binding = "modelo-360-2010.page_02.864-873.operacion-1-bienes-y-servicios-adquiridos-codigo-4"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 258
+ordinal = "17"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f018"
+kind = "binding"
+binding = "modelo-360-2010.page_02.874-875.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-4"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 259
+ordinal = "18"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f019"
+kind = "binding"
+binding = "modelo-360-2010.page_02.876-1125.operacion-1-bienes-y-servicios-adquiridos-descripcion-4"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 260
+ordinal = "19"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f020"
+kind = "binding"
+binding = "modelo-360-2010.page_02.1126-1135.operacion-1-bienes-y-servicios-adquiridos-codigo-5"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 261
+ordinal = "20"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f021"
+kind = "binding"
+binding = "modelo-360-2010.page_02.1136-1137.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-5"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 262
+ordinal = "21"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f022"
+kind = "binding"
+binding = "modelo-360-2010.page_02.1138-1387.operacion-1-bienes-y-servicios-adquiridos-descripcion-5"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 263
+ordinal = "22"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f023"
+kind = "binding"
+binding = "modelo-360-2010.page_02.1388-1397.operacion-1-bienes-y-servicios-adquiridos-codigo-6"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 264
+ordinal = "23"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f024"
+kind = "binding"
+binding = "modelo-360-2010.page_02.1398-1399.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-6"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 265
+ordinal = "24"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f025"
+kind = "binding"
+binding = "modelo-360-2010.page_02.1400-1649.operacion-1-bienes-y-servicios-adquiridos-descripcion-6"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 266
+ordinal = "25"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f026"
+kind = "binding"
+binding = "modelo-360-2010.page_02.1650-1659.operacion-1-bienes-y-servicios-adquiridos-codigo-7"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 267
+ordinal = "26"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f027"
+kind = "binding"
+binding = "modelo-360-2010.page_02.1660-1661.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-7"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 268
+ordinal = "27"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f028"
+kind = "binding"
+binding = "modelo-360-2010.page_02.1662-1911.operacion-1-bienes-y-servicios-adquiridos-descripcion-7"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 269
+ordinal = "28"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f029"
+kind = "binding"
+binding = "modelo-360-2010.page_02.1912-1921.operacion-1-bienes-y-servicios-adquiridos-codigo-8"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 270
+ordinal = "29"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f030"
+kind = "binding"
+binding = "modelo-360-2010.page_02.1922-1923.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-8"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 271
+ordinal = "30"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f031"
+kind = "binding"
+binding = "modelo-360-2010.page_02.1924-2173.operacion-1-bienes-y-servicios-adquiridos-descripcion-8"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 272
+ordinal = "31"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f032"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2174-2183.operacion-1-bienes-y-servicios-adquiridos-codigo-9"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 273
+ordinal = "32"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f033"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2184-2185.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-9"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 274
+ordinal = "33"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f034"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2186-2435.operacion-1-bienes-y-servicios-adquiridos-descripcion-9"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 275
+ordinal = "34"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f035"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2436-2445.operacion-1-bienes-y-servicios-adquiridos-codigo-10"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 276
+ordinal = "35"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f036"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2446-2447.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-10"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 277
+ordinal = "36"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f037"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2448-2697.operacion-1-bienes-y-servicios-adquiridos-descripcion-10"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 278
+ordinal = "37"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f038"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2698-2712.operacion-1-base-imponible"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 279
+ordinal = "38"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f039"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2713-2727.operacion-1-cuota-iva"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 280
+ordinal = "39"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f040"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2728-2732.operacion-1-prorrata"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 281
+ordinal = "40"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f041"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2733-2747.operacion-1-importe-solicitado-a-devolver"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 282
+ordinal = "41"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f042"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2748-2750.operacion-1-divisa"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 283
+ordinal = "42"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f043"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2751-2751.operacion-1-indicador-de-simplificada"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 284
+ordinal = "43"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f044"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2752-2753.operacion-1-datos-del-proveeedor-de-bienes-prestador-de"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 285
+ordinal = "44"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f045"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2754-2768.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-2"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 286
+ordinal = "45"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f046"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2769-2770.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-3"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 287
+ordinal = "46"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f047"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2771-2820.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-4"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 288
+ordinal = "47"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f048"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2821-2945.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-5"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 289
+ordinal = "48"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f049"
+kind = "binding"
+binding = "modelo-360-2010.page_02.2946-3093.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-6"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 290
+ordinal = "49"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f050"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3094-3108.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-7"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 291
+ordinal = "50"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f051"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3109-3110.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-8"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 292
+ordinal = "51"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f052"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3111-3115.operacion-2-numero-de-operacion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 293
+ordinal = "52"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f053"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 294
+ordinal = "53"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f054"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3117-3119.operacion-2-tipo-de-operacion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 295
+ordinal = "54"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f055"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3120-3169.operacion-2-numero-factura-o-doc-importacion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 299
+ordinal = "55"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f056"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3170-3177.operacion-2-fecha-de-emision-factura-o-doc-importacion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 300
+ordinal = "56"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f057"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3178-3187.operacion-2-bienes-y-servicios-adquiridos-codigo"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 301
+ordinal = "57"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f058"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3188-3189.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 302
+ordinal = "58"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f059"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3190-3439.operacion-2-bienes-y-servicios-adquiridos-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 303
+ordinal = "59"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f060"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3440-3449.operacion-2-bienes-y-servicios-adquiridos-codigo-2"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 304
+ordinal = "60"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f061"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3450-3451.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-2"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 305
+ordinal = "61"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f062"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3452-3701.operacion-2-bienes-y-servicios-adquiridos-descripcion-2"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 306
+ordinal = "62"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f063"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3702-3711.operacion-2-bienes-y-servicios-adquiridos-codigo-3"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 307
+ordinal = "63"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f064"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3712-3713.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-3"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 308
+ordinal = "64"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f065"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3714-3963.operacion-2-bienes-y-servicios-adquiridos-descripcion-3"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 309
+ordinal = "65"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f066"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3964-3973.operacion-2-bienes-y-servicios-adquiridos-codigo-4"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 310
+ordinal = "66"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f067"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3974-3975.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-4"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 311
+ordinal = "67"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f068"
+kind = "binding"
+binding = "modelo-360-2010.page_02.3976-4225.operacion-2-bienes-y-servicios-adquiridos-descripcion-4"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 312
+ordinal = "68"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f069"
+kind = "binding"
+binding = "modelo-360-2010.page_02.4226-4235.operacion-2-bienes-y-servicios-adquiridos-codigo-5"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 313
+ordinal = "69"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f070"
+kind = "binding"
+binding = "modelo-360-2010.page_02.4236-4237.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-5"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 314
+ordinal = "70"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f071"
+kind = "binding"
+binding = "modelo-360-2010.page_02.4238-4487.operacion-2-bienes-y-servicios-adquiridos-descripcion-5"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 318
+ordinal = "71"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f072"
+kind = "binding"
+binding = "modelo-360-2010.page_02.4488-4497.operacion-2-bienes-y-servicios-adquiridos-codigo-6"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 319
+ordinal = "72"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f073"
+kind = "binding"
+binding = "modelo-360-2010.page_02.4498-4499.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-6"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 320
+ordinal = "73"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f074"
+kind = "binding"
+binding = "modelo-360-2010.page_02.4500-4749.operacion-2-bienes-y-servicios-adquiridos-descripcion-6"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 321
+ordinal = "74"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f075"
+kind = "binding"
+binding = "modelo-360-2010.page_02.4750-4759.operacion-2-bienes-y-servicios-adquiridos-codigo-7"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 322
+ordinal = "75"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f076"
+kind = "binding"
+binding = "modelo-360-2010.page_02.4760-4761.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-7"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 323
+ordinal = "76"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f077"
+kind = "binding"
+binding = "modelo-360-2010.page_02.4762-5011.operacion-2-bienes-y-servicios-adquiridos-descripcion-7"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 324
+ordinal = "77"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f078"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5012-5021.operacion-2-bienes-y-servicios-adquiridos-codigo-8"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 325
+ordinal = "78"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f079"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5022-5023.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-8"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 326
+ordinal = "79"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f080"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5024-5273.operacion-2-bienes-y-servicios-adquiridos-descripcion-8"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 327
+ordinal = "80"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f081"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5274-5283.operacion-2-bienes-y-servicios-adquiridos-codigo-9"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 328
+ordinal = "81"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f082"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5284-5285.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-9"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 329
+ordinal = "82"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f083"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5286-5535.operacion-2-bienes-y-servicios-adquiridos-descripcion-9"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 330
+ordinal = "83"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f084"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5536-5545.operacion-2-bienes-y-servicios-adquiridos-codigo-10"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 331
+ordinal = "84"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f085"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5546-5547.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-10"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 332
+ordinal = "85"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f086"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5548-5797.operacion-2-bienes-y-servicios-adquiridos-descripcion-10"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 333
+ordinal = "86"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f087"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5798-5812.operacion-2-base-imponible"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 334
+ordinal = "87"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f088"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5813-5827.operacion-2-cuota-iva"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 335
+ordinal = "88"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f089"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5828-5832.operacion-2-prorrata"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 336
+ordinal = "89"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f090"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5833-5847.operacion-2-importe-solicitado-a-devolver"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 337
+ordinal = "90"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f091"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5848-5850.operacion-2-divisa"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 338
+ordinal = "91"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f092"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5851-5851.operacion-2-indicador-de-simplificada"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 339
+ordinal = "92"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f093"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5852-5853.operacion-2-datos-del-proveeedor-de-bienes-prestador-de"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 340
+ordinal = "93"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f094"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5854-5868.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-2"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 341
+ordinal = "94"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f095"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5869-5870.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-3"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 342
+ordinal = "95"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f096"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5871-5920.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-4"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 343
+ordinal = "96"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f097"
+kind = "binding"
+binding = "modelo-360-2010.page_02.5921-6045.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-5"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 344
+ordinal = "97"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f098"
+kind = "binding"
+binding = "modelo-360-2010.page_02.6046-6193.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-6"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 345
+ordinal = "98"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f099"
+kind = "binding"
+binding = "modelo-360-2010.page_02.6194-6208.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-7"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 346
+ordinal = "99"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f100"
+kind = "binding"
+binding = "modelo-360-2010.page_02.6209-6210.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-8"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 347
+ordinal = "100"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f101"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 348
+ordinal = "101"
+record_identity = "Pág. 2"
+
+[[entries]]
+export_field_id = "m360-2010.pagina02.f102"
+kind = "literal"
+literal = "</T360020>"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 2"
+source_row = 349
+ordinal = "102"
+record_identity = "Pág. 2"

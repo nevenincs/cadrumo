@@ -1,0 +1,18 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "232"
+design_epoch = "2018"
+source_ref = "aeat-dr-232-2018"
+source_sha256 = "a61485dfc480393ec1dfc926142fd0b6a9386e28e60746da3dfbf2fdaf3bffff"
+
+[[records]]
+sheet = "DR23201"
+record_identity = "DR23201"
+export_record_id = "m232-operaciones-vinculadas"
+record_type = "operaciones-vinculadas"
+
+[[records]]
+sheet = "DR23202"
+record_identity = "DR23202"
+export_record_id = "m232-paraisos-fiscales"
+record_type = "paraisos-fiscales"

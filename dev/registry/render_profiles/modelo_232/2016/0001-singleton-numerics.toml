@@ -1,0 +1,69 @@
+schema_version = 1
+fragment_id = "singleton-numerics"
+width_17_rules = []
+
+[design_identity]
+modelo = "232"
+design_epoch = "2016"
+source_ref = "aeat-dr-232-2016"
+source_sha256 = "fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR23201"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DR23201"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m232-2016-devengo-ejercicio-year-yyyy"
+decision_statement = "The Devengo ejercicio renders as the four-digit filing year, unsigned, with no decimal component."
+justification = "The official design leaves this field's Contenido cell blank while its own header names it Ejercicio. At four Num characters the only reading available is the four-digit year the export codec already owns; no narrower or wider policy fits the slot."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR23201"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DR23201"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR23201"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "DR23201"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m232-2016-cnae-actividad-principal-identifier-digits"
+decision_statement = "The C.N.A.E. principal-activity code renders as unsigned identifier digits with no decimal component."
+justification = "A CNAE code classifies an activity; it is never summed or scaled, and its leading zeros are significant (0111 is a real division), so it must not pass through a policy that would strip them."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR23201"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "DR23201"

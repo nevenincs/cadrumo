@@ -382,10 +382,18 @@ from ._m303_exonerado_390_projection import (
     project_m303_exonerado_390_activity_rows,
 )
 from ._m303_orden_manifest import (
+    check_m303_annual_orden_census_artefact,
     check_m303_annual_orden_manifest,
     collect_m303_annual_orden_fingerprints,
     load_m303_annual_orden_authority,
+    render_m303_annual_orden_census_artefact,
     render_m303_annual_orden_manifest,
+)
+from ._m303_orden_census_artefact import (
+    M303_ORDEN_CENSUS_ARTEFACT_FILENAME,
+    load_m303_annual_orden_censuses,
+    m303_orden_census_artefact_path,
+    render_m303_annual_orden_censuses,
 )
 from ._m303_orden_projection_compiler import compile_m303_annual_orden_projection
 from ._m303_orden_projection_models import (
@@ -877,6 +885,7 @@ __all__ = [
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
     "LEDGER_BINDING_SOURCE_KINDS",
     "LOGICAL_DICTIONARY_TYPE",
+    "M303_ORDEN_CENSUS_ARTEFACT_FILENAME",
     "MODELO_303_IVA_COMPENSATION_BINDING_ID",
     "REGISTRY_IDENTITY_SCHEMA_VERSION",
     "REGISTRY_IDENTITY_STAMP_FILENAME",
@@ -1225,6 +1234,7 @@ __all__ = [
     "casillas_by_id",
     "censo_modelo_ownership",
     "censo_modelo_ownership_map",
+    "check_m303_annual_orden_census_artefact",
     "check_m303_annual_orden_manifest",
     "clasificar_casillas_oficiales",
     "clear_fingerprint_cache",
@@ -1298,6 +1308,7 @@ __all__ = [
     "load_convenio_authority",
     "load_legal_parameters_only",
     "load_m303_annual_orden_authority",
+    "load_m303_annual_orden_censuses",
     "load_modelo_directory",
     "load_modelo_file",
     "load_modelo_path",
@@ -1305,6 +1316,7 @@ __all__ = [
     "m303_annual_orden_activity_anchor",
     "m303_annual_orden_snapshot_from_projection",
     "m303_annual_orden_table_text",
+    "m303_orden_census_artefact_path",
     "m303_regimen_simplificado_annual_summary_requirement",
     "manual_input_record_field_selector",
     "materialize_relation_binding_values",
@@ -1345,6 +1357,8 @@ __all__ = [
     "render_fixed_width_export_field",
     "render_fixed_width_export_record_body",
     "render_fixed_width_export_record_payload",
+    "render_m303_annual_orden_census_artefact",
+    "render_m303_annual_orden_censuses",
     "render_m303_annual_orden_manifest",
     "renta_first_slice_binding_target_casillas",
     "resolve_applicability_rule_from_authority",

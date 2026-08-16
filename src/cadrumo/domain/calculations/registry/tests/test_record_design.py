@@ -19,6 +19,8 @@ from .. import (
     resolve_record_design_binary,
 )
 from .. import _record_design as record_design_module
+from .._record_design import _unnamed_position_candidate
+from .._record_design_schema import RecordDesignSinglePositionCorrection
 from ._record_design_support import (
     _RECORD_DESIGN_ROOT,
     _committed_registry_tree,
@@ -966,12 +968,58 @@ def test_a_design_with_a_dropped_sheet_reports_the_read_as_partial() -> None:
 
     assert extraction.skipped, "Modelo 232 drops its TABLAS tab; a read that reports none is not seeing it"
     assert extraction.sheets, "some sheets do parse, so this must be a PARTIAL read rather than a refusal"
-    assert extraction.is_complete is False
-    assert not {sheet.name for sheet in extraction.sheets} & {item.name for item in extraction.skipped}
-    assert all(item.reason for item in extraction.skipped), "a skipped sheet must say WHY it was skipped"
+    # A DECLARED non-record tab is named in ``skipped`` but does not make the
+    # read incomplete: the reviewer already adjudicated that it carries no
+    # record, so counting it as unread would report a defect that does not
+    # exist. ``is_complete`` therefore keys on ``unread_record_sheets``, and the
+    # genuinely-partial property is proved on its own specimen below.
+    assert all(skipped.declared_non_record for skipped in extraction.skipped)
+    assert not extraction.unread_record_sheets
+    assert extraction.is_complete is True
 
-    with pytest.raises(RegistryValidationError, match="PARTIAL design"):
-        extraction.require_complete()
+
+def test_a_design_with_an_undeclared_hole_reports_the_read_as_partial(tmp_path: Path) -> None:
+    """A genuinely partial read must SAY it is partial -- the other half of the proof.
+
+    Built SYNTHETICALLY rather than pinned to whichever bundled design happens
+    to be partial today. Pinning it would encode a live defect as this test's
+    contract: the specimen goes green the moment someone legitimately fixes that
+    design, and the property this test exists for would stop being checked
+    without anyone noticing. Modelo 840 was exactly that -- partial when this
+    was written and complete an hour later.
+
+    TWO records, deliberately: the first reads cleanly and the second declares
+    positions 1-12 while printing no row for 6-10. A holed record is moved
+    WHOLLY to ``skipped`` rather than kept as a half-read sheet, so a
+    single-record specimen would leave ``sheets`` empty and prove a refusal
+    instead of the partial read this asserts.
+    """
+    pdf_path = tmp_path / "holed-record-design.pdf"
+    _write_pdf_lines(
+        pdf_path,
+        (
+            "Pág 1 DISEÑO DE REGISTRO 01/12/2003",
+            "Nº Posic. Lon Tipo Descripción Validación Contenido",
+            "1 1 3 An Inicio del identificador de modelo.",
+            "2 4 2 Num Ejercicio.",
+            "3 6 5 An Nombre.",
+            "4 11 2 An Salto de línea. Constante CRLF.",
+            "Pág 2 DISEÑO DE REGISTRO 01/12/2003",
+            "Nº Posic. Lon Tipo Descripción Validación Contenido",
+            "1 1 3 An Inicio del identificador de modelo.",
+            "2 4 2 Num Ejercicio.",
+            "3 11 2 An Salto de línea. Constante CRLF.",
+        ),
+    )
+
+    extraction = extract_record_design_pdf(pdf_path)
+
+    assert extraction.sheets, "some rows do parse, so this is a PARTIAL read rather than a refusal"
+    assert extraction.unread_record_sheets, "the holed record must be named, not silently dropped"
+    assert extraction.is_complete is False
+    reason = extraction.skipped[0].reason
+    assert "6-10" in reason, reason
+    assert not extraction.skipped[0].declared_non_record
 
 
 def test_a_second_recognised_header_shape_is_read_and_a_non_matching_sheet_still_skips() -> None:
@@ -1486,3 +1534,312 @@ def test_a_design_yielding_no_fields_is_never_reported_complete() -> None:
         + ", ".join(empty)
         + " -- an empty read is trivially contiguous, so nothing else can catch it"
     )
+
+
+def _narrative_pdf(path: Path, rows: tuple[str, ...]) -> None:
+    """Write a narrative-style AEAT record design with ``rows`` as its body."""
+    _write_pdf_lines(
+        path,
+        (
+            "Tipo de registro 1: Registro de Declarante",
+            "POSICIONES NATURALEZA DESCRIPCIÓN DE LOS CAMPOS",
+            *rows,
+        ),
+    )
+
+
+def test_a_row_whose_naturaleza_aeat_omitted_fills_the_gap_it_leaves(tmp_path: Path) -> None:
+    """A range-carrying row with no naturaleza is read when nothing else claims its span.
+
+    AEAT prints the naturaleza between the range and the description on every
+    ordinary row, and omits it occasionally. Refusing those outright left a hole,
+    and a record read with a hole understates every coverage figure taken from it.
+    """
+    pdf_path = tmp_path / "gap.pdf"
+    _narrative_pdf(
+        pdf_path,
+        (
+            "1-4 Numérico EJERCICIO.",
+            "5-8 CÓDIGO LEI DEL DECLARANTE",
+            "9-12 Alfanumérico NIF.",
+        ),
+    )
+
+    sheet = extract_record_design(pdf_path).sheets[0]
+    admitted = [field for field in sheet.fields if field.offset == 5]
+
+    assert [field.offset for field in sheet.fields] == [1, 5, 9]
+    assert len(admitted) == 1
+    assert admitted[0].length == 4
+    assert admitted[0].type_code == "No consta"
+    assert "CÓDIGO LEI" in admitted[0].description
+
+
+def test_prose_restating_a_claimed_range_is_never_admitted_as_a_row(tmp_path: Path) -> None:
+    """Mutation proof for the containment guard, the thing that makes the fill safe.
+
+    AEAT routinely opens a field's DESCRIPTION with that field's own range, and 41
+    bundled designs do it. Such a line is shaped exactly like the admitted row
+    above; the ONLY thing separating them is that a prose line's range is already
+    claimed by the field it describes. Remove the disjointness test in
+    ``fill_unread_gaps`` and this record grows a duplicate field at position 5.
+    """
+    pdf_path = tmp_path / "prose.pdf"
+    _narrative_pdf(
+        pdf_path,
+        (
+            "1-4 Numérico EJERCICIO.",
+            "5-8 Alfanumérico APELLIDOS Y NOMBRE.",
+            "5-8 APELLIDOS Y NOMBRE: Se consignará el primer apellido.",
+        ),
+    )
+
+    sheet = extract_record_design(pdf_path).sheets[0]
+
+    assert [field.offset for field in sheet.fields] == [1, 5]
+    assert not [field for field in sheet.fields if field.type_code == "No consta"]
+
+
+def test_a_single_position_without_a_naturaleza_is_not_evidence_of_extent(tmp_path: Path) -> None:
+    """Only an explicit range is admitted; a lone number is an ordinary sentence.
+
+    ``5 Se consignará ...`` is indistinguishable from numbered prose, so admitting
+    it would invent a one-byte field wherever a design happens to number a
+    paragraph.
+    """
+    pdf_path = tmp_path / "single.pdf"
+    _narrative_pdf(
+        pdf_path,
+        (
+            "1-4 Numérico EJERCICIO.",
+            "5 Se consignará lo indicado en el apartado anterior.",
+            "6-9 Alfanumérico NIF.",
+        ),
+    )
+
+    extraction = extract_record_design(pdf_path)
+
+    # The hole at position 5 SURVIVES, and the record is refused for it. That is
+    # the assertion: had the lone number been admitted the hole would have closed
+    # and this design would read clean on an invented one-byte field.
+    assert not extraction.sheets
+    assert [skipped.name for skipped in extraction.skipped] == ["Tipo 1 - Registro De Declarante"]
+    assert "5 were not read at all" in (extraction.skipped[0].reason or "")
+
+
+def test_modelo_296_perceptor_record_reads_whole_after_the_gap_fill() -> None:
+    """The bundled design this fill exists for now reads without a hole.
+
+    Modelo 296 declares 500 positions on its perceptor record and read none of
+    413-432, because AEAT printed ``413-432 CÓDIGO LEI DEL PERCEPTOR`` with no
+    naturaleza while its neighbour ``433-452 Alfanumérico NIF EN EL PAÍS DE
+    RESIDENCIA FISCAL`` carries one. The record was reported skipped entirely.
+    """
+    design = (
+        bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_296", "files")
+        / "01-296-ejercicio-2024.pdf"
+    )
+
+    sheets = {sheet.name: sheet for sheet in extract_record_design(design).sheets}
+    perceptor = sheets["Tipo 2 - Registro De Perceptor"]
+    lei = [field for field in perceptor.fields if field.offset == 413]
+
+    assert len(lei) == 1
+    assert lei[0].length == 20
+    assert lei[0].type_code == "No consta"
+    assert "LEI" in lei[0].description
+
+
+def test_a_page_heading_abbreviated_with_a_period_is_recognised(tmp_path: Path) -> None:
+    """``Pág. 2 DISEÑO DE REGISTRO`` heads a record exactly as ``Pág 2`` does.
+
+    AEAT abbreviates the word both ways. Requiring whitespace straight after the
+    stem matched only the period-less form, so a period-form heading was read as
+    ordinary prose and the body under it became an unidentified record -- present
+    in the file, absent from the read, and reported skipped.
+    """
+    pdf_path = tmp_path / "period.pdf"
+    _write_pdf_lines(
+        pdf_path,
+        (
+            "Pág. 1 DISEÑO DE REGISTRO 25/03/2021",
+            "Nº Posic. Lon Tipo Descripción Validación Contenido",
+            "1 1 3 An Inicio del identificador.",
+            "2 4 2 Num Ejercicio.",
+        ),
+    )
+
+    extraction = extract_record_design(pdf_path)
+
+    assert [sheet.name for sheet in extraction.sheets] == ["Pág. 1"]
+    assert not extraction.skipped
+
+
+def test_modelo_360_reads_both_pages_after_the_period_form_heading(tmp_path: Path) -> None:
+    """The bundled design this fix exists for now reads whole.
+
+    Modelo 360 heads its second page ``Pág. 2 DISEÑO DE REGISTRO 25/03/2021``.
+    Before the period form was recognised the design returned one unnamed sheet
+    and reported the second body skipped; both pages are now named and read.
+    """
+    design = (
+        bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_360", "files")
+        / "01-360-orden-eha-789-2010.pdf"
+    )
+
+    extraction = extract_record_design(design)
+
+    assert [sheet.name for sheet in extraction.sheets] == ["Pág. 1", "Pág. 2"]
+    assert extraction.is_complete
+    assert not extraction.skipped
+
+
+def test_a_quoted_anexo_title_names_the_record_body_under_it(tmp_path: Path) -> None:
+    """``ANEXO «TITLE»`` heads an annex record, which is a real AEAT shape.
+
+    Modelo 296 heads the two anexos following its perceptor record this way. Read
+    as prose, both bodies arrived unidentified and the design never read whole.
+    """
+    pdf_path = tmp_path / "anexo.pdf"
+    _write_pdf_lines(
+        pdf_path,
+        (
+            "Tipo de registro 1: Registro de Declarante",
+            "POSICIONES NATURALEZA DESCRIPCIÓN DE LOS CAMPOS",
+            "1-4 Numérico EJERCICIO.",
+            "ANEXO «VALORES NEGOCIABLES. RELACIÓN DE PAGO»",
+            "(Tipo de Hoja «A»)",
+            "POSICIONES NATURALEZA DESCRIPCIÓN DE LOS CAMPOS",
+            "1-4 Numérico EJERCICIO.",
+        ),
+    )
+
+    extraction = extract_record_design(pdf_path)
+
+    assert [sheet.name for sheet in extraction.sheets] == [
+        "Tipo 1 - Registro De Declarante",
+        "Anexo - Valores Negociables  Relación De Pago",
+    ]
+    assert not extraction.skipped
+
+
+def test_a_prose_reference_to_a_numbered_anexo_names_no_record(tmp_path: Path) -> None:
+    """Mutation proof: the opening quotation mark is what separates title from prose.
+
+    AEAT refers to numbered annexes constantly ("... que figuran en el anexo II de
+    la Orden EHA/3496/2011"). Drop the required quote from the pattern and such a
+    line stages a record name, which geometry then attaches to the next body --
+    renaming a record after an unrelated citation.
+    """
+    pdf_path = tmp_path / "prose_anexo.pdf"
+    _write_pdf_lines(
+        pdf_path,
+        (
+            "Tipo de registro 1: Registro de Declarante",
+            "POSICIONES NATURALEZA DESCRIPCIÓN DE LOS CAMPOS",
+            "1-4 Numérico EJERCICIO.",
+            "ANEXO II DE LA ORDEN EHA/3496/2011, de 15 de diciembre.",
+            "5-8 Alfanumérico NIF.",
+        ),
+    )
+
+    extraction = extract_record_design(pdf_path)
+
+    assert [sheet.name for sheet in extraction.sheets] == ["Tipo 1 - Registro De Declarante"]
+
+
+def test_modelo_296_reads_all_five_record_bodies() -> None:
+    """The bundled design reads whole: declarante, two perceptor records, two anexos.
+
+    Before, it returned two sheets and reported three skips -- the perceptor
+    record dropped for an unread span, and both anexos unidentified.
+    """
+    design = (
+        bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_296", "files")
+        / "01-296-ejercicio-2024.pdf"
+    )
+
+    extraction = extract_record_design(design)
+    anexos = [sheet for sheet in extraction.sheets if sheet.name.startswith("Anexo - ")]
+
+    assert extraction.is_complete
+    assert not extraction.skipped
+    assert len(extraction.sheets) == 5
+    assert len(anexos) == 2
+
+
+class TestSinglePositionCorrection:
+    """A naturaleza-less single-position row is admitted only when declared.
+
+    Modelo 280's declarante record is the live case: AEAT printed
+    ``58 TIPO DE SOPORTE`` with no naturaleza and no range, at a page break,
+    leaving position 58 the only byte of its declared 500 that no row covered.
+    """
+
+    @staticmethod
+    def _declaration() -> RecordDesignSinglePositionCorrection:
+        return RecordDesignSinglePositionCorrection(
+            sheet="Tipo 1 - Registro De Declarante",
+            position=58,
+            corrected_type="Alfabético",
+            description="TIPO DE SOPORTE",
+            reason="AEAT omitted the naturaleza column at a page break; the continuation declares the single value 'T'.",
+            editions_read=("DR_280_2022.pdf pages 4-5",),
+        )
+
+    def test_a_declared_single_position_row_is_admitted(self) -> None:
+        index = {("Tipo 1 - Registro De Declarante", 58): self._declaration()}
+
+        candidate = _unnamed_position_candidate(
+            "58 TIPO DE SOPORTE",
+            1,
+            sheet="Tipo 1 - Registro De Declarante",
+            single_position_corrections=index,
+        )
+
+        assert candidate is not None
+        assert (candidate.offset, candidate.length) == (58, 1)
+        assert candidate.type_code == "Alfabético"
+        assert candidate.description == "TIPO DE SOPORTE"
+
+    def test_an_undeclared_single_position_row_is_still_refused(self) -> None:
+        """The control: without this the declaration would be buying nothing."""
+        assert (
+            _unnamed_position_candidate(
+                "58 TIPO DE SOPORTE",
+                1,
+                sheet="Tipo 1 - Registro De Declarante",
+                single_position_corrections={},
+            )
+            is None
+        )
+
+    def test_a_declaration_does_not_travel_to_another_sheet_or_position(self) -> None:
+        """The key is ``(sheet, position)``; neither half may be assumed."""
+        index = {("Tipo 1 - Registro De Declarante", 58): self._declaration()}
+
+        assert (
+            _unnamed_position_candidate(
+                "58 TIPO DE SOPORTE", 1, sheet="Tipo 2 - Registro De Declarado", single_position_corrections=index
+            )
+            is None
+        )
+        assert (
+            _unnamed_position_candidate(
+                "59 TIPO DE SOPORTE", 1, sheet="Tipo 1 - Registro De Declarante", single_position_corrections=index
+            )
+            is None
+        )
+
+    def test_the_bundled_modelo_280_design_reads_complete_and_says_it_was_corrected(self) -> None:
+        """Real binary, real sidecar: complete, and never passing as pristine."""
+        extraction = extract_record_design(
+            bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_280", "files", "DR_280_2022.pdf"),
+        )
+
+        assert extraction.is_complete
+        assert not extraction.skipped
+        declarante = next(sheet for sheet in extraction.sheets if sheet.name.startswith("Tipo 1"))
+        corrected = next(field for field in declarante.fields if field.offset == 58)
+        assert (corrected.length, corrected.type_code) == (1, "Alfabético")
+        assert [correction.position for correction in declarante.corrections] == [58]

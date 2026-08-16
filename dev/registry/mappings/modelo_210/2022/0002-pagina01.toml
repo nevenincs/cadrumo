@@ -1,0 +1,1651 @@
+schema_version = 1
+fragment_id = "pagina01"
+modelo = "210"
+design_epoch = "2022"
+source_ref = "aeat-dr-210-2022"
+source_sha256 = "dce167991abaf547f31b38d7a5e51892ff6e8bd49a27a539432ab504891a0c00"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f001"
+kind = "literal"
+literal = "<T"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f002"
+kind = "literal"
+literal = "210"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f003"
+kind = "literal"
+literal = "01"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f004"
+kind = "literal"
+literal = ">"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f005"
+kind = "filler"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f006"
+kind = "header"
+producer_key = "irnr.declaracion.tipo"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f007"
+kind = "header"
+producer_key = "irnr.declarante.tax_id"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f008"
+kind = "header"
+producer_key = "irnr.declarante.full_name"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f009"
+kind = "header"
+producer_key = "irnr.declarante.capacity.contribuyente"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f010"
+kind = "header"
+producer_key = "irnr.declarante.capacity.representante"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f011"
+kind = "header"
+producer_key = "irnr.declarante.capacity.pagador"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f012"
+kind = "header"
+producer_key = "irnr.declarante.capacity.depositario"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f013"
+kind = "header"
+producer_key = "irnr.declarante.capacity.gestor"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f014"
+kind = "header"
+producer_key = "irnr.declarante.capacity.retenedor"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f015"
+kind = "header"
+producer_key = "irnr.devengo.agrupacion"
+legal_refs = ["orden-eha-3316-2010:art-1", "orden-eha-3316-2010:art-2"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f016"
+kind = "draft"
+draft_attribute = "period_code"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f017"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f018"
+kind = "header"
+producer_key = "irnr.devengo.fecha_devengo"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f019"
+kind = "casilla"
+casilla_id = "tipo_renta"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 24
+source_cell = "A24"
+ordinal = "19"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f020"
+kind = "header"
+producer_key = "irnr.renta.clave_divisa"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f021"
+kind = "header"
+producer_key = "irnr.contribuyente.tax_id"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f022"
+kind = "header"
+producer_key = "irnr.contribuyente.person_type"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f023"
+kind = "header"
+producer_key = "irnr.contribuyente.full_name"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 28
+source_cell = "A28"
+ordinal = "23"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f024"
+kind = "filler"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 29
+source_cell = "A29"
+ordinal = "24"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f025"
+kind = "header"
+producer_key = "irnr.contribuyente.birth_date"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 30
+source_cell = "A30"
+ordinal = "25"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f026"
+kind = "header"
+producer_key = "irnr.contribuyente.birth_city"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 31
+source_cell = "A31"
+ordinal = "26"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f027"
+kind = "header"
+producer_key = "irnr.contribuyente.birth_country_code"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f028"
+kind = "header"
+producer_key = "irnr.contribuyente.tax_residence_country_code"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 33
+source_cell = "A33"
+ordinal = "28"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f029"
+kind = "header"
+producer_key = "irnr.contribuyente.foreign_address.street"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f030"
+kind = "header"
+producer_key = "irnr.contribuyente.foreign_address.complement"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f031"
+kind = "header"
+producer_key = "irnr.contribuyente.foreign_address.city"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 36
+source_cell = "A36"
+ordinal = "31"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f032"
+kind = "header"
+producer_key = "irnr.contribuyente.foreign_address.email"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 37
+source_cell = "A37"
+ordinal = "32"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f033"
+kind = "header"
+producer_key = "irnr.contribuyente.foreign_address.postal_code"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 38
+source_cell = "A38"
+ordinal = "33"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f034"
+kind = "header"
+producer_key = "irnr.contribuyente.foreign_address.region"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 39
+source_cell = "A39"
+ordinal = "34"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f035"
+kind = "header"
+producer_key = "irnr.contribuyente.foreign_address.country_code"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 40
+source_cell = "A40"
+ordinal = "35"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f036"
+kind = "header"
+producer_key = "irnr.contribuyente.foreign_address.phone"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 41
+source_cell = "A41"
+ordinal = "36"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f037"
+kind = "header"
+producer_key = "irnr.contribuyente.foreign_address.mobile_phone"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 42
+source_cell = "A42"
+ordinal = "37"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f038"
+kind = "header"
+producer_key = "irnr.contribuyente.foreign_address.fax"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 43
+source_cell = "A43"
+ordinal = "38"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f039"
+kind = "header"
+producer_key = "irnr.representante.tax_id"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 44
+source_cell = "A44"
+ordinal = "39"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f040"
+kind = "header"
+producer_key = "irnr.representante.person_type"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 45
+source_cell = "A45"
+ordinal = "40"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f041"
+kind = "header"
+producer_key = "irnr.representante.full_name"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 46
+source_cell = "A46"
+ordinal = "41"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f042"
+kind = "header"
+producer_key = "irnr.representante.appointment_kind"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 47
+source_cell = "A47"
+ordinal = "42"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f043"
+kind = "header"
+producer_key = "irnr.representante.domicilio.tipo_via"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 48
+source_cell = "A48"
+ordinal = "43"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f044"
+kind = "header"
+producer_key = "irnr.representante.domicilio.nombre_via"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 49
+source_cell = "A49"
+ordinal = "44"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f045"
+kind = "header"
+producer_key = "irnr.representante.domicilio.tipo_numeracion"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 50
+source_cell = "A50"
+ordinal = "45"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f046"
+kind = "header"
+producer_key = "irnr.representante.domicilio.numero_casa"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 51
+source_cell = "A51"
+ordinal = "46"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f047"
+kind = "header"
+producer_key = "irnr.representante.domicilio.calificador_numero"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 52
+source_cell = "A52"
+ordinal = "47"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f048"
+kind = "header"
+producer_key = "irnr.representante.domicilio.bloque"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 53
+source_cell = "A53"
+ordinal = "48"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f049"
+kind = "header"
+producer_key = "irnr.representante.domicilio.portal"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 54
+source_cell = "A54"
+ordinal = "49"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f050"
+kind = "header"
+producer_key = "irnr.representante.domicilio.escalera"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 55
+source_cell = "A55"
+ordinal = "50"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f051"
+kind = "header"
+producer_key = "irnr.representante.domicilio.planta"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 56
+source_cell = "A56"
+ordinal = "51"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f052"
+kind = "header"
+producer_key = "irnr.representante.domicilio.puerta"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 57
+source_cell = "A57"
+ordinal = "52"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f053"
+kind = "header"
+producer_key = "irnr.representante.domicilio.datos_complementarios"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 58
+source_cell = "A58"
+ordinal = "53"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f054"
+kind = "header"
+producer_key = "irnr.representante.domicilio.localidad"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 59
+source_cell = "A59"
+ordinal = "54"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f055"
+kind = "header"
+producer_key = "irnr.representante.domicilio.codigo_postal"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 60
+source_cell = "A60"
+ordinal = "55"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f056"
+kind = "filler"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 61
+source_cell = "A61"
+ordinal = "56"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f057"
+kind = "header"
+producer_key = "irnr.representante.domicilio.codigo_ine_municipio"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 62
+source_cell = "A62"
+ordinal = "57"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f058"
+kind = "header"
+producer_key = "irnr.representante.domicilio.codigo_provincia"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 63
+source_cell = "A63"
+ordinal = "58"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f059"
+kind = "header"
+producer_key = "irnr.representante.phone"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 64
+source_cell = "A64"
+ordinal = "59"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f060"
+kind = "header"
+producer_key = "irnr.representante.mobile_phone"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 65
+source_cell = "A65"
+ordinal = "60"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f061"
+kind = "header"
+producer_key = "irnr.representante.fax"
+legal_refs = ["orden-eha-3316-2010:art-1", "trlirnr-rdleg-5-2004:art-10"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 66
+source_cell = "A66"
+ordinal = "61"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f062"
+kind = "header"
+producer_key = "irnr.pagador.tax_id"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 67
+source_cell = "A67"
+ordinal = "62"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f063"
+kind = "header"
+producer_key = "irnr.pagador.person_type"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 68
+source_cell = "A68"
+ordinal = "63"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f064"
+kind = "header"
+producer_key = "irnr.pagador.full_name"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 69
+source_cell = "A69"
+ordinal = "64"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f065"
+kind = "header"
+producer_key = "irnr.inmueble.situacion.tipo_via"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 70
+source_cell = "A70"
+ordinal = "65"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f066"
+kind = "header"
+producer_key = "irnr.inmueble.situacion.nombre_via"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 71
+source_cell = "A71"
+ordinal = "66"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f067"
+kind = "header"
+producer_key = "irnr.inmueble.situacion.tipo_numeracion"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 72
+source_cell = "A72"
+ordinal = "67"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f068"
+kind = "header"
+producer_key = "irnr.inmueble.situacion.numero_casa"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 73
+source_cell = "A73"
+ordinal = "68"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f069"
+kind = "header"
+producer_key = "irnr.inmueble.situacion.calificador_numero"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 74
+source_cell = "A74"
+ordinal = "69"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f070"
+kind = "header"
+producer_key = "irnr.inmueble.situacion.bloque"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 75
+source_cell = "A75"
+ordinal = "70"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f071"
+kind = "header"
+producer_key = "irnr.inmueble.situacion.portal"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 76
+source_cell = "A76"
+ordinal = "71"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f072"
+kind = "header"
+producer_key = "irnr.inmueble.situacion.escalera"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 77
+source_cell = "A77"
+ordinal = "72"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f073"
+kind = "header"
+producer_key = "irnr.inmueble.situacion.planta"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 78
+source_cell = "A78"
+ordinal = "73"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f074"
+kind = "header"
+producer_key = "irnr.inmueble.situacion.puerta"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 79
+source_cell = "A79"
+ordinal = "74"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f075"
+kind = "header"
+producer_key = "irnr.inmueble.situacion.datos_complementarios"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 80
+source_cell = "A80"
+ordinal = "75"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f076"
+kind = "header"
+producer_key = "irnr.inmueble.situacion.localidad"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 81
+source_cell = "A81"
+ordinal = "76"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f077"
+kind = "header"
+producer_key = "irnr.inmueble.situacion.codigo_postal"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 82
+source_cell = "A82"
+ordinal = "77"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f078"
+kind = "filler"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 83
+source_cell = "A83"
+ordinal = "78"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f079"
+kind = "header"
+producer_key = "irnr.inmueble.situacion.codigo_ine_municipio"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 84
+source_cell = "A84"
+ordinal = "79"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f080"
+kind = "header"
+producer_key = "irnr.inmueble.situacion.codigo_provincia"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 85
+source_cell = "A85"
+ordinal = "80"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f081"
+kind = "header"
+producer_key = "irnr.inmueble.referencia_catastral"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 86
+source_cell = "A86"
+ordinal = "81"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f082"
+kind = "casilla"
+casilla_id = "base_imponible_directa_i"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 87
+source_cell = "A87"
+ordinal = "82"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f083"
+kind = "casilla"
+casilla_id = "rendimientos_integros"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 88
+source_cell = "A88"
+ordinal = "83"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f084"
+kind = "casilla"
+casilla_id = "exencion_dividendos"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 89
+source_cell = "A89"
+ordinal = "84"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f085"
+kind = "casilla"
+casilla_id = "gastos_deducibles"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 90
+source_cell = "A90"
+ordinal = "85"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f086"
+kind = "casilla"
+casilla_id = "base_imponible"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 91
+source_cell = "A91"
+ordinal = "86"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f087"
+kind = "header"
+producer_key = "irnr.ganancia_inmobiliaria.titularidad"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 92
+source_cell = "A92"
+ordinal = "87"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f088"
+kind = "header"
+producer_key = "irnr.ganancia_inmobiliaria.cuota_participacion_contribuyente"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 93
+source_cell = "A93"
+ordinal = "88"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f089"
+kind = "header"
+producer_key = "irnr.ganancia_inmobiliaria.cuota_participacion_conyuge"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 94
+source_cell = "A94"
+ordinal = "89"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f090"
+kind = "header"
+producer_key = "irnr.ganancia_inmobiliaria.conyuge_tax_id"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 95
+source_cell = "A95"
+ordinal = "90"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f091"
+kind = "header"
+producer_key = "irnr.ganancia_inmobiliaria.conyuge_full_name"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 96
+source_cell = "A96"
+ordinal = "91"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f092"
+kind = "casilla"
+casilla_id = "ganancia_valor_transmision"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 97
+source_cell = "A97"
+ordinal = "92"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f093"
+kind = "casilla"
+casilla_id = "ganancia_valor_adquisicion"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 98
+source_cell = "A98"
+ordinal = "93"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f094"
+kind = "casilla"
+casilla_id = "ganancia_diferencia"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 99
+source_cell = "A99"
+ordinal = "94"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f095"
+kind = "casilla"
+casilla_id = "ganancia_importe"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 100
+source_cell = "A100"
+ordinal = "95"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f096"
+kind = "casilla"
+casilla_id = "mejora_valor_transmision"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 101
+source_cell = "A101"
+ordinal = "96"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f097"
+kind = "casilla"
+casilla_id = "mejora_valor_adquisicion"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 102
+source_cell = "A102"
+ordinal = "97"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f098"
+kind = "casilla"
+casilla_id = "mejora_diferencia"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 103
+source_cell = "A103"
+ordinal = "98"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f099"
+kind = "casilla"
+casilla_id = "mejora_ganancia"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 104
+source_cell = "A104"
+ordinal = "99"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f100"
+kind = "casilla"
+casilla_id = "base_imponible_ganancias_h"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 105
+source_cell = "A105"
+ordinal = "100"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f101"
+kind = "header"
+producer_key = "irnr.ganancia_inmobiliaria.fecha_adquisicion"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 106
+source_cell = "A106"
+ordinal = "101"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f102"
+kind = "header"
+producer_key = "irnr.ganancia_inmobiliaria.fecha_mejora"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 107
+source_cell = "A107"
+ordinal = "102"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f103"
+kind = "header"
+producer_key = "irnr.ganancia_inmobiliaria.justificante_modelo_211"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 108
+source_cell = "A108"
+ordinal = "103"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f104"
+kind = "casilla"
+casilla_id = "base_imponible_directa_g"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 109
+source_cell = "A109"
+ordinal = "104"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f105"
+kind = "casilla"
+casilla_id = "exenciones_ley_irnr_indicador"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 110
+source_cell = "A110"
+ordinal = "105"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f106"
+kind = "casilla"
+casilla_id = "convenio_indicador"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 111
+source_cell = "A111"
+ordinal = "106"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f107"
+kind = "casilla"
+casilla_id = "tipo_gravamen"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 112
+source_cell = "A112"
+ordinal = "107"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f108"
+kind = "casilla"
+casilla_id = "cuota_integra"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 113
+source_cell = "A113"
+ordinal = "108"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f109"
+kind = "casilla"
+casilla_id = "deduccion_donativos"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 114
+source_cell = "A114"
+ordinal = "109"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f110"
+kind = "casilla"
+casilla_id = "cuota_ley_irnr"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 115
+source_cell = "A115"
+ordinal = "110"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f111"
+kind = "casilla"
+casilla_id = "porcentaje_convenio"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 116
+source_cell = "A116"
+ordinal = "111"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f112"
+kind = "casilla"
+casilla_id = "limite_convenio"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 117
+source_cell = "A117"
+ordinal = "112"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f113"
+kind = "casilla"
+casilla_id = "reduccion_convenio"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 118
+source_cell = "A118"
+ordinal = "113"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f114"
+kind = "casilla"
+casilla_id = "cuota_integra_reducida"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 119
+source_cell = "A119"
+ordinal = "114"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f115"
+kind = "casilla"
+casilla_id = "retencion_practicada"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 120
+source_cell = "A120"
+ordinal = "115"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f116"
+kind = "casilla"
+casilla_id = "ingreso_devolucion_anterior"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 121
+source_cell = "A121"
+ordinal = "116"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f117"
+kind = "casilla"
+casilla_id = "cuota_diferencial"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 122
+source_cell = "A122"
+ordinal = "117"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f118"
+kind = "header"
+producer_key = "amendment_evidence.is_complementaria"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 123
+source_cell = "A123"
+ordinal = "118"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f119"
+kind = "header"
+producer_key = "amendment_evidence.original_aeat_receipt"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 124
+source_cell = "A124"
+ordinal = "119"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f120"
+kind = "header"
+producer_key = "contact_person.full_name"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 125
+source_cell = "A125"
+ordinal = "120"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f121"
+kind = "header"
+producer_key = "contact_person.phone"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 126
+source_cell = "A126"
+ordinal = "121"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f122"
+kind = "header"
+producer_key = "contact_person.secondary_phone"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 127
+source_cell = "A127"
+ordinal = "122"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f123"
+kind = "header"
+producer_key = "contact_person.email"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 128
+source_cell = "A128"
+ordinal = "123"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f124"
+kind = "filler"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 129
+source_cell = "A129"
+ordinal = "124"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f125"
+kind = "header"
+producer_key = "irnr.contribuyente.foreign_tax_id"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 130
+source_cell = "A130"
+ordinal = "125"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f126"
+kind = "filler"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 131
+source_cell = "A131"
+ordinal = "126"
+record_identity = "Página 01"
+
+[[entries]]
+export_field_id = "m210-2022.pagina01.f127"
+kind = "literal"
+literal = "</T21001>"
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]
+[entries.anchor]
+sheet = "Página 01"
+source_row = 132
+source_cell = "A132"
+ordinal = "127"
+record_identity = "Página 01"

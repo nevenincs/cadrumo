@@ -1,0 +1,1902 @@
+schema_version = 1
+fragment_id = "pagina01"
+modelo = "360"
+design_epoch = "2010"
+source_ref = "aeat-dr-360-2010"
+source_sha256 = "1361d004c0156d99555e0257b269ae379cbae420a454cdb90b9c37e0abc28950"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f001"
+kind = "literal"
+literal = "<T360010>"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 8
+ordinal = "1"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f002"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 9
+ordinal = "2"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f003"
+kind = "literal"
+literal = "000100"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 10
+ordinal = "3"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f004"
+kind = "header"
+producer_key = "m360.solicitud.presentacion_en_pruebas"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 11
+ordinal = "4"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f005"
+kind = "header"
+producer_key = "m360.solicitud.nivel_calidad_datos"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 12
+ordinal = "5"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f006"
+kind = "header"
+producer_key = "m360.solicitud.pais_destino"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 13
+ordinal = "6"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f007"
+kind = "casilla"
+casilla_id = "decl.ejercicio"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 14
+ordinal = "7"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f008"
+kind = "header"
+producer_key = "m360.solicitud.causa_presentacion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 15
+ordinal = "8"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f009"
+kind = "header"
+producer_key = "m360.solicitud.comunicacion_prorrata_definitiva"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 16
+ordinal = "9"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f010"
+kind = "header"
+producer_key = "m360.solicitud.numero_registro_declaracion_anterior"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 17
+ordinal = "10"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f011"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 18
+ordinal = "11"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f012"
+kind = "header"
+producer_key = "m360.solicitante.tax_id"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 19
+ordinal = "12"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f013"
+kind = "header"
+producer_key = "m360.solicitante.full_name"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 20
+ordinal = "13"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f014"
+kind = "header"
+producer_key = "m360.solicitante.email"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 21
+ordinal = "14"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f015"
+kind = "header"
+producer_key = "m360.solicitante.phone"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 22
+ordinal = "15"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f016"
+kind = "header"
+producer_key = "m360.solicitante.domicilio.tipo_via"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 23
+ordinal = "16"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f017"
+kind = "header"
+producer_key = "m360.solicitante.domicilio.nombre_via"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 24
+ordinal = "17"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f018"
+kind = "header"
+producer_key = "m360.solicitante.domicilio.tipo_numeracion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 25
+ordinal = "18"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f019"
+kind = "header"
+producer_key = "m360.solicitante.domicilio.numero_casa"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 26
+ordinal = "19"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f020"
+kind = "header"
+producer_key = "m360.solicitante.domicilio.calificador_numero"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 27
+ordinal = "20"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f021"
+kind = "header"
+producer_key = "m360.solicitante.domicilio.bloque"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 28
+ordinal = "21"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f022"
+kind = "header"
+producer_key = "m360.solicitante.domicilio.portal"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 29
+ordinal = "22"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f023"
+kind = "header"
+producer_key = "m360.solicitante.domicilio.escalera"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 30
+ordinal = "23"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f024"
+kind = "header"
+producer_key = "m360.solicitante.domicilio.planta"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 31
+ordinal = "24"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f025"
+kind = "header"
+producer_key = "m360.solicitante.domicilio.puerta"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 32
+ordinal = "25"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f026"
+kind = "header"
+producer_key = "m360.solicitante.domicilio.datos_complementarios"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 33
+ordinal = "26"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f027"
+kind = "header"
+producer_key = "m360.solicitante.domicilio.localidad"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 34
+ordinal = "27"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f028"
+kind = "header"
+producer_key = "m360.solicitante.domicilio.codigo_postal"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 35
+ordinal = "28"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f029"
+kind = "header"
+producer_key = "m360.solicitante.domicilio.nombre_municipio"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 36
+ordinal = "29"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f030"
+kind = "header"
+producer_key = "m360.solicitante.domicilio.provincia"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 37
+ordinal = "30"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f031"
+kind = "header"
+producer_key = "m360.solicitante.foreign_address.street"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 38
+ordinal = "31"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f032"
+kind = "header"
+producer_key = "m360.solicitante.foreign_address.city"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 39
+ordinal = "32"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f033"
+kind = "header"
+producer_key = "m360.solicitante.foreign_address.postal_code"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 40
+ordinal = "33"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f034"
+kind = "header"
+producer_key = "m360.solicitante.foreign_address.region"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 41
+ordinal = "34"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f035"
+kind = "header"
+producer_key = "m360.solicitante.foreign_address.country_code"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 42
+ordinal = "35"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f036"
+kind = "header"
+producer_key = "m360.solicitante.apartado_correos.numero"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 43
+ordinal = "36"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f037"
+kind = "header"
+producer_key = "m360.solicitante.apartado_correos.localidad"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 44
+ordinal = "37"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f038"
+kind = "header"
+producer_key = "m360.solicitante.apartado_correos.codigo_postal"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 45
+ordinal = "38"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f039"
+kind = "header"
+producer_key = "m360.solicitante.apartado_correos.nombre_municipio"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 46
+ordinal = "39"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f040"
+kind = "header"
+producer_key = "m360.solicitante.apartado_correos.provincia"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 47
+ordinal = "40"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f041"
+kind = "header"
+producer_key = "m360.solicitante.establecido_en_tai"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 48
+ordinal = "41"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f042"
+kind = "header"
+producer_key = "m360.solicitante.hacienda_foral"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 49
+ordinal = "42"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f043"
+kind = "header"
+producer_key = "m360.solicitante.delegacion_canarias_ceuta_melilla"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 50
+ordinal = "43"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f044"
+kind = "binding"
+binding = "modelo-360-2010.page_01.799-803.actividad-nace-1-codigo"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 51
+ordinal = "44"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f045"
+kind = "binding"
+binding = "modelo-360-2010.page_01.804-805.actividad-nace-1-idioma"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 52
+ordinal = "45"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f046"
+kind = "binding"
+binding = "modelo-360-2010.page_01.806-830.actividad-nace-1-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 53
+ordinal = "46"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f047"
+kind = "binding"
+binding = "modelo-360-2010.page_01.831-835.actividad-nace-2-codigo"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 54
+ordinal = "47"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f048"
+kind = "binding"
+binding = "modelo-360-2010.page_01.836-837.actividad-nace-2-idioma"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 55
+ordinal = "48"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f049"
+kind = "binding"
+binding = "modelo-360-2010.page_01.838-862.actividad-nace-2-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 56
+ordinal = "49"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f050"
+kind = "binding"
+binding = "modelo-360-2010.page_01.863-867.actividad-nace-3-codigo"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 57
+ordinal = "50"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f051"
+kind = "binding"
+binding = "modelo-360-2010.page_01.868-869.actividad-nace-3-idioma"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 58
+ordinal = "51"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f052"
+kind = "binding"
+binding = "modelo-360-2010.page_01.870-894.actividad-nace-3-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 59
+ordinal = "52"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f053"
+kind = "binding"
+binding = "modelo-360-2010.page_01.895-899.actividad-nace-4-codigo"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 60
+ordinal = "53"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f054"
+kind = "binding"
+binding = "modelo-360-2010.page_01.900-901.actividad-nace-4-idioma"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 61
+ordinal = "54"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f055"
+kind = "binding"
+binding = "modelo-360-2010.page_01.902-926.actividad-nace-4-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 62
+ordinal = "55"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f056"
+kind = "binding"
+binding = "modelo-360-2010.page_01.927-931.actividad-nace-5-codigo"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 63
+ordinal = "56"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f057"
+kind = "binding"
+binding = "modelo-360-2010.page_01.932-933.actividad-nace-5-idioma"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 64
+ordinal = "57"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f058"
+kind = "binding"
+binding = "modelo-360-2010.page_01.934-958.actividad-nace-5-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 65
+ordinal = "58"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f059"
+kind = "binding"
+binding = "modelo-360-2010.page_01.959-963.actividad-nace-6-codigo"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 66
+ordinal = "59"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f060"
+kind = "binding"
+binding = "modelo-360-2010.page_01.964-965.actividad-nace-6-idioma"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 67
+ordinal = "60"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f061"
+kind = "binding"
+binding = "modelo-360-2010.page_01.966-990.actividad-nace-6-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 68
+ordinal = "61"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f062"
+kind = "binding"
+binding = "modelo-360-2010.page_01.991-995.actividad-nace-7-codigo"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 69
+ordinal = "62"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f063"
+kind = "binding"
+binding = "modelo-360-2010.page_01.996-997.actividad-nace-7-idioma"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 70
+ordinal = "63"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f064"
+kind = "binding"
+binding = "modelo-360-2010.page_01.998-1022.actividad-nace-7-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 71
+ordinal = "64"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f065"
+kind = "binding"
+binding = "modelo-360-2010.page_01.1023-1027.actividad-nace-8-codigo"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 72
+ordinal = "65"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f066"
+kind = "binding"
+binding = "modelo-360-2010.page_01.1028-1029.actividad-nace-8-idioma"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 73
+ordinal = "66"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f067"
+kind = "binding"
+binding = "modelo-360-2010.page_01.1030-1054.actividad-nace-8-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 74
+ordinal = "67"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f068"
+kind = "binding"
+binding = "modelo-360-2010.page_01.1055-1059.actividad-nace-9-codigo"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 75
+ordinal = "68"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f069"
+kind = "binding"
+binding = "modelo-360-2010.page_01.1060-1061.actividad-nace-9-idioma"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 76
+ordinal = "69"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f070"
+kind = "binding"
+binding = "modelo-360-2010.page_01.1062-1086.actividad-nace-9-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 77
+ordinal = "70"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f071"
+kind = "binding"
+binding = "modelo-360-2010.page_01.1087-1091.actividad-nace-10-codigo"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 78
+ordinal = "71"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f072"
+kind = "binding"
+binding = "modelo-360-2010.page_01.1092-1093.actividad-nace-10-idioma"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 79
+ordinal = "72"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f073"
+kind = "binding"
+binding = "modelo-360-2010.page_01.1094-1118.actividad-nace-10-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 80
+ordinal = "73"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f074"
+kind = "header"
+producer_key = "m360.representante.tax_id"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 81
+ordinal = "74"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f075"
+kind = "header"
+producer_key = "m360.representante.full_name"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 82
+ordinal = "75"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f076"
+kind = "header"
+producer_key = "m360.representante.email"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 86
+ordinal = "76"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f077"
+kind = "header"
+producer_key = "m360.representante.phone"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 87
+ordinal = "77"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f078"
+kind = "header"
+producer_key = "m360.representante.domicilio.tipo_via"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 88
+ordinal = "78"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f079"
+kind = "header"
+producer_key = "m360.representante.domicilio.nombre_via"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 89
+ordinal = "79"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f080"
+kind = "header"
+producer_key = "m360.representante.domicilio.tipo_numeracion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 90
+ordinal = "80"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f081"
+kind = "header"
+producer_key = "m360.representante.domicilio.numero_casa"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 91
+ordinal = "81"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f082"
+kind = "header"
+producer_key = "m360.representante.domicilio.calificador_numero"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 92
+ordinal = "82"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f083"
+kind = "header"
+producer_key = "m360.representante.domicilio.bloque"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 93
+ordinal = "83"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f084"
+kind = "header"
+producer_key = "m360.representante.domicilio.portal"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 94
+ordinal = "84"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f085"
+kind = "header"
+producer_key = "m360.representante.domicilio.escalera"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 95
+ordinal = "85"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f086"
+kind = "header"
+producer_key = "m360.representante.domicilio.planta"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 96
+ordinal = "86"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f087"
+kind = "header"
+producer_key = "m360.representante.domicilio.puerta"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 97
+ordinal = "87"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f088"
+kind = "header"
+producer_key = "m360.representante.domicilio.datos_complementarios"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 98
+ordinal = "88"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f089"
+kind = "header"
+producer_key = "m360.representante.domicilio.localidad"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 99
+ordinal = "89"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f090"
+kind = "header"
+producer_key = "m360.representante.domicilio.codigo_postal"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 100
+ordinal = "90"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f091"
+kind = "header"
+producer_key = "m360.representante.domicilio.nombre_municipio"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 101
+ordinal = "91"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f092"
+kind = "header"
+producer_key = "m360.representante.domicilio.provincia"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 102
+ordinal = "92"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f093"
+kind = "header"
+producer_key = "m360.representante.foreign_address.street"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 103
+ordinal = "93"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f094"
+kind = "header"
+producer_key = "m360.representante.foreign_address.city"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 104
+ordinal = "94"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f095"
+kind = "header"
+producer_key = "m360.representante.foreign_address.postal_code"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 105
+ordinal = "95"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f096"
+kind = "header"
+producer_key = "m360.representante.foreign_address.region"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 106
+ordinal = "96"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f097"
+kind = "header"
+producer_key = "m360.representante.foreign_address.country_code"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 107
+ordinal = "97"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f098"
+kind = "header"
+producer_key = "m360.representante.apartado_correos.numero"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 108
+ordinal = "98"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f099"
+kind = "header"
+producer_key = "m360.representante.apartado_correos.localidad"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 109
+ordinal = "99"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f100"
+kind = "header"
+producer_key = "m360.representante.apartado_correos.codigo_postal"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 110
+ordinal = "100"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f101"
+kind = "header"
+producer_key = "m360.representante.apartado_correos.nombre_municipio"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 111
+ordinal = "101"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f102"
+kind = "header"
+producer_key = "m360.representante.apartado_correos.provincia"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 112
+ordinal = "102"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f103"
+kind = "casilla"
+casilla_id = "devolucion.importe-solicitado"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 113
+ordinal = "103"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f104"
+kind = "casilla"
+casilla_id = "devolucion.divisa"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 114
+ordinal = "104"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f105"
+kind = "casilla"
+casilla_id = "devolucion.numero-facturas"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 115
+ordinal = "105"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f106"
+kind = "casilla"
+casilla_id = "devolucion.numero-documentos-importacion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 116
+ordinal = "106"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f107"
+kind = "casilla"
+casilla_id = "devolucion.periodo-fecha-inicio"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 117
+ordinal = "107"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f108"
+kind = "casilla"
+casilla_id = "devolucion.periodo-fecha-fin"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 118
+ordinal = "108"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f109"
+kind = "literal"
+literal = "00000"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 119
+ordinal = "109"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f110"
+kind = "casilla"
+casilla_id = "devolucion.declaracion-no-entrega-bienes"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 120
+ordinal = "110"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f111"
+kind = "casilla"
+casilla_id = "prorrata.ejercicio"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 121
+ordinal = "111"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f112"
+kind = "casilla"
+casilla_id = "prorrata.definitiva"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 122
+ordinal = "112"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f113"
+kind = "header"
+producer_key = "m360.cuenta.titular_nombre"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 123
+ordinal = "113"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f114"
+kind = "header"
+producer_key = "m360.cuenta.titular_en_calidad_de"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 124
+ordinal = "114"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f115"
+kind = "header"
+producer_key = "selected_account.iban"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 126
+ordinal = "115"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f116"
+kind = "header"
+producer_key = "selected_account.swift_bic"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 127
+ordinal = "116"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f117"
+kind = "header"
+producer_key = "m360.cuenta.divisa"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 128
+ordinal = "117"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f118"
+kind = "binding"
+binding = "modelo-360-2010.page_01.1986-2001.anexo-1-numero-registro"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 129
+ordinal = "118"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f119"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 130
+ordinal = "119"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f120"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2004-2043.anexo-1-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 131
+ordinal = "120"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f121"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 132
+ordinal = "121"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f122"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2104-2119.anexo-2-numero-registro"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 133
+ordinal = "122"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f123"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 134
+ordinal = "123"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f124"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2122-2161.anexo-2-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 135
+ordinal = "124"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f125"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 136
+ordinal = "125"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f126"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2222-2237.anexo-3-numero-registro"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 137
+ordinal = "126"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f127"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 138
+ordinal = "127"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f128"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2240-2279.anexo-3-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 139
+ordinal = "128"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f129"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 140
+ordinal = "129"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f130"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2340-2355.anexo-4-numero-registro"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 141
+ordinal = "130"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f131"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 142
+ordinal = "131"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f132"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2358-2397.anexo-4-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 143
+ordinal = "132"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f133"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 144
+ordinal = "133"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f134"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2458-2473.anexo-5-numero-registro"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 145
+ordinal = "134"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f135"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 146
+ordinal = "135"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f136"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2476-2515.anexo-5-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 147
+ordinal = "136"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f137"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 148
+ordinal = "137"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f138"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2576-2591.anexo-6-numero-registro"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 149
+ordinal = "138"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f139"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 150
+ordinal = "139"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f140"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2594-2633.anexo-6-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 151
+ordinal = "140"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f141"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 152
+ordinal = "141"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f142"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2694-2709.anexo-7-numero-registro"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 153
+ordinal = "142"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f143"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 154
+ordinal = "143"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f144"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2712-2751.anexo-7-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 155
+ordinal = "144"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f145"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 156
+ordinal = "145"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f146"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2812-2827.anexo-8-numero-registro"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 157
+ordinal = "146"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f147"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 158
+ordinal = "147"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f148"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2830-2869.anexo-8-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 159
+ordinal = "148"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f149"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 160
+ordinal = "149"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f150"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2930-2945.anexo-9-numero-registro"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 161
+ordinal = "150"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f151"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 162
+ordinal = "151"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f152"
+kind = "binding"
+binding = "modelo-360-2010.page_01.2948-2987.anexo-9-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 163
+ordinal = "152"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f153"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 164
+ordinal = "153"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f154"
+kind = "binding"
+binding = "modelo-360-2010.page_01.3048-3063.anexo-10-numero-registro"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 165
+ordinal = "154"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f155"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 166
+ordinal = "155"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f156"
+kind = "binding"
+binding = "modelo-360-2010.page_01.3066-3105.anexo-10-descripcion"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 170
+ordinal = "156"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f157"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 171
+ordinal = "157"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f158"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 172
+ordinal = "158"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f159"
+kind = "filler"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 173
+ordinal = "159"
+record_identity = "Pág. 1"
+
+[[entries]]
+export_field_id = "m360-2010.pagina01.f160"
+kind = "literal"
+literal = "</T360010>"
+legal_refs = ["orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+[entries.anchor]
+sheet = "Pág. 1"
+source_row = 174
+ordinal = "160"
+record_identity = "Pág. 1"

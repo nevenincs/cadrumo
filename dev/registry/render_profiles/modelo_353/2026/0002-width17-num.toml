@@ -1,0 +1,44 @@
+schema_version = 1
+fragment_id = "width17-num"
+singleton_rules = []
+
+[[width_17_rules]]
+rule_kind = "width_17_membership"
+aeat_type = "Num"
+integer_digits = 15
+decimal_digits = 2
+sign_policy = "unsigned"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 127
+source_cell = "A127"
+ordinal = "122"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 128
+source_cell = "A128"
+ordinal = "123"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 129
+source_cell = "A129"
+ordinal = "124"
+record_identity = "35301"
+
+[width_17_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "35301"
+source_cell = "B145"
+expected_normalized_statement = "3. Los campos numéricos (Num) sólo admiten números. Los datos numéricos deberán estar alineados a la derecha rellenando con ceros por la izquierda."
+justification = "The design states the sign contract for this numeric type in its own Nota 1 block; every width-17 amount slot on this modelo is an importe, so the reviewed membership carries the standard fifteen-position amount representation under that stated sign rule."
+
+[design_identity]
+modelo = "353"
+design_epoch = "2026"
+source_ref = "aeat-dr-353-2026"
+source_sha256 = "cb1374a79a87b7c8282ff3c964d78b250bedfa11750decfa0e5e7f90e8f97380"

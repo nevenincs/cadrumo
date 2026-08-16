@@ -1,0 +1,198 @@
+schema_version = 1
+fragment_id = "width17-n"
+singleton_rules = []
+
+[[width_17_rules]]
+rule_kind = "width_17_membership"
+aeat_type = "N"
+integer_digits = 14
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 37
+source_cell = "A37"
+ordinal = "32"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 42
+source_cell = "A42"
+ordinal = "37"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 47
+source_cell = "A47"
+ordinal = "42"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 52
+source_cell = "A52"
+ordinal = "47"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 57
+source_cell = "A57"
+ordinal = "52"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 62
+source_cell = "A62"
+ordinal = "57"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 67
+source_cell = "A67"
+ordinal = "62"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 72
+source_cell = "A72"
+ordinal = "67"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 77
+source_cell = "A77"
+ordinal = "72"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 82
+source_cell = "A82"
+ordinal = "77"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 87
+source_cell = "A87"
+ordinal = "82"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 92
+source_cell = "A92"
+ordinal = "87"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 97
+source_cell = "A97"
+ordinal = "92"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 102
+source_cell = "A102"
+ordinal = "97"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 107
+source_cell = "A107"
+ordinal = "102"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 112
+source_cell = "A112"
+ordinal = "107"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 117
+source_cell = "A117"
+ordinal = "112"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 122
+source_cell = "A122"
+ordinal = "117"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 126
+source_cell = "A126"
+ordinal = "121"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 130
+source_cell = "A130"
+ordinal = "125"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 131
+source_cell = "A131"
+ordinal = "126"
+record_identity = "35301"
+
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 133
+source_cell = "A133"
+ordinal = "128"
+record_identity = "35301"
+
+[width_17_rules.evidence]
+authority_kind = "official_source"
+source_sheet = "35301"
+source_cell = "B146"
+expected_normalized_statement = "5. Los campos numéricos con signo (N) admiten números más el carácter N . Los datos numéricos deberán estar alineados a la derecha rellenando con ceros por la izquierda."
+justification = "The design states the sign contract for this numeric type in its own Nota 1 block; every width-17 amount slot on this modelo is an importe, so the reviewed membership carries the standard fifteen-position amount representation under that stated sign rule."
+
+[design_identity]
+modelo = "353"
+design_epoch = "2026"
+source_ref = "aeat-dr-353-2026"
+source_sha256 = "cb1374a79a87b7c8282ff3c964d78b250bedfa11750decfa0e5e7f90e8f97380"
