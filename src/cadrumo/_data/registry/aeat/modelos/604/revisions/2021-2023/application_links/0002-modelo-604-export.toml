@@ -1,0 +1,7 @@
+[[revisions."2021-2023".application_links]]
+id = "modelo-604-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-hac-510-2021:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2021"]

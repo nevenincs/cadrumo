@@ -2,6 +2,50 @@
 id = "modelo-604-autoliquidacion"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-604-procedure", "aeat-dr-604-2021"]
-casilla_ids = ["decl.ejercicio", "decl.periodo"]
-application_links = ["modelo-604-filing"]
+casilla_ids = [
+    "decl.ejercicio",
+    "decl.periodo",
+    "anexo.numero-justificante",
+    "compl.declaracion-complementaria",
+    "compl.numero-justificante-anterior",
+    "decl.idioma",
+    "decl.tipo-autoliquidacion",
+    "dom-es.bloque",
+    "dom-es.calificador-numero",
+    "dom-es.codigo-postal",
+    "dom-es.codigo-provincia",
+    "dom-es.complemento",
+    "dom-es.escalera",
+    "dom-es.localidad",
+    "dom-es.municipio",
+    "dom-es.nombre-via",
+    "dom-es.numero-casa",
+    "dom-es.planta",
+    "dom-es.portal",
+    "dom-es.provincia",
+    "dom-es.puerta",
+    "dom-es.tipo-numeracion",
+    "dom-es.tipo-via",
+    "dom-ex.codigo-pais",
+    "dom-ex.codigo-postal",
+    "dom-ex.complemento",
+    "dom-ex.domicilio",
+    "dom-ex.pais",
+    "dom-ex.poblacion",
+    "dom-ex.provincia-region-estado",
+    "liq.01-base-imponible",
+    "liq.02-cuota",
+    "liq.03-base-rectificaciones",
+    "liq.03-signo-base-sujetas",
+    "liq.04-cuota-rectificaciones",
+    "liq.04-signo-cuota-rectificaciones",
+    "liq.05-operaciones-exentas",
+    "liq.06-a-deducir",
+    "liq.07-resultado",
+    "sp.codigo-bic",
+    "sp.codigo-lei",
+    "sp.persona-contacto",
+    "sp.telefono-contacto",
+]
+application_links = ["modelo-604-filing", "modelo-604-export"]
 workbook_parity_refs = ["modelo-604-2021-2023-static-layout"]
