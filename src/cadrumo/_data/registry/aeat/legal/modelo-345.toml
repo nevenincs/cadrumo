@@ -248,6 +248,7 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
+record_design_epoch = "2025"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_345/files/01-345-ejercicio-2025.pdf"
 sha256 = "fb0faaf68f8b0de29316bdc65eaeb3ba0dcb8a441eea4d5415d0cb4517c287fd"
 bytes = 331991

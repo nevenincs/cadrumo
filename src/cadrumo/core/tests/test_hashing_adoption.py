@@ -46,8 +46,6 @@ _CANONICAL_HELPER = "core/hashing.py"
 #: entry in the SAME commit: the grounding test refuses an entry whose module no
 #: longer hosts a reducible body.
 _REDUCIBLE_ONE_SHOT_BASELINE: dict[str, int] = {
-    "application/auth/_certificate_sources_operator.py": 1,
-    "application/auth/_operator.py": 1,
     # Delegating this one costs an import line, which pushes the module past the
     # 300-line reviewability ceiling that test_registry_reviewability.py enforces.
     # The file keeps `import hashlib` regardless for two non-reducible streaming

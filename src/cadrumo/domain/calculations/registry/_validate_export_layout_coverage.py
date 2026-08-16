@@ -282,7 +282,61 @@ def _administration_reserved(field: RecordDesignField) -> bool:
     return not _FILER_MARK.search(field.content or "")
 
 
-def _omissible_reason(field: RecordDesignField) -> str | None:
+#: A ``Nota N`` citation inside a field's own naming cell.
+_NOTE_CITATION = re.compile(
+    r"\(\s*(?:Nota\s*(?P<ordinal>\d{1,2})|(?P<symbol>[*]{1,3}))\s*\)",
+    re.IGNORECASE,
+)
+
+#: The same citation standing alone in a field's CONTENT cell, where some
+#: designs put it instead of in the naming cell. Anchored whole-cell.
+_BARE_NOTE_CITATION = re.compile(
+    r"\(?\s*(?:Nota\s*(?P<ordinal>\d{1,2})|(?P<symbol>[*]{1,3}))\s*\)?",
+    re.IGNORECASE,
+)
+
+#: The note body that delegates a position to the software house. AEAT prints
+#: this verbatim beneath the field table: "A cumplimentar por las entidades
+#: desarrolladoras (EEDD)". Matched on the DELEGATION, never on the bare note
+#: citation -- one design's Nota 1 says this, another's says something else
+#: entirely, so a citation alone can never be an omissibility signal.
+_EEDD_DELEGATED = re.compile(r"entidades\s+desarrolladoras|EEDD", re.IGNORECASE)
+
+
+def _eedd_delegated_reason(field: RecordDesignField, sheet: RecordDesignSheet) -> str | None:
+    """Return a reason when the design delegates this position to the EEDD.
+
+    Two independent signals must agree: the field's own naming cell cites a
+    note, and THAT note's body -- as printed on the same sheet -- delegates the
+    position to the entidad desarrolladora. A position identifying the software
+    house that produced the file has no value this application could write:
+    Cadrumo holds no EEDD registration, so writing one would invent a
+    regulatory identity and writing blank would assert an empty EEDD rather
+    than an absent one.
+    """
+    citation = _NOTE_CITATION.search(field.description or "")
+    if citation is None:
+        # Several designs put the citation in the CONTENT column instead of the
+        # naming cell, unparenthesised: m131 and m390 print "Versión del
+        # Programa" with a content cell of exactly "Nota 1". The whole cell must
+        # be the citation -- a note referenced inside prose is discussion, not a
+        # declaration about this position.
+        citation = _BARE_NOTE_CITATION.fullmatch((field.content or "").strip())
+    if citation is None:
+        return None
+    marker = citation.group("ordinal") or citation.group("symbol") or ""
+    body = sheet.note_body(marker)
+    if body is None:
+        # AEAT does not always type the marker on the definition row it prints.
+        # An unmarked delegation body is accepted only when the sheet prints
+        # exactly one, so the mapping from citation to body stays unambiguous.
+        body = sheet.note_body("")
+    if body is None or not _EEDD_DELEGATED.search(body):
+        return None
+    return "delegated to the entidad desarrolladora by the design's own footnote"
+
+
+def _omissible_reason(field: RecordDesignField, sheet: RecordDesignSheet | None = None) -> str | None:
     """Return why the DESIGN says this position may go unwritten, else ``None``.
 
     Obligatoriness wins outright: a position AEAT marks ``OBLIGATORIO`` is
@@ -302,6 +356,8 @@ def _omissible_reason(field: RecordDesignField) -> str | None:
     for text in (field.description, field.content):
         if text and _DECLARED_FILL.match(text.strip()):
             return "declared fill"
+    if sheet is not None:
+        return _eedd_delegated_reason(field, sheet)
     return None
 
 
@@ -342,13 +398,13 @@ def _required_positions(sheet: RecordDesignSheet) -> tuple[_RequiredPosition, ..
     """
     positions: list[_RequiredPosition] = []
     for field in sheet.fields:
-        if _omissible_reason(field) is not None:
+        if _omissible_reason(field, sheet) is not None:
             continue
         if field.components:
             positions.extend(
                 _position(sheet.name, component)
                 for component in field.components
-                if _omissible_reason(component) is None
+                if _omissible_reason(component, sheet) is None
             )
             continue
         positions.append(_position(sheet.name, field))

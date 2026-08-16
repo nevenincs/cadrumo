@@ -1,7 +1,0 @@
-[[revisions."2022-y-siguientes".constructs]]
-id = "modelo-592-autoliquidacion"
-legal_refs = ["orden-hfp-1314-2022:art-1", "orden-hfp-1314-2022:art-2", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-592-procedure", "enrolled-modelo-592-layout"]
-casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
-application_links = ["modelo-592-filing"]
-workbook_parity_refs = ["modelo-592-orden-static-layout"]

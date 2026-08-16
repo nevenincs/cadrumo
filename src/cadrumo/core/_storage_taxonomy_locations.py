@@ -129,7 +129,13 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.SECRETS_MASTER_RECOVERY_KEY,
         "secrets/master.recovery.key",
-        consumer_module="application/user_profile/_custody.py",
+        dormant_reason=(
+            "The shared-master recovery half that wrapped this file has no live caller: "
+            "adapters/persistence/storage/master_key/_recovery.py states in its own module "
+            "docstring that no code path writes master.recovery.key, because per-profile "
+            "password custody supersedes the shared-master surface. The location follows that "
+            "surface and is retired with it."
+        ),
         node_kind=StorageNodeKind.FILE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -548,7 +554,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.PROFILE_CUSTODY_TRANSACTION_JOURNAL,
         "profile-custody-transactions",
-        consumer_module="application/user_profile/_custody_transactions.py",
+        consumer_module="application/user_profile/_custody_repository.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
@@ -556,7 +562,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.PROFILE_CUSTODY_RECEIPT,
         "profile-custody-receipts",
-        consumer_module="application/user_profile/_custody_transactions.py",
+        consumer_module="application/user_profile/_custody_repository.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
@@ -564,7 +570,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.PROFILE_CUSTODY_HOLD_EVIDENCE,
         "profile-custody-holds",
-        consumer_module="application/user_profile/_custody_transactions.py",
+        consumer_module="application/user_profile/_custody_hold.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,

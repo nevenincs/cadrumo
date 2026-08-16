@@ -72,6 +72,7 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
+record_design_epoch = "2018"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_763/files/01-763-desde-2018-4t-y-siguientes-actualizado-en-2023.xlsx"
 sha256 = "590db67f074251ad1ddfcbebfffbf8d58f6157848b62661fadc334bc5e7af5d4"
 bytes = 100952

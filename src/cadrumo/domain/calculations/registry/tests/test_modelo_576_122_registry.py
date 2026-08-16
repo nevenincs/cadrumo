@@ -1,16 +1,14 @@
-"""Registry foundations for the final UNMODELED tail: 592, 576, 121, 122.
+"""Registry foundations for the final UNMODELED tail: 576, 121, 122.
 
-592 (Impuesto especial sobre envases de plástico no reutilizables, Orden
-HFP/1314/2022), 576 (IEDMT por matriculación, Orden EHA/3851/2007), 121
-(comunicación de la cesión de la deducción familia numerosa/discapacidad) and 122
-(regularización de la misma) — both Orden HFP/105/2017. The three ordenes were
-NOT bundled: their corpus excerpts were authored from the BOE fetch during this
-pass, so each legal entry carries honest "pending operator re-verification"
-provenance. All four are grounded WINDOWLESS: 592's plazo cadence depends on the
-taxpayer's IVA period, 576's is per-matriculación (delegated to Orden
-EHA/1981/2005), and 121/122 remit to the annual IRPF campaign — none a fixed
+576 (IEDMT por matriculacion, Orden EHA/3851/2007), 121 (comunicacion de la
+cesion de la deduccion familia numerosa/discapacidad) and 122 (regularizacion de
+la misma) - both Orden HFP/105/2017. The two ordenes were NOT bundled: their
+corpus excerpts were authored from the BOE fetch during this pass, so each legal
+entry carries honest "pending operator re-verification" provenance. All three are
+grounded WINDOWLESS: 576's plazo is per-matriculacion (delegated to Orden
+EHA/1981/2005) and 121/122 remit to the annual IRPF campaign - none a fixed
 calendar window, so no date is fabricated. Scheduling/applicability-grade:
-declaration-header casillas only, no bundled diseño de registro.
+declaration-header casillas only, no bundled diseno de registro.
 
 See Also:
     :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
@@ -40,14 +38,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # (modelo_id, revision, approval, plazo, doc, tax_domain)
 _MODELOS = [
-    (
-        "592",
-        "2022-y-siguientes",
-        "orden-hfp-1314-2022:art-1",
-        "orden-hfp-1314-2022:art-2",
-        "BOE-A-2022-23749",
-        TaxDomain.PLASTICO,
-    ),
     (
         "576",
         "2007-y-siguientes",

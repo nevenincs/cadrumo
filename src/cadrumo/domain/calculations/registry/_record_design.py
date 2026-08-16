@@ -60,6 +60,7 @@ from ._record_design_schema import (
     RecordDesignField,
     RecordDesignFieldTypeCorrection,
     RecordDesignHeaderCellCorrection,
+    RecordDesignNote,
     RecordDesignRelativeSuffixMarker,
     RecordDesignSheet,
     RecordDesignSkippedSheet,
@@ -104,6 +105,10 @@ class _WorkbookSheetRows:
     variable_total_marker_rows: list[int] = field(default_factory=list)
     mixed_total_rows: list[int] = field(default_factory=list)
     corrections_applied: list[RecordDesignCorrection] = field(default_factory=list)
+    #: ``Nota N`` definitions the sheet prints beneath its field table, keyed by
+    #: the printed ordinal. A field's naming cell cites the ordinal; only the
+    #: definition says what the citation MEANS, so the two must travel together.
+    notes: dict[str, str] = field(default_factory=dict)
 
 
 type _TypeCorrectionIndex = Mapping[tuple[str, int], RecordDesignFieldTypeCorrection]
@@ -522,6 +527,7 @@ def _extract_sheet_rows(
         variable_envelope=variable_envelope,
         auxiliary_envelope_header=auxiliary_envelope_header,
         corrections=tuple(parsed_rows.corrections_applied),
+        notes=tuple(RecordDesignNote(ordinal=k, body=v) for k, v in sorted(parsed_rows.notes.items())),
     )
 
 
@@ -543,8 +549,53 @@ def _scan_sheet_rows(
         trailing_blank_rows = 0
         if _consume_total_row(sheet_name, parsed_rows, row_number, values):
             continue
+        if _consume_note_definition_row(parsed_rows, values):
+            continue
         _consume_field_row(sheet_name, parsed_rows, header, row_number, values, corrections or {})
     return parsed_rows
+
+
+#: A footnote definition row printed beneath a field table. AEAT marks these
+#: three ways across its designs: "Nota 1 ...", "(**) ..." and -- where the
+#: marker was simply not typed -- an unmarked body. The marker is captured
+#: when present and left empty when it is not, never invented.
+_NOTE_DEFINITION_RE = re.compile(
+    r"^(?:Nota\s*(?P<ordinal>\d{1,2})|\((?P<symbol>[*]{1,3})\))[.:\s-]*(?P<body>.+)$",
+    re.IGNORECASE,
+)
+
+#: A body that delegates its positions to the software house that produced
+#: the file. Only a body matching this is worth retaining unmarked.
+_DELEGATION_BODY_RE = re.compile(r"entidades\s+desarrolladoras|\(EEDD\)", re.IGNORECASE)
+
+
+def _consume_note_definition_row(parsed_rows: _WorkbookSheetRows, values: tuple[object, ...]) -> bool:
+    """Record a ``Nota N`` definition row, returning whether the row was one.
+
+    AEAT prints these beneath the field table. They are not positions, so the
+    field scanner would otherwise discard them -- and with them the only text
+    that says what a field's ``(Nota N)`` citation means.
+    """
+    joined = " ".join(str(value).strip() for value in values if value is not None and str(value).strip())
+    match = _NOTE_DEFINITION_RE.match(joined)
+    if match is not None:
+        body = match.group("body").strip()
+        # A marker row carrying no prose is a LABEL, not a definition: several
+        # designs print "Nota 1 :" with the sentence itself elsewhere. Recording
+        # it would occupy the marker with punctuation and hide the real body.
+        if sum(character.isalpha() for character in body) < 3:
+            return True
+        marker = match.group("ordinal") or match.group("symbol") or ""
+        parsed_rows.notes.setdefault(marker, body)
+        return True
+    # An unmarked delegation body: AEAT prints the sentence without typing its
+    # marker on some designs. Retained under the empty marker so a citation on
+    # the same sheet can still resolve it; nothing else is kept unmarked, so a
+    # stray sentence cannot become a note.
+    if _DELEGATION_BODY_RE.search(joined):
+        parsed_rows.notes.setdefault("", joined)
+        return True
+    return False
 
 
 def _consume_total_row(
@@ -1234,17 +1285,32 @@ def _int_or_none(value: object | None) -> int | None:
     return None
 
 
+#: The six folds this header comparison has always applied, as one translation
+#: table. Every mapping is one character to one character, so a single
+#: `str.translate` pass produces exactly the text the chained `str.replace`
+#: calls did -- six passes over every cell became one.
+#:
+#: Deliberately NOT `core.text_fold.fold_diacritics`: that folds every combining
+#: mark via NFKD, which would newly collapse characters this comparison has
+#: always kept distinct (ñ -> n among them). Matching more headers is a parsing
+#: behaviour change, not a speed-up, so the narrow table stays.
+_HEADER_CELL_FOLD_TABLE = str.maketrans({"º": "o", "ó": "o", "í": "i", "á": "a", "é": "e", "ú": "u"})
+
+
+@lru_cache(maxsize=4096)
+def _fold_header_text(text: str) -> str:
+    """Fold one already-coerced header cell for comparison.
+
+    Split from :func:`_normalise_header_cell` so the pure text step can be
+    memoised: a record design re-scans the same few header spellings across
+    every row of every sheet, so the distinct inputs number in the dozens while
+    the calls numbered sixteen million in one cold `aeat app modelo list`.
+    """
+    return text.casefold().translate(_HEADER_CELL_FOLD_TABLE)
+
+
 def _normalise_header_cell(value: object | None) -> str:
-    return (
-        coerce_cell_text(value)
-        .casefold()
-        .replace("º", "o")
-        .replace("ó", "o")
-        .replace("í", "i")
-        .replace("á", "a")
-        .replace("é", "e")
-        .replace("ú", "u")
-    )
+    return _fold_header_text(coerce_cell_text(value))
 
 
 def _required_header_index(values: tuple[object, ...], header_name: str) -> int:

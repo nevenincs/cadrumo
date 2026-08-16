@@ -158,6 +158,7 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
+record_design_epoch = "2022"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_280/files/DR_280_2022.pdf"
 sha256 = "45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701"
 bytes = 235352

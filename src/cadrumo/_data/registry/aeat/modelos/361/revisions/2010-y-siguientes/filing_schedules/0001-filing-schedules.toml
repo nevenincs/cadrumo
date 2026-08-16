@@ -1,7 +1,0 @@
-[[revisions."2010-y-siguientes".filing_schedules]]
-id = "modelo-361-ad-hoc"
-period_kind = "ad_hoc"
-periods = ["AD-HOC"]
-profile_condition_mode = "all"
-legal_refs = ["orden-eha-789-2010:art-10"]
-source_refs = ["aeat-modelo-361-procedure", "boe-modelo-361-form"]

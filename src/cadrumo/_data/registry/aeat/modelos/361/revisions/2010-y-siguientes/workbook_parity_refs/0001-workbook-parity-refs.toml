@@ -1,9 +1,0 @@
-[[revisions."2010-y-siguientes".workbook_parity_refs]]
-id = "modelo-361-static-form-layout"
-workbook_source = "boe-modelo-361-form"
-fixture_id = "modelo-361-static-layout"
-formula_coverage = "static_layout"
-runner_required = false
-tolerance = "0.00"
-legal_refs = ["orden-eha-789-2010:art-7", "orden-eha-789-2010:art-8"]
-source_refs = ["boe-modelo-361-form"]

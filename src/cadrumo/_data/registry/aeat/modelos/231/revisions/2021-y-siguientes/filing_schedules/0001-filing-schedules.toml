@@ -1,7 +1,0 @@
-[[revisions."2021-y-siguientes".filing_schedules]]
-id = "modelo-231-anual"
-period_kind = "annual"
-periods = ["0A"]
-profile_condition_mode = "all"
-legal_refs = ["orden-hfp-1978-2016:art-3"]
-source_refs = ["aeat-modelo-231-procedure"]

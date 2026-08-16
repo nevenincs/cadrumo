@@ -12,7 +12,7 @@ from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_M151_FORM_ORDER_REF = "orden-eha-2887-2008:modelo-151"
+_M151_FORM_ORDER_REF = "orden-hap-2783-2015:art-1"
 
 
 def _load_modelo_151() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -29,15 +29,15 @@ def test_modelo_151_validator_accepts_committed_definition() -> None:
 
 def test_modelo_151_revision_2015_declares_constructs() -> None:
     modelo, _ = _load_modelo_151()
-    revision = modelo.revisions["2015-y-siguientes"]
-    assert revision.constructs, "151 2015-y-siguientes revision must declare constructs"
+    revision = modelo.revisions["2015-2022"]
+    assert revision.constructs, "151 2015-2022 revision must declare constructs"
     construct_ids = {c.id for c in revision.constructs}
     assert "m151-impatriado-calculation" in construct_ids
 
 
 def test_modelo_151_revision_2015_formula_targets_resolve() -> None:
     modelo, _ = _load_modelo_151()
-    revision = modelo.revisions["2015-y-siguientes"]
+    revision = modelo.revisions["2015-2022"]
     impatriado = next(c for c in revision.constructs if c.id == "m151-impatriado-calculation")
     formula_ids = {f.id for f in revision.formulas}
     for declared_formula in impatriado.formulas:
@@ -49,7 +49,7 @@ def test_modelo_151_revision_2015_formula_targets_resolve() -> None:
 def test_modelo_151_legal_authority_is_ley_35_2006_art_93() -> None:
     """M151 is the Beckham regime (Ley 35/2006 art. 93 LIRPF)."""
     modelo, catalogues = _load_modelo_151()
-    revision = modelo.revisions["2015-y-siguientes"]
+    revision = modelo.revisions["2015-2022"]
     impatriado = next(c for c in revision.constructs if c.id == "m151-impatriado-calculation")
     assert "ley-35-2006:art-93" in impatriado.legal_refs
     assert "ley-35-2006:art-93" in catalogues.legal
@@ -57,22 +57,26 @@ def test_modelo_151_legal_authority_is_ley_35_2006_art_93() -> None:
 
 def test_modelo_151_form_order_is_boe_corpus_backed() -> None:
     modelo, catalogues = _load_modelo_151()
-    revision = modelo.revisions["2015-y-siguientes"]
+    revision = modelo.revisions["2015-2022"]
     legal = {_M151_FORM_ORDER_REF: catalogues.legal[_M151_FORM_ORDER_REF]}
 
     verify_legal_catalogue(legal, source_root=bundled_path())
 
-    assert _M151_FORM_ORDER_REF in modelo.legal_refs
+    # Asserted on the REVISION, not the modelo. The approving orden is
+    # span-scoped -- Orden HAP/2783/2015 governs 2015-2022 and a later
+    # instrument governs the 2025 span -- so the modelo level carries only the
+    # framework refs both spans share.
+    assert _M151_FORM_ORDER_REF not in modelo.legal_refs
     assert _M151_FORM_ORDER_REF in revision.legal_refs
     assert revision.orden_aplicabilidad == (_M151_FORM_ORDER_REF,)
     reference = legal[_M151_FORM_ORDER_REF]
-    assert reference.document_id == "BOE-A-2008-16237"
+    assert reference.document_id == "BOE-A-2015-14021"
     assert reference.kind == "orden"
-    assert reference.article == "modelo 151"
+    assert reference.article == "1"
 
 
 def test_modelo_151_2015_workbook_parity_uses_era_matching_record_design() -> None:
-    """The 2015-y-siguientes revision (bounded 2015-2022) cites its own-era design.
+    """The 2015-2022 revision cites its own-era design.
 
     ``boe-modelo-151-layout`` was retiered to ``official_source_guidance`` (a
     915-byte orden excerpt with no annex/layout content). AEAT's historical
@@ -81,7 +85,7 @@ def test_modelo_151_2015_workbook_parity_uses_era_matching_record_design() -> No
     this is a genuine acquisition and re-point, not a permanent gap.
     """
     modelo, catalogues = _load_modelo_151()
-    revision = modelo.revisions["2015-y-siguientes"]
+    revision = modelo.revisions["2015-2022"]
     workbook = revision.workbook_parity_refs[0]
 
     assert "boe-modelo-151-form" not in catalogues.sources
@@ -125,11 +129,11 @@ def test_modelo_151_carries_base_liquidable_under_declaration_advisory() -> None
     00501->DP200014:00552 worked-pattern guards.
     """
     modelo, _ = _load_modelo_151()
-    revision = modelo.revisions["2015-y-siguientes"]
+    revision = modelo.revisions["2015-2022"]
 
     predicates = {p.predicate_id: p for p in revision.verification_predicates}
     predicate_id = "modelo-151-base-liquidable-implica-cuota-integra"
-    assert predicate_id in predicates, "M151 2015-y-siguientes must declare the base-liquidable advisory"
+    assert predicate_id in predicates, "M151 2015-2022 must declare the base-liquidable advisory"
 
     guard = predicates[predicate_id]
     assert guard.expression == (

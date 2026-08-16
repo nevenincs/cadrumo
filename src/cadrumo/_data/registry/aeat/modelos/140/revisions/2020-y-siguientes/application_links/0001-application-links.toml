@@ -1,7 +1,0 @@
-[[revisions."2020-y-siguientes".application_links]]
-id = "modelo-140-filing"
-surface = "filing"
-consumer = "cadrumo.application.filing"
-requires_snapshot = true
-legal_refs = ["orden-hac-177-2020:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-140-procedure"]

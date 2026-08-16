@@ -1,9 +1,0 @@
-[[revisions."2021-y-siguientes".workbook_parity_refs]]
-id = "modelo-231-current-annex-static-layout"
-workbook_source = "boe-modelo-231-current-annex"
-fixture_id = "modelo-231-current-annex-layout"
-formula_coverage = "static_layout"
-runner_required = false
-tolerance = "0.00"
-legal_refs = ["orden-hac-1285-2020:art-primero-anexo"]
-source_refs = ["boe-modelo-231-current-annex"]

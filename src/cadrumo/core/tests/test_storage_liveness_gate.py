@@ -212,12 +212,21 @@ def _claim_names(location: StorageLocation) -> frozenset[str]:
     return frozenset(names)
 
 
+#: The harness ships as its own distribution beside the package, so a consumer
+#: living there is not reachable under ``src/cadrumo``. Resolving both roots
+#: keeps a TRUE claim expressible; without it the only way to make the gate
+#: green is to call a live consumer dormant, which is the lie this gate exists
+#: to catch.
+_CONSUMER_ROOTS = (SRC_CADRUMO, SRC_CADRUMO.parent / "cadrumo-harness" / "src")
+
+
 @cache
 def _tree_for(module: str) -> ast.AST | None:
-    path = SRC_CADRUMO / module
-    if not path.is_file():
-        return None
-    return ast.parse(path.read_text(encoding="utf-8"))
+    for root in _CONSUMER_ROOTS:
+        path = root / module
+        if path.is_file():
+            return ast.parse(path.read_text(encoding="utf-8"))
+    return None
 
 
 def _members_claiming_a_consumer() -> tuple[StorageLocation, ...]:
@@ -320,6 +329,12 @@ def test_every_dormant_member_states_a_reason_and_really_is_dormant() -> None:
     )
 
 
+#: The modules that DECLARE the taxonomy, as opposed to consuming it.
+_TAXONOMY_DECLARATION_MODULES = frozenset(
+    {"core/_storage_taxonomy.py", "core/_storage_taxonomy_locations.py"},
+)
+
+
 @cache
 def _production_trees() -> tuple[tuple[str, ast.AST], ...]:
     """Every production module, parsed once.
@@ -332,7 +347,11 @@ def _production_trees() -> tuple[tuple[str, ast.AST], ...]:
     trees: list[tuple[str, ast.AST]] = []
     for path in scan_directory(SRC_CADRUMO, pattern="*.py", recursive=True):
         relative = path.relative_to(SRC_CADRUMO).as_posix()
-        if "/tests/" in f"/{relative}" or relative.startswith("tests/") or relative == "core/_storage_taxonomy.py":
+        # Both declaration modules are excluded: a member's own declaration
+        # names it by construction, so counting the declaration as consumption
+        # refutes every dormancy claim with itself. The locations module was
+        # split out of the taxonomy module and inherited that requirement.
+        if "/tests/" in f"/{relative}" or relative.startswith("tests/") or relative in _TAXONOMY_DECLARATION_MODULES:
             continue
         try:
             trees.append((relative, ast.parse(path.read_text(encoding="utf-8"))))

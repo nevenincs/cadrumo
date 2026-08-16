@@ -95,14 +95,28 @@ def test_stale_product_identity_normalises_without_corrupting_machine_or_authori
     )
 
 
-def test_live_translation_normalises_stale_root_help_identity() -> None:
-    """Real catalogue lookup projects the binding identity before help consumes it."""
-    heading = _render.tr("cli.operator_surface.help.root.heading", locale="es")
-    command_help = _render.tr("cli.operator_surface.help.root.paragraph_type_help", locale="es")
+def test_live_translation_normalises_a_stale_executable_reference() -> None:
+    """``tr`` projects the canonical executable onto what it renders.
 
-    assert heading == "CADRUMO, herramienta de declaraciones fiscales con la AEAT."
-    assert "aeat <comando> --help" in command_help
-    assert "cadrumo <comando> --help" not in command_help
+    Asserted on an INTERPOLATED value rather than on catalogue prose. The
+    shipped catalogues already say ``aeat``, so no live key can exercise the
+    normaliser -- a test pinned to one would pass whether or not ``tr`` still
+    called it, and would red on any wording edit. Normalisation runs after
+    interpolation, so a stale reference supplied as an argument travels the
+    real render path and must come back canonical.
+    """
+    rendered = _render.tr(
+        "cli.config.auth.unknown_provider",
+        provider="cadrumo app modelo",
+        locale="es",
+    )
+
+    # ``app modelo`` deliberately, not ``config auth``: this key's own text
+    # already says "aeat config auth --help", so asserting THAT is satisfied by
+    # the catalogue whether or not the normaliser ran. Only a phrase the
+    # argument alone can produce makes the positive direction bite.
+    assert "aeat app modelo" in rendered
+    assert "cadrumo app modelo" not in rendered
 
 
 def test_locale_load_failure_is_logged_with_traceback(caplog: pytest.LogCaptureFixture) -> None:
