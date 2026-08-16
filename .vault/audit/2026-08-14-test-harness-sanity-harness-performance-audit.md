@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:228d4e397ad6db1ddb9357659192df317ea2dc9e331f837625d8d793b288d5d1'
+body_hash: 'sha256:1625abe6271143a8b1c9e4ee9a4f8ca121fedcd90f4b160798688d7552c03c55'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -3616,3 +3616,54 @@ this corpus collapsing.
 **Four consecutive levers on this file measured no better or worse than the
 baseline.** The remaining one that would work is the scope decision, not a
 technique.
+
+## The unit-lane tail decomposes into three classes, and none is an unexploited lever
+
+Sampled the top of the largely-green `core` + `persistence` unit lane
+(3,856 passed / 50 failed, 160.31s). Every entry falls into one of three
+buckets:
+
+**1. The registry authority load -- already decomposed and handed off.**
+
+| test | sampled self time |
+|---|---|
+| `topics/tests/test_catalogue.py::test_every_topic_legal_ref_resolves_against_real_legal_catalogue` (20.67s) | `open` 21.3%, `realpath` 19.2%, `read_text` 13.6%, `stat` 10.9%, `_read_entries` 9.8%, bs4 5.2% |
+| `profile/tests/test_calculation_repository_roundtrip.py` (34.49s) | `open` 17.6%, `realpath` 16.6%, `stat` 11.7%, `read_text` 8.9% |
+
+That is the same filesystem-dominated authority load measured earlier
+(0.93s fingerprint + 10.2s cold compile + validation), and both modules are
+additionally registry-red. **Nothing new to do here**: the lever is the
+build-time-compiled, randomly-accessible artefact recorded in the architecture
+section, not anything per-module.
+
+**2. Deliberate real-process and real-time waits -- the subject, not overhead.**
+
+`custody/tests/test_kdf_supervision.py` (17 passed, 25.16s) is **88.7% in
+`threading.wait`**, waiting on real supervised Argon2 subprocesses: lease
+blocking, process death, recovery. Removing the waits would remove what the
+module proves. Same shape as the login-screen backoff ruled out above.
+**Do not "optimise" a test whose subject is a real wait.**
+
+**3. Contention artefacts -- targets that are not slow.**
+
+`bucket/tests/test_trash_rename_and_remove.py` was listed at **15.41s** in the
+parallel lane run and measures **1.42s** in isolation: a **10.8x inflation**. Its
+sampled profile is 56% import machinery -- there is no test cost to remove.
+
+This is the recorded hazard made concrete: **durations under `-n auto` are work
+PLUS contention.** Any candidate taken from a parallel run must be re-timed in
+isolation before it is believed, or the work goes to a module that was never
+slow.
+
+### Where that leaves the loop
+
+Across the CLI lane, the application lane, the adapters lane and now the unit
+lane, the tail is fully accounted for by: the registry authority load (handed
+off as an architecture change), deliberate waits, error paths from the in-flight
+registry campaign, and contention inflation. **No unexploited per-module lever
+was found in this pass.**
+
+The remaining named opportunities are all decisions rather than techniques:
+the compiled-artefact architecture, the combined-period gate's scan scope, and
+the worker-count cap. Further per-module profiling on this tree is unlikely to
+return until the registry campaign lands and the tail can be re-measured green.
