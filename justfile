@@ -492,10 +492,18 @@ test-harness:
 # the log for `^FAILED` to get the fail list, so a 24-minute run yielded a
 # count with no identities and the whole suite had to be re-run to learn what
 # broke. Adding `f` back keeps the skip report the flag was added for.
-[doc('Run the unit test suite in parallel. Quiet progress; failures shown.')]
+# `-v`, not `-q`: under `-q` pytest withholds every failure IDENTITY until the
+# run completes, so an hour-long lane that is killed, wedged, or simply still
+# running tells you nothing at all -- only a growing wall of dots. `-rsf` was
+# added earlier for the same class of problem but only helps at the END. Under
+# `-v` each worker prints `[gwN] [ NN%] FAILED <nodeid>` the moment the test
+# finishes, so `grep -E '^\[gw.*FAILED' suite.log` yields a live fail list
+# while the lane is still running. The console is noisier; the capture rule
+# already says to redirect to a file, and a greppable file is the point.
+[doc('Run the unit test suite in parallel. Streams failure identities as they happen.')]
 [group('testing')]
 test-unit durations="":
-    @uv run --no-sync pytest -q -rsf -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool and not os_keychain' {{ if durations == "" { "" } else { "--durations=" + durations } }}
+    @uv run --no-sync pytest -v -rsf -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool and not os_keychain' {{ if durations == "" { "" } else { "--durations=" + durations } }}
 
 # Run the unit test suite serially for reruns after a parallel failure.
 [group('testing')]
@@ -510,8 +518,8 @@ test-unit-serial:
 [doc('Run the integration suite in two lanes: parallel xdist, then the isolation-sensitive serial tests alone.')]
 [group('testing')]
 test-integration:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} {{harness_exclusions}} -m "integration and not serial and not os_keychain"
-    @uv run --no-sync pytest -q {{harness_exclusions}} -m "integration and serial and not perf and not os_keychain" -n0
+    @uv run --no-sync pytest -v -n {{pytest_workers}} {{harness_exclusions}} -m "integration and not serial and not os_keychain"
+    @uv run --no-sync pytest -v {{harness_exclusions}} -m "integration and serial and not perf and not os_keychain" -n0
 
 # THIS FILE IS THE SOLE DECLARATION SITE FOR EVERY `dev/` TEST LANE.
 #
@@ -664,12 +672,12 @@ test-both-lanes:
 [doc('Run only the parallel integration lane, holding the isolation-sensitive serial tests out.')]
 [group('testing')]
 test-integration-parallel:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} {{harness_exclusions}} -m "integration and not serial and not os_keychain"
+    @uv run --no-sync pytest -v -n {{pytest_workers}} {{harness_exclusions}} -m "integration and not serial and not os_keychain"
 
 # Run only the serial (isolation-sensitive) integration lane, no xdist workers.
 [group('testing')]
 test-integration-serial:
-    @uv run --no-sync pytest -q {{harness_exclusions}} -m "integration and serial and not perf and not os_keychain" -n0
+    @uv run --no-sync pytest -v {{harness_exclusions}} -m "integration and serial and not perf and not os_keychain" -n0
 
 # Run the OS-credential-store custody tests. These carry `os_keychain` alongside
 # their execution marker, and EVERY lane above excludes it, so this recipe is the
