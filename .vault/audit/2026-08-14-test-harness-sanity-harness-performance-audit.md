@@ -2884,3 +2884,70 @@ two-row CSV the same as a 514-row corpus. It is a ranked candidate list, not a
 saving. Each entry still needs its seed cost measured before conversion --
 `test_ledger_bulk_classify` seeds two inline EUR-only rows, so its 22 seedings
 may be worth far less than the eight full-corpus imports already converted.
+
+## Profile registration: measured, decomposed, and ruled out as a caching target
+
+`register_minimal_profile` is the seeding primitive behind the largest cluster
+on the worklist. Measured precisely by wrapping it (29 calls in
+`application/auth/tests/test_operator.py`): **8.01s of that module's 21.15s --
+38% -- at 0.276s per call.** Suite-wide the shape is called on the order of
+1,294 times, so roughly 350s of CPU.
+
+Profiling one registration showed what looked like textbook redundancy inside a
+SINGLE call: 8 `_profile_repository.load`, 4 `_capsule_record.load`, and 3
+`resolve_active_profile_output_language` -- the last performing a full encrypted
+workflow-state load each time, because it is registered as the `core.i18n`
+active-language callback and reads `workflow_state_repository().load()` on every
+resolution.
+
+**The caching lever is a correctness bug, and the probe proved it before it was
+built.** Fingerprinting what each load RETURNED, rather than counting calls:
+
+```
+workflow_state loads: 4
+distinct state fingerprints: 4
+redundant consecutive loads: 0 of 4
+```
+
+Every load observes different state, because profile creation writes between
+them. A memo keyed on "the active profile's language" would serve one of those
+four states to a caller expecting a later one. **Do not re-chase caching inside
+the registration path**; its cost is the writes it performs, not repeated reads.
+
+The general rule this instance illustrates: **a repeated read is only redundant
+if it returns the same value.** Counting calls identifies candidates; comparing
+returned values is what distinguishes a cache from a stale-data defect. Count,
+then fingerprint.
+
+(A third cProfile inflation datum, consistent with the earlier correction: the
+single test measures 2.09s unprofiled and 25.88s under cProfile.)
+
+### Why the module conversion was not done either
+
+`test_operator.py` is 29-of-31 seeded and looked like the next conversion, but
+`test_auth_status_preserves_the_active_profile_typed_verdict` asserts
+`verdict.failed_condition_id == "profile.active.pointer_registered"` -- it
+depends on the profile being ABSENT. A seeded module-scoped origin would not
+fail it loudly; it would invert what it proves. Converting the module therefore
+requires splitting that test out, and the repo's supplementary-marker precedents
+(`perf`, `external_tool`, `os_keychain`) are all LANE-SELECTION labels, so a
+"needs an unseeded world" marker would be a category error against the
+marker-integrity gate. Deferred deliberately rather than forced.
+
+**Check every candidate module for absence-dependent tests before converting.**
+The seeded-count metric on the worklist cannot see them: a test that requires a
+missing precondition looks identical to one that simply does not seed.
+
+## The ECB tests violate the written marker contract, not just a convention
+
+`pyproject.toml` defines the lanes explicitly:
+
+- `unit`: "deterministic offline tests scoped to one owner; owned local
+  processes are allowed, **external networks and services are not**"
+- `integration`: "**deterministic** in-process tests that cross architectural
+  layers"
+
+The five tests reaching the live ECB Data Portal are marked `integration`. They
+are neither deterministic (14.63-32.48s on identical code) nor free of external
+services. This is not an unwritten convention being bent -- it is the declared
+meaning of the marker they carry, and `aeat_live` exists for exactly this case.
