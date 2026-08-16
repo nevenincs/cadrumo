@@ -77,6 +77,7 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
+record_design_epoch = "2016"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_122/files/01-122-ejercicio-2016-y-siguientes.xlsx"
 sha256 = "2b7c2bb3472cde1faba997f777aa88290e707a3773a3dc88348f74caeee0a4c7"
 bytes = 79199

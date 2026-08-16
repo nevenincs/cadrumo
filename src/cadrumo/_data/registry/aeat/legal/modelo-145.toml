@@ -96,6 +96,7 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
+record_design_epoch = "2012"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_145/files/dr145v20.pdf"
 sha256 = "fe29e8df4db859b41c66aaaf96c1bd27bc2af9063d98a61e62f21832c091765c"
 bytes = 32295

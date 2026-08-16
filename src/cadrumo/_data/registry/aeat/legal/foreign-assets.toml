@@ -179,6 +179,7 @@ required_text = [
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
+record_design_epoch = "2013"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_720/files/01-720-599-kb-pdf.pdf"
 sha256 = "ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7"
 bytes = 612620
