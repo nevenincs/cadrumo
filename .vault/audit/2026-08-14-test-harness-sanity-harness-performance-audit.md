@@ -2389,3 +2389,87 @@ The worker-count decision now has a decomposed cost rather than a single number:
 about 1.7 GB of unavoidable session state per worker, plus roughly 0.33 MB per
 test executed, ending at 4-5.7 GB. Raising the cap multiplies the session state
 exactly and the accumulation proportionally to how the tests divide.
+
+## Seeding a read-only suite once per file: `test_ledger_list_filter` 91.3s -> 53.9s
+
+`src/cadrumo/entrypoints/cli/tests/test_ledger_list_filter.py` imported a
+four-CSV ledger corpus in ten separate test bodies, then only ever listed it
+back. Isolated, the file cost 91.30s.
+
+Two changes, both landed:
+
+- Two tests (`bogus=1`, a `--filter` token without `=`) imported the corpus for
+  a refusal the filter-token parser raises before any ledger read. The corpus
+  could not affect their outcome. Removed, and both now assert the typed
+  `cli.ledger.filter.valid` failed condition rather than a bare non-zero exit --
+  strictly stronger, because a bare exit-code check is also satisfied by an
+  unrelated failure, which is precisely how those tests could have stayed green
+  while the filter catalogue stopped refusing. 91.30s -> 81.17s.
+- The remaining eight imports were replaced by one module-scoped fixture, on a
+  new `scope` axis of `active_profile_isolated_backend_fixture`. 81.17s ->
+  51.10s, repeated at 58.59s and 51.98s (mean 53.9s).
+
+Order-independence is structural, not hoped for: an AST pass over the module
+confirms the only mutating verb (`ledger import`) is in the fixture and every
+test-level invocation is `ledger list`. The `scope` axis defaults to
+`"function"`, so all 31 existing callers are unchanged; two sibling modules on
+the default path were run to confirm (15 passed).
+
+### Three corrections to what this audit previously recorded
+
+- **The blocker was misattributed twice.** It is neither `live_fx_isolated_backend`
+  nor `_isolated_state`. `_isolated_state` does not even apply to this module --
+  it is autouse inside `_isolated_profile_storage_fixtures.py`, which is not a
+  conftest, and the module imports only the backend fixture. The real constraint
+  was that `active_profile_isolated_backend_fixture` produces a function-scoped,
+  `tmp_path`-dependent fixture *by construction*, so no caller could opt out of
+  per-test seeding. Naming the wrong fixture twice kept a tractable change
+  looking blocked.
+- **"89.3s of 155s importing the corpus nine times" was wrong on both numbers.**
+  155s was measured under `-n auto`, so it carried contention; isolated the file
+  was 91.30s. And there were **ten** import call sites, not nine. The isolated
+  import costs ~3.9-5s, so the real prize was ~40s, not ~89s.
+- **`pytest-randomly` is not installed in this environment.** Ordering is
+  deterministic file order, and the `-p no:randomly` in earlier commands in this
+  campaign was a no-op that neither randomised nor de-randomised anything. Any
+  claim in this audit resting on "under random ordering" describes a plugin this
+  tree does not have.
+
+### Ruled out, so it is not re-chased
+
+Making the corpus import itself cheaper is not available: `ledger import --file`
+takes one file by CLI contract, so the four invocations cannot be collapsed, and
+the corpus size is load-bearing (tests assert >=500 rows and a >=2-year span).
+
+## HEAD does not validate its own registry
+
+Independently of any performance work: at `505fab8304`, with a clean working
+tree, `test_cli_workflow_verification` is 18 of 20 red and all 17 round-trip
+failures share one cause -- `ERROR_CALCULATIONS_REGISTRY_VALIDATION`. The
+messages are explicit authoring items (modelos 036 and 038 declare no export
+layout; several modelo 100 revisions claim `filing` grade with families still
+blocked pending evidence; two `orden-hac-1197-2025` articles cannot resolve a
+corpus unit). This is the peer authority-grade sweep mid-campaign, not an
+accidental break, and not this campaign's to fix.
+
+It has two consequences worth recording. Any suite-wide durations profile taken
+now measures a red tree and is not comparable with the 9,351s CPU baseline. And
+the `test_cli_workflow_verification` refactor stays blocked -- not because a
+module-scoped fixture would collapse eighteen named failures into one setup
+error, which was the reason recorded earlier, but because a before/after cannot
+demonstrate behaviour preservation against a module where every test already
+fails.
+
+## Two harness hazards that cost time this round
+
+**A peer sweeper committed an in-flight edit mid-measurement.** Commit
+`d6723a8240` picked up the half-finished two-file change: it took the factory
+and the test module but not the fixtures file defining the symbol the test
+module imports, so HEAD briefly could not collect that module. The subject it
+was given was accurate, which is what makes this hard to notice -- the tell was
+`git diff` returning empty on a file edited three times. Landing the missing
+half immediately is the recovery; keeping the window short is the mitigation.
+
+**The `pytest-of-hello/pytest-current` symlink `PermissionError` is no longer
+cosmetic.** It aborted a verification run outright. `--basetemp=<private dir>`
+is a reliable per-run workaround and costs nothing.
