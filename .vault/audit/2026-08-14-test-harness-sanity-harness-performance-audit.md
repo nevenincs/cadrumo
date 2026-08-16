@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:045ce56ec07bfcd589c2ab1d5a68c8f21341946a807649eee19a413dcae5ae0c'
+body_hash: 'sha256:690121f5040c2fc2ec786e086b5ee5dadc5b602b1fe8a46c7b3976801b5704ed'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1866,3 +1866,50 @@ Serving a stale tool schema to a client is a correctness failure, not a slow
 start, so that is a design with a blast radius rather than a memo. Recorded with
 the measurement for an owner, alongside the production `load_registry_tree`
 sites.
+
+## Ruled out: deferring the harness MCP import chain
+
+The 7.0s MCP cold start is 2.56s import plus 4.44s descriptor build. The import
+half looked like the classic stray-eager-import win, and `-X importtime` named a
+culprit immediately:
+
+    2.61s  cadrumo_harness.mcp._tools
+    1.94s    -> _identity_gate -> _harness_tools -> cadrumo.application.wizard
+
+`cadrumo.application.wizard` was imported at module level in `_harness_tools`
+for ONE symbol used in ONE function body. Deferring it into that body is the
+pattern the file already uses for `resolve_cli_precondition_action`, and the
+architecture rule explicitly permits it -- lazy resolution governs WHEN a module
+executes, never WHERE a symbol lives.
+
+It buys nothing: **2.61s to 2.58s**, inside noise. Reverted.
+
+The reason is structural and worth recording so nobody re-attempts it.
+`_harness_tools` also imports `cadrumo.application.workflow` for
+`ProfileHealthStatus`, and that symbol is a PYDANTIC FIELD ANNOTATION
+(`readiness: ProfileHealthStatus`). Pydantic needs the real type at
+class-definition time, so that import cannot be deferred at all -- and
+`application.workflow` is 1.64s of the 2.58s on its own. Wizard was merely
+reaching workflow first; removing wizard from the path just exposed workflow as
+the direct cost.
+
+So the harness import cost is pinned by a model definition, not by a careless
+import. Shifting it would mean relocating `ProfileHealthStatus` to a leaf
+module, which is a domain-layout decision, not a performance edit.
+
+### Two mistakes made here, both caught by measuring
+
+The deferral was added while the module-level import was still in place, so
+`ruff --fix` removed the redundant FUNCTION-LOCAL one and kept the eager one --
+the opposite of the intent, and the change silently undid itself. The import
+time not moving is what exposed it; had the win been assumed, a no-op would have
+been reported as a fix.
+
+Then, with both edits correctly applied, the total still did not move. That is
+the second measurement, and it is the one that killed the lever. The first
+measurement caught a broken edit; the second caught a wrong idea. Reporting
+after either one alone would have been wrong.
+
+The revert was done by hand rather than with `git restore`, which needs explicit
+authorization in this worktree, and the file was confirmed byte-identical to
+`HEAD` afterwards rather than assumed clean.
