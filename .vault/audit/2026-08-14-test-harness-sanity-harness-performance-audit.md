@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:a731388162efd60340c909b6979035076f758712b7797cd084c7be0492d69a2a'
+body_hash: 'sha256:eb511b58653bd0f5dfbe7b3f446542c2c30c425381253a247138cae21e4cb0bb'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -3838,3 +3838,40 @@ avoided, connections removed, files not read -- and quote wall clock as a range
 with its sample size.** The honesty review caught an overstatement and replaced
 it with an understatement, because it applied more runs but still not the right
 KIND of claim.
+
+## Re-verifying the campaign's own claims: one holds, one decayed
+
+Having established that a wall clock here is a band, the same test was applied to
+the campaign's other headline numbers.
+
+**Holds.** `test_ledger_list_filter`, claimed 91.30s -> 53.9s median:
+re-measured **54.91, 46.22, 55.88s -- median 54.91s**. The claim is good, and the
+band is wide enough (46-56s) that only the median was ever meaningful.
+
+**Decayed.** The locale honesty gate, claimed 125.14s -> **6.04s**: re-measured
+**12.19s and 10.48s**, roughly double the recorded figure.
+
+The cause is not a regression in the fix. The gate parses four locale
+catalogues, and **`es.yml` grew from 78,096 to 86,073 lines (+10.2%) in about
+twenty-four hours, over 40 commits touching `src/cadrumo/locales/`.** The
+direction of the fix is intact -- 125s -> ~11s is still an eleven-fold
+improvement -- but the number recorded against it was true of a smaller
+catalogue.
+
+### The methodological consequence, which outlives every number above
+
+**An after-figure is true of the tree that produced it.** On a surface whose
+load-bearing input grows ten percent in a day, a recorded performance number
+decays within days and a reader cannot tell decay from regression.
+
+Every performance figure in this audit should therefore be read with its input
+size, and future ones should be recorded WITH it:
+
+- not "the locale honesty gate takes 6.04s"
+- but "6.04s over four catalogues totalling ~310k lines"
+
+The deterministic metrics this audit already prefers are naturally immune --
+"seedings per module 10 -> 1", "connections 76 -> 12", "115 fewer directory
+listings" -- because they state the work removed rather than the time it took on
+one particular tree on one particular afternoon. That is a third, independent
+argument for leading with them.
