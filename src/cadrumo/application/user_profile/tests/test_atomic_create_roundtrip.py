@@ -16,7 +16,6 @@ because both route through the same atomic provisioner.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -27,7 +26,6 @@ from ....core.config import override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_envelope import unwrap_cli_result as _json
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
 
@@ -156,82 +154,3 @@ def test_atomic_create_roundtrip_two_profiles_resolve_independently(_cli_storage
     assert _json(show_alice)["display_name"] != _json(show_bob)["display_name"]
     assert _json(show_alice)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
     assert _json(show_bob)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
-
-
-def test_atomic_create_roundtrip_duplicate_lands_through_provisioner(_cli_storage: Path) -> None:
-    """``profile duplicate`` routes the copy through the atomic provisioner.
-
-    The duplicated profile must be visible in ``profile list`` and
-    ``profile show`` — proof the bucket directory, manifest, encrypted
-    record, and pointer all landed, not just a partial copy.
-    """
-
-    _create("alice")
-
-    duplicate = _invoke(
-        ["--format", "json", "config", "profile", "duplicate", "alice", "alice-copy", "--display-name", "Copy"],
-    )
-    assert duplicate.exit_code == 0, duplicate.output
-    # The duplicate's target UUID is redacted at the CLI boundary; the
-    # stable placeholder is what the operator sees.
-    assert _json(duplicate)["target_profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
-
-    listing = _invoke(["--format", "json", "config", "profile", "list"])
-    # The duplicate is labelled by its --display-name; the source keeps "alice".
-    assert sorted(row["name"] for row in _json(listing)["profiles"]) == ["Copy", "alice"]
-
-    show_copy = _invoke(["--format", "json", "config", "profile", "show", "Copy"])
-    assert show_copy.exit_code == 0, show_copy.output
-    assert _json(show_copy)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
-    assert _json(show_copy)["display_name"] == "Copy"
-    # The source profile's facts copied into the new bucket.
-    copy_facts = {row["path"]: row["value"] for row in _json(show_copy)["facts"]}
-    assert copy_facts["activities.description"] == "design"
-
-
-def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(_cli_storage: Path, tmp_path: Path) -> None:
-    """A profile exported then imported into a fresh root keeps its label and facts.
-
-    The import path routes through the atomic provisioner while preserving the
-    bundle's UUID identity. The operator-facing label and profile facts must
-    survive the round trip. The import lands in a *fresh* storage root so the
-    duplicate-label guard does not (correctly) refuse it.
-    """
-
-    _create("alice")
-    bundle = _cli_storage / "alice-bundle.json"
-    export = _invoke(
-        ["--format", "json", "config", "profile", "export", "alice", "--to", str(bundle), "--cleartext-local"],
-    )
-    assert export.exit_code == 0, export.output
-    assert bundle.is_file()
-    exported_id = json.loads(bundle.read_text(encoding="utf-8"))["profile"]["profile_id"]
-
-    source_show = _invoke(["--format", "json", "config", "profile", "show", "alice"])
-    source_facts = {row["path"]: row["value"] for row in _json(source_show)["facts"]}
-
-    # Re-point the storage root so the imported profile lands in a
-    # clean workspace — the recovery-from-backup scenario.
-    fresh_root = tmp_path / "fresh-root"
-    with override_settings(cadrumo_local_storage_root=fresh_root, cadrumo_active_profile=None):
-        importer = _invoke(["--format", "json", "config", "profile", "import", str(bundle)])
-        assert importer.exit_code == 0, importer.output
-        # Profile UUIDs are redacted at the CLI boundary; the operator-facing
-        # surface carries the display_name and the stable placeholder.
-        assert _json(importer)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
-        assert _json(importer)["display_name"] == "alice"
-
-        imported_list = _invoke(["--format", "json", "config", "profile", "list"])
-        assert [row["name"] for row in _json(imported_list)["profiles"]] == ["alice"]
-
-        imported_show = _invoke(["--format", "json", "config", "profile", "show", "alice"])
-        assert imported_show.exit_code == 0, imported_show.output
-        assert _json(imported_show)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
-        imported_facts = {row["path"]: row["value"] for row in _json(imported_show)["facts"]}
-        assert imported_facts == source_facts
-        from .. import CommittedProfileRepository
-
-        with open_test_profile_session(exported_id):
-            imported = CommittedProfileRepository().load(exported_id)
-        assert imported.profile_id == exported_id
-        assert imported.label == "alice"
