@@ -1,15 +1,23 @@
-# Modelo 186 record-design parity anchor. Declares the bundled orden-hac-539-2003
-# form-approval order as the layout authority. This scheduling/applicability-grade
-# revision carries no calc formulas, so runner_required is false: the anchor pins
-# the official form-approval provenance without asserting a verified fixed-width
-# byte-position record design (no authoritative Modelo 186 DR is bundled).
+# Modelo 186 record-design parity anchor.
+#
+# Anchored on the BOE Anexo I image, which is the real layout authority for this
+# modelo: it carries the actual tipo-1 position table. It replaced the bundled
+# orden-hac-539-2003 excerpt, which was registered a second time under
+# layout_authority purely to satisfy this gate -- a 1042-byte article excerpt
+# that names its annex without containing it, and which the layout-authority
+# content probe correctly refused as a place a layout could come from.
+#
+# This scheduling/applicability-grade revision carries no calc formulas, so
+# runner_required is false: the anchor pins official layout provenance without
+# asserting a verified fixed-width byte-position record design. The image has no
+# text layer, so no reader can parse it into one.
 
 [[revisions."2003-y-siguientes".workbook_parity_refs]]
 id = "modelo-186-orden-static-layout"
-workbook_source = "enrolled-modelo-186-layout"
+workbook_source = "boe-modelo-186-anexo-i-tipo1"
 fixture_id = "modelo-186-orden-hac-539-2003-layout"
 formula_coverage = "static_layout"
 runner_required = false
 tolerance = "0.00"
 legal_refs = ["orden-hac-539-2003:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-186-layout"]
+source_refs = ["boe-modelo-186-anexo-i-tipo1"]

@@ -49,13 +49,19 @@ applies_from = 2003-03-11
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-5304"
 review_status = "reviewed"
 
-# Same bundled orden HTML, registered a second time under layout_authority tier
-# for the per-revision workbook-parity-coverage gate. This is NOT the
-# authoritative AEAT Diseño de Registros (fichero-BOE fixed-width layout) — that
-# is not bundled. It grounds only the static form-approval layout, honestly
-# satisfying the parity gate without asserting a verified byte-position design.
+# The same bundled orden HTML as enrolled-modelo-186-procedure, kept as a
+# separate id because several revision and construct rows cite it by name.
+#
+# Retiered 2026-08-16: it stood at layout_authority solely to satisfy the
+# workbook-parity gate, and the layout-authority content probe correctly refused
+# it -- 1042 bytes of article text that names its annex ("que figura en el anexo
+# de esta orden") without containing it. An orden publishes its layout in the
+# ANNEX. The parity anchor now cites boe-modelo-186-anexo-i-tipo1, the BOE Anexo
+# I image that carries the real position table, so nothing needs this file to
+# pretend to be a layout authority any more. It is what it always was: an
+# approval-and-deadline excerpt.
 [sources."enrolled-modelo-186-layout"]
-evidence_tier = "layout_authority"
+evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hac-539-2003.html"
@@ -88,13 +94,20 @@ review_status = "reviewed"
 # a generated artefact, not an official source, and was removed. Do not
 # re-create it: transcribing the position table below requires reading the
 # image, and no file conversion turns an image into a machine-readable design.
+#
+# It is therefore registered as a form_spec, NOT a record_design. That axis
+# states what the tooling can do with the artefact, and the record-design
+# reader addresses only .pdf/.xls/.xlsx/.xlsm; declaring record_design over an
+# image asserts a parseability this file does not have and hard-fails the
+# registry load. The evidence_tier stays layout_authority because the image IS
+# the layout authority -- it simply is not machine-readable.
 [sources."boe-modelo-186-anexo-i-tipo1"]
 evidence_tier = "layout_authority"
 authority = "boe"
-kind = "record_design"
-corpus_path = "corpus/aeat_official/disenos_registro/modelo_186/files/01-186-anexo-i-tipo1-nacimientos.pdf"
-sha256 = "a46bfe8f3eaa094ebef3a628781ace04b23d6ee4ab6a2d30f33706264325253b"
-bytes = 482074
+kind = "form_spec"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_186/files/01-186-anexo-i-tipo1-nacimientos.png"
+sha256 = "662639891a323cd1139fac3c4220a61e87ae1be25b062006ac840f71488273c6"
+bytes = 183396
 retrieved_at = 2026-08-15
 published_at = 2003-03-10
 applies_from = 2003-03-11
