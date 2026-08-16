@@ -330,7 +330,7 @@ def test_atomic_v1_migration_cas_conflict_writes_no_replacements(tmp_path: Path)
 
 
 def test_authoritative_v1_rows_upgrade_and_roundtrip_through_real_secure_repositories(tmp_path: Path) -> None:
-    """Both S54 owners validate and atomically replace authoritative v1 rows."""
+    """Both deduction-schema owners validate and atomically replace authoritative v1 rows."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="s54-v1-success") as profile:
         engine = get_engine(profile.settings)
         transaction_repository = TransactionCatalogueRepository(bucket_id="s54-v1-success")

@@ -743,7 +743,7 @@ def test_m390_registry_requires_all_ten_endpoints_and_rejects_the_retired_scalar
 
 
 def test_agricultural_rows_remain_an_evidence_bearing_refusal_while_empty_cohort_is_zero() -> None:
-    """S83's unavailable official crosswalk cannot be turned into a zero default."""
+    """An unavailable official crosswalk cannot be turned into a zero default."""
     period = Period.from_year_and_code(_YEAR, "4T")
     empty = general_m303_filing_evidence(period, reference="test:s84:proven-empty")
     assert empty.m303.regimen_simplificado.calculation_result.activities == ()

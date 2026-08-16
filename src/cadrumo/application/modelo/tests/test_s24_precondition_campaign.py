@@ -1,4 +1,4 @@
-"""Drift-sensitive coverage for the S24 modelo precondition migration."""
+"""Drift-sensitive coverage for the modelo precondition migration."""
 
 from __future__ import annotations
 

@@ -259,7 +259,7 @@ source_refs = ["{_SOURCE_REF}"]
     assert tuple((field.offset, field.length) for field in record.fields) == tuple(
         (offset, length) for _ordinal, offset, length, _type_code, _content in _OFFICIAL_DID_ROWS
     )
-    # The S57 renderer refuses a layout the selected snapshot does not own.  Build
+    # The renderer refuses a layout the selected snapshot does not own.  Build
     # that snapshot from the test-owned validated revision plus the real bundled
     # source catalogue, avoiding the unrelated filing-grade legal-review gate.
     return _test_snapshot(modelo=modelo, revision=revision), layout

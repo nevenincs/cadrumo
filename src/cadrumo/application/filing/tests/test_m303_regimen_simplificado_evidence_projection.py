@@ -1,4 +1,4 @@
-"""Persisted S58 evidence projects through the exact S59 DP30302 authority."""
+"""Persisted evidence projects through the exact DP30302 annual-Orden authority."""
 
 from __future__ import annotations
 

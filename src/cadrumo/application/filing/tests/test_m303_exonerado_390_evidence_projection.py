@@ -1,4 +1,4 @@
-"""Persisted S56 evidence projects through every exact M303 DP30304 epoch."""
+"""Persisted evidence projects through every exact M303 DP30304 epoch."""
 
 from __future__ import annotations
 
