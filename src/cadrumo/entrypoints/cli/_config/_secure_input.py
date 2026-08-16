@@ -300,6 +300,62 @@ def terminal_can_prompt_for_secrets() -> bool:
     return stdin_is_tty() and _stdin_is_a_real_console()
 
 
+def write_to_controlling_terminal(text: str) -> None:
+    """Display ``text`` on the controlling terminal, bypassing ``stdout``.
+
+    The counterpart to :func:`prompt_secret_no_echo`: that reads a secret the
+    operator holds, this shows one the application minted. A recovery mnemonic
+    is the case it exists for, and it is the reason this cannot go through the
+    ordinary render path. Everything the CLI prints normally is capturable --
+    ``> file`` redirects it, ``--format json`` folds it into an envelope a
+    caller will persist, a supervisor tees it into a log. A 24-word mnemonic is
+    a BEARER credential over the taxpayer's whole encrypted store, so writing
+    it anywhere durable is the exact defect the channel exists to prevent.
+
+    Opening the terminal DEVICE directly (``CONOUT$`` on Windows, ``/dev/tty``
+    elsewhere) resolves to the operator's screen no matter what the standard
+    streams were rebound to, so the words reach a human and nothing else.
+
+    This refuses rather than degrading. If there is no controlling terminal --
+    a pipe, a CI job, a supervised child -- there is nowhere safe to show the
+    secret, and falling back to ``stdout`` would write the bearer credential
+    into precisely the captured stream this bypasses. A caller that cannot
+    display a mnemonic must refuse the operation that mints one, not proceed
+    with the operator none the wiser.
+
+    The precondition is :func:`terminal_can_prompt_for_secrets`, NOT whether
+    the device happens to open. Opening is not evidence a human is watching:
+    Windows hands a detached process a freshly allocated console, so ``CONOUT$``
+    opens and the write "succeeds" onto a surface nobody can see. That failure
+    is worse than a refusal rather than milder -- the operator is told their
+    profile is enrolled for recovery while the only copy of the words went to a
+    phantom console -- so this reuses the same predicate that decides whether a
+    secret may be PROMPTED for, instead of growing a second notion of what
+    counts as an attached terminal.
+
+    Raises:
+        CliRefusedBoundaryError: When no interactive terminal is attached, or
+            the device cannot be opened.
+    """
+    if not terminal_can_prompt_for_secrets():
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.no_controlling_terminal_for_secret",
+        )
+    device = "CONOUT$" if sys.platform == "win32" else "/dev/tty"
+    try:
+        # newline="" keeps the device's own line discipline: the console is a
+        # DEVICE, not a tracked artefact, and forcing LF degrades Windows
+        # console rendering.
+        with open(device, "w", encoding="utf-8", newline="") as terminal:
+            terminal.write(text)
+            terminal.write("\n")
+            terminal.flush()
+    except OSError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.no_controlling_terminal_for_secret",
+        ) from exc
+
+
 def prompt_secret_no_echo(prompt: str) -> str:
     """Read one secret from the controlling terminal with echo suppressed.
 
@@ -361,4 +417,5 @@ __all__ = [
     "read_secrets_stdin",
     "resolve_secrets_channel",
     "terminal_can_prompt_for_secrets",
+    "write_to_controlling_terminal",
 ]
