@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:e8d4d9fa59cabbfa80720ab09e59907f45ae732666721b996c1b9f71594d262f'
+body_hash: 'sha256:3573d45e9e017a930a3ffd659e050d33df37e069688dd6dc12e2ac3dbc3cbff4'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1498,3 +1498,55 @@ Two items with real headroom remain, both recorded above and both requiring an
 owner's decision rather than more profiling: the nineteen production
 `load_registry_tree` sites, and the teardown `PermissionError` that destroys a
 completed run's entire report.
+
+## The cascade is real per-test and nearly invisible in suite wall clock
+
+A fresh full `src/cadrumo` profile, taken to measure the KDF work at suite
+scale:
+
+    before (fix 1 only) : 2015.64s
+    after  (all 3 doors): 1923.11s
+
+**-4.6%**, and that figure is NOT claimed as the result. The two runs differ in
+test population (22732 vs 22700 passed, 5210 vs 5242 failed) because peers
+committed throughout, so a 4.6% move is inside what tree drift and contention
+alone could produce.
+
+This sits against per-test evidence that is not marginal at all:
+`test_recovery_custody` setup 33.35s to 1.85s, the registration modules 292.47s
+to 175.68s, one registration 17.5s to 2s. Those were measured back to back with
+identical failure sets.
+
+### Why both readings are true
+
+Under `-n auto --dist=loadfile` with six workers, suite wall clock is the
+longest WORKER's chain, not the sum of the work. The KDF fix removed a large
+amount of CPU spread thinly across many profile-registering tests -- and almost
+none of it from the files that define the critical path, which are the ones at
+the top of the ranking and which mostly do not register profiles at all:
+
+    116.24s  test_acceptance_wall_catalogue (setup)
+    103.93s  test_config_custody_profile_lifecycle
+     99.19s  test_ledger_corpus_batch_transform
+     78.29s  test_wheel_content_boundary (setup)
+     77.19s  test_dev_audit_report (setup)
+
+So the suite got materially cheaper in CPU and barely faster in wall clock.
+
+### What this changes about targeting
+
+The loop has been picking the slowest individual TESTS. For suite wall clock
+under `loadfile`, the unit that matters is the slowest FILE, because a file is
+what gets assigned to a worker. Optimising a slow test inside a short file
+returns CPU and developer patience; it returns wall clock only when that file
+was on the critical path.
+
+Both are worth having -- CPU is what a shared, contended box actually runs out
+of, and this campaign has spent most of its time waiting behind peers -- but
+they are different objectives and should not be reported as one. Everything
+above is per-test evidence and stands; no suite-level wall-clock claim is made
+for any of it.
+
+The ranking itself is essentially unchanged from the previous profile, which
+independently confirms the phase conclusion: the remaining top entries are the
+ones already examined and ruled out as irreducible or already shared.
