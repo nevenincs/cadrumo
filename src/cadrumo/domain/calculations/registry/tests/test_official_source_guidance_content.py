@@ -30,6 +30,7 @@ from .._schema_references import SourceReference
 from .._validate_evidence import EvidenceValidator
 from .._validate_official_source_guidance_content import (
     _DEADLINE_VOCABULARY,
+    _SUPPRESSION_VOCABULARY,
     _carries_deadline_content,
     _carries_suppression_content,
     deadline_window_content_failures,
@@ -89,7 +90,7 @@ def _evidence_validator(*, source_root) -> EvidenceValidator:
 
 
 def test_the_suppression_anchor_still_carries_the_properties_it_is_named_for() -> None:
-    """The named defect is still a suppression_notice/official_source_guidance claim.
+    """The anchor is still a suppression_notice/official_source_guidance claim.
 
     Without this, retiering or replacing the source would silently turn the
     reconciliation test below into a statement about an empty population.
@@ -120,12 +121,31 @@ def test_every_reported_suppression_claim_is_one_whose_file_carries_no_suppressi
     assert reported == unbacked
 
 
-def test_the_suppression_gate_reports_the_defect_it_was_built_for() -> None:
-    claims = {_SUPPRESSION_ANCHOR_SOURCE_ID: _bundled_sources()[_SUPPRESSION_ANCHOR_SOURCE_ID]}
-    failures = validate_suppression_notice_content(claims, source_root=bundled_path())
-    assert failures, (
-        f"{_SUPPRESSION_ANCHOR_SOURCE_ID} declares suppression evidence over a file that says WHEN, not WHAT"
+def test_the_suppression_gate_still_refuses_an_entry_into_force_clause() -> None:
+    """A suppression claim over a WHEN clause is refused, naming the fix.
+
+    The anchor once pointed at this order's ``disposicion final unica`` -- an
+    entry-into-force clause carrying no suppression at all -- and was the real
+    defect this gate was built to find. It has since been re-pointed to the
+    amending article that performs the suppression, so the refusal direction
+    needs a claim that still exhibits the defect.
+
+    The clause is the REAL bundled file, still shipped and still cited as a
+    corpus_ref elsewhere, mounted here under the anchor's own identity. A
+    synthetic fixture would prove the regex runs; this proves the gate refuses
+    the exact confusion an author actually makes.
+    """
+    anchor = _bundled_sources()[_SUPPRESSION_ANCHOR_SOURCE_ID]
+    when_not_what = anchor.model_copy(
+        update={"corpus_path": "corpus/normatives/html/orden-hac-1526-2024-df-unica.html"},
     )
+
+    failures = validate_suppression_notice_content(
+        {_SUPPRESSION_ANCHOR_SOURCE_ID: when_not_what},
+        source_root=bundled_path(),
+    )
+
+    assert failures, "a suppression_notice claim over an entry-into-force clause must be refused"
     assert "carries no suppression-establishing text" in failures[0]
     assert "amending article" in failures[0]
 
@@ -147,25 +167,43 @@ def test_entry_into_force_alone_does_not_satisfy_the_suppression_claim() -> None
     )
 
 
-def test_no_suppression_notice_claim_is_currently_accepted() -> None:
-    """The suppression_notice population is exactly one source today, and it is REFUSED.
+def test_every_suppression_acceptance_is_driven_by_content_the_file_actually_carries() -> None:
+    """Strip the suppression vocabulary from each ACCEPTED file and it flips to refused.
 
-    There is therefore no accepted claim to run the strip-in-memory
-    anti-vacuity proof against. That absence is asserted explicitly, so a
-    future honest suppression_notice source starts failing THIS test loudly
-    -- the signal to extend it with the strip-and-reassert proof
-    ``_validate_layout_authority_content.py``'s sibling check performs --
-    rather than silently leaving the acceptance direction unproven forever.
+    Refusals are easy to trust: each names a file and says what is missing. An
+    acceptance is the larger claim -- a predicate that could not say no, or a
+    read that quietly failed, looks exactly like a clean bill of health.
+
+    So each accepted file is re-asked with its ``suprim*`` / ``derog*`` /
+    ``queda sin efecto`` turns of phrase removed IN MEMORY. An acceptance
+    surviving that was never reading the file. Nothing on disk is touched.
+
+    This is the proof the earlier absence-assertion promised: it held only
+    while every suppression_notice claim was refused, and pointed here the
+    moment an honest one landed.
     """
     claims = {sid: source for sid, source in _osg_sources().items() if source.kind == "suppression_notice"}
+    assert claims, "the suppression_notice population moved out from under this test"
     root = bundled_path()
-    accepted = [
-        sid
-        for sid, source in claims.items()
-        if (root / source.corpus_path).is_file()
-        and _carries_suppression_content((root / source.corpus_path).read_text(encoding="utf-8", errors="replace"))
-    ]
-    assert accepted == []
+    accepted, survived, unreadable = 0, [], []
+    for source_id, source in sorted(claims.items()):
+        path = root / source.corpus_path
+        if not path.is_file():
+            unreadable.append(source_id)
+            continue
+        raw = path.read_text(encoding="utf-8", errors="replace")
+        if not _carries_suppression_content(raw):
+            continue
+        accepted += 1
+        if _carries_suppression_content(_SUPPRESSION_VOCABULARY.sub("XXX", raw)):
+            survived.append(source_id)
+
+    assert not unreadable, f"claims whose file could not be read, so neither accepted nor refused: {unreadable}"
+    assert accepted, "no suppression_notice claim was accepted, so this proof would hold vacuously"
+    assert not survived, (
+        f"these acceptances survive having their suppression evidence stripped, so they are not "
+        f"reading the file they claim to verify: {survived}"
+    )
 
 
 # --------------------------------------------------------------------------
@@ -183,16 +221,38 @@ def test_the_deadline_anchor_still_cites_only_ungrounded_sources() -> None:
         assert sources[ref].kind != "manual_pdf", "re-derive against the real file if this anchor moves to a PDF"
 
 
-def test_the_deadline_gate_reports_the_defect_it_was_built_for() -> None:
+def test_the_deadline_gate_still_refuses_a_window_citing_only_who_must_file_sources() -> None:
+    """A window whose every OSG source is silent on WHEN is refused.
+
+    This window was the real defect the gate was built to find: it cited only
+    the censal guide and the activities folleto, both of which say WHO must
+    file and never WHEN. It has since been grounded with the RIRPF article
+    that states the deadline, so the refusal direction needs the pre-fix
+    citation set to point at.
+
+    Both remaining refs are the REAL bundled sources the window still cites,
+    with only the deadline-bearing one dropped -- so this reproduces the exact
+    historical state rather than inventing a synthetic silent source.
+    """
     window = _find_window(_DEADLINE_ANCHOR_MODELO_ID, _DEADLINE_ANCHOR_WINDOW_ID)
     evidence = _evidence_validator(source_root=bundled_path())
+    sources = _bundled_sources()
+    silent_refs = tuple(
+        ref
+        for ref in window.source_refs
+        if (text := evidence.source_text(sources[ref])) is None or not _carries_deadline_content(text)
+    )
+    assert silent_refs, "the anchor window no longer cites any WHO-must-file source to refuse"
+    who_only = window.model_copy(update={"source_refs": silent_refs})
+
     failures = deadline_window_content_failures(
-        "modelo 115 revision 2019-y-siguientes",
-        window,
-        source_refs=_bundled_sources(),
+        f"modelo {_DEADLINE_ANCHOR_MODELO_ID} revision {_DEADLINE_ANCHOR_REVISION_ID}",
+        who_only,
+        source_refs=sources,
         evidence=evidence,
     )
-    assert failures, f"{_DEADLINE_ANCHOR_WINDOW_ID} cites only WHO-must-file sources and must be reported"
+
+    assert failures, f"{_DEADLINE_ANCHOR_WINDOW_ID} citing only WHO-must-file sources must be reported"
     assert "none of their bundled text states a filing deadline" in failures[0]
 
 
@@ -253,7 +313,13 @@ def test_every_reported_deadline_window_cites_no_source_with_deadline_vocabulary
 
     assert total_windows > 400, "the registry's deadline-window population moved out from under this test"
     assert reported == independently_computed
-    assert (_DEADLINE_ANCHOR_MODELO_ID, _DEADLINE_ANCHOR_REVISION_ID, _DEADLINE_ANCHOR_WINDOW_ID) in reported
+    # The bundled population is currently all-honest, so this equality holds at
+    # the empty set and cannot by itself prove the gate can say no. That
+    # direction is carried by
+    # ``test_the_deadline_gate_still_refuses_a_window_citing_only_who_must_file_sources``,
+    # which mounts this window's own pre-fix citation set. Deliberately NOT
+    # pinned to "reported == set()": a genuinely ungrounded window appearing
+    # later must be REPORTED, which is the gate working, not this test failing.
 
 
 def test_deadline_vocabulary_alone_is_the_positive_control() -> None:
