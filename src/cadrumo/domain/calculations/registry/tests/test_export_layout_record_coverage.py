@@ -886,3 +886,53 @@ def test_a_position_two_cited_editions_share_is_counted_once(
                 f"position must be satisfied once, not once per citation"
             )
     assert checked, "no layout cites editions sharing a position, so this rule is untested"
+
+
+def test_an_eedd_delegated_position_is_excused_only_with_its_note_body(
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """A position the design delegates to the software house is not the filer's to write.
+
+    AEAT prints "Nota 1: A cumplimentar por las entidades desarrolladoras
+    (EEDD)" beneath the M111 field table, and two positions cite it. They
+    identify the software house that produced the file; this application holds
+    no EEDD registration, so any value would be invented and a blank would
+    assert an empty EEDD rather than an absent one.
+
+    Both halves are asserted, because a citation alone must never excuse
+    anything: one design's Nota 1 delegates, another's says something else
+    entirely. Swapping in a non-delegating body, and removing the definition,
+    each restore the requirement.
+    """
+    _modelos, catalogues = registry_tree
+    design = extract_record_design(
+        _bundled_design_path(catalogues.sources["aeat-dr-111-2019-v18"]),
+    )
+    sheet = next(s for s in design.sheets if s.name == "M11100")
+    delegated = {
+        (field.offset, field.length)
+        for field in sheet.fields
+        if _omissible_reason(field, sheet) == "delegated to the entidad desarrolladora by Nota 1"
+    }
+
+    assert delegated == {(93, 4), (101, 9)}, (
+        "the EEDD-delegated positions moved; re-derive them from the design rather than "
+        f"trusting this pin: {sorted(delegated)}"
+    )
+
+    cited = next(field for field in sheet.fields if field.offset == 93)
+
+    class _NonDelegatingNote:
+        def note_body(self, ordinal: str) -> str:
+            return "Consignar el importe total de las retenciones practicadas"
+
+    class _UndefinedNote:
+        def note_body(self, ordinal: str) -> None:
+            return None
+
+    assert _omissible_reason(cited, _NonDelegatingNote()) is None, (
+        "a note body that does not delegate to the EEDD must leave the position required"
+    )
+    assert _omissible_reason(cited, _UndefinedNote()) is None, (
+        "a citation whose note the sheet never defined must leave the position required"
+    )
