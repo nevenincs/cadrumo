@@ -49193,6 +49193,1669 @@ modelo:
         official_name: null
         title: null
       revision:
+        2015-2022:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: A bevallás tárgyát képező adóév
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Időszak (éves, 0A)
+            x-chkm8bj3elnn8o9dcdin4ro:
+              help: null
+              label: Nulla fizetendő adó
+            x-chkm8bj4clr6ur3lcdkmurhdedrmipjk5lh6ioo:
+              help: null
+              label: Visszatérítés. SWIFT-BIC
+            x-chkm8bjeelmmasjf5li6abb3elimst315lkm4obe:
+              help: null
+              label: Számlaszám (IBAN)
+            x-chkm8bjicln7arj3d5giqo9ddhgiqp35epnmotb3d4mm2tjfe8mm8pbc5lq6asrfe9niqs3lc9m6iorf:
+              help: null
+              label: Lemondás a visszatérítésről az államkincstár javára
+            x-chkm8bjjdtm6ior9ehgiqr315li6atjfdhqm6qbfdomn0rri5lq74obeedj6asj5dphmio8:
+              help: null
+              label: Visszatérítést kér banki átutalással
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
+              label: Tőkenyereség
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
+              label: A társaság vagy befektetési alap adóazonosító száma (NIF)
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
+              label: Forrásadó vagy adóelőleg
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
+              label: Jövedelemtípus
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
+              label: Tőkenyereségek összesen
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
+              label: Forrásadók és adóelőlegek összesen
+            x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
+              help: null
+              label: Általános adóalap (beköltöző-rendszer, a TRLIRNR 25.1.f cikke
+                szerinti megtakarítási rész kivételével)
+            x-d5mn0obke9km2p3f5phnarrkc4mm8qb6clp6arj3d5gmo:
+              help: null
+              label: Különbözeti adókötelezettség (bruttó általános adókötelezettség
+                levonva a visszatartásokkal)
+            x-d5mn0obke9km2p3f5phnarrkc4mmirjkcljn4o9dctimspbic5m0:
+              help: null
+              label: 'Bruttó általános adókötelezettség (a 93.2.e.1. cikk szerinti
+                sáv: 24% 600 000 EUR-ig, 47% a felette)'
+            x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
+              help: null
+              label: Visszatartások és előlegfizetések (93.2.f cikk)
+            x-e0o32bj1edkmerj1cdkmurhdchiiqor1dpq6ip31chin6bb15lj6irj5ecmn6rr3d5gmopbj:
+              help: null
+              label: Összegek felajánlása szociális célokra
+            x-e0o32bj1edkmerj1cdkmurhdehp6iojlehgn4qb15lgiqr315lkmer35edkm2bb3c5q6ur39cdgg:
+              help: null
+              label: Adófelajánlás a katolikus egyház javára
+            x-e0o32bj3dtmnarj9chgm8bb1elq6urjfdlgiqp355liiqpbc5limkpbicdkm6qbf5lkmsp39cdgm8ro:
+              help: null
+              label: Az adott adóévben az illetőség szerinti autonóm közösség
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1k5lq6is3f5li6abbmd5gg:
+              help: null
+              label: Adózó. 44 - Közterület jellege.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1l5ln6urb2e9iiqp355lm62bbmd5giqs3lc9m6ior1:
+              help: null
+              label: Adózó. 45 - Közterület neve.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1m5lq6is3f5li6abbeelmmasj1cdkmurg:
+              help: null
+              label: Adózó. 46 - Házszámozás típusa.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1n5ln7arb5e9niqp355lhm2sr1:
+              help: null
+              label: Adózó. 47 - Házszám.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1o5lhm2r39cpkm6ob4dtp2qp355ln7arb5e9ng:
+              help: null
+              label: Adózó. 48 - Házszám-kiegészítő.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1p5lh6orrhelig:
+              help: null
+              label: Adózó. 49 - Épületblokk.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9g5lo6usjkc5m0:
+              help: null
+              label: Adózó. 50 - Bejárat.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9h5lin6or1dhin4o8:
+              help: null
+              label: Adózó. 51 - Lépcsőház.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9i5lo6oobeehgg:
+              help: null
+              label: Adózó. 52 - Emelet.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9j5lo7apbiehgg:
+              help: null
+              label: Adózó. 53 - Ajtó.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9k5li62t3fecmmarb5dpq62sj9dtpiqp355li6urb9cdkmoqbf:
+              help: null
+              label: Adózó. 54 - Kiegészítő címadatok.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9l5lm6uor1dhkm8ob45lo6uojcc5hmirre:
+              help: null
+              label: Adózó. 55 - Település
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9m5lhmup39ctniqs3fedq62r0:
+              help: null
+              label: Adózó. 56 - Irányítószám.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9n5lhmup39ctniqp355lmnarj9cdkn0qbf:
+              help: null
+              label: Adózó. 57 - Településkód.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9o5lhmup39ctniqp355lo74rrmd5n66qb1:
+              help: null
+              label: Adózó. 58 - Tartománykód.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9p5lq6ar35cpnmsrpdcpkmkro:
+              help: null
+              label: Adózó. 59 - Vezetékes telefon.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqdhg5lq6ar35cpnmsrpddlnncqbc:
+              help: null
+              label: Adózó. 60 - Mobiltelefon.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqdhh5ln6ubb4ckmmcobo:
+              help: null
+              label: Adózó. 61 - Faxszám.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqor1dlh6irpdchiiqp3fdlkm6qbcd5ng:
+              help: null
+              label: Adózó. Lakcímváltozás
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmm2r1de9imcpbicln66qb15lhm2t31edq74obc:
+              help: null
+              label: Adózó jelenlegi lakásának kiegészítő adatai. Ingatlan-nyilvántartási
+                hivatkozás
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmmarj4c4mm2orkelgmobbkd5q7ar31e9km8ob4:
+              help: null
+              label: Adózó jelenlegi lakásának kiegészítő adatai. Tulajdonjog
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmmusj3cln78obackmn0obiehkm6qbgc5hmirre:
+              help: null
+              label: Adózó jelenlegi lakásának kiegészítő adatai. Részesedés százaléka
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmncqb5dpi62bb1cdq7aobc5lpmit3lc5hmirre:
+              help: null
+              label: Adózó jelenlegi lakásának kiegészítő adatai. Helyzet
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mm2rjaclp6ub9n60mn8pbcclj6urjf5lj6iqjf:
+              help: null
+              label: Adózó külföldi címe. 70 - Vezetékes telefon
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmasjf5kr38bbgdth6oob3d5nmsbb3d5qm8ob4:
+              help: null
+              label: Adózó külföldi címe. 64 - Település/város
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmau3ke9gmsqj5e9niqdhi5li6urb9cdkmoqbf:
+              help: null
+              label: Adózó külföldi címe. 62 - Cím
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmqs3cclmmarjkc5p6irrj5li6urb9cdkmoqbf:
+              help: null
+              label: Adózó külföldi címe. 63 - Kiegészítő címadatok
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmsqj5e9niqdph5lq6ar35cpnmsrpddlnncqbc:
+              help: null
+              label: Adózó külföldi címe. 71 - Mobiltelefon
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mn0sjfepkmsor9c4mn4pb7d5nmsbb5edq62p3f:
+              help: null
+              label: Adózó külföldi címe. 67 - Tartomány/régió/állam
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mn4rpd6or2qorfchkmerpde1nn6t31dgmnkqbg:
+              help: null
+              label: Adózó külföldi címe. 66 - Irányítószám/ZIP
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ub9m6kmmarb1d5m0:
+              help: null
+              label: Adózó külföldi címe. 65 - E-mail
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ub9m70mn0ob9ec:
+              help: null
+              label: Adózó külföldi címe. 68 - Ország
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ub9n68mmsrpdcpgng:
+              help: null
+              label: Adózó külföldi címe. 72 - Faxszám
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqpj5cdk62bb4ckmmsob3d5mmipbeehng:
+              help: null
+              label: Adózó. Születési ideje
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqsr5f1ng:
+              help: null
+              label: Adózó. Neme
+            x-e0o32bj4clhmoobic5hmirre5lhmurbgdhimqpbeehgn4qb1:
+              help: null
+              label: Kiegészítő bevallás
+            x-e0o32bj4clhmoobic5hmirre5lhmurbgdhimqpbeehgn4qb15kp0:
+              help: null
+              label: Kiegészítő bevallás 2
+            x-e0o32bj4clr6arj7dsmn0pbid5nm8ro:
+              help: null
+              label: Esedékesség - időszak
+            x-e0o32bjeelmmasjf5li6abbaelpn8qb6d5hm2rjkck:
+              help: null
+              label: Bizonylatszám
+            x-e0o32bjiclo74pbjcln78obeehiiqd1k5lq6is3f5li6abbmd5gg:
+              help: null
+              label: Képviselő. 44 - Közterület jellege.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1l5ln6urb2e9iiqp355lm62bbmd5giqs3lc9m6ior1:
+              help: null
+              label: Képviselő. 45 - Közterület neve.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1m5lq6is3f5li6abbeelmmasj1cdkmurg:
+              help: null
+              label: Képviselő. 46 - Házszámozás típusa.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1n5ln7arb5e9niqp355lhm2sr1:
+              help: null
+              label: Képviselő. 47 - Házszám.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1o5lhm2r39cpkm6ob4dtp2qp355ln7arb5e9ng:
+              help: null
+              label: Képviselő. 48 - Házszám-kiegészítő.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1p5lh6orrhelig:
+              help: null
+              label: Képviselő. 49 - Épületblokk.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9g5lo6usjkc5m0:
+              help: null
+              label: Képviselő. 50 - Bejárat.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9h5lin6or1dhin4o8:
+              help: null
+              label: Képviselő. 51 - Lépcsőház.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9i5lo6oobeehgg:
+              help: null
+              label: Képviselő. 52 - Emelet.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9j5lo7apbiehgg:
+              help: null
+              label: Képviselő. 53 - Ajtó.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9k5li62t3fecmmarb5dpq62sj9dtpiqp355li6urb9cdkmoqbf:
+              help: null
+              label: Képviselő. 54 - Kiegészítő címadatok.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9l5lm6uor1dhkm8ob45lo6uojcc5hmirre:
+              help: null
+              label: Képviselő. 55 - Település
+            x-e0o32bjiclo74pbjcln78obeehiiqd9m5lhmup39ctniqs3fedq62r0:
+              help: null
+              label: Képviselő. 56 - Irányítószám.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9n5lhmup39ctniqp355lmnarj9cdkn0qbf:
+              help: null
+              label: Képviselő. 57 - Településkód.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9o5lhmup39ctniqp355lo74rrmd5n66qb1:
+              help: null
+              label: Képviselő. 58 - Tartománykód.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9p5lq6ar35cpnmsrpdcpkmkro:
+              help: null
+              label: Képviselő. 59 - Vezetékes telefon.
+            x-e0o32bjiclo74pbjcln78obeehiiqdhg5lq6ar35cpnmsrpddlnncqbc:
+              help: null
+              label: Képviselő. 60 - Mobiltelefon.
+            x-e0o32bjiclo74pbjcln78obeehiiqdhh5ln6ubb4ckmmcobo:
+              help: null
+              label: Képviselő. 61 - Faxszám.
+            x-e0o32bjiclo74pbjcln78obeehiiqobgclm6oqb4dtpg:
+              help: null
+              label: Képviselő. Vezetéknév
+            x-e0o32bjiclo74pbjcln78obeehiiqrj9co:
+              help: null
+              label: Képviselő. Adóazonosító szám
+            x-e0o32bjiclo74pbjcln78obeehiiqrjfdlh74p8:
+              help: null
+              label: Képviselő. Utónév
+            x-e0o32bjkd5o6ubb4ckmm8pb3dhgn4ob3d5nms:
+              help: null
+              label: A bevallás típusa
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60og:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Tulajdon (%)
+                [10]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60p0:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Tulajdon (%)
+                [10]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60pg:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Tulajdon (%)
+                [10]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60q0:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Tulajdon (%)
+                [10]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60og:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Helyzet [13]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60p0:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Helyzet [13]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60pg:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Helyzet [13]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60q0:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Helyzet [13]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60og:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Haszonélvezet
+                (%) [11]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60p0:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Haszonélvezet
+                (%) [11]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60pg:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Haszonélvezet
+                (%) [11]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60q0:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Haszonélvezet
+                (%) [11]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko32:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Ingatlan-nyilvántartási
+                hivatkozás [14]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko34:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Ingatlan-nyilvántartási
+                hivatkozás [14]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko36:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Ingatlan-nyilvántartási
+                hivatkozás [14]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko38:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Ingatlan-nyilvántartási
+                hivatkozás [14]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko32:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Eredet [12]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko34:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Eredet [12]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko36:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Eredet [12]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko38:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Eredet [12]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
+              help: null
+              label: Munkajövedelem kiegészítő adatai. Külföldön megfizetett adó [9]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko34:
+              help: null
+              label: Munkajövedelem kiegészítő adatai. Külföldön megfizetett adó [9]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko36:
+              help: null
+              label: Munkajövedelem kiegészítő adatai. Külföldön megfizetett adó [9]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko38:
+              help: null
+              label: Munkajövedelem kiegészítő adatai. Külföldön megfizetett adó [9]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko32:
+              help: null
+              label: Munkajövedelem kiegészítő adatai. Külföldön szerzett és adóztatott
+                bruttó jövedelem [8]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko34:
+              help: null
+              label: Munkajövedelem kiegészítő adatai. Külföldön szerzett és adóztatott
+                bruttó jövedelem [8]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko36:
+              help: null
+              label: Munkajövedelem kiegészítő adatai. Külföldön szerzett és adóztatott
+                bruttó jövedelem [8]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko38:
+              help: null
+              label: Munkajövedelem kiegészítő adatai. Külföldön szerzett és adóztatott
+                bruttó jövedelem [8]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g64:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g68:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6c:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6g:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0c8:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0cg:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0co:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0d0:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o34bjec5q7asj1dhinko9d68mj0c8:
+              help: null
+              label: Jelleg [2]
+            x-e0o34bjec5q7asj1dhinko9d68mj0cg:
+              help: null
+              label: Jelleg [2]
+            x-e0o34bjec5q7asj1dhinko9d68mj0co:
+              help: null
+              label: Jelleg [2]
+            x-e0o34bjec5q7asj1dhinko9d68mj0d0:
+              help: null
+              label: Jelleg [2]
+            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0c8:
+              help: null
+              label: Kifizető. Vezetéknév vagy cégnév
+            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0cg:
+              help: null
+              label: Kifizető. Vezetéknév vagy cégnév
+            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0co:
+              help: null
+              label: Kifizető. Vezetéknév vagy cégnév
+            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0d0:
+              help: null
+              label: Kifizető. Vezetéknév vagy cégnév
+            x-e0o34bjgc5jm2p3fe8mmcbba5ko32:
+              help: null
+              label: Kifizető. Természetes/jogi személy
+            x-e0o34bjgc5jm2p3fe8mmcbba5ko34:
+              help: null
+              label: Kifizető. Természetes/jogi személy
+            x-e0o34bjgc5jm2p3fe8mmcbba5ko36:
+              help: null
+              label: Kifizető. Természetes/jogi személy
+            x-e0o34bjgc5jm2p3fe8mmcbba5ko38:
+              help: null
+              label: Kifizető. Természetes/jogi személy
+            x-e0o34bjgc5jm2p3fe8mmsqb65ko32:
+              help: null
+              label: Kifizető. Adóazonosító szám
+            x-e0o34bjgc5jm2p3fe8mmsqb65ko34:
+              help: null
+              label: Kifizető. Adóazonosító szám
+            x-e0o34bjgc5jm2p3fe8mmsqb65ko36:
+              help: null
+              label: Kifizető. Adóazonosító szám
+            x-e0o34bjgc5jm2p3fe8mmsqb65ko38:
+              help: null
+              label: Kifizető. Adóazonosító szám
+            x-e0o34bjgc5jm2p3fe8mmsrrdc9p6ab9g64:
+              help: null
+              label: Kifizető. Utónév
+            x-e0o34bjgc5jm2p3fe8mmsrrdc9p6ab9g68:
+              help: null
+              label: Kifizető. Utónév
+            x-e0o34bjgc5jm2p3fe8mmsrrdc9p6ab9g6c:
+              help: null
+              label: Kifizető. Utónév
+            x-e0o34bjgc5jm2p3fe8mmsrrdc9p6ab9g6g:
+              help: null
+              label: Kifizető. Utónév
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko32:
+              help: null
+              label: Bruttó jövedelem / vélelmezett ingatlanjövedelem [6]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko34:
+              help: null
+              label: Bruttó jövedelem / vélelmezett ingatlanjövedelem [6]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko36:
+              help: null
+              label: Bruttó jövedelem / vélelmezett ingatlanjövedelem [6]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko38:
+              help: null
+              label: Bruttó jövedelem / vélelmezett ingatlanjövedelem [6]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko32:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko34:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko36:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko38:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o34bjmc5m6usj1cdkmurhd6cmj0c8:
+              help: null
+              label: Értékelés [3]
+            x-e0o34bjmc5m6usj1cdkmurhd6cmj0cg:
+              help: null
+              label: Értékelés [3]
+            x-e0o34bjmc5m6usj1cdkmurhd6cmj0co:
+              help: null
+              label: Értékelés [3]
+            x-e0o34bjmc5m6usj1cdkmurhd6cmj0d0:
+              help: null
+              label: Értékelés [3]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60og:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Tulajdon (%)
+                [10]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60p0:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Tulajdon (%)
+                [10]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60pg:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Tulajdon (%)
+                [10]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60q0:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Tulajdon (%)
+                [10]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60og:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Helyzet [13]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60p0:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Helyzet [13]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60pg:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Helyzet [13]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60q0:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Helyzet [13]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60og:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Haszonélvezet
+                (%) [11]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60p0:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Haszonélvezet
+                (%) [11]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60pg:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Haszonélvezet
+                (%) [11]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60q0:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Haszonélvezet
+                (%) [11]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko32:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Ingatlan-nyilvántartási
+                hivatkozás [14]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko34:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Ingatlan-nyilvántartási
+                hivatkozás [14]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko36:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Ingatlan-nyilvántartási
+                hivatkozás [14]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko38:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Ingatlan-nyilvántartási
+                hivatkozás [14]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko32:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Eredet [12]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko34:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Eredet [12]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko36:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Eredet [12]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko38:
+              help: null
+              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Eredet [12]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
+              help: null
+              label: Munkajövedelem kiegészítő adatai. Külföldön megfizetett adó [9]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko34:
+              help: null
+              label: Munkajövedelem kiegészítő adatai. Külföldön megfizetett adó [9]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko36:
+              help: null
+              label: Munkajövedelem kiegészítő adatai. Külföldön megfizetett adó [9]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko38:
+              help: null
+              label: Munkajövedelem kiegészítő adatai. Külföldön megfizetett adó [9]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko32:
+              help: null
+              label: Munkajövedelem kiegészítő adatai. Külföldön szerzett és adóztatott
+                bruttó jövedelem [8]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko34:
+              help: null
+              label: Munkajövedelem kiegészítő adatai. Külföldön szerzett és adóztatott
+                bruttó jövedelem [8]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko36:
+              help: null
+              label: Munkajövedelem kiegészítő adatai. Külföldön szerzett és adóztatott
+                bruttó jövedelem [8]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko38:
+              help: null
+              label: Munkajövedelem kiegészítő adatai. Külföldön szerzett és adóztatott
+                bruttó jövedelem [8]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g64:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g68:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6c:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6g:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0c8:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0cg:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0co:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0d0:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o36bjec5q7asj1dhinko9d68mj0c8:
+              help: null
+              label: Jelleg [2]
+            x-e0o36bjec5q7asj1dhinko9d68mj0cg:
+              help: null
+              label: Jelleg [2]
+            x-e0o36bjec5q7asj1dhinko9d68mj0co:
+              help: null
+              label: Jelleg [2]
+            x-e0o36bjec5q7asj1dhinko9d68mj0d0:
+              help: null
+              label: Jelleg [2]
+            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0c8:
+              help: null
+              label: Kifizető. Vezetéknév vagy cégnév
+            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0cg:
+              help: null
+              label: Kifizető. Vezetéknév vagy cégnév
+            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0co:
+              help: null
+              label: Kifizető. Vezetéknév vagy cégnév
+            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0d0:
+              help: null
+              label: Kifizető. Vezetéknév vagy cégnév
+            x-e0o36bjgc5jm2p3fe8mmcbba5ko32:
+              help: null
+              label: Kifizető. Természetes/jogi személy
+            x-e0o36bjgc5jm2p3fe8mmcbba5ko34:
+              help: null
+              label: Kifizető. Természetes/jogi személy
+            x-e0o36bjgc5jm2p3fe8mmcbba5ko36:
+              help: null
+              label: Kifizető. Természetes/jogi személy
+            x-e0o36bjgc5jm2p3fe8mmcbba5ko38:
+              help: null
+              label: Kifizető. Természetes/jogi személy
+            x-e0o36bjgc5jm2p3fe8mmsqb65ko32:
+              help: null
+              label: Kifizető. Adóazonosító szám
+            x-e0o36bjgc5jm2p3fe8mmsqb65ko34:
+              help: null
+              label: Kifizető. Adóazonosító szám
+            x-e0o36bjgc5jm2p3fe8mmsqb65ko36:
+              help: null
+              label: Kifizető. Adóazonosító szám
+            x-e0o36bjgc5jm2p3fe8mmsqb65ko38:
+              help: null
+              label: Kifizető. Adóazonosító szám
+            x-e0o36bjgc5jm2p3fe8mmsrrdc9p6ab9g64:
+              help: null
+              label: Kifizető. Utónév
+            x-e0o36bjgc5jm2p3fe8mmsrrdc9p6ab9g68:
+              help: null
+              label: Kifizető. Utónév
+            x-e0o36bjgc5jm2p3fe8mmsrrdc9p6ab9g6c:
+              help: null
+              label: Kifizető. Utónév
+            x-e0o36bjgc5jm2p3fe8mmsrrdc9p6ab9g6g:
+              help: null
+              label: Kifizető. Utónév
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko32:
+              help: null
+              label: Bruttó jövedelem / vélelmezett ingatlanjövedelem [6]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko34:
+              help: null
+              label: Bruttó jövedelem / vélelmezett ingatlanjövedelem [6]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko36:
+              help: null
+              label: Bruttó jövedelem / vélelmezett ingatlanjövedelem [6]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko38:
+              help: null
+              label: Bruttó jövedelem / vélelmezett ingatlanjövedelem [6]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko32:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko34:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko36:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko38:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o36bjiclpn8rpde9imsp39dlkmarjkdsmmirjkckmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m:
+              help: null
+              label: FENNMARADÓ. Bruttó jövedelem / vélelmezett ingatlanjövedelem
+                [6]
+            x-e0o36bjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d6s:
+              help: null
+              label: FENNMARADÓ. Forrásadó vagy adóelőleg [7]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o36bjkdtq62r1de9imsp39dlkmarjkdtpiqqbeegmmsrbfc9kmoqb1e9km2bb9dlo7at31chgiqc9l:
+              help: null
+              label: Bruttó jövedelem / vélelmezett ingatlanjövedelem összesen [15]
+            x-e0o36bjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj2dg:
+              help: null
+              label: Forrásadók vagy adóelőlegek összesen [16]
+            x-e0o36bjmc5m6usj1cdkmurhd6cmj0c8:
+              help: null
+              label: Értékelés [3]
+            x-e0o36bjmc5m6usj1cdkmurhd6cmj0cg:
+              help: null
+              label: Értékelés [3]
+            x-e0o36bjmc5m6usj1cdkmurhd6cmj0co:
+              help: null
+              label: Értékelés [3]
+            x-e0o36bjmc5m6usj1cdkmurhd6cmj0d0:
+              help: null
+              label: Értékelés [3]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g64:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g68:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6c:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6g:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6k:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6o:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6s:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g70:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g74:
+              help: null
+              label: Adóelőlegek [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0c8:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0cg:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0co:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0d0:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0d8:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0dg:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0do:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0e0:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0e8:
+              help: null
+              label: Áthárított adóelőlegek [5]
+            x-e0o38bjec5q7asj1dhinko9d68mj0c8:
+              help: null
+              label: Jelleg [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0cg:
+              help: null
+              label: Jelleg [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0co:
+              help: null
+              label: Jelleg [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0d0:
+              help: null
+              label: Jelleg [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0d8:
+              help: null
+              label: Jelleg [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0dg:
+              help: null
+              label: Jelleg [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0do:
+              help: null
+              label: Jelleg [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0e0:
+              help: null
+              label: Jelleg [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0e8:
+              help: null
+              label: Jelleg [2]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko32:
+              help: null
+              label: Bruttó jövedelem [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko34:
+              help: null
+              label: Bruttó jövedelem [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko36:
+              help: null
+              label: Bruttó jövedelem [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko38:
+              help: null
+              label: Bruttó jövedelem [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3a:
+              help: null
+              label: Bruttó jövedelem [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3c:
+              help: null
+              label: Bruttó jövedelem [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3e:
+              help: null
+              label: Bruttó jövedelem [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3g:
+              help: null
+              label: Bruttó jövedelem [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3i:
+              help: null
+              label: Bruttó jövedelem [6]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko32:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko34:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko36:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko38:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3a:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3c:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3e:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3g:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3i:
+              help: null
+              label: Forrásadó vagy adóelőleg [7]
+            x-e0o38bjiclpn8rpde9imsp39dlkmarjkdtpiqqbeehimesjf5kr0:
+              help: null
+              label: FENNMARADÓ. Bruttó jövedelem [6]
+            x-e0o38bjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d6s:
+              help: null
+              label: FENNMARADÓ. Forrásadó vagy adóelőleg [7]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60qg:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60r0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60rg:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60s0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60sg:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o38bjkdtq62r1de9imsp39dlkmarjkdtpiqqbeehimesjfecmjg:
+              help: null
+              label: Bruttó jövedelem összesen [8]
+            x-e0o38bjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mji:
+              help: null
+              label: Forrásadók vagy adóelőlegek összesen [9]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0c8:
+              help: null
+              label: Értékelés [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0cg:
+              help: null
+              label: Értékelés [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0co:
+              help: null
+              label: Értékelés [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0d0:
+              help: null
+              label: Értékelés [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0d8:
+              help: null
+              label: Értékelés [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0dg:
+              help: null
+              label: Értékelés [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0do:
+              help: null
+              label: Értékelés [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0e0:
+              help: null
+              label: Értékelés [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0e8:
+              help: null
+              label: Értékelés [3]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0c8:
+              help: null
+              label: Tőkenyereség [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0cg:
+              help: null
+              label: Tőkenyereség [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0co:
+              help: null
+              label: Tőkenyereség [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0d0:
+              help: null
+              label: Tőkenyereség [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0d8:
+              help: null
+              label: Tőkenyereség [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0dg:
+              help: null
+              label: Tőkenyereség [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0do:
+              help: null
+              label: Tőkenyereség [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0e0:
+              help: null
+              label: Tőkenyereség [2]
+            x-e0o3abj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dkmm2r35ecmnibb4ckmn6tbdd5n6isrke9nn6b9k:
+              help: null
+              label: Anyag- és készletbeszerzési ráfordítások [4]
+            x-e0o3abj7c5pn8rrj5li6abbgclp76rrec5m2qco:
+              help: null
+              label: Személyi jellegű ráfordítások [3]
+            x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj4:
+              help: null
+              label: Bruttó bevételek [2]
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g64:
+              help: null
+              label: A befektetési társaság vagy alap adóazonosító száma
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g68:
+              help: null
+              label: A befektetési társaság vagy alap adóazonosító száma
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6c:
+              help: null
+              label: A befektetési társaság vagy alap adóazonosító száma
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6g:
+              help: null
+              label: A befektetési társaság vagy alap adóazonosító száma
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6k:
+              help: null
+              label: A befektetési társaság vagy alap adóazonosító száma
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6o:
+              help: null
+              label: A befektetési társaság vagy alap adóazonosító száma
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6s:
+              help: null
+              label: A befektetési társaság vagy alap adóazonosító száma
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g70:
+              help: null
+              label: A befektetési társaság vagy alap adóazonosító száma
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5kqg:
+              help: null
+              label: Nettó jövedelem [5]
+            x-e0o3abjicln68qbdd5imst3fecmmspb7c5q6itjfecmmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9m:
+              help: null
+              label: Negatív jövedelem. Forrásadó vagy adóelőleg [6]
+            x-e0o3abjicln68qbdd5imst3fecmmspb7c5q6itjfecmn4pbechkmqqb5dpq6ubbeclq6ub9n:
+              help: null
+              label: Negatív jövedelem. Nettó jövedelem [7]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko32:
+              help: null
+              label: Forrásadó vagy adóelőleg [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko34:
+              help: null
+              label: Forrásadó vagy adóelőleg [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko36:
+              help: null
+              label: Forrásadó vagy adóelőleg [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko38:
+              help: null
+              label: Forrásadó vagy adóelőleg [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko3a:
+              help: null
+              label: Forrásadó vagy adóelőleg [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko3c:
+              help: null
+              label: Forrásadó vagy adóelőleg [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko3e:
+              help: null
+              label: Forrásadó vagy adóelőleg [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko3g:
+              help: null
+              label: Forrásadó vagy adóelőleg [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9m:
+              help: null
+              label: Forrásadó vagy adóelőleg [6]
+            x-e0o3abjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5kp0:
+              help: null
+              label: FENNMARADÓ. Tőkenyereség [2]
+            x-e0o3abjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d6c:
+              help: null
+              label: FENNMARADÓ. Forrásadó vagy adóelőleg [3]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60qg:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60r0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60rg:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60s0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60sg:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3abjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9k:
+              help: null
+              label: Tőkenyereség összesen [4]
+            x-e0o3abjkdtq62r1de9imsp39dlkmarjkdtpiqrj5ehnn6b9o:
+              help: null
+              label: Nettó jövedelem összesen [8]
+            x-e0o3abjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mja:
+              help: null
+              label: Forrásadók vagy adóelőlegek összesen [5]
+            x-e0o3abjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mji:
+              help: null
+              label: Forrásadók vagy adóelőlegek összesen [9]
+            x-e0o3cbhk6gmn8qbgdsmm8p9depkm2b9g64:
+              help: null
+              label: 44 - Közterület jellege.
+            x-e0o3cbhk6gmn8qbgdsmm8p9depkm2b9g68:
+              help: null
+              label: 44 - Közterület jellege.
+            x-e0o3cbhk6kmmsrrdc9p6abb4ckmmoo9depkm2bbgelh6oqb3c4mj0c8:
+              help: null
+              label: 45 - Közterület neve.
+            x-e0o3cbhk6kmmsrrdc9p6abb4ckmmoo9depkm2bbgelh6oqb3c4mj0cg:
+              help: null
+              label: 45 - Közterület neve.
+            x-e0o3cbhk6omn8qbgdsmm8p9ddpqmqpbic5hmirre5ko32:
+              help: null
+              label: 46 - Házszámozás típusa.
+            x-e0o3cbhk6omn8qbgdsmm8p9ddpqmqpbic5hmirre5ko34:
+              help: null
+              label: 46 - Házszámozás típusa.
+            x-e0o3cbhk6smmstbdclp6ubb4ckmm6objc4mj0c8:
+              help: null
+              label: 47 - Házszám.
+            x-e0o3cbhk6smmstbdclp6ubb4ckmm6objc4mj0cg:
+              help: null
+              label: 47 - Házszám.
+            x-e0o3cbhk70mm6obcd5j6ior1chnn4bb4ckmmstbdclp6ub9g64:
+              help: null
+              label: 48 - Házszám-kiegészítő.
+            x-e0o3cbhk70mm6obcd5j6ior1chnn4bb4ckmmstbdclp6ub9g68:
+              help: null
+              label: 48 - Házszám-kiegészítő.
+            x-e0o3cbhk74mm4r3fe5qmab9g64:
+              help: null
+              label: 49 - Épületblokk.
+            x-e0o3cbhk74mm4r3fe5qmab9g68:
+              help: null
+              label: 49 - Épületblokk.
+            x-e0o3cbhl60mn0rriehgmob9g64:
+              help: null
+              label: 50 - Bejárat.
+            x-e0o3cbhl60mn0rriehgmob9g68:
+              help: null
+              label: 50 - Bejárat.
+            x-e0o3cbhl64mmasr3c5m6asj15ko32:
+              help: null
+              label: 51 - Lépcsőház.
+            x-e0o3cbhl64mmasr3c5m6asj15ko34:
+              help: null
+              label: 51 - Lépcsőház.
+            x-e0o3cbhl68mn0r31dpq62b9g64:
+              help: null
+              label: 52 - Emelet.
+            x-e0o3cbhl68mn0r31dpq62b9g68:
+              help: null
+              label: 52 - Emelet.
+            x-e0o3cbhl6cmn0tb5e9q62b9g64:
+              help: null
+              label: 53 - Ajtó.
+            x-e0o3cbhl6cmn0tb5e9q62b9g68:
+              help: null
+              label: 53 - Ajtó.
+            x-e0o3cbhl6gmm8obkdtpiqorfdlo6opbdcln78obid5nn6bb4ckmm8rrdd5hmir39dsmj0c8:
+              help: null
+              label: 54 - Kiegészítő címadatok.
+            x-e0o3cbhl6gmm8obkdtpiqorfdlo6opbdcln78obid5nn6bb4ckmm8rrdd5hmir39dsmj0cg:
+              help: null
+              label: 54 - Kiegészítő címadatok.
+            x-e0o3cbhl6kmmorr3c5m6ip31cgmn0rr2dhgm6qbfdomj0c8:
+              help: null
+              label: 55 - Település
+            x-e0o3cbhl6kmmorr3c5m6ip31cgmn0rr2dhgm6qbfdomj0cg:
+              help: null
+              label: 55 - Település
+            x-e0o3cbhl6omm6rr4d5jmubbgdtpn8obc5ko32:
+              help: null
+              label: 56 - Irányítószám.
+            x-e0o3cbhl6omm6rr4d5jmubbgdtpn8obc5ko34:
+              help: null
+              label: 56 - Irányítószám.
+            x-e0o3cbhl6smmqtbed5hmis39dsmj0c8:
+              help: null
+              label: 57 - Település
+            x-e0o3cbhl6smmqtbed5hmis39dsmj0cg:
+              help: null
+              label: 57 - Település
+            x-e0o3cbhl70mn0sjfepkmsor9c4mj0c8:
+              help: null
+              label: 58 - Tartomány.
+            x-e0o3cbhl70mn0sjfepkmsor9c4mj0cg:
+              help: null
+              label: 58 - Tartomány.
+            x-e0o3cbhn6cmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc1h:
+              help: null
+              label: 73 - Ingatlan-nyilvántartási hivatkozás
+            x-e0o3cbhn6cmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc1i:
+              help: null
+              label: 73 - Ingatlan-nyilvántartási hivatkozás
+            x-e0o3cbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lniqsj1f9nmsbbjdthmiobc5ko32:
+              help: null
+              label: Vevő. Vezetéknév vagy cégnév
+            x-e0o3cbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lniqsj1f9nmsbbjdthmiobc5ko34:
+              help: null
+              label: Vevő. Vezetéknév vagy cégnév
+            x-e0o3cbj1chonaqbid5imst355lj2qqhd60og:
+              help: null
+              label: Vevő. Természetes/jogi személy
+            x-e0o3cbj1chonaqbid5imst355lj2qqhd60p0:
+              help: null
+              label: Vevő. Természetes/jogi személy
+            x-e0o3cbj1chonaqbid5imst355ln6iphd60og:
+              help: null
+              label: Vevő. Adóazonosító szám
+            x-e0o3cbj1chonaqbid5imst355ln6iphd60p0:
+              help: null
+              label: Vevő. Adóazonosító szám
+            x-e0o3cbj1chonaqbid5imst355ln6urb2e9iiqc1h:
+              help: null
+              label: Vevő. Utónév
+            x-e0o3cbj1chonaqbid5imst355ln6urb2e9iiqc1i:
+              help: null
+              label: Vevő. Utónév
+            x-e0o3cbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomj0c8:
+              help: null
+              label: Részesedési hányad
+            x-e0o3cbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomj0cg:
+              help: null
+              label: Részesedési hányad
+            x-e0o3cbj4d5j6asj5dphmio9dc5i72tb9edkm6qbfdomj8b9g64:
+              help: null
+              label: Különbözet (szerzés) [4]
+            x-e0o3cbj4d5j6asj5dphmio9dc5i72tb9edkm6qbfdomj8b9g68:
+              help: null
+              label: Különbözet (szerzés) [4]
+            x-e0o3cbj4d5j6asj5dphmio9ddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9o5ko32:
+              help: null
+              label: Különbözet (felújítás vagy 2. szerzés) [8]
+            x-e0o3cbj4d5j6asj5dphmio9ddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9o5ko34:
+              help: null
+              label: Különbözet (felújítás vagy 2. szerzés) [8]
+            x-e0o3cbj4dthnarb5dpq6ubbgelh6oqb3dsmmubbge9kncob4dsmj0c8:
+              help: null
+              label: Közokirat vagy magánokirat
+            x-e0o3cbj4dthnarb5dpq6ubbgelh6oqb3dsmmubbge9kncob4dsmj0cg:
+              help: null
+              label: Közokirat vagy magánokirat
+            x-e0o3cbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60og:
+              help: null
+              label: Szerzés időpontja
+            x-e0o3cbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60p0:
+              help: null
+              label: Szerzés időpontja
+            x-e0o3cbj6clhmgo9dchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0c8:
+              help: null
+              label: Felújítás vagy 2. szerzés időpontja
+            x-e0o3cbj6clhmgo9dchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0cg:
+              help: null
+              label: Felújítás vagy 2. szerzés időpontja
+            x-e0o3cbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60og:
+              help: null
+              label: Átruházás időpontja
+            x-e0o3cbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60p0:
+              help: null
+              label: Átruházás időpontja
+            x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd6kmj0c8:
+              help: null
+              label: Nyereség vagy veszteség (szerzés) [5]
+            x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd6kmj0cg:
+              help: null
+              label: Nyereség vagy veszteség (szerzés) [5]
+            x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomjib9g64:
+              help: null
+              label: Nyereség vagy veszteség (felújítás vagy 2. szerzés) [9]
+            x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomjib9g68:
+              help: null
+              label: Nyereség vagy veszteség (felújítás vagy 2. szerzés) [9]
+            x-e0o3cbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1dehnn8obc5lnm4t35dpkm8o9d64o2qc1h:
+              help: null
+              label: Elért teljes tőkenyereség [10]
+            x-e0o3cbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1dehnn8obc5lnm4t35dpkm8o9d64o2qc1i:
+              help: null
+              label: Elért teljes tőkenyereség [10]
+            x-e0o3cbjedtq62sj9dsmmubb6cli6at31e9kmub9g64:
+              help: null
+              label: Közjegyző vagy hitelesítő
+            x-e0o3cbjedtq62sj9dsmmubb6cli6at31e9kmub9g68:
+              help: null
+              label: Közjegyző vagy hitelesítő
+            x-e0o3cbjeelmmasjf5li6abbge9nn8rr3dtm6ub9g64:
+              help: null
+              label: Ügyiratszám
+            x-e0o3cbjeelmmasjf5li6abbge9nn8rr3dtm6ub9g68:
+              help: null
+              label: Ügyiratszám
+            x-e0o3cbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9g64:
+              help: null
+              label: A 211-es nyomtatvány bizonylatszáma
+            x-e0o3cbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9g68:
+              help: null
+              label: A 211-es nyomtatvány bizonylatszáma
+            x-e0o3cbjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5lq6ut31dgmmuojkcln6ip315koj0:
+              help: null
+              label: FENNMARADÓ. Elért teljes tőkenyereség [10]
+            x-e0o3cbjiclpn8rpde9in8pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9h64:
+              help: null
+              label: FENNMARADÓ. Forrásadó vagy adóelőleg [11]
+            x-e0o3cbjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc9h5ko32:
+              help: null
+              label: Forrásadó vagy adóelőleg [11]
+            x-e0o3cbjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc9h5ko34:
+              help: null
+              label: Forrásadó vagy adóelőleg [11]
+            x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3cbjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9h68:
+              help: null
+              label: Tőkenyereség összesen [12]
+            x-e0o3cbjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj2co:
+              help: null
+              label: Forrásadók vagy adóelőlegek összesen [13]
+            x-e0o3cbjmc5m6ushdchiiqob4e5qmisr9cdkmurhdc5i72tb9edkm6qbfdomj6b9g64:
+              help: null
+              label: Szerzési érték (szerzés) [3]
+            x-e0o3cbjmc5m6ushdchiiqob4e5qmisr9cdkmurhdc5i72tb9edkm6qbfdomj6b9g68:
+              help: null
+              label: Szerzési érték (szerzés) [3]
+            x-e0o3cbjmc5m6ushdchiiqrb5d9nn4o9ddsmj4o9dc4mmkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9n5ko32:
+              help: null
+              label: Felújítás vagy 2. szerzés értéke (felújítás vagy 2. szerzés)
+                [7]
+            x-e0o3cbjmc5m6ushdchiiqrb5d9nn4o9ddsmj4o9dc4mmkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9n5ko34:
+              help: null
+              label: Felújítás vagy 2. szerzés értéke (felújítás vagy 2. szerzés)
+                [7]
+            x-e0o3cbjmc5m6ushdchiiqt3ic5n76rb9edkmurhdc5i72tb9edkm6qbfdomj4b9g64:
+              help: null
+              label: Átruházási érték (szerzés) [2]
+            x-e0o3cbjmc5m6ushdchiiqt3ic5n76rb9edkmurhdc5i72tb9edkm6qbfdomj4b9g68:
+              help: null
+              label: Átruházási érték (szerzés) [2]
+            x-e0o3cbjmc5m6ushdchiiqt3ic5n76rb9edkmurhddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9m5ko32:
+              help: null
+              label: Átruházási érték (felújítás vagy 2. szerzés) [6]
+            x-e0o3cbjmc5m6ushdchiiqt3ic5n76rb9edkmurhddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9m5ko34:
+              help: null
+              label: Átruházási érték (felújítás vagy 2. szerzés) [6]
+            x-e0o3ebj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qc1h:
+              help: null
+              label: A tőkenyereség megnevezése
+            x-e0o3ebj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qc1i:
+              help: null
+              label: A tőkenyereség megnevezése
+            x-e0o3ebj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qc1j:
+              help: null
+              label: A tőkenyereség megnevezése
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko32:
+              help: null
+              label: A vagyontárgy megnevezése
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko34:
+              help: null
+              label: A vagyontárgy megnevezése
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko36:
+              help: null
+              label: A vagyontárgy megnevezése
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko38:
+              help: null
+              label: A vagyontárgy megnevezése
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko3a:
+              help: null
+              label: A vagyontárgy megnevezése
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0c8:
+              help: null
+              label: Különbözet [4]
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0cg:
+              help: null
+              label: Különbözet [4]
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0co:
+              help: null
+              label: Különbözet [4]
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0d0:
+              help: null
+              label: Különbözet [4]
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0d8:
+              help: null
+              label: Különbözet [4]
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60og:
+              help: null
+              label: Szerzés időpontja
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60p0:
+              help: null
+              label: Szerzés időpontja
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60pg:
+              help: null
+              label: Szerzés időpontja
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60q0:
+              help: null
+              label: Szerzés időpontja
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60qg:
+              help: null
+              label: Szerzés időpontja
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60og:
+              help: null
+              label: Átruházás időpontja
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60p0:
+              help: null
+              label: Átruházás időpontja
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60pg:
+              help: null
+              label: Átruházás időpontja
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60q0:
+              help: null
+              label: Átruházás időpontja
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60qg:
+              help: null
+              label: Átruházás időpontja
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6cmj0c8:
+              help: null
+              label: Tőkenyereség [3]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6cmj0cg:
+              help: null
+              label: Tőkenyereség [3]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6cmj0co:
+              help: null
+              label: Tőkenyereség [3]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0c8:
+              help: null
+              label: Tőkenyereség [5]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0cg:
+              help: null
+              label: Tőkenyereség [5]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0co:
+              help: null
+              label: Tőkenyereség [5]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0d0:
+              help: null
+              label: Tőkenyereség [5]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0d8:
+              help: null
+              label: Tőkenyereség [5]
+            x-e0o3ebjec5q7asj1dhinko9d68mj0c8:
+              help: null
+              label: Jelleg [2]
+            x-e0o3ebjec5q7asj1dhinko9d68mj0cg:
+              help: null
+              label: Jelleg [2]
+            x-e0o3ebjec5q7asj1dhinko9d68mj0co:
+              help: null
+              label: Jelleg [2]
+            x-e0o3ebjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5kpg:
+              help: null
+              label: FENNMARADÓ. Tőkenyereség [3]
+            x-e0o3ebjiclpn8rpde9in8pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9k:
+              help: null
+              label: FENNMARADÓ. Forrásadó vagy adóelőleg [4]
+            x-e0o3ebjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqd1d60og:
+              help: null
+              label: Forrásadó vagy adóelőleg [4]
+            x-e0o3ebjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqd1d60p0:
+              help: null
+              label: Forrásadó vagy adóelőleg [4]
+            x-e0o3ebjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqd1d60pg:
+              help: null
+              label: Forrásadó vagy adóelőleg [4]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60qg:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60r0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60rg:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60s0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3ebjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9l:
+              help: null
+              label: Tőkenyereség összesen [5]
+            x-e0o3ebjkdtq62r1de9in8pbecdkmurhddsmmirj7e9in6rrj5lgiqorlcln78o9d6o:
+              help: null
+              label: Forrásadók vagy adóelőlegek összesen [6]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0c8:
+              help: null
+              label: Szerzési érték [3]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0cg:
+              help: null
+              label: Szerzési érték [3]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0co:
+              help: null
+              label: Szerzési érték [3]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0d0:
+              help: null
+              label: Szerzési érték [3]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0d8:
+              help: null
+              label: Szerzési érték [3]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0c8:
+              help: null
+              label: Átruházási érték [2]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0cg:
+              help: null
+              label: Átruházási érték [2]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0co:
+              help: null
+              label: Átruházási érték [2]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d0:
+              help: null
+              label: Átruházási érték [2]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d8:
+              help: null
+              label: Átruházási érték [2]
+            x-e0o3gbj2c5pmabbcd5onaqb4c5h6op9dchimobb1d1nn4sjf5kojg:
+              help: null
+              label: Megtakarítási adóalap [18]
+            x-e0o3gbj3elnn8o9dcdnn4sj5edo6urj4d5imst355liiqpr5dpin4obc5li6ar1dc5k6usjidsmj4c0:
+              help: null
+              label: A megtakarítási adóalapra jutó adó [20]
+            x-e0o3gbj3elnn8o9dd5n78pb7e9giqt3fehgmob9i64:
+              help: null
+              label: Bruttó adó összesen [21]
+            x-e0o3gbj3elnn8o9dd5n78pb7e9giqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kp36:
+              help: null
+              label: Bruttó adó összesen. Autonóm közösségi rész [23]
+            x-e0o3gbj3elnn8o9dd5n78pb7e9giqt3fehgmobbgc5p78p9dclpn8obkc5m2qchi:
+              help: null
+              label: Bruttó adó összesen. Állami rész [22]
+            x-e0o3gbj3elnn8o9ddhkn2tb9chgiqt3fehgmob9j60:
+              help: null
+              label: Nettó adó összesen [30]
+            x-e0o3gbj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kpj4:
+              help: null
+              label: Nettó adó összesen. Autonóm közösségi rész [32]
+            x-e0o3gbj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dclpn8obkc5m2qcph:
+              help: null
+              label: Nettó adó összesen. Állami rész [31]
+            x-e0o3gbj3elnn8obj5li6ar1dd5mn0tb5edq6ubbjdsmm2spdcln2qr315li6aorcc5p62or9dtn2qcpk:
+              help: null
+              label: A bevallásban szereplő jövedelem után megfizetett, külföldi illetőségűeket
+                terhelő jövedelemadó [34]
+            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dkmm2rjaclp6ubbgc5p78p9dclpn8obkc5m2qcho:
+              help: null
+              label: Nemzetközi kettős adóztatás miatti levonás a külföldön szerzett
+                és adóztatott munkajövedelem után. Állami rész [28]
+            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dkmm8rrj5limsbb5dgmmau3ke9gmsqj5e9niqchn:
+              help: null
+              label: Nemzetközi kettős adóztatás miatti levonás a külföldön szerzett
+                és adóztatott munkajövedelem után [27]
+            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dkmmasjf5lo62sjkckmm2tbkdtn6urb9cdgiqchp:
+              help: null
+              label: Nemzetközi kettős adóztatás miatti levonás a külföldön szerzett
+                és adóztatott munkajövedelem után. Autonóm közösségi rész [29]
+            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqchk:
+              help: null
+              label: Adományok utáni levonás [24]
+            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqs31e9q6abb1elq6urjfdlkm6o9d68r0:
+              help: null
+              label: Adományok utáni levonás. Autonóm közösségi rész [26]
+            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqs31e9q6abb5edq62t31dgmj4d8:
+              help: null
+              label: Adományok utáni levonás. Állami rész [25]
+            x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko32:
+              help: null
+              label: A vagyontárgy megnevezése
+            x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko34:
+              help: null
+              label: A vagyontárgy megnevezése
+            x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko36:
+              help: null
+              label: A vagyontárgy megnevezése
+            x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko38:
+              help: null
+              label: A vagyontárgy megnevezése
+            x-e0o3gbj4clr6ur3lcdkmurj5ecmm2orfe9i62p31ecmmushddhgiqob4dlkmsqbjehp62or9dtn2qd1i:
+              help: null
+              label: Az adóhatóság által megítélt visszatérítések [42]
+            x-e0o3gbj4d5j6asj5dphmio9d6gmj0c8:
+              help: null
+              label: Különbözet [4]
+            x-e0o3gbj4d5j6asj5dphmio9d6gmj0cg:
+              help: null
+              label: Különbözet [4]
+            x-e0o3gbj4d5j6asj5dphmio9d6gmj0co:
+              help: null
+              label: Különbözet [4]
+            x-e0o3gbj4d5j6asj5dphmio9d6gmj0d0:
+              help: null
+              label: Különbözet [4]
+            x-e0o3gbj5e1kmesj1cpiiqo9h5kpja:
+              help: null
+              label: A1 tétel [35]
+            x-e0o3gbj5e1kmesj1cpiiqo9i5kpjc:
+              help: null
+              label: A2 tétel [36]
+            x-e0o3gbj5e1kmesj1cpiiqohd6crg:
+              help: null
+              label: B tétel [37]
+            x-e0o3gbj5e1kmesj1cpiiqopd6cs0:
+              help: null
+              label: C tétel [38]
+            x-e0o3gbj5e1kmesj1cpiiqp1d6csg:
+              help: null
+              label: D tétel [39]
+            x-e0o3gbj5e1kmesj1cpiiqp9h5lsiqp9i5kq30:
+              help: null
+              label: E1 és E2 tétel [40]
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60og:
+              help: null
+              label: Szerzés időpontja
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60p0:
+              help: null
+              label: Szerzés időpontja
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60pg:
+              help: null
+              label: Szerzés időpontja
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60q0:
+              help: null
+              label: Szerzés időpontja
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60og:
+              help: null
+              label: Átruházás időpontja
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60p0:
+              help: null
+              label: Átruházás időpontja
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60pg:
+              help: null
+              label: Átruházás időpontja
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60q0:
+              help: null
+              label: Átruházás időpontja
+            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0c8:
+              help: null
+              label: Tőkenyereség [5]
+            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0cg:
+              help: null
+              label: Tőkenyereség [5]
+            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0co:
+              help: null
+              label: Tőkenyereség [5]
+            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0d0:
+              help: null
+              label: Tőkenyereség [5]
+            x-e0o3gbjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5kqg:
+              help: null
+              label: FENNMARADÓ. Tőkenyereség [5]
+            x-e0o3gbjiclpnar3kc5i6ubb4ckmmoo9dchim6r31e9gm6qbfdomj8co:
+              help: null
+              label: A bevallás eredménye [43]
+            x-e0o3gbjiclpnar3kc5i6uspdc4mmirj7e9in6obi5lhmirre5lgm8rb9dpkn6t3ic5q6itj1ecmj8c8:
+              help: null
+              label: Korábbi bevallásokból vagy hatósági megállapításokból fizetendő
+                összegek [41]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              help: null
+              label: Jövedelem típusa [1]
+            x-e0o3gbjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9m:
+              help: null
+              label: Tőkenyereség összesen [6]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0c8:
+              help: null
+              label: Szerzési érték [3]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0cg:
+              help: null
+              label: Szerzési érték [3]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0co:
+              help: null
+              label: Szerzési érték [3]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0d0:
+              help: null
+              label: Szerzési érték [3]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0c8:
+              help: null
+              label: Átruházási érték [2]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0cg:
+              help: null
+              label: Átruházási érték [2]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0co:
+              help: null
+              label: Átruházási érték [2]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d0:
+              help: null
+              label: Átruházási érték [2]
         2015-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -49362,6 +51025,54 @@ modelo:
       revision:
         2013-y-siguientes:
           casilla:
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Kiegészítő vagy helyettesítő bevallás
+            declarante-razon-social:
+              help: null
+              label: A bejelentő neve vagy cégneve
+            empresa-emergente:
+              help: null
+              label: Induló vállalkozás
+            fecha-adquisicion:
+              help: null
+              label: A részvények vagy üzletrészek megszerzésének dátuma
+            fecha-constitucion:
+              help: null
+              label: Az alapítás dátuma
+            importe-fondos-propios:
+              help: null
+              label: A saját tőke összege
+            importe-suscripcion:
+              help: null
+              label: A jegyzés vagy szerzés összege
+            importe-total-suscripciones:
+              help: null
+              label: A jegyzések vagy szerzések teljes összege
+            numero-identificativo-anterior:
+              help: null
+              label: A korábbi bevallás azonosító száma
+            numero-identificativo-declaracion:
+              help: null
+              label: A bevallás azonosító száma
+            numero-total-declarados:
+              help: null
+              label: A bejelentett tagok száma összesen
+            persona-relacion:
+              help: null
+              label: Kapcsolattartó személy
+            porcentaje-participacion:
+              help: null
+              label: A részesedés százaléka
+            representante-legal-nif:
+              help: null
+              label: A törvényes képviselő adószáma
+            socio-nif:
+              help: null
+              label: A tag vagy résztulajdonos adószáma
+            socio-nombre:
+              help: null
+              label: A tag vagy résztulajdonos családi és utóneve
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Az adóbevallás vonatkozási éve
@@ -49683,6 +51394,126 @@ modelo:
       revision:
         2009-y-siguientes:
           casilla:
+            cantidades-minorar-principal:
+              help: null
+              label: A kölcsön tőketartozásának csökkentésére fordított összegek
+            clave-intervencion:
+              help: null
+              label: Az ügyletben betöltött szerep kódja
+            clave-tipo-identificacion:
+              help: null
+              label: Az azonosítás típuskódja
+            codigo-provincia:
+              help: null
+              label: Tartománykód
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Kiegészítő vagy helyettesítő bevallás
+            declarado-nif:
+              help: null
+              label: A bejelentett személy adószáma
+            declarado-nombre:
+              help: null
+              label: A bejelentett személy neve vagy cégneve
+            declarante-razon-social:
+              help: null
+              label: A bejelentő cégneve
+            direccion-inmueble:
+              help: null
+              label: Az ingatlan címe
+            duracion-operacion:
+              help: null
+              label: Az ügylet futamideje hónapban
+            fecha-operacion:
+              help: null
+              label: Az ügylet dátuma
+            identificacion-operacion:
+              help: null
+              label: A kölcsön, hitel vagy egyéb pénzügyi ügylet azonosítója
+            importe-amortizacion-capital:
+              help: null
+              label: Az év során tőketörlesztés címén kifizetett összeg
+            importe-gastos-financiacion:
+              help: null
+              label: Az év során külső finanszírozási költség címén kifizetett összeg
+            importe-intereses:
+              help: null
+              label: Az év során kamat címén kifizetett összeg
+            importe-operacion:
+              help: null
+              label: A kölcsön, hitel vagy egyéb pénzügyi ügylet összege
+            importe-reintegro-intereses:
+              help: null
+              label: Az év során visszatérített kamat címén elszámolt összeg
+            importe-total-capital-amortizado:
+              help: null
+              label: A törlesztett tőke teljes összege
+            importe-total-gastos-financiacion:
+              help: null
+              label: A külső finanszírozásból eredő költségek összege
+            importe-total-intereses:
+              help: null
+              label: Az év során kifizetett kamat teljes összege
+            importe-total-saldos-pendientes:
+              help: null
+              label: A december 31-én fennálló egyenlegek összege
+            intereses-indemnizatorios:
+              help: null
+              label: Kártalanítási kamat
+            numero-identificativo-anterior:
+              help: null
+              label: A korábbi bevallás azonosító száma
+            numero-identificativo-declaracion:
+              help: null
+              label: A bevallás azonosító száma
+            numero-total-declarados:
+              help: null
+              label: A bejelentett rekordok száma összesen
+            origen-operacion:
+              help: null
+              label: Az ügylet eredete
+            otras-cantidades-indemnizatorias:
+              help: null
+              label: Egyéb kártalanítási összegek
+            persona-relacion:
+              help: null
+              label: Kapcsolattartó személy
+            porcentaje-financiacion-vivienda-habitual:
+              help: null
+              label: A finanszírozás állandó lakóingatlanra fordított százaléka
+            porcentaje-participacion:
+              help: null
+              label: A részesedés százaléka
+            prefijo-codigo-iban:
+              help: null
+              label: Az IBAN-kód előtagja
+            prestamista-nif:
+              help: null
+              label: A hitelező adószáma
+            prestamista-nombre:
+              help: null
+              label: A hitelező neve vagy cégneve
+            referencia-catastral:
+              help: null
+              label: Ingatlan-nyilvántartási hivatkozás
+            representante-legal-nif:
+              help: null
+              label: A törvényes képviselő adószáma
+            saldo-pendiente:
+              help: null
+              label: A december 31-én fennálló egyenleg
+            situacion-inmueble:
+              help: null
+              label: Az ingatlan elhelyezkedése
+            subclave-operacion:
+              help: null
+              label: Az ügylet alkódja
+            tipo-operacion:
+              help: null
+              label: Az ügylet típusa
+            valor-tasacion-inmueble:
+              help: null
+              label: A biztosítékul adott ingatlan értékbecslés szerinti értéke
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Az adóbevallás vonatkozási éve
@@ -49944,12 +51775,33 @@ modelo:
       revision:
         2024-y-siguientes:
           casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: null
+              label: Kiegészítő bevallás
+            x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
+              help: null
+              label: A kapcsolattartó e-mail címe
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: null
+              label: A bevallás azonosító száma
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: null
+              label: Az előző bevallás azonosító száma
             x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
               help: null
               label: A kifizetések teljes összege
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              help: null
+              label: A kapcsolattartó vezeték- és utóneve
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              help: null
+              label: A kapcsolattartó telefonszáma
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: null
               label: A visszatartások és előlegfizetések teljes összege
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              help: null
+              label: Helyettesítő bevallás
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: A kifizetések teljes száma
@@ -73410,6 +75262,474 @@ modelo:
         official_name: null
         title: null
       revision:
+        '2021':
+          casilla:
+            490-01-declaracion-complementaria-995:
+              help: null
+              label: Kiegészítő bevallás
+            490-01-declaracion-negativa-1009:
+              help: null
+              label: Nemleges bevallás
+            490-01-grupo-denominacion-388:
+              help: null
+              label: A csoport azonosítása. A csoport neve
+            490-01-grupo-dominante-515:
+              help: null
+              label: A csoport azonosítása. Anyavállalat
+            490-01-grupo-pais-dominante-513:
+              help: null
+              label: A csoport azonosítása. Az anyavállalat illetőségi országa
+            490-01-identificacion-email-154:
+              help: null
+              label: Azonosítás. E-mail cím
+            490-01-identificacion-nif-representante-254:
+              help: null
+              label: Azonosítás. A képviselő adószáma (NIF)
+            490-01-identificacion-nombre-representante-263:
+              help: null
+              label: Azonosítás. A képviselő cégneve vagy teljes neve
+            490-01-indicador-pagina-complementaria-12:
+              help: null
+              label: Kiegészítő oldal jelzője
+            490-01-ingreso-bic-swift-950:
+              help: null
+              label: Befizetés vagy visszatérítés. BIC/SWIFT-kód
+            490-01-ingreso-iban-961:
+              help: null
+              label: Befizetés vagy visszatérítés. IBAN-szám
+            490-01-justificante-anterior-996:
+              help: null
+              label: Az előző bevallás igazolásszáma
+            490-01-tipo-declaracion-13:
+              help: null
+              label: A bevallás típusa
+            490-02-indicador-pagina-complementaria-12:
+              help: null
+              label: Kiegészítő oldal jelzője
+            490-02-regularizacion-ejercicio-1285:
+              help: null
+              label: Helyesbítés (a törvény 10.3. cikke). Adóév
+            490-02-regularizacion-ejercicio-13:
+              help: null
+              label: Helyesbítés (a törvény 10.3. cikke). Adóév
+            490-02-regularizacion-ejercicio-437:
+              help: null
+              label: Helyesbítés (a törvény 10.3. cikke). Adóév
+            490-02-regularizacion-ejercicio-861:
+              help: null
+              label: Helyesbítés (a törvény 10.3. cikke). Adóév
+            liq-base-imponible-total-13:
+              help: null
+              label: Elszámolás. Az időszak teljes adóalapja [13]
+            liq-cuota-integra-16:
+              help: null
+              label: Elszámolás. Bruttó adó [16]
+            liq-datos-base-11:
+              help: null
+              label: Elszámolás. 3. Adatátviteli szolgáltatások. Adóalap [11]
+            liq-datos-ing-10:
+              help: null
+              label: Elszámolás. 3. Adatátviteli szolgáltatások. Teljes bevétel [10]
+            liq-datos-reg-base-12:
+              help: null
+              label: Elszámolás. 3. Adatátviteli szolgáltatások. Adóalap-helyesbítés
+                (10.3. cikk) [12]
+            liq-indicador-regularizacion-A:
+              help: null
+              label: Elszámolás. Helyesbítési jelző (a 4/2020. törvény 10.3. cikke)
+                [A]
+            liq-interm-a-base-05:
+              help: null
+              label: Elszámolás. 2.A. Online közvetítő szolgáltatások mögöttes termékértékesítéssel
+                vagy szolgáltatásnyújtással. Adóalap [05]
+            liq-interm-a-ing-04:
+              help: null
+              label: Elszámolás. 2.A. Online közvetítő szolgáltatások mögöttes termékértékesítéssel
+                vagy szolgáltatásnyújtással. Teljes bevétel [04]
+            liq-interm-a-reg-base-06:
+              help: null
+              label: Elszámolás. 2.A. Online közvetítő szolgáltatások mögöttes termékértékesítéssel
+                vagy szolgáltatásnyújtással. Adóalap-helyesbítés (10.3. cikk) [06]
+            liq-interm-b-base-08:
+              help: null
+              label: Elszámolás. 2.B. Egyéb online közvetítő szolgáltatások. Adóalap
+                [08]
+            liq-interm-b-ing-07:
+              help: null
+              label: Elszámolás. 2.B. Egyéb online közvetítő szolgáltatások. Teljes
+                bevétel [07]
+            liq-interm-b-reg-base-09:
+              help: null
+              label: Elszámolás. 2.B. Egyéb online közvetítő szolgáltatások. Adóalap-helyesbítés
+                (10.3. cikk) [09]
+            liq-publi-base-02:
+              help: null
+              label: Elszámolás. 1. Online hirdetési szolgáltatások. Adóalap [02]
+            liq-publi-ing-01:
+              help: null
+              label: Elszámolás. 1. Online hirdetési szolgáltatások. Teljes bevétel
+                [01]
+            liq-publi-reg-base-03:
+              help: null
+              label: Elszámolás. 1. Online hirdetési szolgáltatások. Adóalap-helyesbítés
+                (10.3. cikk) [03]
+            liq-reg-periodos-anteriores-14:
+              help: null
+              label: Elszámolás. Korábbi időszakok adóalap-helyesbítésének összege
+                (a 4/2020. törvény 10.3. cikke) [14]
+            liq-tipo-15:
+              help: null
+              label: Elszámolás. Adókulcs [15]
+            liq21-ajuste-cuota-integra-17:
+              help: null
+              label: Elszámolás. A helyesbített időszak bruttó adójának kiigazítása
+                [17]
+            liq21-resultado-19:
+              help: null
+              label: Az elszámolás eredménye [19]
+            reg-total-cuota-101:
+              help: null
+              label: A helyesbítés összesen (adó) [101]
+            reg21-base-negativa-15:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 3. negyedév [15]
+            reg21-base-negativa-2:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 1. negyedév [2]
+            reg21-base-negativa-21:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 4. negyedév [21]
+            reg21-base-negativa-27:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 1. negyedév [27]
+            reg21-base-negativa-34:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 2. negyedév [34]
+            reg21-base-negativa-40:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 3. negyedév [40]
+            reg21-base-negativa-46:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 4. negyedév [46]
+            reg21-base-negativa-52:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 1. negyedév [52]
+            reg21-base-negativa-59:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 2. negyedév [59]
+            reg21-base-negativa-65:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 3. negyedév [65]
+            reg21-base-negativa-71:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 4. negyedév [71]
+            reg21-base-negativa-77:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 1. negyedév [77]
+            reg21-base-negativa-84:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 2. negyedév [84]
+            reg21-base-negativa-9:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 2. negyedév [9]
+            reg21-base-negativa-90:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 3. negyedév [90]
+            reg21-base-negativa-96:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 4. negyedév [96]
+            reg21-base-positiva-1:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 1. negyedév [1]
+            reg21-base-positiva-14:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 3. negyedév [14]
+            reg21-base-positiva-20:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 4. negyedév [20]
+            reg21-base-positiva-26:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 1. negyedév [26]
+            reg21-base-positiva-33:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 2. negyedév [33]
+            reg21-base-positiva-39:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 3. negyedév [39]
+            reg21-base-positiva-45:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 4. negyedév [45]
+            reg21-base-positiva-51:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 1. negyedév [51]
+            reg21-base-positiva-58:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 2. negyedév [58]
+            reg21-base-positiva-64:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 3. negyedév [64]
+            reg21-base-positiva-70:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 4. negyedév [70]
+            reg21-base-positiva-76:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 1. negyedév [76]
+            reg21-base-positiva-8:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 2. negyedév [8]
+            reg21-base-positiva-83:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 2. negyedév [83]
+            reg21-base-positiva-89:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 3. negyedév [89]
+            reg21-base-positiva-95:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 4. negyedév [95]
+            reg21-base-total-10:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 2. negyedév [10]
+            reg21-base-total-16:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 3. negyedév [16]
+            reg21-base-total-22:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 4. negyedév [22]
+            reg21-base-total-28:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 1. negyedév [28]
+            reg21-base-total-3:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 1. negyedév [3]
+            reg21-base-total-35:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 2. negyedév [35]
+            reg21-base-total-41:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 3. negyedév [41]
+            reg21-base-total-47:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 4. negyedév [47]
+            reg21-base-total-53:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 1. negyedév [53]
+            reg21-base-total-60:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 2. negyedév [60]
+            reg21-base-total-66:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 3. negyedév [66]
+            reg21-base-total-72:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 4. negyedév [72]
+            reg21-base-total-78:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 1. negyedév [78]
+            reg21-base-total-85:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 2. negyedév [85]
+            reg21-base-total-91:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 3. negyedév [91]
+            reg21-base-total-97:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 4. negyedév [97]
+            reg21-cuota-negativa-12:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 2. negyedév [12]
+            reg21-cuota-negativa-18:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 3. negyedév [18]
+            reg21-cuota-negativa-24:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 4. negyedév [24]
+            reg21-cuota-negativa-31:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 1. negyedév [31]
+            reg21-cuota-negativa-37:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 2. negyedév [37]
+            reg21-cuota-negativa-43:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 3. negyedév [43]
+            reg21-cuota-negativa-49:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 4. negyedév [49]
+            reg21-cuota-negativa-56:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 1. negyedév [56]
+            reg21-cuota-negativa-6:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 1. negyedév [6]
+            reg21-cuota-negativa-62:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 2. negyedév [62]
+            reg21-cuota-negativa-68:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 3. negyedév [68]
+            reg21-cuota-negativa-74:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 4. negyedév [74]
+            reg21-cuota-negativa-81:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 1. negyedév [81]
+            reg21-cuota-negativa-87:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 2. negyedév [87]
+            reg21-cuota-negativa-93:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 3. negyedév [93]
+            reg21-cuota-negativa-99:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 4. negyedév [99]
+            reg21-cuota-positiva-11:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 2. negyedév [11]
+            reg21-cuota-positiva-17:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 3. negyedév [17]
+            reg21-cuota-positiva-23:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 4. negyedév [23]
+            reg21-cuota-positiva-30:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 1. negyedév [30]
+            reg21-cuota-positiva-36:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 2. negyedév [36]
+            reg21-cuota-positiva-42:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 3. negyedév [42]
+            reg21-cuota-positiva-48:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 4. negyedév [48]
+            reg21-cuota-positiva-5:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 1. negyedév [5]
+            reg21-cuota-positiva-55:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 1. negyedév [55]
+            reg21-cuota-positiva-61:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 2. negyedév [61]
+            reg21-cuota-positiva-67:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 3. negyedév [67]
+            reg21-cuota-positiva-73:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 4. negyedév [73]
+            reg21-cuota-positiva-80:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 1. negyedév [80]
+            reg21-cuota-positiva-86:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 2. negyedév [86]
+            reg21-cuota-positiva-92:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 3. negyedév [92]
+            reg21-cuota-positiva-98:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 4. negyedév [98]
+            reg21-cuota-total-100:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 4. negyedév [100]
+            reg21-cuota-total-13:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 2. negyedév [13]
+            reg21-cuota-total-19:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 3. negyedév [19]
+            reg21-cuota-total-25:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 4. negyedév [25]
+            reg21-cuota-total-32:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 1. negyedév [32]
+            reg21-cuota-total-38:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 2. negyedév [38]
+            reg21-cuota-total-44:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 3. negyedév [44]
+            reg21-cuota-total-50:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 4. negyedév [50]
+            reg21-cuota-total-57:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 1. negyedév [57]
+            reg21-cuota-total-63:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 2. negyedév [63]
+            reg21-cuota-total-69:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 3. negyedév [69]
+            reg21-cuota-total-7:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 1. negyedév [7]
+            reg21-cuota-total-75:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 4. negyedév [75]
+            reg21-cuota-total-82:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 1. negyedév [82]
+            reg21-cuota-total-88:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 2. negyedév [88]
+            reg21-cuota-total-94:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 3. negyedév [94]
+            reg21-tipo-29-645:
+              help: null
+              label: Adókulcs (d). 1. negyedév [29]
+            reg21-tipo-29-648:
+              help: null
+              label: Adókulcs (d). 2. negyedév [29]
+            reg21-tipo-29-651:
+              help: null
+              label: Adókulcs (d). 3. negyedév [29]
+            reg21-tipo-29-654:
+              help: null
+              label: Adókulcs (d). 4. negyedév [29]
+            reg21-tipo-4-221:
+              help: null
+              label: Adókulcs (d). 1. negyedév [4]
+            reg21-tipo-4-224:
+              help: null
+              label: Adókulcs (d). 2. negyedév [4]
+            reg21-tipo-4-227:
+              help: null
+              label: Adókulcs (d). 3. negyedév [4]
+            reg21-tipo-4-230:
+              help: null
+              label: Adókulcs (d). 4. negyedév [4]
+            reg21-tipo-54-1069:
+              help: null
+              label: Adókulcs (d). 1. negyedév [54]
+            reg21-tipo-54-1072:
+              help: null
+              label: Adókulcs (d). 2. negyedév [54]
+            reg21-tipo-54-1075:
+              help: null
+              label: Adókulcs (d). 3. negyedév [54]
+            reg21-tipo-54-1078:
+              help: null
+              label: Adókulcs (d). 4. negyedév [54]
+            reg21-tipo-79-1493:
+              help: null
+              label: Adókulcs (d). 1. negyedév [79]
+            reg21-tipo-79-1496:
+              help: null
+              label: Adókulcs (d). 2. negyedév [79]
+            reg21-tipo-79-1499:
+              help: null
+              label: Adókulcs (d). 3. negyedév [79]
+            reg21-tipo-79-1502:
+              help: null
+              label: Adókulcs (d). 4. negyedév [79]
+            resultado-a-deducir-18:
+              help: null
+              label: 'Eredmény. Levonandó (csak kiegészítő önadózásnál): az azonos
+                évre és időszakra vonatkozó korábbi bevallás(ok) eredménye [18]'
         2021-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -73424,6 +75744,1734 @@ modelo:
                 title: null
           field:
             label: null
+        2022-1t:
+          casilla:
+            490-01-declaracion-complementaria-995:
+              help: null
+              label: Kiegészítő bevallás
+            490-01-declaracion-negativa-1009:
+              help: null
+              label: Nemleges bevallás
+            490-01-grupo-denominacion-388:
+              help: null
+              label: A csoport azonosítása. A csoport neve
+            490-01-grupo-dominante-515:
+              help: null
+              label: A csoport azonosítása. Anyavállalat
+            490-01-grupo-pais-dominante-513:
+              help: null
+              label: A csoport azonosítása. Az anyavállalat illetőségi országa
+            490-01-identificacion-email-154:
+              help: null
+              label: Azonosítás. E-mail cím
+            490-01-identificacion-nif-representante-254:
+              help: null
+              label: Azonosítás. A képviselő adószáma (NIF)
+            490-01-identificacion-nombre-representante-263:
+              help: null
+              label: Azonosítás. A képviselő cégneve vagy teljes neve
+            490-01-indicador-pagina-complementaria-12:
+              help: null
+              label: Kiegészítő oldal jelzője
+            490-01-ingreso-bic-swift-950:
+              help: null
+              label: Befizetés vagy visszatérítés. BIC/SWIFT-kód
+            490-01-ingreso-iban-961:
+              help: null
+              label: Befizetés vagy visszatérítés. IBAN-szám
+            490-01-justificante-anterior-996:
+              help: null
+              label: Az előző bevallás igazolásszáma
+            490-01-tipo-declaracion-13:
+              help: null
+              label: A bevallás típusa
+            490-02-indicador-pagina-complementaria-12:
+              help: null
+              label: Kiegészítő oldal jelzője
+            490-02-regularizacion-ejercicio-1285:
+              help: null
+              label: Helyesbítés (a törvény 10.3. cikke). Adóév
+            490-02-regularizacion-ejercicio-13:
+              help: null
+              label: Helyesbítés (a törvény 10.3. cikke). Adóév
+            490-02-regularizacion-ejercicio-437:
+              help: null
+              label: Helyesbítés (a törvény 10.3. cikke). Adóév
+            490-02-regularizacion-ejercicio-861:
+              help: null
+              label: Helyesbítés (a törvény 10.3. cikke). Adóév
+            liq-base-imponible-total-13:
+              help: null
+              label: Elszámolás. Az időszak teljes adóalapja [13]
+            liq-cuota-integra-16:
+              help: null
+              label: Elszámolás. Bruttó adó [16]
+            liq-datos-base-11:
+              help: null
+              label: Elszámolás. 3. Adatátviteli szolgáltatások. Adóalap [11]
+            liq-datos-ing-10:
+              help: null
+              label: Elszámolás. 3. Adatátviteli szolgáltatások. Teljes bevétel [10]
+            liq-datos-reg-base-12:
+              help: null
+              label: Elszámolás. 3. Adatátviteli szolgáltatások. Adóalap-helyesbítés
+                (10.3. cikk) [12]
+            liq-indicador-regularizacion-A:
+              help: null
+              label: Elszámolás. Helyesbítési jelző (a 4/2020. törvény 10.3. cikke)
+                [A]
+            liq-interm-a-base-05:
+              help: null
+              label: Elszámolás. 2.A. Online közvetítő szolgáltatások mögöttes termékértékesítéssel
+                vagy szolgáltatásnyújtással. Adóalap [05]
+            liq-interm-a-ing-04:
+              help: null
+              label: Elszámolás. 2.A. Online közvetítő szolgáltatások mögöttes termékértékesítéssel
+                vagy szolgáltatásnyújtással. Teljes bevétel [04]
+            liq-interm-a-reg-base-06:
+              help: null
+              label: Elszámolás. 2.A. Online közvetítő szolgáltatások mögöttes termékértékesítéssel
+                vagy szolgáltatásnyújtással. Adóalap-helyesbítés (10.3. cikk) [06]
+            liq-interm-b-base-08:
+              help: null
+              label: Elszámolás. 2.B. Egyéb online közvetítő szolgáltatások. Adóalap
+                [08]
+            liq-interm-b-ing-07:
+              help: null
+              label: Elszámolás. 2.B. Egyéb online közvetítő szolgáltatások. Teljes
+                bevétel [07]
+            liq-interm-b-reg-base-09:
+              help: null
+              label: Elszámolás. 2.B. Egyéb online közvetítő szolgáltatások. Adóalap-helyesbítés
+                (10.3. cikk) [09]
+            liq-publi-base-02:
+              help: null
+              label: Elszámolás. 1. Online hirdetési szolgáltatások. Adóalap [02]
+            liq-publi-ing-01:
+              help: null
+              label: Elszámolás. 1. Online hirdetési szolgáltatások. Teljes bevétel
+                [01]
+            liq-publi-reg-base-03:
+              help: null
+              label: Elszámolás. 1. Online hirdetési szolgáltatások. Adóalap-helyesbítés
+                (10.3. cikk) [03]
+            liq-reg-periodos-anteriores-14:
+              help: null
+              label: Elszámolás. Korábbi időszakok adóalap-helyesbítésének összege
+                (a 4/2020. törvény 10.3. cikke) [14]
+            liq-tipo-15:
+              help: null
+              label: Elszámolás. Adókulcs [15]
+            liq21-ajuste-cuota-integra-17:
+              help: null
+              label: Elszámolás. A helyesbített időszak bruttó adójának kiigazítása
+                [17]
+            liq21-resultado-19:
+              help: null
+              label: Az elszámolás eredménye [19]
+            reg-total-cuota-101:
+              help: null
+              label: A helyesbítés összesen (adó) [101]
+            reg21-base-negativa-15:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 3. negyedév [15]
+            reg21-base-negativa-2:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 1. negyedév [2]
+            reg21-base-negativa-21:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 4. negyedév [21]
+            reg21-base-negativa-27:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 1. negyedév [27]
+            reg21-base-negativa-34:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 2. negyedév [34]
+            reg21-base-negativa-40:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 3. negyedév [40]
+            reg21-base-negativa-46:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 4. negyedév [46]
+            reg21-base-negativa-52:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 1. negyedév [52]
+            reg21-base-negativa-59:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 2. negyedév [59]
+            reg21-base-negativa-65:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 3. negyedév [65]
+            reg21-base-negativa-71:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 4. negyedév [71]
+            reg21-base-negativa-77:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 1. negyedév [77]
+            reg21-base-negativa-84:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 2. negyedév [84]
+            reg21-base-negativa-9:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 2. negyedév [9]
+            reg21-base-negativa-90:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 3. negyedév [90]
+            reg21-base-negativa-96:
+              help: null
+              label: Negatív adóalap-helyesbítés (b). 4. negyedév [96]
+            reg21-base-positiva-1:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 1. negyedév [1]
+            reg21-base-positiva-14:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 3. negyedév [14]
+            reg21-base-positiva-20:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 4. negyedév [20]
+            reg21-base-positiva-26:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 1. negyedév [26]
+            reg21-base-positiva-33:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 2. negyedév [33]
+            reg21-base-positiva-39:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 3. negyedév [39]
+            reg21-base-positiva-45:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 4. negyedév [45]
+            reg21-base-positiva-51:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 1. negyedév [51]
+            reg21-base-positiva-58:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 2. negyedév [58]
+            reg21-base-positiva-64:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 3. negyedév [64]
+            reg21-base-positiva-70:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 4. negyedév [70]
+            reg21-base-positiva-76:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 1. negyedév [76]
+            reg21-base-positiva-8:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 2. negyedév [8]
+            reg21-base-positiva-83:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 2. negyedév [83]
+            reg21-base-positiva-89:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 3. negyedév [89]
+            reg21-base-positiva-95:
+              help: null
+              label: Pozitív adóalap-helyesbítés (a). 4. negyedév [95]
+            reg21-base-total-10:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 2. negyedév [10]
+            reg21-base-total-16:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 3. negyedév [16]
+            reg21-base-total-22:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 4. negyedév [22]
+            reg21-base-total-28:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 1. negyedév [28]
+            reg21-base-total-3:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 1. negyedév [3]
+            reg21-base-total-35:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 2. negyedév [35]
+            reg21-base-total-41:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 3. negyedév [41]
+            reg21-base-total-47:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 4. negyedév [47]
+            reg21-base-total-53:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 1. negyedév [53]
+            reg21-base-total-60:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 2. negyedév [60]
+            reg21-base-total-66:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 3. negyedév [66]
+            reg21-base-total-72:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 4. negyedév [72]
+            reg21-base-total-78:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 1. negyedév [78]
+            reg21-base-total-85:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 2. negyedév [85]
+            reg21-base-total-91:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 3. negyedév [91]
+            reg21-base-total-97:
+              help: null
+              label: Az adóalap-helyesbítés összesen (c = a + b). 4. negyedév [97]
+            reg21-cuota-negativa-12:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 2. negyedév [12]
+            reg21-cuota-negativa-18:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 3. negyedév [18]
+            reg21-cuota-negativa-24:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 4. negyedév [24]
+            reg21-cuota-negativa-31:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 1. negyedév [31]
+            reg21-cuota-negativa-37:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 2. negyedév [37]
+            reg21-cuota-negativa-43:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 3. negyedév [43]
+            reg21-cuota-negativa-49:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 4. negyedév [49]
+            reg21-cuota-negativa-56:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 1. negyedév [56]
+            reg21-cuota-negativa-6:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 1. negyedév [6]
+            reg21-cuota-negativa-62:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 2. negyedév [62]
+            reg21-cuota-negativa-68:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 3. negyedév [68]
+            reg21-cuota-negativa-74:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 4. negyedév [74]
+            reg21-cuota-negativa-81:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 1. negyedév [81]
+            reg21-cuota-negativa-87:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 2. negyedév [87]
+            reg21-cuota-negativa-93:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 3. negyedév [93]
+            reg21-cuota-negativa-99:
+              help: null
+              label: Negatív adóhelyesbítés (f = b × d). 4. negyedév [99]
+            reg21-cuota-positiva-11:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 2. negyedév [11]
+            reg21-cuota-positiva-17:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 3. negyedév [17]
+            reg21-cuota-positiva-23:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 4. negyedév [23]
+            reg21-cuota-positiva-30:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 1. negyedév [30]
+            reg21-cuota-positiva-36:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 2. negyedév [36]
+            reg21-cuota-positiva-42:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 3. negyedév [42]
+            reg21-cuota-positiva-48:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 4. negyedév [48]
+            reg21-cuota-positiva-5:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 1. negyedév [5]
+            reg21-cuota-positiva-55:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 1. negyedév [55]
+            reg21-cuota-positiva-61:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 2. negyedév [61]
+            reg21-cuota-positiva-67:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 3. negyedév [67]
+            reg21-cuota-positiva-73:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 4. negyedév [73]
+            reg21-cuota-positiva-80:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 1. negyedév [80]
+            reg21-cuota-positiva-86:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 2. negyedév [86]
+            reg21-cuota-positiva-92:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 3. negyedév [92]
+            reg21-cuota-positiva-98:
+              help: null
+              label: Pozitív adóhelyesbítés (e = a × d). 4. negyedév [98]
+            reg21-cuota-total-100:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 4. negyedév [100]
+            reg21-cuota-total-13:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 2. negyedév [13]
+            reg21-cuota-total-19:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 3. negyedév [19]
+            reg21-cuota-total-25:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 4. negyedév [25]
+            reg21-cuota-total-32:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 1. negyedév [32]
+            reg21-cuota-total-38:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 2. negyedév [38]
+            reg21-cuota-total-44:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 3. negyedév [44]
+            reg21-cuota-total-50:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 4. negyedév [50]
+            reg21-cuota-total-57:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 1. negyedév [57]
+            reg21-cuota-total-63:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 2. negyedév [63]
+            reg21-cuota-total-69:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 3. negyedév [69]
+            reg21-cuota-total-7:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 1. negyedév [7]
+            reg21-cuota-total-75:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 4. negyedév [75]
+            reg21-cuota-total-82:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 1. negyedév [82]
+            reg21-cuota-total-88:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 2. negyedév [88]
+            reg21-cuota-total-94:
+              help: null
+              label: Az adóhelyesbítés összesen (g = e + f). 3. negyedév [94]
+            reg21-tipo-29-645:
+              help: null
+              label: Adókulcs (d). 1. negyedév [29]
+            reg21-tipo-29-648:
+              help: null
+              label: Adókulcs (d). 2. negyedév [29]
+            reg21-tipo-29-651:
+              help: null
+              label: Adókulcs (d). 3. negyedév [29]
+            reg21-tipo-29-654:
+              help: null
+              label: Adókulcs (d). 4. negyedév [29]
+            reg21-tipo-4-221:
+              help: null
+              label: Adókulcs (d). 1. negyedév [4]
+            reg21-tipo-4-224:
+              help: null
+              label: Adókulcs (d). 2. negyedév [4]
+            reg21-tipo-4-227:
+              help: null
+              label: Adókulcs (d). 3. negyedév [4]
+            reg21-tipo-4-230:
+              help: null
+              label: Adókulcs (d). 4. negyedév [4]
+            reg21-tipo-54-1069:
+              help: null
+              label: Adókulcs (d). 1. negyedév [54]
+            reg21-tipo-54-1072:
+              help: null
+              label: Adókulcs (d). 2. negyedév [54]
+            reg21-tipo-54-1075:
+              help: null
+              label: Adókulcs (d). 3. negyedév [54]
+            reg21-tipo-54-1078:
+              help: null
+              label: Adókulcs (d). 4. negyedév [54]
+            reg21-tipo-79-1493:
+              help: null
+              label: Adókulcs (d). 1. negyedév [79]
+            reg21-tipo-79-1496:
+              help: null
+              label: Adókulcs (d). 2. negyedév [79]
+            reg21-tipo-79-1499:
+              help: null
+              label: Adókulcs (d). 3. negyedév [79]
+            reg21-tipo-79-1502:
+              help: null
+              label: Adókulcs (d). 4. negyedév [79]
+            resultado-a-deducir-18:
+              help: null
+              label: 'Eredmény. Levonandó (csak kiegészítő önadózásnál): az azonos
+                évre és időszakra vonatkozó korábbi bevallás(ok) eredménye [18]'
+        2022-2t-4t:
+          casilla:
+            490-01-declaracion-complementaria-1054:
+              help: null
+              label: Kiegészítő bevallás
+            490-01-declaracion-negativa-1068:
+              help: null
+              label: Nemleges bevallás
+            490-01-grupo-denominacion-388:
+              help: null
+              label: A csoport azonosítása. A csoport neve
+            490-01-grupo-dominante-515:
+              help: null
+              label: A csoport azonosítása. Anyavállalat
+            490-01-grupo-pais-dominante-513:
+              help: null
+              label: A csoport azonosítása. Az anyavállalat illetőségi országa
+            490-01-identificacion-email-154:
+              help: null
+              label: Azonosítás. E-mail cím
+            490-01-identificacion-nif-representante-254:
+              help: null
+              label: Azonosítás. A képviselő adószáma (NIF)
+            490-01-identificacion-nombre-representante-263:
+              help: null
+              label: Azonosítás. A képviselő cégneve vagy teljes neve
+            490-01-indicador-pagina-complementaria-12:
+              help: null
+              label: Kiegészítő oldal jelzője
+            490-01-ingreso-bic-swift-1009:
+              help: null
+              label: Befizetés vagy visszatérítés. BIC/SWIFT-kód
+            490-01-ingreso-iban-1020:
+              help: null
+              label: Befizetés vagy visszatérítés. IBAN-szám
+            490-01-justificante-anterior-1055:
+              help: null
+              label: Az előző bevallás igazolásszáma
+            490-01-tipo-declaracion-13:
+              help: null
+              label: A bevallás típusa
+            490-02-indicador-pagina-complementaria-12:
+              help: null
+              label: Kiegészítő oldal jelzője
+            490-02-regularizacion-ejercicio-13:
+              help: null
+              label: Helyesbítés (a 4/2020. törvény 10.3. cikke). Adóév
+            490-02-regularizacion-ejercicio-909:
+              help: null
+              label: Helyesbítés (a 4/2020. törvény 10.3. cikke). Adóév
+            490-03-indicador-pagina-complementaria-12:
+              help: null
+              label: Kiegészítő oldal jelzője
+            490-03-regularizacion-ejercicio-13:
+              help: null
+              label: Helyesbítés (a 4/2020. törvény 10.3. cikke). Adóév
+            490-03-regularizacion-ejercicio-909:
+              help: null
+              label: Helyesbítés (a 4/2020. törvény 10.3. cikke). Adóév
+            ajuste-cuota-integra-reg-estado-19:
+              help: null
+              label: A helyesbített időszakok államnak betudható bruttó adójának kiigazítása
+                [19]
+            ajuste-cuota-integra-regularizacion-18:
+              help: null
+              label: A helyesbített időszakok bruttó adójának kiigazítása [18]
+            cuota-integra-estado-17:
+              help: null
+              label: Az álligazgatásnak betudható bruttó adó [17]
+            liq-base-imponible-total-13:
+              help: null
+              label: Elszámolás. Az időszak teljes adóalapja [13]
+            liq-cuota-integra-16:
+              help: null
+              label: Elszámolás. Bruttó adó [16]
+            liq-datos-base-11:
+              help: null
+              label: Elszámolás. 3. Adatátviteli szolgáltatások. Adóalap [11]
+            liq-datos-ing-10:
+              help: null
+              label: Elszámolás. 3. Adatátviteli szolgáltatások. Teljes bevétel [10]
+            liq-datos-reg-base-12:
+              help: null
+              label: Elszámolás. 3. Adatátviteli szolgáltatások. Adóalap-helyesbítés
+                (10.3. cikk) [12]
+            liq-indicador-regularizacion-A:
+              help: null
+              label: Elszámolás. Helyesbítési jelző (a 4/2020. törvény 10.3. cikke)
+                [A]
+            liq-interm-a-base-05:
+              help: null
+              label: Elszámolás. 2.A. Online közvetítő szolgáltatások mögöttes termékértékesítéssel
+                vagy szolgáltatásnyújtással. Adóalap [05]
+            liq-interm-a-ing-04:
+              help: null
+              label: Elszámolás. 2.A. Online közvetítő szolgáltatások mögöttes termékértékesítéssel
+                vagy szolgáltatásnyújtással. Teljes bevétel [04]
+            liq-interm-a-reg-base-06:
+              help: null
+              label: Elszámolás. 2.A. Online közvetítő szolgáltatások mögöttes termékértékesítéssel
+                vagy szolgáltatásnyújtással. Adóalap-helyesbítés (10.3. cikk) [06]
+            liq-interm-b-base-08:
+              help: null
+              label: Elszámolás. 2.B. Egyéb online közvetítő szolgáltatások. Adóalap
+                [08]
+            liq-interm-b-ing-07:
+              help: null
+              label: Elszámolás. 2.B. Egyéb online közvetítő szolgáltatások. Teljes
+                bevétel [07]
+            liq-interm-b-reg-base-09:
+              help: null
+              label: Elszámolás. 2.B. Egyéb online közvetítő szolgáltatások. Adóalap-helyesbítés
+                (10.3. cikk) [09]
+            liq-publi-base-02:
+              help: null
+              label: Elszámolás. 1. Online hirdetési szolgáltatások. Adóalap [02]
+            liq-publi-ing-01:
+              help: null
+              label: Elszámolás. 1. Online hirdetési szolgáltatások. Teljes bevétel
+                [01]
+            liq-publi-reg-base-03:
+              help: null
+              label: Elszámolás. 1. Online hirdetési szolgáltatások. Adóalap-helyesbítés
+                (10.3. cikk) [03]
+            liq-reg-periodos-anteriores-14:
+              help: null
+              label: Elszámolás. Korábbi időszakok adóalap-helyesbítésének összege
+                (a 4/2020. törvény 10.3. cikke) [14]
+            liq-tipo-15:
+              help: null
+              label: Elszámolás. Adókulcs [15]
+            reg-ajuste-distribucion-120:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 1. negyedév [120]
+            reg-ajuste-distribucion-141:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 2. negyedév [141]
+            reg-ajuste-distribucion-162:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 3. negyedév [162]
+            reg-ajuste-distribucion-183:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 1. negyedév [183]
+            reg-ajuste-distribucion-204:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 1. negyedév [204]
+            reg-ajuste-distribucion-225:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 2. negyedév [225]
+            reg-ajuste-distribucion-246:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 3. negyedév [246]
+            reg-ajuste-distribucion-267:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 1. negyedév [267]
+            reg-ajuste-distribucion-288:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 1. negyedév [288]
+            reg-ajuste-distribucion-309:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 2. negyedév [309]
+            reg-ajuste-distribucion-330:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 3. negyedév [330]
+            reg-ajuste-distribucion-351:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 1. negyedév [351]
+            reg-ajuste-distribucion-36:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 1. negyedév [36]
+            reg-ajuste-distribucion-57:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 2. negyedév [57]
+            reg-ajuste-distribucion-78:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 3. negyedév [78]
+            reg-ajuste-distribucion-99:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 1. negyedév [99]
+            reg-ajuste-total-estado-100:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 4. negyedév [100]
+            reg-ajuste-total-estado-121:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 1. negyedév [121]
+            reg-ajuste-total-estado-142:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 2. negyedév [142]
+            reg-ajuste-total-estado-163:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 3. negyedév [163]
+            reg-ajuste-total-estado-184:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 4. negyedév [184]
+            reg-ajuste-total-estado-205:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 1. negyedév [205]
+            reg-ajuste-total-estado-226:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 2. negyedév [226]
+            reg-ajuste-total-estado-247:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 3. negyedév [247]
+            reg-ajuste-total-estado-268:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 4. negyedév [268]
+            reg-ajuste-total-estado-289:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 1. negyedév [289]
+            reg-ajuste-total-estado-310:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 2. negyedév [310]
+            reg-ajuste-total-estado-331:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 3. negyedév [331]
+            reg-ajuste-total-estado-352:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 4. negyedév [352]
+            reg-ajuste-total-estado-37:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 1. negyedév [37]
+            reg-ajuste-total-estado-58:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 2. negyedév [58]
+            reg-ajuste-total-estado-79:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 3. negyedév [79]
+            reg-base-declarada-111:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 1. negyedév
+                [111]
+            reg-base-declarada-132:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 2. negyedév
+                [132]
+            reg-base-declarada-153:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 3. negyedév
+                [153]
+            reg-base-declarada-174:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 4. negyedév
+                [174]
+            reg-base-declarada-195:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 1. negyedév
+                [195]
+            reg-base-declarada-216:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 2. negyedév
+                [216]
+            reg-base-declarada-237:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 3. negyedév
+                [237]
+            reg-base-declarada-258:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 4. negyedév
+                [258]
+            reg-base-declarada-27:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 1. negyedév
+                [27]
+            reg-base-declarada-279:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 1. negyedév
+                [279]
+            reg-base-declarada-300:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 2. negyedév
+                [300]
+            reg-base-declarada-321:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 3. negyedév
+                [321]
+            reg-base-declarada-342:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 4. negyedév
+                [342]
+            reg-base-declarada-48:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 2. negyedév
+                [48]
+            reg-base-declarada-69:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 3. negyedév
+                [69]
+            reg-base-declarada-90:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 4. negyedév
+                [90]
+            reg-base-negativa-113:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 1. negyedév [113]
+            reg-base-negativa-134:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 2. negyedév [134]
+            reg-base-negativa-155:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 3. negyedév [155]
+            reg-base-negativa-176:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 4. negyedév [176]
+            reg-base-negativa-197:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 1. negyedév [197]
+            reg-base-negativa-218:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 2. negyedév [218]
+            reg-base-negativa-239:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 3. negyedév [239]
+            reg-base-negativa-260:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 4. negyedév [260]
+            reg-base-negativa-281:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 1. negyedév [281]
+            reg-base-negativa-29:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 1. negyedév [29]
+            reg-base-negativa-302:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 2. negyedév [302]
+            reg-base-negativa-323:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 3. negyedév [323]
+            reg-base-negativa-344:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 4. negyedév [344]
+            reg-base-negativa-50:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 2. negyedév [50]
+            reg-base-negativa-71:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 3. negyedév [71]
+            reg-base-negativa-92:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 4. negyedév [92]
+            reg-base-positiva-112:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 1. negyedév [112]
+            reg-base-positiva-133:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 2. negyedév [133]
+            reg-base-positiva-154:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 3. negyedév [154]
+            reg-base-positiva-175:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 4. negyedév [175]
+            reg-base-positiva-196:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 1. negyedév [196]
+            reg-base-positiva-217:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 2. negyedév [217]
+            reg-base-positiva-238:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 3. negyedév [238]
+            reg-base-positiva-259:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 4. negyedév [259]
+            reg-base-positiva-28:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 1. negyedév [28]
+            reg-base-positiva-280:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 1. negyedév [280]
+            reg-base-positiva-301:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 2. negyedév [301]
+            reg-base-positiva-322:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 3. negyedév [322]
+            reg-base-positiva-343:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 4. negyedév [343]
+            reg-base-positiva-49:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 2. negyedév [49]
+            reg-base-positiva-70:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 3. negyedév [70]
+            reg-base-positiva-91:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 4. negyedév [91]
+            reg-base-total-114:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 1. negyedév [114]
+            reg-base-total-135:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 2. negyedév [135]
+            reg-base-total-156:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 3. negyedév [156]
+            reg-base-total-177:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 4. negyedév [177]
+            reg-base-total-198:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 1. negyedév [198]
+            reg-base-total-219:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 2. negyedév [219]
+            reg-base-total-240:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 3. negyedév [240]
+            reg-base-total-261:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 4. negyedév [261]
+            reg-base-total-282:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 1. negyedév [282]
+            reg-base-total-30:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 1. negyedév [30]
+            reg-base-total-303:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 2. negyedév [303]
+            reg-base-total-324:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 3. negyedév [324]
+            reg-base-total-345:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 4. negyedév [345]
+            reg-base-total-51:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 2. negyedév [51]
+            reg-base-total-72:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 3. negyedév [72]
+            reg-base-total-93:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 4. negyedév [93]
+            reg-cuota-estado-119:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 1. negyedév
+                [119]
+            reg-cuota-estado-140:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 2. negyedév
+                [140]
+            reg-cuota-estado-161:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 3. negyedév
+                [161]
+            reg-cuota-estado-182:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 4. negyedév
+                [182]
+            reg-cuota-estado-203:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 1. negyedév
+                [203]
+            reg-cuota-estado-224:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 2. negyedév
+                [224]
+            reg-cuota-estado-245:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 3. negyedév
+                [245]
+            reg-cuota-estado-266:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 4. negyedév
+                [266]
+            reg-cuota-estado-287:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 1. negyedév
+                [287]
+            reg-cuota-estado-308:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 2. negyedév
+                [308]
+            reg-cuota-estado-329:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 3. negyedév
+                [329]
+            reg-cuota-estado-35:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 1. negyedév
+                [35]
+            reg-cuota-estado-350:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 4. negyedév
+                [350]
+            reg-cuota-estado-56:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 2. negyedév
+                [56]
+            reg-cuota-estado-77:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 3. negyedév
+                [77]
+            reg-cuota-estado-98:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 4. negyedév
+                [98]
+            reg-cuota-negativa-117:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 1. negyedév [117]
+            reg-cuota-negativa-138:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 2. negyedév [138]
+            reg-cuota-negativa-159:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 3. negyedév [159]
+            reg-cuota-negativa-180:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 4. negyedév [180]
+            reg-cuota-negativa-201:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 1. negyedév [201]
+            reg-cuota-negativa-222:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 2. negyedév [222]
+            reg-cuota-negativa-243:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 3. negyedév [243]
+            reg-cuota-negativa-264:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 4. negyedév [264]
+            reg-cuota-negativa-285:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 1. negyedév [285]
+            reg-cuota-negativa-306:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 2. negyedév [306]
+            reg-cuota-negativa-327:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 3. negyedév [327]
+            reg-cuota-negativa-33:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 1. negyedév [33]
+            reg-cuota-negativa-348:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 4. negyedév [348]
+            reg-cuota-negativa-54:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 2. negyedév [54]
+            reg-cuota-negativa-75:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 3. negyedév [75]
+            reg-cuota-negativa-96:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 4. negyedév [96]
+            reg-cuota-positiva-116:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 1. negyedév [116]
+            reg-cuota-positiva-137:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 2. negyedév [137]
+            reg-cuota-positiva-158:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 3. negyedév [158]
+            reg-cuota-positiva-179:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 4. negyedév [179]
+            reg-cuota-positiva-200:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 1. negyedév [200]
+            reg-cuota-positiva-221:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 2. negyedév [221]
+            reg-cuota-positiva-242:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 3. negyedév [242]
+            reg-cuota-positiva-263:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 4. negyedév [263]
+            reg-cuota-positiva-284:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 1. negyedév [284]
+            reg-cuota-positiva-305:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 2. negyedév [305]
+            reg-cuota-positiva-32:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 1. negyedév [32]
+            reg-cuota-positiva-326:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 3. negyedév [326]
+            reg-cuota-positiva-347:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 4. negyedév [347]
+            reg-cuota-positiva-53:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 2. negyedév [53]
+            reg-cuota-positiva-74:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 3. negyedév [74]
+            reg-cuota-positiva-95:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 4. negyedév [95]
+            reg-cuota-total-118:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 1. negyedév [118]
+            reg-cuota-total-139:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 2. negyedév [139]
+            reg-cuota-total-160:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 3. negyedév [160]
+            reg-cuota-total-181:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 4. negyedév [181]
+            reg-cuota-total-202:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 1. negyedév [202]
+            reg-cuota-total-223:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 2. negyedév [223]
+            reg-cuota-total-244:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 3. negyedév [244]
+            reg-cuota-total-265:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 4. negyedév [265]
+            reg-cuota-total-286:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 1. negyedév [286]
+            reg-cuota-total-307:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 2. negyedév [307]
+            reg-cuota-total-328:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 3. negyedév [328]
+            reg-cuota-total-34:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 1. negyedév [34]
+            reg-cuota-total-349:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 4. negyedév [349]
+            reg-cuota-total-55:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 2. negyedév [55]
+            reg-cuota-total-76:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 3. negyedév [76]
+            reg-cuota-total-97:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 4. negyedév [97]
+            reg-tipo-115:
+              help: null
+              label: Adókulcs (e). 1. negyedév [115]
+            reg-tipo-136:
+              help: null
+              label: Adókulcs (e). 2. negyedév [136]
+            reg-tipo-157:
+              help: null
+              label: Adókulcs (e). 3. negyedév [157]
+            reg-tipo-178:
+              help: null
+              label: Adókulcs (e). 4. negyedév [178]
+            reg-tipo-199:
+              help: null
+              label: Adókulcs (e). 1. negyedév [199]
+            reg-tipo-220:
+              help: null
+              label: Adókulcs (e). 2. negyedév [220]
+            reg-tipo-241:
+              help: null
+              label: Adókulcs (e). 3. negyedév [241]
+            reg-tipo-262:
+              help: null
+              label: Adókulcs (e). 4. negyedév [262]
+            reg-tipo-283:
+              help: null
+              label: Adókulcs (e). 1. negyedév [283]
+            reg-tipo-304:
+              help: null
+              label: Adókulcs (e). 2. negyedév [304]
+            reg-tipo-31:
+              help: null
+              label: Adókulcs (e). 1. negyedév [31]
+            reg-tipo-325:
+              help: null
+              label: Adókulcs (e). 3. negyedév [325]
+            reg-tipo-346:
+              help: null
+              label: Adókulcs (e). 4. negyedév [346]
+            reg-tipo-52:
+              help: null
+              label: Adókulcs (e). 2. negyedév [52]
+            reg-tipo-73:
+              help: null
+              label: Adókulcs (e). 3. negyedév [73]
+            reg-tipo-94:
+              help: null
+              label: Adókulcs (e). 4. negyedév [94]
+            reg-total-cuota-363:
+              help: null
+              label: A helyesbítés összesen (adó) [363]
+            reg-total-cuota-estado-364:
+              help: null
+              label: Az álligazgatásnak betudható helyesbítés összesen [364]
+            resultado-a-deducir-25:
+              help: null
+              label: 'Eredmény. Levonandó (csak kiegészítő önadózásnál): az azonos
+                évre és időszakra vonatkozó korábbi bevallás(ok) eredménye [25]'
+            resultado-liquidacion-26:
+              help: null
+              label: Az elszámolás eredménye [26]
+            terr-alava-20:
+              help: null
+              label: Területi adózás. Álava [20]
+            terr-alava-con-reg-102:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 4.
+                negyedév [102]
+            terr-alava-con-reg-123:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 1.
+                negyedév [123]
+            terr-alava-con-reg-144:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 2.
+                negyedév [144]
+            terr-alava-con-reg-165:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 3.
+                negyedév [165]
+            terr-alava-con-reg-186:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 4.
+                negyedév [186]
+            terr-alava-con-reg-207:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 1.
+                negyedév [207]
+            terr-alava-con-reg-228:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 2.
+                negyedév [228]
+            terr-alava-con-reg-249:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 3.
+                negyedév [249]
+            terr-alava-con-reg-270:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 4.
+                negyedév [270]
+            terr-alava-con-reg-291:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 1.
+                negyedév [291]
+            terr-alava-con-reg-312:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 2.
+                negyedév [312]
+            terr-alava-con-reg-333:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 3.
+                negyedév [333]
+            terr-alava-con-reg-354:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 4.
+                negyedév [354]
+            terr-alava-con-reg-39:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 1.
+                negyedév [39]
+            terr-alava-con-reg-60:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 2.
+                negyedév [60]
+            terr-alava-con-reg-81:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 3.
+                negyedév [81]
+            terr-alava-per-101:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 4.
+                negyedév [101]
+            terr-alava-per-122:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 1.
+                negyedév [122]
+            terr-alava-per-143:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 2.
+                negyedév [143]
+            terr-alava-per-164:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 3.
+                negyedév [164]
+            terr-alava-per-185:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 4.
+                negyedév [185]
+            terr-alava-per-206:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 1.
+                negyedév [206]
+            terr-alava-per-227:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 2.
+                negyedév [227]
+            terr-alava-per-248:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 3.
+                negyedév [248]
+            terr-alava-per-269:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 4.
+                negyedév [269]
+            terr-alava-per-290:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 1.
+                negyedév [290]
+            terr-alava-per-311:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 2.
+                negyedév [311]
+            terr-alava-per-332:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 3.
+                negyedév [332]
+            terr-alava-per-353:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 4.
+                negyedév [353]
+            terr-alava-per-38:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 1.
+                negyedév [38]
+            terr-alava-per-59:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 2.
+                negyedév [59]
+            terr-alava-per-80:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 3.
+                negyedév [80]
+            terr-comun-24:
+              help: null
+              label: Területi adózás. Közös terület [24]
+            terr-comun-con-reg-110:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                4. negyedév [110]
+            terr-comun-con-reg-131:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                1. negyedév [131]
+            terr-comun-con-reg-152:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                2. negyedév [152]
+            terr-comun-con-reg-173:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                3. negyedév [173]
+            terr-comun-con-reg-194:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                4. negyedév [194]
+            terr-comun-con-reg-215:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                1. negyedév [215]
+            terr-comun-con-reg-236:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                2. negyedév [236]
+            terr-comun-con-reg-257:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                3. negyedév [257]
+            terr-comun-con-reg-278:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                4. negyedév [278]
+            terr-comun-con-reg-299:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                1. negyedév [299]
+            terr-comun-con-reg-320:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                2. negyedév [320]
+            terr-comun-con-reg-341:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                3. negyedév [341]
+            terr-comun-con-reg-362:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                4. negyedév [362]
+            terr-comun-con-reg-47:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                1. negyedév [47]
+            terr-comun-con-reg-68:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                2. negyedév [68]
+            terr-comun-con-reg-89:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                3. negyedév [89]
+            terr-comun-per-109:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                4. negyedév [109]
+            terr-comun-per-130:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                1. negyedév [130]
+            terr-comun-per-151:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                2. negyedév [151]
+            terr-comun-per-172:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                3. negyedév [172]
+            terr-comun-per-193:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                4. negyedév [193]
+            terr-comun-per-214:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                1. negyedév [214]
+            terr-comun-per-235:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                2. negyedév [235]
+            terr-comun-per-256:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                3. negyedév [256]
+            terr-comun-per-277:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                4. negyedév [277]
+            terr-comun-per-298:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                1. negyedév [298]
+            terr-comun-per-319:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                2. negyedév [319]
+            terr-comun-per-340:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                3. negyedév [340]
+            terr-comun-per-361:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                4. negyedév [361]
+            terr-comun-per-46:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                1. negyedév [46]
+            terr-comun-per-67:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                2. negyedév [67]
+            terr-comun-per-88:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                3. negyedév [88]
+            terr-guipuzcoa-21:
+              help: null
+              label: Területi adózás. Gipuzkoa [21]
+            terr-guipuzcoa-con-reg-104:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                4. negyedév [104]
+            terr-guipuzcoa-con-reg-125:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                1. negyedév [125]
+            terr-guipuzcoa-con-reg-146:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                2. negyedév [146]
+            terr-guipuzcoa-con-reg-167:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                3. negyedév [167]
+            terr-guipuzcoa-con-reg-188:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                4. negyedév [188]
+            terr-guipuzcoa-con-reg-209:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                1. negyedév [209]
+            terr-guipuzcoa-con-reg-230:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                2. negyedév [230]
+            terr-guipuzcoa-con-reg-251:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                3. negyedév [251]
+            terr-guipuzcoa-con-reg-272:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                4. negyedév [272]
+            terr-guipuzcoa-con-reg-293:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                1. negyedév [293]
+            terr-guipuzcoa-con-reg-314:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                2. negyedév [314]
+            terr-guipuzcoa-con-reg-335:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                3. negyedév [335]
+            terr-guipuzcoa-con-reg-356:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                4. negyedév [356]
+            terr-guipuzcoa-con-reg-41:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                1. negyedév [41]
+            terr-guipuzcoa-con-reg-62:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                2. negyedév [62]
+            terr-guipuzcoa-con-reg-83:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                3. negyedév [83]
+            terr-guipuzcoa-per-103:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                4. negyedév [103]
+            terr-guipuzcoa-per-124:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                1. negyedév [124]
+            terr-guipuzcoa-per-145:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                2. negyedév [145]
+            terr-guipuzcoa-per-166:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                3. negyedév [166]
+            terr-guipuzcoa-per-187:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                4. negyedév [187]
+            terr-guipuzcoa-per-208:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                1. negyedév [208]
+            terr-guipuzcoa-per-229:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                2. negyedév [229]
+            terr-guipuzcoa-per-250:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                3. negyedév [250]
+            terr-guipuzcoa-per-271:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                4. negyedév [271]
+            terr-guipuzcoa-per-292:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                1. negyedév [292]
+            terr-guipuzcoa-per-313:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                2. negyedév [313]
+            terr-guipuzcoa-per-334:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                3. negyedév [334]
+            terr-guipuzcoa-per-355:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                4. negyedév [355]
+            terr-guipuzcoa-per-40:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                1. negyedév [40]
+            terr-guipuzcoa-per-61:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                2. negyedév [61]
+            terr-guipuzcoa-per-82:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                3. negyedév [82]
+            terr-vizcaya-22:
+              help: null
+              label: Területi adózás. Bizkaia [22]
+            terr-vizcaya-con-reg-106:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 4.
+                negyedév [106]
+            terr-vizcaya-con-reg-127:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 1.
+                negyedév [127]
+            terr-vizcaya-con-reg-148:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 2.
+                negyedév [148]
+            terr-vizcaya-con-reg-169:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 3.
+                negyedév [169]
+            terr-vizcaya-con-reg-190:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 4.
+                negyedév [190]
+            terr-vizcaya-con-reg-211:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 1.
+                negyedév [211]
+            terr-vizcaya-con-reg-232:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 2.
+                negyedév [232]
+            terr-vizcaya-con-reg-253:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 3.
+                negyedév [253]
+            terr-vizcaya-con-reg-274:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 4.
+                negyedév [274]
+            terr-vizcaya-con-reg-295:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 1.
+                negyedév [295]
+            terr-vizcaya-con-reg-316:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 2.
+                negyedév [316]
+            terr-vizcaya-con-reg-337:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 3.
+                negyedév [337]
+            terr-vizcaya-con-reg-358:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 4.
+                negyedév [358]
+            terr-vizcaya-con-reg-43:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 1.
+                negyedév [43]
+            terr-vizcaya-con-reg-64:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 2.
+                negyedév [64]
+            terr-vizcaya-con-reg-85:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 3.
+                negyedév [85]
+            terr-vizcaya-per-105:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 4.
+                negyedév [105]
+            terr-vizcaya-per-126:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 1.
+                negyedév [126]
+            terr-vizcaya-per-147:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 2.
+                negyedév [147]
+            terr-vizcaya-per-168:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 3.
+                negyedév [168]
+            terr-vizcaya-per-189:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 4.
+                negyedév [189]
+            terr-vizcaya-per-210:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 1.
+                negyedév [210]
+            terr-vizcaya-per-231:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 2.
+                negyedév [231]
+            terr-vizcaya-per-252:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 3.
+                negyedév [252]
+            terr-vizcaya-per-273:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 4.
+                negyedév [273]
+            terr-vizcaya-per-294:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 1.
+                negyedév [294]
+            terr-vizcaya-per-315:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 2.
+                negyedév [315]
+            terr-vizcaya-per-336:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 3.
+                negyedév [336]
+            terr-vizcaya-per-357:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 4.
+                negyedév [357]
+            terr-vizcaya-per-42:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 1.
+                negyedév [42]
+            terr-vizcaya-per-63:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 2.
+                negyedév [63]
+            terr-vizcaya-per-84:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 3.
+                negyedév [84]
         2023-y-siguientes:
           casilla:
             490-01-declaracion-complementaria-1054:
@@ -74984,12 +79032,137 @@ modelo:
       revision:
         2021-2023:
           casilla:
+            x-c5n6au3f5pn7arb5e9niqqjledq6ipj9cdgmst35:
+              help: null
+              label: Tájékoztató melléklet. Igazolásszám
+            x-cdnmqs3c5pi6aorcc5p62or9dtn2qorfdlo6opbdcln78obid5gg:
+              help: null
+              label: Kiegészítő bevallás
+            x-cdnmqs3c5pn7arb5e9niqqjledq6ipj9cdgmst355lgmst35e9kmusg:
+              help: null
+              label: Az előző bevallás igazolásszáma
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Az önadózás vonatkozási éve
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: A bevallás nyelve
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Időszak (naptári hónap)
+            x-chim6r1eehkn0rpdc5qn8rrcd5onaqb4c5hmirre:
+              help: null
+              label: 'Az önadózás típusa (I: fizetendő, N: nemleges)'
+            x-chnmqbb5ecn64r3fe5qma:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Tömb
+            x-chnmqbb5ecn66obcd5j6ior1chnn4bbeelmmasjf:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Házszám kiegészítő
+            x-chnmqbb5ecn66rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Irányítószám
+            x-chnmqbb5ecn66rr4d5jmubbge9nncqbecdkm2:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Tartománykód
+            x-chnmqbb5ecn66rrde1m6arb5dpq6u:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Cím kiegészítés
+            x-chnmqbb5ecn6asr3c5m6asj1:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Lépcsőház
+            x-chnmqbb5ecn6orr3c5m6ip31cg:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Helység vagy település
+            x-chnmqbb5ecn6qtbed5hmis39ds:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Önkormányzat
+            x-chnmqbb5ecn6srrdc9p6abbmd5gg:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Közterület neve
+            x-chnmqbb5ecn6stbdclp6ubb3c5pm2:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Házszám
+            x-chnmqbb5ecn70r31dpq62:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Emelet
+            x-chnmqbb5ecn70rriehgmo:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Bejárat
+            x-chnmqbb5ecn70sjfepkmsor9c4:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Tartomány
+            x-chnmqbb5ecn70tb5e9q62:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Ajtó
+            x-chnmqbb5ecn78qbgdsmmstbdclp62or9dtn0:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Házszámozás típusa
+            x-chnmqbb5ecn78qbgdsmncqb1:
+              help: null
+              label: Adóügyi lakóhely spanyol területen. Közterület jellege
+            x-chnmqbb5f0n66rr4d5jmubbgc5kn6:
+              help: null
+              label: Adóügyi lakóhely külföldön. Országkód
+            x-chnmqbb5f0n66rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Adóügyi lakóhely külföldön. Irányítószám (ZIP)
+            x-chnmqbb5f0n66rrde1m6arb5dpq6u:
+              help: null
+              label: Adóügyi lakóhely külföldön. Cím kiegészítés
+            x-chnmqbb5f0n68rrdd5hmir39ds:
+              help: null
+              label: Adóügyi lakóhely külföldön. Cím
+            x-chnmqbb5f0n70ob9ec:
+              help: null
+              label: Adóügyi lakóhely külföldön. Ország
+            x-chnmqbb5f0n70rr2dhgm6qbfdo:
+              help: null
+              label: Adóügyi lakóhely külföldön. Település vagy város
+            x-chnmqbb5f0n70sjfepkmsor9c4mn4pb7d5nmsbb5edq62p3f:
+              help: null
+              label: Adóügyi lakóhely külföldön. Tartomány, régió vagy állam
+            x-dhkn2bhg64mm4objckmmirbgdtn6iojcck:
+              help: null
+              label: Az időszakban végzett adóköteles, nem mentes ügyletek. Adóalap
+                [01]
+            x-dhkn2bhg68mm6tbfehgg:
+              help: null
+              label: Az időszakban végzett adóköteles, nem mentes ügyletek. Adó [02]
+            x-dhkn2bhg6cmm4objckmn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Helyesbítések. Adóalap [03]
+            x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsrld9in8obj:
+              help: null
+              label: Az időszak adóköteles, nem mentes ügyletei. Az adóalap előjele
+                [03]
+            x-dhkn2bhg6gmm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Helyesbítések. Adó [04]
+            x-dhkn2bhg6gmn6qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Helyesbítések. Az adó előjele [04]
+            x-dhkn2bhg6kmmus35e9gm6qbfdpin6bb5f1imst31ec:
+              help: null
+              label: Az időszakban végzett mentes ügyletek [05]
+            x-dhkn2bhg6omm2bb4cli7aor9e8:
+              help: null
+              label: Levonandó [06]
+            x-dhkn2bhg6smn4pbjelm78ob4ds:
+              help: null
+              label: Az önadózás eredménye [07]
+            x-edo2sorfchkmerpdc9km6:
+              help: null
+              label: Adóalany. BIC-kód
+            x-edo2sorfchkmerpddhimi:
+              help: null
+              label: Adóalany. LEI-kód (ISO 17442 szabvány)
+            x-edo2ss35e9pmurj15lhmurjkc5hn8ro:
+              help: null
+              label: Adóalany. Kapcsolattartó személy
+            x-edo2st35dhimcrredsmm6rreehgm6t3f:
+              help: null
+              label: Adóalany. Kapcsolattartó telefonszáma
           construct:
             modelo-604-autoliquidacion:
               field:
