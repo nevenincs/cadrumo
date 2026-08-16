@@ -71,3 +71,41 @@ source_refs = [
     "boe-modelo-322-2007-form",
     "aeat-calendario-contribuyente-2026-hasta-2-marzo",
 ]
+
+[revisions."2026-y-siguientes".family_dispositions.dependency_classifications]
+reason = "A dependency classification names another modelo whose filing this one depends on. 322 depends on none: it is the LEAF of the grupo de entidades chain, the member entity's own monthly liquidation of its own operations, and every value it reports originates in that member's ledger. The dependency runs the other way -- Modelo 353 declares 'modelo-353-dep-322' because the group aggregate reads these results -- and a classification is authored on the DEPENDENT revision, not the source. Empty by direction, not by omission."
+legal_refs = [
+    "ley-37-1992:art-163-sexies",
+    "orden-eha-3434-2007:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = [
+    "aeat-dr-322-2026",
+    "aeat-modelo-322-procedure",
+]
+
+[revisions."2026-y-siguientes".family_dispositions.parameters]
+reason = "A parameter is a regulatory value the engine applies -- a rate, a bracket tranche, a threshold, a reduction coefficient. This revision applies none. Every base and every cuota it carries is declared: the filer enters the base and the cuota AEAT prints side by side in each tipo's row, and the registry's own formulas only ADD those declared cuotas and subtract the deducible total. No formula on this revision multiplies a base by a rate, so there is no versioned regulatory number for it to hold. A future revision that derived a cuota from a base would author the rate here, and this declaration is what that change would replace."
+legal_refs = [
+    "ley-37-1992:art-88",
+    "ley-37-1992:art-90",
+    "ley-37-1992:art-91",
+    "orden-eha-3434-2007:art-1",
+    "rd-1624-1992:art-71",
+]
+source_refs = [
+    "aeat-dr-322-2026",
+    "aeat-modelo-322-procedure",
+    "boe-modelo-322-2007-form",
+]
+
+[revisions."2026-y-siguientes".family_dispositions.extraction_profiles]
+reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. No such document is bundled for 322. Its artefacts are four diseños de registro, which describe the WIRE record and print no form labels, and the procedure page, which carries no box numbers at all: a search of it for a label followed by a bracketed box number returns nothing. Authoring patterns anyway would mean inventing the labels a real 322 declaración prints, which is exactly the fabrication the grounding rule forbids. Bundling a filed or AEAT-published 322 specimen is the change that makes this family authorable."
+legal_refs = [
+    "orden-eha-3434-2007:art-1",
+    "orden-eha-3434-2007:art-8",
+]
+source_refs = [
+    "aeat-dr-322-2026",
+    "aeat-modelo-322-procedure",
+]

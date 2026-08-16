@@ -1,0 +1,15 @@
+{
+  "corrections": [
+    {
+      "kind": "single_position",
+      "sheet": "Tipo 1 - Registro De Declarante",
+      "position": 58,
+      "corrected_type": "Alfabético",
+      "description": "TIPO DE SOPORTE",
+      "reason": "AEAT printed this row without its naturaleza column and without a position range: the published line reads '58 TIPO DE SOPORTE', where every neighbouring row carries one ('18-57 Alfanumérico RAZÓN SOCIAL DEL DECLARANTE', '59-107 Alfanumérico PERSONA CON QUIÉN RELACIONARSE'). The omission is a page-break artefact -- the row is the last line of the declarante table on page 4 of the PDF, and its own description continues at the top of page 5 as \"Se cumplimentará la siguiente clave: 'T': Transmisión telemática.\". That continuation is what establishes the naturaleza: the field's sole declared value is the single letter 'T', so it is alfabético, one position wide, which agrees with the record's arithmetic -- position 58 is the only byte of the declared 500 that no read row covers, bounded exactly by RAZÓN SOCIAL ending at 57 and PERSONA CON QUIÉN RELACIONARSE starting at 59. Declared rather than inferred because the parser must keep refusing this shape on sight: a single position with no naturaleza is indistinguishable from a numbered prose sentence, and 41 bundled designs open a description with the field's own range.",
+      "editions_read": [
+        "DR_280_2022.pdf (Modelo 280, ejercicio 2022) pages 4-5, 'Tipo 1 - Registro de declarante'"
+      ]
+    }
+  ]
+}

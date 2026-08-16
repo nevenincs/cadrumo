@@ -26,7 +26,7 @@ source_refs = [
 
 
 [revisions."2026-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = "CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). This revision DOES have a strictly-earlier sibling (2008-2025), so it could in principle be the landing point of a within-modelo continuity transition. It declares none because the numbered casillas it introduces are NEW identities rather than renumberings: the 2008-2025 sibling declares no numbered casilla at all, so there is no prior identity for [01], [02], [03], [04], [05], [08], [09] or [10] to have evolved from."
+reason = "This revision has a strictly-earlier sibling (2008-2025), and that sibling now declares the same numbered boxes [01], [02], [03], [04], [05], [08] and [09] this one does -- its own diseno prints them, so they were mirrored onto it when its export layout was authored. Those seven DO continue across the split, and [10] is genuinely new here. What blocks declaring them is the type, not the facts: every evolution names a continuidad_id, and no continuidad chain is declared for modelo 353 -- nor for any modelo in this registry, where every casilla_continuidad_evolutions family is a disposition and not one evolution has ever been authored. An entry here could name no chain. A deferral with a named unblocker, NOT a claim that nothing evolved: authoring 353's chains, then the seven unchanged evolutions and the absence of a predecessor for [10], is the work this stands in for."
 legal_refs = [
     "orden-eha-3434-2007:art-2",
     "orden-eha-3434-2007:art-8",
@@ -34,12 +34,12 @@ legal_refs = [
 ]
 source_refs = [
     "aeat-dr-353-2026",
+    "aeat-dr-353-2021-2025",
     "aeat-modelo-353-procedure",
     "boe-modelo-353-2007-form",
     "aeat-calendario-contribuyente-2026-hasta-2-marzo",
     "aeat-calendario-contribuyente-2026-domiciliacion",
 ]
-
 [revisions."2026-y-siguientes".family_dispositions.relations]
 reason = "A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 3 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this declaration through the same revision."
 legal_refs = [

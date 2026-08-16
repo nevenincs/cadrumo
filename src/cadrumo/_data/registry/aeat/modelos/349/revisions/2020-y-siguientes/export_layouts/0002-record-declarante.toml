@@ -8,6 +8,124 @@ order = 0
 encoding = "latin-1"
 line_ending = "none"
 
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = "modelo-349-decl-persona-relacion-telefono"
+offset = 59
+length = 9
+kind = "header"
+# Design campo 7 subcampo 1, "59-67 TELEFONO: Campo numerico de 9 posiciones".
+# Read from the profile contact section, which models the persona con quien
+# relacionarse as its own party: under a gestor this is routinely neither the
+# taxpayer nor the presenter, so neither identity may stand in for it.
+producer_key = "contact_person.phone"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = "modelo-349-decl-persona-relacion-nombre"
+offset = 68
+length = 40
+kind = "header"
+# Design campo 7 subcampo 2, "68-107 APELLIDOS Y NOMBRE": first surname, a
+# space, second surname, a space, then the full given name, in that order.
+producer_key = "contact_person.full_name"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = "modelo-349-decl-numero-identificativo"
+offset = 108
+length = 13
+kind = "casilla"
+casilla_id = "decl.numero-identificativo"
+# Design campo 8. AEAT assigns the numero identificativo at presentation rather
+# than deriving it from the draft, so no producer key can carry it.
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = "modelo-349-decl-complementaria-sustitutiva"
+offset = 121
+length = 2
+kind = "casilla"
+casilla_id = "decl.complementaria-sustitutiva"
+# Design campo 9. AEAT declares 121-122 as ONE two-byte field, holding "C" for
+# complementaria or "S" for sustitutiva on a second or later presentation.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = "modelo-349-decl-numero-identificativo-anterior"
+offset = 123
+length = 13
+kind = "casilla"
+casilla_id = "decl.numero-identificativo-anterior"
+# Design campo 10. Named only when campo 9 carries "C" or "S", identifying the
+# declaration this one replaces or supplements.
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = "modelo-349-decl-cambio-periodicidad"
+offset = 186
+length = 1
+kind = "casilla"
+casilla_id = "decl.cambio-periodicidad"
+# Design campo 13. Where entregas and prestaciones exceed 50.000 euros in the
+# SECOND month of a quarter (febrero, mayo, agosto, noviembre), that period is
+# declared monthly instead, and this indicator states the change. A filer fact
+# about the obligation, not a derivable draft value.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions.2020-y-siguientes.export_layouts.records.fields]]
+id = "modelo-349-decl-nif-representante-legal"
+offset = 391
+length = 9
+kind = "casilla"
+casilla_id = "decl.nif-representante-legal"
+# Design campo 20. Carried only where the declarante is under 14, naming the NIF
+# of the padre, madre o tutor. Modelo 180 authors the perceptor's equivalent as
+# a manual casilla for the same reason: no producer holds a representative for
+# a party the profile does not model as one.
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current"]
+
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
 id = "modelo-349-decl-record-type"
 offset = 1

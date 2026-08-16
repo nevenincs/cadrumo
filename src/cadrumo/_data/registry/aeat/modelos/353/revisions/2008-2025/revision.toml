@@ -61,3 +61,41 @@ source_refs = [
     "aeat-calendario-contribuyente-2026-hasta-2-marzo",
     "aeat-calendario-contribuyente-2026-domiciliacion",
 ]
+
+[revisions."2008-2025".family_dispositions.parameters]
+reason = "A parameter is a regulatory value the engine applies -- a rate, a bracket tranche, a threshold, a reduction coefficient. 353 applies none. It is an AGGREGATION return: every cuota it reports was already determined, at its own rate, on the member entity's own Modelo 322, and 353 only sums those results and nets them against the group's pending compensaciones and prior payments. Every formula on this revision is addition and subtraction over casillas whose values arrive from the members; not one multiplies by a rate. The regime of LIVA art. 163 sexies fixes WHO aggregates, not at what rate, so there is no versioned regulatory number for this revision to carry."
+legal_refs = [
+    "ley-37-1992:art-163-sexies",
+    "orden-eha-3434-2007:art-2",
+    "orden-eha-3434-2007:art-8",
+    "rd-1624-1992:art-71",
+]
+source_refs = [
+    "aeat-dr-353-2021-2025",
+    "aeat-modelo-353-procedure",
+    "boe-modelo-353-2007-form",
+]
+
+[revisions."2008-2025".family_dispositions.projection_endpoints]
+reason = "A projection endpoint names a FilingProjectionRef, and that type is a CLOSED union whose members are all m303_* -- the seven Modelo 303 endpoints the application projects into. No non-303 revision can populate this family at all: there is no member for it to name, so an entry here would not merely be unauthored, it would be unrepresentable. This is a type-level exclusion, not missing work. It changes only if the union gains a 353 member, which is a code change in core, not a registry one."
+legal_refs = [
+    "ley-37-1992:art-163-sexies",
+    "orden-eha-3434-2007:art-2",
+    "rd-1624-1992:art-71",
+]
+source_refs = [
+    "aeat-dr-353-2021-2025",
+    "aeat-modelo-353-procedure",
+]
+
+[revisions."2008-2025".family_dispositions.extraction_profiles]
+reason = "An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. No such document is bundled for 353. Its three bundled artefacts are the two diseños de registro, which describe the WIRE record and print no form labels; the procedure page, which carries no box numbers at all; and Orden EHA/3434/2007, whose consolidated text bundles no anexo with the printed form. A grep of both for a label-plus-box-number pattern returns nothing. Authoring patterns anyway would mean inventing the labels a real 353 declaración prints, which is exactly the fabrication the grounding rule forbids. Bundling a filed or AEAT-published 353 specimen is the change that makes this family authorable."
+legal_refs = [
+    "orden-eha-3434-2007:art-2",
+    "orden-eha-3434-2007:art-8",
+]
+source_refs = [
+    "aeat-dr-353-2021-2025",
+    "aeat-modelo-353-procedure",
+    "boe-modelo-353-2007-form",
+]

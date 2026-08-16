@@ -32,8 +32,8 @@ record_identity = "Tipo 1 - Registro De Declarante"
 
 [[entries]]
 export_field_id = "m347-2025.declarante.f003"
-kind = "draft"
-draft_attribute = "filing_year"
+kind = "casilla"
+casilla_id = "decl.ejercicio"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 [entries.anchor]

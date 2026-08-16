@@ -1,0 +1,12 @@
+[[revisions.2008-y-siguientes.export_layouts]]
+id = 'generated-modelo-347-2008-y-siguientes-fichero'
+format = 'fixed_width'
+source_refs = ['aeat-dr-347-2025']
+legal_refs = [
+    'ley-58-2003:art-93',
+    'orden-eha-3012-2008:art-1',
+    'orden-eha-3012-2008:art-10',
+    'orden-hac-1431-2025:art-1',
+    'rd-1065-2007:art-31',
+]
+dictionary_path_overrides = []

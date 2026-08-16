@@ -1,0 +1,10 @@
+[[revisions.2020-y-siguientes.casillas]]
+id = "decl.complementaria-sustitutiva"
+number = "121-122"
+section = ["declarante", "identificacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-349-decl-complementaria-sustitutiva"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current"]
