@@ -2473,3 +2473,53 @@ half immediately is the recovery; keeping the window short is the mitigation.
 **The `pytest-of-hello/pytest-current` symlink `PermissionError` is no longer
 cosmetic.** It aborted a verification run outright. `--basetemp=<private dir>`
 is a reliable per-run workaround and costs nothing.
+
+## Where the module-scope axis pays, and where it does not
+
+Screening all 81 CLI test modules that use `active_profile_isolated_backend_fixture`
+found only **6** that are provably read-only -- no mutating verb in any literal
+argv, and no invocation whose argv could not be classified. The screen is
+deliberately conservative: an `invoke_cached_cli` call whose argv is built
+dynamically counts as *unclassifiable*, never as read-only, because a false
+read-only verdict is what leaks state between tests. (An earlier, looser pass in
+this campaign missed `_list_rows` for exactly that reason -- it builds its argv
+in a loop.)
+
+All six were measured: 24.59s, 6.49s, 3.85s, 3.15s, 2.59s, 1.27s. **None is
+worth converting.** That is the useful negative result:
+
+> The axis pays where a read-only suite performs expensive shared **seeding** in
+> its test bodies. It does not pay for read-only-ness alone. Module-scoping the
+> backend fixture by itself saves only the per-test storage-root and profile
+> registration, about 0.27s per test.
+
+`test_ledger_list_filter` qualified because it re-imported a four-CSV corpus ten
+times, not because it was read-only. Read-only was the *permission*; the corpus
+import was the *prize*. Do not re-chase the other five.
+
+(Four of the six are also currently red on the registry-validation failure
+described above, so their timings are the shape of a failing run.)
+
+### The remaining prize is in the suites that DO mutate
+
+Counting test functions that seed a ledger corpus -- directly, or through a
+module-local helper whose body issues `ledger import` -- gives **141 per-test
+seedings across 25 modules**, led by `test_ledger_bulk_classify` (23),
+`test_ledger_import_ux` (16), `test_cli_workflow_verification` (13) and
+`test_ledger_fx_import` (11).
+
+**Method and its limit:** a helper counts if its body contains a literal argv
+naming both `ledger` and `import`. That over-counts cheap seedings (a
+two-transaction fixture costs far less than the four-CSV corpus) and misses any
+seeding assembled dynamically, so 141 bounds the population rather than
+measuring the time. It is a target list, not a saving.
+
+Module scope is **unsafe** for nearly all of them -- they classify, split, merge
+and remove -- so the shape that would fit is a **seed-once, copy-per-test**
+fixture: build the world once, snapshot the isolated storage root, and give each
+test a copy instead of re-running the import. That keeps per-test isolation
+exactly as it is today while removing the repeated work, which is why it is
+worth more than the scope axis. It is unproven: it needs checking against open
+engine handles, WAL sidecars, and any absolute path baked into the encrypted
+store. That validation is the next substantial piece, and it should not be
+started as a side effect of a smaller change.
