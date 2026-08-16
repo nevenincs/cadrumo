@@ -60,6 +60,7 @@ from ._record_design_schema import (
     RecordDesignField,
     RecordDesignFieldTypeCorrection,
     RecordDesignHeaderCellCorrection,
+    RecordDesignNote,
     RecordDesignRelativeSuffixMarker,
     RecordDesignSheet,
     RecordDesignSkippedSheet,
@@ -104,6 +105,10 @@ class _WorkbookSheetRows:
     variable_total_marker_rows: list[int] = field(default_factory=list)
     mixed_total_rows: list[int] = field(default_factory=list)
     corrections_applied: list[RecordDesignCorrection] = field(default_factory=list)
+    #: ``Nota N`` definitions the sheet prints beneath its field table, keyed by
+    #: the printed ordinal. A field's naming cell cites the ordinal; only the
+    #: definition says what the citation MEANS, so the two must travel together.
+    notes: dict[str, str] = field(default_factory=dict)
 
 
 type _TypeCorrectionIndex = Mapping[tuple[str, int], RecordDesignFieldTypeCorrection]
@@ -522,6 +527,7 @@ def _extract_sheet_rows(
         variable_envelope=variable_envelope,
         auxiliary_envelope_header=auxiliary_envelope_header,
         corrections=tuple(parsed_rows.corrections_applied),
+        notes=tuple(RecordDesignNote(ordinal=k, body=v) for k, v in sorted(parsed_rows.notes.items())),
     )
 
 
@@ -543,8 +549,28 @@ def _scan_sheet_rows(
         trailing_blank_rows = 0
         if _consume_total_row(sheet_name, parsed_rows, row_number, values):
             continue
+        if _consume_note_definition_row(parsed_rows, values):
+            continue
         _consume_field_row(sheet_name, parsed_rows, header, row_number, values, corrections or {})
     return parsed_rows
+
+
+_NOTE_DEFINITION_RE = re.compile(r"^Nota\s*(?P<ordinal>\d{1,2})[.:\s-]*(?P<body>.+)$", re.IGNORECASE)
+
+
+def _consume_note_definition_row(parsed_rows: _WorkbookSheetRows, values: tuple[object, ...]) -> bool:
+    """Record a ``Nota N`` definition row, returning whether the row was one.
+
+    AEAT prints these beneath the field table. They are not positions, so the
+    field scanner would otherwise discard them -- and with them the only text
+    that says what a field's ``(Nota N)`` citation means.
+    """
+    joined = " ".join(str(value).strip() for value in values if value is not None and str(value).strip())
+    match = _NOTE_DEFINITION_RE.match(joined)
+    if match is None:
+        return False
+    parsed_rows.notes.setdefault(match.group("ordinal"), match.group("body").strip())
+    return True
 
 
 def _consume_total_row(

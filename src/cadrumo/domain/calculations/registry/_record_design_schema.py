@@ -20,6 +20,7 @@ __all__ = [
     "RecordDesignField",
     "RecordDesignFieldTypeCorrection",
     "RecordDesignHeaderCellCorrection",
+    "RecordDesignNote",
     "RecordDesignRelativeSuffixMarker",
     "RecordDesignSheet",
     "RecordDesignSkippedSheet",
@@ -386,6 +387,21 @@ RecordDesignCorrection = Annotated[
 ]
 
 
+class RecordDesignNote(RegistryModel):
+    """One ``Nota N`` definition a record-design sheet prints beneath its table.
+
+    A field's naming cell cites the ordinal (``Versión del Programa (Nota 1)``);
+    only this body says what the citation MEANS. Reading a citation without its
+    definition would let one design's ``Nota 1`` be interpreted as another's, so
+    both travel together on the sheet that printed them.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    ordinal: str
+    body: str
+
+
 class RecordDesignSheet(RegistryModel):
     """Parsed field rows and declared total length for one workbook sheet."""
 
@@ -400,6 +416,15 @@ class RecordDesignSheet(RegistryModel):
     #: type or a header column, per :data:`RecordDesignCorrection`. Empty for
     #: the overwhelming majority of sheets, which read as published.
     corrections: tuple[RecordDesignCorrection, ...] = ()
+    #: ``Nota N`` definitions printed beneath this sheet's field table.
+    notes: tuple[RecordDesignNote, ...] = ()
+
+    def note_body(self, ordinal: str) -> str | None:
+        """Return the body of ``Nota <ordinal>`` as this sheet printed it."""
+        for note in self.notes:
+            if note.ordinal == ordinal:
+                return note.body
+        return None
 
     @model_validator(mode="after")
     def _require_one_record_composition_kind(self) -> Self:
