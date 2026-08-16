@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:7e0798073f1863e1bfd319732d63e60d38f3710b592007a36fdb19bc9f3fb171'
+body_hash: 'sha256:3d22fe93beccbd10e8af03331a8fd3834595d7e4add2b43bb5741d024092f3c6'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -2006,3 +2006,54 @@ One profile (31 minutes) plus two isolated re-runs, to establish that the suite
 has not drifted and that the one candidate is contention over an already-shared
 cost. That is the intended steady state: the baseline turns an open-ended
 "find something" round into a bounded comparison with a definite answer.
+
+## Refactor analysis, and why no refactor was landed this round
+
+The operator asked what could be REFACTORED rather than cached, which is a
+different lever from everything above: not "compute once and share", but "stop
+rebuilding the world to observe one fact".
+
+### The shape, measured
+
+`test_cli_workflow_verification` (103-191s) has a helper,
+`_drive_workflow_round_trip`, that performs an entire workflow -- profile
+create, auth configure/status/test, ledger import, overview, review -- and it is
+invoked from **14 call sites, ~18 executions, one per test**. Each test then
+asserts ONE field of a plain data bundle (`status_payload`,
+`auth_status_payload`, `imported_payload`, ...). The backend fixture is
+`autouse` and function-scoped, so nothing is reused.
+
+`test_batch_ingest_runner` (107.4s) shows the same shape in miniature: eleven
+tests take the same `(runtime_profile, batch_dir)` pair, and its first three
+tests each call `_run(...)` on identical fixtures to assert different aspects of
+one run -- the items reported, the refusal detail, the persisted draft.
+
+The refactor is to build the world once per scenario and let tests observe
+different facts of it: a class- or module-scoped fixture returning the outcome
+bundle, with per-test assertions unchanged. Sharing the BUNDLE is safe by
+construction where sharing a backend would not be -- the bundle is captured
+data, not live state.
+
+### Why nothing was landed
+
+Both candidates failed a precondition, and the honest answer is that neither is
+currently verifiable:
+
+- `test_cli_workflow_verification` is **18 of 20 red** for tree-wide registry
+  reasons. A module-scoped fixture there collapses eighteen individually-named
+  failures into one setup error, which trades diagnostics for speed at exactly
+  the moment the diagnostics are carrying information.
+- `test_batch_ingest_runner` was the clean alternative -- 21 passed, twice, in
+  the isolated baseline. Re-running it this round gave **5 failed, 16 passed**,
+  and a repeat gave **21 passed** again. It is intermittently flaky, roughly one
+  run in four.
+
+A before/after comparison against a module that changes verdict between
+identical runs cannot establish that a refactor preserved behaviour. The
+repeat-before-reporting rule earned its place twice here: once by preventing a
+false regression report, and once by disqualifying the target.
+
+So the sequencing is stability first. Recorded as an available, quantified
+refactor rather than a ruled-out one -- the lever is real and the payoff is the
+largest remaining (roughly 103s to 10-15s on the workflow module alone), but it
+should land against a module whose result is reproducible.
