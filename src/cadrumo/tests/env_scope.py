@@ -44,6 +44,7 @@ from pydantic_settings import SettingsConfigDict
 
 from ..core import AuthProviderKind
 from ..core.config import Settings, reset_settings_cache
+from ..core.external_constants import OutputLanguage
 from ..core.i18n import OUTPUT_LANGUAGE_ENV_VAR, clear_output_language_cache
 from ._collection_storage_root import SETTINGS_STEM
 
@@ -216,7 +217,7 @@ def scoped_sys_argv(argv: list[str]) -> Iterator[None]:
         sys.argv = saved
 
 
-def activate_output_language(language: str | None) -> None:
+def activate_output_language(language: OutputLanguage | None) -> None:
     """Set the output language and make the change observable, without restoring it.
 
     ``load_settings()`` holds a process-wide :class:`Settings` singleton cached
@@ -246,7 +247,7 @@ def activate_output_language(language: str | None) -> None:
 
 
 @contextmanager
-def output_language_scope(language: str | None) -> Iterator[None]:
+def output_language_scope(language: OutputLanguage | None) -> Iterator[None]:
     """Pin the output language for the with-block and restore it on exit.
 
     Restores the prior value even when the block mutates the variable partway
