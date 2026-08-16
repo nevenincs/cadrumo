@@ -1,0 +1,945 @@
+# Modelo 151 (2015-2022) — página 07 (design sheet M15107000), positions 1-1600.
+#
+# TRANSCRIBED from the bundled AEAT Diseño de Registro aeat-dr-151-2015
+# (corpus/aeat_official/disenos_registro/modelo_151/files/02-151-ejercicio-2015-2022.xls,
+# sha256 997dc9cf5230a374716d04a5ae9aed0e9c659ee9352451843dbc5232d3f2137a,
+# 1206784 bytes; AEAT titles it "151 - Orden HAP/2783/2015 (Ejercicios
+# 2015-2022)", matching this revision's window exactly).
+#
+# Every offset, length, label and alignment rule is read out of that design.
+# Alignment follows AEAT's own Tipo column: "An" campos are left-aligned and
+# blank-filled, "Num" campos right-aligned and zero-filled, per the design's
+# Nota 2. `number` carries the campo's own inclusive position range.
+
+
+[[revisions."2015-2022".export_layouts]]
+id = "modelo-151-2015-fichero-boe"
+
+[[revisions."2015-2022".export_layouts.records]]
+id = "modelo-151-2015-p07"
+record_type = "pagina_07"
+order = 7
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-inicio-del-identifi-r-de-modelo-y-pagina-1"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-modelo-2"
+offset = 3
+length = 3
+kind = "literal"
+literal = "151"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-pagina-3"
+offset = 6
+length = 2
+kind = "literal"
+literal = "07"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-fin-de-identificador-de-modelo-4"
+offset = 8
+length = 4
+kind = "literal"
+literal = "000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-reservado-para-la-administracion-5"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-tipo-de-renta-1-01"
+offset = 13
+length = 2
+kind = "casilla"
+casilla_id = "p07.tipo-de-renta-1-01"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-descripcion-de-la-ganancia-patrimonial-01"
+offset = 15
+length = 100
+kind = "casilla"
+casilla_id = "p07.descripcion-de-la-ganancia-patrimonial-01"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-naturaleza-2-01"
+offset = 115
+length = 1
+kind = "casilla"
+casilla_id = "p07.naturaleza-2-01"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-ganancia-patrimonial-3-01"
+offset = 116
+length = 17
+kind = "casilla"
+casilla_id = "p07.ganancia-patrimonial-3-01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-retencion-o-ingreso-a-cuenta-4-01"
+offset = 133
+length = 17
+kind = "casilla"
+casilla_id = "p07.retencion-o-ingreso-a-cuenta-4-01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-tipo-de-renta-1-02"
+offset = 150
+length = 2
+kind = "casilla"
+casilla_id = "p07.tipo-de-renta-1-02"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-descripcion-de-la-ganancia-patrimonial-02"
+offset = 152
+length = 100
+kind = "casilla"
+casilla_id = "p07.descripcion-de-la-ganancia-patrimonial-02"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-naturaleza-2-02"
+offset = 252
+length = 1
+kind = "casilla"
+casilla_id = "p07.naturaleza-2-02"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-ganancia-patrimonial-3-02"
+offset = 253
+length = 17
+kind = "casilla"
+casilla_id = "p07.ganancia-patrimonial-3-02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-retencion-o-ingreso-a-cuenta-4-02"
+offset = 270
+length = 17
+kind = "casilla"
+casilla_id = "p07.retencion-o-ingreso-a-cuenta-4-02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-tipo-de-renta-1-03"
+offset = 287
+length = 2
+kind = "casilla"
+casilla_id = "p07.tipo-de-renta-1-03"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-descripcion-de-la-ganancia-patrimonial-03"
+offset = 289
+length = 100
+kind = "casilla"
+casilla_id = "p07.descripcion-de-la-ganancia-patrimonial-03"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-naturaleza-2-03"
+offset = 389
+length = 1
+kind = "casilla"
+casilla_id = "p07.naturaleza-2-03"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-ganancia-patrimonial-3-03"
+offset = 390
+length = 17
+kind = "casilla"
+casilla_id = "p07.ganancia-patrimonial-3-03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-retencion-o-ingreso-a-cuenta-4-03"
+offset = 407
+length = 17
+kind = "casilla"
+casilla_id = "p07.retencion-o-ingreso-a-cuenta-4-03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-resto-ganancia-patrimonial-3"
+offset = 424
+length = 17
+kind = "casilla"
+casilla_id = "p07.resto-ganancia-patrimonial-3"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-resto-retencion-o-ingreso-a-cuenta-4"
+offset = 441
+length = 17
+kind = "casilla"
+casilla_id = "p07.resto-retencion-o-ingreso-a-cuenta-4"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-total-ganancias-patrimoniales-5"
+offset = 458
+length = 17
+kind = "casilla"
+casilla_id = "p07.total-ganancias-patrimoniales-5"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-total-retencion-o-ingresos-a-cuenta-6"
+offset = 475
+length = 17
+kind = "casilla"
+casilla_id = "p07.total-retencion-o-ingresos-a-cuenta-6"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-tipo-de-renta-1-04"
+offset = 492
+length = 2
+kind = "casilla"
+casilla_id = "p07.tipo-de-renta-1-04"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-descripcion-del-elemento-patrimonial-01"
+offset = 494
+length = 100
+kind = "casilla"
+casilla_id = "p07.descripcion-del-elemento-patrimonial-01"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-fecha-de-transmision-01"
+offset = 594
+length = 8
+kind = "casilla"
+casilla_id = "p07.fecha-de-transmision-01"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-fecha-de-adquisicion-01"
+offset = 602
+length = 8
+kind = "casilla"
+casilla_id = "p07.fecha-de-adquisicion-01"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-valor-de-transmision-2-01"
+offset = 610
+length = 17
+kind = "casilla"
+casilla_id = "p07.valor-de-transmision-2-01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-valor-de-adquisicion-3-01"
+offset = 627
+length = 17
+kind = "casilla"
+casilla_id = "p07.valor-de-adquisicion-3-01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-diferencia-4-01"
+offset = 644
+length = 17
+kind = "casilla"
+casilla_id = "p07.diferencia-4-01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-ganancia-patrimonial-5-01"
+offset = 661
+length = 17
+kind = "casilla"
+casilla_id = "p07.ganancia-patrimonial-5-01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-tipo-de-renta-1-05"
+offset = 678
+length = 2
+kind = "casilla"
+casilla_id = "p07.tipo-de-renta-1-05"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-descripcion-del-elemento-patrimonial-02"
+offset = 680
+length = 100
+kind = "casilla"
+casilla_id = "p07.descripcion-del-elemento-patrimonial-02"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-fecha-de-transmision-02"
+offset = 780
+length = 8
+kind = "casilla"
+casilla_id = "p07.fecha-de-transmision-02"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-fecha-de-adquisicion-02"
+offset = 788
+length = 8
+kind = "casilla"
+casilla_id = "p07.fecha-de-adquisicion-02"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-valor-de-transmision-2-02"
+offset = 796
+length = 17
+kind = "casilla"
+casilla_id = "p07.valor-de-transmision-2-02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-valor-de-adquisicion-3-02"
+offset = 813
+length = 17
+kind = "casilla"
+casilla_id = "p07.valor-de-adquisicion-3-02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-diferencia-4-02"
+offset = 830
+length = 17
+kind = "casilla"
+casilla_id = "p07.diferencia-4-02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-ganancia-patrimonial-5-02"
+offset = 847
+length = 17
+kind = "casilla"
+casilla_id = "p07.ganancia-patrimonial-5-02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-tipo-de-renta-1-06"
+offset = 864
+length = 2
+kind = "casilla"
+casilla_id = "p07.tipo-de-renta-1-06"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-descripcion-del-elemento-patrimonial-03"
+offset = 866
+length = 100
+kind = "casilla"
+casilla_id = "p07.descripcion-del-elemento-patrimonial-03"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-fecha-de-transmision-03"
+offset = 966
+length = 8
+kind = "casilla"
+casilla_id = "p07.fecha-de-transmision-03"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-fecha-de-adquisicion-03"
+offset = 974
+length = 8
+kind = "casilla"
+casilla_id = "p07.fecha-de-adquisicion-03"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-valor-de-transmision-2-03"
+offset = 982
+length = 17
+kind = "casilla"
+casilla_id = "p07.valor-de-transmision-2-03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-valor-de-adquisicion-3-03"
+offset = 999
+length = 17
+kind = "casilla"
+casilla_id = "p07.valor-de-adquisicion-3-03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-diferencia-4-03"
+offset = 1016
+length = 17
+kind = "casilla"
+casilla_id = "p07.diferencia-4-03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-ganancia-patrimonial-5-03"
+offset = 1033
+length = 17
+kind = "casilla"
+casilla_id = "p07.ganancia-patrimonial-5-03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-tipo-de-renta-1-07"
+offset = 1050
+length = 2
+kind = "casilla"
+casilla_id = "p07.tipo-de-renta-1-07"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-descripcion-del-elemento-patrimonial-04"
+offset = 1052
+length = 100
+kind = "casilla"
+casilla_id = "p07.descripcion-del-elemento-patrimonial-04"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-fecha-de-transmision-04"
+offset = 1152
+length = 8
+kind = "casilla"
+casilla_id = "p07.fecha-de-transmision-04"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-fecha-de-adquisicion-04"
+offset = 1160
+length = 8
+kind = "casilla"
+casilla_id = "p07.fecha-de-adquisicion-04"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-valor-de-transmision-2-04"
+offset = 1168
+length = 17
+kind = "casilla"
+casilla_id = "p07.valor-de-transmision-2-04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-valor-de-adquisicion-3-04"
+offset = 1185
+length = 17
+kind = "casilla"
+casilla_id = "p07.valor-de-adquisicion-3-04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-diferencia-4-04"
+offset = 1202
+length = 17
+kind = "casilla"
+casilla_id = "p07.diferencia-4-04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-ganancia-patrimonial-5-04"
+offset = 1219
+length = 17
+kind = "casilla"
+casilla_id = "p07.ganancia-patrimonial-5-04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-tipo-de-renta-1-08"
+offset = 1236
+length = 2
+kind = "casilla"
+casilla_id = "p07.tipo-de-renta-1-08"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-descripcion-del-elemento-patrimonial-05"
+offset = 1238
+length = 100
+kind = "casilla"
+casilla_id = "p07.descripcion-del-elemento-patrimonial-05"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-fecha-de-transmision-05"
+offset = 1338
+length = 8
+kind = "casilla"
+casilla_id = "p07.fecha-de-transmision-05"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-fecha-de-adquisicion-05"
+offset = 1346
+length = 8
+kind = "casilla"
+casilla_id = "p07.fecha-de-adquisicion-05"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-valor-de-transmision-2-05"
+offset = 1354
+length = 17
+kind = "casilla"
+casilla_id = "p07.valor-de-transmision-2-05"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-valor-de-adquisicion-3-05"
+offset = 1371
+length = 17
+kind = "casilla"
+casilla_id = "p07.valor-de-adquisicion-3-05"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-diferencia-4-05"
+offset = 1388
+length = 17
+kind = "casilla"
+casilla_id = "p07.diferencia-4-05"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-ganancia-patrimonial-5-05"
+offset = 1405
+length = 17
+kind = "casilla"
+casilla_id = "p07.ganancia-patrimonial-5-05"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-reservado-aeat-23"
+offset = 1422
+length = 167
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+
+[[revisions."2015-2022".export_layouts.records.fields]]
+id = "modelo-151-2015-p07-indicador-de-fin-de-registro-23"
+offset = 1589
+length = 12
+kind = "literal"
+literal = "</T15107000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
