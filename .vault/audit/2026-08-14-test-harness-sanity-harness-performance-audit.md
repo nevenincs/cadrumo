@@ -3470,3 +3470,80 @@ meet would prove something weaker."
 **Do not re-chase.** The sleep is the test's subject, not its overhead. A
 deliberate, documented real-time wait is not a performance defect, and removing
 it would trade a proven behaviour for 2.5s.
+
+## Is there a better registry-loading architecture? Yes, and two thirds of it already exists
+
+The pipeline is right; the **phase boundary** is wrong. The architecture rule
+already describes it as a compiler: "TOML authoring tree -> loader/compiler ->
+strict schema objects -> registry validation -> validated authority". The compile
+and validate steps exist -- they just run at RUNTIME, on the operator's machine,
+on first use.
+
+### What is already build-time
+
+`dev/packaging/python_cohort.py:_stamp_bundled_verdict_into_build_tree` stamps a
+shipped verdict into the build tree, and `_verdict_cache` reads it beside the
+installed registry root. Its own docstring states the intent: *"The build and
+continuous integration are the validation gate; the runtime asserts fingerprint
+identity only."* So **validation (~17.6s) is already a build-time concern** for a
+real wheel. That third is done.
+
+### What is not, and the measurement that decides the shape
+
+Two runtime costs remain on every process:
+
+| cost | measured |
+|---|---|
+| fingerprint walk of 18,847 entries (the cache key) | **0.93s**, every process |
+| `_construct_authority` with the compiled artefact present | **2.9s** |
+| ...of which reading the 23.0 MB artefact from disk | **0.007s** |
+
+**99.8% of a warm load is rebuilding objects, not I/O.** That single number
+changes the answer:
+
+- **Shipping the compiled artefact is necessary but NOT sufficient.** It removes
+  the 10.2s first-run compile, and nothing more: every later run still pays the
+  2.9s reconstruction. A design that stops at "ship the pickle" fixes the first
+  run and leaves the operator-facing number where it is.
+- **The lever is not hydrating the whole authority to answer part of a
+  question.** `aeat app modelo list` needs ~60 modelo headers and reconstructs an
+  object graph compiled from 17,526 fragments.
+
+### The shape this points at
+
+1. **Compile at release, ship the artefact.** Removes the per-machine first-run
+   compile entirely. Not as a pickle: pickle executes arbitrary code on load and
+   is fragile across interpreter versions, which is the wrong contract for
+   something shipped in a wheel. A plain data format -- SQLite is the natural
+   fit -- keeps it inspectable and version-stable.
+2. **Random access instead of whole-graph hydration.** A single indexed file lets
+   a listing surface read the rows it needs and a calculation path read its
+   revision, without either paying for the other. This is what makes the
+   remaining 2.9s go away rather than move.
+3. **Cheap identity for immutable installs.** An installed wheel's registry
+   cannot change, so its identity is the package version plus one stamped digest
+   -- not a walk of 18,847 entries per process. Keep the full walk for editable
+   and authoring trees, where files genuinely do change; that distinction already
+   exists (`is_bundled_registry_root`, and the separate fingerprint TTLs).
+
+### Why this is better architecture, not just faster
+
+It resolves a tension already recorded in this audit. The earlier remedy for CLI
+load time was "a metadata projection for listing surfaces", which
+`aeat-registry-authority-flow` resists for good reason: it forbids parallel read
+paths over registry data, because snapshot construction is authority-owned.
+Random access over ONE shipped artefact is not a second read path -- it is the
+same authority, consulted without being fully hydrated first. **The projection
+idea and the no-parallel-paths rule stop conflicting.**
+
+It also puts the compiler where the rule already says it belongs, and makes the
+runtime do what that docstring already claims it does: assert identity, not
+recompute the answer.
+
+### Cost, honestly
+
+This is a release-pipeline and artefact-format change touching the registry
+authority -- the most load-bearing surface in the application. It is an ADR, not
+a sweep. The prize, from the numbers above: a warm authority load of ~3.8s
+(0.93s identity + 2.9s hydration) becomes a read plus a partial hydration, and
+the 33s cold CLI loses its compile entirely.
