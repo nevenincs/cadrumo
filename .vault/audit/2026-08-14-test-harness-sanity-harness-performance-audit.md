@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:1e745c5b78ae1f9f6fbc8116dc014be831d07b9732c8f913c7cbe79510bbbb07'
+body_hash: 'sha256:045ce56ec07bfcd589c2ab1d5a68c8f21341946a807649eee19a413dcae5ae0c'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -1816,3 +1816,53 @@ times that conclusion was true of the slices it had profiled and false of the
 suite, because the slice list came from habit. A coverage claim should be
 derived from the configuration that defines the population -- here, three lines
 of `testpaths` -- not from the set of runs that happen to have been done.
+
+## The harness slice, characterised -- and a production cold-start cost
+
+The third `testpaths` entry (`dev/packaging/tests/test_installed_oracles.py`)
+was checked and is already optimal: 244.35s for six tests, of which a 199.30s
+`installed_cohort` fixture is MODULE-scoped, so the build-and-install is already
+shared. Nothing to collapse.
+
+The harness slice was then characterised with the spawn timer rather than
+investigated test by test:
+
+    test time (all workers) : 310s
+    inside spawned children : 122s = 39.3%
+    spawns                  : 20, mean 6.09s each
+
+Twenty spawns carrying 122s. The tests that own them
+(`test_inprocess_envelope_parity` and friends) run one verb through BOTH a real
+`aeat` subprocess AND the warm in-process runtime, because cross-transport
+parity is the claim; the duplication is the oracle, the same shape already
+recorded for the TUI migration manifest. Not reducible.
+
+### Why a spawn costs six seconds
+
+Measured directly in a cold interpreter, twice:
+
+    import cadrumo_harness.mcp._tools : 2.56s / 2.59s
+    first build_tool_descriptors()    : 4.44s / 4.49s
+    total to 285 descriptors          : 7.00s / 7.07s
+
+So an MCP server needs about seven seconds from process start before it can
+advertise its tools, and `_server.py` builds descriptors at startup. That is
+user-facing latency, not a test artefact -- the tests merely pay it twenty
+times.
+
+The memo added this round does NOT reach it, and for the reason already
+recorded once in this campaign: a process-level cache cannot cross a spawn
+boundary. That is now the third instance of the same family (the KDF session
+default, the `_child_settings` constructor argument, and this), which makes it a
+reliable thing to check rather than a surprise: any in-process memo leaves child
+processes paying full price, and any measurement that still shows the old cost
+after a memo should be tested for a process boundary before the memo is doubted.
+
+### Not acted on
+
+Making MCP startup cheaper means persisting the descriptor set and keying it to
+something that invalidates correctly across a version or command-tree change.
+Serving a stale tool schema to a client is a correctness failure, not a slow
+start, so that is a design with a blast radius rather than a memo. Recorded with
+the measurement for an owner, alongside the production `load_registry_tree`
+sites.
