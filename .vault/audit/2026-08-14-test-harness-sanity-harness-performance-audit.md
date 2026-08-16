@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:889f370b5490f0b4094542800594b65088b10ed78fa94333af8ded4b252357e4'
+body_hash: 'sha256:f189890e1c14d73b1304e9c798a87eae475f2d8657dc302cd65593f8314093bd'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -3213,3 +3213,65 @@ The compile is already Rust-parsed (`rtoml`), already `os.scandir`-based, alread
 23.1 MB pickle. There is no idle C-level delegation left in it. **Its cost is
 the 17,526 files it touches**, which is a shape problem, not an implementation
 one -- see the metadata-projection proposal above.
+
+## Directory-scan deduplication: one fold landed, one reverted, the rest capped at 0.26s
+
+The warm registry compile is ~1.23s with **58.8% of self time in
+`core/_directory_scan.py:_read_entries`** and 92.5% cumulative under
+`discover_modelo_sources` -- discovery, not TOML parsing. Instrumenting the
+scanner over a warm compile:
+
+```
+_read_entries calls      : 3,659
+distinct directories     : 1,259
+REDUNDANT re-scans       : 2,400  (65.6%)
+```
+
+Every section directory was listed three times.
+
+### Landed
+
+`discover_modelo_sources` listed `modelos/` three times (validate, `*.toml`,
+subdirectories) and `_discover_revision_sources` did the same per modelo. Each
+validating pass had already `stat`'d every entry to classify it, so the later
+listings recomputed something in hand. Both validators now return their
+classification: **115 fewer listings per compile, adding no syscalls.**
+
+Wall clock: **1.29s median of five (1.21-1.36)** against a 1.33s single-sample
+before. Deterministic work removed; **not** a measured speed-up, and recorded as
+such.
+
+### Reverted, with the reason pinned at the call site
+
+The same fold over SECTION directories -- the most numerous in the tree -- cut
+listings 32% (3,659 -> 2,493) and made the warm compile **slower**: 1.49s median.
+
+`scan_directory(select=...)` and `pattern=...` classify from
+`os.DirEntry.is_dir()`, which `os.scandir` already populated, so they never
+`stat`. One scan classified in Python via `Path.is_dir()` costs **one stat
+syscall per entry**. Fewer listings, more stats, net loss.
+
+**The lesson, which cost a full cycle: a reduced call count is not a reduced
+cost.** The metric that looked like the win was measuring the wrong resource.
+Dedup only pays when the removed call is more expensive than the bookkeeping
+that replaces it -- and `DirEntry`-based selection is already close to free.
+
+### The rest of the redundancy is capped, so stop here
+
+There is a correct version of the section fold: one recursive
+`select=ALL` walk, grouped by parent, reusing `DirEntry` classification and so
+adding no stats. Before writing it, the ceiling was measured:
+
+| | |
+|---|---|
+| time inside `_read_entries` | **0.391-0.411s** (32-33% of the warm compile) |
+| recoverable if ALL 2,285 redundant scans vanished at zero cost | **~0.26s** |
+
+**~0.26s of a ~1.23s warm compile** -- and that compile is 2.9s inside a CLI
+invocation that costs 24s warm / 33s cold. A perfect dedup of every remaining
+re-scan cannot move the number the operator sees.
+
+**Ruled out: the recursive-walk scan-dedup refactor, and directory-scan
+deduplication generally.** The ceiling is measured, small, and does not justify
+restructuring revision-fragment validation. The CLI load-time lever remains the
+metadata projection recorded above, not the scanner.
