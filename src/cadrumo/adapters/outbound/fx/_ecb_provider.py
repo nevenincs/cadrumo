@@ -20,20 +20,19 @@ A transport or protocol failure raises
 an unreachable ECB must not be indistinguishable from a currency the ECB does
 not publish, which would silently degrade ledger rows to a zero EUR value.
 
-The default transport (:func:`_https_fetch`) refuses a pytest-driven call unless
-the live-test opt-in is set, so a test exercising a non-EUR currency through
-:func:`default_ecb_rate_provider` fails loudly instead of silently reaching a
-live European Central Bank host. A deterministic suite injects a
-:data:`RateFetch` fake (``tests.ecb_stub.ecb_csv_fetch``); a suite that genuinely
-wants the live series opts in explicitly.
+The default transport (:func:`_https_fetch`) reaches the live European Central
+Bank host unconditionally, because reaching it is what this adapter is for.
+Holding a deterministic suite off that host is a TEST concern, carried by the
+``aeat_live`` marker rather than by a production branch: a deterministic suite
+injects a :data:`RateFetch` transport (``tests.ecb_stub.ecb_csv_fetch``), and a
+test that genuinely wants the published series declares ``aeat_live`` and is
+selected only by the live lane.
 """
 
 from __future__ import annotations
 
 import csv
 import io
-import os
-import sys
 import urllib.error
 import urllib.request
 from collections.abc import Callable
@@ -42,7 +41,7 @@ from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 from urllib.parse import urlparse
 
-from ....core.config import LIVE_READ_TEST_OPT_IN_ENV_VAR, load_settings
+from ....core.config import load_settings
 from ....core.errors import CoreValidationError
 from ....core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
 from ....core.parsing import normalise_iso_4217_currency, parse_iso8601_date
@@ -197,41 +196,18 @@ def _parse_observations(payload: str) -> list[tuple[date, Decimal]]:
     return observations
 
 
-_PYTEST_CURRENT_TEST_ENV = "PYTEST_CURRENT_TEST"
-
-
-def _pytest_is_driving_this_call() -> bool:
-    """Return whether the current call is executing under pytest.
-
-    Mirrors :meth:`core.access_gate.AeatAccessGate.live_read_requires_test_opt_in`:
-    a pytest-driven call is caught either by pytest's own per-test env marker or by
-    pytest being importable in-process, so a fixture that clears the env var before
-    a nested call is still caught.
-    """
-    return bool(os.environ.get(_PYTEST_CURRENT_TEST_ENV, "")) or "pytest" in sys.modules
-
-
 def _https_fetch(url: str) -> str:
     """Read ``url`` over HTTPS, constrained to the ECB Data Portal host.
 
-    Refuses a pytest-driven call unless ``Settings.live_tests_enabled`` opts in
-    (via ``CADRUMO_LIVE_TESTS_ENABLED=1`` or ``override_settings(cadrumo_live_tests_enabled="1")``
-    for the calling scope). Nothing before this guard distinguished a deliberately
-    live-gated test from an ordinary one that merely forgot to inject a
-    :data:`RateFetch` fake, so any suite reaching a non-EUR currency through the
-    default provider silently depended on a live European Central Bank host.
+    Carries no test-awareness. Keeping a deterministic suite off the live host is
+    enforced by the ``aeat_live`` marker contract, not by a production branch
+    reading a pytest-only opt-in.
     """
     parsed = urlparse(url)
     if parsed.scheme != "https" or parsed.netloc != ECB_DATA_API_HOST:
         msg = f"refusing non-https or non-ECB exchange-rate URL: {url!r}"
         raise ExchangeRateProviderError(msg)
     settings = load_settings()
-    if _pytest_is_driving_this_call() and not settings.live_tests_enabled:
-        msg = (
-            f"refusing a pytest-driven live ECB euro reference-rate lookup without "
-            f"{LIVE_READ_TEST_OPT_IN_ENV_VAR}=1: {url!r}"
-        )
-        raise ExchangeRateProviderError(msg)
     timeout = settings.cadrumo_fx_rate_lookup_timeout_s
     # URL is constrained to the canonical ECB Data Portal HTTPS host above.
     try:
