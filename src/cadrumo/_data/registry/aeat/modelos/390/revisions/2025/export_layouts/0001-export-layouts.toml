@@ -127,18 +127,25 @@ signed = false
 legal_refs = ["orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
-[[revisions."2025".export_layouts.records.fields]]
-id = "modelo-390-envelope-program-version"
-offset = 93
-length = 4
-kind = "filler"
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025"]
+# EEDD slots, deliberately UNWRITTEN: @93+4 "Version del Programa" and @101+9
+# "NIF Empresa Desarrollo". This design's own note reads "A cumplimentar por las
+# entidades desarrolladoras (EEDD):", and expands it as "Version del programa:
+# Debe consignarse el identificador de la version del SW desarrollado por la ED"
+# and "NIF Empresa Desarrollo: Debe consignarse el NIF de la ED del SW". No
+# entidad-desarrolladora identity is declared anywhere in this project, so
+# neither slot is guessed. This matches Modelos 111/115/117/122/123/126/128/130/
+# 131/341/714, which omit the same two slots of the same AEAT envelope grammar.
+#
+# HISTORY, so nobody copies the old shape out of this file: @101+9 previously
+# carried `kind = "header"` with `producer_key = "presenter.tax_id"`. The
+# presenter is NOT the software developer, so that wrote a wrong identity into a
+# slot AEAT defines for a different party. Modelo 390 was the file others copied
+# it from -- it was a defect, never a precedent.
+#
+# Unwritten rather than filler, deliberately: the record renderer pre-fills every
+# record with spaces before writing fields, so an omitted span and a right_space
+# filler emit byte-identical output. The only thing a filler changes is that the
+# coverage gate counts the position as WRITTEN -- coverage no datum earned.
 
 [[revisions."2025".export_layouts.records.fields]]
 id = "modelo-390-envelope-reserved-2"
@@ -153,19 +160,7 @@ signed = false
 legal_refs = ["orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
-[[revisions."2025".export_layouts.records.fields]]
-id = "modelo-390-envelope-presenter-nif"
-offset = 101
-length = 9
-kind = "header"
-producer_key = "presenter.tax_id"
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025"]
+# @101+9 "NIF Empresa Desarrollo" is UNWRITTEN -- see the EEDD note above.
 
 [[revisions."2025".export_layouts.records.fields]]
 id = "modelo-390-envelope-reserved-3"

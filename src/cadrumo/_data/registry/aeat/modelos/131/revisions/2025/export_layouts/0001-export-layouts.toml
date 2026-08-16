@@ -583,6 +583,23 @@ id = "modelo-131-2025-dpa-complementaria-indicator"
 offset = 12
 length = 1
 kind = "header"
+# DELIBERATE, DO NOT "FIX" THIS INTO A FILLER.
+# The DPA design row 5 declares its contenido as
+# 'Blanco (No complementaria) o "C" (Complementaria)' -- unlike Pag. 1 row 5,
+# which declares 'En blanco' and is correctly a filler. This slot carries a
+# real datum, and the admitted character is "C".
+#
+# A boolean export field renders the canonical "X" or blank, so this field
+# currently emits "X" where AEAT admits only "C" or blank, and AEAT rejects
+# the file. No carrier can emit "C" here: the one that exists,
+# m303_complementaria_page_marker, is ExportComputedKey.M303_*-scoped.
+#
+# Emitting blank instead would pass validation while presenting a
+# complementaria DPA as non-complementaria -- a silent under-declaration,
+# which no-silent-under-declaration treats as the worse failure because
+# nothing surfaces it to anyone. A rejection stops the filing in front of
+# the filer; a blank files the wrong thing quietly. The loud failure is the
+# deliberate choice until a "C"-capable carrier exists.
 producer_key = "amendment_evidence.is_complementaria"
 data_type = "boolean"
 required = false

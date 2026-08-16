@@ -112,82 +112,26 @@ signed = false
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2023"]
 
-[[revisions.2023-y-siguientes.export_layouts.records.fields]]
-id = "modelo-180-decl-persona-relacion"
-offset = 59
-length = 49
-kind = "filler"
-# Design campo 7, "PERSONA CON QUIEN RELACIONARSE", subdivided by AEAT into
-# 59-67 TELEFONO and 68-107 APELLIDOS Y NOMBRE. Cadrumo holds no contact-person
-# fact for the presenting declarant -- no producer key carries a contact
-# telephone or a contact name -- so the slot is written as the design's own
-# single alfanumerico campo and left blank, which the design's global rule
-# admits: "los campos alfanumericos/alfabeticos que no tengan contenido se
-# rellenaran a blancos". Writing a taxpayer identity here instead would name
-# the wrong person.
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
-
-[[revisions.2023-y-siguientes.export_layouts.records.fields]]
-id = "modelo-180-decl-numero-identificativo"
-offset = 108
-length = 13
-kind = "filler"
-# Design campo 8. The numero identificativo is a sequential number whose first
-# three digits are the code 180; it is assigned at presentation, not derived
-# from the draft, and no producer key carries it. Numerico with no content is
-# written to ceros per the design's global numeric rule.
-data_type = "text"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = false
-legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
-
-[[revisions.2023-y-siguientes.export_layouts.records.fields]]
-id = "modelo-180-decl-complementaria-sustitutiva"
-offset = 121
-length = 2
-kind = "filler"
-# Design campo 9, subdivided into 121 DECLARACION COMPLEMENTARIA ("C") and 122
-# DECLARACION SUSTITUTIVA ("S"). Neither byte can be produced correctly today:
-# the amendment_evidence.is_complementaria producer is a boolean, and a boolean
-# export field renders the canonical "X", not the "C" this design admits; there
-# is no sustitutiva producer at all. A first presentation leaves both bytes
-# blank, which is the design's own default ("en el caso excepcional de segunda
-# o posterior presentacion"), so blank is correct for every filing this
-# application can currently build. Emitting "X" here would write a token AEAT
-# does not admit.
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
-
-[[revisions.2023-y-siguientes.export_layouts.records.fields]]
-id = "modelo-180-decl-numero-identificativo-anterior"
-offset = 123
-length = 13
-kind = "filler"
-# Design campo 10. Written only when campo 9 carries "C" or "S", which no
-# filing this application builds currently does; the design states "en
-# cualquier otro caso debera rellenarse a CEROS".
-data_type = "text"
-required = false
-padding = "left_zero"
-justification = "right"
-signed = false
-legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
-
+# UNWRITTEN, DELIBERATELY: campo 7 "PERSONA CON QUIEN RELACIONARSE" (59-67 telefono, 68-107 apellidos y nombre).
+# AEAT declares a datum here, and no producer key carries a contact telephone or contact name. A filler was previously
+# authored over it; that emitted the same spaces the codec already pre-fills
+# while making the position look covered. The slot is left unwritten so the
+# missing carrier stays visible. Restore a field here only with a real source.
+# UNWRITTEN, DELIBERATELY: campo 8 "NUMERO IDENTIFICATIVO DE LA DECLARACION".
+# AEAT declares a datum here, and the sequential number is assigned at presentation and no producer key carries it. A filler was previously
+# authored over it; that emitted the same spaces the codec already pre-fills
+# while making the position look covered. The slot is left unwritten so the
+# missing carrier stays visible. Restore a field here only with a real source.
+# UNWRITTEN, DELIBERATELY: campo 9 "DECLARACION COMPLEMENTARIA O SUSTITUTIVA" (121 "C", 122 "S").
+# AEAT declares a datum here, and the is_complementaria producer is a boolean and renders "X", not the "C" this design admits; there is no sustitutiva producer at all. A filler was previously
+# authored over it; that emitted the same spaces the codec already pre-fills
+# while making the position look covered. The slot is left unwritten so the
+# missing carrier stays visible. Restore a field here only with a real source.
+# UNWRITTEN, DELIBERATELY: campo 10 "NUMERO IDENTIFICATIVO DE LA DECLARACION ANTERIOR".
+# AEAT declares a datum here, and no producer key carries the prior declaration's number. A filler was previously
+# authored over it; that emitted the same spaces the codec already pre-fills
+# while making the position look covered. The slot is left unwritten so the
+# missing carrier stays visible. Restore a field here only with a real source.
 [[revisions.2023-y-siguientes.export_layouts.records.fields]]
 id = "modelo-180-decl-total-perceptores"
 offset = 136
@@ -248,6 +192,16 @@ id = "modelo-180-decl-sello-electronico"
 offset = 238
 length = 263
 kind = "filler"
+# Design campo 15 "SELLO ELECTRONICO": "Campo reservado para el sello
+# electronico en presentaciones individuales, que sera cumplimentado
+# EXCLUSIVAMENTE POR LOS PROGRAMAS OFICIALES DE LA A.E.A.T. En cualquier otro
+# caso, y en presentaciones colectivas SE RELLENARA A BLANCOS." Cadrumo is not
+# an official AEAT program, so blancos is the value AEAT prescribes here -- a
+# filler is correct authoring, not a datum papered over.
+#
+# It is also the record's LENGTH ANCHOR. render_fixed_width_export_record_body
+# derives the emitted length from max(offset + length - 1), so dropping this
+# terminal slot truncates the declarante record from 500 bytes to 237.
 data_type = "text"
 required = false
 padding = "right_space"

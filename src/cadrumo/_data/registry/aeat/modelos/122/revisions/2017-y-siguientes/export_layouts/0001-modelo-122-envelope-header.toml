@@ -140,44 +140,23 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
-id = "modelo-122-envelope-version-programa"
-offset = 93
-length = 4
-kind = "filler"
-# Nota 1: "A cumplimentar por las entidades desarrolladoras (EEDD)" -- the
-# identifier of the developing entity's own software version. Cadrumo declares
-# no EEDD identity, and inventing a version token would assert a registration
-# this application does not hold, so the slot is left blank per the design's
-# alfanumérico rule.
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-122-2016"]
+# Positions 93-96 ("Versión del Programa") and 101-109 ("NIF Empresa
+# Desarrollo") are DELIBERATELY NOT DECLARED, and this record therefore has a
+# hole at each. Both carry the design's Nota 1, "A cumplimentar por las
+# entidades desarrolladoras (EEDD)": they identify the software house that
+# produced the file and the version of its product. This project holds no EEDD
+# registration and no such identity exists to write, so any value would be
+# invented and a blank would assert an EEDD identity that is empty rather than
+# absent. Leaving them undeclared states honestly that this application cannot
+# write them, and the coverage gate correctly reports 41 of 43 rather than
+# reporting a completeness that does not exist. Modelo 131 sits permanently at
+# 143/145 on exactly these two campos, for exactly this reason.
 
 [[revisions."2017-y-siguientes".export_layouts.records.fields]]
 id = "modelo-122-envelope-reservado-pre-nif-ed"
 offset = 97
 length = 4
 kind = "filler"
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-122-2016"]
-
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
-id = "modelo-122-envelope-nif-empresa-desarrollo"
-offset = 101
-length = 9
-kind = "filler"
-# Nota 1: the NIF of the entidad desarrolladora of the software. Same reason as
-# the versión del programa slot above -- no such identity is declared.
 data_type = "text"
 required = false
 padding = "right_space"
