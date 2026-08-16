@@ -54,10 +54,25 @@ review_status = "reviewed"
 # verified directly: "ANEXO II DISEÑOS FÍSICOS Y LÓGICOS ... Registros de:
 # 250 posiciones", the canonical AEAT layout vocabulary. Fields now point at
 # the bundled file, sourced from its manifest.json (real, observed
-# provenance, not re-fetched). applies_from/record_design_epoch left
-# undeclared: the file states "Ejercicio 2021" for the magnetic-support
-# section quoted but is titled "vigente" (currently in force) with no single
-# coverage-start date of its own.
+# provenance, not re-fetched).
+#
+# applies_from and record_design_epoch are deliberately UNDECLARED, because
+# AEAT states no ejercicio for this artefact. It is served as
+# 156_HAC_3580_2003.pdf, indexed as "156 - Orden HAC/3580/2003, de 17
+# diciembre" with no era qualifier, and headed "ANEXO II -- DISENOS FISICOS Y
+# LOGICOS ... DEL MODELO 156": it is the anexo of the orden that approves this
+# modelo. Two details inside the document corroborate that it is unchanged
+# 2003-era content rather than a later redesign carrying an era of its own:
+# TIPO DE SOPORTE still admits 'C' (cartucho magnetico IBM-3480) and 'D'
+# (disquete de 3 1/2"), and the NIF composition rules cite Real Decreto
+# 338/1990 where every later AEAT design cites Real Decreto 1065/2007. The
+# "Ejercicio 2021" page footer is a re-issue stamp on the same anexo.
+#
+# A second source id, declaring applies_from 2021-01-01 and epoch "2021" over
+# these identical bytes and this identical hash, was retired rather than
+# reconciled: it asserted an ejercicio AEAT does not state and the document
+# itself contradicts. Removing it deletes a false span; it does not create a
+# true one, which is why nothing was transferred here.
 [sources."enrolled-modelo-156-layout"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -69,15 +84,3 @@ retrieved_at = 2026-07-21
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/156_HAC_3580_2003.pdf"
 review_status = "reviewed"
 
-[sources."aeat-dr-156-2021"]
-evidence_tier = "layout_authority"
-authority = "aeat"
-kind = "record_design"
-record_design_epoch = "2021"
-corpus_path = "corpus/aeat_official/disenos_registro/modelo_156/files/01-156-diseno-de-registro-vigente.pdf"
-sha256 = "d387cfeb7254e49d539d5c3a731c0bd6bf275c8c1fdae80e6faa5a1006d5d068"
-bytes = 39458
-retrieved_at = 2026-07-21
-applies_from = 2021-01-01
-source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/156_HAC_3580_2003.pdf"
-review_status = "reviewed"

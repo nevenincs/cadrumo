@@ -73,12 +73,22 @@ legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
-id = "modelo-349-decl-apellidos-filler"
+id = "modelo-349-decl-apellidos-razon-social"
 offset = 18
 length = 40
-kind = "filler"
+kind = "header"
+# Design campo 5, "APELLIDOS Y NOMBRE O RAZON SOCIAL DEL DECLARANTE". One slot
+# carries "apellidos y nombre" for a persona fisica and "razon social" for a
+# persona juridica, so it must read the fact populated for BOTH: full_name.
+# surnames/given_name are blank for an entity and legal_name is blank for a
+# natural person, so either would blank the slot for half the declarant
+# population. The design's "primer apellido, un espacio, el segundo apellido,
+# un espacio y el nombre completo, necesariamente en este orden" is exactly the
+# surnames-first join compose_legal_full_name already performs. Identical slot
+# and identical treatment to modelo 180's declarante campo 5.
+producer_key = "taxpayer.full_name"
 data_type = "text"
-required = false
+required = true
 padding = "right_space"
 justification = "left"
 signed = false

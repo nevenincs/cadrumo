@@ -3,15 +3,17 @@
 # 01-156-diseno-de-registro-vigente.pdf, sha256
 # d387cfeb7254e49d539d5c3a731c0bd6bf275c8c1fdae80e6faa5a1006d5d068.
 #
-# TWO registry sources name that one file with that one hash:
-# enrolled-modelo-156-layout (which deliberately declares no applies_from and no
-# record_design_epoch) and aeat-dr-156-2021 (which declares applies_from
-# 2021-01-01 and epoch "2021"). Only the former is cited here, for two reasons.
-# First, correctness: the coverage gate reads every record_design source a layout
-# cites, so citing both makes it read the same two sheets twice and double every
-# count it reports. Second, honesty: the file is the anexo of the 2003 orden, so
-# the 2021 applies_from is a stamp this layout must not lean on while it is
-# authored on the 2003-y-siguientes revision.
+# One source names that file: enrolled-modelo-156-layout, which declares no
+# applies_from and no record_design_epoch because AEAT states no ejercicio for
+# this artefact. A second id over the identical bytes and hash, asserting
+# applies_from 2021-01-01, was retired; the legal catalogue entry records why.
+#
+# Cite exactly ONE record_design source on a fixed-width layout. The coverage
+# gate reads every record_design source a layout cites and concatenates their
+# sheets with no window filter or uniqueness check, so a second citation makes
+# it read the same design twice and double every count it reports. This layout
+# briefly did exactly that and was measured at "58 of 60" where the truth was
+# "29 of 30".
 #
 # That PDF is headed "ANEXO II -- DISENOS FISICOS Y LOGICOS A LOS QUE DEBE
 # AJUSTARSE ... DEL MODELO 156", AEAT serves it as `156_HAC_3580_2003.pdf`, and

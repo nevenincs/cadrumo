@@ -75,19 +75,18 @@ source_refs = ["aeat-dr-122-2016"]
 id = "modelo-122-p1-pagina-complementaria"
 offset = 12
 length = 1
-kind = "filler"
+kind = "casilla"
+casilla_id = "decl.pagina-complementaria"
 # Design campo 5, "Indicador de página complementaria", admitting "C o blanco".
-# The amendment_evidence.is_complementaria producer is a boolean and renders
-# the canonical "X", which this slot does not admit, and there is no producer
-# that emits "C". Blank is the design's own default for a non-complementaria
-# page, so blank is correct for every filing this application builds; emitting
-# "X" would write a token AEAT does not accept here. The separate
-# "Autoliquidación complementaria" flag at position 667 DOES admit "X" and is
-# wired to that producer.
+# Deliberately NOT the amendment_evidence.is_complementaria producer: that is a
+# boolean and renders the canonical "X", which this slot does not admit. It is
+# an operator-supplied clave with AEAT's own stated domain, so it is a casilla.
+# The separate "Autoliquidación complementaria" flag at position 667 DOES admit
+# "X" and is wired to that producer.
 data_type = "text"
 required = false
-padding = "right_space"
-justification = "left"
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
@@ -176,15 +175,17 @@ source_refs = ["aeat-dr-122-2016"]
 id = "modelo-122-p1-periodo"
 offset = 107
 length = 2
-kind = "literal"
-# The design declares this slot "Reservado AEAT (Periodo)" with Contenido
-# Constante "0A": AEAT fixes the token itself rather than taking it from the
-# filing, so it is written as the constant the design states.
-literal = "0A"
+kind = "filler"
+# The design's Contenido cell shows Constante "0A", but its DESCRIPTION names
+# the slot "Reservado AEAT (Periodo)" -- AEAT reserves these two bytes for
+# itself, so the filer must not write a datum into them even though the value
+# AEAT puts there is known. A fixed-width record is contiguous, so the bytes are
+# still emitted; they are emitted as fill. The filing's own period token is
+# carried by the envelope header at @11+2, which is not reserved.
 data_type = "text"
-required = true
-padding = "none"
-justification = "none"
+required = false
+padding = "right_space"
+justification = "left"
 signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]

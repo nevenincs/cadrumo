@@ -47960,6 +47960,10 @@ modelo:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: A korrekció vonatkozási éve
+            x-chim6r1ee1gmeqbec4mm6rrde1m6arb5dpq62sj9c4:
+              help: C jelölés, ha az oldal egy korábban benyújtott oldalt egészít
+                ki; egyébként üresen marad.
+              label: Kiegészítő oldal jelölése
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
@@ -65947,9 +65951,32 @@ modelo:
       revision:
         2013-y-siguientes:
           casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: C jelölés, ha a bevallás olyan rekordokat tartalmaz, amelyek egy
+                korábbi, azonos évi bevallásból teljesen kimaradtak.
+              label: Kiegészítő bevallás
             x-chim6r1ecll6asj3d5hmiro:
               help: null
               label: Az adóbevallás vonatkozási éve
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: Tizenhárom pozíciós sorszám, amelynek első három számjegye a 270-es
+                kód.
+              label: A bevallás azonosító száma
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: Annak a bevallásnak az azonosító száma, amelyet ez kiegészít vagy
+                helyettesít. Minden más esetben nullákkal kell kitölteni.
+              label: A korábbi bevallás azonosító száma
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              help: Első vezetéknév, szóköz, második vezetéknév, szóköz és teljes
+                utónév, kötelezően ebben a sorrendben.
+              label: A kapcsolattartó vezeték- és utóneve
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              help: Kilenc pozíciós numerikus mező a bevalló kapcsolattartási telefonszámával.
+              label: A kapcsolattartó telefonszáma
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              help: S jelölés, ha a benyújtás egyetlen korábbi, azonos évi bevallást
+                teljes egészében érvénytelenít és helyettesít.
+              label: Helyettesítő bevallás
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
@@ -73397,6 +73424,1397 @@ modelo:
                 title: null
           field:
             label: null
+        2023-y-siguientes:
+          casilla:
+            490-01-declaracion-complementaria-1054:
+              help: null
+              label: Kiegészítő bevallás
+            490-01-declaracion-negativa-1068:
+              help: null
+              label: Nemleges bevallás
+            490-01-grupo-denominacion-388:
+              help: null
+              label: A csoport azonosítása. A csoport neve
+            490-01-grupo-dominante-515:
+              help: null
+              label: A csoport azonosítása. Anyavállalat
+            490-01-grupo-pais-dominante-513:
+              help: null
+              label: A csoport azonosítása. Az anyavállalat illetőségi országa
+            490-01-identificacion-email-154:
+              help: null
+              label: Azonosítás. E-mail cím
+            490-01-identificacion-nif-representante-254:
+              help: null
+              label: Azonosítás. A képviselő adószáma (NIF)
+            490-01-identificacion-nombre-representante-263:
+              help: null
+              label: Azonosítás. A képviselő cégneve vagy teljes neve
+            490-01-indicador-pagina-complementaria-12:
+              help: null
+              label: Kiegészítő oldal jelzője
+            490-01-ingreso-bic-swift-1009:
+              help: null
+              label: Befizetés vagy visszatérítés. BIC/SWIFT-kód
+            490-01-ingreso-iban-1020:
+              help: null
+              label: Befizetés vagy visszatérítés. IBAN-szám
+            490-01-justificante-anterior-1055:
+              help: null
+              label: Az előző bevallás igazolásszáma
+            490-01-tipo-declaracion-13:
+              help: null
+              label: A bevallás típusa
+            490-02-indicador-pagina-complementaria-12:
+              help: null
+              label: Kiegészítő oldal jelzője
+            490-02-regularizacion-ejercicio-13:
+              help: null
+              label: Helyesbítés (a 4/2020. törvény 10.3. cikke). Adóév
+            490-02-regularizacion-ejercicio-909:
+              help: null
+              label: Helyesbítés (a 4/2020. törvény 10.3. cikke). Adóév
+            490-03-indicador-pagina-complementaria-12:
+              help: null
+              label: Kiegészítő oldal jelzője
+            490-03-regularizacion-ejercicio-13:
+              help: null
+              label: Helyesbítés (a 4/2020. törvény 10.3. cikke). Adóév
+            490-03-regularizacion-ejercicio-909:
+              help: null
+              label: Helyesbítés (a 4/2020. törvény 10.3. cikke). Adóév
+            ajuste-cuota-integra-reg-estado-19:
+              help: null
+              label: A helyesbített időszakok államnak betudható bruttó adójának kiigazítása
+                [19]
+            ajuste-cuota-integra-regularizacion-18:
+              help: null
+              label: A helyesbített időszakok bruttó adójának kiigazítása [18]
+            cuota-integra-estado-17:
+              help: null
+              label: Az álligazgatásnak betudható bruttó adó [17]
+            liq-base-imponible-total-13:
+              help: null
+              label: Elszámolás. Az időszak teljes adóalapja [13]
+            liq-cuota-integra-16:
+              help: null
+              label: Elszámolás. Bruttó adó [16]
+            liq-datos-base-11:
+              help: null
+              label: Elszámolás. 3. Adatátviteli szolgáltatások. Adóalap [11]
+            liq-datos-ing-10:
+              help: null
+              label: Elszámolás. 3. Adatátviteli szolgáltatások. Teljes bevétel [10]
+            liq-datos-reg-base-12:
+              help: null
+              label: Elszámolás. 3. Adatátviteli szolgáltatások. Adóalap-helyesbítés
+                (10.3. cikk) [12]
+            liq-indicador-regularizacion-A:
+              help: null
+              label: Elszámolás. Helyesbítési jelző (a 4/2020. törvény 10.3. cikke)
+                [A]
+            liq-interm-a-base-05:
+              help: null
+              label: Elszámolás. 2.A. Online közvetítő szolgáltatások mögöttes termékértékesítéssel
+                vagy szolgáltatásnyújtással. Adóalap [05]
+            liq-interm-a-ing-04:
+              help: null
+              label: Elszámolás. 2.A. Online közvetítő szolgáltatások mögöttes termékértékesítéssel
+                vagy szolgáltatásnyújtással. Teljes bevétel [04]
+            liq-interm-a-reg-base-06:
+              help: null
+              label: Elszámolás. 2.A. Online közvetítő szolgáltatások mögöttes termékértékesítéssel
+                vagy szolgáltatásnyújtással. Adóalap-helyesbítés (10.3. cikk) [06]
+            liq-interm-b-base-08:
+              help: null
+              label: Elszámolás. 2.B. Egyéb online közvetítő szolgáltatások. Adóalap
+                [08]
+            liq-interm-b-ing-07:
+              help: null
+              label: Elszámolás. 2.B. Egyéb online közvetítő szolgáltatások. Teljes
+                bevétel [07]
+            liq-interm-b-reg-base-09:
+              help: null
+              label: Elszámolás. 2.B. Egyéb online közvetítő szolgáltatások. Adóalap-helyesbítés
+                (10.3. cikk) [09]
+            liq-publi-base-02:
+              help: null
+              label: Elszámolás. 1. Online hirdetési szolgáltatások. Adóalap [02]
+            liq-publi-ing-01:
+              help: null
+              label: Elszámolás. 1. Online hirdetési szolgáltatások. Teljes bevétel
+                [01]
+            liq-publi-reg-base-03:
+              help: null
+              label: Elszámolás. 1. Online hirdetési szolgáltatások. Adóalap-helyesbítés
+                (10.3. cikk) [03]
+            liq-reg-periodos-anteriores-14:
+              help: null
+              label: Elszámolás. Korábbi időszakok adóalap-helyesbítésének összege
+                (a 4/2020. törvény 10.3. cikke) [14]
+            liq-tipo-15:
+              help: null
+              label: Elszámolás. Adókulcs [15]
+            reg-ajuste-distribucion-120:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 1. negyedév [120]
+            reg-ajuste-distribucion-141:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 2. negyedév [141]
+            reg-ajuste-distribucion-162:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 3. negyedév [162]
+            reg-ajuste-distribucion-183:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 1. negyedév [183]
+            reg-ajuste-distribucion-204:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 1. negyedév [204]
+            reg-ajuste-distribucion-225:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 2. negyedév [225]
+            reg-ajuste-distribucion-246:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 3. negyedév [246]
+            reg-ajuste-distribucion-267:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 1. negyedév [267]
+            reg-ajuste-distribucion-288:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 1. negyedév [288]
+            reg-ajuste-distribucion-309:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 2. negyedév [309]
+            reg-ajuste-distribucion-330:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 3. negyedév [330]
+            reg-ajuste-distribucion-351:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 1. negyedév [351]
+            reg-ajuste-distribucion-36:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 1. negyedév [36]
+            reg-ajuste-distribucion-57:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 2. negyedév [57]
+            reg-ajuste-distribucion-78:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 3. negyedév [78]
+            reg-ajuste-distribucion-99:
+              help: null
+              label: Az államnak betudható adó helyesbítésének kiigazítása a területi
+                megoszlás változása miatt (j). 1. negyedév [99]
+            reg-ajuste-total-estado-100:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 4. negyedév [100]
+            reg-ajuste-total-estado-121:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 1. negyedév [121]
+            reg-ajuste-total-estado-142:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 2. negyedév [142]
+            reg-ajuste-total-estado-163:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 3. negyedév [163]
+            reg-ajuste-total-estado-184:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 4. negyedév [184]
+            reg-ajuste-total-estado-205:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 1. negyedév [205]
+            reg-ajuste-total-estado-226:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 2. negyedév [226]
+            reg-ajuste-total-estado-247:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 3. negyedév [247]
+            reg-ajuste-total-estado-268:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 4. negyedév [268]
+            reg-ajuste-total-estado-289:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 1. negyedév [289]
+            reg-ajuste-total-estado-310:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 2. negyedév [310]
+            reg-ajuste-total-estado-331:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 3. negyedév [331]
+            reg-ajuste-total-estado-352:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 4. negyedév [352]
+            reg-ajuste-total-estado-37:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 1. negyedév [37]
+            reg-ajuste-total-estado-58:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 2. negyedév [58]
+            reg-ajuste-total-estado-79:
+              help: null
+              label: A helyesbített időszak államnak betudható bruttóadó-kiigazítása
+                összesen (k = i + j). 3. negyedév [79]
+            reg-base-declarada-111:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 1. negyedév
+                [111]
+            reg-base-declarada-132:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 2. negyedév
+                [132]
+            reg-base-declarada-153:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 3. negyedév
+                [153]
+            reg-base-declarada-174:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 4. negyedév
+                [174]
+            reg-base-declarada-195:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 1. negyedév
+                [195]
+            reg-base-declarada-216:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 2. negyedév
+                [216]
+            reg-base-declarada-237:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 3. negyedév
+                [237]
+            reg-base-declarada-258:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 4. negyedév
+                [258]
+            reg-base-declarada-27:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 1. negyedév
+                [27]
+            reg-base-declarada-279:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 1. negyedév
+                [279]
+            reg-base-declarada-300:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 2. negyedév
+                [300]
+            reg-base-declarada-321:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 3. negyedév
+                [321]
+            reg-base-declarada-342:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 4. negyedév
+                [342]
+            reg-base-declarada-48:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 2. negyedév
+                [48]
+            reg-base-declarada-69:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 3. negyedév
+                [69]
+            reg-base-declarada-90:
+              help: null
+              label: A helyesbített időszakban bevallott adóalap (a). 4. negyedév
+                [90]
+            reg-base-negativa-113:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 1. negyedév [113]
+            reg-base-negativa-134:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 2. negyedév [134]
+            reg-base-negativa-155:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 3. negyedév [155]
+            reg-base-negativa-176:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 4. negyedév [176]
+            reg-base-negativa-197:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 1. negyedév [197]
+            reg-base-negativa-218:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 2. negyedév [218]
+            reg-base-negativa-239:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 3. negyedév [239]
+            reg-base-negativa-260:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 4. negyedév [260]
+            reg-base-negativa-281:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 1. negyedév [281]
+            reg-base-negativa-29:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 1. negyedév [29]
+            reg-base-negativa-302:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 2. negyedév [302]
+            reg-base-negativa-323:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 3. negyedév [323]
+            reg-base-negativa-344:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 4. negyedév [344]
+            reg-base-negativa-50:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 2. negyedév [50]
+            reg-base-negativa-71:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 3. negyedév [71]
+            reg-base-negativa-92:
+              help: null
+              label: Negatív adóalap-helyesbítés (c). 4. negyedév [92]
+            reg-base-positiva-112:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 1. negyedév [112]
+            reg-base-positiva-133:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 2. negyedév [133]
+            reg-base-positiva-154:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 3. negyedév [154]
+            reg-base-positiva-175:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 4. negyedév [175]
+            reg-base-positiva-196:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 1. negyedév [196]
+            reg-base-positiva-217:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 2. negyedév [217]
+            reg-base-positiva-238:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 3. negyedév [238]
+            reg-base-positiva-259:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 4. negyedév [259]
+            reg-base-positiva-28:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 1. negyedév [28]
+            reg-base-positiva-280:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 1. negyedév [280]
+            reg-base-positiva-301:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 2. negyedév [301]
+            reg-base-positiva-322:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 3. negyedév [322]
+            reg-base-positiva-343:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 4. negyedév [343]
+            reg-base-positiva-49:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 2. negyedév [49]
+            reg-base-positiva-70:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 3. negyedév [70]
+            reg-base-positiva-91:
+              help: null
+              label: Pozitív adóalap-helyesbítés (b). 4. negyedév [91]
+            reg-base-total-114:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 1. negyedév [114]
+            reg-base-total-135:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 2. negyedév [135]
+            reg-base-total-156:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 3. negyedév [156]
+            reg-base-total-177:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 4. negyedév [177]
+            reg-base-total-198:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 1. negyedév [198]
+            reg-base-total-219:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 2. negyedév [219]
+            reg-base-total-240:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 3. negyedév [240]
+            reg-base-total-261:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 4. negyedév [261]
+            reg-base-total-282:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 1. negyedév [282]
+            reg-base-total-30:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 1. negyedév [30]
+            reg-base-total-303:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 2. negyedév [303]
+            reg-base-total-324:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 3. negyedév [324]
+            reg-base-total-345:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 4. negyedév [345]
+            reg-base-total-51:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 2. negyedév [51]
+            reg-base-total-72:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 3. negyedév [72]
+            reg-base-total-93:
+              help: null
+              label: Az adóalap-helyesbítés összesen (d = b + c). 4. negyedév [93]
+            reg-cuota-estado-119:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 1. negyedév
+                [119]
+            reg-cuota-estado-140:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 2. negyedév
+                [140]
+            reg-cuota-estado-161:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 3. negyedév
+                [161]
+            reg-cuota-estado-182:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 4. negyedév
+                [182]
+            reg-cuota-estado-203:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 1. negyedév
+                [203]
+            reg-cuota-estado-224:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 2. negyedév
+                [224]
+            reg-cuota-estado-245:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 3. negyedév
+                [245]
+            reg-cuota-estado-266:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 4. negyedév
+                [266]
+            reg-cuota-estado-287:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 1. negyedév
+                [287]
+            reg-cuota-estado-308:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 2. negyedév
+                [308]
+            reg-cuota-estado-329:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 3. negyedév
+                [329]
+            reg-cuota-estado-35:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 1. negyedév
+                [35]
+            reg-cuota-estado-350:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 4. negyedév
+                [350]
+            reg-cuota-estado-56:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 2. negyedév
+                [56]
+            reg-cuota-estado-77:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 3. negyedév
+                [77]
+            reg-cuota-estado-98:
+              help: null
+              label: Az államnak betudható adó helyesbítése (i = h × m). 4. negyedév
+                [98]
+            reg-cuota-negativa-117:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 1. negyedév [117]
+            reg-cuota-negativa-138:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 2. negyedév [138]
+            reg-cuota-negativa-159:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 3. negyedév [159]
+            reg-cuota-negativa-180:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 4. negyedév [180]
+            reg-cuota-negativa-201:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 1. negyedév [201]
+            reg-cuota-negativa-222:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 2. negyedév [222]
+            reg-cuota-negativa-243:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 3. negyedév [243]
+            reg-cuota-negativa-264:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 4. negyedév [264]
+            reg-cuota-negativa-285:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 1. negyedév [285]
+            reg-cuota-negativa-306:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 2. negyedév [306]
+            reg-cuota-negativa-327:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 3. negyedév [327]
+            reg-cuota-negativa-33:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 1. negyedév [33]
+            reg-cuota-negativa-348:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 4. negyedév [348]
+            reg-cuota-negativa-54:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 2. negyedév [54]
+            reg-cuota-negativa-75:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 3. negyedév [75]
+            reg-cuota-negativa-96:
+              help: null
+              label: Negatív bruttóadó-helyesbítés (g = c × e). 4. negyedév [96]
+            reg-cuota-positiva-116:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 1. negyedév [116]
+            reg-cuota-positiva-137:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 2. negyedév [137]
+            reg-cuota-positiva-158:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 3. negyedév [158]
+            reg-cuota-positiva-179:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 4. negyedév [179]
+            reg-cuota-positiva-200:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 1. negyedév [200]
+            reg-cuota-positiva-221:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 2. negyedév [221]
+            reg-cuota-positiva-242:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 3. negyedév [242]
+            reg-cuota-positiva-263:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 4. negyedév [263]
+            reg-cuota-positiva-284:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 1. negyedév [284]
+            reg-cuota-positiva-305:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 2. negyedév [305]
+            reg-cuota-positiva-32:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 1. negyedév [32]
+            reg-cuota-positiva-326:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 3. negyedév [326]
+            reg-cuota-positiva-347:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 4. negyedév [347]
+            reg-cuota-positiva-53:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 2. negyedév [53]
+            reg-cuota-positiva-74:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 3. negyedév [74]
+            reg-cuota-positiva-95:
+              help: null
+              label: Pozitív bruttóadó-helyesbítés (f = b × e). 4. negyedév [95]
+            reg-cuota-total-118:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 1. negyedév [118]
+            reg-cuota-total-139:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 2. negyedév [139]
+            reg-cuota-total-160:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 3. negyedév [160]
+            reg-cuota-total-181:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 4. negyedév [181]
+            reg-cuota-total-202:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 1. negyedév [202]
+            reg-cuota-total-223:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 2. negyedév [223]
+            reg-cuota-total-244:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 3. negyedév [244]
+            reg-cuota-total-265:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 4. negyedév [265]
+            reg-cuota-total-286:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 1. negyedév [286]
+            reg-cuota-total-307:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 2. negyedév [307]
+            reg-cuota-total-328:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 3. negyedév [328]
+            reg-cuota-total-34:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 1. negyedév [34]
+            reg-cuota-total-349:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 4. negyedév [349]
+            reg-cuota-total-55:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 2. negyedév [55]
+            reg-cuota-total-76:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 3. negyedév [76]
+            reg-cuota-total-97:
+              help: null
+              label: A bruttóadó-helyesbítés összesen (h = f + g). 4. negyedév [97]
+            reg-tipo-115:
+              help: null
+              label: Adókulcs (e). 1. negyedév [115]
+            reg-tipo-136:
+              help: null
+              label: Adókulcs (e). 2. negyedév [136]
+            reg-tipo-157:
+              help: null
+              label: Adókulcs (e). 3. negyedév [157]
+            reg-tipo-178:
+              help: null
+              label: Adókulcs (e). 4. negyedév [178]
+            reg-tipo-199:
+              help: null
+              label: Adókulcs (e). 1. negyedév [199]
+            reg-tipo-220:
+              help: null
+              label: Adókulcs (e). 2. negyedév [220]
+            reg-tipo-241:
+              help: null
+              label: Adókulcs (e). 3. negyedév [241]
+            reg-tipo-262:
+              help: null
+              label: Adókulcs (e). 4. negyedév [262]
+            reg-tipo-283:
+              help: null
+              label: Adókulcs (e). 1. negyedév [283]
+            reg-tipo-304:
+              help: null
+              label: Adókulcs (e). 2. negyedév [304]
+            reg-tipo-31:
+              help: null
+              label: Adókulcs (e). 1. negyedév [31]
+            reg-tipo-325:
+              help: null
+              label: Adókulcs (e). 3. negyedév [325]
+            reg-tipo-346:
+              help: null
+              label: Adókulcs (e). 4. negyedév [346]
+            reg-tipo-52:
+              help: null
+              label: Adókulcs (e). 2. negyedév [52]
+            reg-tipo-73:
+              help: null
+              label: Adókulcs (e). 3. negyedév [73]
+            reg-tipo-94:
+              help: null
+              label: Adókulcs (e). 4. negyedév [94]
+            reg-total-cuota-363:
+              help: null
+              label: A helyesbítés összesen (adó) [363]
+            reg-total-cuota-estado-364:
+              help: null
+              label: Az álligazgatásnak betudható helyesbítés összesen [364]
+            resultado-a-deducir-25:
+              help: null
+              label: 'Eredmény. Levonandó (csak kiegészítő önadózásnál): az azonos
+                évre és időszakra vonatkozó korábbi bevallás(ok) eredménye [25]'
+            resultado-liquidacion-26:
+              help: null
+              label: Az elszámolás eredménye [26]
+            terr-alava-20:
+              help: null
+              label: Területi adózás. Álava [20]
+            terr-alava-con-reg-102:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 4.
+                negyedév [102]
+            terr-alava-con-reg-123:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 1.
+                negyedév [123]
+            terr-alava-con-reg-144:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 2.
+                negyedév [144]
+            terr-alava-con-reg-165:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 3.
+                negyedév [165]
+            terr-alava-con-reg-186:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 4.
+                negyedév [186]
+            terr-alava-con-reg-207:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 1.
+                negyedév [207]
+            terr-alava-con-reg-228:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 2.
+                negyedév [228]
+            terr-alava-con-reg-249:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 3.
+                negyedév [249]
+            terr-alava-con-reg-270:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 4.
+                negyedév [270]
+            terr-alava-con-reg-291:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 1.
+                negyedév [291]
+            terr-alava-con-reg-312:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 2.
+                negyedév [312]
+            terr-alava-con-reg-333:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 3.
+                negyedév [333]
+            terr-alava-con-reg-354:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 4.
+                negyedév [354]
+            terr-alava-con-reg-39:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 1.
+                negyedév [39]
+            terr-alava-con-reg-60:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 2.
+                negyedév [60]
+            terr-alava-con-reg-81:
+              help: null
+              label: Területi adózás. Álava. Százalék a helyesbítéssel együtt. 3.
+                negyedév [81]
+            terr-alava-per-101:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 4.
+                negyedév [101]
+            terr-alava-per-122:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 1.
+                negyedév [122]
+            terr-alava-per-143:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 2.
+                negyedév [143]
+            terr-alava-per-164:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 3.
+                negyedév [164]
+            terr-alava-per-185:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 4.
+                negyedév [185]
+            terr-alava-per-206:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 1.
+                negyedév [206]
+            terr-alava-per-227:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 2.
+                negyedév [227]
+            terr-alava-per-248:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 3.
+                negyedév [248]
+            terr-alava-per-269:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 4.
+                negyedév [269]
+            terr-alava-per-290:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 1.
+                negyedév [290]
+            terr-alava-per-311:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 2.
+                negyedév [311]
+            terr-alava-per-332:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 3.
+                negyedév [332]
+            terr-alava-per-353:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 4.
+                negyedév [353]
+            terr-alava-per-38:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 1.
+                negyedév [38]
+            terr-alava-per-59:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 2.
+                negyedév [59]
+            terr-alava-per-80:
+              help: null
+              label: Területi adózás. Álava. A helyesbített időszak százaléka. 3.
+                negyedév [80]
+            terr-comun-24:
+              help: null
+              label: Területi adózás. Közös terület [24]
+            terr-comun-con-reg-110:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                4. negyedév [110]
+            terr-comun-con-reg-131:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                1. negyedév [131]
+            terr-comun-con-reg-152:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                2. negyedév [152]
+            terr-comun-con-reg-173:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                3. negyedév [173]
+            terr-comun-con-reg-194:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                4. negyedév [194]
+            terr-comun-con-reg-215:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                1. negyedév [215]
+            terr-comun-con-reg-236:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                2. negyedév [236]
+            terr-comun-con-reg-257:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                3. negyedév [257]
+            terr-comun-con-reg-278:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                4. negyedév [278]
+            terr-comun-con-reg-299:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                1. negyedév [299]
+            terr-comun-con-reg-320:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                2. negyedév [320]
+            terr-comun-con-reg-341:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                3. negyedév [341]
+            terr-comun-con-reg-362:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                4. negyedév [362]
+            terr-comun-con-reg-47:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                1. negyedév [47]
+            terr-comun-con-reg-68:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                2. negyedév [68]
+            terr-comun-con-reg-89:
+              help: null
+              label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
+                3. negyedév [89]
+            terr-comun-per-109:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                4. negyedév [109]
+            terr-comun-per-130:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                1. negyedév [130]
+            terr-comun-per-151:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                2. negyedév [151]
+            terr-comun-per-172:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                3. negyedév [172]
+            terr-comun-per-193:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                4. negyedév [193]
+            terr-comun-per-214:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                1. negyedév [214]
+            terr-comun-per-235:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                2. negyedév [235]
+            terr-comun-per-256:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                3. negyedév [256]
+            terr-comun-per-277:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                4. negyedév [277]
+            terr-comun-per-298:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                1. negyedév [298]
+            terr-comun-per-319:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                2. negyedév [319]
+            terr-comun-per-340:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                3. negyedév [340]
+            terr-comun-per-361:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                4. negyedév [361]
+            terr-comun-per-46:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                1. negyedév [46]
+            terr-comun-per-67:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                2. negyedév [67]
+            terr-comun-per-88:
+              help: null
+              label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
+                3. negyedév [88]
+            terr-guipuzcoa-21:
+              help: null
+              label: Területi adózás. Gipuzkoa [21]
+            terr-guipuzcoa-con-reg-104:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                4. negyedév [104]
+            terr-guipuzcoa-con-reg-125:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                1. negyedév [125]
+            terr-guipuzcoa-con-reg-146:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                2. negyedév [146]
+            terr-guipuzcoa-con-reg-167:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                3. negyedév [167]
+            terr-guipuzcoa-con-reg-188:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                4. negyedév [188]
+            terr-guipuzcoa-con-reg-209:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                1. negyedév [209]
+            terr-guipuzcoa-con-reg-230:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                2. negyedév [230]
+            terr-guipuzcoa-con-reg-251:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                3. negyedév [251]
+            terr-guipuzcoa-con-reg-272:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                4. negyedév [272]
+            terr-guipuzcoa-con-reg-293:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                1. negyedév [293]
+            terr-guipuzcoa-con-reg-314:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                2. negyedév [314]
+            terr-guipuzcoa-con-reg-335:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                3. negyedév [335]
+            terr-guipuzcoa-con-reg-356:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                4. negyedév [356]
+            terr-guipuzcoa-con-reg-41:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                1. negyedév [41]
+            terr-guipuzcoa-con-reg-62:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                2. negyedév [62]
+            terr-guipuzcoa-con-reg-83:
+              help: null
+              label: Területi adózás. Gipuzkoa. Százalék a helyesbítéssel együtt.
+                3. negyedév [83]
+            terr-guipuzcoa-per-103:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                4. negyedév [103]
+            terr-guipuzcoa-per-124:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                1. negyedév [124]
+            terr-guipuzcoa-per-145:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                2. negyedév [145]
+            terr-guipuzcoa-per-166:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                3. negyedév [166]
+            terr-guipuzcoa-per-187:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                4. negyedév [187]
+            terr-guipuzcoa-per-208:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                1. negyedév [208]
+            terr-guipuzcoa-per-229:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                2. negyedév [229]
+            terr-guipuzcoa-per-250:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                3. negyedév [250]
+            terr-guipuzcoa-per-271:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                4. negyedév [271]
+            terr-guipuzcoa-per-292:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                1. negyedév [292]
+            terr-guipuzcoa-per-313:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                2. negyedév [313]
+            terr-guipuzcoa-per-334:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                3. negyedév [334]
+            terr-guipuzcoa-per-355:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                4. negyedév [355]
+            terr-guipuzcoa-per-40:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                1. negyedév [40]
+            terr-guipuzcoa-per-61:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                2. negyedév [61]
+            terr-guipuzcoa-per-82:
+              help: null
+              label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka.
+                3. negyedév [82]
+            terr-navarra-23:
+              help: null
+              label: Területi adózás. Navarra [23]
+            terr-navarra-con-reg-108:
+              help: null
+              label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 4.
+                negyedév [108]
+            terr-navarra-con-reg-129:
+              help: null
+              label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 1.
+                negyedév [129]
+            terr-navarra-con-reg-150:
+              help: null
+              label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 2.
+                negyedév [150]
+            terr-navarra-con-reg-171:
+              help: null
+              label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 3.
+                negyedév [171]
+            terr-navarra-con-reg-192:
+              help: null
+              label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 4.
+                negyedév [192]
+            terr-navarra-con-reg-213:
+              help: null
+              label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 1.
+                negyedév [213]
+            terr-navarra-con-reg-234:
+              help: null
+              label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 2.
+                negyedév [234]
+            terr-navarra-con-reg-255:
+              help: null
+              label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 3.
+                negyedév [255]
+            terr-navarra-con-reg-276:
+              help: null
+              label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 4.
+                negyedév [276]
+            terr-navarra-con-reg-297:
+              help: null
+              label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 1.
+                negyedév [297]
+            terr-navarra-con-reg-318:
+              help: null
+              label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 2.
+                negyedév [318]
+            terr-navarra-con-reg-339:
+              help: null
+              label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 3.
+                negyedév [339]
+            terr-navarra-con-reg-360:
+              help: null
+              label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 4.
+                negyedév [360]
+            terr-navarra-con-reg-45:
+              help: null
+              label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 1.
+                negyedév [45]
+            terr-navarra-con-reg-66:
+              help: null
+              label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 2.
+                negyedév [66]
+            terr-navarra-con-reg-87:
+              help: null
+              label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 3.
+                negyedév [87]
+            terr-navarra-per-107:
+              help: null
+              label: Területi adózás. Navarra. A helyesbített időszak százaléka. 4.
+                negyedév [107]
+            terr-navarra-per-128:
+              help: null
+              label: Területi adózás. Navarra. A helyesbített időszak százaléka. 1.
+                negyedév [128]
+            terr-navarra-per-149:
+              help: null
+              label: Területi adózás. Navarra. A helyesbített időszak százaléka. 2.
+                negyedév [149]
+            terr-navarra-per-170:
+              help: null
+              label: Területi adózás. Navarra. A helyesbített időszak százaléka. 3.
+                negyedév [170]
+            terr-navarra-per-191:
+              help: null
+              label: Területi adózás. Navarra. A helyesbített időszak százaléka. 4.
+                negyedév [191]
+            terr-navarra-per-212:
+              help: null
+              label: Területi adózás. Navarra. A helyesbített időszak százaléka. 1.
+                negyedév [212]
+            terr-navarra-per-233:
+              help: null
+              label: Területi adózás. Navarra. A helyesbített időszak százaléka. 2.
+                negyedév [233]
+            terr-navarra-per-254:
+              help: null
+              label: Területi adózás. Navarra. A helyesbített időszak százaléka. 3.
+                negyedév [254]
+            terr-navarra-per-275:
+              help: null
+              label: Területi adózás. Navarra. A helyesbített időszak százaléka. 4.
+                negyedév [275]
+            terr-navarra-per-296:
+              help: null
+              label: Területi adózás. Navarra. A helyesbített időszak százaléka. 1.
+                negyedév [296]
+            terr-navarra-per-317:
+              help: null
+              label: Területi adózás. Navarra. A helyesbített időszak százaléka. 2.
+                negyedév [317]
+            terr-navarra-per-338:
+              help: null
+              label: Területi adózás. Navarra. A helyesbített időszak százaléka. 3.
+                negyedév [338]
+            terr-navarra-per-359:
+              help: null
+              label: Területi adózás. Navarra. A helyesbített időszak százaléka. 4.
+                negyedév [359]
+            terr-navarra-per-44:
+              help: null
+              label: Területi adózás. Navarra. A helyesbített időszak százaléka. 1.
+                negyedév [44]
+            terr-navarra-per-65:
+              help: null
+              label: Területi adózás. Navarra. A helyesbített időszak százaléka. 2.
+                negyedév [65]
+            terr-navarra-per-86:
+              help: null
+              label: Területi adózás. Navarra. A helyesbített időszak százaléka. 3.
+                negyedév [86]
+            terr-vizcaya-22:
+              help: null
+              label: Területi adózás. Bizkaia [22]
+            terr-vizcaya-con-reg-106:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 4.
+                negyedév [106]
+            terr-vizcaya-con-reg-127:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 1.
+                negyedév [127]
+            terr-vizcaya-con-reg-148:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 2.
+                negyedév [148]
+            terr-vizcaya-con-reg-169:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 3.
+                negyedév [169]
+            terr-vizcaya-con-reg-190:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 4.
+                negyedév [190]
+            terr-vizcaya-con-reg-211:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 1.
+                negyedév [211]
+            terr-vizcaya-con-reg-232:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 2.
+                negyedév [232]
+            terr-vizcaya-con-reg-253:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 3.
+                negyedév [253]
+            terr-vizcaya-con-reg-274:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 4.
+                negyedév [274]
+            terr-vizcaya-con-reg-295:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 1.
+                negyedév [295]
+            terr-vizcaya-con-reg-316:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 2.
+                negyedév [316]
+            terr-vizcaya-con-reg-337:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 3.
+                negyedév [337]
+            terr-vizcaya-con-reg-358:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 4.
+                negyedév [358]
+            terr-vizcaya-con-reg-43:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 1.
+                negyedév [43]
+            terr-vizcaya-con-reg-64:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 2.
+                negyedév [64]
+            terr-vizcaya-con-reg-85:
+              help: null
+              label: Területi adózás. Bizkaia. Százalék a helyesbítéssel együtt. 3.
+                negyedév [85]
+            terr-vizcaya-per-105:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 4.
+                negyedév [105]
+            terr-vizcaya-per-126:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 1.
+                negyedév [126]
+            terr-vizcaya-per-147:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 2.
+                negyedév [147]
+            terr-vizcaya-per-168:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 3.
+                negyedév [168]
+            terr-vizcaya-per-189:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 4.
+                negyedév [189]
+            terr-vizcaya-per-210:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 1.
+                negyedév [210]
+            terr-vizcaya-per-231:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 2.
+                negyedév [231]
+            terr-vizcaya-per-252:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 3.
+                negyedév [252]
+            terr-vizcaya-per-273:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 4.
+                negyedév [273]
+            terr-vizcaya-per-294:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 1.
+                negyedév [294]
+            terr-vizcaya-per-315:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 2.
+                negyedév [315]
+            terr-vizcaya-per-336:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 3.
+                negyedév [336]
+            terr-vizcaya-per-357:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 4.
+                negyedév [357]
+            terr-vizcaya-per-42:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 1.
+                negyedév [42]
+            terr-vizcaya-per-63:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 2.
+                negyedév [63]
+            terr-vizcaya-per-84:
+              help: null
+              label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 3.
+                negyedév [84]
     '576':
       field:
         official_name: null

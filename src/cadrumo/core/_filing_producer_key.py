@@ -22,6 +22,15 @@ class FilingProducerKey(StrEnum):
     TAXPAYER_GIVEN_NAME = "taxpayer.given_name"
     TAXPAYER_SURNAMES = "taxpayer.surnames"
     TAXPAYER_FULL_NAME = "taxpayer.full_name"
+    #: Apellidos for a persona fisica, razon social for an entidad -- the ONE
+    #: slot of a two-slot identity design. AEAT labels it "Apellidos o Razon
+    #: Social" and pairs it with a separate "Nombre (solo personas fisicas)"
+    #: slot, so neither existing key fits: `taxpayer.surnames` is None for an
+    #: entity (Modelo 390 filed a blank OBLIGATORIO field for every company),
+    #: `taxpayer.legal_name` is None for a natural person, and
+    #: `taxpayer.full_name` would put "APELLIDOS NOMBRE" in a surnames-only slot
+    #: and then repeat the nombre in the companion slot.
+    TAXPAYER_SURNAMES_OR_LEGAL_NAME = "taxpayer.surnames_or_legal_name"
     AMENDMENT_IS_RECTIFICATIVA = "amendment_evidence.is_rectificativa"
     AMENDMENT_IS_COMPLEMENTARIA = "amendment_evidence.is_complementaria"
     AMENDMENT_ORIGINAL_AEAT_RECEIPT = "amendment_evidence.original_aeat_receipt"

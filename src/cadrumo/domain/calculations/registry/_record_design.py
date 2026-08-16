@@ -446,9 +446,23 @@ def _extract_record_design_pdf_stream(
             ) from pdf_exc
         visual_chart = _extract_visual_record_design_chart(pages, source_label=source_label)
         if visual_chart:
-            # The geometry reader either reconstructs every charted record or
-            # returns nothing, so a result here is complete by construction.
-            return RecordDesignExtraction(source=source_label, sheets=visual_chart)
+            # The geometry reader was documented as "complete by construction",
+            # and it is not: modelo 349's 2002 edition and modelo 180's 2000
+            # edition both reconstruct here with 40-to-65-byte runs missing from
+            # every record, and reported ``is_complete`` because nothing checked.
+            # It is a READER like any other, so it answers to the same contiguity
+            # question -- a sheet whose rows do not tile its declared extent is
+            # reported as skipped rather than handed over as whole.
+            broken = {
+                sheet.name: reason for sheet in visual_chart if (reason := contiguity_failure(sheet)) is not None
+            }
+            return RecordDesignExtraction(
+                source=source_label,
+                sheets=tuple(sheet for sheet in visual_chart if sheet.name not in broken),
+                skipped=tuple(
+                    RecordDesignSkippedSheet(name=name, reason=reason) for name, reason in broken.items()
+                ),
+            )
         raise
 
 
@@ -1405,6 +1419,12 @@ class _PdfFieldDraft:
 
     def finish(self) -> RecordDesignField:
         description = _join_pdf_parts(self.description_parts)
+        if not description and self.type_code == "Blancos":
+            # A fill run needs no description: AEAT writes the naturaleza alone
+            # ("58 BLANCO", "187-390 BLANCOS") because there is no datum to name.
+            # Demanding one here discarded the row, and a discarded fill run
+            # leaves a hole that reads as "the reader lost a field".
+            description = "Blancos"
         if not description:
             raise RegistryValidationError(f"{self.sheet!r} PDF row {self.row} missing description")
         return RecordDesignField(
@@ -1869,12 +1889,13 @@ def contiguity_failure(sheet: RecordDesignSheet) -> str | None:
             f"read at all, so rows were dropped; a record read with holes understates every coverage "
             f"figure derived from it"
         )
-    if beyond := sorted(covered - declared):
-        return (
-            f"declares {sheet.total_positions} total positions but rows were read at "
-            f"{_position_runs(beyond)}, past its declared extent, so at least one row was invented; "
-            f"an invented position inflates every coverage denominator derived from it"
-        )
+    # No "beyond the declared extent" leg: ``total_positions`` is DERIVED as
+    # ``max(offset + length - 1)`` on the PDF paths, so the covered set is a
+    # subset of the declared span by construction and such a check can never
+    # fire. Measured across 2,581 bundled sheets: zero hits. A check whose zero
+    # is not evidence is worse than no check, because it reads as coverage.
+    # Fabricated rows show up as OVERLAP and as a length sum exceeding the
+    # extent, which is where they are caught.
     return None
 
 
@@ -1968,7 +1989,13 @@ def _naturaleza_or_none(value: str) -> str | None:
     normalised = unicodedata.normalize("NFKD", raw).encode("ascii", "ignore").decode("ascii").lower()
     if not normalised:
         return None
-    if normalised == "blank":
+    # AEAT names the fill naturaleza in Spanish far more often than in English:
+    # "58 BLANCO", "187-390 BLANCOS", "58-107 Blancos BLANCOS". Recognising only
+    # the English "blank" and the dash form dropped every one of those rows, and
+    # a dropped filler run is not cosmetic -- modelo 349 lost 204 bytes at
+    # 187-390 and 32 at 147-178, which took its whole design below the
+    # contiguity check and left a live layout unmeasurable.
+    if normalised.startswith("blanco") or normalised == "blank":
         return "Blancos"
     # The ADJECTIVE stems, never the bare noun. "num" also prefixes
     # "NUMERO"/"NÚMERO", which opens a great many AEAT field NAMES
@@ -1979,7 +2006,12 @@ def _naturaleza_or_none(value: str) -> str | None:
     # which no record may declare because they would overlap.
     if normalised.startswith(("alfanumeric", "alphanumeric")):
         return "Alfanumérico"
-    if normalised.startswith(("alfabetic", "alphabetic")):
+    # "afabetic" is AEAT's own typo for "alfabético", shipped in modelo 156's
+    # "36 - 75 Afabético APELLIDOS Y NOMBRE DEL AFILIADO O MUTUALISTA". Dropping
+    # it left a 40-byte hole exactly where the taxpayer's name belongs. It is
+    # listed explicitly rather than folded into a looser stem because a wider
+    # prefix would start matching field-name words.
+    if normalised.startswith(("alfabetic", "alphabetic", "afabetic")):
         return "Alfabético"
     if normalised.startswith("numeric"):
         return "Numérico"

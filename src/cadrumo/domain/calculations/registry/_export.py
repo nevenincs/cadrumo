@@ -400,7 +400,11 @@ def _export_field_from_binding(
         required=False,
         padding=_padding_for_binding_data_type(selector.data_type),
         justification=_justification_for_binding_data_type(selector.data_type),
-        signed=False,
+        # Read from the selector, never assumed. A hard-coded False here made
+        # every binding-derived slot unsigned regardless of what AEAT typed the
+        # design row, so a binding projecting into an ``N`` row emitted one
+        # magnitude digit too many and refused outright on a negative value.
+        signed=selector.signed,
         legal_refs=binding.legal_refs,
         source_refs=binding.source_refs,
     )

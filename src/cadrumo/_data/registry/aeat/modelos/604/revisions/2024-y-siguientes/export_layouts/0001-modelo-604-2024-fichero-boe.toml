@@ -4,9 +4,13 @@
 # Three records, each tiling its declared extent exactly once with no gap and
 # no overlap: Pag. 0 envelope 1..328, Pag. 1 1..1000, Pag. 2 1..700.
 #
-# @93+4 (Version del Programa) is filler and @101+9 carries the presenter NIF,
-# following the Modelo 390 envelope precedent for the same <AUX> grammar at
-# the same coordinates.
+# The three "(**) A cumplimentar por las entidades desarrolladoras (EEDD)" slots
+# in the Pag. 0 envelope -- @53+1 idioma, @93+4 version del programa, @101+9 NIF
+# Empresa Desarrollo -- identify the SOFTWARE HOUSE that produced the file, not
+# the presenter and not the taxpayer. Modelo 390 writes presenter.tax_id at
+# @101+9; that is a known DEFECT, not a precedent, and is not copied here.
+# @101+9 is left unwritten (see below) and @93+4 is filler pending a ruling on
+# whether these slots can carry a real runtime-supplied identity at all.
 
 [[revisions."2024-y-siguientes".export_layouts]]
 id = "modelo-604-2024-fichero-boe"
@@ -186,19 +190,14 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-604-604-00-presenter-tax-id"
-offset = 101
-length = 9
-kind = "header"
-producer_key = "presenter.tax_id"
-data_type = "text"
-required = true
-padding = "none"
-justification = "none"
-signed = false
-legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
+# @101+9 is deliberately LEFT UNWRITTEN. AEAT names it "NIF Empresa Desarrollo"
+# and marks it, with @53+1 and @93+4, "(**) A cumplimentar por las entidades
+# desarrolladoras (EEDD)" -- it identifies the software house that produced the
+# file, which is not the presenter and not the taxpayer. Writing
+# presenter.tax_id here would put a confidently wrong NIF into a real filing.
+# No producer key carries a developer identity, so the honest state is an
+# unwritten slot: the coverage gate counts it as a genuine shortfall, which is
+# accurate, rather than reporting full marks over a wrong value.
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-604-604-00-reservado-110"
@@ -291,13 +290,20 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
+# AEAT declares this slot's Contenido as "En blanco" and admits NO other value
+# on this modelo -- contrast Modelo 490, whose same-coordinate indicator admits
+# "C o blanco". Blank is therefore the declared constant for every page this
+# application emits, so it is authored as that constant rather than as a pad:
+# a filler asserts "no datum here", a literal asserts "the datum is blank",
+# and only the second is what the design says.
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-604-604-01-reservado-12"
+id = "modelo-604-604-01-indicador-pagina-complementaria"
 offset = 12
 length = 1
-kind = "filler"
+kind = "literal"
+literal = " "
 data_type = "text"
-required = false
+required = true
 padding = "none"
 justification = "none"
 signed = false
@@ -1109,13 +1115,20 @@ signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
 
+# AEAT declares this slot's Contenido as "En blanco" and admits NO other value
+# on this modelo -- contrast Modelo 490, whose same-coordinate indicator admits
+# "C o blanco". Blank is therefore the declared constant for every page this
+# application emits, so it is authored as that constant rather than as a pad:
+# a filler asserts "no datum here", a literal asserts "the datum is blank",
+# and only the second is what the design says.
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-604-604-02-reservado-12"
+id = "modelo-604-604-02-indicador-pagina-complementaria"
 offset = 12
 length = 1
-kind = "filler"
+kind = "literal"
+literal = " "
 data_type = "text"
-required = false
+required = true
 padding = "none"
 justification = "none"
 signed = false

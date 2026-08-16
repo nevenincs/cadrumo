@@ -115,19 +115,34 @@ signed = false
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
+# Design campo 7 @59+49 is declared as the two data AEAT's own prose names
+# inside it -- 59-67 TELEFONO and 68-107 APELLIDOS Y NOMBRE. The coverage gate
+# measures byte extent rather than (offset, length) identity, so the design's
+# grouping and the layout's do not have to agree; writing the two real facts
+# beats writing one 49-byte blank.
 [[revisions."2013-y-siguientes".export_layouts.records.fields]]
-id = "modelo-270-decl-persona-relacion"
+id = "modelo-270-decl-persona-contacto-telefono"
 offset = 59
-length = 49
-kind = "filler"
-# Design campo 7, "PERSONA CON QUIEN RELACIONARSE", subdivided by AEAT into
-# 59-67 TELEFONO and 68-107 APELLIDOS Y NOMBRE. Cadrumo holds no contact-person
-# fact for the presenting declarant -- no producer key carries a contact
-# telephone or a contact name -- so the slot is written as the design's own
-# single alfanumerico campo and left blank, which the design's global rule
-# admits: "los campos alfanumericos/alfabeticos que no tengan contenido se
-# rellenaran a blancos". Writing a taxpayer identity here would name the wrong
-# person.
+length = 9
+kind = "casilla"
+casilla_id = "decl.persona-contacto-telefono"
+# "TELEFONO: Campo numerico de 9 posiciones."
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-persona-contacto-nombre"
+offset = 68
+length = 40
+kind = "casilla"
+casilla_id = "decl.persona-contacto-nombre"
+# "APELLIDOS Y NOMBRE: Se consignara el primer apellido, un espacio, el segundo
+# apellido, un espacio y el nombre completo, necesariamente en este orden."
 data_type = "text"
 required = false
 padding = "right_space"
@@ -140,54 +155,66 @@ source_refs = ["aeat-dr-270-2023"]
 id = "modelo-270-decl-numero-identificativo"
 offset = 108
 length = 13
-kind = "filler"
-# Design campo 8. A sequential number whose first three digits are the code
-# 270; it is assigned at presentation, not derived from the draft, and no
-# producer key carries it. Numerico with no content is written to ceros per
-# the design's global numeric rule.
+kind = "casilla"
+casilla_id = "decl.numero-identificativo"
+# Design campo 8: a 13-position numeric field the filer assigns, first three
+# digits the codigo 270. Operator datum, not a producer fact.
 data_type = "text"
-required = false
+required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]
+
+# Design campo 9 @121+2 carries TWO independent single-byte claves, which AEAT
+# subdivides itself: 121 "C" complementaria and 122 "S" sustitutiva. Declared as
+# two fields so each clave lands on its own byte. Deliberately NOT wired to
+# amendment_evidence.is_complementaria: that producer is a boolean and renders
+# the canonical "X", which this design does not admit here.
+[[revisions."2013-y-siguientes".export_layouts.records.fields]]
+id = "modelo-270-decl-complementaria"
+offset = 121
+length = 1
+kind = "casilla"
+casilla_id = "decl.complementaria"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
 [[revisions."2013-y-siguientes".export_layouts.records.fields]]
-id = "modelo-270-decl-complementaria-sustitutiva"
-offset = 121
-length = 2
-kind = "filler"
-# Design campo 9, subdivided into 121 DECLARACION COMPLEMENTARIA ("C") and 122
-# DECLARACION SUSTITUTIVA ("S"). Neither byte can be produced correctly today:
-# the amendment_evidence.is_complementaria producer is a boolean and renders
-# the canonical "X", not the "C" this design admits, and there is no
-# sustitutiva producer at all. A first presentation leaves both bytes blank,
-# which is the design's own default ("en el caso excepcional de segunda o
-# posterior presentacion de declaraciones"), so blank is correct for every
-# filing this application can currently build.
+id = "modelo-270-decl-sustitutiva"
+offset = 122
+length = 1
+kind = "casilla"
+casilla_id = "decl.sustitutiva"
 data_type = "text"
 required = false
-padding = "right_space"
-justification = "left"
+padding = "none"
+justification = "none"
 signed = false
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
 [[revisions."2013-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-numero-identificativo-anterior"
 offset = 123
 length = 13
-kind = "filler"
-# Design campo 10. Written only when campo 9 carries "C" or "S", which no
-# filing this application builds currently does; the design states "en
-# cualquier otro caso debera rellenarse a CEROS".
+kind = "casilla"
+casilla_id = "decl.numero-identificativo-anterior"
+# Design campo 10, the numero identificativo of the declaration this one
+# complements or replaces. The operator holds it; the design fills it with
+# ceros otherwise.
 data_type = "text"
 required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
 [[revisions."2013-y-siguientes".export_layouts.records.fields]]

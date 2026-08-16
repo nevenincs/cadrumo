@@ -7,7 +7,7 @@ source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
 id = "modelo-131-2019-2023.page1.113-129.actividad-1-rendimiento-neto"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-1-rendimiento-neto", offset = 113, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-1-rendimiento-neto", offset = 113, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
@@ -19,7 +19,7 @@ source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
 id = "modelo-131-2019-2023.page1.135-151.actividad-1-resultado"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-1-resultado", offset = 135, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-1-resultado", offset = 135, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
@@ -31,7 +31,7 @@ source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
 id = "modelo-131-2019-2023.page1.156-172.actividad-2-rendimiento-neto"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-2-rendimiento-neto", offset = 156, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-2-rendimiento-neto", offset = 156, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
@@ -43,7 +43,7 @@ source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
 id = "modelo-131-2019-2023.page1.178-194.actividad-2-resultado"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-2-resultado", offset = 178, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-2-resultado", offset = 178, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
@@ -55,7 +55,7 @@ source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
 id = "modelo-131-2019-2023.page1.199-215.actividad-3-rendimiento-neto"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-3-rendimiento-neto", offset = 199, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-3-rendimiento-neto", offset = 199, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
@@ -67,7 +67,7 @@ source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
 id = "modelo-131-2019-2023.page1.221-237.actividad-3-resultado"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-3-resultado", offset = 221, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-3-resultado", offset = 221, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
@@ -79,7 +79,7 @@ source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
 id = "modelo-131-2019-2023.page1.242-258.actividad-4-rendimiento-neto"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-4-rendimiento-neto", offset = 242, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-4-rendimiento-neto", offset = 242, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
@@ -91,7 +91,7 @@ source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
 id = "modelo-131-2019-2023.page1.264-280.actividad-4-resultado"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-4-resultado", offset = 264, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-4-resultado", offset = 264, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
@@ -103,7 +103,7 @@ source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
 id = "modelo-131-2019-2023.page1.285-301.actividad-5-rendimiento-neto"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-5-rendimiento-neto", offset = 285, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-5-rendimiento-neto", offset = 285, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
@@ -115,7 +115,7 @@ source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]
 id = "modelo-131-2019-2023.page1.307-323.actividad-5-resultado"
 source = "manual_input"
-selector = { record = "page_1", field = "actividad-5-resultado", offset = 307, length = 17, data_type = "money" }
+selector = { record = "page_1", field = "actividad-5-resultado", offset = 307, length = 17, data_type = "money", signed = true }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".bindings]]

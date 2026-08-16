@@ -177,14 +177,6 @@ from ._verification_actions import (
     require_cross_period_clean_state,
 )
 
-#: AEAT-assigned program-identifier code stamped into the optional
-#: ``program_version`` export header. AEAT requires a 4-character
-#: software code on the fichero-BOE envelope; this is the single
-#: sourced value the export path emits. It is intentionally distinct
-#: from the package ``__version__`` — AEAT program codes are assigned
-#: per submission tool, not per release.
-_PROGRAM_VERSION_CODE = "A001"
-
 _LOCAL_EXPORT_EVIDENCE_STATUS = "local_export_not_official_aeat_filing_evidence"
 _LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE = (
     "Local export wrote an AEAT-compatible fichero-BOE file only; it is not official AEAT filing evidence. "

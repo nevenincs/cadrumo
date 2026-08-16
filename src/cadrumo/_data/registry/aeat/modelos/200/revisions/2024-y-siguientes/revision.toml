@@ -6,6 +6,35 @@ authority_grade = "filing"
 # the orden's own publication/effective year. The prior 2025-01-01 value
 # self-contradicted the revision's own declared filing_year=2024 deadline
 # window and excluded any 2024-dated `on=` selection with no basis in law.
+#
+# HAZARD -- this revision spans TWO record designs, and a layout must never
+# cite both. source_refs below carry aeat-dr-200-2024 (applies_to 2024-12-31)
+# and aeat-dr-200-2025 (applies_from 2025-01-01): a clean year boundary, but
+# two different designs -- 75 sheets / 6,635 required positions for 2024, and
+# 77 sheets / 6,726 for 2025. The export-layout coverage gate concatenates
+# every cited record_design, so a layout authored here would be measured
+# against all 152 sheets at once and could not be correct for either year.
+#
+# The hazard is LATENT today: this revision declares no export layout and none
+# of its 3,250 casillas carries an export_ref, so nothing can currently be
+# filed by any route and no wrong-era bytes can be produced. Authoring a layout
+# is what makes it bite, so the split must land BEFORE that work, not after.
+#
+# Sizing, measured rather than estimated, so the next author does not discover
+# it: splitting into '2024' and '2025-y-siguientes' duplicates 1,045 TOML files
+# (2,575,213 bytes) and re-keys 26,008 locale leaves (6,502 x es/en/ca/hu),
+# because casilla locale keys are revision-scoped and a revision cannot be
+# casilla-less. The new revision needs its own 3,250 casillas, i.e. another
+# 26,008 leaves.
+#
+# SEQUENCE IT WITH THE SEGMENTO REFACTOR, NOT BEFORE IT. The 2024 design
+# demands 5,482 distinct (sheet, box) identities while only 94 of these 3,250
+# casillas carry a `segmento`, so exact (segmento, number) matches number 92.
+# Segment-qualifying the ~3,156 bare-numbered casillas re-keys their locale
+# leaves too. Splitting first means paying the 26,008 re-keys twice; doing both
+# together pays them once. That identity refactor also changes ids the
+# formulas, constructs, verification predicates and completeness manifest
+# already reference, so it needs its own ruling before either starts.
 valid_from = 2024-01-01
 period_selector = { year_from = 2024, periods = ["0A"] }
 legal_refs = [

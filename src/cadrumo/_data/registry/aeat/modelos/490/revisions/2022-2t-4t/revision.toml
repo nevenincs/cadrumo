@@ -21,9 +21,16 @@ authority_grade = "applicability"
 #
 # This revision consumes AEAT's "Orden HAC/590/2021 (Ejercicio 2022 periodo 2T-4T)" design.
 #
-# NO export layout is declared on this revision: the aeat-dr-490-2022-2t design has not
-# been transcribed. That is an absent filing capability honestly reported by the
-# export-layout gate, not an exemption.
+# NO export layout is declared on this revision. That is an absent filing
+# capability honestly reported by the export-layout gate, not an exemption.
+#
+# The era-appropriate diseno de registro for this revision IS bundled and
+# hash-verified in the corpus, but it is NOT a registered registry source: a
+# source requires `review_status`, which is Literal["reviewed"] with no pending
+# state, and no human has reviewed that document. Registering it would mean
+# asserting a review that did not happen, so this revision cites the already
+# registered orden-derived guidance instead and declares no layout. Unblocking
+# it is one operator decision, shared with the acquisition lane's bundled files.
 #
 # No deadline_windows and no deadline application link: the only windows this modelo
 # ever declared were for 2025 and 2026, which belong to the 2023-y-siguientes
@@ -40,7 +47,7 @@ legal_refs = [
 ]
 source_refs = [
     "enrolled-modelo-490-procedure",
-    "aeat-dr-490-2022-2t",
+    "enrolled-modelo-490-layout",
 ]
 
 
@@ -53,5 +60,5 @@ legal_refs = [
 ]
 source_refs = [
     "enrolled-modelo-490-procedure",
-    "aeat-dr-490-2022-2t",
+    "enrolled-modelo-490-layout",
 ]

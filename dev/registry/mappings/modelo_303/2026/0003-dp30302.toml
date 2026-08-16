@@ -64,7 +64,7 @@ record_identity = 'DP30302'
 [[entries]]
 export_field_id = 'm303-2026.dp30302.f005'
 kind = 'computed'
-computed_key = 'm303_complementaria_page_marker'
+computed_key = 'complementaria_page_marker'
 legal_refs = ['orden-eha-3786-2008:art-1']
 source_refs = ['aeat-dr-303-2026']
 

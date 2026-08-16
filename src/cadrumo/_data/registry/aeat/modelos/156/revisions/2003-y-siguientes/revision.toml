@@ -4,9 +4,8 @@ authority_grade = "applicability"
 # and its filing plazo grounded verbatim in orden-hac-3580-2003 art 4
 # (bundled BOE corpus). Scheduling/applicability-grade: declaration-header
 # casillas only. The authoritative Modelo 156 diseño de registro IS bundled
-# (enrolled-modelo-156-layout / aeat-dr-156-2021, re-pointed 2026-08-15) but
-# no casilla-to-position mapping has been authored from it yet, so no
-# numbered form casilla is fabricated here.
+# (enrolled-modelo-156-layout), and its numbered positions are now authored
+# from it in the casillas and export_layouts fragments of this revision.
 valid_from = 2003-01-01
 period_selector = { year_from = 2003, periods = ["0A"] }
 orden_aplicabilidad = ["orden-hac-3580-2003:art-1"]
@@ -18,7 +17,6 @@ legal_refs = [
 source_refs = [
     "enrolled-modelo-156-procedure",
     "enrolled-modelo-156-layout",
-    "aeat-dr-156-2021",
 ]
 
 
@@ -32,5 +30,4 @@ legal_refs = [
 source_refs = [
     "enrolled-modelo-156-procedure",
     "enrolled-modelo-156-layout",
-    "aeat-dr-156-2021",
 ]

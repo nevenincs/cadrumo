@@ -20,4 +20,4 @@ surface = "export"
 consumer = "cadrumo.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = ["orden-hac-3580-2003:art-1"]
-source_refs = ["aeat-dr-156-2021"]
+source_refs = ["enrolled-modelo-156-layout"]

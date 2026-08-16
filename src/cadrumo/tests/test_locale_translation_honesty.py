@@ -31,11 +31,17 @@ a data edit.
 from __future__ import annotations
 
 import json
+import tomllib
 from functools import cache
 from pathlib import Path
 
 import pytest
 import yaml
+
+from cadrumo.domain.calculations.registry import (
+    casilla_continuity_locale_key,
+    casilla_occurrence_locale_key,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -130,6 +136,48 @@ def _catalogue_leaves(locale_code: str) -> dict[str, str | None]:
     copy costs microseconds against a multi-second parse.
     """
     return dict(_parsed_catalogue(locale_code))
+
+
+@cache
+def _continuity_backing() -> dict[str, str]:
+    """Map each casilla occurrence label key to its continuity label key.
+
+    Read from the registry's casilla TOML rather than through the validated
+    authority, because this gate makes a claim about the SHIPPED catalogues and
+    must stay answerable while the registry is refusing validation for unrelated
+    reasons. It mirrors exactly what the loader does at
+    :func:`~cadrumo.domain.calculations.registry._modelo_localization._localised_casilla`:
+    read ``id`` and ``continuidad_id`` off the raw casilla table and derive both
+    keys with the same two canonical encoders.
+
+    Returns:
+        ``{occurrence_label_key: continuity_label_key}`` for every casilla that
+        declares a ``continuidad_id``. A casilla without one is simply absent,
+        which is what makes its null occurrence value a real offender.
+    """
+    backing: dict[str, str] = {}
+    modelos_dir = _LOCALES_DIR.parent / "_data" / "registry" / "aeat" / "modelos"
+    for casilla_file in modelos_dir.glob("*/revisions/*/casillas/*.toml"):
+        modelo_id = casilla_file.parents[3].name
+        try:
+            document = tomllib.loads(casilla_file.read_text(encoding="utf-8"))
+        except (OSError, tomllib.TOMLDecodeError):  # pragma: no cover - unreadable fragment
+            continue
+        for revision_id, revision in (document.get("revisions") or {}).items():
+            if not isinstance(revision, dict):
+                continue
+            for casilla in revision.get("casillas") or ():
+                if not isinstance(casilla, dict):
+                    continue
+                casilla_id = casilla.get("id")
+                continuidad_id = casilla.get("continuidad_id")
+                if not isinstance(casilla_id, str) or not isinstance(continuidad_id, str):
+                    continue
+                backing[casilla_occurrence_locale_key(modelo_id, revision_id, casilla_id, "label")] = (
+                    casilla_continuity_locale_key(modelo_id, continuidad_id, "label")
+                )
+    assert backing, "no casilla declares a continuidad_id; the continuity exemption below would be vacuous"
+    return backing
 
 
 def _load_metadata_ceiling(locale_code: str, field: str) -> int | None:
@@ -278,16 +326,38 @@ def test_no_catalogue_value_is_blank() -> None:
 
 
 def test_modelo_spanish_values_are_authority_source() -> None:
-    """Every enrolled Modelo key has one non-blank Spanish source value."""
+    """Every enrolled Modelo key resolves to one non-blank Spanish source value.
+
+    A null occurrence value is NOT automatically an offender.
+    :func:`~cadrumo.domain.calculations.registry._modelo_localization.resolve_modelo_localization`
+    advances on the absence of a VALUE and carries the casilla's continuity key
+    in the same chain, so a casilla whose ``continuidad_id`` has a populated
+    continuity label already renders correct Spanish. Demanding a value on the
+    occurrence key too would force a second copy of text that already has one
+    curated home, and the next edit to the continuity label would silently not
+    change what renders.
+
+    What stays sharp is the other half: a null with NO continuity backing --
+    no ``continuidad_id``, or one whose continuity label is itself blank --
+    renders nothing, and still fails here.
+    """
 
     es_keys = _catalogue_leaves("es")
+    backing = _continuity_backing()
     offenders = sorted(
         key
         for key, value in es_keys.items()
-        if _is_modelo_source_key(key) and (not isinstance(value, str) or not value.strip())
+        if _is_modelo_source_key(key)
+        and (not isinstance(value, str) or not value.strip())
+        and not (
+            (continuity_key := backing.get(key)) is not None
+            and isinstance(fallback := es_keys.get(continuity_key), str)
+            and fallback.strip()
+        )
     )
     assert offenders == [], (
-        f"es.yml is the mandatory official Modelo source; these schema leaves are missing or blank: {offenders[:10]}"
+        f"es.yml is the mandatory official Modelo source; these schema leaves are blank AND have no "
+        f"populated continuity label to fall back to, so they render nothing: {offenders[:10]}"
     )
 
 

@@ -21,6 +21,21 @@
 # formula can honestly populate them. See the note on resultado.a-ingresar
 # below for why that box is manual too.
 
+# Design campo 5, "Indicador de página complementaria", admitting "C o blanco".
+# An operator-supplied clave with AEAT's own stated domain, distinct from the
+# application's amendment_evidence boolean, which renders "X".
+[[revisions."2017-y-siguientes".casillas]]
+id = "decl.pagina-complementaria"
+number = "12"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m122_pagina_complementaria"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-122-p1-pagina-complementaria"]
+legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+
 [[revisions."2017-y-siguientes".casillas]]
 id = "conyuge.deduccion"
 number = "238-254"

@@ -119,23 +119,22 @@ signed = false
 legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-216-envelope-program-version"
-offset = 93
-length = 4
-kind = "filler"
-# AEAT note (**): "A cumplimentar por las entidades desarrolladoras
-# (EEDD)". This slot carries the identifier of the SOFTWARE version, supplied
-# by the software house, not by the filer, and the application declares no
-# developer identity anywhere. It renders blank, exactly as it does on a filing
-# produced by software whose developer is unregistered.
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
-source_refs = ["aeat-dr-216-2024"]
+# EEDD slots, deliberately UNWRITTEN: @93+4 "Version del Programa (**)" and
+# @101+9 "NIF Empresa Desarrollo (**)". AEAT's note (**) on this design reads
+# "A cumplimentar por las entidades desarrolladoras (EEDD)". Both carry the
+# software house's own identity -- the version of the SW and the NIF of the ED --
+# not the filer's and not the presenter's, and this project declares no
+# entidad-desarrolladora identity anywhere.
+#
+# These two were previously authored as fillers with that reasoning already
+# correct, including an explicit refusal to map @101+9 to presenter.tax_id. Only
+# the SHAPE changes here: the record renderer pre-fills every record with spaces
+# before writing fields, so a right_space filler and an omitted span emit
+# byte-identical output -- the blank rendering the earlier note intended is
+# preserved exactly. What the filler additionally did was make the coverage gate
+# count both positions as WRITTEN, which is coverage no datum earned. Leaving
+# them unwritten reports the gap instead, and matches Modelos 111/115/117/122/
+# 123/126/128/130/131/341/714 and now 390.
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-216-envelope-reserved-2"
@@ -150,22 +149,7 @@ signed = false
 legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
-id = "modelo-216-envelope-eedd-nif"
-offset = 101
-length = 9
-kind = "filler"
-# Same EEDD note (**): the NIF of the software-development entity, not of
-# the taxpayer and not of the presenter. Deliberately NOT mapped to
-# presenter.tax_id: that would write the filer's NIF into a slot AEAT reserves
-# for the software house.
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
-source_refs = ["aeat-dr-216-2024"]
+# @101+9 "NIF Empresa Desarrollo (**)" is UNWRITTEN -- see the EEDD note above.
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
 id = "modelo-216-envelope-reserved-3"

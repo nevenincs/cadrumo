@@ -12,6 +12,8 @@ from ....core import CasillaId
 from ._ids import RevisionId
 from ._validate_semantic_role_axes import (
     semantic_roles_are_axis_siblings,
+    semantic_roles_are_modelo_prefix_siblings,
+    semantic_roles_are_month_axis_siblings,
     semantic_roles_are_tax_domain_siblings,
 )
 
@@ -158,6 +160,10 @@ def _candidate_is_typo_twin(
 
     # Only run sibling checks on potential typo matches!
     if semantic_roles_are_tax_domain_siblings(role, known):
+        return False
+    if semantic_roles_are_modelo_prefix_siblings(role, known):
+        return False
+    if semantic_roles_are_month_axis_siblings(role, known):
         return False
     return not semantic_roles_are_axis_siblings(role, known)
 

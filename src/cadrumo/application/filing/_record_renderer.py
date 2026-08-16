@@ -26,7 +26,7 @@ from ._record_field_renderer import (
     DRAFT_VALUE_PRODUCERS,
     format_field,
     m303_complementaria_marker,
-    m303_complementaria_page_marker,
+    complementaria_page_marker,
     m303_no_activity_marker,
     projection_field_value,
     render_record,
@@ -39,7 +39,7 @@ _RecordRenderRow = RecordRenderRow
 _RenderedRecordOccurrence = RenderedRecordOccurrence
 _format_field = format_field
 _m303_complementaria_marker = m303_complementaria_marker
-_m303_complementaria_page_marker = m303_complementaria_page_marker
+_complementaria_page_marker = complementaria_page_marker
 _m303_no_activity_marker = m303_no_activity_marker
 _projection_field_value = projection_field_value
 _render_record = render_record
@@ -343,13 +343,13 @@ __all__ = [
     "_RenderedRecordOccurrence",
     "_format_field",
     "_m303_complementaria_marker",
-    "_m303_complementaria_page_marker",
+    "_complementaria_page_marker",
     "_m303_no_activity_marker",
     "_projection_field_value",
     "_render_record",
     "format_field",
     "m303_complementaria_marker",
-    "m303_complementaria_page_marker",
+    "complementaria_page_marker",
     "m303_no_activity_marker",
     "preflight_projection_plan",
     "projection_field_value",
