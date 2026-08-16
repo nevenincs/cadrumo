@@ -6,7 +6,6 @@ import json
 from collections import Counter
 from collections.abc import Mapping
 from datetime import date
-from hashlib import sha256
 from pathlib import Path
 from typing import cast
 from urllib.parse import urlsplit
@@ -29,6 +28,7 @@ from ....core import (
     orden_anual_iva_authority_units,
     orden_anual_iva_table_text,
     render_corpus_sidecar_text,
+    sha256_hex,
 )
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._m303_orden_constants import (
@@ -87,7 +87,7 @@ def validate_pinned_boe_orden_source(source: SourceReference, *, ejercicio: int)
 
 def annual_orden_raw_activity_identity(raw_activity: M303AnnualOrdenRawActivity) -> str:
     identity_seed = f"{raw_activity.iae_epigrafe}\0{raw_activity.activity_name}".encode()
-    return sha256(identity_seed).hexdigest()[:20]
+    return sha256_hex(identity_seed)[:20]
 
 
 def extract_m303_annual_orden_source(
@@ -103,7 +103,7 @@ def extract_m303_annual_orden_source(
         source_bytes = source_path.read_bytes()
     except OSError as exc:
         raise RegistryLoadError(f"annual Orden source {source.id!r} is unavailable at {source_path}") from exc
-    digest = sha256(source_bytes).hexdigest()
+    digest = sha256_hex(source_bytes)
     if digest != source.sha256:
         raise RegistryLoadError(
             f"annual Orden source {source.id!r} digest mismatch: expected {source.sha256}, got {digest}",
