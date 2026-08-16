@@ -26,8 +26,8 @@ from typing import Final, cast
 from urllib.parse import urlsplit
 
 from cadrumo.core import scan_directory
-from cadrumo.domain.calculations.registry import LegalReference
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry import LegalReference
 from dev._paths import UTF_8
 
 from ._locale_chrome import docs_chrome

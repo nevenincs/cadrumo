@@ -1475,7 +1475,7 @@ def test_a_design_yielding_no_fields_is_never_reported_complete() -> None:
             continue
         try:
             extraction = extract_record_design(path)
-        except Exception:  # noqa: BLE001 - a raising design is a different, louder state
+        except Exception:
             continue
         if sum(len(sheet.fields) for sheet in extraction.sheets):
             continue

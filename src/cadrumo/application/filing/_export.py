@@ -115,13 +115,13 @@ from ._record_renderer import (
     RenderedRecordOccurrence as _RenderedRecordOccurrence,
 )
 from ._record_renderer import (
+    complementaria_page_marker as _complementaria_page_marker,
+)
+from ._record_renderer import (
     format_field as _format_field,
 )
 from ._record_renderer import (
     m303_complementaria_marker as _m303_complementaria_marker,
-)
-from ._record_renderer import (
-    complementaria_page_marker as _complementaria_page_marker,
 )
 from ._record_renderer import (
     m303_no_activity_marker as _m303_no_activity_marker,
@@ -1496,9 +1496,9 @@ __all__ = [
     "FilingProjectionValue",
     "FilingRecordRenderContext",
     "_RecordRenderRow",
+    "_complementaria_page_marker",
     "_format_field",
     "_m303_complementaria_marker",
-    "_complementaria_page_marker",
     "_m303_no_activity_marker",
     "_preflight_projection_plan",
     "_projection_field_value",

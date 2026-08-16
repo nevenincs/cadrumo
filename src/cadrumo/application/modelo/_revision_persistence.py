@@ -53,7 +53,6 @@ from ...core import (
     validated_casilla_id,
 )
 from ...core.hashing import sha256_hex
-from ..filing import try_record_filing_retention_snapshot
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepositoryProtocol,
@@ -102,6 +101,7 @@ from ...domain.prorrata_register import (
     ProrrataRegisterRepositoryProtocol,
 )
 from ..calculations import CalculationObservationRepository, PriorDomiciliationElectionProjection
+from ..filing import try_record_filing_retention_snapshot
 from ._action_errors import M303FilingEvidenceError
 from ._filed_revision_observation import persist_filed_revision_observation, require_filing_result_disposition
 from ._m303_filing_evidence import m303_filing_evidence_failure

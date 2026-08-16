@@ -223,14 +223,6 @@ if TYPE_CHECKING:
     from ._keys_validation import list_profile_key_records, validate_profile_values
     from ._language_resolver import resolve_profile_output_language_hint
     from ._lifecycle import ProfileCapsuleLifecycle
-    from ._recovery_custody import (
-        ProfileRecoveryArtifactReceipt,
-        ProfileRecoveryEnrollment,
-        enroll_profile_recovery,
-        export_profile_recovery_artifact,
-        restore_profile_from_recovery_artifact,
-        restore_profile_with_password,
-    )
     from ._login_session import (
         ProfileLoginOutcome,
         ProfileLoginThrottledError,
@@ -277,6 +269,14 @@ if TYPE_CHECKING:
         record_to_path_values,
         record_to_values,
         snapshot_to_values,
+    )
+    from ._recovery_custody import (
+        ProfileRecoveryArtifactReceipt,
+        ProfileRecoveryEnrollment,
+        enroll_profile_recovery,
+        export_profile_recovery_artifact,
+        restore_profile_from_recovery_artifact,
+        restore_profile_with_password,
     )
     from ._registration import (
         PASSPHRASE_MINIMUM_LENGTH,
