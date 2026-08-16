@@ -230,16 +230,11 @@ class Modelo(StrEnum):
 #: extensible edge of AEAT-wide enrollment: it ratchets up as obligations are
 #: recognized and shrinks as they are modeled.
 #:
-#: **It carries exactly one member today.** :data:`Modelo.M721` (monedas virtuales
-#: situadas en el extranjero) is a real annual informative duty resting on the same
-#: statutory basis as :data:`Modelo.M720` -- Ley 58/2003 disposicion adicional 18
-#: and RD 1065/2007 art. 42 quater -- for which AEAT publishes no record design, so
-#: this application cannot file it and the taxpayer must be advised rather than left
-#: to assume it is covered. It is the first member, and it makes the
-#: ``REGISTRY_UNMODELED`` disposition reachable from production input for the first
-#: time; the out-of-scope partition no longer resolves ahead of it for this modelo.
+#: **It is INTENTIONALLY EMPTY today, and that is a recorded decision rather than
+#: an oversight.** Every sentence above describes the mechanism, which is live and
+#: exercised; none of it asserts that a member currently exists.
 #:
-#: Why the set stays otherwise minimal: deciding that a
+#: Why it stays empty rather than being filled in passing: deciding that a
 #: **Do not delete the consuming branch to remove "dead code".** While this
 #: mapping is empty the ``REGISTRY_UNMODELED`` disposition in
 #: :func:`application.overview.build_obligation_coverage` is unreachable from any
@@ -251,9 +246,7 @@ class Modelo(StrEnum):
 #: classifies a member correctly; it does not, and cannot, prove any actually
 #: declared obligation is correct. The first real entry therefore inherits a gate
 #: that already bites.
-UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {
-    Modelo.M721: "monedas virtuales situadas en el extranjero; saldos superiores a 50.000 euros",
-}
+UNMODELED_OBLIGATIONS: Mapping[Modelo, str] = {}
 
 
 #: Registry modelos (with a TOML definition) deliberately out of scope of the
