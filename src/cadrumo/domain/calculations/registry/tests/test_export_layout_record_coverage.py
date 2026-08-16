@@ -45,6 +45,7 @@ from .._schema import ExportLayoutDefinition, ModeloDefinition, ModeloRevision, 
 from .._validate_export_layout_coverage import (
     _administration_reserved,
     _belongs_to_layout,
+    _covers,
     _design_sources,
     _omissible_reason,
     _read_design_sheets,
@@ -642,35 +643,45 @@ def test_a_row_aeat_does_not_mark_constante_yields_no_constant(
     assert checked, "no unmarked design row was examined, so this guard proved nothing"
 
 
-def _every_declared_design_row(
+def _every_declared_design_sheet(
     catalogues: RegistryCatalogues,
-) -> list[RecordDesignField]:
-    """Every row of every record design the registry declares, sub-fields included.
+) -> list[RecordDesignSheet]:
+    """Every sheet of every record design the registry declares.
 
-    Broader than the designs a layout happens to cite, because the reservation
-    predicate is a reading of AEAT's vocabulary rather than a property of one
-    modelo.
+    Broader than the designs a layout happens to cite, because the properties
+    tested through it are readings of AEAT's own vocabulary rather than
+    properties of one modelo.
 
     Deliberately tolerant of a PARTIAL read, unlike ``_read_design_sheets``.
     Completeness guards coverage ARITHMETIC -- a ratio derived from a half-read
     design is inflated by exactly the records that were dropped -- whereas
-    classifying one row's wording needs only that row. Requiring completeness
-    here silently emptied the bare-label population instead: all sixty of those
-    rows live in Modelo 840, whose design is one of the seventeen the reader
-    cannot finish, so the fallback assertion passed its own emptiness check and
-    then proved nothing.
+    classifying one row needs only that row. Requiring completeness here
+    silently emptied the bare-label population instead: all sixty of those rows
+    live in Modelo 840, whose design is one of the seventeen the reader cannot
+    finish, so the fallback assertion passed its own emptiness check and then
+    proved nothing.
     """
     from .....core.resources import resolve_corpus_binary
 
-    rows: list[RecordDesignField] = []
+    sheets: list[RecordDesignSheet] = []
     for source in (source for source in catalogues.sources.values() if source.kind == "record_design"):
         path = resolve_corpus_binary(*source.corpus_path.split("/"))
         if path is None:
             continue
-        for sheet in extract_record_design(path).sheets:
-            for field in sheet.fields:
-                rows.extend((field, *field.components))
-    return rows
+        sheets.extend(extract_record_design(path).sheets)
+    return sheets
+
+
+def _every_declared_design_row(
+    catalogues: RegistryCatalogues,
+) -> list[RecordDesignField]:
+    """Every row of every declared record design, sub-fields included."""
+    return [
+        candidate
+        for sheet in _every_declared_design_sheet(catalogues)
+        for field in sheet.fields
+        for candidate in (field, *field.components)
+    ]
 
 
 def test_a_reservado_row_naming_the_aeat_as_owner_stays_reserved(
@@ -764,3 +775,68 @@ def test_a_bare_reservado_label_with_no_contenido_stays_reserved(
             f"@{field.offset}+{field.length} ({field.description!r}) lost its reservation "
             f"although AEAT names no owner and declares no filer tick"
         )
+
+
+def test_an_obligatory_blank_is_required_and_satisfied_by_a_filler(
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """AEAT can demand a position AND declare its content blank; both bind.
+
+    Thirty-four positions across Modelos 369, 322, 036, 210 and 353 are marked
+    obligatorio while their own ``Contenido`` cell reads ``Blancos`` / ``blanco``
+    / ``En blanco``. Neither statement overrides the other: the field must be
+    emitted so the fixed-width record stays contiguous, and what it emits is
+    blanks.
+
+    Demanding real data there made every one of them UNSATISFIABLE -- a filler
+    did not cover them, and a value-carrying field would contradict the
+    Contenido cell and trip the reserved-span rule for claiming reserved bytes.
+    So the assertion is two-sided: a filler must satisfy such a position, and
+    writing NOTHING must still fail it, or the rule would be a blanket pass.
+    """
+    _modelos, catalogues = registry_tree
+    blanks = [
+        position
+        for sheet in _every_declared_design_sheet(catalogues)
+        for position in _required_positions(sheet)
+        if position.declared_blank
+    ]
+    assert blanks, "no obligatory-blank position was examined, so this proved nothing"
+    for position in blanks:
+        span = set(range(position.offset, position.offset + position.length))
+        assert _covers(position, set(), span), (
+            f"{position.sheet!r} @{position.offset}+{position.length} "
+            f"({position.description!r}) is an obligatory blank a filler must satisfy"
+        )
+        assert not _covers(position, set(), set()), (
+            f"{position.sheet!r} @{position.offset}+{position.length} passed while the layout "
+            f"emits nothing there, so the obligatory-blank allowance is a blanket pass"
+        )
+
+
+def test_a_required_position_that_is_not_a_declared_blank_still_needs_real_data(
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """The obligatory-blank allowance must not leak to ordinary data positions.
+
+    A filler over a position AEAT expects a datum in is the silent
+    under-declaration this gate exists to refuse -- Modelo 190 read 96.2% against
+    a real data coverage of 32% while blanking its way there. The allowance is
+    keyed strictly on AEAT's own Contenido cell, so every other required
+    position must still reject a filler.
+    """
+    _modelos, catalogues = registry_tree
+    ordinary = [
+        position
+        for sheet in _every_declared_design_sheet(catalogues)
+        for position in _required_positions(sheet)
+        if not position.declared_blank
+    ]
+    assert ordinary, "no ordinary required position was examined, so this proved nothing"
+    for position in ordinary[:2000]:
+        span = set(range(position.offset, position.offset + position.length))
+        assert not _covers(position, set(), span), (
+            f"{position.sheet!r} @{position.offset}+{position.length} "
+            f"({position.description!r}) was satisfied by fill alone"
+        )
+        assert _covers(position, span, span)
