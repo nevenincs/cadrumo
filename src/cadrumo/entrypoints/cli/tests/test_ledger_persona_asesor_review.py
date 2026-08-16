@@ -35,10 +35,9 @@ from ....tests import FIXTURES_DIR
 from ....tests.cli_envelope import unwrap_schema_envelope as _json
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.ledger_cli import list_ledger_rows_via_cli as _list_rows
-from ._isolated_profile_storage_fixtures import live_fx_isolated_backend
+from ._isolated_profile_storage_fixtures import live_fx_seeded_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["live_fx_isolated_backend"]
 
 _CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
 _FILES = (
@@ -62,11 +61,13 @@ def _import_corpus() -> None:
         assert result.exit_code == 0, f"{name}: {result.output}"
 
 
-def _import_bbva() -> None:
-    result = _invoke(
-        ["app", "ledger", "import", "--file", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
-    )
-    assert result.exit_code == 0, result.output
+# The corpus is the asesor's starting state, not the thing under test: every
+# test below opens on a client ledger that has just been imported. Seeding it
+# once and giving each test a copy keeps the per-test isolation exactly as it
+# was -- each still gets its own storage root, so a classify or archive cannot
+# reach the next test -- while paying the import once instead of ten times.
+_seeded_origin, live_fx_seeded_world = live_fx_seeded_backend(seed=_import_corpus)
+__all__ = ["_seeded_origin", "live_fx_seeded_world"]
 
 
 def _find(rows: list[dict[str, object]], needle: str) -> dict[str, object]:
@@ -84,7 +85,6 @@ def test_asesor_sees_entire_corpus_unclassified_on_arrival() -> None:
     The asesor must be able to see, at a glance, that *every* row still needs a
     disposition — none are silently treated as ready.
     """
-    _import_corpus()
     rows = _list_rows()
     assert len(rows) >= 500, f"expected operating-scale corpus, got {len(rows)}"
     assert all(r.get("business_classification") == "NOT_YET_PROCESSED" for r in rows)
@@ -96,7 +96,6 @@ def test_asesor_triage_pending_backlog_via_review_filter() -> None:
     The pending backlog must be reachable as a typed filter, and the recargo
     anomaly + a personal row must both be in it before any disposition.
     """
-    _import_corpus()
     pending = _invoke(["--format", "json", "app", "ledger", "review", "--filter", "status=pending"])
     assert pending.exit_code == 0, pending.output
     json_result = _json(pending.output)
@@ -120,7 +119,6 @@ def test_check_surfaces_all_period_anomalies_without_mutating() -> None:
     missing-classification gap, so the probe must report ``ready=false`` with a
     non-empty issue list, and never silently green-light the ledger.
     """
-    _import_corpus()
     check = _invoke(["--format", "json", "app", "ledger", "check"])
     assert check.exit_code == 0, check.output
     result = _json(check.output)
@@ -148,7 +146,6 @@ def test_preflight_period_scopes_the_readiness_gaps() -> None:
     The asesor reviews quarter by quarter; the period filter must narrow the
     checked set below the all-period total while still reporting gaps.
     """
-    _import_corpus()
     pre = _invoke(
         ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
     )
@@ -175,7 +172,6 @@ def test_preflight_period_scopes_the_readiness_gaps() -> None:
 
 def test_preflight_issue_detail_is_actionable_text() -> None:
     """Each preflight issue must name the missing fact in plain language."""
-    _import_corpus()
     pre = _invoke(
         ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
     )
@@ -196,10 +192,9 @@ def test_preflight_issue_detail_is_actionable_text() -> None:
 def test_history_and_track_expose_lineage_for_one_transaction() -> None:
     """``history`` + ``track`` are the asesor's audit-trail surfaces.
 
-    For a single business row both verbs must succeed and surface a stable id +
+    For one business row both verbs must succeed and surface a stable id +
     a lifecycle/event chain — the evidence an asesor needs to defend a row.
     """
-    _import_bbva()
     row = _find(_list_rows(), _RECARGO_DESC)
     tx_val = row.get("transaction_id")
     assert isinstance(tx_val, str)
@@ -229,7 +224,6 @@ def test_history_after_disposition_records_the_decision() -> None:
     Archiving a personal row and re-reading ``history`` must show more events
     than before — the decision is auditable, not silent.
     """
-    _import_corpus()
     row = _find(_list_rows(), _PERSONAL_DESC)
     tx_val = row.get("transaction_id")
     assert isinstance(tx_val, str)
@@ -255,7 +249,6 @@ def test_asesor_can_classify_then_preflight_surfaces_recargo_gaps() -> None:
     and then preflight must still surface a downstream fact gap, because a
     classified-but-incomplete business row is not yet filing-ready.
     """
-    _import_bbva()
     row = _find(_list_rows(), _RECARGO_DESC)
     tx_val = row.get("transaction_id")
     assert isinstance(tx_val, str)
@@ -291,7 +284,6 @@ def test_personal_row_drops_out_of_readiness_when_classified() -> None:
     NOT flag it (personal rows carry no deductible facts) — the asesor can
     distinguish "needs attention" from "legitimately out of scope".
     """
-    _import_corpus()
     row = _find(_list_rows(), _PERSONAL_DESC)
     tx_val = row.get("transaction_id")
     assert isinstance(tx_val, str)
@@ -323,7 +315,6 @@ def test_check_clears_recargo_row_once_personal_and_business_dispositioned() -> 
     ``check`` issue count must strictly drop — review work visibly converges
     toward a clean filing rather than staying flat.
     """
-    _import_corpus()
     before_issues_val = _json(_invoke(["--format", "json", "app", "ledger", "check"]).output).get(
         "issues",
         [],
