@@ -1285,17 +1285,32 @@ def _int_or_none(value: object | None) -> int | None:
     return None
 
 
+#: The six folds this header comparison has always applied, as one translation
+#: table. Every mapping is one character to one character, so a single
+#: `str.translate` pass produces exactly the text the chained `str.replace`
+#: calls did -- six passes over every cell became one.
+#:
+#: Deliberately NOT `core.text_fold.fold_diacritics`: that folds every combining
+#: mark via NFKD, which would newly collapse characters this comparison has
+#: always kept distinct (ñ -> n among them). Matching more headers is a parsing
+#: behaviour change, not a speed-up, so the narrow table stays.
+_HEADER_CELL_FOLD_TABLE = str.maketrans({"º": "o", "ó": "o", "í": "i", "á": "a", "é": "e", "ú": "u"})
+
+
+@lru_cache(maxsize=4096)
+def _fold_header_text(text: str) -> str:
+    """Fold one already-coerced header cell for comparison.
+
+    Split from :func:`_normalise_header_cell` so the pure text step can be
+    memoised: a record design re-scans the same few header spellings across
+    every row of every sheet, so the distinct inputs number in the dozens while
+    the calls numbered sixteen million in one cold `aeat app modelo list`.
+    """
+    return text.casefold().translate(_HEADER_CELL_FOLD_TABLE)
+
+
 def _normalise_header_cell(value: object | None) -> str:
-    return (
-        coerce_cell_text(value)
-        .casefold()
-        .replace("º", "o")
-        .replace("ó", "o")
-        .replace("í", "i")
-        .replace("á", "a")
-        .replace("é", "e")
-        .replace("ú", "u")
-    )
+    return _fold_header_text(coerce_cell_text(value))
 
 
 def _required_header_index(values: tuple[object, ...], header_name: str) -> int:
