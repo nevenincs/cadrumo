@@ -477,12 +477,15 @@ def main() -> int:
     apply_dispositions(dispositions)
 
     with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".json", delete=False, encoding="utf-8",
+        mode="w",
+        suffix=".json",
+        delete=False,
+        encoding="utf-8",
     ) as handle:
         json.dump([asdict(d) for d in dispositions], handle, ensure_ascii=False)
         verify_payload_path = Path(handle.name)
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # noqa: S603 - fixed argv, this module re-invoked through sys.executable
             [
                 sys.executable,
                 "-m",

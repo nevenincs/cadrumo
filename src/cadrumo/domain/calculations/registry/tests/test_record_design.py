@@ -1475,7 +1475,7 @@ def test_a_design_yielding_no_fields_is_never_reported_complete() -> None:
             continue
         try:
             extraction = extract_record_design(path)
-        except Exception:
+        except Exception:  # noqa: S112 - an unreadable design is the sibling gate's subject, not this one's
             continue
         if sum(len(sheet.fields) for sheet in extraction.sheets):
             continue

@@ -109,9 +109,7 @@ def test_every_reported_suppression_claim_is_one_whose_file_carries_no_suppressi
     claims = {sid: source for sid, source in _osg_sources().items() if source.kind == "suppression_notice"}
     assert claims, "the suppression_notice population moved out from under this test"
     root = bundled_path()
-    reported = {
-        sid for sid in claims if validate_suppression_notice_content({sid: claims[sid]}, source_root=root)
-    }
+    reported = {sid for sid in claims if validate_suppression_notice_content({sid: claims[sid]}, source_root=root)}
     unbacked = set()
     for sid, source in claims.items():
         path = root / source.corpus_path
@@ -290,7 +288,7 @@ def test_every_accepted_deadline_window_survives_stripping_only_when_re_asked_wi
 
     accepted, survived, unreadable = 0, [], []
     for modelo in modelos:
-        for rev_id, revision in modelo.revisions.items():
+        for _rev_id, revision in modelo.revisions.items():
             for window in revision.deadline_windows:
                 osg_refs = [
                     ref

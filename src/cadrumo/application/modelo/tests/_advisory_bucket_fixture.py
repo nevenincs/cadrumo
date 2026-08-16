@@ -39,7 +39,7 @@ def operator_text(diagnostic: CalculationSourceDiagnostic) -> str:
 
 
 @pytest.fixture(autouse=True)
-def _bucket(tmp_path: Path, bucket_id: str) -> Iterator[None]:
+def _bucket(tmp_path: Path, bucket_id: str) -> Iterator[None]:  # noqa: F811 - pytest injects the imported fixture
     from ... import wizard as _wizard
 
     assert _wizard.WIZARD_FLOWS
