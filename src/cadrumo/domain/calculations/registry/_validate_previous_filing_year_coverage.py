@@ -51,7 +51,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
-from ....core import BindingSourceKind
+from ....core import BindingSourceKind, Modelo
 from ._bindings_previous_filing import previous_filing_source_reference
 from ._errors import RegistryValidationError
 from ._ids import BindingId, ModeloId
@@ -89,7 +89,7 @@ class _PreviousFilingYearCoverageAllowance:
 _ALLOWANCES: tuple[_PreviousFilingYearCoverageAllowance, ...] = (
     _PreviousFilingYearCoverageAllowance(
         binding_id="irpf.previous_year_economic_activity_net_income",
-        source_modelo="100",
+        source_modelo=Modelo.M100.value,
         missing_from_year=2018,
         missing_through_year=2019,
         reason=(
@@ -107,7 +107,7 @@ _ALLOWANCES: tuple[_PreviousFilingYearCoverageAllowance, ...] = (
     ),
     _PreviousFilingYearCoverageAllowance(
         binding_id="modelo-720-prior-year-cuentas-valoracion-baseline",
-        source_modelo="720",
+        source_modelo=Modelo.M720.value,
         missing_from_year=2011,
         missing_through_year=2011,
         reason=(
@@ -124,7 +124,7 @@ _ALLOWANCES: tuple[_PreviousFilingYearCoverageAllowance, ...] = (
     ),
     _PreviousFilingYearCoverageAllowance(
         binding_id="modelo-720-prior-year-valores-valoracion-baseline",
-        source_modelo="720",
+        source_modelo=Modelo.M720.value,
         missing_from_year=2011,
         missing_through_year=2011,
         reason=(
@@ -135,7 +135,7 @@ _ALLOWANCES: tuple[_PreviousFilingYearCoverageAllowance, ...] = (
     ),
     _PreviousFilingYearCoverageAllowance(
         binding_id="modelo-720-prior-year-inmuebles-valoracion-baseline",
-        source_modelo="720",
+        source_modelo=Modelo.M720.value,
         missing_from_year=2011,
         missing_through_year=2011,
         reason=(

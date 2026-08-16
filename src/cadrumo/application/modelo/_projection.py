@@ -400,7 +400,7 @@ def _m130_annual_projection(year: int) -> _M130AnnualProjection:
     if latest_ordinal is None:
         raise ModeloProjectionError(
             translated_message="errors.error.modelo_projection",
-            context={"modelo": "130", "period_is_quarter": False},
+            context={"modelo": Modelo.M130.value, "period_is_quarter": False},
         )
     latest_revision = m130_quarters[latest_period]
     total_rendimiento_neto = _required_casilla_value(

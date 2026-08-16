@@ -80,7 +80,7 @@ from ...application.modelo import (
     get_filing_record,
     registry_casillas_for_registry_scope,
 )
-from ...core import STRICT_FROZEN_CONFIG, Period, permitted_amendment_kind_values
+from ...core import STRICT_FROZEN_CONFIG, Modelo, Period, permitted_amendment_kind_values
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
@@ -735,7 +735,7 @@ def _m303_motive_page(
     run_token: str,
     table: dict[str, str],
 ) -> FlowPage | None:
-    if modelo != "303":
+    if modelo != Modelo.M303:
         return None
     filing_evidence = baseline_revision.filing_instance_evidence
     if filing_evidence is None:

@@ -2,15 +2,21 @@
 
 from __future__ import annotations
 
+import re
 from enum import StrEnum
-from typing import Annotated, Literal, Self
+from typing import Annotated, Final, Literal, Self
 
 from pydantic import ConfigDict, Field, model_validator
 
+from ....core import Modelo
 from ._errors import RegistryValidationError
 from ._schema import RegistryModel
 
 __all__ = [
+    "AUXILIARY_ENVELOPE_HEADER_CONTENT",
+    "AUXILIARY_ENVELOPE_HEADER_LENGTHS",
+    "AUXILIARY_ENVELOPE_HEADER_ORDINALS",
+    "AUXILIARY_ENVELOPE_HEADER_ROWS",
     "RecordDesignAuxiliaryEnvelopeHeader",
     "RecordDesignAuxiliaryEnvelopeHeaderField",
     "RecordDesignAuxiliaryEnvelopeHeaderRole",
@@ -27,6 +33,7 @@ __all__ = [
     "RecordDesignVariableBodyMarker",
     "RecordDesignVariableEnvelope",
     "RecordDesignVariableTotalMarker",
+    "validate_auxiliary_envelope_header_contents",
 ]
 
 
@@ -72,7 +79,7 @@ class RecordDesignField(RegistryModel):
 
 
 class RecordDesignAuxiliaryEnvelopeHeaderRole(StrEnum):
-    """One exact source role in the fixed Modelo 390 page-zero header."""
+    """One exact source role in the fixed AEAT auxiliary page-zero header."""
 
     OPENING_TAG = "opening_tag"
     MODELO = "modelo"
@@ -89,27 +96,45 @@ class RecordDesignAuxiliaryEnvelopeHeaderRole(StrEnum):
     AUXILIARY_CLOSING_TAG = "auxiliary_closing_tag"
 
 
-_M390_AUXILIARY_HEADER_ROLES: tuple[RecordDesignAuxiliaryEnvelopeHeaderRole, ...] = tuple(
+_AUXILIARY_HEADER_ROLES: tuple[RecordDesignAuxiliaryEnvelopeHeaderRole, ...] = tuple(
     RecordDesignAuxiliaryEnvelopeHeaderRole,
 )
-_M390_AUXILIARY_HEADER_LENGTHS: tuple[int, ...] = (2, 3, 1, 4, 2, 5, 5, 70, 4, 4, 9, 213, 6)
-_M390_AUXILIARY_HEADER_CONTENT: tuple[str | None, ...] = (
+AUXILIARY_ENVELOPE_HEADER_LENGTHS: tuple[int, ...] = (2, 3, 1, 4, 2, 5, 5, 70, 4, 4, 9, 213, 6)
+#: The exact Contenido cell every design writes at this position. Two indices
+#: are deliberately absent and validated separately, because AEAT spells them
+#: differently across designs while the WIRE fact is identical.
+AUXILIARY_ENVELOPE_HEADER_CONTENT: tuple[str | None, ...] = (
     'Constante "<T"',
-    'Constante "390"',
+    None,
     'Constante "0"',
-    "Nota 2",
+    None,
     '"0A"',
     '"0000>"',
     '"<AUX>"',
     "BLANCOS",
-    "Nota 1",
+    None,
     "BLANCOS",
-    "Nota 1",
+    None,
     "BLANCOS",
     '"</AUX>"',
 )
-_M390_AUXILIARY_HEADER_ROWS: tuple[int, ...] = tuple(range(6, 19))
-_M390_AUXILIARY_HEADER_ORDINALS: tuple[str, ...] = tuple(str(i) for i in range(1, 14))
+#: The slot carrying the modelo's OWN three-digit constant. Pinning it to one
+#: modelo made this header contract single-modelo by accident: every other
+#: structural check -- roles, lengths, rows, ordinals, extent -- is already
+#: modelo-neutral, so the literal was the only thing rejecting an identical
+#: header on another form.
+_AUXILIARY_ENVELOPE_HEADER_MODELO_INDEX: Final[int] = 1
+_AUXILIARY_ENVELOPE_HEADER_MODELO_RE: Final[re.Pattern[str]] = re.compile(r'^Constante "\d{3}"$')
+#: Slots AEAT footnotes rather than fills: the filing year and the two entidad
+#: desarrolladora identity positions. Modelo 390 writes the marker IN the
+#: Contenido cell ("Nota 2", "Nota 1"); Modelo 232 leaves the cell empty and
+#: puts the same footnote in the description instead. Neither spelling is a wire
+#: fact -- the values come from the producer either way -- so both are admitted,
+#: and nothing else is.
+_AUXILIARY_ENVELOPE_HEADER_FOOTNOTE_INDICES: Final[frozenset[int]] = frozenset({3, 8, 10})
+_AUXILIARY_ENVELOPE_HEADER_FOOTNOTE_RE: Final[re.Pattern[str]] = re.compile(r"^Nota\s+\d+$", re.IGNORECASE)
+AUXILIARY_ENVELOPE_HEADER_ROWS: tuple[int, ...] = tuple(range(6, 19))
+AUXILIARY_ENVELOPE_HEADER_ORDINALS: tuple[str, ...] = tuple(str(i) for i in range(1, 14))
 
 
 class RecordDesignAuxiliaryEnvelopeHeaderField(RegistryModel):
@@ -124,7 +149,9 @@ class RecordDesignAuxiliaryEnvelopeHeaderField(RegistryModel):
 class RecordDesignAuxiliaryEnvelopeHeader(RegistryModel):
     """A source-proved fixed header deliberately outside fixed-record totals.
 
-    The only admitted shape is Modelo 390 page zero's thirteen slots.  Its
+    The admitted shape is the thirteen-slot AEAT auxiliary header: fixed
+    roles, lengths, rows, ordinals and literals, with the modelo's own
+    constant and AEAT's footnoted slots the only modelo-varying parts.  Its
     terminal extent is an emitted-byte property, never a parser
     ``declared_total`` for a fixed record.
     """
@@ -137,11 +164,11 @@ class RecordDesignAuxiliaryEnvelopeHeader(RegistryModel):
     emitted_extent: Literal[328]
 
     @model_validator(mode="after")
-    def _require_exact_m390_source_shape(self) -> Self:
+    def _require_exact_auxiliary_header_source_shape(self) -> Self:
         raw_fields = tuple(item.field for item in self.fields)
         _validate_auxiliary_header_roles(self.fields)
         _validate_auxiliary_header_lengths(raw_fields)
-        _validate_auxiliary_header_content(raw_fields)
+        validate_auxiliary_envelope_header_contents(tuple(field.content for field in raw_fields))
         _validate_auxiliary_header_positions(raw_fields)
         _validate_auxiliary_header_extent(raw_fields, self.emitted_extent)
         return self
@@ -155,24 +182,52 @@ class RecordDesignAuxiliaryEnvelopeHeader(RegistryModel):
 def _validate_auxiliary_header_roles(
     fields: tuple[RecordDesignAuxiliaryEnvelopeHeaderField, ...],
 ) -> None:
-    if tuple(item.role for item in fields) != _M390_AUXILIARY_HEADER_ROLES:
+    if tuple(item.role for item in fields) != _AUXILIARY_HEADER_ROLES:
         raise ValueError("auxiliary envelope header does not retain its exact thirteen source roles")
 
 
 def _validate_auxiliary_header_lengths(fields: tuple[RecordDesignField, ...]) -> None:
-    if tuple(field.length for field in fields) != _M390_AUXILIARY_HEADER_LENGTHS:
+    if tuple(field.length for field in fields) != AUXILIARY_ENVELOPE_HEADER_LENGTHS:
         raise ValueError("auxiliary envelope header has an unsupported source length sequence")
 
 
-def _validate_auxiliary_header_content(fields: tuple[RecordDesignField, ...]) -> None:
-    if tuple(field.content for field in fields) != _M390_AUXILIARY_HEADER_CONTENT:
-        raise ValueError("auxiliary envelope header does not match exact Modelo 390 source content")
+def validate_auxiliary_envelope_header_contents(contents: tuple[str | None, ...]) -> None:
+    """Require the exact auxiliary-header Contenido shape, modelo-neutrally.
+
+    The ONE definition of this rule. The parser's own header model and the
+    development intermediate that re-projects it both call it; a second copy is
+    how the two came to disagree about which modelos have an auxiliary header.
+
+    Raises:
+        ValueError: when a slot carries neither its required literal, the
+            modelo's own three-digit constant, nor an admitted footnote spelling.
+    """
+    for index, (expected, value) in enumerate(zip(AUXILIARY_ENVELOPE_HEADER_CONTENT, contents, strict=True)):
+        if index == _AUXILIARY_ENVELOPE_HEADER_MODELO_INDEX:
+            if value is None or not _AUXILIARY_ENVELOPE_HEADER_MODELO_RE.fullmatch(value.strip()):
+                raise ValueError(
+                    "auxiliary envelope header does not declare a three-digit modelo constant at its "
+                    f"second slot: {value!r}",
+                )
+            continue
+        if index in _AUXILIARY_ENVELOPE_HEADER_FOOTNOTE_INDICES:
+            stripped = (value or "").strip()
+            if stripped and not _AUXILIARY_ENVELOPE_HEADER_FOOTNOTE_RE.fullmatch(stripped):
+                raise ValueError(
+                    "auxiliary envelope header footnoted slot carries neither a footnote marker nor an "
+                    f"empty cell: {value!r}",
+                )
+            continue
+        if value != expected:
+            raise ValueError(
+                f"auxiliary envelope header slot {index} carries {value!r}, not the required {expected!r}",
+            )
 
 
 def _validate_auxiliary_header_positions(fields: tuple[RecordDesignField, ...]) -> None:
-    if tuple(field.row for field in fields) != _M390_AUXILIARY_HEADER_ROWS:
-        raise ValueError("auxiliary envelope header does not match exact Modelo 390 source rows")
-    if tuple(field.ordinal for field in fields) != _M390_AUXILIARY_HEADER_ORDINALS:
+    if tuple(field.row for field in fields) != AUXILIARY_ENVELOPE_HEADER_ROWS:
+        raise ValueError("auxiliary envelope header does not match the exact auxiliary-header source rows")
+    if tuple(field.ordinal for field in fields) != AUXILIARY_ENVELOPE_HEADER_ORDINALS:
         raise ValueError("auxiliary envelope header does not match exact Modelo 390 source ordinals")
 
 
@@ -223,7 +278,7 @@ def _validate_m220_closing_part_shape(parts: tuple[RecordDesignRelativeSuffixMar
         raise ValueError("composite relative closing requires six alphanumeric parts")
     if tuple(part.content for part in parts) != (
         "</T",
-        "220",
+        Modelo.M220.value,
         "(*)[A|E|I|0]",
         None,
         "0A",
