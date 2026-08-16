@@ -5,7 +5,7 @@ tags:
 date: '2026-08-14'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:3d22fe93beccbd10e8af03331a8fd3834595d7e4add2b43bb5741d024092f3c6'
+body_hash: 'sha256:e454a01a83b0095e572d3d05d8d97942f3ac7ccf1435a0cfc8977a549d0e37da'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
@@ -2057,3 +2057,55 @@ So the sequencing is stability first. Recorded as an available, quantified
 refactor rather than a ruled-out one -- the lever is real and the payoff is the
 largest remaining (roughly 103s to 10-15s on the workflow module alone), but it
 should land against a module whose result is reproducible.
+
+## Diagnosed: the batch-ingest flakiness is a leaked loopback endpoint
+
+`test_batch_ingest_runner` blocks the largest remaining refactor because its
+verdict is not reproducible. Four full-module runs gave 7 failed, 3 failed, 21
+passed, 21 passed, and failures correlated with SLOWER runs (192.87s and 139.15s
+against 116.44s and 107.82s).
+
+The same test run ALONE passed 6 times out of 6, which rules the test itself out
+and makes it an inter-test interaction.
+
+Captured from a failing full-module run:
+
+    runtime_reachable: False
+    runtime_url: http://127.0.0.1:56455/api/tags
+    connect_tcp.failed ConnectionRefusedError(10061, ...actively refused it...)
+    AssertionError: a reachable reader must leave the lane open
+
+Port 56455 is EPHEMERAL. `serving_loopback` binds `("127.0.0.1", 0)` so the OS
+picks a free port, and `ThreadingHTTPServer` binds and listens before the URL is
+yielded -- so a test INSIDE that block cannot get connection-refused. The tests
+that fail are not inside it: only one test in the module uses the loopback
+reader.
+
+So a later test is probing an ephemeral URL belonging to an EARLIER test's
+loopback server, after that server has been shut down and its port released.
+The endpoint reaches the runtime through
+`override_settings(cadrumo_llm_ollama_chat_url=chat_url)`, and `load_settings`
+caches the constructed `Settings` -- a caching behaviour already documented
+elsewhere in this tree, where "a plain `os.environ` mutation is invisible to the
+in-process resolver once an earlier call already built and cached a `Settings`".
+A cached instance outliving the context manager that installed it would produce
+exactly this: a dead ephemeral URL, a refused connection, the runner taking the
+paused path, and whichever tests required a reachable reader failing.
+
+That also explains the load correlation. It is not that slowness causes failure;
+it is that ordering and timing decide whether the stale URL is still installed
+when a later test probes, and a contended run shifts both.
+
+### Not fixed here
+
+The remedy is in settings-cache lifetime around `override_settings`, which is
+shared infrastructure reached by far more than this module, and the hypothesis
+-- while it fits every observation -- has not been proven by instrumenting the
+cache. Guessing at a fix in a caching seam used tree-wide is how a flaky module
+becomes a flaky suite.
+
+Recorded with the reproduction (run the full module repeatedly; roughly one run
+in two fails under load) so an owner can act, and because it is the stated
+precondition for the drive-once refactor: a before/after cannot establish
+behaviour preservation against a module that changes verdict between identical
+runs.
