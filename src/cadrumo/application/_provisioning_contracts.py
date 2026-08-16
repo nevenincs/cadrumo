@@ -16,6 +16,7 @@ from ..core import (
 from .operator_actions import ConditionEvidence, PreconditionVerdict
 
 __all__ = [
+    "OLLAMA_PROBE_CACHE_TTL_S",
     "OLLAMA_PROBE_TIMEOUT_S",
     "OLLAMA_PULL_TIMEOUT_S",
     "OLLAMA_READINESS_TIMEOUT_S",
@@ -27,6 +28,24 @@ __all__ = [
 ]
 
 OLLAMA_PROBE_TIMEOUT_S = 2.0
+
+# How long one probe's answer stands before the endpoint is asked again.
+#
+# Reachability of a local model server is a property of the machine, not of the
+# work being done, so asking once per document -- or once per batch run, or once
+# per test -- re-answers a question whose answer did not change. Measured on a
+# host with no Ollama running: 65 probes of 127.0.0.1:11434 across one test
+# module, 71.5s of its 98s, at ~0.94s per refused connection. Redirecting the
+# endpoint does not help, because the cost is the connection ATTEMPT rather than
+# the target.
+#
+# Bounded rather than process-lifetime, for the same reason the registry
+# fingerprint cache is: an operator who starts their model server mid-session
+# must see it appear without restarting the process. Ten seconds folds the
+# repeated probes of one operator interaction while still noticing a server that
+# came up moments ago, and matches BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS
+# rather than inventing a second cadence.
+OLLAMA_PROBE_CACHE_TTL_S = 10.0
 
 # A model fetch is a multi-gigabyte download over an operator's connection, so
 # it gets its own generous bound rather than the 2s probe timeout, which exists
