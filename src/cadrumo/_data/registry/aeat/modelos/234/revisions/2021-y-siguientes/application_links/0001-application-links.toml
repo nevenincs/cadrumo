@@ -1,7 +1,0 @@
-[[revisions."2021-y-siguientes".application_links]]
-id = "modelo-234-filing"
-surface = "filing"
-consumer = "cadrumo.application.filing"
-requires_snapshot = true
-legal_refs = ["orden-hac-342-2021:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-234-procedure"]

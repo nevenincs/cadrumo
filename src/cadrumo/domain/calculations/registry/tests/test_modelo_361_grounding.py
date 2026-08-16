@@ -1,4 +1,4 @@
-"""Grounding checks for the current Modelo 231 and 361 registry surfaces."""
+"""Grounding checks for the current Modelo 361 registry surface."""
 
 from __future__ import annotations
 
@@ -12,18 +12,6 @@ from .._legal import verify_legal_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_M231_LEGAL_REFS = {
-    "rd-634-2015:art-13",
-    "orden-hfp-1978-2016:art-1",
-    "orden-hfp-1978-2016:art-3",
-    "orden-hfp-1978-2016:art-4",
-    "orden-hac-1285-2020:art-primero-anexo",
-}
-_M231_SOURCE_REFS = {
-    "aeat-modelo-231-procedure",
-    "boe-modelo-231-base-order",
-    "boe-modelo-231-current-annex",
-}
 _M361_LEGAL_REFS = {
     "orden-eha-789-2010:art-7",
     "orden-eha-789-2010:art-8",
@@ -36,35 +24,6 @@ _M361_SOURCE_REFS = {
     "aeat-modelo-361-lista-operaciones",
     "boe-modelo-361-form",
 }
-
-
-def test_modelo_231_current_registry_uses_current_annex_without_fake_calculation() -> None:
-    authority = resources().modelos.authority
-    modelo = authority.modelo("231")
-    revision = modelo.revisions["2021-y-siguientes"]
-
-    assert modelo.calculation_class == "informative"
-    assert set(modelo.legal_refs) == _M231_LEGAL_REFS
-    assert set(revision.legal_refs) == _M231_LEGAL_REFS
-    assert set(revision.orden_aplicabilidad) == {"orden-hac-1285-2020:art-primero-anexo"}
-    assert set(modelo.source_refs) == _M231_SOURCE_REFS
-    assert set(revision.source_refs) == _M231_SOURCE_REFS
-    assert revision.casillas
-    assert {casilla.input_kind for casilla in revision.casillas} == {"manual"}
-    assert not revision.formulas
-    assert revision.completeness_manifest is None
-    assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {"boe-modelo-231-current-annex"}
-    assert {link.surface for link in revision.application_links} == {"filing", "deadline"}
-
-    stale_refs = {"orden-hac-941-2018:art-primero-5-anexo-i", "enrolled-modelo-231-procedure"}
-    assert stale_refs.isdisjoint(modelo.legal_refs)
-    assert stale_refs.isdisjoint(modelo.source_refs)
-
-    verify_legal_catalogue(
-        {ref: authority.catalogues.legal[ref] for ref in _M231_LEGAL_REFS},
-        source_root=bundled_path(),
-    )
-    verify_source_catalogue(bundled_path(), {ref: authority.catalogues.sources[ref] for ref in _M231_SOURCE_REFS})
 
 
 def test_modelo_361_current_registry_uses_361_articles_without_fake_calculation() -> None:

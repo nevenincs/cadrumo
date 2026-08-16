@@ -8,9 +8,11 @@ it is directly substitutable for the existing bare-string usage throughout the
 codebase.
 
 A small set of members are known modelos that the code references as
-identifiers but which have **no registry definition by design** — currently the
-retired :data:`Modelo.M037` (censo simplificada, suppressed by
-Orden HAC/1526/2024).  These are enumerated in :data:`NON_REGISTRY_MODELOS`.
+identifiers but which have **no registry definition by design** — the modelos
+suppressed by a later norm (:data:`Modelo.M037`, suppressed by
+Orden HAC/1526/2024, and :data:`Modelo.M179`, suppressed from ejercicio 2024),
+plus the recognized obligations filed by third parties or specialised filers.
+These are enumerated in :data:`NON_REGISTRY_MODELOS`.
 They are real codes with implementation support (lifecycle routing, portal
 entries), but
 :meth:`~domain.calculations.registry.ValidatedRegistryAuthority.validate_modelo`
@@ -349,6 +351,14 @@ _UNMODELED_OUT_OF_SCOPE_OBLIGATIONS: Mapping[Modelo, str] = {
     Modelo.M993: "procedimiento interno AEAT de control de deducciones autonomicas; sin orden de aprobacion",
     Modelo.M198: "operaciones con activos financieros y otros valores mobiliarios (anual)",
     Modelo.M290: "cuentas de personas estadounidenses (FATCA, instituciones financieras)",
+    Modelo.M186: "nacimientos y defunciones; lo declaran los Registros Civiles",
+    Modelo.M231: "informacion pais por pais (CbC); solo grandes grupos multinacionales",
+    Modelo.M233: "gastos en guarderias; lo declaran los centros de educacion infantil autorizados",
+    Modelo.M234: "mecanismos transfronterizos DAC6; filers especializados, como los Modelos 235 y 236",
+    Modelo.M238: "operadores de plataformas DAC7; lo declaran las plataformas digitales",
+    Modelo.M289: "cuentas financieras CRS/DAC2; lo declaran las instituciones financieras, como el Modelo 290",
+    Modelo.M379: "pagos transfronterizos CESOP; lo declaran los proveedores de servicios de pago",
+    Modelo.M592: "envases de plastico no reutilizables; lo declaran fabricantes e importadores del sector",
     Modelo.M291: "cuentas de no residentes sin establecimiento permanente (entidades)",
     Modelo.M294: "clientes perceptores de beneficios de IIC (lo declaran las gestoras)",
     Modelo.M295: "clientes con posicion inversora en IIC (lo declaran las gestoras)",
@@ -372,18 +382,31 @@ OUT_OF_SCOPE_OBLIGATIONS: Mapping[Modelo, str] = {
 }
 
 
+#: Modelos suppressed by a later norm, each mapped to the instrument that
+#: suppressed it and its successor where one exists. Membership is a legal fact
+#: with a citable source, never an inference from a form's absence or from this
+#: application's inability to file it: :data:`Modelo.M037` was suppressed by
+#: Orden HAC/1526/2024 and superseded by :data:`Modelo.M036`; :data:`Modelo.M179`
+#: ceased to be fileable from ejercicio 2024, its platform-reporting duty
+#: absorbed into :data:`Modelo.M238` under the DAC7 regime.
+_SUPPRESSED_MODELOS: Mapping[Modelo, str] = {
+    Modelo.M037: "censo simplificada, suprimido por la Orden HAC/1526/2024; sustituido por el Modelo 036",
+    Modelo.M179: "cesion de viviendas turisticas, suprimido desde 2024; sustituido por el Modelo 238 (DAC7)",
+}
+
+
 #: Known modelo identifiers that intentionally have **no registry definition**.
 #: These are real, code-referenced modelos for which
 #: :meth:`~domain.calculations.registry.ValidatedRegistryAuthority.validate_modelo`
 #: raises and no registry TOML exists or may be created. Three reasons put a member
-#: here: the retired :data:`Modelo.M037` (censo simplificada, suppressed by
-#: Orden HAC/1526/2024; superseded by :data:`Modelo.M036`), every
-#: recognized-but-not-yet-modeled obligation in :data:`UNMODELED_OBLIGATIONS`, and
-#: every recognized non-registry obligation declared out of scope
-#: (:data:`_UNMODELED_OUT_OF_SCOPE_OBLIGATIONS`). The parity gate compares the
-#: remaining members to :func:`application.modelo.registry_modelo_codes`, so the
-#: enum can carry retired codes, recognized-unmodeled obligations, and out-of-scope
+#: here: every modelo suppressed by a later norm (:data:`_SUPPRESSED_MODELOS`),
+#: every recognized-but-not-yet-modeled obligation in
+#: :data:`UNMODELED_OBLIGATIONS`, and every recognized non-registry obligation
+#: declared out of scope (:data:`_UNMODELED_OUT_OF_SCOPE_OBLIGATIONS`). The parity
+#: gate compares the remaining members to
+#: :func:`application.modelo.registry_modelo_codes`, so the enum can carry
+#: suppressed codes, recognized-unmodeled obligations, and out-of-scope
 #: non-registry forms without implying the registry can load them.
 NON_REGISTRY_MODELOS: frozenset[Modelo] = (
-    frozenset({Modelo.M037}) | frozenset(UNMODELED_OBLIGATIONS) | frozenset(_UNMODELED_OUT_OF_SCOPE_OBLIGATIONS)
+    frozenset(_SUPPRESSED_MODELOS) | frozenset(UNMODELED_OBLIGATIONS) | frozenset(_UNMODELED_OUT_OF_SCOPE_OBLIGATIONS)
 )

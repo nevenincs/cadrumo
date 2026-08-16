@@ -1,7 +1,0 @@
-[[revisions."2025".filing_schedules]]
-id = "modelo-289-anual"
-period_kind = "annual"
-periods = ["0A"]
-profile_condition_mode = "all"
-legal_refs = ["orden-hap-1695-2016:art-4"]
-source_refs = ["aeat-modelo-289-procedure", "boe-modelo-289-base-order"]

@@ -1,7 +1,0 @@
-[[revisions."2024-y-siguientes".filing_schedules]]
-id = "modelo-379-trimestral"
-period_kind = "quarterly"
-periods = ["1T", "2T", "3T", "4T"]
-profile_condition_mode = "all"
-legal_refs = ["orden-hfp-1415-2023:art-4"]
-source_refs = ["aeat-modelo-379-procedure", "boe-modelo-379-form"]

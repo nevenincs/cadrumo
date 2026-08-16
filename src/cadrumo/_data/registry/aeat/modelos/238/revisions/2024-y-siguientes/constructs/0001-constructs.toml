@@ -1,7 +1,0 @@
-[[revisions."2024-y-siguientes".constructs]]
-id = "modelo-238-informative"
-legal_refs = ["orden-hac-72-2024:art-1", "orden-hac-72-2024:art-9", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-238-procedure", "enrolled-modelo-238-layout"]
-casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
-application_links = ["modelo-238-filing"]
-workbook_parity_refs = ["modelo-238-orden-static-layout"]
