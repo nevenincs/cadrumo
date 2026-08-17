@@ -4,8 +4,7 @@ tags:
   - '#locale-catalogue-sharding'
 date: '2026-08-16'
 modified: '2026-08-16'
-body_schema: 'body-v1'
-body_hash: 'sha256:abeb2df6d0514b2d490a868557fa47b82620757e3d7f0d31ebd3850a0374d48b'
+body_hash: 'sha256:97fb3e1c8b3f2e7642964897d870e5b5df3c58ca5539c571e7f87246cbb68cd5'
 tier: L2
 related:
   - '[[2026-08-16-locale-catalogue-sharding-adr]]'
@@ -32,36 +31,36 @@ Because catalogue migration is a destructive storage boundary, the rollout follo
 
 Deliver deterministic dot-notation key routing and on-demand lazy shard resolution with dual-tier fallback in core i18n (additive only, zero deletions).
 
-- [ ] `P01.S01` - Implement deterministic `route_key_to_shard` and domain shard taxonomy; `src/cadrumo/core/i18n/_routing.py`.
-- [ ] `P01.S02` - Implement `LazyLocaleCatalogue` with on-demand shard parsing, in-memory caching, and dual-tier monolith fallback; `src/cadrumo/core/i18n/_render.py`.
-- [ ] `P01.S03` - Add directory-aware multi-file digest computation and cache invalidation; `src/cadrumo/core/i18n/_catalogue_cache.py`.
-- [ ] `P01.S04` - Add targeted unit tests for lazy loading, cache hits, and dual fallback resolution; `src/cadrumo/core/i18n/tests/test_lazy_render.py`.
+- [x] `P01.S01` - Implement deterministic `route_key_to_shard` and domain shard taxonomy; `src/cadrumo/core/i18n/_routing.py`.
+- [x] `P01.S02` - Implement `LazyLocaleCatalogue` with on-demand shard parsing, in-memory caching, and dual-tier monolith fallback; `src/cadrumo/core/i18n/_render.py`.
+- [x] `P01.S03` - Add directory-aware multi-file digest computation and cache invalidation; `src/cadrumo/core/i18n/_catalogue_cache.py`.
+- [x] `P01.S04` - Add targeted unit tests for lazy loading, cache hits, and dual fallback resolution; `src/cadrumo/core/i18n/tests/test_lazy_render.py`.
 
 ### Phase `P02` - maintenance harness upgrades
 
 Enhance `dev.locales` manager, write guard, and CLI commands to operate natively over directory-based shards (additive only).
 
-- [ ] `P02.S05` - Update `LocaleManager.load_locale` and `load_sharded_locale` with deep dictionary merging; `dev/locales/manager.py`.
-- [ ] `P02.S06` - Upgrade `LocaleManager.set_locale_value`, `set_locale_values`, and `remove_locale_value` to mutate targeted shards; `dev/locales/manager.py`.
-- [ ] `P02.S07` - Upgrade `LocaleManager.scaffold` to partition codebase keys by shard path and prune per-shard; `dev/locales/manager.py`.
-- [ ] `P02.S08` - Update `CatalogueWriteGuard` to fingerprint and lock sharded file paths under write guard; `dev/locales/_write_guard.py`.
-- [ ] `P02.S09` - Add test coverage for sharded CLI scaffold, audit, set, and remove commands; `dev/locales/tests/test_sharded_manager.py`.
+- [x] `P02.S05` - Update `LocaleManager.load_locale` and `load_sharded_locale` with deep dictionary merging; `dev/locales/manager.py`.
+- [x] `P02.S06` - Upgrade `LocaleManager.set_locale_value`, `set_locale_values`, and `remove_locale_value` to mutate targeted shards; `dev/locales/manager.py`.
+- [x] `P02.S07` - Upgrade `LocaleManager.scaffold` to partition codebase keys by shard path and prune per-shard; `dev/locales/manager.py`.
+- [x] `P02.S08` - Update `CatalogueWriteGuard` to fingerprint and lock sharded file paths under write guard; `dev/locales/_write_guard.py`.
+- [x] `P02.S09` - Add test coverage for sharded CLI scaffold, audit, set, and remove commands; `dev/locales/tests/test_sharded_manager.py`.
 
 ### Phase `P03` - catalogue materialization and pre-cutover attestation
 
 Materialize sharded directory trees alongside existing monoliths and prove 100% key-value parity across all 4 locales.
 
-- [ ] `P03.S10` - Partition and write `es`, `en`, `ca`, and `hu` monolithic files into `src/cadrumo/locales/<locale>/` shard trees while preserving monoliths; `src/cadrumo/locales/`.
-- [ ] `P03.S11` - Run `python -m dev.locales audit` and `scaffold --check` across sharded catalogues to prove zero key drift; `dev/locales/cli.py`.
-- [ ] `P03.S12` - Execute targeted parity gates asserting exact key-value match and translation honesty; `src/cadrumo/tests/test_parity.py`.
+- [x] `P03.S10` - Partition and write `es`, `en`, `ca`, and `hu` monolithic files into `src/cadrumo/locales/<locale>/` shard trees while preserving monoliths; `src/cadrumo/locales/`.
+- [x] `P03.S11` - Run `python -m dev.locales audit` and `scaffold --check` across sharded catalogues to prove zero key drift; `dev/locales/cli.py`.
+- [x] `P03.S12` - Execute targeted parity gates asserting exact key-value match and translation honesty; `src/cadrumo/tests/test_parity.py`.
 
 ### Phase `P04` - atomic cutover and legacy monolith deletion
 
 Execute the atomic rollover in a single coordinated transition, deleting the legacy monolithic files and updating rule references.
 
-- [ ] `P04.S13` - Switch runtime catalogue resolution to primary shard mode; `src/cadrumo/core/i18n/_render.py`.
-- [ ] `P04.S14` - Atomically delete legacy monolithic files `src/cadrumo/locales/{es,en,ca,hu}.yml`; `src/cadrumo/locales/`.
-- [ ] `P04.S15` - Update rule `.vaultspec/rules/aeat-locales-cli.md` and run `vaultspec-core sync` to record sharded directory authority; `.vaultspec/rules/aeat-locales-cli.md`.
+- [x] `P04.S13` - Switch runtime catalogue resolution to primary shard mode; `src/cadrumo/core/i18n/_render.py`.
+- [x] `P04.S14` - Atomically delete legacy monolithic files `src/cadrumo/locales/{es,en,ca,hu}.yml`; `src/cadrumo/locales/`.
+- [x] `P04.S15` - Update rule `.vaultspec/rules/aeat-locales-cli.md` and run `vaultspec-core sync` to record sharded directory authority; `.vaultspec/rules/aeat-locales-cli.md`.
 
 ## Parallelization
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:0f93eaf8427a4ce29e6cd16db9d64cff913107a5caf94a48d057b8614ecda1f9'
+body_hash: 'sha256:352b3ff6bb67cc54b2d0ffbcc41aed438ee0af1050731da364067fbe97034856'
 related:
   - "[[2026-08-16-m210-export-authority-adr]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -423,3 +423,293 @@ Until it lands, check mode refuses for both Modelo 353 trees - not because 353 i
 incomplete, but because 322 is staged beside it as the modelo 353 folds in. Both entries
 are recorded in the gate's pending table with that exact reason, so closing 322 is what
 removes them.
+
+## Modelo 322's 2008-2025 layout, carried rather than re-decided
+
+The gap named above closed in the same session. 322's 2008-2025 revision now
+generates, validates and reproduces byte-for-byte, and is enrolled in the same gate.
+
+The method is worth recording because it is reusable and because the alternative was
+worse. 322's 2026 sibling already holds a complete REVIEWED answer for what every anchor
+of its record design means, in its authored export layout. Its 2024-2025 edition prints
+the same 188 bracketed boxes (a strict subset of 2026's 189; only [112] is new) at nearly
+the same geometry. So the semantic map was derived by carrying the 2026 decision across
+on each anchor's own printed DESCRIPTION, rather than by re-reading AEAT's prose and
+reaching a second, possibly divergent conclusion about the same box.
+
+That claimed 224 of 240 anchors outright. Two descriptions carried conflicting decisions
+across pages and were DROPPED rather than guessed. The remaining sixteen were resolved
+explicitly: eight record identifiers read from the design's own printed tag, and eight
+anchors AEAT reworded between editions - the identificación flags moved from questions
+("¿Está inscrito en...?") to statements ("Sujeto pasivo inscrito en..."), and [68] and
+[70] gained terms this edition does not have ([77] and [112] respectively). Each is keyed
+by its exact position on THIS edition's design, with the reason written beside it.
+
+The casilla mirror was scoped the same way: a casilla lands on 2008-2025 only where this
+revision's own design prints a slot for it, or where a landed casilla's formula reads it.
+Nothing was carried merely because the sibling declares it.
+
+Authoring it surfaced three more spellings in shared generator machinery, all in the same
+class as 353's: a record's opening tag printed BARE as well as its closing tag; a third
+enumeration spelling with the label FIRST ("Si=1, No=2"); and a note reference written
+parenthesised with a verb on its own line ("(ver Nota 5)"), which the trailing-note peel
+did not recognise, so a perfectly ordinary "15 enteros + 2 decimales" refused as
+ambiguous. Each was widened at the single canonical site with its negative case gated.
+
+## Where all four generated modelos now stand, and the one wall left
+
+210, 232 (both revisions), 353 (both revisions) and 322's 2008-2025 all generate,
+validate, and reproduce byte-for-byte under the one parameterised gate. Check mode
+refuses for every one of them for exactly ONE reason now: `review_status =
+"pending_review"` on the revision itself. A filing-grade snapshot requires a REVIEWED
+revision, and that stamp is a human tax reviewer's judgement against official sources -
+not an authoring step, and explicitly not one an agent may make under the operator's
+name. The gate's pending table records that reason per tree, so the day a revision is
+reviewed its entry fails and forces the upgrade.
+
+That is the honest statement of completeness for this segment: the authoring is done and
+the review is not, and no amount of further authoring moves it.
+
+## A gate that had stopped gating on this platform
+
+`test_export_header_key_naming.py` shells out to `git grep` with `text=True`, which
+decodes with the platform's locale codec. On Windows that is cp1252, where the second
+byte of a UTF-8 "Á" is undefined - so the decode raised, `.stdout` came back `None`, and
+the gate ERRORED at setup instead of gating. Modelo 322's committed "Álava" line is what
+does it, and it has been committed for some time.
+
+With the decode pinned to UTF-8 the gate ran, and both its HEAD assertions turned out to
+be stale pins on a moment rather than on a property:
+
+- It required MORE THAN TWENTY header_key tokens at HEAD. The count fell to eighteen when
+  nineteen modelos' export layouts were retracted, so a healthy corpus read as a broken
+  scan. Replaced with the property that distinguishes a real read from a broken one: the
+  scan returned something, and everything it returned is in the closed producer
+  vocabulary.
+- It asserted the offender set EQUALS `(presenter_tax_id, presenter_nif)` - pinning a
+  live defect as the contract. That gate would have failed for having been FIXED, and
+  while it stood it could never have caught a second offender appearing beside the first.
+  Replaced with the real contract: the committed corpus carries no dual spelling. The
+  detector's own anti-tautology proof already lives in a sibling test against a
+  hand-built corpus, so nothing was lost.
+
+Both are worth naming beyond this modelo: a count and a known-offender list are the two
+shapes that make a gate look green while measuring nothing.
+
+## Modelo 202, all three revisions, from first principles
+
+202's three revisions had no export layout and no sibling layout to carry from, so
+each map was built from its own diseño. All three now generate, validate and
+reproduce byte-for-byte: 95 anchors each on 2019-2022 and 2023-2024, 103 on
+2025-y-siguientes, with EVERY anchor claimed and every casilla addressed - 54, 54 and
+61 respectively.
+
+Two things made it tractable and are worth reusing. First, the bracket sets and the
+casilla sets agree exactly and in BOTH directions on all three revisions, which was
+measured before any authoring: no bracket without a casilla, no casilla without a
+bracket. That turns the liquidación block into a mechanical claim. Second, everything
+the brackets do not cover is the identification and régimen block, which files FACTS
+rather than boxes, and each is claimed by exact byte range with one entry per concept.
+
+The 2025 edition restructures that block wholesale - the foral flag moves to the front,
+devengo shifts a byte, the tipo de gravamen slot widens from five positions to fifteen,
+and one cooperativa-or-multiple-tipos enumeration splits into three markers - so it
+carries its own complete fact table rather than an adjustment to the earlier one.
+
+Reading the FULL labels rather than the truncated ones caught two errors before they
+shipped: `@121` is Ley 49/2002 and `@122` is Ley 11/2009, the opposite of what the
+shortened descriptions suggested, and `@124` names LIS art. 101 (empresa de reducida
+dimensión), not art. 29.2. A key named for the wrong article would have rendered the
+wrong régimen flag with nothing able to refuse it.
+
+### Eleven boxes AEAT prints without numbering
+
+The design gives eleven 17-position amount slots under "Información adicional (5)" and,
+unlike every liquidación slot on the same record, prints no bracket beside any of them.
+They carry declared amounts and have their own slots, so the export must be able to
+write them - which makes them casillas. Their ids are SLUGS taken from AEAT's own label,
+never invented box numbers: this registry already keys unnumbered concepts that way, and
+a number would assert an official identity the design does not print.
+
+Their grounding is deliberately partial and says so. LIS art. 40 - the provision that
+establishes the pago fraccionado this record files - is a valid foundation home for a
+slot on it. The specific provisions AEAT names in the remaining labels (LIS arts. 17.2,
+33, 34 and 109, Ley 19/1994 arts. 26 and 44, Ley 20/1990 art. 24) are NOT in the legal
+catalogue, and the registry refuses a ref it cannot resolve to bundled corpus text. They
+are left uncited rather than cited unbacked; adding them means fetching and verifying
+each consolidated article against BOE, which is its own change.
+
+### A deadline this session refused to write
+
+202's remaining blocked family is `deadline_windows`, and it is empty on purpose. The
+pagos fraccionados of LIS art. 40.3 open on the 1st and run to the 20th of April,
+October and December, but the exact close moves for weekends and holidays and AEAT
+publishes it per year in the Calendario del Contribuyente. Those calendars are bundled
+from 2023 onward, and the 202 entry was located in both - but the close date sits under
+a "Hasta el N" heading that this pass could not read back from the PDF reliably.
+
+A draft of this work had the six 2023-2024 windows written out with a comment claiming
+they were read from the calendar. They were not; they were written from memory. That is
+the exact shape `aeat-calculation-grounding` forbids, and a wrong filing deadline is a
+filing-grade harm. They were removed and the family declared as a deferral naming the
+heading extraction as its unblocker - and, for 2019-2022, the additional fact that those
+years' calendars are not bundled at all.
+
+`filing_schedules` is a different kind of claim and DID carry: it declares the period
+SHAPE, not dates, and LIS art. 40 fixes the same three pagos fraccionados every year.
+
+### Four more content spellings, one canonical site each
+
+- a record's OPENING tag printed bare, not only its closing tag (Modelo 322 prints both)
+- a note reference written parenthesised with a verb on its own line, `(ver Nota 5)`,
+  which made an ordinary `15 enteros + 2 decimales` refuse as ambiguous
+- a quoted enumeration with a FREE-TEXT label per value, `"0" No consta, "1" Cooperativa`
+- an over-eager reading of my own earlier `Si=1` rule: it accepted any non-digit before
+  the `=`, so `"1" (>= 10 M y < 20 M €)` parsed `>= 10` as the value 10 - three
+  two-character values for a one-character slot. The label must now START WITH A LETTER,
+  which excludes a comparison and a formula alike.
+
+That last one is the useful lesson: widening a reader to admit a new spelling is exactly
+where a reader starts accepting things that are not that spelling, and it was caught only
+because the width check downstream refused. Both directions are gated.
+
+## A manifest-schema addition silently stales every committed tree
+
+`dev/registry/_semantic_map.py` gained an `ordinal_absent` anchor field, and
+`_SEMANTIC_MAP_ANCHOR_KEYS` in `dev/registry/_provenance_manifest.py:112` was versioned
+to admit it. Both halves are correct. What neither carries is the consequence: the field
+is emitted into `_generation.provenance.json`, so every committed generated tree's
+manifest became stale the moment the field landed - including Modelo 210 and both Modelo
+232 revisions, whose registry data nobody had touched.
+
+The delta was verified to be exactly the new key and nothing else: a fresh render into an
+isolated candidate reproduced every TOML fragment byte-for-byte on all nine trees, with
+`field_derivations.semantic_entry.anchor.ordinal_absent` the sole structural difference in
+the JSON. All nine manifests were regenerated through the generator; no TOML changed.
+
+The finding is the coupling, not the field. A manifest-schema change is a tree-wide
+regeneration event, and there is no verb that performs it: the only thing that reports the
+staleness is the per-tree byte-equality assertion in
+`dev/registry/tests/test_generated_export_trees.py`, which reds for every enrolled tree at
+once and names none of them as the cause. A tree NOT enrolled in that gate would carry a
+stale manifest indefinitely with nothing to say so. Enrolment is therefore the only
+staleness detector this repository has, which is an argument for enrolling every generated
+tree the day it lands rather than when its check-mode reason is known.
+
+## Modelo 202 is blocked by its neighbour, not by itself
+
+202's three trees generate, validate and reproduce byte-for-byte, but check mode refuses.
+The candidate registry must admit Modelo 200 - 202's pagos fraccionados ARE the Sociedades
+annual return's instalments, so 200 is a supporting modelo, not an optional one - and 200
+declares no export layout at all while claiming `filing` authority grade. That refusal is
+200's, and 200 is 3250 casillas of peer-held work.
+
+Pinned in `_CHECK_MODE_PENDING` on 200's own message rather than the generic
+`registry validation failed` envelope, deliberately: when 200's layout lands, the pin
+fails, and 202's remaining blocker has to be looked at rather than inherited. That
+remaining blocker is 202's per-revision singleton semantic roles - roughly twenty
+`is_pf_mod_40_*` roles each appearing on exactly one casilla within a revision. They are
+present at HEAD, predate the layout work, and are untouched by it; the layout commits add
+one derived `export_refs` line per addressed casilla and nothing else. Whether a role that
+names one specific box is a defect or the correct shape for this modelo is a registry
+question, not an export question, and is left open here rather than answered by silence.
+
+## Modelo 151: a hand transcription that was two positions short
+
+151/2015-2022 already carried a complete hand-transcribed `export_layouts` tree, so it
+was not a coverage gap and it validated. Regenerating it through the generator found
+what a transcription cannot check about itself: the envelope was **two positions short**
+of AEAT's own. The transcription wrote the AUX block's surrounding blanco fillers but
+omitted `Version del Programa` (@93, 4 positions) and `NIF Empresa Desarrollo` (@101, 9
+positions) between them. The generated envelope carries both, because the modelo-neutral
+13-role prefix contract has a role for each. This is one of the nineteen revisions
+already known to be short exactly those two positions; it is the first where the fix
+fell out of regeneration rather than needing its own edit.
+
+The map was DERIVED from that transcription rather than re-decided -- it is a reviewed
+artefact, and its per-record field counts already agreed with the parser's reading of
+the design -- with the join asserted on offset and length at every one of the 600
+positions. So the regeneration keeps every human judgement it encoded and drops only its
+omission.
+
+### Four content spellings this design needed, three of them AEAT's own errors
+
+- **Bracketed clause.** 151 writes `[15 enteros + 2 decimales]` where 202, 303 and 322
+  write it bare, across 220 money slots per edition. Peeled once, before the value
+  grammars, and only when the brackets wrap the ENTIRE content.
+- **`Formato: "dd/MM/yyyy"`.** A quoted separator-bearing date pattern in the
+  programmer's vocabulary rather than the Spanish token. Folded into the SAME policy
+  table `ddmmaaaa` already keys on, so a second table cannot drift from the first. Kept
+  case-sensitive: `MM` is the month and `mm` the minute, and a slot spelling minutes is
+  not a date this grammar should accept.
+- **Bare comma-separated enumerations** (`1,2,3`, `0,1,2`, `1,2,3,4`) -- the same closed
+  set the quoted grammar already read, written without quotes or labels.
+- **`decmales`.** AEAT's typo, shipped once per edition beside eighteen correctly spelled
+  siblings of the same shape. Admitted by naming that exact misspelling, never by
+  loosening the word: the reading is proved independently anyway, because the declared
+  3 + 2 digits must equal the slot's own 5 positions.
+
+### A representation the machinery could not express
+
+The 2015 design types its 100-position `Descripcion del elemento patrimonial` slots
+`Num`, eleven of them. AEAT's own Nota 1 defines that column as "A (Alfabetico) An
+(Alfanumerico), Num (Numerico sin signo) o N (Numerico con signo)", so this is a
+publication error, not a convention -- the whole block below each page identifier is
+typed `Num` uniformly, money and prose alike. `SingletonNumericRule` had no way to say
+so: its nearest kind, `identifier_digits`, renders unpadded because an identifier must
+fill its slot exactly, which prose does not.
+
+Added `ExportValuePolicy.MISTYPED_ALPHANUMERIC_TEXT` with its projector, wire validator,
+canonical wire shape (text, blank-filled, left-justified) and a `semantic_kind` that
+declares zero digits in both positions, because the slot has no numeric reading at all.
+
+The reading was then **independently confirmed by AEAT**: the 2023 edition types those
+same slots `An`. AEAT fixed it, which is why the 2023 profile needs no such rule. The
+existing hand transcription had it wrong in the other direction -- `data_type = "text"`
+with `padding = "left_zero"`, which would zero-fill a description.
+
+### 151/2025-y-siguientes: 8 casillas to a filing-grade revision
+
+This revision declared 8 casillas against a 714-position design and no layout at all.
+A description carry from the 2015 sibling was measured first and reached **76%** -- high
+enough to look authoritative, far too low to build on -- because the 2023 edition
+renumbered the printed box references, repeats several blocks more times, and adds two
+whole records. So it was authored from its own design, which is the better authority: it
+prints an explicit bracketed box number on nearly every data row.
+
+616 casillas and the semantic map were emitted from ONE walk, so a casilla id cannot
+disagree with the export field addressing it. The six liquidacion boxes the revision
+already modelled (base liquidable general [17] and del ahorro [18], both cuotas integras
+[19] [20], retenciones [33], resultado [43]) keep their authored ids, formulas and
+bindings; the walk binds the design's boxes to them rather than minting parallel
+casillas beside them.
+
+Two findings fell out of the authoring:
+
+- **The printed box number cannot be a casilla `number`.** A page repeats one block up to
+  nine times and prints the SAME box numbers in each repeat, so the printed number is
+  unique only within a block while `number` must be unique within the record. The byte
+  range is used, matching the 2015 sibling; the box number is preserved verbatim in each
+  entry's comment.
+- **AEAT transposes the municipio and provincia labels** -- and their printed box numbers
+  with them -- in the 2023 Representante block, against the Contribuyente block a few
+  hundred positions earlier. The widths do not move: an INE provincia code is two digits
+  and a municipio code five, in both blocks and both editions. Width decides, and the
+  generator counts and prints each transposition rather than silently correcting it.
+
+### Grounding
+
+Four legal entries were added, each read out of the bundled consolidated corpus before
+authoring: art. 2 (obligados) and art. 3 (plazo) of both Orden HAP/2783/2015 and Orden
+HFP/1338/2023. Art. 3.1 of each fixes the plazo BY REMISSION -- "sera el mismo que se
+apruebe cada ejercicio, con caracter general, para las declaraciones del IRPF" -- which
+is precisely why this modelo's deadline windows are a per-year factual claim its own
+orden cannot supply.
+
+For 2023-2025 that remission resolves: those windows are authored citing both the Renta
+campaign orden that fixes the dates and the remission article that makes it apply. The
+payment cutoff is this modelo's OWN, from art. 4.2 ("cinco dias antes de que finalice el
+plazo"); computed by that rule it independently reproduces the cutoff Modelo 100 declares
+for all three campaigns -- two derivations agreeing, not one copied. For 2015-2022 it
+does not resolve: five of those eight years have no in-repository authority at all, so
+the family is a named deferral rather than a partial guess.

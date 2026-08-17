@@ -5,7 +5,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:52f5bfb2608c3e8eb4ebfe9b837f5d6ca4ef139804141c6d2a329abf10fef405'
+body_hash: 'sha256:ec139ac7baa61d199e7f21ec76f814e176338fc45e193a9c80c7f88ef423cfa2'
 related:
   - "[[2026-08-14-test-harness-sanity-harness-performance-audit]]"
   - "[[2026-07-17-mcp-call-latency-adr]]"
@@ -45,8 +45,9 @@ detection that makes any of them safe.
   projections are built from — so the remedy must ship the census, not a digest:
   same research.
 - The identity walk runs twice on an authoring tree, at ~4.4s each, because a
-  mutable tree's fingerprints are deliberately never memoised: same research,
-  "O5 measured".
+  mutable tree's fingerprints are deliberately never memoised — and that second
+  walk is the freshness policy working, not waste, so it stays: same research,
+  "O5 measured" and "O5 retired".
 - `2026-07-17-mcp-call-latency-adr` already established the governing inversion
   in its D1 — the build and continuous integration are the gate, the runtime
   asserts identity — and already accepted its risk: a corrupted install that
@@ -72,10 +73,10 @@ already exists. Sizes are per-process, warm, from the research decomposition.
 | | option | saves | blast radius | mechanism exists |
 |---|---|---|---|---|
 | **O1** | ship the existing compiled pickle inside the wheel | first-run compile only; **0s warm** | small | yes |
-| **O2** | replace the pickle with a randomly-indexed artefact built at release | up to ~0.7-0.95s warm, proportional to what is read | **large** — artefact format, release pipeline, loader | no |
+| **O2** | replace the pickle with a randomly-indexed artefact built at release | up to ~0.7-0.95s warm on a PARTIAL read; **+68% on a full one** | **large** — artefact format, release pipeline, loader | no |
 | **O3** | stamped identity for an immutable install; keep the walk for authoring trees | **3.1s measured** on installs, 0s on authoring trees | medium | **yes** — the verdict stamp shape |
 | **O4** | move the annual-Orden extraction to build time; runtime loads the shipped census | **1.59s measured** parse, warm, everywhere | medium | **yes** — same inversion as D1 |
-| **O5** | fold the two identity walks into one | **~4.4s measured**, authoring trees only | medium | no |
+| **O5** | fold the two identity walks into one | ~4.4s measured — but **unsafe to take**; see below | medium | no |
 | **O6** | warm in-process serving | everything, for MCP only | large | already decided |
 | **O7** | keep micro-optimising the walk and the loader | ceiling measured at ~0.26s | small | n/a |
 
@@ -92,6 +93,28 @@ risk the research names: building pydantic models from rows may re-validate
 where unpickling does not, which would make per-object reconstruction more
 expensive rather than less. It is sequenced last and gated on a prototype
 measurement before its format is committed.
+
+**The gate is now met, and the named risk is REAL.** Measured over the dominant
+leaf type with the round-trip proven before timing, validation from plain dicts
+costs **1.68x** unpickling: 1.65 ms against 0.98 ms for 208 casillas. Building
+models from rows genuinely is dearer per object, because unpickling restores
+state where validation re-checks every field.
+
+That fixes O2's shape rather than killing it. Hydration is concentrated — the
+five heaviest modelos are 653 ms of a 0.73-0.95s decode, modelo 100 alone about
+half — so a partial read avoids enough objects to outrun the penalty easily,
+while a full hydration would pay roughly 68% MORE than today. **O2 is therefore
+conditional: it must ship WITH the partial-read call sites, never before them.**
+Swapping the artefact in while every consumer still hydrates the whole authority
+is a straight regression, and the number says so rather than merely warning.
+
+One further constraint holds regardless: `exclude=True` on required fields is
+systematic, not incidental — `ConstructDefinition.localization_key`,
+`ModeloRevision.localization_key` and `CasillaDefinition.localization_keys` all
+carry it — so a row format must transport excluded fields out of band. Removing
+the exclusions instead is not local, since they serve the envelope and export
+surfaces that must not carry localization keys. All figures in
+`2026-08-16-registry-load-artefact-research`.
 
 **O3 — accepted, first.** Largest measured saving, and the discriminator and
 placement rules already exist in the verdict-stamp machinery. It buys nothing on
@@ -110,13 +133,13 @@ the result removes the work rather than moving it. Had that split gone the other
 way this option would have been worthless, which is why it was checked before
 anything was built.
 
-**O5 — measured, and promoted from deferred to accepted.** It is the only lever
+**O5 — measured, then rejected.** It looked like the only lever
 available to an authoring tree, and it was the one lever here with no number.
 Measurement puts it at **~4.4s per authority load**: a mutable tree's
 fingerprints are deliberately never memoised, so the authority collects them and
-`load_registry_tree` then collects the identical set again at full price. The
-authority already holds them; passing them down removes a walk and is strictly
-fresher than a second independent walk rather than less fresh.
+`load_registry_tree` then collects the identical set again at full price. Both
+walks are real; the second turns out not to be redundant, which is what the
+paragraphs below establish.
 
 The refusal to borrow the audit's 0.26s ceiling is vindicated: that ceiling
 bounds a different pair, and the real figure is roughly seventeen times it.
@@ -125,6 +148,35 @@ very likely retired the option. Scope is honest, though — a stamped install
 skips all of this under D1, so O5 buys nothing there and everything in the tree
 developers actually work in. Figures in
 `2026-08-16-registry-load-artefact-research`.
+
+**Now REJECTED, on the reason the walk exists.** Implementing it forced a
+re-reading of why the second walk is there, and the answer retires the option
+rather than pointing at a better mechanism. `is_bundled_registry_root` states the
+policy outright: a mutable tree "is fingerprinted afresh on every call rather
+than served from a window whose freshness check cannot speak for its file
+content". Handing the loader tuples the authority walked seconds earlier IS
+serving it from such a window. The ~4.4s is the deliberate price of refusing a
+stale view of a tree that can change under the process — not redundancy nobody
+noticed.
+
+And there is no safe remainder. On a bundled tree the fold already happened: the
+TTL memo serves the second caller for free (1.291s then 0.000s in the
+decomposition). On a mutable tree it is unsafe by the same policy that makes the
+memo bundled-only. Those are one decision, not two. O5 can only return by
+reopening the freshness policy itself — whether an authority may act on a
+several-second-old view of an authoring tree — which is an owner-level ruling on
+registry semantics touching the complete-tree-fingerprint invariant, not a
+performance change.
+
+**The prior attempt, kept as evidence.** The obvious mechanism — the
+authority offering its walk to the loader — was built, removed the second walk,
+and broke cross-process compiled-cache agreement: two processes derived different
+keys for one tree, which is the sharing the audit measured as collapsing
+twenty-four workers' compiles into one. It was reverted whole rather than left
+behind a flag. The saving stands; the mechanism does not, and the constraint any
+replacement must satisfy is now explicit — every process must derive its key by
+the same route, so no design may let one process key on when ITS authority
+happened to walk. Same research, "O5 implemented, and reverted".
 
 **O6 — out of scope.** Already decided as D4 of `2026-07-17-mcp-call-latency-adr`
 and orthogonal: it amortises the per-process cost for MCP and leaves the

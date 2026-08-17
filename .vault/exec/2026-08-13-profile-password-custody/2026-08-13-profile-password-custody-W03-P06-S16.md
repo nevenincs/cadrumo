@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#profile-password-custody'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-08-16'
 body_schema: 'body-v1'
-body_hash: 'sha256:0bffeb7637160b621d2a2359e1de133b41f796c7129530b84c21253de3152121'
+body_hash: 'sha256:1e175040e65ce9c8d93ce25e2b16bc338b29300dd59c3435f4fcce63a3874b7b'
 step_id: 'S16'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
@@ -182,3 +182,152 @@ surface this row touched.
 
 No commit was made and no plan checkbox was set. Every capture lives under the
 session scratchpad directory, not the repository.
+
+## Continuation, 2026-08-16: the named blocker was removed and restore is delivered
+
+**The gap this record named precisely is closed, by the piece it said was
+missing rather than by working around it.** The blocker was recorded as
+"nothing in the tree maps a transport artefact to that triple". The
+capsule-restore row has since landed `read_profile_capsule_source`, which
+reads an unpublished capsule DIRECTORY and returns exactly the password
+envelope, sentinel and database bytes the two restore functions require, plus
+the recovery wrapper. That is the mapping whose absence blocked this row.
+
+`aeat config profile restore LABEL --file CAPSULE_DIR [--artifact PATH]` is
+registered and green.
+
+**One verb, two credentials, argued rather than assumed.** The row names
+"restore" and "restore-recover" as two verbs. They are delivered as one verb
+selected by `--artifact`, because they are two ways of PROVING one key rather
+than two restore paths: both converge on the single application restore
+authority, and splitting them would have produced two argument surfaces over
+one operation that could then drift. Recorded here as a deliberate narrowing
+of the row's literal wording, not a silent one. What the standing goal still
+gets: both credentials reach restore from the command line, which is what the
+row exists to deliver.
+
+**The recovery door's limit is surfaced, not hidden.** That door republishes
+the capsule under its EXISTING password envelope, so it recovers the records
+and not the credential. The verb emits a warning `Notice` saying so and
+carries a `password_unchanged` field so a machine caller can branch on it. A
+plain success envelope here would have been a half-truth at exactly the moment
+an operator is deciding whether they are recovered. Rotation-through-recovery
+— which would close that gap properly — is sequenced onto the custody lane
+with the constraint that it reuse the ONE rotation authority the passphrase
+verb already calls, not a recovery-specific fork.
+
+**Bootstrap-exempt, with the reason recorded as data.** Registered as a
+`TORN_STATE_RECOVERY` exemption. The profile an active-session gate would
+demand is the one being restored, so gating it is a deadlock in the literal
+sense; and it grants nothing, because the caller must already hold both the
+capsule bytes and a credential that opens them. This is the deliberate
+counterpart to the delete verb's recorded REFUSAL of an exemption above —
+same registry, opposite ruling, each with its own stated ground.
+
+**Coverage, including what is NOT covered.** Two real end-to-end CLI tests: a
+capsule directory registered under one storage root restores into a second
+root that has never seen it, with identity asserted ON DISK (the payload
+redacts the profile id by contract, so the restored capsule directory being
+named for the SOURCE profile UUID is the real claim — a restore that minted a
+new id would have cloned the records, not recovered them); and a non-capsule
+directory refuses without a traceback. The recovery-artifact door is NOT
+covered at CLI level and the module says so in its docstring: minting an
+artifact needs a replayed recovery key with no sanctioned test-support door,
+and reaching into another package's private test helpers to fake one would be
+worse than the honest gap. The artifact door is covered at application level.
+The consequence is stated rather than left to be inferred — the CLI assertion
+that a password restore carries no advisory would pass identically if the
+advisory never fired at all, so it is written as a control on the password
+door, not as evidence about the recovery door.
+
+**Two boundary preconditions were landed rather than deferred.**
+`ProfileRestoreAuthority` was promoted to the profile package's `__all__`
+before the payload consumed it, so the closed authority set is one canonical
+Literal rather than a duplicate declared at the CLI boundary. And the notice
+code constant was RENAMED rather than suppressed when the linter flagged it as
+a possible hardcoded password — the rule was right to be suspicious of a
+constant named that way.
+
+**The fourteen owed locale keys this record reported have since landed**, and
+six further keys for this verb were added through the locale CLI in all four
+catalogues with real values, not placeholders.
+
+**The pre-existing red this record documented is confirmed still pre-existing.**
+`test_every_cli_leaf_has_a_registered_schema` reds over four
+declared-unimplemented profile keys — export, import, rename and
+subject_access_request. This record states it reduced that list from five to
+four; it is still four, and today's work neither added to it nor cleared it.
+Attributing it here so it is not re-discovered a third time as if new.
+
+## Continuation, 2026-08-16: the sealed-archive backup surface and acceptance 276
+
+**A catalogued operator capability was unimplemented at two layers and its
+acceptance test had been failing for an unrelated reason, which is why nobody
+had noticed.** `acceptance_wall_catalogue.py` binds issue **276** — *"the
+operator backs up their local catalogue to an archive and restores it on a
+fresh machine without data loss"* — to
+`test_profile_archive_roundtrip.py`. That module drove
+`config profile archive export | import | inspect`, none of which existed; the
+application service had been removed with, in `bucket_maintenance`'s own words,
+"no successor primitive at all". The module never reached those verbs because
+it died earlier on `r_create.exit_code`, the registration door having changed
+to return a profile id. A test failing at the wrong line concealed a missing
+capability for as long as nobody read past the first exception.
+
+**Delivered: `archive export` and `archive inspect`. Deliberately NOT
+delivered: `archive import`.**
+
+An archive and a capsule directory differ only in how their material is READ —
+both produce a `ProfileCapsuleSource`, and from there both reach one shared
+publication authority. So `config profile restore` now takes EITHER shape and
+tells them apart by asking the filesystem, and there is no import verb. A
+second import verb would have been a second door onto one authority, and would
+have left an operator guessing which of two commands restores a backup. This
+is the same single-authority argument that made restore one verb with two
+credentials rather than two sibling verbs.
+
+**Two properties were verified rather than accepted on assertion.** The
+recovery slot is constant-WIDTH, not merely fixed-marker — the distinction
+matters, because any differently-sized marker still signals absence by length,
+so enrolment would have stayed inferable from a copy of the file. And a
+byte-scan over the archive members proves no tax id, name, surname or LABEL
+appears outside the encrypted member. The label is the one an obvious
+implementation leaks: it lives in plaintext beside the ciphertext inside a
+published capsule, so packing the directory verbatim would publish the
+operator's chosen name. Packing from `ProfileCapsuleSource` excludes it
+structurally, because that type never reads it.
+
+**The acceptance module was rewritten, not repaired, and its anchor renamed.**
+Three of its assumptions no longer hold: an `import` verb, a `size_bytes`
+inspect field, and an automatic active-profile switch on restore. The last is a
+deliberate behaviour change — republishing a profile is not a claim that the
+operator wants to work in it. The capability the wall names is unchanged and is
+proved end to end, including a seeded ledger row so that restoring an empty but
+structurally valid profile cannot pass. The wall entry now names
+`test_archive_export_restore_roundtrip`. Six tests, all green.
+
+**A gate defect was fixed rather than worked around.**
+`test_every_cli_leaf_has_a_registered_schema` reds on registry keys with no CLI
+leaf, and had no knowledge of `DECLARED_UNIMPLEMENTED_SURFACES` — the mapping
+whose entire purpose is to declare exactly that state, and which
+`assert_schema_coverage` has always honoured. Two gates therefore disagreed
+about the same four keys, so one was red for a state the other called legal.
+A red that cannot be cleared teaches everyone to ignore the gate. The exclusion
+is now honoured here too, and the teeth are kept by a NEW companion assertion:
+a declared entry whose verb has since landed is itself a failure, because every
+entry's own stated exit condition is that restoring the verb removes it.
+Nothing enforced that before, so a landed verb could have left its
+"knowingly absent" declaration standing indefinitely — the same
+prose-nobody-re-derives class this campaign keeps meeting.
+
+**Locale debt was cleared in both directions:** five keys describing the absent
+import verb and a non-existent `--recovery-wrap-passphrase` flag were removed,
+and three were rewritten to describe the live surface, all four catalogues.
+
+**Attribution for the reds NOT addressed here.** 25 failures in
+`entrypoints/cli/_config/tests` (status frontend and status notices) and the
+bulk of the wider CLI suite resolve a live modelo-303 snapshot. The registry
+campaign has M303 mid-authoring and refusing — missing export layouts, and a
+revision whose id claims an open-ended window its own `year_to = 2022` closes —
+and registry validation is whole-tree, so a single refusal takes every snapshot
+resolution with it. Not custody, not this row, and not fixable from this lane.
