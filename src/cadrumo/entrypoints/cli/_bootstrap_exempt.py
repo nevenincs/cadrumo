@@ -228,6 +228,18 @@ BOOTSTRAP_EXEMPTIONS: tuple[BootstrapExemption, ...] = (
         ),
     ),
     BootstrapExemption(
+        verb_path="config profile restore",
+        criterion=ExemptionCriterion.TORN_STATE_RECOVERY,
+        note=(
+            "Republishes a capsule the operator holds on disk after a disk failure or an "
+            "interrupted publication. The profile an active-session gate would demand is the "
+            "one being restored, so gating it is a deadlock in the literal sense. It grants "
+            "nothing either: the caller must already hold both the capsule bytes and a "
+            "credential that opens them, so the session it skips would prove something it "
+            "already had to prove to get this far."
+        ),
+    ),
+    BootstrapExemption(
         verb_path="config login",
         criterion=ExemptionCriterion.SESSION_DOOR,
         note=(

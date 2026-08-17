@@ -41,7 +41,7 @@ from ....core import (
 )
 from ....core.config import override_settings
 from ....core.errors import NoActiveProfileError, get_registered_error_code
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ... import wizard as _wizard  # noqa: F401
 from .._models import WorkflowState
 from .._profile_bucket_scan import resolve_profile_bucket
@@ -83,6 +83,7 @@ def _current_profile_session(profile_id: str, *, root: Path, label: str) -> Prof
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_PROFILE_DEK),
         data_files={},
         initial_record=UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
             profile_id=str(identity),
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
         ),

@@ -33,21 +33,6 @@ class NonTtyRefusedError(CadrumoError):
         super().__init__()
 
 
-def is_stdout_tty() -> bool:
-    """Return whether stdout is attached to an interactive terminal."""
-    return stdout_is_tty()
-
-
-def is_stderr_tty() -> bool:
-    """Return whether stderr is attached to an interactive terminal."""
-    return stderr_is_tty()
-
-
-def is_stdin_tty() -> bool:
-    """Return whether stdin is attached to an interactive terminal."""
-    return stdin_is_tty()
-
-
 def should_use_color(*, no_color: bool | None = None) -> bool:
     """Resolve whether ANSI colour should be enabled for this invocation.
 
@@ -71,7 +56,7 @@ def should_use_color(*, no_color: bool | None = None) -> bool:
         return False
     if settings.cadrumo_force_color:
         return True
-    return is_stdout_tty()
+    return stdout_is_tty()
 
 
 def should_show_rich_progress(
@@ -101,7 +86,7 @@ def should_show_rich_progress(
     resolved_no_progress = current_cli_flag("no_progress") or bool(no_progress)
     if resolved_quiet or resolved_json_mode or resolved_no_progress:
         return False
-    return is_stdout_tty() and is_stderr_tty()
+    return stdout_is_tty() and stderr_is_tty()
 
 
 def refuse_if_stdin_non_tty() -> None:
@@ -110,15 +95,12 @@ def refuse_if_stdin_non_tty() -> None:
     Raises:
         NonTtyRefusedError: When stdin is not a TTY.
     """
-    if not is_stdin_tty():
+    if not stdin_is_tty():
         raise NonTtyRefusedError()
 
 
 __all__ = [
     "NonTtyRefusedError",
-    "is_stderr_tty",
-    "is_stdin_tty",
-    "is_stdout_tty",
     "refuse_if_stdin_non_tty",
     "should_show_rich_progress",
     "should_use_color",

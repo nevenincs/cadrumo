@@ -30,9 +30,9 @@ or failure leaves a valid live bucket session; it never changes the outcome
 of password authentication. A prior profile is retired only after B is
 durably selected and locally bound.
 
-:func:`resume_active_profile_session` is the read-side counterpart and the
-SINGLE resume authority: both the login no-op path and the CLI root
-callback call it, so the two surfaces cannot drift.
+:func:`bind_resumed_profile_session` is the read-side counterpart and the
+SINGLE resume authority: the login no-op path, the CLI root callback and
+the named-profile read path all call it, so the surfaces cannot drift.
 
 See Also:
     :mod:`cadrumo.adapters.persistence.storage.custody._acceleration_receipt`
@@ -717,17 +717,25 @@ def remove_profile_session_acceleration_for_custody_delete(
     return ProfileCustodySessionOwnerEffect.REMOVED if was_present else ProfileCustodySessionOwnerEffect.VERIFIED_ABSENT
 
 
-def resume_active_profile_session(
+def bind_resumed_profile_session(
     *,
     bucket_id: str,
     now: datetime | None = None,
 ) -> ProfileSessionRefusalReason | None:
     """Resume ``bucket_id``'s persisted session and bind it to this process.
 
-    The SINGLE resume authority, shared by the login idempotence guard and
-    the CLI root callback so the two can never drift. Fail-closed
-    throughout: the adapter deletes stale artefacts and reports a typed
-    refusal, and this function opens NOTHING on any refusal branch.
+    The SINGLE resume authority, shared by the login idempotence guard, the
+    CLI root callback, and the named-profile read path so they cannot drift.
+    Fail-closed throughout: the adapter deletes stale artefacts and reports a
+    typed refusal, and this function opens NOTHING on any refusal branch.
+
+    ``bucket_id`` is an explicit target, NOT the active profile. The name once
+    said "active", which was false of the parameter and cost a real defect:
+    the named-profile read path concluded this authority could not serve a
+    target it had resolved itself, skipped the resume, and reported records it
+    could not open as missing. Binding is what distinguishes this from the
+    substrate's own ``resume_profile_session``, which returns material and
+    binds nothing.
 
     On success the sliding idle deadline is advanced and re-persisted
     exactly once, so activity in a later process keeps the session alive
@@ -1028,7 +1036,7 @@ def _resume_for_idempotent_login(
     already bound to this bucket only short-circuits the reopen — the
     record is still peeked, and its absence still means "not idempotent".
     Otherwise the record is resumed through the shared
-    :func:`resume_active_profile_session` authority.
+    :func:`bind_resumed_profile_session` authority.
 
     Returns ``None`` when the profile must authenticate: either genuinely
     logged out, or holding a live session that was never persisted because
@@ -1045,7 +1053,7 @@ def _resume_for_idempotent_login(
             now=now,
         )
         return peeked.record if peeked.resumed else None
-    if resume_active_profile_session(bucket_id=bucket_id, now=now) is not None:
+    if bind_resumed_profile_session(bucket_id=bucket_id, now=now) is not None:
         return None
     peeked, _ = _resume_acceleration_receipt(
         storage_root=effective_storage_root(),
@@ -1549,10 +1557,10 @@ __all__ = [
     "ProfileCustodySessionOwnerEffect",
     "ProfileLoginOutcome",
     "ProfileLoginThrottledError",
+    "bind_resumed_profile_session",
     "close_profile_session_artefacts",
     "login_profile",
     "logout_active_profile",
     "remove_profile_session_acceleration_for_custody_delete",
-    "resume_active_profile_session",
     "revoke_live_profile_secret_for_custody_delete",
 ]

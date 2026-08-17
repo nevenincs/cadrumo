@@ -21,7 +21,7 @@ from .._secure_input import write_to_controlling_terminal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_SECRET = "abandon ability able about above absent absorb abstract absurd abuse access accident"
+_SECRET = "abandon ability able about above absent absorb abstract absurd abuse access accident"  # noqa: S105 - synthetic BIP-39 words, never a live credential
 
 _REFUSAL_PROBE = (
     "from cadrumo.entrypoints.cli._config._secure_input import write_to_controlling_terminal\n"

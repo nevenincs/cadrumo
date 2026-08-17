@@ -207,6 +207,31 @@ class ProfileRecordSession:
         _assert_row_revision_metadata(raw)
 
 
+def _assert_setup_state_was_stated(record: UserProfileRecord) -> None:
+    """Refuse a record that would be persisted claiming completion by omission.
+
+    ``setup_state`` defaults to COMPLETE, and COMPLETE is not a label for a
+    record that stopped being edited -- it is the CLAIM that nothing required
+    is missing, which every downstream surface then trusts. A record built
+    without stating it therefore makes that claim by accident, and persisting
+    one makes the accident durable.
+
+    The discriminator is pydantic's own record of which fields the caller
+    supplied, so an explicit ``setup_state=COMPLETE`` passes and an omitted one
+    does not, even though the resulting VALUE is identical. A record loaded
+    from disk always carries the field in its payload and so always passes;
+    the roundtrip test beside this module proves that rather than assuming it.
+
+    Enforced here, at the single write path, rather than by making the field
+    required on the model: the hazard is a persisted record claiming
+    completion, and this is the boundary a record crosses to become one.
+    """
+    if "setup_state" not in record.model_fields_set:
+        raise ProfileRecordIntegrityError(
+            "profile record must state its setup state explicitly before it is persisted",
+        )
+
+
 def _assert_record_profile_binding(
     profile_id: UUID,
     record: UserProfileRecord,
@@ -446,6 +471,7 @@ class ProfileRecordStore:
         # a rotation that assembled its own SecureObjectWrite would be a
         # second write path into the one row this class exists to own.
         writer = writing_session or self._session
+        _assert_setup_state_was_stated(record)
         event_value = _build_record_event(writer, record, event)
         events = default_profile_bucket_event_history_repository(objects=objects)
         history, observed_event_revision = events.load_revisioned()

@@ -27,7 +27,6 @@ See Also:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from secrets import token_bytes
 from typing import TYPE_CHECKING
 
@@ -37,6 +36,7 @@ from ...core.errors import CadrumoError
 from ...core.hashing import prefixed_digest
 from ...core.identity import ProfileId
 from ...core.paths import effective_storage_root
+from ...core.time import now as _now
 from ...domain.buckets import BucketEventType
 from ..profile_custody import (
     create_profile_custody_registration_material,
@@ -163,7 +163,7 @@ def rotate_profile_passphrase(
         # recovery that knows the operator's NEW password, and after the swap
         # the old password no longer opens anything. So the step that needs
         # the old credential goes first.
-        occurred_at = datetime.now(UTC)
+        occurred_at = _now()
         old_session = ProfileRecordSession.from_envelope(envelope=current, dek=unlock.dek)
         new_session = ProfileRecordSession.from_envelope(envelope=rotated, dek=unlock.dek)
         try:

@@ -23,6 +23,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from ....adapters.persistence.storage import generate_recovery_key
 from ....adapters.persistence.storage.custody import (
     ProfileCustodyEnvelope,
     ProfileCustodyPasswordError,
@@ -33,7 +34,7 @@ from ....adapters.persistence.storage.custody import (
 from ....core.config import override_settings
 from ....domain.user_profile import ProfileSetupState, UserProfileRecord
 from ...profile_custody import create_profile_custody_registration_material
-from .._capsule_record import ProfileRecordSession
+from .._capsule_record import ProfileRecordSession, ProfileRecordStore
 from .._lifecycle import ProfileCapsuleLifecycle
 from .._recovery_custody import (
     ProfileRecoveryArtifactReceipt,
@@ -477,3 +478,105 @@ def test_restore_refuses_a_sentinel_from_a_different_profile(
             )
     finally:
         session.close()
+
+
+def test_recovery_artifact_restore_publishes_a_capsule_whose_records_are_readable(
+    enrolled: _EnrolledProfile,
+    tmp_path: Path,
+) -> None:
+    """The artifact door returns an operator's RECORDS, not merely a capsule.
+
+    This is the claim the whole recovery mechanism exists to make good on,
+    and publishing a capsule is only half of it: a restore that republished
+    a capsule whose database no key could open would satisfy every assertion
+    about publication and still leave the taxpayer with nothing. So the
+    record is decrypted out of the restored capsule, through a session built
+    from the key the ARTIFACT proved, and compared to what was stored.
+    """
+    artifact = tmp_path / "exports" / "recovery.artifact.json"
+    enrolled.export(artifact)
+    destination = tmp_path / "artifact-restored"
+
+    restored = restore_profile_from_recovery_artifact(
+        label="Recovered by artifact",
+        artifact_source=artifact,
+        recovery_secret=enrolled.enrollment.recovery_key.mnemonic,
+        password_envelope=enrolled.envelope,
+        sentinel=enrolled.sentinel,
+        database_bytes=enrolled.database_bytes,
+        root=destination,
+    )
+
+    assert restored.profile_id == str(enrolled.profile_id)
+    assert restored.publication_kind == "restore"
+
+    session = ProfileRecordSession.from_envelope(envelope=enrolled.envelope, dek=enrolled.dek)
+    try:
+        recovered = ProfileRecordStore(session=session, root=destination).load().record
+    finally:
+        session.close()
+
+    assert recovered.profile_id == str(enrolled.profile_id)
+    assert recovered.setup_state is ProfileSetupState.INCOMPLETE
+
+
+def test_recovery_artifact_restore_does_not_hand_back_password_access(
+    enrolled: _EnrolledProfile,
+    tmp_path: Path,
+) -> None:
+    """Recovering the DATA is not recovering the credential, and must not become it.
+
+    The capsule is republished under its EXISTING password envelope, so an
+    operator who genuinely lost their password gets their records onto a
+    valid capsule and still cannot log in with a password they do not know.
+    Changing that would be credential rotation reached through the recovery
+    door, which is a different capability with a different authorisation --
+    so this pins the boundary rather than describing it in a docstring.
+    """
+    artifact = tmp_path / "exports" / "no-password-reset.artifact.json"
+    enrolled.export(artifact)
+    destination = tmp_path / "artifact-restored-envelope"
+
+    restore_profile_from_recovery_artifact(
+        label="Recovered without a new password",
+        artifact_source=artifact,
+        recovery_secret=enrolled.enrollment.recovery_key.mnemonic,
+        password_envelope=enrolled.envelope,
+        sentinel=enrolled.sentinel,
+        database_bytes=enrolled.database_bytes,
+        root=destination,
+    )
+
+    republished = (destination / "buckets" / str(enrolled.profile_id) / "custody" / "envelope.v1.json").read_bytes()
+
+    assert republished == enrolled.envelope.canonical_json_bytes()
+
+
+def test_a_wrong_mnemonic_restores_nothing_through_the_artifact_door(
+    enrolled: _EnrolledProfile,
+    tmp_path: Path,
+) -> None:
+    """Anti-tautology for the pair above: the artifact is not self-authorising.
+
+    Both sibling tests would read identically if holding the FILE were
+    sufficient, so a real artifact presented with a different real mnemonic
+    must publish nothing at all.
+    """
+    artifact = tmp_path / "exports" / "wrong-secret.artifact.json"
+    enrolled.export(artifact)
+    destination = tmp_path / "artifact-refused"
+
+    with generate_recovery_key() as impostor:
+        assert impostor.mnemonic != enrolled.enrollment.recovery_key.mnemonic
+        with pytest.raises(ProfileCustodyPasswordError):
+            restore_profile_from_recovery_artifact(
+                label="Refused",
+                artifact_source=artifact,
+                recovery_secret=impostor.mnemonic,
+                password_envelope=enrolled.envelope,
+                sentinel=enrolled.sentinel,
+                database_bytes=enrolled.database_bytes,
+                root=destination,
+            )
+
+    assert not (destination / "buckets" / str(enrolled.profile_id)).exists()

@@ -9,8 +9,9 @@ import pytest
 
 from ....core.config import SecretStoreBackend
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import dev_test_database_password
+from ....tests.secure_sql import dev_test_database_password, isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
+from .. import register_profile_with_credentials
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -58,37 +59,25 @@ def test_setup_auth_help_exposes_access_lifecycle(tmp_path: Path) -> None:
 
 
 def test_setup_profile_roundtrip(tmp_path: Path) -> None:
-    env = _env(tmp_path)
-    init = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--activity",
-            "design",
-            "--tax-id",
-            "12345678Z",
-            "--entity-type",
-            "natural_person",
-            "--name",
-            "Operator",
-            "--surnames",
-            "Example",
-        ],
-        env=env,
-    )
-    show = invoke_cached_cli(["--format", "json", "config", "profile", "list"], env=env)
+    """A profile created at the credential door is visible to ``profile list``.
 
-    assert init.exit_code == 0, init.output
+    Creation is the credential door's alone: the wizard's ``create`` mode
+    refuses outright and tells the operator to register first, so a scripted
+    ``config profile create`` no longer makes a profile and asserting it
+    succeeded would assert a surface that is gone. What survives from the
+    original roundtrip is the part that still has a subject -- a profile that
+    exists is reported by the listing verb, under the label it was given.
+    """
+    label = "operator"
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label=label, passphrase=dev_test_database_password())
+
+        show = invoke_cached_cli(["--format", "json", "config", "profile", "list"])
+
     assert show.exit_code == 0, show.output
     payload = json.loads(show.output)
-    # the exact shape of payload depends on `aeat config profile list --format json`
-    # Let's just ensure it parsed as json
     assert isinstance(payload, dict)
+    assert label in show.output
 
 
 def test_setup_status_reports_missing_and_ready_steps(tmp_path: Path) -> None:

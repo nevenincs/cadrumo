@@ -277,6 +277,17 @@ class ProfileCustodySentinelPort(Protocol):
 
     profile_id: UUID
 
+    def canonical_json_bytes(self) -> bytes:
+        """Return the exact committed bytes of this sentinel.
+
+        Declared for the same reason as the envelope's: a backup carries the
+        record verbatim, and the archive is built from bytes rather than from
+        fields. The bytes cross the boundary; their MEANING does not. Nothing
+        here reads a field of the payload, and the sentinel carries no
+        plaintext secret to read in any case.
+        """
+        ...
+
 
 class ProfileCustodyRecoveryEnvelopePort(Protocol):
     """Recovery-envelope contract forwarded to custody storage.
@@ -287,11 +298,24 @@ class ProfileCustodyRecoveryEnvelopePort(Protocol):
     checked against the password envelope beside it is an enrollment nothing
     can prove belongs to this capsule. Everything else about the record --
     the KDF parameters, the wrapped key, the AAD descriptor -- stays opaque,
-    because the application has no business reading key material.
+    because the application has no business INTERPRETING key material.
+
+    "Interpreting" rather than "touching" is the precise line, and
+    :meth:`canonical_json_bytes` is why it has to be stated. A backup carries
+    this record verbatim, so the application does handle the whole of it --
+    wrapped key, KDF parameters and all -- as an opaque run of bytes it
+    forwards and digests without reading a field. What stays forbidden is
+    deciding anything from the payload's contents. A reader who sees that
+    method sitting under this paragraph should conclude the two agree, not
+    that one of them is stale.
     """
 
     profile_id: UUID
     dek_epoch: str
+
+    def canonical_json_bytes(self) -> bytes:
+        """Return the exact committed bytes of this recovery wrapper."""
+        ...
 
 
 __all__ = [

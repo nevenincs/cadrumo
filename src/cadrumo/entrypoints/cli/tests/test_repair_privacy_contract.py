@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....adapters.persistence.storage import activate_session, get_master_key_provider
+from ....adapters.persistence.storage import activate_session
 from ....adapters.persistence.storage.master_key import BucketSession
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.sql.engine import dispose_engine
@@ -245,12 +245,10 @@ def test_config_repair_quarantine_dry_run_is_metadata_only_and_non_mutating() ->
         object_key=f"wallet:{sensitive_tax_id}:{sensitive_period}:{active_bucket_id}",
         payload=b"wallet-balance=999999; taxpayer=12345678Z",
     )
-    with get_master_key_provider():
-        rows_before = tuple(secure_object_repository_for_active_bucket().iter_all_records_raw())
+    rows_before = tuple(secure_object_repository_for_active_bucket().iter_all_records_raw())
 
     text, payload_result = _invoke_text_and_json(("config", "repair", "quarantine", "--dry-run"))
-    with get_master_key_provider():
-        rows_after = tuple(secure_object_repository_for_active_bucket().iter_all_records_raw())
+    rows_after = tuple(secure_object_repository_for_active_bucket().iter_all_records_raw())
 
     assert text.exit_code == 0, text.output
     assert payload_result.exit_code == 0, payload_result.output

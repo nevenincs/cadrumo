@@ -190,7 +190,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
-            revision_id="2009-y-siguientes",
+            revision_id="2009-2022",
             repository=wu_repo,
             clock=_T0,
         )
@@ -286,10 +286,6 @@ def test_v3_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ....adapters.persistence.storage.master_key import (
-        activate_master_key_provider,
-        get_master_key_provider,
-    )
     from ....core import resolve_active_bucket_id
     from ....core.config import override_settings
 
@@ -332,7 +328,6 @@ def test_v3_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     # Load originals while still in source storage context.
     with (
         override_settings(cadrumo_active_profile=source_bucket_id),
-        activate_master_key_provider(get_master_key_provider()),
     ):
         original_work_units = tuple(WorkUnitCatalogueRepository(bucket_id=source_bucket_id).load())
         original_transactions = tuple(TransactionCatalogueRepository(bucket_id=source_bucket_id).load())
@@ -359,7 +354,6 @@ def test_v3_bundle_export_import_roundtrip(tmp_path: Path) -> None:
 
         with (
             override_settings(cadrumo_active_profile=imported_bucket_id),
-            activate_master_key_provider(get_master_key_provider()),
         ):
             imported_work_units = tuple(WorkUnitCatalogueRepository(bucket_id=imported_bucket_id).load())
             imported_transactions = tuple(TransactionCatalogueRepository(bucket_id=imported_bucket_id).load())
@@ -456,10 +450,6 @@ def test_v3_bundle_anti_tautology_legal_refs_mutation(tmp_path: Path) -> None:
     """
 
     from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-    from ....adapters.persistence.storage.master_key import (
-        activate_master_key_provider,
-        get_master_key_provider,
-    )
     from ....core.config import override_settings
     from ....domain.user_profile import UserProfilePortableExport
 
@@ -468,7 +458,6 @@ def test_v3_bundle_anti_tautology_legal_refs_mutation(tmp_path: Path) -> None:
 
     with (
         override_settings(cadrumo_active_profile=source_bucket_id),
-        activate_master_key_provider(get_master_key_provider()),
     ):
         (original_revision,) = tuple(CalculationRevisionCatalogueRepository(bucket_id=source_bucket_id).load())
 

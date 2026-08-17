@@ -114,9 +114,9 @@ def _login_and_require_persistence(storage_root: Path, bucket_id: str) -> None:
 
 def _resume(bucket_id: str) -> ProfileSessionRefusalReason | None:
     """Drive the shared resume authority the root callback itself calls."""
-    from ....application.user_profile import resume_active_profile_session
+    from ....application.user_profile import bind_resumed_profile_session
 
-    return resume_active_profile_session(bucket_id=bucket_id)
+    return bind_resumed_profile_session(bucket_id=bucket_id)
 
 
 def _invoke_decrypting_verb_without_the_secret_channel():
@@ -170,10 +170,10 @@ class TestSilentResume:
         result = _invoke_decrypting_verb_without_the_secret_channel()
         assert result.exit_code == 0, result.output
 
-        from ....application.user_profile import resume_active_profile_session
+        from ....application.user_profile import bind_resumed_profile_session
 
         close_active_bucket_session()
-        assert resume_active_profile_session(bucket_id=bucket_id) is None
+        assert bind_resumed_profile_session(bucket_id=bucket_id) is None
         resumed = current_active_bucket_session()
         assert resumed is not None
         # The sliding window rolled forward, while the absolute cap - fixed at

@@ -627,10 +627,10 @@ def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> Non
     """
     from ...adapters.persistence.storage.errors import KeyringUnavailableError
     from ...application.profile_preconditions import profile_session_failure_verdict
-    from ...application.user_profile import login_profile, resume_active_profile_session
+    from ...application.user_profile import bind_resumed_profile_session, login_profile
     from ._errors import CliRefusedBoundaryError
 
-    refusal = resume_active_profile_session(bucket_id=bucket_id)
+    refusal = bind_resumed_profile_session(bucket_id=bucket_id)
     if refusal is None:
         return
     if refusal is _ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
@@ -700,14 +700,14 @@ def _authenticated_at_the_gate(ctx: typer.Context, *, bucket_id: str) -> bool:
     to whatever was actually authenticated, so the verb and the session
     always name the same profile.
     """
-    from ...application.user_profile import resume_active_profile_session
+    from ...application.user_profile import bind_resumed_profile_session
     from ._config import offer_login_to_a_gated_verb
 
     outcome = offer_login_to_a_gated_verb(ctx, bucket_id=bucket_id)
     if outcome is None:
         return False
     _bind_authenticated_profile_to_invocation(ctx, bucket_id=outcome.bucket_id)
-    return resume_active_profile_session(bucket_id=outcome.bucket_id) is None
+    return bind_resumed_profile_session(bucket_id=outcome.bucket_id) is None
 
 
 def _bind_authenticated_profile_to_invocation(ctx: typer.Context, *, bucket_id: str) -> None:
@@ -766,6 +766,14 @@ def _is_explicit_profile_target_invocation(ctx: typer.Context, verb_path: str | 
     their own label/UUID target, so an unrelated active-profile pointer must not
     gate them first. Their no-argument forms still depend on the active profile
     and remain active-profile guarded.
+
+    The unlocking half of that sentence was aspirational for a while, and the
+    early return here is what made the gap invisible: those verbs resolved
+    their target and then never resumed a session for it, so the same record
+    read through the active-profile path and through an explicit target gave
+    present-with-keys and missing respectively. The named path now resumes its
+    own target through the shared resume authority, which is what makes this
+    return safe rather than merely quiet.
     """
     from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
 

@@ -41,6 +41,7 @@ from ...application.operator_surface import HelpSurface
 from ...application.user_profile import (
     ProfileBundleExportPurpose,
     ProfileBundleExportTransport,
+    ProfileRestoreAuthority,
 )
 from ...application.workflow import ProfileHealthStatus, ProfileSource
 from ...core import HEX_PATTERN_64, Period
@@ -391,6 +392,79 @@ class ConfigLoginResult(OutputSchema):
     session_persisted: bool
     already_authenticated: bool
     closed_previous_profile: str | None = None
+
+
+@register_schema("config.profile.archive.export")
+class ConfigProfileArchiveExportResult(OutputSchema):
+    """JSON envelope for ``aeat config profile archive export``.
+
+    Reports one sealed backup written to disk.
+
+    ``recovery_enrolled`` is reported to the operator who asked for the backup
+    and is deliberately NOT inferable from the archive file: the recovery slot
+    is constant-width whether or not the profile enrolled, so someone holding a
+    copy cannot learn it. Telling the requester is safe; publishing it in the
+    bytes would not be.
+
+    No password, recovery phrase, key material or label enters this payload.
+    """
+
+    bucket_id: BucketId
+    target: str
+    archive_schema_version: int
+    recovery_enrolled: bool
+
+
+@register_schema("config.profile.archive.inspect")
+class ConfigProfileArchiveInspectResult(OutputSchema):
+    """JSON envelope for ``aeat config profile archive inspect``.
+
+    Exactly the archive's plaintext header, which is what anyone holding the
+    file can read without a key. Nothing may be added here that is a fact about
+    the OPERATOR rather than about the archive -- the label is absent for that
+    reason, not by oversight.
+
+    ``manifest_digest`` is carried by the header and verified by the reader at
+    the application layer, not by the archive transport, which treats its
+    payload as opaque bytes.
+    """
+
+    product: str
+    bucket_id: BucketId
+    archive_schema_version: int
+    created_at: datetime
+    manifest_digest: str
+
+
+@register_schema("config.profile.restore")
+class ConfigProfileRestoreResult(OutputSchema):
+    """JSON envelope for ``aeat config profile restore``.
+
+    Reports one completed restore of a capsule the operator held on disk.
+
+    ``authority`` names which door proved the key rather than leaving it
+    implicit in which flags were passed, so a caller reading a stored envelope
+    later can tell a password restore from a recovery-artifact one.
+
+    ``recovery_enrolled`` is reported on every restore because a restore IS a
+    publication, and publication is the only moment a recovery wrapper can be
+    installed. A restored profile carrying ``false`` has permanently lost its
+    second door, and an operator who is not told cannot act on it.
+
+    ``password_unchanged`` is the recovery door's honest limit: that door
+    republishes the capsule under its EXISTING password envelope, so it
+    recovers the records without recovering the credential. It is a field
+    rather than only a notice so a machine caller can branch on it.
+
+    No password, recovery phrase, key material or wrapper bytes enter this
+    payload.
+    """
+
+    profile_id: ProfileId
+    label: str
+    authority: ProfileRestoreAuthority
+    recovery_enrolled: bool
+    password_unchanged: bool
 
 
 @register_schema("config.passphrase.change")

@@ -7,10 +7,6 @@ import json
 import pytest
 
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from .....adapters.persistence.storage import (
-    activate_master_key_provider,
-    get_master_key_provider,
-)
 from .....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .....application.workflow import WorkflowState, workflow_state_repository
 from .....domain.buckets import BucketEventType
@@ -43,8 +39,7 @@ def _seed_workflow_state() -> None:
 
 
 def _row_exists() -> bool:
-    with activate_master_key_provider(get_master_key_provider()):
-        return secure_object_repository_for_active_bucket().exists("cadrumo.workflow", "state")
+    return secure_object_repository_for_active_bucket().exists("cadrumo.workflow", "state")
 
 
 def _assert_operator_text_avoids_storage_terms(output: str) -> None:
@@ -73,8 +68,7 @@ def test_reset_progress_help_uses_operator_progress_wording() -> None:
 def test_reset_progress_text_output_uses_operator_labels_not_storage_labels() -> None:
     _seed_workflow_state()
 
-    with activate_master_key_provider(get_master_key_provider()):
-        result = invoke_cached_cli(["config", "repair", "reset-progress", "--dry-run"])
+    result = invoke_cached_cli(["config", "repair", "reset-progress", "--dry-run"])
 
     assert result.exit_code == 0, result.output
     assert "progress_schema_version\t1" in result.output
@@ -86,8 +80,7 @@ def test_reset_progress_text_output_uses_operator_labels_not_storage_labels() ->
 def test_reset_progress_dry_run_returns_fingerprint_without_deleting_row() -> None:
     _seed_workflow_state()
 
-    with activate_master_key_provider(get_master_key_provider()):
-        result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-progress", "--dry-run"])
+    result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-progress", "--dry-run"])
 
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
@@ -115,11 +108,9 @@ def test_reset_progress_without_yes_or_dry_run_raises_refusal_and_keeps_row() ->
 
 def test_reset_progress_with_yes_deletes_row_emits_event_and_reload_is_empty() -> None:
     _seed_workflow_state()
-    with activate_master_key_provider(get_master_key_provider()):
-        history_before = len(BucketEventHistoryRepository().load().events)
+    history_before = len(BucketEventHistoryRepository().load().events)
 
-    with activate_master_key_provider(get_master_key_provider()):
-        result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-progress", "--yes"])
+    result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-progress", "--yes"])
 
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
@@ -133,15 +124,14 @@ def test_reset_progress_with_yes_deletes_row_emits_event_and_reload_is_empty() -
 
     assert not _row_exists()
 
-    with activate_master_key_provider(get_master_key_provider()):
-        catalogue = BucketEventHistoryRepository().load()
-        reset_events = [
-            event for event in catalogue.events.values() if event.event_type is BucketEventType.WORKFLOW_STATE_RESET
-        ]
-        assert len(reset_events) == 1
-        assert len(catalogue.events) == history_before + 1
+    catalogue = BucketEventHistoryRepository().load()
+    reset_events = [
+        event for event in catalogue.events.values() if event.event_type is BucketEventType.WORKFLOW_STATE_RESET
+    ]
+    assert len(reset_events) == 1
+    assert len(catalogue.events) == history_before + 1
 
-        reloaded = workflow_state_repository().load()
+    reloaded = workflow_state_repository().load()
     fresh = WorkflowState()
     assert reloaded.model_dump(exclude={"updated_at"}) == fresh.model_dump(exclude={"updated_at"})
 

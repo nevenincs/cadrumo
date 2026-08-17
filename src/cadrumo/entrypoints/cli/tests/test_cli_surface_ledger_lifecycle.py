@@ -110,10 +110,6 @@ def _drive_ledger_lifecycle_round_trip(tmp_path: Path) -> _LedgerLifecycleOutcom
 def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
     """Persist one RECEIVED purchase invoice and return its id."""
     from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-    from ....adapters.persistence.storage import (
-        activate_master_key_provider,
-        get_master_key_provider,
-    )
     from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
     from ....domain.iva import InvoiceKind
 
@@ -142,8 +138,7 @@ def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
             "payment_status": PaymentStatus.PAID,
         },
     )
-    with activate_master_key_provider(get_master_key_provider()):
-        InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
+    InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     return purchase_evidence.invoice_id
 
 

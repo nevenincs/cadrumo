@@ -257,7 +257,7 @@ def test_label_provenance_is_uuid_bound_revisioned_and_cas_replaced(tmp_path: Pa
         password_envelope=envelope,
         sentinel=sentinel,
         data_files=data_files,
-        initial_record=UserProfileRecord(profile_id=str(_PROFILE_ID)),
+        initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=str(_PROFILE_ID)),
         record_session=session,
     )
     initial = load_committed_profile_custody_label_record(_PROFILE_ID, root=tmp_path)
@@ -302,7 +302,7 @@ def test_label_provenance_refuses_substitution_and_serializes_real_rename_collis
             password_envelope=envelope,
             sentinel=sentinel,
             data_files=data_files,
-            initial_record=UserProfileRecord(profile_id=str(profile_id)),
+            initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=str(profile_id)),
             record_session=session,
         )
         profiles.append((profile_id, lifecycle, load_committed_profile_custody_label_record(profile_id, root=tmp_path)))
@@ -347,7 +347,7 @@ def test_locked_label_read_refuses_a_fresh_canonical_same_uuid_substitution(tmp_
         password_envelope=envelope,
         sentinel=sentinel,
         data_files=data_files,
-        initial_record=UserProfileRecord(profile_id=str(_PROFILE_ID)),
+        initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=str(_PROFILE_ID)),
         record_session=session,
     )
     original = load_committed_profile_custody_label_record(_PROFILE_ID, root=tmp_path)
@@ -373,7 +373,7 @@ def test_real_crash_between_label_and_head_recovers_the_durable_advance(tmp_path
         password_envelope=envelope,
         sentinel=sentinel,
         data_files=data_files,
-        initial_record=UserProfileRecord(profile_id=str(_PROFILE_ID)),
+        initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=str(_PROFILE_ID)),
         record_session=session,
     )
     before = CommittedProfileRepository(root=tmp_path).load(_PROFILE_ID)
