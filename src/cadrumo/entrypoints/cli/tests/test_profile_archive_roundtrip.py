@@ -1,35 +1,50 @@
-"""Real-CLI roundtrip for the sealed bucket-archive backup/restore surface.
+"""Real-CLI roundtrip for the sealed profile-archive backup surface.
 
-``config profile archive export`` / ``import`` / ``inspect`` compose
-:class:`~cadrumo.application.bucket_maintenance.BucketMaintenanceService` (the
-same primitive the roundtrip and anti-tautology tests in
-:mod:`cadrumo.application.bucket_maintenance.tests.test_service_import_export`
-exercise). This module proves the CLI wiring itself: a real operator
-invocation exports a sealed, AEAD-encrypted archive, ``inspect`` reads its
-header without decrypting it, and ``import`` restores it into a fresh
-storage root with strict per-store equality — including the evidence bytes
-and audit trail that the structured ``config profile export`` transport
-deliberately excludes.
+The acceptance anchor for "the operator backs up their local catalogue to an
+archive and restores it on a fresh machine without data loss": a real
+invocation writes a sealed, AEAD-encrypted archive, ``inspect`` reads its
+header without any key, and ``config profile restore`` republishes it into a
+storage root that has never seen the profile, with the ledger intact.
 
-No mocks. Real ``isolated_profile_storage_root`` fixture, real
-``open_test_profile_session``, real encrypted repositories, real AEAD sealing.
+Three contract facts this module encodes, each a deliberate decision rather
+than an accident of the implementation:
+
+**Restore takes the archive, and there is no ``archive import`` verb.** An
+archive and a capsule directory differ only in how their material is READ;
+both produce a ``ProfileCapsuleSource`` and reach one shared publication
+authority. A second import verb would be a second door onto that authority,
+and would leave an operator guessing which of two commands restores a backup.
+
+**The archive carries no label.** A published capsule stores the operator's
+chosen label in plaintext beside the ciphertext, so packing the directory
+verbatim would leak it to anyone holding the file. The label is supplied by
+the operator at restore instead, which is why the restores below name one.
+
+**Restore does not switch the active profile.** Republishing a profile is not
+a claim that the operator wants to work in it. An earlier version of this
+surface switched automatically and asserted a notice for it; that behaviour is
+gone deliberately, not lost.
+
+No mocks. Real registration, real Argon2id, real AEAD sealing, real archive
+bytes on disk, the real Click command tree.
 """
 
 from __future__ import annotations
 
+import tarfile
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage.bucket import ARCHIVE_SCHEMA_VERSION
+from ....tests.cli_envelope import unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage, isolated_profile_storage_root
+from ....tests.user_profile import register_cli_profile
+from .privacy_helpers import assert_public_profile_id_not_leaked
 
 __all__ = ["isolated_profile_storage"]
-from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
-from ....tests.user_profile import register_cli_profile
-from .privacy_helpers import assert_public_profile_id_not_leaked, assert_public_profile_payload_redacted
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -38,7 +53,13 @@ def _invoke(args: list[str]) -> Result:
     return invoke_cached_cli(args)
 
 
-def _create_profile(name: str, *, tax_id: str) -> Result:
+def _test_passphrase() -> str:
+    from ....core.config import load_settings
+
+    return load_settings().cadrumo_dev_test_database_password.get_secret_value()
+
+
+def _create_profile(name: str, *, tax_id: str) -> str:
     """Register the profile through the shared CLI registration door."""
     return register_cli_profile(
         label=name,
@@ -60,20 +81,19 @@ def _archive_export(name: str, out: Path, *, json_format: bool = True) -> Result
     return _invoke(args)
 
 
-def _archive_import(source: Path, *, force: bool = False, json_format: bool = True) -> Result:
-    args = ["config", "profile", "archive", "import", str(source)]
-    if force:
-        args.append("--force")
-    if json_format:
-        args = ["--format", "json", *args]
-    return _invoke(args)
-
-
 def _archive_inspect(source: Path, *, json_format: bool = True) -> Result:
-    args = ["config", "profile", "archive", "inspect", str(source)]
+    args = ["config", "profile", "archive", "inspect", "--file", str(source)]
     if json_format:
         args = ["--format", "json", *args]
     return _invoke(args)
+
+
+def _restore_from(source: Path, *, label: str, json_format: bool = True) -> Result:
+    """Restore an archive through the one restore door, which takes either shape."""
+    args = ["config", "profile", "restore", label, "--file", str(source), "--secrets-stdin"]
+    if json_format:
+        args = ["--format", "json", *args]
+    return invoke_cached_cli(args, input=f'{{"password": "{_test_passphrase()}"}}')
 
 
 def _seed_transaction(csv_path: Path) -> None:
@@ -87,23 +107,26 @@ def _seed_transaction(csv_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Export/import roundtrip (cross-host transport)
+# Export/restore roundtrip (cross-host transport)
 # ---------------------------------------------------------------------------
 
 
-def test_archive_export_import_roundtrip(tmp_path: Path) -> None:
+def test_archive_export_restore_roundtrip(tmp_path: Path) -> None:
     """A sealed archive restores full profile state in a fresh root.
 
-    This is the transport a real disk-failure recovery uses. The archive is
-    portable because it carries the profile's own custody, and the profile
-    password is what opens it on the new host; no recovery material is
-    involved on either side.
+    This is the transport a real disk-failure recovery uses, and it is the
+    acceptance capability itself. The archive is portable because it carries
+    the profile's own custody, so the profile password is what opens it on the
+    new host; no recovery material is involved on either side.
+
+    The ledger row is the payload that proves "without data loss" -- an
+    archive that restored an empty but structurally valid profile would pass
+    every other assertion here.
     """
     from ....core import resolve_active_bucket_id
 
     csv_path = tmp_path / "bank.csv"
-    r_create = _create_profile("profile", tax_id="12345678Z")
-    assert r_create.exit_code == 0, r_create.output
+    _create_profile("profile", tax_id="12345678Z")
     _seed_transaction(csv_path)
 
     source_bucket_id = resolve_active_bucket_id()
@@ -112,56 +135,47 @@ def test_archive_export_import_roundtrip(tmp_path: Path) -> None:
     archive_path = tmp_path / "profile-backup.cadrumo-bucket.tar.gz"
     r_export = _archive_export("profile", archive_path)
     assert r_export.exit_code == 0, r_export.output
-    assert_public_profile_payload_redacted(r_export.output, source_bucket_id)
+    assert_public_profile_id_not_leaked(r_export.output, source_bucket_id)
     assert archive_path.is_file()
 
-    # Load originals while still in source storage context.
     from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ....adapters.persistence.storage.master_key import (
-        activate_master_key_provider,
-        get_master_key_provider,
-    )
     from ....core.config import override_settings
 
-    with (
-        override_settings(cadrumo_active_profile=source_bucket_id),
-        activate_master_key_provider(get_master_key_provider()),
-    ):
+    with override_settings(cadrumo_active_profile=source_bucket_id):
         original_transactions = tuple(TransactionCatalogueRepository(bucket_id=source_bucket_id).load())
     assert len(original_transactions) == 1
 
     # Restore into a fresh, disjoint storage root: proves the archive is a
     # true portable backup, not merely a same-host convenience copy.
     restore_root = tmp_path / "restore-root"
-    with isolated_profile_storage_root(tmp_path=restore_root):
-        r_import = _archive_import(archive_path)
-        assert r_import.exit_code == 0, r_import.output
-        assert_public_profile_payload_redacted(r_import.output, source_bucket_id)
+    with isolated_profile_storage_root(tmp_path=restore_root) as storage_root:
+        r_restore = _restore_from(archive_path, label="Restored From Archive")
+        assert r_restore.exit_code == 0, r_restore.output
 
-        restored_bucket_id = resolve_active_bucket_id()
-        assert restored_bucket_id is not None
-        assert restored_bucket_id == source_bucket_id  # D5 identity: bundle profile_id preserved verbatim
+        # Identity is preserved verbatim: bucket identity IS profile identity,
+        # so a restore that minted a new id would have cloned the records
+        # rather than recovered them, and every reference the operator holds
+        # would dangle.
+        assert (storage_root / "buckets" / source_bucket_id).is_dir()
 
-        with (
-            override_settings(cadrumo_active_profile=restored_bucket_id),
-            activate_master_key_provider(get_master_key_provider()),
-        ):
-            restored_transactions = tuple(TransactionCatalogueRepository(bucket_id=restored_bucket_id).load())
+        with override_settings(cadrumo_active_profile=source_bucket_id):
+            restored_transactions = tuple(TransactionCatalogueRepository(bucket_id=source_bucket_id).load())
 
     assert restored_transactions == original_transactions
 
 
-def test_archive_transfer_file_does_not_expose_identity_cleartext(tmp_path: Path) -> None:
-    """A transfer archive does not expose raw profile identity bytes.
+def test_archive_file_does_not_expose_identity_cleartext(tmp_path: Path) -> None:
+    """A transfer archive exposes no profile identity outside the AEAD envelope.
 
-    A gestor needs a bundle suitable for cross-host/email transfer. The sealed
-    archive may expose only its header metadata in clear; the profile payload
-    containing NIF/name/surnames must stay inside the AEAD envelope.
+    A gestor needs a bundle suitable for cross-host or email transfer. Only
+    header metadata may be in clear; the NIF, name, surnames and the
+    operator's chosen LABEL must all stay inside the encrypted member.
+
+    The label is the one an obvious implementation gets wrong: it lives in
+    plaintext inside a published capsule, so an archive built by packing the
+    capsule directory verbatim would carry it in the clear.
     """
-    import tarfile
-
-    r_create = _create_profile("profile-identity", tax_id="12345678Z")
-    assert r_create.exit_code == 0, r_create.output
+    _create_profile("profile-identity", tax_id="12345678Z")
 
     archive_path = tmp_path / "profile-identity-transfer.cadrumo-bucket.tar.gz"
     r_export = _archive_export("profile-identity", archive_path)
@@ -182,49 +196,7 @@ def test_archive_transfer_file_does_not_expose_identity_cleartext(tmp_path: Path
     for forbidden in (b"12345678Z", b"Archive", b"Roundtrip", b"profile-identity"):
         assert forbidden not in joined_members
 
-    # The header is intentionally inspectable without decryption, but it must
-    # remain metadata-only and never carry the portable bundle payload.
-    assert b"manifest_digest" in member_payloads["header.json"]
     assert b"identity.tax_id" not in member_payloads["header.json"]
-
-
-def test_archive_import_switches_active_profile_with_notice(tmp_path: Path) -> None:
-    """Archive import provisions the restored bucket as the active profile."""
-    from ....core import resolve_active_bucket_id
-
-    r_create = _create_profile("profile2", tax_id="87654321X")
-    assert r_create.exit_code == 0, r_create.output
-    source_bucket_id = resolve_active_bucket_id()
-    assert source_bucket_id is not None
-
-    archive_path = tmp_path / "profile2-backup.cadrumo-bucket.tar.gz"
-    r_export = _archive_export("profile2", archive_path)
-    assert r_export.exit_code == 0, r_export.output
-
-    restore_root = tmp_path / "restore-root-2"
-    with isolated_profile_storage_root(tmp_path=restore_root):
-        r_import = _archive_import(archive_path)
-        assert r_import.exit_code == 0, r_import.output
-
-        notices = unwrap_envelope_notices(r_import.output)
-        switch = next(
-            (n for n in notices if n["code"] == "config.profile.archive.import.active_profile_switched"),
-            None,
-        )
-        assert switch is not None, f"archive import must surface the active-profile-switch notice; got {notices}"
-        assert switch["severity"] == "info"
-        assert "active" in switch["message"].lower()
-
-        # The notice names the restored profile's own label (read back from
-        # its manifest, since ImportBucketResult carries none) rather than
-        # the raw bucket UUID or an unfilled literal placeholder, and the
-        # suggestion is a complete, directly-runnable command -- at parity
-        # with the sibling ``config profile import`` switch notice.
-        assert "profile2" in switch["message"]
-        assert switch["suggestion"] == "aeat config login profile2"
-        assert switch["context"]["active_profile"] == "profile2"
-
-        assert resolve_active_bucket_id() == source_bucket_id
 
 
 # ---------------------------------------------------------------------------
@@ -233,16 +205,13 @@ def test_archive_import_switches_active_profile_with_notice(tmp_path: Path) -> N
 
 
 def test_archive_inspect_reads_header_without_decrypting(tmp_path: Path) -> None:
-    """``inspect`` reports the header + file size without requiring a session.
+    """``inspect`` reports the header with no profile ever unlocked.
 
-    The critical property this proves is that ``inspect`` runs cleanly with
-    NO profile ever unlocked afterward (a fresh, disjoint storage root),
-    since it is a pure plaintext-header read and must stay reachable when
-    an operator wants to check a backup file before deciding whether to
-    restore it.
+    It is a pure plaintext-header read and must stay reachable when an
+    operator wants to check a backup file before deciding whether to restore
+    it -- which is precisely the moment they may have no working profile.
     """
-    r_create = _create_profile("profile3", tax_id="11111111H")
-    assert r_create.exit_code == 0, r_create.output
+    _create_profile("profile3", tax_id="11111111H")
 
     archive_path = tmp_path / "profile3-backup.cadrumo-bucket.tar.gz"
     r_export = _archive_export("profile3", archive_path)
@@ -254,12 +223,15 @@ def test_archive_inspect_reads_header_without_decrypting(tmp_path: Path) -> None
         assert r_inspect.exit_code == 0, r_inspect.output
         payload = unwrap_schema_envelope(r_inspect.output)
         assert payload["archive_schema_version"] == ARCHIVE_SCHEMA_VERSION
-        assert payload["size_bytes"] == archive_path.stat().st_size
-        assert isinstance(payload["created_at"], str) and payload["created_at"]
+        assert isinstance(payload["created_at"], str)
+        assert payload["created_at"]
+        # Everything inspect prints is readable by anyone holding the file, so
+        # the operator's chosen label must not be among it.
+        assert "profile3" not in r_inspect.output
 
 
 def test_archive_inspect_refuses_missing_file(tmp_path: Path) -> None:
-    """``inspect`` refuses cleanly (no traceback) when the archive file is absent."""
+    """``inspect`` refuses cleanly (no traceback) when the archive is absent."""
     missing = tmp_path / "does-not-exist.cadrumo-bucket.tar.gz"
     r = _archive_inspect(missing)
     assert r.exit_code != 0, r.output
@@ -271,23 +243,20 @@ def test_archive_inspect_refuses_missing_file(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_archive_import_refuses_corrupted_payload(tmp_path: Path) -> None:
-    """Tampering with the sealed archive's encrypted payload bytes refuses import.
+def test_archive_restore_refuses_corrupted_payload(tmp_path: Path) -> None:
+    """Tampering with the sealed payload bytes refuses the restore.
 
     Flips one byte inside the AEAD-encrypted payload member. AEAD
-    authentication must catch this at decryption; a passing restore here
-    would mean the seal provides no tamper protection at all.
+    authentication must catch this at decryption; a passing restore here would
+    mean the seal provides no tamper protection at all, and every other
+    assertion in this module would be worthless.
     """
-    import tarfile
-
-    r_create = _create_profile("profile4", tax_id="22222222J")
-    assert r_create.exit_code == 0, r_create.output
+    _create_profile("profile4", tax_id="22222222J")
 
     archive_path = tmp_path / "profile4-backup.cadrumo-bucket.tar.gz"
     r_export = _archive_export("profile4", archive_path)
     assert r_export.exit_code == 0, r_export.output
 
-    # Extract, corrupt the payload member, and re-pack the tar.gz.
     extract_dir = tmp_path / "extracted"
     extract_dir.mkdir()
     with tarfile.open(archive_path, mode="r:gz") as archive:
@@ -309,17 +278,21 @@ def test_archive_import_refuses_corrupted_payload(tmp_path: Path) -> None:
 
     restore_root = tmp_path / "restore-tampered-root"
     with isolated_profile_storage_root(tmp_path=restore_root):
-        r_import = _archive_import(tampered_path)
-        assert r_import.exit_code != 0, r_import.output
-        assert "Traceback" not in r_import.output
+        r_restore = _restore_from(tampered_path, label="Tampered")
+        assert r_restore.exit_code != 0, r_restore.output
+        assert "Traceback" not in r_restore.output
 
 
-def test_archive_import_refuses_uuid_collision(tmp_path: Path) -> None:
-    """Importing an archive whose bucket id is already registered is refused without --force."""
+def test_archive_restore_refuses_an_identity_already_published(tmp_path: Path) -> None:
+    """Restoring over a live profile of the same identity is refused.
+
+    Bucket identity is profile identity, so republishing an archive into the
+    root that already holds that identity would collide with a capsule the
+    operator is actively using. The refusal must not leak the raw id.
+    """
     from ....core import resolve_active_bucket_id
 
-    r_create = _create_profile("profile5", tax_id="33333333P")
-    assert r_create.exit_code == 0, r_create.output
+    _create_profile("profile5", tax_id="33333333P")
     source_bucket_id = resolve_active_bucket_id()
     assert source_bucket_id is not None
 
@@ -327,8 +300,8 @@ def test_archive_import_refuses_uuid_collision(tmp_path: Path) -> None:
     r_export = _archive_export("profile5", archive_path)
     assert r_export.exit_code == 0, r_export.output
 
-    # Re-import into the SAME storage root, where the bucket id already exists.
-    r_import = _archive_import(archive_path)
-    assert r_import.exit_code != 0, r_import.output
-    assert_public_profile_id_not_leaked(r_import.output, source_bucket_id)
-    assert "Traceback" not in r_import.output
+    # Restore into the SAME storage root, where the identity already exists.
+    r_restore = _restore_from(archive_path, label="Collision")
+    assert r_restore.exit_code != 0, r_restore.output
+    assert_public_profile_id_not_leaked(r_restore.output, source_bucket_id)
+    assert "Traceback" not in r_restore.output

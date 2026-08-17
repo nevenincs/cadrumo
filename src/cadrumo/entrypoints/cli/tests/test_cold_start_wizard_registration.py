@@ -54,6 +54,15 @@ PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
 )
 """Taxonomy-vocabulary literals this module deliberately pins.
 
+These names outlived the code that wrote them, and that makes the assertions
+STRONGER rather than stale. The shared-master file store was retired, so no
+surviving path can create ``master.key``, ``master.kdf`` or
+``master.recovery.key`` at all: an assertion that they are absent used to mean
+"this flow did not write them" and now also means "nothing could have". Do not
+read these literals as leftovers of a deleted surface and sweep them -- the
+absence they pin is the point, and pinning it by literal is what keeps the
+check independent of the taxonomy accessors it is checking.
+
 ``_workspace_secret_store_fingerprint`` targets the real, shared dev-workspace
 secret store (``REPO_ROOT / "var" / "secrets"``), never a taxonomy accessor --
 that is the point of the fingerprint, which exists to catch a cold-process

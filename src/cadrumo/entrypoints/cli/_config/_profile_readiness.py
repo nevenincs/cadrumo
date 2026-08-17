@@ -89,12 +89,38 @@ def _emit_profile_record_unreadable(
 
 
 def _read_profile_record(*, profile_id: str, bucket_id: str):
-    """Read a profile record under a bucket session scoped to that profile."""
+    """Read a profile record under a bucket session scoped to that profile.
+
+    Resumes ``bucket_id``'s own persisted session when none is already
+    serving it. That is not a convenience: the root callback deliberately
+    returns early for a verb naming an explicit profile target, on the stated
+    ground that such a verb resolves and unlocks its OWN target rather than
+    being gated by an unrelated active-profile pointer. Resolving happened
+    here; unlocking never did.
+
+    The consequence was a resolution split rather than a missing record. In a
+    fresh interpreter the active-profile path was resumed by the root callback
+    and reported the record present with its keys, while the named-profile
+    path skipped that resume, found no session serving its bucket, and
+    reported the same record on the same disk as missing. Neither durability
+    nor the key digest was involved, which is why investigations framed around
+    those found nothing.
+
+    Resume goes through the single shared authority, so this path and the root
+    callback cannot drift: it is fail-closed, opens nothing on any refusal
+    branch, and returns a typed reason rather than a bare failure.
+    """
     from ....adapters.persistence.storage import active_bucket_session_serves
-    from ....application.user_profile import ProfileNotFoundError, ProfileRecordRepository
+    from ....application.user_profile import (
+        ProfileNotFoundError,
+        ProfileRecordRepository,
+        bind_resumed_profile_session,
+    )
 
     # Ask the bound session which bucket it serves; matching the pointer and
     # then checking only that SOME session exists leaves it unverified.
+    if not active_bucket_session_serves(bucket_id):
+        bind_resumed_profile_session(bucket_id=bucket_id)
     if active_bucket_session_serves(bucket_id):
         return ProfileRecordRepository.for_current_session(bucket_id).load(profile_id)
     raise ProfileNotFoundError("profile record requires its active authenticated custody session")

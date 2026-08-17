@@ -25,6 +25,7 @@ from .._common import _emit_envelope, resolve_cli_precondition_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._apoderado import apoderado_app, register_apoderado_commands
+from ._archive_cli import register_archive_commands
 from ._auth import auth_app
 from ._auth_diagnostics import auth_diagnostics_app
 from ._bucket_history import register_bucket_history_commands
@@ -48,6 +49,7 @@ from ._profile_readiness import _read_profile_record
 from ._repair_cli import register_repair_maintenance_commands
 from ._repair_profile import register_repair_profile_command
 from ._reset_cli import register_reset_commands
+from ._restore_cli import register_restore_commands
 from ._status_rendering import blocked_readiness_status as _blocked_readiness_status
 from ._status_rendering import precondition_action_lines as _precondition_action_lines
 from ._status_rendering import unavailable_profile_record_status as _unavailable_profile_record_status
@@ -446,6 +448,8 @@ register_repair_profile_command(
 )
 register_repair_maintenance_commands(repair_app)
 register_bucket_history_commands(profile_app)
+register_restore_commands(profile_app)
+register_archive_commands(profile_app, resolve_profile_by_label=_resolve_profile_by_label)
 _register_profile_delete_command(profile_app, resolve_profile_by_label=_resolve_profile_by_label)
 register_custody_commands(app)
 register_passphrase_commands(app)

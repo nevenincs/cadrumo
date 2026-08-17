@@ -19,7 +19,7 @@ from .....tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PASSPHRASE = "a-sufficiently-long-operator-passphrase"
+_PASSPHRASE = "a-sufficiently-long-operator-passphrase"  # noqa: S105 - synthetic test credential
 
 
 def _storage_overrides(tmp_path: Path, *, passphrase: str | None) -> dict[str, object]:

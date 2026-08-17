@@ -229,18 +229,13 @@ def _ledger_classify_transaction(transaction_id: str) -> dict[str, object]:
 def _seed_usage_ratio_for_telefonia(bucket_id: str) -> None:
     """Persist a usage-ratio profile so the next allocate verb can resolve TELEFONIA_MOVIL."""
     from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
-    from ....adapters.persistence.storage import (
-        activate_master_key_provider,
-        get_master_key_provider,
-    )
     from ....domain.categories import SpendingCategory
     from ....domain.usage_ratios import UsageRatioProfile
 
-    with activate_master_key_provider(get_master_key_provider()):
-        save_usage_ratios(
-            UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.60")}),
-            bucket_id=bucket_id,
-        )
+    save_usage_ratios(
+        UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.60")}),
+        bucket_id=bucket_id,
+    )
 
 
 def _ledger_allocate_transaction(transaction_id: str) -> dict[str, object]:
