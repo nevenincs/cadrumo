@@ -21,11 +21,11 @@ from typing import Final
 import pytest
 
 from ....adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
-from ....adapters.persistence.storage import get_master_key_provider
 from ....core import Period, require_active_bucket_id
 from ....core.config import load_settings
 from ....core.resources import resources
 from ....tests.live_gate import requires_live_enabled
+from ....tests.master_key import EphemeralMasterKeyProvider
 from ...calculations import IvaWalletDecisionRepository
 from ...modelo import ModeloIvaWalletReconciliationBlocked
 from ...modelo import apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding
@@ -46,7 +46,7 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
     """
 
     requires_live_enabled()
-    with get_master_key_provider():
+    with EphemeralMasterKeyProvider():
         bucket_id = require_active_bucket_id()
         taxpayer_nif = _active_profile_tax_id(bucket_id)
         if taxpayer_nif is None:

@@ -15,9 +15,7 @@ from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
 
-from pydantic import TypeAdapter
-
-from ...core.identity import BucketId
+from ...core.identity import canonical_bucket_id
 from ...core.logging import get_logger
 from ..categories import (
     SpendingCategory,
@@ -37,8 +35,6 @@ __all__ = [
 
 _LOGGER = get_logger(__name__)
 
-_BUCKET_ID: TypeAdapter[str] = TypeAdapter(BucketId)
-
 
 def _canonical_bucket_id(bucket_id: str) -> str:
     """Return ``bucket_id`` under the canonical :data:`~core.identity.BucketId` contract.
@@ -49,15 +45,18 @@ def _canonical_bucket_id(bucket_id: str) -> str:
     usage-ratio row and a lock target that no other bucket consumer would
     address the same way, fragmenting storage ownership for one profile.
 
+    The rule itself is not restated here. It lives beside the alias it
+    enforces, as :func:`~core.identity.canonical_bucket_id`; this wrapper only
+    translates the shared refusal into this domain's own error class, which is
+    exactly why the shared helper raises the plain builtin.
+
     Raises:
         UsageRatioPersistenceError: When ``bucket_id`` is blank after
             stripping or violates the canonical bound.
     """
-    from pydantic import ValidationError
-
     try:
-        return _BUCKET_ID.validate_python(bucket_id)
-    except ValidationError as exc:
+        return canonical_bucket_id(bucket_id)
+    except ValueError as exc:
         raise UsageRatioPersistenceError(
             "bucket_id must be a canonical bucket identifier: non-blank and at most 128 characters",
         ) from exc

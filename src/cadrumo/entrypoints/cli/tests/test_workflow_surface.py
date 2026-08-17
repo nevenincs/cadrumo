@@ -174,8 +174,6 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
         ],
     )
     assert declare_result.exit_code == 0, declare_result.output
-
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from ....application.workflow import read_profile_bucket
     from ....domain.user_profile import UserProfileFact
 
@@ -186,20 +184,16 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     operator_pointer = read_profile_bucket("operator")
     assert operator_pointer is not None, "config profile create did not register the 'operator' bucket"
     operator_profile_id = operator_pointer.bucket_id
+    set_active_test_profile_facts((UserProfileFact(path="preferences.output_language", value="en"),))
 
-    provider = get_master_key_provider()
-    with activate_master_key_provider(provider):
-        set_active_test_profile_facts((UserProfileFact(path="preferences.output_language", value="en"),))
-
-        with open_test_profile_session(operator_profile_id):
-            refreshed = load_test_profile_record(operator_profile_id)
-        assert fact_value(refreshed, "preferences.output_language") == "en"
+    with open_test_profile_session(operator_profile_id):
+        refreshed = load_test_profile_record(operator_profile_id)
+    assert fact_value(refreshed, "preferences.output_language") == "en"
 
     # `config profile status` reads the profile-bound secure store, needing an
     # active bucket session that the in-process test runner does not re-open per invoke
     # (#52 / master_key _active_session); hold the provider active across it.
-    with activate_master_key_provider(provider):
-        status_result = _invoke(["--format", "json", "config", "profile", "status"])
+    status_result = _invoke(["--format", "json", "config", "profile", "status"])
     assert status_result.exit_code == 0, status_result.output
     status_envelope = json.loads(_json_output(status_result))
     assert status_envelope["command"] == "config.profile.status"
@@ -209,40 +203,37 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     assert status_payload["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
     assert status_payload["iva_regime"] == "GENERAL"
 
-    with activate_master_key_provider(get_master_key_provider()):
-        state = workflow_state_repository().load()
-        assert state.active_profile_bucket_id() == operator_profile_id
-        with open_test_profile_session(operator_profile_id):
-            stored = load_test_profile_record(operator_profile_id)
-        assert fact_value(stored, "identity.tax_id") == "00000000T"
-        assert fact_value(stored, "preferences.output_language") == "en"
+    state = workflow_state_repository().load()
+    assert state.active_profile_bucket_id() == operator_profile_id
+    with open_test_profile_session(operator_profile_id):
+        stored = load_test_profile_record(operator_profile_id)
+    assert fact_value(stored, "identity.tax_id") == "00000000T"
+    assert fact_value(stored, "preferences.output_language") == "en"
 
     # overview calendar reads the profile-bound store for obligation derivation,
     # needing an active bucket session that the in-process test runner does not re-open
     # per invoke (#52 / master_key _active_session); hold the provider active.
-    with activate_master_key_provider(get_master_key_provider()):
-        calendar_result = _invoke(
-            [
-                "--format",
-                "json",
-                "app",
-                "overview",
-                "calendar",
-                "--from",
-                "2026-01-01",
-                "--to",
-                "2026-03-31",
-                "--allow-incomplete",
-            ],
-        )
+    calendar_result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2026-01-01",
+            "--to",
+            "2026-03-31",
+            "--allow-incomplete",
+        ],
+    )
     assert calendar_result.exit_code == 0, calendar_result.output
     calendar_envelope = json.loads(_json_output(calendar_result))
     assert calendar_envelope["command"] == "overview.calendar"
     calendar_payload = calendar_envelope["result"]
     assert "iva.regime" in calendar_payload["completeness"]["explicitly_set_keys"]
 
-    with activate_master_key_provider(get_master_key_provider()):
-        filing_profile = load_default_filing_profile()
+    filing_profile = load_default_filing_profile()
     assert filing_profile.tax_id == "00000000T"
 
 

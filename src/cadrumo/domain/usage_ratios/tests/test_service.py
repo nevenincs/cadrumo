@@ -16,7 +16,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ....adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
-from ....adapters.persistence.storage import Envelope, SensitivityClass
+from ....adapters.persistence.storage import Envelope, SensitivityClass, StorageRuntimeReadinessCode
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....core import StorageCategory, scan_directory, storage_path
 from ....core.identity import BucketId
@@ -122,11 +122,15 @@ def test_profiles_are_scoped_by_bucket(tmp_path: Path) -> None:
 def test_default_repository_refuses_bucket_route_mismatch() -> None:
     profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
 
-    with pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"):
-        save_usage_ratios(profile, bucket_id=_BUCKET_B_ID)
-
-    with pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"):
-        load_usage_ratios(bucket_id=_BUCKET_B_ID)
+    # Assert the TYPED readiness code, not rendered prose. ``str(exc)`` on this
+    # boundary is the translation key by design -- the operator-facing message
+    # is rendered downstream -- so a prose match here was matching the key and
+    # would pass equally on an absent session, which is a different refusal
+    # with a different remedy. The code discriminates them; prose cannot.
+    for call in (lambda: save_usage_ratios(profile, bucket_id=_BUCKET_B_ID), lambda: load_usage_ratios(bucket_id=_BUCKET_B_ID)):
+        with pytest.raises(StorageValidationError) as raised:
+            call()
+        assert raised.value.context["readiness_code"] == StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH.value
 
 
 def test_save_replaces_previous_payload(tmp_path: Path) -> None:
