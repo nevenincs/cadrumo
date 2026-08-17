@@ -1,0 +1,39 @@
+# Both surfaces are READ-ONLY and forbid every write verb, which is the standing
+# prohibition on live AEAT submission rather than a per-modelo choice: this
+# application builds, validates and exports, and the human files outside it.
+# Modelled on the sibling retenciones autoliquidaciones (modelos 111 and 115),
+# which declare the identical pair with the identical guard shape.
+[[revisions."2024-y-siguientes".live_cross_references]]
+id = "modelo-216-static-official"
+evidence_tier = "layout_authority"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-216-static-official"
+forbidden_actions = ["presentar", "firmar", "guardar", "pagar", "domiciliar", "modificar", "anular"]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1", "orden-eha-3290-2008:art-1"]
+source_refs = ["aeat-dr-216-2024"]
+
+[[revisions."2024-y-siguientes".live_cross_references]]
+id = "modelo-216-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-216-filed-declarations-read-only"
+allowed_hosts = ["www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-4", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]

@@ -1,0 +1,23 @@
+# Under-declaration advisory (no-silent-under-declaration). casilla
+# decl.numero-operadores is the count of intracomunitario operators the
+# declarant transacted with in the period and decl.importe-operaciones is the
+# total amount of those operations. Both are input_kind = "bound": this revision
+# declares 34 bindings and these totals arrive from them rather than from a
+# formula, so neither is derived from the other and their disagreement is a real
+# observation about the filing.
+#
+# A declaration naming operators while totalling zero is the shape that matters
+# here. Modelo 349 is recapitulative: AEAT cross-checks it against the VIES
+# declarations its counterparties file in other member states, so a zero total
+# against a non-zero operator count does not merely under-declare locally, it
+# desynchronises the Spanish side of a cross-border reconciliation.
+#
+# ADVISORY, not BLOCKING. implies_nonzero holds trivially when the antecedent is
+# at or below zero, so a period with no intracomunitarias never fires it. It
+# stays advisory because a bound total can legitimately be mid-aggregation when
+# the operator calculates, and because the operator, not this application, files.
+[[revisions."2020-y-siguientes".verification_predicates]]
+predicate_id = "modelo-349-importe-operaciones-cuando-operadores-declarados"
+expression = 'implies_nonzero(["decl.numero-operadores", "decl.importe-operaciones"])'
+finding_kind = "ADVISORY"
+legal_refs = ["orden-eha-769-2010:art-1", "rd-1624-1992:art-81", "ley-58-2003:art-93"]

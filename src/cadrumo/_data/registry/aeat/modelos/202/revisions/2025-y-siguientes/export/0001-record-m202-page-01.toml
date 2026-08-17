@@ -1,0 +1,680 @@
+[[revisions.2025-y-siguientes.export_layouts]]
+id = 'generated-modelo-202-2025-y-siguientes-fichero'
+
+[[revisions.2025-y-siguientes.export_layouts.records]]
+id = 'm202-page-01'
+record_type = 'page-01'
+order = 0
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f001'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f002'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '202'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f003'
+offset = 6
+length = 2
+kind = 'literal'
+literal = '01'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f004'
+offset = 8
+length = 4
+kind = 'literal'
+literal = '000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f005'
+offset = 12
+length = 1
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f006'
+offset = 13
+length = 1
+kind = 'header'
+producer_key = 'filing.result_disposition'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f007'
+offset = 14
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f008'
+offset = 23
+length = 60
+kind = 'header'
+producer_key = 'taxpayer.surnames_or_legal_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f009'
+offset = 83
+length = 20
+kind = 'header'
+producer_key = 'taxpayer.given_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f010'
+offset = 103
+length = 1
+kind = 'header'
+producer_key = 'm202.normativa_territorio_foral'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f011'
+offset = 104
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f012'
+offset = 108
+length = 2
+kind = 'draft'
+draft_attribute = 'period_code'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f013'
+offset = 110
+length = 8
+kind = 'draft'
+draft_attribute = 'period_start_date'
+data_type = 'date'
+required = false
+padding = 'none'
+justification = 'none'
+date_format = 'ddmmaaaa'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f014'
+offset = 118
+length = 4
+kind = 'header'
+producer_key = 'm202.cnae_actividad_principal'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f015'
+offset = 122
+length = 1
+kind = 'header'
+producer_key = 'm202.regimen.ley_49_2002_sin_fines_lucrativos'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f016'
+offset = 123
+length = 1
+kind = 'header'
+producer_key = 'm202.regimen.ley_11_2009_socimi'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f017'
+offset = 124
+length = 1
+kind = 'header'
+producer_key = 'm202.regimen.entidad_capital_riesgo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f018'
+offset = 125
+length = 1
+kind = 'header'
+producer_key = 'm202.regimen.entidades_navieras_tonelaje'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f019'
+offset = 126
+length = 1
+kind = 'header'
+producer_key = 'm202.regimen.articulo_101_lis_reducida_dimension'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f020'
+offset = 127
+length = 1
+kind = 'header'
+producer_key = 'm202.cifra_negocios_doce_meses_umbral'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f021'
+offset = 128
+length = 1
+kind = 'header'
+producer_key = 'm202.cooperativa_fiscalmente_protegida'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f022'
+offset = 129
+length = 1
+kind = 'header'
+producer_key = 'm202.marca_instrumental'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f023'
+offset = 130
+length = 1
+kind = 'header'
+producer_key = 'm202.cifra_negocios_periodo_anterior_bajo_umbral'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f024'
+offset = 131
+length = 1
+kind = 'header'
+producer_key = 'm202.multiples_tipos_impositivos'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f025'
+offset = 132
+length = 15
+kind = 'header'
+producer_key = 'm202.tipo_gravamen_impuesto_sociedades'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f026'
+offset = 147
+length = 1
+kind = 'header'
+producer_key = 'm202.importe_neto_cifra_negocios_tramo'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '0',
+    '1',
+    '2',
+    '3',
+]
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f027'
+offset = 148
+length = 1
+kind = 'header'
+producer_key = 'm202.discriminante_declaracion_negativa'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f028'
+offset = 149
+length = 17
+kind = 'casilla'
+casilla_id = '01'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f029'
+offset = 166
+length = 17
+kind = 'casilla'
+casilla_id = '02'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f030'
+offset = 183
+length = 17
+kind = 'casilla'
+casilla_id = '03'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f031'
+offset = 200
+length = 17
+kind = 'casilla'
+casilla_id = '04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f032'
+offset = 217
+length = 17
+kind = 'casilla'
+casilla_id = '05'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f033'
+offset = 234
+length = 17
+kind = 'casilla'
+casilla_id = '06'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f034'
+offset = 251
+length = 17
+kind = 'casilla'
+casilla_id = '67'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f035'
+offset = 268
+length = 17
+kind = 'casilla'
+casilla_id = '37'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f036'
+offset = 285
+length = 17
+kind = 'casilla'
+casilla_id = '07'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f037'
+offset = 302
+length = 17
+kind = 'casilla'
+casilla_id = '08'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f038'
+offset = 319
+length = 17
+kind = 'casilla'
+casilla_id = '38'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f039'
+offset = 336
+length = 17
+kind = 'casilla'
+casilla_id = '39'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f040'
+offset = 353
+length = 17
+kind = 'casilla'
+casilla_id = '13'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f041'
+offset = 370
+length = 17
+kind = 'casilla'
+casilla_id = '44'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f042'
+offset = 387
+length = 17
+kind = 'casilla'
+casilla_id = '14'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f043'
+offset = 404
+length = 17
+kind = 'casilla'
+casilla_id = '45'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f044'
+offset = 421
+length = 17
+kind = 'casilla'
+casilla_id = '46'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f045'
+offset = 438
+length = 251
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm202-2025.pagina01.f046'
+offset = 689
+length = 12
+kind = 'literal'
+literal = '</T20201000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2025']
+
+[revisions.2025-y-siguientes.export_layouts.records.row_field_casilla_ids]

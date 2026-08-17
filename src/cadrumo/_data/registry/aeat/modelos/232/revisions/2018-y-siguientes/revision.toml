@@ -65,3 +65,15 @@ source_refs = [
     "aeat-modelo-232-procedure",
     "boe-modelo-232-2017-form",
 ]
+
+
+[revisions."2018-y-siguientes".family_dispositions.verification_predicates]
+reason = "A verification predicate guards a CALCULATED result -- characteristically that a positive economic input did not resolve to a zero base or cuota. Modelo 232 calculates nothing: it declares calculation_class = 'informative', its formulas family is already dispositioned inapplicable on this revision, and none of its 53 casillas is computed or carries a base or cuota. It reports the existence and amount of operations with vinculadas and with paraisos fiscales so AEAT can select for transfer-pricing review; the tax consequence is settled on the declarant's own modelo 200. There is no computed result here for an implication to constrain."
+legal_refs = ["ley-27-2014:art-18", "rd-634-2015:art-13", "orden-hfp-816-2017:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018", "aeat-modelo-232-procedure", "boe-modelo-232-2017-form"]
+
+[revisions."2018-y-siguientes".family_dispositions.dependency_classifications]
+reason = "A dependency classification declares which OTHER modelo's filing a value here derives from, and modelo 232 derives from none. It reports the declarant's own operaciones vinculadas and paraiso-fiscal operations, read from its own accounts rather than folded in from another return. The relationship with modelo 200 runs the other way and is not a fold-in either: 200 settles the Impuesto sobre Sociedades in which those operations are valued, while 232 reports their existence separately for selection purposes, and neither takes its figures from the other. Inapplicable by this modelo's position rather than merely unpopulated."
+legal_refs = ["ley-27-2014:art-18", "rd-634-2015:art-13", "orden-hfp-816-2017:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018", "aeat-modelo-232-procedure", "boe-modelo-232-2017-form"]
+

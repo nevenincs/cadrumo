@@ -1,0 +1,24 @@
+# Under-declaration advisory (no-silent-under-declaration). casilla
+# decl.total-perceptores is the count of arrendadores the retenedor paid in the
+# year, input_kind = "bound" from this application's own records, while
+# decl.base-total is COPIED from a relation folding in modelo 115's annual base
+# (op = "copy" over relation modelo-180-rel-115-base-anual). The two therefore
+# come from genuinely different places -- one from the perceptor store, one from
+# the quarterly autoliquidaciones -- so a positive count against a zero base is a
+# real disagreement between them rather than an arithmetic identity.
+#
+# That disagreement is exactly what an annual resumen exists to expose: modelo
+# 180 is what AEAT reconciles the four modelo 115 filings against, so a resumen
+# naming arrendadores while folding in no base means either the quarterly chain
+# is incomplete or the perceptor records are, and both are worth an operator's
+# attention before filing.
+#
+# ADVISORY, not BLOCKING. implies_nonzero holds trivially when the antecedent is
+# at or below zero, so a retenedor with no arrendadores in the year never fires
+# it. It stays advisory because the relation fold-in can legitimately be
+# mid-population when the operator calculates, and because the operator files.
+[[revisions."2019-2022".verification_predicates]]
+predicate_id = "modelo-180-base-anual-cuando-perceptores-declarados"
+expression = 'implies_nonzero(["decl.total-perceptores", "decl.base-total"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "ley-35-2006:art-101"]

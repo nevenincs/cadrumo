@@ -21,9 +21,9 @@ section = ["did", "numero-de-cuenta-iban"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-did-numero-de-cuenta-iban"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.did.f006"]
 
 # AEAT campo: Devolución. SWIFT-BIC
 [[revisions."2015-2022".casillas]]
@@ -34,9 +34,9 @@ section = ["did", "devolucion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-did-devolucion-swift-bic"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.did.f007"]
 
 # AEAT campo: Renuncia a la devolución a favor del Tesoro Público
 [[revisions."2015-2022".casillas]]
@@ -47,9 +47,9 @@ section = ["did", "renuncia-a-la-devol-r-del-tesoro-publico"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-did-renuncia-a-la-devoluci-avor-del-tesoro-publico"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.did.f008"]
 
 # AEAT campo: Solicita la devolución por transferencia
 [[revisions."2015-2022".casillas]]
@@ -60,9 +60,9 @@ section = ["did", "solicita-la-devolucion-por-transferencia"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-did-solicita-la-devolucion-por-transferencia"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.did.f009"]
 
 # AEAT campo: Cuota cero
 [[revisions."2015-2022".casillas]]
@@ -73,6 +73,6 @@ section = ["did", "cuota-cero"]
 data_type = "text"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-did-cuota-cero"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.did.f010"]

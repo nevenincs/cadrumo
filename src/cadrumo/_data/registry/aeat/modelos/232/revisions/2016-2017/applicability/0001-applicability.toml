@@ -1,0 +1,7 @@
+[[revisions."2016-2017".applicability]]
+id = "m232-seed"
+applicable_entity_types = ["legal_entity"]
+applicable_reason = "Modelo 232 (declaracion informativa de operaciones vinculadas y de operaciones y situaciones relacionadas con paraisos fiscales): el contribuyente del Impuesto sobre Sociedades realiza operaciones con personas o entidades vinculadas en los terminos del articulo 18 de la Ley 27/2014, o mantiene operaciones o valores en paises o territorios calificados como paraisos fiscales, y queda obligado a informar de ellas conforme a la Orden HFP/816/2017."
+not_applicable_reason = "Modelo 232 no aplica: la obligacion informativa solo alcanza al contribuyente del Impuesto sobre Sociedades con operaciones vinculadas por encima de los umbrales del articulo 13.4 del RIS o con operaciones y situaciones relacionadas con paraisos fiscales."
+cuota_bearing = false
+legal_refs = ["ley-27-2014:art-18", "rd-634-2015:art-13", "orden-hfp-816-2017:art-1"]

@@ -69,3 +69,18 @@ source_refs = [
     "aeat-modelo-369-procedure",
     "boe-modelo-369-2021-form",
 ]
+
+[revisions."esquema-importacion".family_dispositions.parameters]
+reason = "A parameter holds a regulatory value a formula of this revision applies. Modelo 369 (regimen de importacion) applies none: its single formula sums the per-member-state cuota casillas into the scheme total, and a sum applies nothing. The VAT rate is the CONSUMING member state's own, applied when each country cuota is determined, and it arrives here already applied -- this declaration exists precisely to route amounts owed to other member states through the Spanish one-stop shop, not to compute them. Empty by the shape of this modelo's calculation rather than by omission."
+legal_refs = ["orden-hac-610-2021:art-1", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure"]
+
+[revisions."esquema-importacion".family_dispositions.dependency_classifications]
+reason = "A dependency classification declares which OTHER modelo's filing a value here derives from, and modelo 369 derives from none. Its per-member-state cuota casillas are input_kind bound, aggregated from the declarant's own OSS/IOSS sales records rather than folded in from another return. The reconciliation this declaration feeds runs OUTWARD to the consuming member states through the one-stop-shop mechanism, not inward from a Spanish modelo: the IVA operations it reports are excluded from the ordinary modelo 303 liquidacion rather than derived from it. Inapplicable by this modelo's position rather than merely unpopulated."
+legal_refs = ["orden-hac-610-2021:art-1", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure"]
+
+[revisions."esquema-importacion".family_dispositions.verification_predicates]
+reason = "A verification predicate asserts an implication between two figures that can independently disagree. This revision offers no such pair. Measured on it: every input casilla is a per-member-state cuota (input_kind bound) and the only computed casilla is their arithmetic sum, so any implication between a component and the total would hold by the addition itself and assert nothing but that the engine added correctly -- the tautology this campaign already refused on modelo 115's base-to-retencion pairing. There is no activity, count or base casilla here that could disagree with a cuota: the scheme total IS the declaration. The under-declaration risk is real but lives where the cuotas are determined, in the OSS sales records the bindings read, not in a relation between two casillas of this revision."
+legal_refs = ["orden-hac-610-2021:art-1", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure"]

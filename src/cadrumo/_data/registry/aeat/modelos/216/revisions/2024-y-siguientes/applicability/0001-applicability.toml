@@ -1,0 +1,8 @@
+[[revisions."2024-y-siguientes".applicability]]
+id = "m216-seed"
+applicable_entity_types = ["attribution_entity", "legal_entity", "natural_person"]
+required_payer_fact = "pays_withheld_income"
+applicable_reason = "Modelo 216 (IRNR, retenciones e ingresos a cuenta): el declarante satisface rentas sujetas al Impuesto sobre la Renta de no Residentes obtenidas sin establecimiento permanente y autoliquida las retenciones e ingresos a cuenta practicados sobre ellas."
+not_applicable_reason = "Modelo 216 no aplica: la autoliquidacion de retenciones del IRNR solo corresponde a quien satisface rentas a contribuyentes sin establecimiento permanente sujetas a retencion o ingreso a cuenta."
+cuota_bearing = true
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1", "orden-hac-56-2024:art-1"]

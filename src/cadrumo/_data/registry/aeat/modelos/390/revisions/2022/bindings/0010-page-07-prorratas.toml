@@ -1,0 +1,216 @@
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.12-12.indicador-de-pagina-complementaria"
+source = "manual_input"
+selector = { record = "page_7", field = "indicador-de-pagina-complementaria", offset = 12, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.200-239.prorratas-1-actividad-desarrollada"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-1-actividad-desarrollada", offset = 200, length = 40, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.240-242.prorratas-1-codigo-cnae"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-1-codigo-cnae", offset = 240, length = 3, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.243-259.prorratas-1-importe-de-operaciones"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-1-importe-de-operaciones", offset = 243, length = 17, data_type = "money", signed = false }
+legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.260-276.prorratas-1-importe-de-operaciones-con-derecho-a-deduccion"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-1-importe-de-operaciones-con-derecho-a-deduccion", offset = 260, length = 17, data_type = "money", signed = false }
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.277-277.prorratas-1-tipo-de-prorrata"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-1-tipo-de-prorrata", offset = 277, length = 1, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.278-282.prorratas-1-porcentaje-de-prorrata"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-1-porcentaje-de-prorrata", offset = 278, length = 5, data_type = "decimal", decimals = 2, signed = false }
+legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.283-322.prorratas-2-actividad-desarrollada"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-2-actividad-desarrollada", offset = 283, length = 40, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.323-325.prorratas-2-codigo-cnae"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-2-codigo-cnae", offset = 323, length = 3, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.326-342.prorratas-2-importe-de-operaciones"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-2-importe-de-operaciones", offset = 326, length = 17, data_type = "money", signed = false }
+legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.343-359.prorratas-2-importe-de-operaciones-con-derecho-a-deduccion"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-2-importe-de-operaciones-con-derecho-a-deduccion", offset = 343, length = 17, data_type = "money", signed = false }
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.360-360.prorratas-2-tipo-de-prorrata"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-2-tipo-de-prorrata", offset = 360, length = 1, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.361-365.prorratas-2-porcentaje-de-prorrata"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-2-porcentaje-de-prorrata", offset = 361, length = 5, data_type = "decimal", decimals = 2, signed = false }
+legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.366-405.prorratas-3-actividad-desarrollada"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-3-actividad-desarrollada", offset = 366, length = 40, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.406-408.prorratas-3-codigo-cnae"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-3-codigo-cnae", offset = 406, length = 3, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.409-425.prorratas-3-importe-de-operaciones"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-3-importe-de-operaciones", offset = 409, length = 17, data_type = "money", signed = false }
+legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.426-442.prorratas-3-importe-de-operaciones-con-derecho-a-deduccion"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-3-importe-de-operaciones-con-derecho-a-deduccion", offset = 426, length = 17, data_type = "money", signed = false }
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.443-443.prorratas-3-tipo-de-prorrata"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-3-tipo-de-prorrata", offset = 443, length = 1, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.444-448.prorratas-3-porcentaje-de-prorrata"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-3-porcentaje-de-prorrata", offset = 444, length = 5, data_type = "decimal", decimals = 2, signed = false }
+legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.449-488.prorratas-4-actividad-desarrollada"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-4-actividad-desarrollada", offset = 449, length = 40, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.489-491.prorratas-4-codigo-cnae"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-4-codigo-cnae", offset = 489, length = 3, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.492-508.prorratas-4-importe-de-operaciones"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-4-importe-de-operaciones", offset = 492, length = 17, data_type = "money", signed = false }
+legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.509-525.prorratas-4-importe-de-operaciones-con-derecho-a-deduccion"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-4-importe-de-operaciones-con-derecho-a-deduccion", offset = 509, length = 17, data_type = "money", signed = false }
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.526-526.prorratas-4-tipo-de-prorrata"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-4-tipo-de-prorrata", offset = 526, length = 1, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.527-531.prorratas-4-porcentaje-de-prorrata"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-4-porcentaje-de-prorrata", offset = 527, length = 5, data_type = "decimal", decimals = 2, signed = false }
+legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.532-571.prorratas-5-actividad-desarrollada"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-5-actividad-desarrollada", offset = 532, length = 40, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.572-574.prorratas-5-codigo-cnae"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-5-codigo-cnae", offset = 572, length = 3, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-101", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.575-591.prorratas-5-importe-de-operaciones"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-5-importe-de-operaciones", offset = 575, length = 17, data_type = "money", signed = false }
+legal_refs = ["ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.592-608.prorratas-5-importe-de-operaciones-con-derecho-a-deduccion"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-5-importe-de-operaciones-con-derecho-a-deduccion", offset = 592, length = 17, data_type = "money", signed = false }
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-94", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.609-609.prorratas-5-tipo-de-prorrata"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-5-tipo-de-prorrata", offset = 609, length = 1, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-103", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-2022.page_7.610-614.prorratas-5-porcentaje-de-prorrata"
+source = "manual_input"
+selector = { record = "page_7", field = "prorratas-5-porcentaje-de-prorrata", offset = 610, length = 5, data_type = "decimal", decimals = 2, signed = false }
+legal_refs = ["ley-37-1992:art-103", "ley-37-1992:art-104", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2022"]

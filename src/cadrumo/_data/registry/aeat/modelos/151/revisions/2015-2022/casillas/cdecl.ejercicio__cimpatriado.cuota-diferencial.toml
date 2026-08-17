@@ -40,9 +40,9 @@ continuidad_id = "impatriado-base-liquidable-general"
 required = false
 input_kind = "bound"
 binding = "modelo-151-impatriado-base-liquidable-general"
-export_refs = ["modelo-151-2015-p08-base-liquidable-general-17"]
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+export_refs = ["m151-2015.pagina08.f040"]
 
 [[revisions."2015-2022".casillas]]
 id = "impatriado.cuota-integra-general"
@@ -54,9 +54,9 @@ continuidad_id = "impatriado-cuota-integra-general"
 required = false
 input_kind = "computed"
 formula = "modelo-151-cuota-integra-general"
-export_refs = ["modelo-151-2015-p08-cuota-correspondiente-e-liquidable-general-19"]
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+export_refs = ["m151-2015.pagina08.f042"]
 
 [[revisions."2015-2022".casillas]]
 id = "impatriado.retenciones"
@@ -67,10 +67,18 @@ semantic_role = "impatriado_retenciones"
 continuidad_id = "impatriado-retenciones"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-retencion-e-ingresos-a-cuenta-33"]
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+export_refs = ["m151-2015.pagina08.f056"]
 
+# Cuota integra general menos retenciones. AEAT's Diseno de Registros has no
+# position for this figure: pagina 8 goes from cuota liquida and 'Retencion e
+# ingresos a cuenta [33]' straight to 'Resultado de la declaracion [43]', and
+# box 43 is a LATER figure that also nets the results of previous declarations
+# [41] and refunds already agreed by the Administracion [42]. So this is the
+# intermediate between them, materialised as a casilla because the revision's
+# verification expectation reconciles against it. It files no slot because the
+# design prints none, not because one was overlooked.
 [[revisions."2015-2022".casillas]]
 id = "impatriado.cuota-diferencial"
 number = "impatriado.cuota-diferencial"
@@ -80,5 +88,6 @@ semantic_role = "impatriado_cuota_diferencial"
 required = false
 input_kind = "computed"
 formula = "modelo-151-cuota-diferencial"
+export_exemption_reason = "not_in_record_design"
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]

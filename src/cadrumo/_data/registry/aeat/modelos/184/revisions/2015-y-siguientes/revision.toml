@@ -22,6 +22,15 @@ source_refs = [
     "aeat-modelo-184-procedure",
     "boe-modelo-184-2015-form",
 ]
+# Prepared and reviewed by an agent against the bundled diseño de registros and
+# the ordenes it cites; NO human operator has countersigned it, and
+# 'agent_reviewed' plus this reviewer token record that state honestly rather
+# than claiming the operator's own sign-off. An operator re-stamping this to
+# 'operator_reviewed' is what promotes the revision to a countersigned filing
+# grade.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-16
 
 
 [revisions."2015-y-siguientes".family_dispositions.casilla_continuidad_evolutions]

@@ -1,0 +1,377 @@
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.109-109.sujeto-pasivo-registro-de-devolucion-mensual"
+source = "manual_input"
+selector = { record = "page_1", field = "sujeto-pasivo-registro-de-devolucion-mensual", offset = 109, length = 1, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-116", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-30", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.110-110.sujeto-pasivo-regimen-especial-del-grupo-de-entidades"
+source = "manual_input"
+selector = { record = "page_1", field = "sujeto-pasivo-regimen-especial-del-grupo-de-entidades", offset = 110, length = 1, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-163-quinquies", "ley-37-1992:art-163-sexies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.111-117.sujeto-pasivo-numero-de-grupo"
+source = "manual_input"
+selector = { record = "page_1", field = "sujeto-pasivo-numero-de-grupo", offset = 111, length = 7, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-quinquies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.118-118.sujeto-pasivo-dominante"
+source = "manual_input"
+selector = { record = "page_1", field = "sujeto-pasivo-dominante", offset = 118, length = 1, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-quinquies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.119-119.sujeto-pasivo-dependiente"
+source = "manual_input"
+selector = { record = "page_1", field = "sujeto-pasivo-dependiente", offset = 119, length = 1, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-quinquies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.120-120.sujeto-pasivo-tipo-regimen-especial-aplicable-art-163-sexies-cinco-si-o-no"
+source = "manual_input"
+selector = { record = "page_1", field = "sujeto-pasivo-tipo-regimen-especial-aplicable-art-163-sexies-cinco-si-o-no", offset = 120, length = 1, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.121-129.sujeto-pasivo-nif-entidad-dominante"
+source = "manual_input"
+selector = { record = "page_1", field = "sujeto-pasivo-nif-entidad-dominante", offset = 121, length = 9, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-quinquies", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.133-133.devengo-sustitutiva"
+source = "manual_input"
+selector = { record = "page_1", field = "devengo-sustitutiva", offset = 133, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.134-134.devengo-sustitutiva-por-rectificacion-de-cuotas"
+source = "manual_input"
+selector = { record = "page_1", field = "devengo-sustitutiva-por-rectificacion-de-cuotas", offset = 134, length = 1, data_type = "integer", signed = false }
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.148-187.datos-estadisticos-a-actividades-principal"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-a-actividades-principal", offset = 148, length = 40, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.188-190.datos-estadisticos-b-codigo-de-actividad-principal"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-b-codigo-de-actividad-principal", offset = 188, length = 3, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.191-194.datos-estadisticos-c-epigrafe-i-a-e-principal"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-c-epigrafe-i-a-e-principal", offset = 191, length = 4, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.195-234.datos-estadisticos-a-actividades-otras-1a"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-a-actividades-otras-1a", offset = 195, length = 40, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.235-237.datos-estadisticos-b-codigo-de-actividad-otras-1a"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-b-codigo-de-actividad-otras-1a", offset = 235, length = 3, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.238-241.datos-estadisticos-c-epigrafe-i-a-e-otras-1o"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-c-epigrafe-i-a-e-otras-1o", offset = 238, length = 4, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.242-281.datos-estadisticos-a-actividades-otras-2a"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-a-actividades-otras-2a", offset = 242, length = 40, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.282-284.datos-estadisticos-b-codigo-de-actividad-otras-2a"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-b-codigo-de-actividad-otras-2a", offset = 282, length = 3, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.285-288.datos-estadisticos-c-epigrafe-i-a-e-otras-2o"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-c-epigrafe-i-a-e-otras-2o", offset = 285, length = 4, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.289-328.datos-estadisticos-a-actividades-otras-3a"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-a-actividades-otras-3a", offset = 289, length = 40, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.329-331.datos-estadisticos-b-codigo-de-actividad-otras-3a"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-b-codigo-de-actividad-otras-3a", offset = 329, length = 3, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.332-335.datos-estadisticos-c-epigrafe-i-a-e-otras-3o"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-c-epigrafe-i-a-e-otras-3o", offset = 332, length = 4, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.336-375.datos-estadisticos-a-actividades-otras-4a"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-a-actividades-otras-4a", offset = 336, length = 40, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.376-378.datos-estadisticos-b-codigo-de-actividad-otras-4a"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-b-codigo-de-actividad-otras-4a", offset = 376, length = 3, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.379-382.datos-estadisticos-c-epigrafe-i-a-e-otras-4o"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-c-epigrafe-i-a-e-otras-4o", offset = 379, length = 4, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.383-422.datos-estadisticos-a-actividades-otras-5a"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-a-actividades-otras-5a", offset = 383, length = 40, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.423-425.datos-estadisticos-b-codigo-de-actividad-otras-5a"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-b-codigo-de-actividad-otras-5a", offset = 423, length = 3, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.426-429.datos-estadisticos-c-epigrafe-i-a-e-otras-5o"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-c-epigrafe-i-a-e-otras-5o", offset = 426, length = 4, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.430-430.datos-estadisticos-d-declaracion-anual-operac-con-terceras-personas"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-d-declaracion-anual-operac-con-terceras-personas", offset = 430, length = 1, data_type = "text", signed = false }
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1065-2007:art-31", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.431-439.datos-estadisticos-declaracion-conjunta-nif"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-declaracion-conjunta-nif", offset = 431, length = 9, data_type = "text", signed = false }
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1065-2007:art-31", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.440-476.datos-estadisticos-declaracion-conjunta-razon-social"
+source = "manual_input"
+selector = { record = "page_1", field = "datos-estadisticos-declaracion-conjunta-razon-social", offset = 440, length = 37, data_type = "text", signed = false }
+legal_refs = ["orden-eha-3111-2009:art-1", "rd-1065-2007:art-31", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.477-485.representante-personas-fisicas-comunid-bienes-represent-nif"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-fisicas-comunid-bienes-represent-nif", offset = 477, length = 9, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.486-565.representante-personas-fisicas-comunid-bienes-represent-apellidos-y-nombre-razon-social"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-fisicas-comunid-bienes-represent-apellidos-y-nombre-razon-social", offset = 486, length = 80, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.566-567.representante-personas-fisicas-comunid-bienes-represent-calle-pza-avda"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-fisicas-comunid-bienes-represent-calle-pza-avda", offset = 566, length = 2, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.568-584.representante-personas-fisicas-comunid-bienes-represent-nombre-de-la-via-publica"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-fisicas-comunid-bienes-represent-nombre-de-la-via-publica", offset = 568, length = 17, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.585-589.representante-personas-fisicas-comunid-bienes-represent-numero"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-fisicas-comunid-bienes-represent-numero", offset = 585, length = 5, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.590-591.representante-personas-fisicas-comunid-bienes-represent-esc"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-fisicas-comunid-bienes-represent-esc", offset = 590, length = 2, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.592-593.representante-personas-fisicas-comunid-bienes-represent-piso"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-fisicas-comunid-bienes-represent-piso", offset = 592, length = 2, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.594-595.representante-personas-fisicas-comunid-bienes-represent-prta"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-fisicas-comunid-bienes-represent-prta", offset = 594, length = 2, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.596-604.representante-personas-fisicas-comunid-bienes-represent-telefono"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-fisicas-comunid-bienes-represent-telefono", offset = 596, length = 9, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.605-624.representante-personas-fisicas-comunid-bienes-represent-municipio"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-fisicas-comunid-bienes-represent-municipio", offset = 605, length = 20, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.625-639.representante-personas-fisicas-comunid-bienes-represent-provincia"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-fisicas-comunid-bienes-represent-provincia", offset = 625, length = 15, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.640-644.representante-personas-fisicas-comunid-bienes-represent-codigo-postal"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-fisicas-comunid-bienes-represent-codigo-postal", offset = 640, length = 5, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.645-724.representante-personas-juridicas-represent-1-nombre-y-apellidos"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-juridicas-represent-1-nombre-y-apellidos", offset = 645, length = 80, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.725-733.representante-personas-juridicas-represent-1-nif"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-juridicas-represent-1-nif", offset = 725, length = 9, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.734-741.representante-personas-juridicas-represent-1-fecha-poder-ddmmaaaa"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-juridicas-represent-1-fecha-poder-ddmmaaaa", offset = 734, length = 8, data_type = "integer", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.742-753.representante-personas-juridicas-represent-1-notaria"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-juridicas-represent-1-notaria", offset = 742, length = 12, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.754-833.representante-personas-juridicas-represent-2-nombre-y-apellidos"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-juridicas-represent-2-nombre-y-apellidos", offset = 754, length = 80, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.834-842.representante-personas-juridicas-represent-2-nif"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-juridicas-represent-2-nif", offset = 834, length = 9, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.843-850.representante-personas-juridicas-represent-2-fecha-poder-ddmmaaaa"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-juridicas-represent-2-fecha-poder-ddmmaaaa", offset = 843, length = 8, data_type = "integer", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.851-862.representante-personas-juridicas-represent-2-notaria"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-juridicas-represent-2-notaria", offset = 851, length = 12, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.863-942.representante-personas-juridicas-represent-3-nombre-y-apellidos"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-juridicas-represent-3-nombre-y-apellidos", offset = 863, length = 80, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.943-951.representante-personas-juridicas-represent-3-nif"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-juridicas-represent-3-nif", offset = 943, length = 9, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.952-959.representante-personas-juridicas-represent-3-fecha-poder-ddmmaaaa"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-juridicas-represent-3-fecha-poder-ddmmaaaa", offset = 952, length = 8, data_type = "integer", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".bindings]]
+id = "modelo-390-2023.page_1.960-971.representante-personas-juridicas-represent-3-notaria"
+source = "manual_input"
+selector = { record = "page_1", field = "representante-personas-juridicas-represent-3-notaria", offset = 960, length = 12, data_type = "text", signed = false }
+legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]

@@ -1,0 +1,52 @@
+# Filing year 2023 only, and the close dates are READ from AEAT's own Calendario
+# del Contribuyente rather than derived from the statutory "primeros veinte dias"
+# rule: the day moves for weekends and holidays, and a filing deadline written
+# from the rule rather than the published calendar is a filing-grade harm.
+# Bundled calendar 2023 gives "Hasta el 20 de abril / julio / octubre - Primer /
+# Segundo / Tercer trimestre 2023: 111, 115, 117, 123, ...", and bundled calendar
+# 2024 gives "Hasta el 22 de enero - Cuarto trimestre 2023: ... 123 ...".
+#
+# Filing years 2019 through 2022 are NOT declared: AEAT's calendars are bundled
+# only from 2023 onward, so their close dates cannot be read from any source this
+# repository holds. Declaring a window per governed year is not required -- modelo
+# 115's open-ended revision declares 2026 alone -- so the family is populated with
+# what is grounded rather than padded with guessed dates.
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2023-1t"
+filing_year = 2023
+period = "2023 1T"
+period_kind = "quarterly"
+opens_on = 2023-04-01
+closes_on = 2023-04-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2023-2t"
+filing_year = 2023
+period = "2023 2T"
+period_kind = "quarterly"
+opens_on = 2023-07-01
+closes_on = 2023-07-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2023-3t"
+filing_year = 2023
+period = "2023 3T"
+period_kind = "quarterly"
+opens_on = 2023-10-01
+closes_on = 2023-10-20
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2019-2023".deadline_windows]]
+id = "modelo-123-2023-4t"
+filing_year = 2023
+period = "2023 4T"
+period_kind = "quarterly"
+opens_on = 2024-01-01
+closes_on = 2024-01-22
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-modelo-123-procedure", "aeat-calendario-contribuyente-2024"]

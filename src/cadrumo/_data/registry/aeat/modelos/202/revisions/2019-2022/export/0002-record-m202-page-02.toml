@@ -1,0 +1,656 @@
+[[revisions.2019-2022.export_layouts]]
+id = 'generated-modelo-202-2019-2022-fichero'
+
+[[revisions.2019-2022.export_layouts.records]]
+id = 'm202-page-02'
+record_type = 'page-02'
+order = 1
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f001'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f002'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '202'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f003'
+offset = 6
+length = 2
+kind = 'literal'
+literal = '02'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f004'
+offset = 8
+length = 4
+kind = 'literal'
+literal = '000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f005'
+offset = 12
+length = 1
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f006'
+offset = 13
+length = 17
+kind = 'casilla'
+casilla_id = '19'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f007'
+offset = 30
+length = 17
+kind = 'casilla'
+casilla_id = '20'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f008'
+offset = 47
+length = 5
+kind = 'casilla'
+casilla_id = '21'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f009'
+offset = 52
+length = 17
+kind = 'casilla'
+casilla_id = '22'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f010'
+offset = 69
+length = 17
+kind = 'casilla'
+casilla_id = '23'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f011'
+offset = 86
+length = 5
+kind = 'casilla'
+casilla_id = '24'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f012'
+offset = 91
+length = 17
+kind = 'casilla'
+casilla_id = '25'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f013'
+offset = 108
+length = 17
+kind = 'casilla'
+casilla_id = '50'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f014'
+offset = 125
+length = 17
+kind = 'casilla'
+casilla_id = '42'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f015'
+offset = 142
+length = 17
+kind = 'casilla'
+casilla_id = '51'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f016'
+offset = 159
+length = 17
+kind = 'casilla'
+casilla_id = '52'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f017'
+offset = 176
+length = 17
+kind = 'casilla'
+casilla_id = '26'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f018'
+offset = 193
+length = 17
+kind = 'casilla'
+casilla_id = '27'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f019'
+offset = 210
+length = 17
+kind = 'casilla'
+casilla_id = '28'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f020'
+offset = 227
+length = 5
+kind = 'casilla'
+casilla_id = '29'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f021'
+offset = 232
+length = 17
+kind = 'casilla'
+casilla_id = '30'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f022'
+offset = 249
+length = 17
+kind = 'casilla'
+casilla_id = '31'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f023'
+offset = 266
+length = 17
+kind = 'casilla'
+casilla_id = '32'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f024'
+offset = 283
+length = 17
+kind = 'casilla'
+casilla_id = '33'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f025'
+offset = 300
+length = 17
+kind = 'casilla'
+casilla_id = '34'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f026'
+offset = 317
+length = 1
+kind = 'header'
+producer_key = 'm202.comunicacion_datos_adicionales'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f027'
+offset = 318
+length = 22
+kind = 'header'
+producer_key = 'm202.numero_referencia_sociedades'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f028'
+offset = 340
+length = 17
+kind = 'casilla'
+casilla_id = 'informacion-adicional.importe-excluido-quita-espera'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f029'
+offset = 357
+length = 17
+kind = 'casilla'
+casilla_id = 'informacion-adicional.integrado-base-imponible-quita-espera'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f030'
+offset = 374
+length = 17
+kind = 'casilla'
+casilla_id = 'informacion-adicional.integrado-cuota-quita-espera-cooperativas'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f031'
+offset = 391
+length = 17
+kind = 'casilla'
+casilla_id = 'informacion-adicional.rentas-reversion-deterioros'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f032'
+offset = 408
+length = 17
+kind = 'casilla'
+casilla_id = 'informacion-adicional.reserva-inversiones-canarias'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f033'
+offset = 425
+length = 17
+kind = 'casilla'
+casilla_id = 'informacion-adicional.bonificacion-ley-19-1994-art-26'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f034'
+offset = 442
+length = 17
+kind = 'casilla'
+casilla_id = 'informacion-adicional.no-computable-regimen-zec'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f035'
+offset = 459
+length = 17
+kind = 'casilla'
+casilla_id = 'informacion-adicional.minoracion-rentas-bonificacion-art-33-lis'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f036'
+offset = 476
+length = 17
+kind = 'casilla'
+casilla_id = 'informacion-adicional.excluido-aumento-capital-art-17-2'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f037'
+offset = 493
+length = 17
+kind = 'casilla'
+casilla_id = 'informacion-adicional.renta-exenta-cap-xiv-tit-vii-lis'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f038'
+offset = 510
+length = 17
+kind = 'casilla'
+casilla_id = 'informacion-adicional.bonificacion-art-34-lis'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f039'
+offset = 527
+length = 1
+kind = 'header'
+producer_key = 'amendment_evidence.is_complementaria'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f040'
+offset = 528
+length = 13
+kind = 'header'
+producer_key = 'amendment_evidence.original_aeat_receipt'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f041'
+offset = 541
+length = 34
+kind = 'header'
+producer_key = 'selected_account.iban'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f042'
+offset = 575
+length = 101
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f043'
+offset = 676
+length = 13
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = 'm202-2019.pagina02.f044'
+offset = 689
+length = 12
+kind = 'literal'
+literal = '</T20202000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-hfp-227-2017:art-1']
+source_refs = ['aeat-dr-202-2019']
+
+[revisions.2019-2022.export_layouts.records.row_field_casilla_ids]

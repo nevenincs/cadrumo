@@ -1,0 +1,21 @@
+# Under-declaration advisory (no-silent-under-declaration). casilla 01 is the
+# perceptor_count and casilla 02 the base_retenciones_ingresos_a_cuenta. Neither is
+# derived from the other -- they are separate declarations about the same
+# period -- so a positive count against a zero base is a real observation
+# about the filing rather than an arithmetic identity.
+#
+# The count-to-base pairing is used deliberately in preference to
+# base-to-retencion, which would be the obvious choice and is unsafe here for
+# the reason modelo 115's own predicate records: where a revision computes the
+# retencion from the base, the implication holds by the arithmetic. It does not
+# hold by arithmetic here, but the same reasoning selects the pair furthest
+# from the engine's own additions.
+#
+# ADVISORY, not BLOCKING. implies_nonzero holds trivially when the antecedent
+# is at or below zero, so a retenedor with no rentas in the period never fires
+# it -- modelo 123 is filed quarterly even for a quarter with no activity.
+[[revisions."2019-2023".verification_predicates]]
+predicate_id = "modelo-123-2019-2023-base-declarada-cuando-rentas-positivas"
+expression = 'implies_nonzero(["01", "02"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "ley-35-2006:art-101"]

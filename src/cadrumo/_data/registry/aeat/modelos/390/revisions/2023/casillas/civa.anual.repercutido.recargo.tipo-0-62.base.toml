@@ -1,0 +1,10 @@
+[[revisions."2023".casillas]]
+id = "iva.anual.repercutido.recargo.tipo-0-62.base"
+number = "665"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-390-page-02-casilla-repercutido-recargo-tipo-0-62-base"]
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2023"]

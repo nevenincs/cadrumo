@@ -1,0 +1,89 @@
+# Measured across the 2022 to 2023 transition: all 340 shared continuidad_ids
+# carry identical legal_refs and identical Spanish labels, and nothing was added
+# or retired, so the transition is fully unchanged. Following the convention this
+# registry already uses -- modelo 100 authors rows for what CHANGED, 46 of 455
+# concepts on its 2021 revision, plus one or two deliberate unchanged records --
+# the nine rows below are not full coverage. They are the nine reduced-rate tiers
+# that DO change in the next revision, recorded here so their trajectory starts
+# from a stated fact rather than from silence.
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m390-iva-base-imponible-repercutida-tipo-2-2022-2023-unchanged"
+continuidad_id = "iva-base-imponible-repercutida-tipo-2"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m390-iva-base-imponible-repercutida-tipo-5-2022-2023-unchanged"
+continuidad_id = "iva-base-imponible-repercutida-tipo-5"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m390-iva-base-imponible-repercutida-tipo-7-5-2022-2023-unchanged"
+continuidad_id = "iva-base-imponible-repercutida-tipo-7-5"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-recargo-equivalencia-tipo-0-26-2022-2023-unchanged"
+continuidad_id = "iva-cuota-recargo-equivalencia-tipo-0-26"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-recargo-equivalencia-tipo-0-62-2022-2023-unchanged"
+continuidad_id = "iva-cuota-recargo-equivalencia-tipo-0-62"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-recargo-equivalencia-tipo-1-2022-2023-unchanged"
+continuidad_id = "iva-cuota-recargo-equivalencia-tipo-1"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-repercutida-tipo-2-2022-2023-unchanged"
+continuidad_id = "iva-cuota-repercutida-tipo-2"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-repercutida-tipo-5-2022-2023-unchanged"
+continuidad_id = "iva-cuota-repercutida-tipo-5"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2023"]
+
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-repercutida-tipo-7-5-2022-2023-unchanged"
+continuidad_id = "iva-cuota-repercutida-tipo-7-5"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2023"]

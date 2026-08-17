@@ -5,19 +5,18 @@ source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
 
 [[revisions."2015-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "tipo2.renta-atribuible-importe"
-number = "178-190"
+number = "177-190"
+segmento = "184-2-entidad"
 
 [[revisions."2015-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "tipo2.clave"
 number = "77"
+segmento = "184-2-entidad"
 
 [[revisions."2015-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "tipo2.subclave"
 number = "78-79"
-
-[[revisions."2015-y-siguientes".completeness_manifest.casillas]]
-casilla_id = "tipo2.miembro-nif"
-number = "9-17"
+segmento = "184-2-entidad"
 
 [[revisions."2015-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "decl.ejercicio"

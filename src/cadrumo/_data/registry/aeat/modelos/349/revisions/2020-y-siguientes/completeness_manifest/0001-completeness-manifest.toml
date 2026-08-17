@@ -51,3 +51,19 @@ number = "162-170"
 [[revisions."2020-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "decl.importe-rectificaciones"
 number = "171-185"
+
+# The three operador detail casillas entered the closure when this revision's
+# verification expectation enrolled them: NIF, clave and base imponible are the
+# per-operation spine AEAT reconciles against the counterparties' own VIES
+# declarations, so they are the figures a filed 349 must be checked on.
+[[revisions."2020-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "op.nif-comunitario"
+number = "78-92"
+
+[[revisions."2020-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "op.clave-operacion"
+number = "133"
+
+[[revisions."2020-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "op.base-imponible"
+number = "134-146"

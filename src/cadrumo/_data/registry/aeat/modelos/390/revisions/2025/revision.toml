@@ -29,3 +29,8 @@ source_refs = [
     "aeat-modelo-390-procedure",
     "boe-modelo-390-2009-form",
 ]
+
+[revisions."2025".family_dispositions.parameters]
+reason = "A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 390 applies none, and this was verified on THIS revision rather than argued from the modelo: it declares zero parameters and its four formulas aggregate the already-computed period figures into the annual summary. The IVA rates that produced those figures were applied on the periodic modelo 303 autoliquidaciones the year is made of; the resumen anual restates their outcome and applies nothing of its own. Empty by the shape of this revision's calculation rather than by omission."
+legal_refs = ["ley-37-1992:art-164", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-modelo-390-procedure"]

@@ -1,0 +1,51 @@
+# Domestic reverse-charge (inversion del sujeto pasivo, LIVA art. 84.Uno.2).
+# The recipient self-assesses BOTH an IVA devengado entry (official box 13,
+# "IVA devengado otras ops inversion sujeto pasivo excl intracom - Cuota") and a
+# matching IVA deducible entry (official box 37, deducible inversion sujeto pasivo
+# interior corriente). The two cancel arithmetically in the M303 resultado
+# (devengada - deducible = 0 for the line) but both must be booked. Both bindings
+# select the same domestic_reverse_charge / inversion_sujeto_pasivo observations,
+# so they resolve to the same cuota (net-zero), mirroring the autorepercutido
+# intracomunitaria pair. Split into this fragment (the loader merges revision
+# bindings across fragments) to keep revision.toml under the reviewability cap.
+[[revisions.2009-2022.bindings]]
+id = "modelo-303-iva-autorepercutido-interior-devengado-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2009-2022.bindings.selector]
+categories = ["domestic_reverse_charge"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+[revisions.2009-2022.bindings.aggregation]
+op = "sum"
+
+[[revisions.2009-2022.bindings]]
+id = "modelo-303-iva-autorepercutido-interior-deducible-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2009-2022.bindings.selector]
+categories = ["domestic_reverse_charge"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
+[revisions.2009-2022.bindings.aggregation]
+op = "sum"

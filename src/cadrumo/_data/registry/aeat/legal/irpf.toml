@@ -314,6 +314,25 @@ required_text = [
     "declaración anual de las retenciones e ingresos a cuenta",
 ]
 
+[legal."rd-439-2007:art-111"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007.html#a111"
+document_id = "BOE-A-2007-6820"
+article = "111"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a111"
+published_at = 2007-03-31
+effective_from = 2007-03-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-16
+reviewed_by = "agent-prepared-pending-operator"
+notes = "Provision that ESTABLISHES the pago fraccionado filing window, which article 110 does not: 110 fixes the IMPORTE and 111 fixes the plazo. Read directly from the bundled consolidated RD 439/2007 text, which carries article 111 in full; the separately bundled per-article files stop at 110 and skip 111, which is why the windows on modelos 130 and 131 were previously cited to 110. Q1-Q3 run from the 1st to the 20th of April, July and October; Q4 runs from the 1st to the 30th of January. No human operator has reviewed this entry and reviewed_by records that status honestly."
+required_text = [
+    "Los tres primeros trimestres, entre el día 1 y el 20 de los meses de abril, julio y octubre",
+    "Cuarto trimestre, entre el día 1 y el 30 del mes de enero",
+]
+
 [legal."rd-439-2007:art-110"]
 evidence_tier = "legal_authority"
 authority = "boe"

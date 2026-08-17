@@ -22,9 +22,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-tipo-de-renta-1-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f006"]
 
 # AEAT campo: Descripción del elemento patrimonial
 [[revisions."2015-2022".casillas]]
@@ -36,9 +36,9 @@ data_type = "text"
 semantic_role = "m151_descripcion-del-elemento-patrimonial"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-descripcion-del-elemento-patrimonial-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f007"]
 
 # AEAT campo: Fecha de transmisión
 [[revisions."2015-2022".casillas]]
@@ -50,9 +50,9 @@ data_type = "text"
 semantic_role = "m151_fecha-de-transmision"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-fecha-de-transmision-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f008"]
 
 # AEAT campo: Fecha de adquisición
 [[revisions."2015-2022".casillas]]
@@ -64,9 +64,9 @@ data_type = "text"
 semantic_role = "m151_fecha-de-adquisicion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-fecha-de-adquisicion-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f009"]
 
 # AEAT campo: Valor de transmisión [2]
 [[revisions."2015-2022".casillas]]
@@ -78,9 +78,9 @@ data_type = "money"
 semantic_role = "m151_valor-de-transmision-2"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-valor-de-transmision-2-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f010"]
 
 # AEAT campo: Valor de adquisición [3]
 [[revisions."2015-2022".casillas]]
@@ -92,9 +92,9 @@ data_type = "money"
 semantic_role = "m151_valor-de-adquisicion-3"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-valor-de-adquisicion-3-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f011"]
 
 # AEAT campo: Diferencia [4]
 [[revisions."2015-2022".casillas]]
@@ -106,9 +106,9 @@ data_type = "money"
 semantic_role = "m151_diferencia-4"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-diferencia-4-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f012"]
 
 # AEAT campo: Ganancia patrimonial [5]
 [[revisions."2015-2022".casillas]]
@@ -120,9 +120,9 @@ data_type = "money"
 semantic_role = "m151_ganancia-patrimonial-5"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-ganancia-patrimonial-5-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f013"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -134,9 +134,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-tipo-de-renta-1-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f014"]
 
 # AEAT campo: Descripción del elemento patrimonial
 [[revisions."2015-2022".casillas]]
@@ -148,9 +148,9 @@ data_type = "text"
 semantic_role = "m151_descripcion-del-elemento-patrimonial"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-descripcion-del-elemento-patrimonial-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f015"]
 
 # AEAT campo: Fecha de transmisión
 [[revisions."2015-2022".casillas]]
@@ -162,9 +162,9 @@ data_type = "text"
 semantic_role = "m151_fecha-de-transmision"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-fecha-de-transmision-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f016"]
 
 # AEAT campo: Fecha de adquisición
 [[revisions."2015-2022".casillas]]
@@ -176,9 +176,9 @@ data_type = "text"
 semantic_role = "m151_fecha-de-adquisicion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-fecha-de-adquisicion-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f017"]
 
 # AEAT campo: Valor de transmisión [2]
 [[revisions."2015-2022".casillas]]
@@ -190,9 +190,9 @@ data_type = "money"
 semantic_role = "m151_valor-de-transmision-2"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-valor-de-transmision-2-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f018"]
 
 # AEAT campo: Valor de adquisición [3]
 [[revisions."2015-2022".casillas]]
@@ -204,9 +204,9 @@ data_type = "money"
 semantic_role = "m151_valor-de-adquisicion-3"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-valor-de-adquisicion-3-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f019"]
 
 # AEAT campo: Diferencia [4]
 [[revisions."2015-2022".casillas]]
@@ -218,9 +218,9 @@ data_type = "money"
 semantic_role = "m151_diferencia-4"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-diferencia-4-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f020"]
 
 # AEAT campo: Ganancia patrimonial [5]
 [[revisions."2015-2022".casillas]]
@@ -232,9 +232,9 @@ data_type = "money"
 semantic_role = "m151_ganancia-patrimonial-5"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-ganancia-patrimonial-5-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f021"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -246,9 +246,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-tipo-de-renta-1-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f022"]
 
 # AEAT campo: Descripción del elemento patrimonial
 [[revisions."2015-2022".casillas]]
@@ -260,9 +260,9 @@ data_type = "text"
 semantic_role = "m151_descripcion-del-elemento-patrimonial"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-descripcion-del-elemento-patrimonial-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f023"]
 
 # AEAT campo: Fecha de transmisión
 [[revisions."2015-2022".casillas]]
@@ -274,9 +274,9 @@ data_type = "text"
 semantic_role = "m151_fecha-de-transmision"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-fecha-de-transmision-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f024"]
 
 # AEAT campo: Fecha de adquisición
 [[revisions."2015-2022".casillas]]
@@ -288,9 +288,9 @@ data_type = "text"
 semantic_role = "m151_fecha-de-adquisicion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-fecha-de-adquisicion-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f025"]
 
 # AEAT campo: Valor de transmisión [2]
 [[revisions."2015-2022".casillas]]
@@ -302,9 +302,9 @@ data_type = "money"
 semantic_role = "m151_valor-de-transmision-2"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-valor-de-transmision-2-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f026"]
 
 # AEAT campo: Valor de adquisición [3]
 [[revisions."2015-2022".casillas]]
@@ -316,9 +316,9 @@ data_type = "money"
 semantic_role = "m151_valor-de-adquisicion-3"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-valor-de-adquisicion-3-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f027"]
 
 # AEAT campo: Diferencia [4]
 [[revisions."2015-2022".casillas]]
@@ -330,9 +330,9 @@ data_type = "money"
 semantic_role = "m151_diferencia-4"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-diferencia-4-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f028"]
 
 # AEAT campo: Ganancia patrimonial [5]
 [[revisions."2015-2022".casillas]]
@@ -344,9 +344,9 @@ data_type = "money"
 semantic_role = "m151_ganancia-patrimonial-5"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-ganancia-patrimonial-5-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f029"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -358,9 +358,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-tipo-de-renta-1-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f030"]
 
 # AEAT campo: Descripción del elemento patrimonial
 [[revisions."2015-2022".casillas]]
@@ -372,9 +372,9 @@ data_type = "text"
 semantic_role = "m151_descripcion-del-elemento-patrimonial"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-descripcion-del-elemento-patrimonial-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f031"]
 
 # AEAT campo: Fecha de transmisión
 [[revisions."2015-2022".casillas]]
@@ -386,9 +386,9 @@ data_type = "text"
 semantic_role = "m151_fecha-de-transmision"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-fecha-de-transmision-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f032"]
 
 # AEAT campo: Fecha de adquisición
 [[revisions."2015-2022".casillas]]
@@ -400,9 +400,9 @@ data_type = "text"
 semantic_role = "m151_fecha-de-adquisicion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-fecha-de-adquisicion-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f033"]
 
 # AEAT campo: Valor de transmisión [2]
 [[revisions."2015-2022".casillas]]
@@ -414,9 +414,9 @@ data_type = "money"
 semantic_role = "m151_valor-de-transmision-2"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-valor-de-transmision-2-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f034"]
 
 # AEAT campo: Valor de adquisición [3]
 [[revisions."2015-2022".casillas]]
@@ -428,9 +428,9 @@ data_type = "money"
 semantic_role = "m151_valor-de-adquisicion-3"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-valor-de-adquisicion-3-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f035"]
 
 # AEAT campo: Diferencia [4]
 [[revisions."2015-2022".casillas]]
@@ -442,9 +442,9 @@ data_type = "money"
 semantic_role = "m151_diferencia-4"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-diferencia-4-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f036"]
 
 # AEAT campo: Ganancia patrimonial [5]
 [[revisions."2015-2022".casillas]]
@@ -456,9 +456,9 @@ data_type = "money"
 semantic_role = "m151_ganancia-patrimonial-5"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-ganancia-patrimonial-5-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f037"]
 
 # AEAT campo: RESTO. Ganancia patrimonial [5]
 [[revisions."2015-2022".casillas]]
@@ -469,9 +469,9 @@ section = ["p08", "resto"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-resto-ganancia-patrimonial-5"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f038"]
 
 # AEAT campo: Total ganancias patrimoniales [6]
 [[revisions."2015-2022".casillas]]
@@ -482,9 +482,9 @@ section = ["p08", "total-ganancias-patrimoniales-6"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-total-ganancias-patrimoniales-6"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f039"]
 
 # AEAT campo: Base liquidable del ahorro [18]
 [[revisions."2015-2022".casillas]]
@@ -495,9 +495,9 @@ section = ["p08", "base-liquidable-del-ahorro-18"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-base-liquidable-del-ahorro-18"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f041"]
 
 # AEAT campo: Cuota correspondiente a la base liquidable general del ahorro [20]
 [[revisions."2015-2022".casillas]]
@@ -508,9 +508,9 @@ section = ["p08", "cuota-correspondien-eneral-del-ahorro-20"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-cuota-correspondiente-e-general-del-ahorro-20"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f043"]
 
 # AEAT campo: Cuota íntegra total [21]
 [[revisions."2015-2022".casillas]]
@@ -521,9 +521,9 @@ section = ["p08", "cuota-integra-total-21"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-cuota-integra-total-21"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f044"]
 
 # AEAT campo: Cuota íntegra total. Parte estatal [22]
 [[revisions."2015-2022".casillas]]
@@ -534,9 +534,9 @@ section = ["p08", "cuota-integra-total"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-cuota-integra-total-parte-estatal-22"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f045"]
 
 # AEAT campo: Cuota íntegra total. Parte autonómica [23]
 [[revisions."2015-2022".casillas]]
@@ -547,9 +547,9 @@ section = ["p08", "cuota-integra-total"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-cuota-integra-total-parte-autonomica-23"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f046"]
 
 # AEAT campo: Deduccion por donativos [24]
 [[revisions."2015-2022".casillas]]
@@ -560,9 +560,9 @@ section = ["p08", "deduccion-por-donativos-24"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-deduccion-por-donativos-24"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f047"]
 
 # AEAT campo: Deduccion por donativos. Parte estatal [25]
 [[revisions."2015-2022".casillas]]
@@ -573,9 +573,9 @@ section = ["p08", "deduccion-por-donativos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-deduccion-por-donativos-parte-estatal-25"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f048"]
 
 # AEAT campo: Deduccion por donativos. Parte autonómica [26]
 [[revisions."2015-2022".casillas]]
@@ -586,9 +586,9 @@ section = ["p08", "deduccion-por-donativos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-deduccion-por-donativos-parte-autonomica-26"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f049"]
 
 # AEAT campo: Deducción por doble imposición internacional por razón de los rendimientos de trabajo obtenidos y gravados en el extranjero [27]
 [[revisions."2015-2022".casillas]]
@@ -599,9 +599,9 @@ section = ["p08", "deduccion-por-doble-en-el-extranjero-27"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-deduccion-por-doble-im-dos-en-el-extranjero-27"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f050"]
 
 # AEAT campo: Deducción por doble imposición internacional por razón de los rendimientos de trabajo obtenidos y gravados en el extranjero. Parte estatal [28]
 [[revisions."2015-2022".casillas]]
@@ -612,9 +612,9 @@ section = ["p08", "deduccion-por-doble-dos-en-el-extranjero"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-deduccion-por-doble-im-anjero-parte-estatal-28"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f051"]
 
 # AEAT campo: Deducción por doble imposición internacional por razón de los rendimientos de trabajo obtenidos y gravados en el extranjero. Parte autonómica [29]
 [[revisions."2015-2022".casillas]]
@@ -625,9 +625,9 @@ section = ["p08", "deduccion-por-doble-dos-en-el-extranjero"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-deduccion-por-doble-im-ero-parte-autonomica-29"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f052"]
 
 # AEAT campo: Cuota líquida total [30]
 [[revisions."2015-2022".casillas]]
@@ -638,9 +638,9 @@ section = ["p08", "cuota-liquida-total-30"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-cuota-liquida-total-30"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f053"]
 
 # AEAT campo: Cuota líquida total. Parte estatal [31]
 [[revisions."2015-2022".casillas]]
@@ -651,9 +651,9 @@ section = ["p08", "cuota-liquida-total"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-cuota-liquida-total-parte-estatal-31"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f054"]
 
 # AEAT campo: Cuota líquida total. Parte autonómica [32]
 [[revisions."2015-2022".casillas]]
@@ -664,9 +664,9 @@ section = ["p08", "cuota-liquida-total"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-cuota-liquida-total-parte-autonomica-32"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f055"]
 
 # AEAT campo: Cuotas del impuesto sobre la Renta de no Residentes pagadas respecto de las rentas incluidas en la declaración [34]
 [[revisions."2015-2022".casillas]]
@@ -677,9 +677,9 @@ section = ["p08", "cuotas-del-impuesto-en-la-declaracion-34"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-cuotas-del-impuesto-so-as-en-la-declaracion-34"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f057"]
 
 # AEAT campo: Epígrafe A1 [35]
 [[revisions."2015-2022".casillas]]
@@ -690,9 +690,9 @@ section = ["p08", "epigrafe-a1-35"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-epigrafe-a1-35"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f058"]
 
 # AEAT campo: Epígrafe A2 [36]
 [[revisions."2015-2022".casillas]]
@@ -703,9 +703,9 @@ section = ["p08", "epigrafe-a2-36"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-epigrafe-a2-36"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f059"]
 
 # AEAT campo: Epígrafe B [37]
 [[revisions."2015-2022".casillas]]
@@ -716,9 +716,9 @@ section = ["p08", "epigrafe-b-37"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-epigrafe-b-37"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f060"]
 
 # AEAT campo: Epígrafe C [38]
 [[revisions."2015-2022".casillas]]
@@ -729,9 +729,9 @@ section = ["p08", "epigrafe-c-38"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-epigrafe-c-38"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f061"]
 
 # AEAT campo: Epígrafe D [39]
 [[revisions."2015-2022".casillas]]
@@ -742,9 +742,9 @@ section = ["p08", "epigrafe-d-39"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-epigrafe-d-39"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f062"]
 
 # AEAT campo: Epígrafe E1 y E2 [40]
 [[revisions."2015-2022".casillas]]
@@ -755,9 +755,9 @@ section = ["p08", "epigrafe-e1-y-e2-40"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-epigrafe-e1-y-e2-40"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f063"]
 
 # AEAT campo: Resultados a ingresar de las anteriores declaraciones o liquidacion administrativas [41]
 [[revisions."2015-2022".casillas]]
@@ -768,9 +768,9 @@ section = ["p08", "resultados-a-ingres-n-administrativas-41"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-resultados-a-ingresar-cion-administrativas-41"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f064"]
 
 # AEAT campo: Devoluciones acordadas por la Administración [42]
 [[revisions."2015-2022".casillas]]
@@ -781,9 +781,9 @@ section = ["p08", "devoluciones-acorda-la-administracion-42"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-devoluciones-acordadas-or-la-administracion-42"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f065"]
 
 # AEAT campo: Resultado de la declaración [43]
 [[revisions."2015-2022".casillas]]
@@ -794,6 +794,6 @@ section = ["p08", "resultado-de-la-declaracion-43"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p08-resultado-de-la-declaracion-43"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina08.f066"]

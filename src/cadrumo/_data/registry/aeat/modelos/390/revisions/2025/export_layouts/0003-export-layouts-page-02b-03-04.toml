@@ -140,6 +140,118 @@ source_refs = ["aeat-dr-390-2025"]
 # two tiers modelo-390-iva-soportado-interiores-cuota /
 # modelo-390-iva-soportado-importaciones-cuota sum onto.
 
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02b-casilla-recargo-tipo-0.base"
+offset = 13
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-0.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02b-casilla-recargo-tipo-0.cuota"
+offset = 30
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-0.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02b-casilla-recargo-tipo-0-26.base"
+offset = 47
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-26.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02b-casilla-recargo-tipo-0-26.cuota"
+offset = 64
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-26.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02b-casilla-recargo-tipo-0-62.base"
+offset = 115
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-62.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02b-casilla-recargo-tipo-0-62.cuota"
+offset = 132
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-62.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02b-casilla-recargo-tipo-1.base"
+offset = 149
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-1.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-390-page-02b-casilla-recargo-tipo-1.cuota"
+offset = 166
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.tipo-1.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
 [[revisions."2025".export_layouts.records]]
 id = "modelo-390-page-03"
 record_type = "page_03"

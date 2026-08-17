@@ -1,0 +1,14 @@
+# Modelo 151 (2023 y siguientes) export surface.
+#
+# Required once the revision declares a fixed-width export layout: registry
+# validation refuses a revision that carries export layouts without an
+# application link declaring the surface that consumes them. Mirrors the
+# 2015-2022 sibling's own export link.
+
+[[revisions."2025-y-siguientes".application_links]]
+id = "modelo-151-2023-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]

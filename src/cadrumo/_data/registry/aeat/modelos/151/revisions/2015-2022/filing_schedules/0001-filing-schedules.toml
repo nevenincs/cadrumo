@@ -1,0 +1,25 @@
+# Modelo 151 filing schedule.
+#
+# One annual declaration per período impositivo. Orden HAP/2783/2015 art. 2
+# obliges every IRPF contribuyente under the régimen especial to present it, and
+# art. 3.1 sets its plazo BY REMISSION to the general IRPF plazo approved each
+# ejercicio. The remission fixes the SHAPE -- one annual presentation, on the
+# Renta calendar -- while leaving each year's concrete dates to that year's own
+# orden, which is why deadline_windows is a separate and separately grounded
+# claim on this revision.
+
+[[revisions."2015-2022".filing_schedules]]
+id = "modelo-151-2015-2022-anual"
+period_kind = "annual"
+periods = ["0A"]
+profile_condition_mode = "all"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-2", "orden-hap-2783-2015:art-3"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+
+[[revisions."2015-2022".filing_schedules.profile_conditions]]
+field = "taxpayer.entity_type"
+op = "equals"
+value = "natural_person"
+explanation = "El régimen especial del art. 93 LIRPF solo puede aplicarse a personas físicas que adquieren su residencia fiscal en España como consecuencia de su desplazamiento a territorio español."
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure"]

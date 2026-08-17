@@ -1,0 +1,27 @@
+# Under-declaration advisory (no-silent-under-declaration). casilla 10 is the
+# TOTAL base de retenciones over rentas SOMETIDAS a retencion (the sum of 08,
+# dividendos, and 09, resto) and casilla 13 is the total retencion practised on
+# them (the sum of 11 and 12). The two totals are computed by separate formulas
+# over separate manual inputs -- 13 is NOT derived from 10 -- so a positive base
+# with a zero retencion is a real observation about the filing rather than an
+# arithmetic identity the engine could not violate.
+#
+# The SOMETIDAS side is the antecedent and not the totals across the whole form,
+# because this modelo declares rentas NO sometidas separately in casillas 14 to
+# 19 precisely to record income the retenedor was NOT obliged to withhold on
+# (article 2 points Dos and Tres of the approving Orden). Keying the antecedent
+# on a figure that mixes both would fire on a retenedor whose income is lawfully
+# exempt from retencion, which is the population this form's own structure sets
+# apart.
+#
+# ADVISORY, not BLOCKING. implies_nonzero holds trivially when the antecedent is
+# at or below zero, so a retenedor with no rentas sometidas in the period never
+# fires it. IRNR retencion carries no income threshold below which it is
+# lawfully zero -- unlike IRPF trabajo withholding -- so a positive sometida base
+# with no retencion has no ordinary reading; it stays advisory because the
+# operator files, and an alert they can weigh is the safeguard here.
+[[revisions."2024-y-siguientes".verification_predicates]]
+predicate_id = "modelo-216-retenciones-declaradas-cuando-base-sometida-positiva"
+expression = 'implies_nonzero(["10", "13"])'
+finding_kind = "ADVISORY"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]

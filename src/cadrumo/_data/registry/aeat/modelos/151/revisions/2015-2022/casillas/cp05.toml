@@ -22,9 +22,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-tipo-de-renta-1-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f006"]
 
 # AEAT campo: Ingresos íntegros [2]
 [[revisions."2015-2022".casillas]]
@@ -35,9 +35,9 @@ section = ["p05", "ingresos-integros-2"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-ingresos-integros-2"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f007"]
 
 # AEAT campo: Gastos de personal [3]
 [[revisions."2015-2022".casillas]]
@@ -48,9 +48,9 @@ section = ["p05", "gastos-de-personal-3"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-gastos-de-personal-3"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f008"]
 
 # AEAT campo: Gastos de aprovisionamiento de materiales y de suministros [4]
 [[revisions."2015-2022".casillas]]
@@ -61,9 +61,9 @@ section = ["p05", "gastos-de-aprovisio-s-y-de-suministros-4"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-gastos-de-aprovisionam-ales-y-de-suministros-4"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f009"]
 
 # AEAT campo: Rendimiento neto [5]
 [[revisions."2015-2022".casillas]]
@@ -74,9 +74,9 @@ section = ["p05", "rendimiento-neto-5"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-rendimiento-neto-5"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f010"]
 
 # AEAT campo: Rentención o ingreso a cuenta [6]
 [[revisions."2015-2022".casillas]]
@@ -87,9 +87,9 @@ section = ["p05", "rentencion-o-ingreso-a-cuenta-6"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-rentencion-o-ingreso-a-cuenta-6"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f011"]
 
 # AEAT campo: Rendimientos Negativos. Retención o ingreso a cuenta [6]
 [[revisions."2015-2022".casillas]]
@@ -100,9 +100,9 @@ section = ["p05", "rendimientos-negativos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-rendimientos-negativos-on-o-ingreso-a-cuenta-6"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f012"]
 
 # AEAT campo: Rendimientos Negativos. Rendimiento neto[7]
 [[revisions."2015-2022".casillas]]
@@ -113,9 +113,9 @@ section = ["p05", "rendimientos-negativos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-rendimientos-negativos-rendimiento-neto-7"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f013"]
 
 # AEAT campo: Total rendimientos netos [8]
 [[revisions."2015-2022".casillas]]
@@ -126,9 +126,9 @@ section = ["p05", "total-rendimientos-netos-8"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-total-rendimientos-netos-8"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f014"]
 
 # AEAT campo: Total retenciones o ingresos a cuenta [9]
 [[revisions."2015-2022".casillas]]
@@ -140,9 +140,9 @@ data_type = "money"
 semantic_role = "m151_total-retenciones-o-ingresos-a-cuenta-9"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-total-retenciones-o-ingresos-a-cuenta-9"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f015"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -154,9 +154,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-tipo-de-renta-1-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f016"]
 
 # AEAT campo: NIF de la sociedad o fondo de inversión
 [[revisions."2015-2022".casillas]]
@@ -168,9 +168,9 @@ data_type = "nif"
 semantic_role = "m151_nif-de-la-sociedad-o-fondo-de-inversion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-nif-de-la-sociedad-o-fondo-de-inversion-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f017"]
 
 # AEAT campo: Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
@@ -182,9 +182,9 @@ data_type = "money"
 semantic_role = "m151_ganancia-patrimonial-2"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-ganancia-patrimonial-2-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f018"]
 
 # AEAT campo: Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
@@ -196,9 +196,9 @@ data_type = "money"
 semantic_role = "m151_rentencion-o-ingreso-a-cuenta-3"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-rentencion-o-ingreso-a-cuenta-3-01"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f019"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -210,9 +210,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-tipo-de-renta-1-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f020"]
 
 # AEAT campo: NIF de la sociedad o fondo de inversión
 [[revisions."2015-2022".casillas]]
@@ -224,9 +224,9 @@ data_type = "nif"
 semantic_role = "m151_nif-de-la-sociedad-o-fondo-de-inversion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-nif-de-la-sociedad-o-fondo-de-inversion-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f021"]
 
 # AEAT campo: Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
@@ -238,9 +238,9 @@ data_type = "money"
 semantic_role = "m151_ganancia-patrimonial-2"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-ganancia-patrimonial-2-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f022"]
 
 # AEAT campo: Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
@@ -252,9 +252,9 @@ data_type = "money"
 semantic_role = "m151_rentencion-o-ingreso-a-cuenta-3"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-rentencion-o-ingreso-a-cuenta-3-02"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f023"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -266,9 +266,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-tipo-de-renta-1-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f024"]
 
 # AEAT campo: NIF de la sociedad o fondo de inversión
 [[revisions."2015-2022".casillas]]
@@ -280,9 +280,9 @@ data_type = "nif"
 semantic_role = "m151_nif-de-la-sociedad-o-fondo-de-inversion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-nif-de-la-sociedad-o-fondo-de-inversion-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f025"]
 
 # AEAT campo: Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
@@ -294,9 +294,9 @@ data_type = "money"
 semantic_role = "m151_ganancia-patrimonial-2"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-ganancia-patrimonial-2-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f026"]
 
 # AEAT campo: Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
@@ -308,9 +308,9 @@ data_type = "money"
 semantic_role = "m151_rentencion-o-ingreso-a-cuenta-3"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-rentencion-o-ingreso-a-cuenta-3-03"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f027"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -322,9 +322,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-tipo-de-renta-1-05"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f028"]
 
 # AEAT campo: NIF de la sociedad o fondo de inversión
 [[revisions."2015-2022".casillas]]
@@ -336,9 +336,9 @@ data_type = "nif"
 semantic_role = "m151_nif-de-la-sociedad-o-fondo-de-inversion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-nif-de-la-sociedad-o-fondo-de-inversion-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f029"]
 
 # AEAT campo: Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
@@ -350,9 +350,9 @@ data_type = "money"
 semantic_role = "m151_ganancia-patrimonial-2"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-ganancia-patrimonial-2-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f030"]
 
 # AEAT campo: Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
@@ -364,9 +364,9 @@ data_type = "money"
 semantic_role = "m151_rentencion-o-ingreso-a-cuenta-3"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-rentencion-o-ingreso-a-cuenta-3-04"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f031"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -378,9 +378,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-tipo-de-renta-1-06"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f032"]
 
 # AEAT campo: NIF de la sociedad o fondo de inversión
 [[revisions."2015-2022".casillas]]
@@ -392,9 +392,9 @@ data_type = "nif"
 semantic_role = "m151_nif-de-la-sociedad-o-fondo-de-inversion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-nif-de-la-sociedad-o-fondo-de-inversion-05"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f033"]
 
 # AEAT campo: Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
@@ -406,9 +406,9 @@ data_type = "money"
 semantic_role = "m151_ganancia-patrimonial-2"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-ganancia-patrimonial-2-05"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f034"]
 
 # AEAT campo: Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
@@ -420,9 +420,9 @@ data_type = "money"
 semantic_role = "m151_rentencion-o-ingreso-a-cuenta-3"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-rentencion-o-ingreso-a-cuenta-3-05"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f035"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -434,9 +434,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-tipo-de-renta-1-07"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f036"]
 
 # AEAT campo: NIF de la sociedad o fondo de inversión
 [[revisions."2015-2022".casillas]]
@@ -448,9 +448,9 @@ data_type = "nif"
 semantic_role = "m151_nif-de-la-sociedad-o-fondo-de-inversion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-nif-de-la-sociedad-o-fondo-de-inversion-06"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f037"]
 
 # AEAT campo: Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
@@ -462,9 +462,9 @@ data_type = "money"
 semantic_role = "m151_ganancia-patrimonial-2"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-ganancia-patrimonial-2-06"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f038"]
 
 # AEAT campo: Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
@@ -476,9 +476,9 @@ data_type = "money"
 semantic_role = "m151_rentencion-o-ingreso-a-cuenta-3"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-rentencion-o-ingreso-a-cuenta-3-06"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f039"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -490,9 +490,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-tipo-de-renta-1-08"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f040"]
 
 # AEAT campo: NIF de la sociedad o fondo de inversión
 [[revisions."2015-2022".casillas]]
@@ -504,9 +504,9 @@ data_type = "nif"
 semantic_role = "m151_nif-de-la-sociedad-o-fondo-de-inversion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-nif-de-la-sociedad-o-fondo-de-inversion-07"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f041"]
 
 # AEAT campo: Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
@@ -518,9 +518,9 @@ data_type = "money"
 semantic_role = "m151_ganancia-patrimonial-2"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-ganancia-patrimonial-2-07"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f042"]
 
 # AEAT campo: Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
@@ -532,9 +532,9 @@ data_type = "money"
 semantic_role = "m151_rentencion-o-ingreso-a-cuenta-3"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-rentencion-o-ingreso-a-cuenta-3-07"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f043"]
 
 # AEAT campo: Tipo de Renta [1]
 [[revisions."2015-2022".casillas]]
@@ -546,9 +546,9 @@ data_type = "text"
 semantic_role = "m151_tipo-de-renta-1"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-tipo-de-renta-1-09"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f044"]
 
 # AEAT campo: NIF de la sociedad o fondo de inversión
 [[revisions."2015-2022".casillas]]
@@ -560,9 +560,9 @@ data_type = "nif"
 semantic_role = "m151_nif-de-la-sociedad-o-fondo-de-inversion"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-nif-de-la-sociedad-o-fondo-de-inversion-08"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f045"]
 
 # AEAT campo: Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
@@ -574,9 +574,9 @@ data_type = "money"
 semantic_role = "m151_ganancia-patrimonial-2"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-ganancia-patrimonial-2-08"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f046"]
 
 # AEAT campo: Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
@@ -588,9 +588,9 @@ data_type = "money"
 semantic_role = "m151_rentencion-o-ingreso-a-cuenta-3"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-rentencion-o-ingreso-a-cuenta-3-08"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f047"]
 
 # AEAT campo: RESTO. Ganancia Patrimonial[2]
 [[revisions."2015-2022".casillas]]
@@ -601,9 +601,9 @@ section = ["p05", "resto"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-resto-ganancia-patrimonial-2"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f048"]
 
 # AEAT campo: RESTO. Rentención o ingreso a cuenta [3]
 [[revisions."2015-2022".casillas]]
@@ -614,9 +614,9 @@ section = ["p05", "resto"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-resto-rentencion-o-ingreso-a-cuenta-3"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f049"]
 
 # AEAT campo: Total ganancias patrimoniales [4]
 [[revisions."2015-2022".casillas]]
@@ -627,9 +627,9 @@ section = ["p05", "total-ganancias-patrimoniales-4"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-total-ganancias-patrimoniales-4"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f050"]
 
 # AEAT campo: Total retenciones o ingresos a cuenta [5]
 [[revisions."2015-2022".casillas]]
@@ -640,6 +640,6 @@ section = ["p05", "total-retenciones-o-ingresos-a-cuenta-5"]
 data_type = "money"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-151-2015-p05-total-retenciones-o-ingresos-a-cuenta-5"]
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
 source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2015.pagina05.f051"]

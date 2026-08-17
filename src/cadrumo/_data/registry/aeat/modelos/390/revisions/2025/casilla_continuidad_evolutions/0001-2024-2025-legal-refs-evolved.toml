@@ -1,0 +1,85 @@
+# The same nine tiers DROP real-decreto-ley-4-2024:art-1 as the temporary
+# foodstuffs reduction lapsed, leaving each grounded on the standing LIVA
+# articles alone. Symmetric with the 2024 addition and measured the same way: the
+# nine shared continuidad_ids whose legal_refs tuple differs, with no label change.
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m390-iva-base-imponible-repercutida-tipo-2-2024-2025-legal-refs-evolved"
+continuidad_id = "iva-base-imponible-repercutida-tipo-2"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m390-iva-base-imponible-repercutida-tipo-5-2024-2025-legal-refs-evolved"
+continuidad_id = "iva-base-imponible-repercutida-tipo-5"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m390-iva-base-imponible-repercutida-tipo-7-5-2024-2025-legal-refs-evolved"
+continuidad_id = "iva-base-imponible-repercutida-tipo-7-5"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-recargo-equivalencia-tipo-0-26-2024-2025-legal-refs-evolved"
+continuidad_id = "iva-cuota-recargo-equivalencia-tipo-0-26"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-recargo-equivalencia-tipo-0-62-2024-2025-legal-refs-evolved"
+continuidad_id = "iva-cuota-recargo-equivalencia-tipo-0-62"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-recargo-equivalencia-tipo-1-2024-2025-legal-refs-evolved"
+continuidad_id = "iva-cuota-recargo-equivalencia-tipo-1"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-repercutida-tipo-2-2024-2025-legal-refs-evolved"
+continuidad_id = "iva-cuota-repercutida-tipo-2"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-repercutida-tipo-5-2024-2025-legal-refs-evolved"
+continuidad_id = "iva-cuota-repercutida-tipo-5"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m390-iva-cuota-repercutida-tipo-7-5-2024-2025-legal-refs-evolved"
+continuidad_id = "iva-cuota-repercutida-tipo-7-5"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]

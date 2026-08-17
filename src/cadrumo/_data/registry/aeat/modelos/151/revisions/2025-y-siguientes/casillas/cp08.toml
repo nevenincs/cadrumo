@@ -1,0 +1,1049 @@
+# Modelo 151 (2025-y-siguientes) -- casillas of design record M15108000.
+#
+# Authored from the bundled AEAT diseno de registro aeat-dr-151-2023
+# (sha256 7680e5a21935c22f4b63deb0c96956d63fbcb287c5eb67a552daa7768ca0fcb9).
+# `number` carries AEAT's OWN printed box reference where the design prints
+# one, and the campo's inclusive position range where it does not: this
+# edition brackets a box number on nearly every data row, and that printed
+# number is a better identifier than a byte range because it survives the
+# renumbering a later edition applies to positions.
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.tipo-de-renta-01"
+number = "13-14"
+segmento = "M15108000"
+section = ["p08", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f006"]
+
+# AEAT campo: Número Justificante del modelo 211 [54]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.numero-justificante-del-modelo-211-54"
+number = "15-27"
+segmento = "M15108000"
+section = ["p08", "numero-justificante-del-modelo-211"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f007"]
+
+# AEAT campo: Valor de transmisión (Adquisición) [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.valor-de-transmision-adquisicion-02"
+number = "28-44"
+segmento = "M15108000"
+section = ["p08", "valor-de-transmision-adquisicion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f008"]
+
+# AEAT campo: Valor de adquisición (Adquisición) [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.valor-de-adquisicion-adquisicion-03"
+number = "45-61"
+segmento = "M15108000"
+section = ["p08", "valor-de-adquisicion-adquisicion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f009"]
+
+# AEAT campo: Diferencia (Adquisición) [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.diferencia-adquisicion-04"
+number = "62-78"
+segmento = "M15108000"
+section = ["p08", "diferencia-adquisicion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f010"]
+
+# AEAT campo: Ganancia o pérdida (Adquisición) [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.ganancia-o-perdida-adquisicion-05"
+number = "79-95"
+segmento = "M15108000"
+section = ["p08", "ganancia-o-perdida-adquisicion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f011"]
+
+# AEAT campo: Valor de transmisión (Mejora o 2ª adquisición) [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.valor-de-transmision-mejora-o-2a-adquisicion-06"
+number = "96-112"
+segmento = "M15108000"
+section = ["p08", "valor-de-transmision-mejora-o-2a-adquisicion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f012"]
+
+# AEAT campo: Valor de Mejora o 2ª adquisición (Mejora o 2ª adquisición) [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.valor-de-mejora-o-2a-adquisicion-mejora-o-2a-adquisicion-07"
+number = "113-129"
+segmento = "M15108000"
+section = ["p08", "valor-de-mejora-o-2a-adquisicion-mejora-o-2a-adquisicion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f013"]
+
+# AEAT campo: Diferencia (Mejora o 2ª adquisición) [08]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.diferencia-mejora-o-2a-adquisicion-08"
+number = "130-146"
+segmento = "M15108000"
+section = ["p08", "diferencia-mejora-o-2a-adquisicion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f014"]
+
+# AEAT campo: Ganancia o pérdida (Mejora o 2ª adquisición) [09]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.ganancia-o-perdida-mejora-o-2a-adquisicion-09"
+number = "147-163"
+segmento = "M15108000"
+section = ["p08", "ganancia-o-perdida-mejora-o-2a-adquisicion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f015"]
+
+# AEAT campo: Ganancia Patrimonial total obtenida [10]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.ganancia-patrimonial-total-obtenida-10"
+number = "164-180"
+segmento = "M15108000"
+section = ["p08", "ganancia-patrimonial-total-obtenida"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f016"]
+
+# AEAT campo: Retención o ingreso a cuenta [11]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.retencion-o-ingreso-a-cuenta-11"
+number = "181-197"
+segmento = "M15108000"
+section = ["p08", "retencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f017"]
+
+# AEAT campo: Fecha de adquisición [55]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.fecha-de-adquisicion-55"
+number = "198-205"
+segmento = "M15108000"
+section = ["p08", "fecha-de-adquisicion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f018"]
+
+# AEAT campo: Fecha de mejora o 2ª adquisición [56]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.fecha-de-mejora-o-2a-adquisicion-56"
+number = "206-213"
+segmento = "M15108000"
+section = ["p08", "fecha-de-mejora-o-2a-adquisicion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f019"]
+
+# AEAT campo: Fecha de transmisión [57]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.fecha-de-transmision-57"
+number = "214-221"
+segmento = "M15108000"
+section = ["p08", "fecha-de-transmision"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f020"]
+
+# AEAT campo: Cuota de participación [58]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.cuota-de-participacion-58"
+number = "222-226"
+segmento = "M15108000"
+section = ["p08", "cuota-de-participacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f021"]
+
+# AEAT campo: Adquiriente. NIF [59]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.adquiriente-nif-59"
+number = "227-235"
+segmento = "M15108000"
+section = ["p08", "adquiriente-nif"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f022"]
+
+# AEAT campo: Adquiriente. F/J [60]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.adquiriente-f-j-60"
+number = "236-236"
+segmento = "M15108000"
+section = ["p08", "adquiriente-f-j"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f023"]
+
+# AEAT campo: Adquiriente. Apellidos y nombre o razón social [61]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.adquiriente-apellidos-y-nombre-o-razon-social-61"
+number = "237-316"
+segmento = "M15108000"
+section = ["p08", "adquiriente-apellidos-y-nombre-o-razon-social"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f024"]
+
+# AEAT campo: Tipo de vía [26]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.tipo-de-via-26"
+number = "317-321"
+segmento = "M15108000"
+section = ["p08", "tipo-de-via"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f025"]
+
+# AEAT campo: Nombre de la vía pública [27]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.nombre-de-la-via-publica-27"
+number = "322-371"
+segmento = "M15108000"
+section = ["p08", "nombre-de-la-via-publica"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f026"]
+
+# AEAT campo: Tipo de numeración [28]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.tipo-de-numeracion-28"
+number = "372-374"
+segmento = "M15108000"
+section = ["p08", "tipo-de-numeracion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f027"]
+
+# AEAT campo: Número de casa [29]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.numero-de-casa-29"
+number = "375-379"
+segmento = "M15108000"
+section = ["p08", "numero-de-casa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f028"]
+
+# AEAT campo: Calificador de número [30]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.calificador-de-numero-30"
+number = "380-382"
+segmento = "M15108000"
+section = ["p08", "calificador-de-numero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f029"]
+
+# AEAT campo: Bloque [31]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.bloque-31"
+number = "383-385"
+segmento = "M15108000"
+section = ["p08", "bloque"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f030"]
+
+# AEAT campo: Portal [32]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.portal-32"
+number = "386-388"
+segmento = "M15108000"
+section = ["p08", "portal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f031"]
+
+# AEAT campo: Escalera [33]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.escalera-33"
+number = "389-391"
+segmento = "M15108000"
+section = ["p08", "escalera"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f032"]
+
+# AEAT campo: Planta [34]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.planta-34"
+number = "392-394"
+segmento = "M15108000"
+section = ["p08", "planta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f033"]
+
+# AEAT campo: Puerta [35]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.puerta-35"
+number = "395-397"
+segmento = "M15108000"
+section = ["p08", "puerta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f034"]
+
+# AEAT campo: Datos complementarios de domicilio [36]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.datos-complementarios-de-domicilio-36"
+number = "398-437"
+segmento = "M15108000"
+section = ["p08", "datos-complementarios-de-domicilio"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f035"]
+
+# AEAT campo: Localidad/Población [37]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.localidad-poblacion-37"
+number = "438-467"
+segmento = "M15108000"
+section = ["p08", "localidad-poblacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f036"]
+
+# AEAT campo: Código postal [38]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.codigo-postal-38"
+number = "468-472"
+segmento = "M15108000"
+section = ["p08", "codigo-postal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f037"]
+
+# AEAT campo: Provincia [39]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.provincia-39"
+number = "473-474"
+segmento = "M15108000"
+section = ["p08", "provincia"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f038"]
+
+# AEAT campo: Municipio [40]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.municipio-40"
+number = "475-479"
+segmento = "M15108000"
+section = ["p08", "municipio"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f039"]
+
+# AEAT campo: Referencia Catastral [53]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.referencia-catastral-53"
+number = "480-499"
+segmento = "M15108000"
+section = ["p08", "referencia-catastral"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f040"]
+
+# AEAT campo: Documento publico o privado [62] [63]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.documento-publico-o-privado-62"
+number = "500-500"
+segmento = "M15108000"
+section = ["p08", "documento-publico-o-privado"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f041"]
+
+# AEAT campo: Notario o fedetario [64]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.notario-o-fedetario-64"
+number = "501-600"
+segmento = "M15108000"
+section = ["p08", "notario-o-fedetario"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f042"]
+
+# AEAT campo: Número de protocolo [65]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.numero-de-protocolo-65"
+number = "601-620"
+segmento = "M15108000"
+section = ["p08", "numero-de-protocolo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f043"]
+
+# AEAT campo: Tipo de Renta [01]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.tipo-de-renta-01-02"
+number = "621-622"
+segmento = "M15108000"
+section = ["p08", "tipo-de-renta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f044"]
+
+# AEAT campo: Número Justificante del modelo 211 [54]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.numero-justificante-del-modelo-211-54-02"
+number = "623-635"
+segmento = "M15108000"
+section = ["p08", "numero-justificante-del-modelo-211"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f045"]
+
+# AEAT campo: Valor de transmisión (Adquisición) [02]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.valor-de-transmision-adquisicion-02-02"
+number = "636-652"
+segmento = "M15108000"
+section = ["p08", "valor-de-transmision-adquisicion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f046"]
+
+# AEAT campo: Valor de adquisición (Adquisición) [03]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.valor-de-adquisicion-adquisicion-03-02"
+number = "653-669"
+segmento = "M15108000"
+section = ["p08", "valor-de-adquisicion-adquisicion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f047"]
+
+# AEAT campo: Diferencia (Adquisición) [04]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.diferencia-adquisicion-04-02"
+number = "670-686"
+segmento = "M15108000"
+section = ["p08", "diferencia-adquisicion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f048"]
+
+# AEAT campo: Ganancia o pérdida (Adquisición) [05]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.ganancia-o-perdida-adquisicion-05-02"
+number = "687-703"
+segmento = "M15108000"
+section = ["p08", "ganancia-o-perdida-adquisicion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f049"]
+
+# AEAT campo: Valor de transmisión (Mejora o 2ª adquisición) [06]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.valor-de-transmision-mejora-o-2a-adquisicion-06-02"
+number = "704-720"
+segmento = "M15108000"
+section = ["p08", "valor-de-transmision-mejora-o-2a-adquisicion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f050"]
+
+# AEAT campo: Valor de Mejora o 2ª adquisición (Mejora o 2ª adquisición) [07]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.valor-de-mejora-o-2a-adquisicion-mejora-o-2a-adquisici-07-02"
+number = "721-737"
+segmento = "M15108000"
+section = ["p08", "valor-de-mejora-o-2a-adquisicion-mejora-o-2a-adquisicion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f051"]
+
+# AEAT campo: Diferencia (Mejora o 2ª adquisición) [08]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.diferencia-mejora-o-2a-adquisicion-08-02"
+number = "738-754"
+segmento = "M15108000"
+section = ["p08", "diferencia-mejora-o-2a-adquisicion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f052"]
+
+# AEAT campo: Ganancia o pérdida (Mejora o 2ª adquisición) [09]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.ganancia-o-perdida-mejora-o-2a-adquisicion-09-02"
+number = "755-771"
+segmento = "M15108000"
+section = ["p08", "ganancia-o-perdida-mejora-o-2a-adquisicion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f053"]
+
+# AEAT campo: Ganancia Patrimonial total obtenida [10]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.ganancia-patrimonial-total-obtenida-10-02"
+number = "772-788"
+segmento = "M15108000"
+section = ["p08", "ganancia-patrimonial-total-obtenida"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f054"]
+
+# AEAT campo: Retención o ingreso a cuenta [11]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.retencion-o-ingreso-a-cuenta-11-02"
+number = "789-805"
+segmento = "M15108000"
+section = ["p08", "retencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f055"]
+
+# AEAT campo: Fecha de adquisición [55]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.fecha-de-adquisicion-55-02"
+number = "806-813"
+segmento = "M15108000"
+section = ["p08", "fecha-de-adquisicion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f056"]
+
+# AEAT campo: Fecha de mejora o 2ª adquisición [56]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.fecha-de-mejora-o-2a-adquisicion-56-02"
+number = "814-821"
+segmento = "M15108000"
+section = ["p08", "fecha-de-mejora-o-2a-adquisicion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f057"]
+
+# AEAT campo: Fecha de transmisión [57]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.fecha-de-transmision-57-02"
+number = "822-829"
+segmento = "M15108000"
+section = ["p08", "fecha-de-transmision"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f058"]
+
+# AEAT campo: Cuota de participación [58]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.cuota-de-participacion-58-02"
+number = "830-834"
+segmento = "M15108000"
+section = ["p08", "cuota-de-participacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f059"]
+
+# AEAT campo: Adquiriente. NIF [59]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.adquiriente-nif-59-02"
+number = "835-843"
+segmento = "M15108000"
+section = ["p08", "adquiriente-nif"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f060"]
+
+# AEAT campo: Adquiriente. F/J [60]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.adquiriente-f-j-60-02"
+number = "844-844"
+segmento = "M15108000"
+section = ["p08", "adquiriente-f-j"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f061"]
+
+# AEAT campo: Adquiriente. Apellidos y nombre o razón social [61]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.adquiriente-apellidos-y-nombre-o-razon-social-61-02"
+number = "845-924"
+segmento = "M15108000"
+section = ["p08", "adquiriente-apellidos-y-nombre-o-razon-social"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f062"]
+
+# AEAT campo: Tipo de vía [26]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.tipo-de-via-26-02"
+number = "925-929"
+segmento = "M15108000"
+section = ["p08", "tipo-de-via"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f063"]
+
+# AEAT campo: Nombre de la vía pública [27]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.nombre-de-la-via-publica-27-02"
+number = "930-979"
+segmento = "M15108000"
+section = ["p08", "nombre-de-la-via-publica"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f064"]
+
+# AEAT campo: Tipo de numeración [28]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.tipo-de-numeracion-28-02"
+number = "980-982"
+segmento = "M15108000"
+section = ["p08", "tipo-de-numeracion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f065"]
+
+# AEAT campo: Número de casa [29]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.numero-de-casa-29-02"
+number = "983-987"
+segmento = "M15108000"
+section = ["p08", "numero-de-casa"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f066"]
+
+# AEAT campo: Calificador de número [30]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.calificador-de-numero-30-02"
+number = "988-990"
+segmento = "M15108000"
+section = ["p08", "calificador-de-numero"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f067"]
+
+# AEAT campo: Bloque [31]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.bloque-31-02"
+number = "991-993"
+segmento = "M15108000"
+section = ["p08", "bloque"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f068"]
+
+# AEAT campo: Portal [32]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.portal-32-02"
+number = "994-996"
+segmento = "M15108000"
+section = ["p08", "portal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f069"]
+
+# AEAT campo: Escalera [33]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.escalera-33-02"
+number = "997-999"
+segmento = "M15108000"
+section = ["p08", "escalera"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f070"]
+
+# AEAT campo: Planta [34]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.planta-34-02"
+number = "1000-1002"
+segmento = "M15108000"
+section = ["p08", "planta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f071"]
+
+# AEAT campo: Puerta [35]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.puerta-35-02"
+number = "1003-1005"
+segmento = "M15108000"
+section = ["p08", "puerta"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f072"]
+
+# AEAT campo: Datos complementarios de domicilio [36]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.datos-complementarios-de-domicilio-36-02"
+number = "1006-1045"
+segmento = "M15108000"
+section = ["p08", "datos-complementarios-de-domicilio"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f073"]
+
+# AEAT campo: Localidad/Población [37]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.localidad-poblacion-37-02"
+number = "1046-1075"
+segmento = "M15108000"
+section = ["p08", "localidad-poblacion"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f074"]
+
+# AEAT campo: Código postal [38]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.codigo-postal-38-02"
+number = "1076-1080"
+segmento = "M15108000"
+section = ["p08", "codigo-postal"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f075"]
+
+# AEAT campo: Provincia [39]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.provincia-39-02"
+number = "1081-1082"
+segmento = "M15108000"
+section = ["p08", "provincia"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f076"]
+
+# AEAT campo: Municipio [40]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.municipio-40-02"
+number = "1083-1087"
+segmento = "M15108000"
+section = ["p08", "municipio"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f077"]
+
+# AEAT campo: Referencia Catastral [53]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.referencia-catastral-53-02"
+number = "1088-1107"
+segmento = "M15108000"
+section = ["p08", "referencia-catastral"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f078"]
+
+# AEAT campo: Documento publico o privado [62] [63]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.documento-publico-o-privado-62-02"
+number = "1108-1108"
+segmento = "M15108000"
+section = ["p08", "documento-publico-o-privado"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f079"]
+
+# AEAT campo: Notario o fedetario [64]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.notario-o-fedetario-64-02"
+number = "1109-1208"
+segmento = "M15108000"
+section = ["p08", "notario-o-fedetario"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f080"]
+
+# AEAT campo: Número de protocolo [65]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.numero-de-protocolo-65-02"
+number = "1209-1228"
+segmento = "M15108000"
+section = ["p08", "numero-de-protocolo"]
+data_type = "text"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f081"]
+
+# AEAT campo: RESTO. Ganancia Patrimonial total obtenida [10]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.resto-ganancia-patrimonial-total-obtenida-10"
+number = "1229-1245"
+segmento = "M15108000"
+section = ["p08", "resto-ganancia-patrimonial-total-obtenida"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f082"]
+
+# AEAT campo: RESTO. Retención o ingreso a cuenta [11]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.resto-retencion-o-ingreso-a-cuenta-11"
+number = "1246-1262"
+segmento = "M15108000"
+section = ["p08", "resto-retencion-o-ingreso-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f083"]
+
+# AEAT campo: Total ganancias patrimoniales [12]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.total-ganancias-patrimoniales-12"
+number = "1263-1279"
+segmento = "M15108000"
+section = ["p08", "total-ganancias-patrimoniales"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f084"]
+
+# AEAT campo: Total retenciones o ingresos a cuenta [13]
+[[revisions."2025-y-siguientes".casillas]]
+id = "p08.total-retenciones-o-ingresos-a-cuenta-13"
+number = "1280-1296"
+segmento = "M15108000"
+section = ["p08", "total-retenciones-o-ingresos-a-cuenta"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+export_refs = ["m151-2023.pagina08.f085"]

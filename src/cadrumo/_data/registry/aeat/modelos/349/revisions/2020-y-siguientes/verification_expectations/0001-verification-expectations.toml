@@ -1,0 +1,22 @@
+[[revisions."2020-y-siguientes".verification_expectations]]
+id = "modelo-349-recapitulativa-verification"
+computed_casilla_ids = [
+    "decl.numero-operadores",
+    "decl.importe-operaciones",
+    "op.nif-comunitario",
+    "op.clave-operacion",
+    "op.base-imponible",
+]
+reconcile_when_present_casilla_ids = [
+    "decl.numero-rectificaciones",
+    "decl.importe-rectificaciones",
+    "rect.ejercicio-rectificado",
+    "rect.periodo-rectificado",
+    "rect.base-rectificada",
+]
+tolerance = "0.00"
+rounding = "none"
+min_coverage = "1.0"
+discrepancy_causes = ["extraction_unreliable"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "rd-1624-1992:art-81", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "aeat-modelo-349-procedure"]

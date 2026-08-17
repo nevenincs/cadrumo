@@ -842,9 +842,19 @@ signed = false
 legal_refs = ["orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2022"]
 
+# Pagina 5, apartado 6 (Operaciones en regimen simplificado). Its two
+# actividad blocks are repeating operator-supplied modulo rows -- epigrafe
+# IAE, unidades and importe per modulo, indice corrector, cuota minima and
+# the derived cuota -- carried by per-slot manual_input bindings in the
+# sibling bindings fragment, the same shape Modelo 131 files. A binding is
+# addressed by POSITION and carries no box number, so the repeated rows need
+# neither one casilla smeared across both actividades nor invented box
+# numbers. Scale is read from the design's own Contenido column: a modulo
+# unit count is "8 enteros 2 decimales", not an integer.
 [[revisions."2022".export_layouts.records]]
 id = "modelo-390-page-05"
 record_type = "page_05"
+binding_record = "page_5"
 order = 5
 encoding = "latin-1"
 line_ending = "none"

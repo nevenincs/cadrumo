@@ -1,0 +1,35 @@
+# The sujeto pasivo SUSTITUTO identity, printed at the tail of both tipo-2
+# records. The design names them "NIF EMPRESARIO O PROFESIONAL DESTINATARIO
+# FINAL" and "APELLIDOS Y NOMBRE O RAZON SOCIAL DEL SUJETO", and each field's own
+# content cell continues the name and states the condition: "... PASIVO
+# SUSTITUTO (Solo se cumplimentara en caso de clave ...)".
+#
+# They are declared as data casillas rather than left as export fillers because
+# they carry a real taxpayer identity whenever that clave applies. A filler emits
+# blanks unconditionally, so modelling them that way writes an empty NIF over a
+# position AEAT expects filled -- the silent under-declaration the coverage gate
+# exists to refuse. required = false records that the condition, not the datum,
+# is optional.
+[[revisions."2020-y-siguientes".casillas]]
+id = "sustituto.nif"
+number = "179-195"
+export_refs = ["modelo-349-op-sustituto-nif", "modelo-349-rect-sustituto-nif"]
+section = ["sustituto", "identificacion"]
+data_type = "text"
+semantic_role = "intracomunitario_sustituto_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".casillas]]
+id = "sustituto.apellidos-razon-social"
+number = "196-235"
+export_refs = ["modelo-349-op-sustituto-apellidos", "modelo-349-rect-sustituto-apellidos"]
+section = ["sustituto", "identificacion"]
+data_type = "text"
+semantic_role = "intracomunitario_sustituto_nombre"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]

@@ -9,3 +9,4 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2018-2022"]
+export_refs = ["m202-2019.pagina01.f037"]
