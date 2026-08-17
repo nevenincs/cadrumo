@@ -239,7 +239,7 @@ def test_registry_casilla_schema_rejects_legacy_formula_inputs_key() -> None:
 def test_registry_casilla_collection_rejects_duplicate_casilla_ids() -> None:
     casilla = _registry_casilla_schema(_CASILLA_01)
 
-    with pytest.raises(ModeloBuilderError, match=r"duplicate casilla\.id") as exc_info:
+    with pytest.raises(ModeloBuilderError) as exc_info:
         RegistryCasillaCollection(
             casillas=(casilla, casilla.model_copy()),
             schema_version="registry:test:rev",
@@ -255,10 +255,7 @@ def test_registry_casilla_collection_rejects_dangling_formula_inputs() -> None:
         formula_input_casilla_ids=(_MISSING_INPUT_CASILLA,),
     )
 
-    with pytest.raises(
-        ModeloBuilderError,
-        match=r"formula inputs must reference canonical casilla\.id",
-    ) as exc_info:
+    with pytest.raises(ModeloBuilderError) as exc_info:
         RegistryCasillaCollection(casillas=(computed,), schema_version="registry:test:rev")
     assert exc_info.value.translated_message == "application.filing.runtime.errors.ambiguous_casilla_schema"
     assert exc_info.value.context == {
@@ -326,7 +323,7 @@ def test_runtime_projection_rejects_ambiguous_revision_casilla_identity() -> Non
         dependency_classifications={},
     )
 
-    with pytest.raises(ModeloBuilderError, match="casilla reference token '01' is ambiguous") as exc_info:
+    with pytest.raises(ModeloBuilderError) as exc_info:
         collection_from_snapshot(snapshot)
 
     assert exc_info.value.translated_message == "application.filing.runtime.errors.ambiguous_casilla_schema"
@@ -398,8 +395,12 @@ def test_runtime_projection_rejects_casilla_binding_id_collision() -> None:
         dependency_classifications={},
     )
 
-    with pytest.raises(ModeloBuilderError, match="duplicate registry id '01' shared by casilla, binding"):
+    with pytest.raises(ModeloBuilderError) as exc_info:
         collection_from_snapshot(snapshot)
+
+    assert exc_info.value.translated_message == "application.filing.runtime.errors.ambiguous_casilla_schema"
+    assert exc_info.value.context is not None
+    assert "duplicate registry id '01' shared by casilla, binding" in str(exc_info.value.context["casilla_ids"])
 
 
 def _revision_validation_years(revision: ModeloRevision) -> tuple[int, ...]:
