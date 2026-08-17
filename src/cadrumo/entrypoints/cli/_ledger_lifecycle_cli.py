@@ -62,6 +62,7 @@ def register_lifecycle_commands(app: typer.Typer) -> None:
         "pull-folder",
         help=tr("cli.ledger.pull_folder.help"),
     )(ledger_pull_folder)
+    app.command("detach", help=tr("cli.ledger.detach.help"))(ledger_detach)
     app.command("archive", help=tr("cli.ledger.archive.help"))(ledger_archive)
     app.command("stash", help=tr("cli.ledger.stash.help"))(ledger_stash)
     app.command(
@@ -73,6 +74,43 @@ def register_lifecycle_commands(app: typer.Typer) -> None:
     app.command("reset", help=tr("cli.ledger.reset.help"))(ledger_reset)
     app.command("split", help=tr("cli.ledger.split.help"))(ledger_split)
     app.command("merge", help=tr("cli.ledger.merge.help"))(ledger_merge)
+
+
+def ledger_detach(
+    ctx: typer.Context,
+    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.detach.id_help")),
+    attachment_ids: list[str] = typer.Option(
+        [],
+        "--attachment-id",
+        help=tr("cli.ledger.detach.attachment_help"),
+    ),
+    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.detach.actor_help")),
+) -> None:
+    """Detach supplementary attachments from one ledger transaction."""
+    from ...application.ledger import detach_manual_transaction_attachments
+
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    result = detach_manual_transaction_attachments(
+        bucket_id=transaction_repository.bucket_id,
+        transaction_id=resolved_id,
+        attachment_ids=tuple(attachment_ids),
+        actor=actor or resolve_active_bucket_id() or "operator",
+        source_command="aeat app ledger detach",
+        transaction_repository=transaction_repository,
+    )
+    from ._ledger_payloads import LedgerDetachResult
+
+    _emit_update_result(
+        ctx,
+        result.transaction,
+        result.ref.bucket_id,
+        result.bucket_event_ids,
+        command="ledger.detach",
+        result_cls=LedgerDetachResult,
+        notices=_stale_finalized_revision_notices(result),
+    )
 
 
 def ledger_attach(

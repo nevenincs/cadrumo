@@ -19,6 +19,7 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.ledger import ManualLedgerTransactionResult
+from ....application.review import LedgerReviewFilterSpec
 from ....core import LedgerSortField, LedgerSortOrder
 from ....domain.transactions import (
     BucketTransactionRef,
@@ -31,7 +32,7 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .._ledger_list import _sort_results, parse_ledger_list_filter_spec, project_ledger_list
+from .._ledger_list import _sort_results, project_ledger_list
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -225,7 +226,7 @@ def test_project_ledger_list_applies_sort_over_real_repository(tmp_path: Path) -
 
         projection = project_ledger_list(
             transaction_repository=TransactionCatalogueRepository(bucket_id=profile.bucket_id),
-            spec=parse_ledger_list_filter_spec([]),
+            spec=LedgerReviewFilterSpec.from_strings([]),
             group=None,
             by_group=False,
             limit=None,
