@@ -44,7 +44,8 @@ def test_fresh_state_uses_one_cadrumo_identity_across_persistence_boundaries(tmp
         dispose_engine(settings)
 
     session_path = Path(".cadrumo/auth/sessions") / f"{_BUCKET_ID}-certificate.json"
-    with isolated_runtime_profile(tmp_path=tmp_path / "fresh-session-case", bucket_id=_BUCKET_ID):
+    case_root = tmp_path / "fresh-session-case"
+    with isolated_runtime_profile(tmp_path=case_root, bucket_id=_BUCKET_ID):
         repository = secure_object_repository_for_active_bucket()
         repository.save(
             namespace=AEAT_BROWSER_SESSION_NAMESPACE.namespace,
@@ -70,7 +71,7 @@ def test_fresh_state_uses_one_cadrumo_identity_across_persistence_boundaries(tmp
         archive_schema_version=ARCHIVE_SCHEMA_VERSION,
         created_at=_INSTANT,
     )
-    write_sealed_archive(archive_path, header=header, payload_envelope_bytes=b"encrypted-envelope")
+    write_sealed_archive(archive_path, header=header, payload_bytes=b"encrypted-envelope")
     archive = read_sealed_archive(archive_path)
 
     assert storage_root == platform_base / "cadrumo" / "storage"
@@ -78,9 +79,22 @@ def test_fresh_state_uses_one_cadrumo_identity_across_persistence_boundaries(tmp
     assert session_path.as_posix().startswith(".cadrumo/auth/sessions/")
     assert session_record is not None
     assert session_record.payload == b"canonical-session-envelope"
-    assert session_namespaces == {"cadrumo.outbound.aeat.auth.sessions"}
+    # The property is product identity, not a tally. This pinned the exact set
+    # back when the fixture provisioned a bare bucket tree, so the row this test
+    # wrote was the only one present. The fixture now publishes a real capsule
+    # -- the only way a bucket can come into existence -- which legitimately
+    # brings the profile record and the creation event with it, and re-pinning
+    # the set would just re-encode whatever publication happens to write today.
+    #
+    # Asserted on the ROOT segment rather than on the absence of "aeat":
+    # `cadrumo.outbound.aeat.auth.sessions` correctly carries the authority's
+    # name in its path, because the referent there IS the tax authority. What
+    # must never appear is a namespace ROOTED at the retired product name.
+    assert AEAT_BROWSER_SESSION_NAMESPACE.namespace in session_namespaces
+    assert session_namespaces, "the fresh bucket persisted nothing, so this proves no identity"
+    assert all(namespace.split(".")[0] == "cadrumo" for namespace in session_namespaces), session_namespaces
     assert archive.header.product == "cadrumo"
-    assert archive.payload_envelope_bytes == b"encrypted-envelope"
+    assert archive.payload_bytes == b"encrypted-envelope"
     assert not (platform_base / "aeat").exists()
     assert not (storage_root / "aeat.db").exists()
     assert not (tmp_path / "profile.aeat-bucket.tar.gz").exists()
@@ -99,7 +113,8 @@ def test_former_states_are_refused_without_mutation_or_canonical_creation(tmp_pa
     # silently materialise the canonical fallback name beside the former one.
     assert not (database_root / "cadrumo.db").exists()
 
-    with isolated_runtime_profile(tmp_path=tmp_path / "former-namespace-case", bucket_id=_BUCKET_ID):
+    case_root = tmp_path / "former-namespace-case"
+    with isolated_runtime_profile(tmp_path=case_root, bucket_id=_BUCKET_ID):
         repository = secure_object_repository_for_active_bucket()
         with pytest.raises(StorageValidationError):
             repository.save(

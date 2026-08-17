@@ -55,7 +55,7 @@ def _write_valid_archive(path: Path, *, payload: bytes = _PAYLOAD, bucket_id: st
             archive_schema_version=ARCHIVE_SCHEMA_VERSION,
             created_at=_INSTANT,
         ),
-        payload_envelope_bytes=payload,
+        payload_bytes=payload,
     )
 
 
@@ -80,7 +80,7 @@ class TestBundleExportCrashWindow:
 
         contents = read_sealed_archive(archive)
         assert contents.header.bucket_id == _BUCKET_ID
-        assert contents.payload_envelope_bytes == _PAYLOAD
+        assert contents.payload_bytes == _PAYLOAD
 
     def test_truncated_archive_is_rejected_at_read(self, tmp_path: Path) -> None:
         # A torn write that damages the gzip stream (30-80% kept) is caught at

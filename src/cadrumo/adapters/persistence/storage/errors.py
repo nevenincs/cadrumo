@@ -135,16 +135,6 @@ class SessionExpiredError(SecretStoreError):
     """
 
 
-class PassphraseTooShortError(SecretStoreError):
-    """Raised when an operator-supplied passphrase falls below the NIST floor.
-
-    NIST SP 800-63B §5.1.1.1 mandates that verifiers SHALL require user-
-    chosen memorized secrets to be at least 8 characters in length. The
-    :class:`FileFallbackMasterKeyProvider` rejects shorter passphrases at
-    resolution time.
-    """
-
-
 class KeyringUnavailableError(SecretStoreError):
     """Raised when the OS keychain backend is unusable.
 
@@ -158,51 +148,22 @@ class MasterKeyUnavailableError(SecretStoreError):
     """Raised when no master key can be acquired from any provider."""
 
 
-class MasterKeyKdfVersionError(MasterKeyUnavailableError):
-    """Raised when the on-disk ``master.kdf`` declares a KDF version this build cannot consume.
-
-    The substrate gates the master.kdf parameters by version. Mismatch means
-    the operator's passphrase may be correct, but the on-disk parameters do not
-    match this build's supported key-derivation contract.
-    """
-
-
-class MasterKeyKeychainLockedError(MasterKeyUnavailableError):
-    """Raised when the OS keychain is reachable but the entry is locked.
-
-    Distinct from :class:`KeyringUnavailableError` (no usable backend at
-    all). This class signals a recoverable state: the operator unlocks
-    the OS keychain (Touch ID / Windows Hello / desktop-wallet unlock)
-    and retries. The CLI's error envelope renders the actionable hint.
-    """
-
-
-class MasterKeyPassphraseMismatchError(MasterKeyUnavailableError):
-    """Raised when the file-fallback passphrase does not unwrap ``master.key``.
-
-    Recoverable by re-entering the passphrase. A forgotten passphrase
-    has no in-app remedy: the global recovery facade that once re-minted
-    the master key from a recovery-key backup was retired with the
-    per-profile custody cutover, so the only route back is a backup of
-    the secret-store directory taken under the passphrase that unlocks
-    it. The CLI's error envelope distinguishes this case from
-    :class:`MasterKeyMaterialMissingError` so retries do not waste
-    backoff budget on missing-file errors.
-    """
-
-
 class MasterKeyMaterialMissingError(MasterKeyUnavailableError):
-    """Raised when no master-key material exists at all.
+    """Raised when no key material this substrate can open a bucket with exists.
 
-    Neither the keyring entry nor the file-fallback artefacts
-    (``master.key`` / ``master.kdf`` / ``salt``) are present. The
-    substrate has not been provisioned. The operator's actionable
-    next step is to set up a profile, which mints the material.
+    The shared process-wide key store this once described -- a keyring entry
+    and a passphrase-derived file fallback -- was deleted with its providers,
+    so the artefacts named here no longer exist to be absent. What survives is
+    the same distinction at the current custody boundary: a bucket's data key
+    lives in that profile's own password custody and is unwrapped by
+    ``aeat config login``, so this class means no unlocked custody is
+    available rather than a wrong passphrase, and it is raised without minting
+    anything.
 
-    Raised by canonical read paths to distinguish "not provisioned"
-    from "wrong passphrase" without minting key material. Explicit
-    profile creation is responsible for provisioning; ordinary load
-    paths fail closed with this class when material is absent.
+    The operator's actionable next step is unchanged: set up or log in to a
+    profile. Ordinary load paths fail closed with this class rather than
+    provisioning on demand, which is what keeps "not provisioned" and
+    "authentication failed" separable at the surface.
     """
 
 

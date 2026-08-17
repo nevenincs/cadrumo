@@ -98,11 +98,6 @@ was deleted look identical from here, and only one of them is fine.
 """
 
 CONSTANTS_OUTSIDE_THE_INVENTORY: Final[Mapping[str, str]] = {
-    "WRAPPED_MASTER_KEY_SCHEMA_VERSION": (
-        "Shared-master recovery record. Excluded BY DECISION rather than oversight: it belongs "
-        "to the surface being deleted, so enrolling it would create an entry destined to outlive "
-        "its implementation -- the exact failure this gate exists to catch, committed on purpose."
-    ),
     "MANUAL_CORPUS_TEXT_SCHEMA_VERSION": (
         "Bundled corpus sidecar. Ships inside the wheel, is versioned with the code and replaced "
         "wholesale on upgrade, and nothing under src/ writes one -- only a dev extraction tool "

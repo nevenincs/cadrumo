@@ -226,7 +226,7 @@ class SecretStore:
                 persisted via this repository.
             master_key_provider: Optional override. Used to derive the
                 lookup sub-key via HKDF. Falls back to
-                :func:`adapters.persistence.storage.master_key.get_master_key_provider`.
+                the active bucket session's data key.
         """
         self._store_dir = Path(store_dir)
         self._blob_store = blob_store

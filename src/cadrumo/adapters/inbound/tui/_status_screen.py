@@ -112,7 +112,7 @@ class StatusPageData:
     omitted entirely rather than shown blank."""
 
 
-_PROFILE_SETUP_STATE_KEYS: dict[str, str] = {
+_PROFILE_SETUP_STATE_LOCALE_KEYS: dict[str, str] = {
     "complete": "flows.status.profiles.status.complete",
     "incomplete": "flows.status.profiles.status.incomplete",
 }
@@ -244,7 +244,7 @@ class StatusApp(App[None]):
         for index, row in enumerate(self._data.profiles):
             # An unmapped setup-state token is not operator copy. It must still
             # refuse to look healthy, but without exposing the storage token.
-            setup_state_key = _PROFILE_SETUP_STATE_KEYS.get(row.setup_state or "")
+            setup_state_key = _PROFILE_SETUP_STATE_LOCALE_KEYS.get(row.setup_state or "")
             status_label = (
                 tr(setup_state_key) if setup_state_key is not None else tr("flows.status.profiles.status.unknown")
             )

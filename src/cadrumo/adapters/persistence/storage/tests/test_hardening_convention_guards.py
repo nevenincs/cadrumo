@@ -27,9 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _HARDENING_TEST_SURFACES = (
     "src/cadrumo/adapters/persistence/storage/blob_store/tests/test_materialisation.py",
-    "src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key.py",
     "src/cadrumo/adapters/persistence/storage/tests/test_runtime.py",
-    "src/cadrumo/adapters/persistence/storage/master_key/tests/test_kdf_params.py",
     # Successor of `test_profile_repository.py`, which no longer exists: the
     # profile repository's test module in that package is now `test_repository`.
     # The stale name silently dropped a surface from the environment-mutation
@@ -45,9 +43,9 @@ _ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS = {
     "src/cadrumo/adapters/persistence/storage/runtime_repository.py",
 }
 _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
+    "src/cadrumo/adapters/persistence/storage/master_key/tests/test_adverse_sessions.py",
     "src/cadrumo/adapters/persistence/storage/envelope/tests/test_secure_bound_repository_contract.py",
     "src/cadrumo/adapters/persistence/storage/envelope/tests/_repository_contract_support.py",
-    "src/cadrumo/adapters/persistence/storage/master_key/tests/test_adverse_sessions.py",
     "src/cadrumo/adapters/persistence/storage/sql/tests/test_engine.py",
     "src/cadrumo/adapters/persistence/storage/tests/test_runtime.py",
     "src/cadrumo/application/tests/test_diagnostics.py",

@@ -10,7 +10,6 @@ from ..adapters.persistence.storage.master_key import (
     BucketSession,
     MasterKeyReentrantError,
     activate_session,
-    exit_provider_session,
 )
 from ..core.time import now
 
@@ -66,8 +65,22 @@ class EphemeralMasterKeyProvider:
         exc: BaseException | None,
         tb: TracebackType | None,
     ) -> None:
-        """Evict this provider's session through the shared teardown boundary."""
-        exit_provider_session(self, exc_type, exc, tb)
+        """Unbind this provider's activation, then close its session.
+
+        The order matters and is why this is not two independent statements:
+        the activation is a scoped binding onto the session, so unwinding it
+        first means no binding ever names a closed session. Both handles are
+        cleared before either is touched, so a raising teardown cannot leave
+        this provider holding a half-torn-down session it would try to reuse.
+        """
+        activation, self._activation_cm = self._activation_cm, None
+        session, self._session = self._session, None
+        try:
+            if activation is not None:
+                activation.__exit__(exc_type, exc, tb)
+        finally:
+            if session is not None:
+                session.close()
 
 
 __all__ = ["EphemeralMasterKeyProvider"]

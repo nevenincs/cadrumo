@@ -32,7 +32,6 @@ import pytest
 
 from ......core.config import Settings
 from ......tests.live_gate import requires_live_enabled
-from .....persistence.storage import get_master_key_provider
 from ...browser import default_browser_session_factory
 from .. import (
     AeatLoginAssertion,
@@ -93,44 +92,43 @@ async def test_clave_permanente_provider_full_login_with_central_playwright() ->
             "are not both configured after live opt-in",
         )
 
-    with get_master_key_provider():
-        provider = ClavePermanenteAuthProvider(settings, browser_session_factory=_central_browser_session)
-        try:
-            session = await provider.authenticate()
-            assert isinstance(session, AeatSession)
-            expected_identity = settings.cadrumo_clave_permanente_dni_nie.get_secret_value().strip().upper()
-            assert session.identity_nif == expected_identity
-            assert isinstance(session.provider_detail, ClavePermanenteSessionDetail)
-            assertion = await provider.verify(session)
-            assert assertion.is_valid is True, (
-                f"fresh Cl@ve Permanente login assertion failed: "
-                f"status={assertion.status_code} error={assertion.error_message}"
-            )
-        finally:
-            await provider.close()
-
-        from ......core import require_active_bucket_id
-        from ......core.auth_session_keys import aeat_auth_session_storage_state_path
-
-        storage_state_path = aeat_auth_session_storage_state_path(
-            require_active_bucket_id(),
-            "clave-permanente-storage",
+    provider = ClavePermanenteAuthProvider(settings, browser_session_factory=_central_browser_session)
+    try:
+        session = await provider.authenticate()
+        assert isinstance(session, AeatSession)
+        expected_identity = settings.cadrumo_clave_permanente_dni_nie.get_secret_value().strip().upper()
+        assert session.identity_nif == expected_identity
+        assert isinstance(session.provider_detail, ClavePermanenteSessionDetail)
+        assertion = await provider.verify(session)
+        assert assertion.is_valid is True, (
+            f"fresh Cl@ve Permanente login assertion failed: "
+            f"status={assertion.status_code} error={assertion.error_message}"
         )
-        assert _session_store.exists(storage_state_path)
-        assert not storage_state_path.exists()
-        assert not storage_state_path.with_suffix(".meta.json").exists()
+    finally:
+        await provider.close()
 
-        resume_provider = ClavePermanenteAuthProvider(settings, browser_session_factory=_central_browser_session)
-        try:
-            resumed_session = await resume_provider.authenticate()
-            assert isinstance(resumed_session, AeatSession)
-            assert resumed_session.identity_nif == expected_identity
-            assert isinstance(resumed_session.provider_detail, ClavePermanenteSessionDetail)
-            resumed_assertion = await resume_provider.verify(resumed_session)
-            assert isinstance(resumed_assertion, AeatLoginAssertion)
-            assert resumed_assertion.is_valid is True, (
-                "persisted Cl@ve Permanente login assertion failed: "
-                f"status={resumed_assertion.status_code} error={resumed_assertion.error_message}"
-            )
-        finally:
-            await resume_provider.close()
+    from ......core import require_active_bucket_id
+    from ......core.auth_session_keys import aeat_auth_session_storage_state_path
+
+    storage_state_path = aeat_auth_session_storage_state_path(
+        require_active_bucket_id(),
+        "clave-permanente-storage",
+    )
+    assert _session_store.exists(storage_state_path)
+    assert not storage_state_path.exists()
+    assert not storage_state_path.with_suffix(".meta.json").exists()
+
+    resume_provider = ClavePermanenteAuthProvider(settings, browser_session_factory=_central_browser_session)
+    try:
+        resumed_session = await resume_provider.authenticate()
+        assert isinstance(resumed_session, AeatSession)
+        assert resumed_session.identity_nif == expected_identity
+        assert isinstance(resumed_session.provider_detail, ClavePermanenteSessionDetail)
+        resumed_assertion = await resume_provider.verify(resumed_session)
+        assert isinstance(resumed_assertion, AeatLoginAssertion)
+        assert resumed_assertion.is_valid is True, (
+            "persisted Cl@ve Permanente login assertion failed: "
+            f"status={resumed_assertion.status_code} error={resumed_assertion.error_message}"
+        )
+    finally:
+        await resume_provider.close()

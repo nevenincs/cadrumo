@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Protocol
 from uuid import UUID
 
+from .....core import StorageCategory, storage_location
 from ._errors import (
     ProfileCustodyRecordError,
     ProfileCustodyRecoveryGuidance,
@@ -44,12 +45,20 @@ class _CommitIdentity(Protocol):
     profile_id: UUID
 
 
-PROFILE_CUSTODY_RETIRED_BUCKET_MEMBER_PATHS: tuple[str, ...] = ("manifest.toml",)
+PROFILE_CUSTODY_RETIRED_BUCKET_MEMBER_PATHS: tuple[str, ...] = (
+    storage_location(StorageCategory.BUCKET_MANIFEST).subpath,
+)
 """Closed, exact retired members checked below every bucket candidate.
 
-``manifest.toml`` was the former plaintext profile authority.  Current
-capsules have no manifest member: their only discovery authority is the
-commit marker and their label is a non-authoritative current projection.
+The former plaintext profile authority.  Current capsules have no manifest
+member: their only discovery authority is the commit marker and their label
+is a non-authoritative current projection.
+
+The name is read from the core storage taxonomy rather than re-typed, because
+this detector is the load-bearing reader of it and a second literal here could
+drift silently -- recognising nothing while still looking correct.  If the
+taxonomy member is ever deleted outright, this import fails loudly at module
+load, which is the right failure for a refusal path.
 """
 
 PROFILE_CUSTODY_RETIRED_KEYSTORE_MEMBER_PATHS: tuple[str, ...] = ("bucket.dek.json",)

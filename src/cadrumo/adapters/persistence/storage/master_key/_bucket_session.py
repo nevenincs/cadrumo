@@ -1,8 +1,8 @@
 """Per-bucket instance-scoped unlock state.
 
-`BucketSession` replaces the module-global `ClassVar` caches that
-previously survived a bucket switch on `KeyringMasterKeyProvider` and
-`FileFallbackMasterKeyProvider`. Each instance binds to exactly one
+`BucketSession` replaces the module-global `ClassVar` caches that once
+survived a bucket switch on the shared-master providers, both since
+deleted. Each instance binds to exactly one
 `bucket_id`; the unlocked KEK and DEK are held in `bytearray` buffers
 so `close()` can overwrite the bytes in place before the references are
 dropped. The session is the only object that holds cleartext key
@@ -16,11 +16,6 @@ short-lived `bytes` copies of the buffers when callers materialised the
 those copies. The contract is documented honestly so callers do not
 assume Python guarantees a deeper wipe than the language can deliver.
 
-See Also:
-    :class:`~adapters.persistence.storage.master_key.KeyringMasterKeyProvider`
-        Provider whose former process cache is replaced by this session.
-    :class:`~adapters.persistence.storage.master_key.FileFallbackMasterKeyProvider`
-        File-backed provider whose unlocked buffers are session-scoped.
 """
 
 from __future__ import annotations

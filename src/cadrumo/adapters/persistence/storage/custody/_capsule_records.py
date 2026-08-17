@@ -21,6 +21,7 @@ from .....core.hashing import (
     validate_prefixed_digest,
 )
 from .....core.identity import PrefixedContentDigest, ProfileLabel
+from .....core.time import now as _now
 from ._errors import ProfileCustodyRecordError
 from ._filesystem import ProfileCustodyPasswordReadOperation
 from ._records import ProfileCustodyEnvelope
@@ -250,7 +251,7 @@ class ProfileCustodyCommit(_ProfileCustodyCommitPayload):
         publication_kind: Literal["enroll", "restore"],
         published_at: datetime | None = None,
     ) -> ProfileCustodyCommit:
-        instant = (published_at or datetime.now(UTC)).astimezone(UTC)
+        instant = (published_at or _now()).astimezone(UTC)
         serialized_time = instant.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         payload = _ProfileCustodyCommitPayload(
             schema_version=PROFILE_CUSTODY_COMMIT_SCHEMA_VERSION,
