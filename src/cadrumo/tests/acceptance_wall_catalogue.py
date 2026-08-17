@@ -176,7 +176,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "machine without data loss."
         ),
         test_module="src/cadrumo/entrypoints/cli/tests/test_profile_archive_roundtrip.py",
-        test_function="test_archive_export_import_roundtrip",
+        test_function="test_archive_export_restore_roundtrip",
     ),
     AcceptanceWallEntry(
         issue=219,

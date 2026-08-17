@@ -2,11 +2,16 @@
 
 Exercises the on-disk footprint measurement against a real bucket directory
 tree: the fixture provisions a genuine ``BUCKET_DEK_V1`` bucket (real
-manifest and real ``db``/``blobs`` subdirectories) and the tests write
-real bytes to the database file and to the blobs directory, then assert the
-service's byte totals track the real filesystem state via plain ``os.stat``
-— never decrypted secure-object content. This is the #422 sandbox
-disk-envelope-accounting slice.
+``db``/``blobs`` subdirectories) and the tests write real bytes to the
+database file and to the blobs directory, then assert the service's byte
+totals track the real filesystem state via plain ``os.stat`` — never
+decrypted secure-object content.
+
+Only current hierarchy members are measured. The retired plaintext bucket
+manifest was once enumerated as an extra file beside ``db``; a store that
+could carry one is a store custody discovery refuses outright, so counting
+it made this the one site presenting a retired artefact as an ordinary
+member of a current bucket.
 
 Authority: ``aeat-architecture-boundaries`` (the service reads
 filesystem metadata through the existing

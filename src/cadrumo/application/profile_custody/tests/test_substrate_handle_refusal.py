@@ -47,6 +47,7 @@ class _StandInBucketSession:
         self.idle_deadline = now + timedelta(minutes=5)
         self.absolute_deadline = now + timedelta(minutes=30)
         self.unsecured_backend = False
+        self.sealed = False
 
     def touch(self, now: datetime) -> None:
         self.idle_deadline = now + timedelta(minutes=5)
@@ -56,6 +57,7 @@ class _StandInBucketSession:
 
     def close(self) -> None:
         self.dek = b""
+        self.sealed = True
 
 
 class _StandInPersistedSession:

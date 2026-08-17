@@ -38,7 +38,7 @@ from ....application.profile_custody import (
 from ....core import ProfileSessionRefusalReason, read_pointer
 from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
-from .._login_session import login_profile, logout_active_profile, resume_active_profile_session
+from .._login_session import bind_resumed_profile_session, login_profile, logout_active_profile
 from .._profile_record_repository import close_active_profile_record_session
 from .._registration import register_profile_with_credentials
 
@@ -71,7 +71,7 @@ def test_logout_clears_the_live_session_the_pointer_and_the_persisted_accelerati
     """Every artefact logout destroys, and the negative that makes it matter.
 
     The security-load-bearing claim is the last one: once the durable
-    acceleration receipt is gone, ``resume_active_profile_session`` can no
+    acceleration receipt is gone, ``bind_resumed_profile_session`` can no
     longer reconstruct the DEK and refuses ``ABSENT``. That refusal is
     decided before the resume path reaches the credential store, which is
     why this case needs no keychain precondition.
@@ -87,7 +87,7 @@ def test_logout_clears_the_live_session_the_pointer_and_the_persisted_accelerati
             assert profile_current_bucket_session() is None
             assert not session_path.exists()
             assert read_pointer(storage_root) is None
-            assert resume_active_profile_session(bucket_id=profile_id) is ProfileSessionRefusalReason.ABSENT
+            assert bind_resumed_profile_session(bucket_id=profile_id) is ProfileSessionRefusalReason.ABSENT
             assert profile_current_bucket_session() is None
         finally:
             _close_live_login()

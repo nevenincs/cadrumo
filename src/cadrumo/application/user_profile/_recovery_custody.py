@@ -185,6 +185,7 @@ def restore_profile_with_password(
     password_envelope: ProfileCustodyEnvelopePort,
     sentinel: ProfileCustodySentinelPort,
     database_bytes: bytes,
+    recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None = None,
     root: Path | None = None,
 ) -> CommittedProfileView:
     """Republish one capsule proving nothing but the profile's own password.
@@ -210,6 +211,7 @@ def restore_profile_with_password(
         database_bytes=database_bytes,
         authority="password",
         root=root,
+        recovery_envelope=recovery_envelope,
     )
 
 
@@ -221,6 +223,7 @@ def restore_profile_from_recovery_artifact(
     password_envelope: ProfileCustodyEnvelopePort,
     sentinel: ProfileCustodySentinelPort,
     database_bytes: bytes,
+    recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None = None,
     root: Path | None = None,
 ) -> CommittedProfileView:
     """Republish one capsule proving a portable artifact instead of the password.
@@ -258,6 +261,7 @@ def restore_profile_from_recovery_artifact(
         database_bytes=database_bytes,
         authority="recovery_artifact",
         root=root,
+        recovery_envelope=recovery_envelope,
     )
 
 
@@ -270,8 +274,19 @@ def _publish_restored_capsule(
     database_bytes: bytes,
     authority: ProfileRestoreAuthority,
     root: Path | None,
+    recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None = None,
 ) -> CommittedProfileView:
-    """Bind a proved key to one record session and publish exactly once."""
+    """Bind a proved key to one record session and publish exactly once.
+
+    ``recovery_envelope`` is carried forward rather than dropped. Recovery is
+    installable only at publication, and a restore IS a publication -- so a
+    republished capsule that omitted the wrapper it had would leave the
+    operator with a working profile whose second door had silently closed,
+    with no way to reopen it and nothing said. Passing it through is what
+    makes a restore preserve the profile rather than merely reproduce its
+    records; the wrapper is unchanged material, so the phrase the operator
+    already holds keeps working.
+    """
     session = ProfileRecordSession.from_envelope(envelope=password_envelope, dek=dek)
     try:
         return ProfileCapsuleLifecycle(root=root).restore(
@@ -282,6 +297,7 @@ def _publish_restored_capsule(
             record_session=session,
             database_bytes=database_bytes,
             authority=authority,
+            recovery_envelope=recovery_envelope,
         )
     finally:
         session.close()

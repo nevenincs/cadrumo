@@ -45,15 +45,9 @@ def isolated_language_state(tmp_path: Path) -> Iterator[str]:
 
 
 def _seed_profile_language(language: str, *, profile_id: str) -> None:
-    from ...workflow import workflow_state_repository
-
-    repository = workflow_state_repository()
-    repository.update(
-        lambda state: register_minimal_profile(
-            state,
-            profile_id=profile_id,
-            overrides={"preferences.output_language": language},
-        ),
+    register_minimal_profile(
+        profile_id=profile_id,
+        overrides={"preferences.output_language": language},
     )
 
 

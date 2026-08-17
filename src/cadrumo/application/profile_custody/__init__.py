@@ -20,21 +20,18 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import (
-    STORAGE_NAMESPACE_REGISTRY,
     USER_PROFILE_VALUE_NAMESPACE,
     KeyringUnavailableError,
-    MasterKeyKeychainLockedError,
     MasterKeyMaterialMissingError,
-    MasterKeyPassphraseMismatchError,
     SecureObjectRepository,
     bucket,
-    create_engine_from_settings,
     crypto,
     custody,
     generate_recovery_key,
     master_key,
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
+    secure_object_repository_for_staged_bucket,
 )
 from ...core import SecureObjectWrite, StorageCategory, storage_location
 from ...core.classification import SensitivityClass
@@ -297,6 +294,18 @@ class ProfileBucketStoragePathsPort(Protocol):
         """The bucket's encrypted database file."""
         ...
 
+    @property
+    def bucket_id(self) -> str:
+        """The bucket these paths were resolved for.
+
+        Declared because the lock refusals name it, which is what lets this
+        narrowed view satisfy the bucket lock's own target protocol directly.
+        Without it the two lock delegations had to re-widen the port back to
+        the concrete record through a runtime identity check -- a check that
+        stood in for exactly this declaration.
+        """
+        ...
+
 
 class ProfileBucketStoragePort(Protocol):
     """Bucket layout and lock operations exposed to application authorities."""
@@ -477,10 +486,10 @@ class _PersistenceProfileBucketStorage:
         return bucket.bucket_paths(root, bucket_id)
 
     def acquire_lock(self, paths: ProfileBucketStoragePathsPort, *, wait_seconds: float) -> None:
-        bucket.acquire_lock(_substrate_handle(paths, bucket.BucketPaths, "bucket paths"), wait_seconds=wait_seconds)
+        bucket.acquire_lock(paths, wait_seconds=wait_seconds)
 
     def release_lock(self, paths: ProfileBucketStoragePathsPort) -> None:
-        bucket.release_lock(_substrate_handle(paths, bucket.BucketPaths, "bucket paths"))
+        bucket.release_lock(paths)
 
 
 class _PersistenceProfileSecureObjectInventory:
@@ -555,8 +564,15 @@ def create_profile_custody_registration_material(
     dek: bytes,
     dek_epoch: str,
     salt: bytes,
+    password_generation: int = 1,
 ) -> ProfileCustodyRegistrationMaterial:
-    """Mint the password envelope and DEK sentinel at the custody boundary."""
+    """Mint the password envelope and DEK sentinel at the custody boundary.
+
+    ``password_generation`` defaults to the first, which is what creation
+    wants. A rotation passes the successor: the same DEK and the same epoch
+    re-wrapped under a new password, which is why this mint serves both doors
+    instead of a rotation growing a parallel one.
+    """
     calibration = custody.calibrate_profile_kdf(salt=salt)
     envelope = custody.create_profile_custody_password_envelope(
         profile_id=profile_id,
@@ -564,6 +580,7 @@ def create_profile_custody_registration_material(
         dek=dek,
         dek_epoch=dek_epoch,
         kdf=calibration.parameters,
+        password_generation=password_generation,
     )
     sentinel = custody.create_profile_custody_sentinel(envelope=envelope, dek=dek)
     return ProfileCustodyRegistrationMaterial(envelope=envelope, sentinel=sentinel)
@@ -699,6 +716,56 @@ def load_profile_custody_password_material(
     return custody.load_committed_profile_password_material(profile_id, root=root)
 
 
+def replace_profile_custody_envelope(
+    profile_id: UUID,
+    payload: bytes,
+    *,
+    expected_sha256: str,
+    root: Path | None = None,
+) -> None:
+    """CAS-replace one committed capsule's password envelope.
+
+    The application layer holds the transaction lock and supplies the digest
+    of the envelope it believes it is replacing; the provider owns the
+    filesystem discipline and refuses a payload that would change the DEK
+    epoch or name another profile. Re-wrapping is the only sanctioned edit to
+    a committed envelope -- there is no path here that re-keys one.
+    """
+    custody.replace_committed_profile_custody_envelope(
+        profile_id,
+        payload,
+        expected_sha256=expected_sha256,
+        root=root,
+    )
+
+
+def parse_profile_custody_envelope(payload: bytes) -> ProfileCustodyEnvelopePort:
+    """Parse one canonical password envelope from bytes the caller holds.
+
+    The committed-capsule reader cannot serve a restore, whose capsule is by
+    definition unpublished, so its material arrives as bytes and is parsed
+    here through the same strict record the publisher wrote. Parsing rather
+    than trusting is the point: a torn member is refused before anything is
+    republished, not discovered as a decryption failure afterwards.
+    """
+    return custody.parse_profile_custody_envelope(payload)
+
+
+def parse_profile_custody_sentinel(payload: bytes) -> ProfileCustodySentinelPort:
+    """Parse one canonical DEK sentinel from bytes the caller holds."""
+    return custody.parse_profile_custody_sentinel_record(payload)
+
+
+def parse_profile_custody_recovery_envelope(payload: bytes) -> ProfileCustodyRecoveryEnvelopePort:
+    """Parse one canonical optional recovery wrapper from bytes the caller holds."""
+    return custody.parse_profile_custody_recovery_envelope(payload)
+
+
+def profile_custody_recovery_envelope_path(capsule_path: Path) -> Path:
+    """Return where a committed capsule keeps its optional recovery wrapper."""
+    return capsule_path / "custody" / custody.PROFILE_CUSTODY_RECOVERY_FILENAME
+
+
 def unlock_profile_custody_password(
     material: ProfileCustodyPasswordMaterialPort,
     *,
@@ -826,8 +893,6 @@ def profile_is_authentication_failure(error: BaseException) -> bool:
     return isinstance(
         error,
         (
-            MasterKeyPassphraseMismatchError,
-            MasterKeyKeychainLockedError,
             KeyringUnavailableError,
             MasterKeyMaterialMissingError,
         ),
@@ -972,19 +1037,15 @@ def profile_custody_secure_object_repository(
 
     if database_file is None:
         database_file = bucket.bucket_paths(root, str(profile_id)).database_file
-    database_file.parent.mkdir(parents=True, exist_ok=True)
-    settings = Settings(cadrumo_database_url=f"sqlite:///{database_file.as_posix()}")
-    with _temporary_profile_custody_session(profile_id=profile_id, dek=dek, root=root):
-        engine = create_engine_from_settings(settings)
-        try:
-            yield SecureObjectRepository(
-                engine=engine,
-                namespace_registry=STORAGE_NAMESPACE_REGISTRY,
-                active_session_bucket_id=str(profile_id),
-                require_secure_active_session=True,
-            )
-        finally:
-            engine.dispose()
+    # The DEK binding stays out here on purpose: a staged capsule's key exists
+    # only inside the transaction creating it, so it cannot be storage's to
+    # resolve. Everything below that -- engine lifetime, namespace registry,
+    # session requirement -- is runtime-owned through the staged-bucket door.
+    with (
+        _temporary_profile_custody_session(profile_id=profile_id, dek=dek, root=root),
+        secure_object_repository_for_staged_bucket(str(profile_id), database_file=database_file) as staged,
+    ):
+        yield staged
 
 
 @contextmanager
@@ -1077,6 +1138,9 @@ __all__ = [
     "export_profile_recovery_artifact",
     "load_profile_custody_data_file",
     "load_profile_custody_password_material",
+    "parse_profile_custody_envelope",
+    "parse_profile_custody_recovery_envelope",
+    "parse_profile_custody_sentinel",
     "profile_advance_session_idle_deadline",
     "profile_bind_bucket_session",
     "profile_bucket_session_open",
@@ -1085,6 +1149,7 @@ __all__ = [
     "profile_current_bucket_session",
     "profile_custody_owner_root",
     "profile_custody_record_session_material",
+    "profile_custody_recovery_envelope_path",
     "profile_custody_secure_object_key_digest",
     "profile_custody_secure_object_namespace",
     "profile_custody_secure_object_repository",
@@ -1105,6 +1170,7 @@ __all__ = [
     "prove_profile_recovery_artifact",
     "refuse_profile_login_without_password_channel",
     "replace_profile_custody_data_file",
+    "replace_profile_custody_envelope",
     "unlock_profile_custody_password",
     "verify_profile_custody_dek_against_sentinel",
 ]

@@ -174,18 +174,18 @@ class BucketMaintenanceService:
 
         storage = default_profile_bucket_storage()
         paths = storage.resolve(load_settings().cadrumo_local_storage_root, command.bucket_id)
-        manifest = paths.bucket_dir / storage_location(StorageCategory.BUCKET_MANIFEST).relative_path()
         rows: list[BucketDiskUsageSubdirRow] = []
         total_bytes = 0
-        for name, directory, extra_files in (
-            (storage_location(StorageCategory.BUCKET_DATABASE).subpath, paths.db_dir, (manifest,)),
-            (storage_location(StorageCategory.BUCKET_BLOBS).subpath, paths.blobs_dir, ()),
+        # Only current hierarchy members are measured. The retired plaintext
+        # bucket manifest was counted here as an extra file, which made this
+        # the one site treating it as an ordinary member of a current bucket:
+        # nothing writes one, and a store carrying one is a store custody
+        # discovery refuses outright.
+        for name, directory in (
+            (storage_location(StorageCategory.BUCKET_DATABASE).subpath, paths.db_dir),
+            (storage_location(StorageCategory.BUCKET_BLOBS).subpath, paths.blobs_dir),
         ):
             byte_count, file_count = directory_byte_total(directory, tolerate_errors=True)
-            for extra_file in extra_files:
-                if extra_file.is_file():
-                    byte_count += extra_file.stat().st_size
-                    file_count += 1
             rows.append(BucketDiskUsageSubdirRow(subdir=name, total_bytes=byte_count, file_count=file_count))
             total_bytes += byte_count
         return DiskUsageBucketResult(bucket_id=command.bucket_id, total_bytes=total_bytes, subdirs=tuple(rows))

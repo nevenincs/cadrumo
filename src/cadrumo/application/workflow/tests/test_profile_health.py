@@ -29,7 +29,7 @@ from ....application.user_profile._lifecycle import ProfileCapsuleLifecycle
 from ....application.user_profile._profile_record_repository import bound_profile_record_session
 from ....core import BucketPointer, read_pointer, write_pointer
 from ....core.config import override_settings
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._models import WorkflowState
 from .._profile_health import assess_active_profile_health, repair_active_profile_pointer
 
@@ -87,7 +87,7 @@ def _create_current_profile(*, root: Path, facts: tuple[UserProfileFact, ...] = 
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
         data_files={},
-        initial_record=UserProfileRecord(profile_id=_PROFILE_ID, facts=facts),
+        initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_ID, facts=facts),
         record_session=session,
     )
     return session

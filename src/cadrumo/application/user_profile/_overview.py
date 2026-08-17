@@ -471,7 +471,7 @@ def _repeatable_section_views(
 #: a leaf name is chosen by whichever family writes the namespace and other
 #: namespaces (``renta_family.descendiente`` and siblings) are repeatable
 #: SECTIONS with their own declared field labels, not this shape.
-_CENSO_DIVERGENCIA_LEAF_LABEL_KEYS: Final[Mapping[str, str]] = {
+_CENSO_DIVERGENCIA_LEAF_LABEL_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "axis": "cli.config.profile.censo.divergencia_leaf_axis",
     "artefact_value": "cli.config.profile.censo.divergencia_leaf_artefact_value",
     "source": "cli.config.profile.censo.divergencia_leaf_source",
@@ -544,7 +544,7 @@ def _namespace_leaf_view(
 
     The leaf is named in the label because it is the only thing telling two rows
     of one instance apart. For the ``censo.divergencia`` namespace it is
-    translated through :data:`_CENSO_DIVERGENCIA_LEAF_LABEL_KEYS`; every other
+    translated through :data:`_CENSO_DIVERGENCIA_LEAF_LABEL_LOCALE_KEYS`; every other
     namespace still shows the stored key itself, since the leaf is not prose
     this layer may invent a translation for.
     """
@@ -554,8 +554,8 @@ def _namespace_leaf_view(
         field=field,
         values=values,
         label_suffix=(
-            f" ({tr(_CENSO_DIVERGENCIA_LEAF_LABEL_KEYS[leaf], default=leaf)})"
-            if is_censo_divergencia and leaf in _CENSO_DIVERGENCIA_LEAF_LABEL_KEYS
+            f" ({tr(_CENSO_DIVERGENCIA_LEAF_LABEL_LOCALE_KEYS[leaf], default=leaf)})"
+            if is_censo_divergencia and leaf in _CENSO_DIVERGENCIA_LEAF_LABEL_LOCALE_KEYS
             else f" ({tr('flows.manager.namespace_detail', number=detail_number)})"
         ),
         row_index=index,
@@ -592,7 +592,7 @@ def _namespace_field_views(
 
     The leaf is named in the label because it is the only thing telling two
     rows of one instance apart. For the ``censo.divergencia`` namespace it is
-    translated through :data:`_CENSO_DIVERGENCIA_LEAF_LABEL_KEYS`; every
+    translated through :data:`_CENSO_DIVERGENCIA_LEAF_LABEL_LOCALE_KEYS`; every
     other namespace still shows the stored key itself, since the leaf is not
     prose this layer may invent a translation for.
     """

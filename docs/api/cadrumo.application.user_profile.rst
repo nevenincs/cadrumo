@@ -20,7 +20,9 @@ Submodules
    cadrumo.application.user_profile._bundle_export_contracts
    cadrumo.application.user_profile._bundle_export_operation
    cadrumo.application.user_profile._capabilities
+   cadrumo.application.user_profile._capsule_archive
    cadrumo.application.user_profile._capsule_record
+   cadrumo.application.user_profile._capsule_restore
    cadrumo.application.user_profile._censo_errors
    cadrumo.application.user_profile._censo_sync
    cadrumo.application.user_profile._commands
