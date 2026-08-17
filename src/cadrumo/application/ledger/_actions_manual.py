@@ -327,6 +327,88 @@ def attach_manual_transaction_evidence(
     )
 
 
+def detach_manual_transaction_attachments(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    actor: str,
+    attachment_ids: tuple[str, ...],
+    source_command: str = "aeat app ledger detach",
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    attachment_store: _AttachmentStoreProtocol | None = None,
+    usage_ratio_profile: UsageRatioProfile | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    occurred_at: datetime | None = None,
+) -> ManualLedgerTransactionResult:
+    """Detach named supplementary attachments from one ledger transaction.
+
+    The inverse of :func:`attach_manual_transaction_evidence` for the axis that
+    can express it. ``attachment_ids`` is a whole-tuple patch, so the remaining
+    ids are computed here and written as the new set -- the attach path merges
+    into the same field, and both go through the one
+    :func:`update_manual_transaction_fields` writer rather than editing the
+    catalogue directly.
+
+    PURCHASE EVIDENCE IS DELIBERATELY OUT OF SCOPE and refuses in
+    :func:`attach_manual_transaction_evidence` instead of being cleared here.
+    ``ManualLedgerTransactionPatch`` cannot express the difference between
+    "clear this field" and "leave it unchanged": ``purchase_invoice_evidence_id``
+    is an optional text field whose validator normalises an empty string to
+    ``None``, which is also the patch's own "no change" value. Clearing it needs
+    a sentinel the patch model does not have, and inventing one here -- rather
+    than deciding it once for every optional field on that model -- would put a
+    second clearing convention into the ledger command shape.
+
+    Detaching does NOT delete the attachment's bytes. The attachment is a
+    content-addressed secure object that other transactions and finalized
+    revisions may reference; this removes one transaction's reference to it, and
+    the stale-revision notices the caller already surfaces report where a
+    finalized revision used what is now detached.
+
+    Returns a :class:`~cadrumo.application.ledger.ManualLedgerTransactionResult`.
+    """
+    trimmed_actor = _require_actor(actor, operation="ledger evidence detachment")
+    trimmed_source_command = _require_source_command(source_command, operation="ledger evidence detachment")
+    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    catalogue = repository.load()
+    current = _require_transaction(catalogue, transaction_id)
+    requested = _normalise_attachment_patch_ids(attachment_ids)
+    if not requested:
+        raise TransactionValidationError(
+            "ledger evidence detachment requires at least one attachment id",
+            translated_message="application.ledger.errors.evidence_detachment_requires_ids",
+        )
+    attached = tuple(current.attachment_ids)
+    unknown = tuple(identifier for identifier in requested if identifier not in attached)
+    if unknown:
+        raise TransactionValidationError(
+            f"ledger transaction does not carry attachment(s) {unknown!r}",
+            translated_message="application.ledger.errors.evidence_detachment_unknown_attachment",
+            context={"attachment_ids": ", ".join(unknown)},
+        )
+    remaining = tuple(identifier for identifier in attached if identifier not in set(requested))
+    return update_manual_transaction_fields(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        patch=ManualLedgerTransactionPatch.model_validate({"attachment_ids": remaining}),
+        actor=trimmed_actor,
+        source_command=trimmed_source_command,
+        transaction_repository=repository,
+        bucket_event_repository=bucket_event_repository,
+        invoice_repository=invoice_repository,
+        attachment_store=attachment_store,
+        usage_ratio_profile=usage_ratio_profile,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        occurred_at=occurred_at,
+        _preloaded_catalogue=catalogue,
+        _evidence_authority=True,
+    )
+
+
 def link_manual_transaction_invoice(
     *,
     bucket_id: str,

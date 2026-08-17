@@ -49,7 +49,7 @@ def _seed_revision_citing_transaction(
         modelo="303",
         filing_year=2026,
         period=period,
-        revision_id="2009-y-siguientes",
+        revision_id="2009-2022",
     )
     filing_instance_evidence = general_m303_filing_evidence(period, reference="test:remove-draft-revision")
     revision_id = derive_calculation_revision_id(
@@ -66,7 +66,7 @@ def _seed_revision_citing_transaction(
         modelo=ModeloCode("303"),
         filing_year=2026,
         period=period,
-        revision_id="2009-y-siguientes",
+        revision_id="2009-2022",
         name=f"303-2026-{period_code}",
         created_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
         updated_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),

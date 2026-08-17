@@ -120,6 +120,7 @@ if TYPE_CHECKING:
     from ._actions_manual import (
         attach_manual_transaction_evidence,
         create_manual_transaction,
+        detach_manual_transaction_attachments,
         get_manual_transaction,
         ledger_transaction_payload,
         ledger_transaction_result_payload,
@@ -650,6 +651,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "apply_saturated_llm_classification": "._llm_classification",
     "archive_manual_transaction": "._actions_lifecycle",
     "attach_manual_transaction_evidence": "._actions_manual",
+    "detach_manual_transaction_attachments": "._actions_manual",
     "build_llm_diagnostics_report": "._llm_diagnostics",
     "bulk_classify_from_csv": "._actions_classification",
     "censo_business_pct_for": "._ratios",
@@ -924,6 +926,7 @@ __all__ = [
     "derive_invoice_kind_from_filer_role",
     "derive_operator_iva_substrate",
     "describe_aeat_party_identifier",
+    "detach_manual_transaction_attachments",
     "deterministic_check_names",
     "deterministic_findings",
     "discard_extraction_draft",
