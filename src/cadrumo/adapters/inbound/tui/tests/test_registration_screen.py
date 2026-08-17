@@ -16,11 +16,16 @@ profile is real.
 
 from __future__ import annotations
 
+from uuid import UUID
+
 import pytest
 from textual.widgets import Input, Static
 
-from .....adapters.persistence.storage.errors import MasterKeyPassphraseMismatchError
-from .....adapters.persistence.storage.master_key import get_master_key_provider
+from .....adapters.persistence.storage.custody import (
+    ProfileCustodyPasswordError,
+    load_committed_profile_password_material,
+    unlock_profile_custody,
+)
 from .....application.user_profile import assess_passphrase
 from .....entrypoints.cli._config._manager_frontend import attempt_registration
 from .....tests.secure_sql import isolated_profile_storage_root
@@ -65,7 +70,7 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
     proves the screen wired the operator's credential through to the key
     material rather than merely reporting success.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         app = _screen()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(pilot, username="Screen Subject", password=_TYPED_PASSWORD, confirm=_TYPED_PASSWORD)
@@ -80,9 +85,26 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
         assert app.outcome.label == "Screen Subject"
         assert app.outcome.setup_state.value == "incomplete"
 
-        assert len(get_master_key_provider(passphrase_callback=lambda: _TYPED_PASSWORD).get_master_key()) == 32
-        with pytest.raises(MasterKeyPassphraseMismatchError):
-            get_master_key_provider(passphrase_callback=lambda: "a-different-secret").get_master_key()
+        # The password typed into the screen is the one that opens the
+        # profile. Asserted against the committed capsule rather than a
+        # process-wide key store: custody is per profile, so "the typed
+        # password unlocks THIS profile" is the property that matters.
+        material = load_committed_profile_password_material(
+            UUID(str(app.outcome.profile_id)),
+            root=storage_root,
+        )
+        unlocked = unlock_profile_custody(
+            password=_TYPED_PASSWORD,
+            envelope=material.envelope,
+            sentinel=material.sentinel,
+        )
+        assert len(bytes(unlocked.dek)) == 32
+        with pytest.raises(ProfileCustodyPasswordError):
+            unlock_profile_custody(
+                password="a-different-secret",  # noqa: S106 - synthetic wrong password under test
+                envelope=material.envelope,
+                sentinel=material.sentinel,
+            )
 
 
 @pytest.mark.asyncio

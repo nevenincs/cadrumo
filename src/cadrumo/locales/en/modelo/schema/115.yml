@@ -1,0 +1,30 @@
+modelo:
+  schema:
+    '115':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Number of recipients
+            '02':
+              help: null
+              label: Base of withholdings and payments on account
+            '03':
+              help: null
+              label: Withholdings and payments on account
+            '04':
+              help: null
+              label: Result of previous returns
+            '05':
+              help: null
+              label: Result payable
+          construct:
+            modelo-115-quarterly-rental-withholding:
+              field:
+                title: null
+          field:
+            label: null

@@ -1,0 +1,99 @@
+modelo:
+  schema:
+    '156':
+      field:
+        official_name: Modelo 156. Impuesto sobre la Renta de las Personas Físicas.
+          Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad.
+          Declaración informativa anual.
+        title: Cotizaciones de afiliados y mutualistas a efectos de la deducción por
+          maternidad (informativa anual)
+      revision:
+        2003-y-siguientes:
+          casilla:
+            afiliado-nif:
+              help: null
+              label: NIF del afiliado o mutualista
+            afiliado-nombre:
+              help: null
+              label: Apellidos y nombre del afiliado o mutualista
+            cotizacion-abril:
+              help: null
+              label: 'Cotizacion de abril: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-agosto:
+              help: null
+              label: 'Cotizacion de agosto: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-diciembre:
+              help: null
+              label: 'Cotizacion de diciembre: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-enero:
+              help: null
+              label: 'Cotizacion de enero: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-febrero:
+              help: null
+              label: 'Cotizacion de febrero: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-julio:
+              help: null
+              label: 'Cotizacion de julio: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-junio:
+              help: null
+              label: 'Cotizacion de junio: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-marzo:
+              help: null
+              label: 'Cotizacion de marzo: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-mayo:
+              help: null
+              label: 'Cotizacion de mayo: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-noviembre:
+              help: null
+              label: 'Cotizacion de noviembre: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-octubre:
+              help: null
+              label: 'Cotizacion de octubre: situacion mensual e importe de la cuota
+                devengada'
+            cotizacion-septiembre:
+              help: null
+              label: 'Cotizacion de septiembre: situacion mensual e importe de la
+                cuota devengada'
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaracion complementaria o sustitutiva
+            declarante-razon-social:
+              help: null
+              label: Razon social del declarante
+            numero-afiliacion:
+              help: null
+              label: Numero de afiliacion
+            numero-identificativo-anterior:
+              help: null
+              label: Numero identificativo de la declaracion anterior
+            numero-justificante:
+              help: null
+              label: Numero de justificante de la declaracion
+            numero-total-afiliados:
+              help: null
+              label: Numero total de registros de afiliados o mutualistas
+            persona-relacion:
+              help: null
+              label: Persona con quien relacionarse
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaración
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-156-informative:
+              field:
+                title: Modelo 156 declaración informativa
+          field:
+            label: Modelo 156 (orden-hac-3580-2003), ejercicios 2003 y siguientes

@@ -44,6 +44,7 @@ from cadrumo.domain.user_profile import ProfileSetupState
 from .._ast_scanner import scan_namespace_markers, scan_source_tree
 from .._fstring_registry import get_registered_keys
 from .._paths import SRC_DIR
+from ..manager import LocaleManager, locale_catalogue_source
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -51,6 +52,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # maintains, so the root is resolved from the checkout by the shared derivation
 # rather than counted from this file's own parents.
 _SRC_ROOT = SRC_DIR
+_LOCALES_ROOT = SRC_DIR / "locales"
+
+
+def _catalogue_payload(locale: str) -> dict[str, object]:
+    """Return one committed catalogue's parsed content, whatever shape it ships in.
+
+    Routed through the manager rather than :func:`yaml.safe_load` on a path,
+    because a catalogue ships either as a shard DIRECTORY or a flat file and
+    only the manager reads both. Reading the path directly is what made these
+    two assertions raise instead of check once the catalogues were resharded.
+    """
+    source = locale_catalogue_source(_LOCALES_ROOT, locale)
+    if source is None:
+        raise AssertionError(f"no committed catalogue found for locale {locale!r}")
+    payload = LocaleManager(src_dir=SRC_DIR, locales_dir=_LOCALES_ROOT).load_locale(source)
+    inner = payload.get(locale, payload)
+    return inner if isinstance(inner, dict) else payload
 
 
 # ---------------------------------------------------------------------------
@@ -76,11 +94,9 @@ OPEN_ENDED_NAMESPACES: dict[str, str] = {
         "codes surfaced at runtime (application/modelo/_profile_readiness_gate.py). "
         "Issue codes are raised ad hoc by the readiness gate, not a bounded enum."
     ),
-    "application.modelo.findings": (
-        "application.modelo.findings.{predicate_id} — keyed by registry "
-        "verification-predicate ids (application/modelo/_verification_predicates.py). "
-        "The predicate set is registry-data-driven per modelo revision, not a "
-        "bounded import-time enum."
+    "errors.context_labels": (
+        "errors.context_labels.{key} — keyed by context dict keys in error formatting "
+        "(_text_context_label in core/errors/_registry.py). Context keys are open-ended."
     ),
     "cli.registry.metrics": (
         "cli.registry.metrics.{key} — keyed by runtime registry-metric names "
@@ -276,13 +292,10 @@ def test_no_catalogue_leaf_is_a_self_referencing_placeholder() -> None:
     the branch before value inspection caught them. The assertion is
     namespace-unscoped on purpose.
     """
-    import yaml
-
     total_leaves = 0
     echoes: list[str] = []
     for locale in ("en", "es", "ca", "hu"):
-        catalogue = _SRC_ROOT / "locales" / f"{locale}.yml"
-        payload = yaml.safe_load(catalogue.read_text(encoding="utf-8"))
+        payload = _catalogue_payload(locale)
         for key, value in _flatten_leaves(payload.get(locale, payload)):
             total_leaves += 1
             if value == key:
@@ -305,13 +318,10 @@ def test_no_catalogue_value_carries_a_doubled_apostrophe() -> None:
     the two, so the scan runs after parsing. Twelve shipped this way in Catalan,
     one of them also hiding a lost opening quote around a command name.
     """
-    import yaml
-
     total_values = 0
     doubled: list[str] = []
     for locale in ("en", "es", "ca", "hu"):
-        catalogue = _SRC_ROOT / "locales" / f"{locale}.yml"
-        payload = yaml.safe_load(catalogue.read_text(encoding="utf-8"))
+        payload = _catalogue_payload(locale)
         for key, value in _flatten_leaves(payload.get(locale, payload)):
             if not isinstance(value, str):
                 continue

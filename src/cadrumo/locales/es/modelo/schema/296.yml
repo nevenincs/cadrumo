@@ -1,0 +1,26 @@
+modelo:
+  schema:
+    '296':
+      field:
+        official_name: Modelo 296. Impuesto sobre la Renta de no Residentes. No residentes
+          sin establecimiento permanente. Declaración anual de retenciones e ingresos
+          a cuenta.
+        title: IRNR resumen anual de retenciones e ingresos a cuenta
+      revision:
+        2024-y-siguientes:
+          casilla:
+            '03':
+              help: null
+              label: Base retenciones e ingresos a cuenta
+            '04':
+              help: null
+              label: Retenciones e ingresos a cuenta declarados
+            '05':
+              help: null
+              label: Total retenciones del resumen anual
+          construct:
+            modelo-296-calculation-construct:
+              field:
+                title: Modelo 296 calculation construct
+          field:
+            label: Orden HAC/56/2024, ejercicios 2024 y siguientes

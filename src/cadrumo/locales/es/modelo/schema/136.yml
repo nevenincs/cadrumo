@@ -1,0 +1,92 @@
+modelo:
+  schema:
+    '136':
+      field:
+        official_name: Modelo 136. IRPF e IRNR. Gravamen Especial sobre los Premios
+          de determinadas Loterias y Apuestas. Autoliquidacion.
+        title: Gravamen especial sobre los premios de determinadas loterias y apuestas.
+          Autoliquidacion
+      revision:
+        '2026':
+          casilla:
+            '01':
+              help: null
+              label: Importe del premio obtenido por el boleto, cupon o apuesta premiado
+            '02':
+              help: null
+              label: Importe o valor del premio que corresponde individualmente al
+                declarante
+            '03':
+              help: null
+              label: Cuantia exenta del gravamen especial
+            '04':
+              help: null
+              label: Base imponible
+            '05':
+              help: null
+              label: Cuota del gravamen especial
+            '06':
+              help: null
+              label: Resultados a ingresar de anteriores autoliquidaciones por el
+                mismo concepto y correspondientes al mismo premio
+            '07':
+              help: null
+              label: Resultado a ingresar
+            09:
+              help: null
+              label: Importe ingresado a favor del Tesoro Publico
+            autoliquidacion-complementaria:
+              help: null
+              label: Autoliquidacion complementaria
+            declarante-nif:
+              help: null
+              label: Numero de identificacion fiscal (NIF)
+            declarante-nombre:
+              help: null
+              label: Apellidos y nombre o razon social
+            ejercicio-declaracion:
+              help: null
+              label: Ejercicio
+            fecha-celebracion:
+              help: null
+              label: Fecha de celebracion
+            fecha-cobro-premio:
+              help: null
+              label: Fecha de cobro del premio
+            forma-pago:
+              help: null
+              label: Forma de pago
+            iban:
+              help: null
+              label: Codigo IBAN
+            justificante-anterior:
+              help: null
+              label: Numero de justificante identificativo de la autoliquidacion anterior
+            loteria-apuesta-denominacion:
+              help: null
+              label: Denominacion de la loteria o apuesta
+            organizador-codigo-pais:
+              help: null
+              label: Codigo pais del organismo o entidad organizadora
+            organizador-denominacion:
+              help: null
+              label: Denominacion o razon social del organismo o entidad organizadora
+            organizador-pais:
+              help: null
+              label: Pais del organismo o entidad organizadora
+            periodo-declaracion:
+              help: null
+              label: Periodo
+            precio-unitario:
+              help: null
+              label: Precio unitario
+            provincia-residencia-irpf:
+              help: null
+              label: Codigo de la provincia de residencia habitual del contribuyente
+                IRPF
+          construct:
+            modelo-136-calculation-construct:
+              field:
+                title: Modelo 136 gravamen especial premios calculation construct
+          field:
+            label: Modelo 136 ejercicio 2026 (Orden HAP/70/2013 y Orden HAC/763/2018)

@@ -1,0 +1,80 @@
+modelo:
+  schema:
+    '369':
+      field:
+        official_name: null
+        title: null
+      revision:
+        esquema-exterior:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the self-assessment relates
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period of the return
+            x-d5r62bj5f1q6asj9dtp2sorldtq62bbkdtq62r0:
+              help: null
+              label: Total VAT output tax under the Non-Union scheme (sum of amounts
+                by destination)
+            x-d5r62bj5f1q6asj9dtp2sp355ppmasjmd5hmaspdcdqmut31:
+              help: null
+              label: VAT output tax to destination DE - services supplied (Non-Union
+                scheme)
+          construct:
+            modelo-369-esquema-exterior:
+              field:
+                title: null
+          field:
+            label: null
+        esquema-importacion:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the self-assessment relates
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period of the return
+            x-d5r62bj9dlo6usjkc5hmirre5phnarrkc4mn8rrkc5m0:
+              help: null
+              label: Total VAT output tax under the Import scheme (IOSS, sum by destination)
+            x-d5r62bj9dlo6usjkc5hmirre5pi6abjcdtriqtj1dhqmabb3elnn8o8:
+              help: null
+              label: IOSS VAT to destination DE - distance sales of imported goods
+                ≤ EUR 150 (LIVA art. 163 quinvicies)
+          construct:
+            modelo-369-esquema-importacion:
+              field:
+                title: null
+          field:
+            label: null
+        esquema-union:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Tax year the self-assessment refers to
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Filing period
+            x-d5r62bjldpkmurhecdqmut315lq6ut31dg:
+              help: null
+              label: Total output VAT of the Union scheme (cross-destination, cross-flow
+                sum)
+            x-d5r62bjldpkmurhechiisprfdti76bb4d5pn8obecdiiqorldtq62:
+              help: null
+              label: OSS Union scheme VAT amount to destination DE - distance sales
+                + electronic interfaces
+            x-d5r62bjldpkmurhechiissr5e9r6ior5ecmm6tbfehgg:
+              help: null
+              label: OSS Union scheme VAT amount to destination DE - services supplied
+                (LIVA art. 163 unvicies)
+            x-d5r62bjldpkmurhecpp2ssr5e9r6ior5ecmm6tbfehgg:
+              help: null
+              label: OSS Union scheme VAT amount to destination FR - services supplied
+                (LIVA art. 163 unvicies)
+          construct:
+            modelo-369-esquema-union:
+              field:
+                title: null
+          field:
+            label: null

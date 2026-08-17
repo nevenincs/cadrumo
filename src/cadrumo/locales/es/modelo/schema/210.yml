@@ -1,0 +1,120 @@
+modelo:
+  schema:
+    '210':
+      field:
+        official_name: Modelo 210. Impuesto sobre la Renta de no Residentes. No residentes
+          sin establecimiento permanente. Autoliquidación.
+        title: IRNR autoliquidación no residentes sin establecimiento permanente
+      revision:
+        '2025':
+          casilla:
+            base_imponible:
+              help: null
+              label: Base imponible
+            base_imponible_directa_g:
+              help: null
+              label: Base imponible (210 G)
+            base_imponible_directa_i:
+              help: null
+              label: Base imponible (210 I)
+            base_imponible_ganancias_h:
+              help: null
+              label: Base imponible ([12]+[16]) (210 H)
+            coeficiente_imputacion_inmobiliaria:
+              help: null
+              label: Coeficiente de imputación inmobiliaria
+            convenio_indicador:
+              help: null
+              label: Convenio
+            cuota_diferencial:
+              help: null
+              label: Cuota diferencial
+            cuota_integra:
+              help: null
+              label: Cuota íntegra
+            cuota_integra_reducida:
+              help: null
+              label: Cuota íntegra reducida ([24]-[27])
+            cuota_ley_irnr:
+              help: null
+              label: Cuota Ley IRNR ([22]-[23])
+            deduccion_donativos:
+              help: null
+              label: Deducción por donativos
+            dias_imputacion:
+              help: null
+              label: Días de imputación
+            exencion_dividendos:
+              help: null
+              label: Exención aplicada dividendos (límite anual 1.500 euros) (210
+                R)
+            exenciones_ley_irnr_indicador:
+              help: null
+              label: Exenciones Ley IRNR, excepto dividendos (límite anual 1.500 euros)
+            ganancia_diferencia:
+              help: null
+              label: Adquisición. Diferencia (210 H)
+            ganancia_importe:
+              help: null
+              label: Adquisición. Ganancia (210 H)
+            ganancia_valor_adquisicion:
+              help: null
+              label: Adquisición. Valor de adquisición (actualizado) (210 H)
+            ganancia_valor_transmision:
+              help: null
+              label: Adquisición. Valor de transmisión (210 H)
+            gastos_deducibles:
+              help: null
+              label: Gastos deducibles
+            ingreso_devolucion_anterior:
+              help: null
+              label: Ingreso/Devolución anterior (exclusivamente autoliquidación complementaria)
+            limite_convenio:
+              help: null
+              label: Límite Convenio
+            mejora_diferencia:
+              help: null
+              label: Mejora o 2ª adquisición. Diferencia (210 H)
+            mejora_ganancia:
+              help: null
+              label: Mejora o 2ª adquisición. Ganancia (210 H)
+            mejora_valor_adquisicion:
+              help: null
+              label: Mejora o 2ª adquisición. Valor de adquisición (actualizado) (210
+                H)
+            mejora_valor_transmision:
+              help: null
+              label: Mejora o 2ª adquisición. Valor de transmisión (210 H)
+            porcentaje_convenio:
+              help: null
+              label: Porcentaje Convenio (%)
+            reduccion_convenio:
+              help: null
+              label: Reducción por Convenio ([24]-[26])
+            rendimientos_integros:
+              help: null
+              label: Rendimientos íntegros
+            retencion_practicada:
+              help: null
+              label: Retención practicada
+            tipo_gravamen:
+              help: null
+              label: Tipo de gravamen
+            tipo_renta:
+              help: null
+              label: Tipo de renta
+            valor_adquisicion:
+              help: null
+              label: Valor de adquisición
+            valor_catastral:
+              help: null
+              label: Valor catastral
+            valor_comprobado_administracion:
+              help: null
+              label: Valor comprobado por la Administración
+          construct:
+            m210-irnr-calculation:
+              field:
+                title: Modelo 210 IRNR calculation
+          field:
+            label: Ejercicio 2025 y siguientes

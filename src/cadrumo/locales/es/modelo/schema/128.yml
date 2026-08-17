@@ -1,0 +1,40 @@
+modelo:
+  schema:
+    '128':
+      field:
+        official_name: Modelo 128. Retenciones e ingresos a cuenta. Rentas o rendimientos
+          del capital mobiliario procedentes de operaciones de capitalizacion y de
+          contratos de seguro de vida o invalidez.
+        title: Retenciones e ingresos a cuenta - rentas de capital mobiliario de operaciones
+          de capitalizacion y contratos de seguro
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Numero de perceptores
+            '02':
+              help: null
+              label: Base de retenciones e ingresos a cuenta
+            '03':
+              help: null
+              label: Retenciones e ingresos a cuenta
+            '04':
+              help: null
+              label: Numero de perceptores adicional
+            '05':
+              help: null
+              label: Base de retenciones e ingresos a cuenta adicional
+            '06':
+              help: null
+              label: Resultados a ingresar de anteriores declaraciones por el mismo
+                concepto, ejercicio y periodo
+            '07':
+              help: null
+              label: Resultado a ingresar
+          construct:
+            modelo-128-calculation-construct:
+              field:
+                title: Modelo 128 calculation construct
+          field:
+            label: Orden EHA/3435/2007, ejercicios 2019 y siguientes

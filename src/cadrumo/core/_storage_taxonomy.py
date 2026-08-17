@@ -305,13 +305,6 @@ class StorageCategory(StrEnum):
     BLOBS = "blobs"
     LIVE_STATE = "live-state"
 
-    # ── Fixed layout: within the secret store ────────────────────────────────
-    SECRETS_MASTER_KEY = "secrets.master-key"
-    SECRETS_MASTER_KDF = "secrets.master-kdf"
-    SECRETS_MASTER_LOCK = "secrets.master-lock"
-    SECRETS_KEYRING_LOCK = "secrets.keyring-lock"
-    SECRETS_MASTER_RECOVERY_KEY = "secrets.master-recovery-key"
-
     # ── Fixed layout: live IVA remote-state capture ─────────────────────────
     LIVE_STATE_IVA_WALLET = "live-state.iva-wallet"
     LIVE_STATE_IVA_REMOTE_STATE = "live-state.iva-remote-state"

@@ -1,0 +1,119 @@
+modelo:
+  schema:
+    '122':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2017-y-siguientes:
+          casilla:
+            x-c5pm6pbechkmarjkckmm8rrj5lk6iqjfecn62ojfdpniqobeehkm6qbgc5i6u:
+              help: Az adómegállapítási időszakban ténylegesen felvett levonási előleg
+                összege. Korrekcióra akkor kerül sor, ha a felvett összeg meghaladja
+                az adózót megillető levonást.
+              label: Törvényesen különélő vagy házassági kötelék nélküli, két gyermeket
+                nevelő felmenő utáni korrekció. Az előlegfizetés összege
+            x-c5pm6pbechkmarjkckmm8rrj5lk6iqjfecn68pb4elhm6qbfdo:
+              help: Az adózót az adómegállapítási időszakban megillető levonás összege
+                a 35/2006. sz. törvény 81 bis cikke szerint.
+              label: Törvényesen különélő vagy házassági kötelék nélküli, két gyermeket
+                nevelő felmenő utáni korrekció. A levonás összege
+            x-c5pm6pbechkmarjkclpisob2dtn6ubb1dpq6ior9e1gm8ro:
+              help: Az adómegállapítási időszakban ténylegesen felvett levonási előleg
+                összege. Korrekcióra akkor kerül sor, ha a felvett összeg meghaladja
+                az adózót megillető levonást.
+              label: Fogyatékossággal élő felmenők utáni korrekció. Az előlegfizetés
+                összege
+            x-c5pm6pbechkmarjkclpisp35chqm6or9dtn0:
+              help: Az adózót az adómegállapítási időszakban megillető levonás összege
+                a 35/2006. sz. törvény 81 bis cikke szerint.
+              label: Fogyatékossággal élő felmenők utáni korrekció. A levonás összege
+            x-c5pm6pbechkmarjkclpisrj9co:
+              help: Annak a fogyatékossággal élő felmenőnek az adóazonosító száma,
+                akire tekintettel a levonást igénybe vették.
+              label: Fogyatékossággal élő felmenők utáni korrekció. A felmenő adóazonosító
+                száma
+            x-c5pm6pbechkmarjkclpisrjfdlh74p8:
+              help: A fogyatékossággal élő felmenő első vezetékneve, szóköz, második
+                vezetékneve, szóköz és teljes utóneve.
+              label: Fogyatékossággal élő felmenők utáni korrekció. A felmenő vezeték-
+                és utóneve
+            x-cdnmsublctiisob2dtn6ubb1dpq6ior9e1gm8ro:
+              help: Az adómegállapítási időszakban ténylegesen felvett levonási előleg
+                összege. Korrekcióra akkor kerül sor, ha a felvett összeg meghaladja
+                az adózót megillető levonást.
+              label: Fogyatékossággal élő, nem különélő házastárs utáni korrekció.
+                Az előlegfizetés összege
+            x-cdnmsublctiisp35chqm6or9dtn0:
+              help: Az adózót az adómegállapítási időszakban megillető levonás összege
+                a 35/2006. sz. törvény 81 bis cikke szerint.
+              label: Fogyatékossággal élő, nem különélő házastárs utáni korrekció.
+                A levonás összege
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: A korrekció vonatkozási éve
+            x-chim6r1ee1gmeqbec4mm6rrde1m6arb5dpq62sj9c4:
+              help: C jelölés, ha az oldal egy korábban benyújtott oldalt egészít
+                ki; egyébként üresen marad.
+              label: Kiegészítő oldal jelölése
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+            x-chin6or5dpi6ipbeehin6bj1c9nmsrpdc5n78qb3d5o62p3f:
+              help: Az adómegállapítási időszakban ténylegesen felvett levonási előleg
+                összege. Korrekcióra akkor kerül sor, ha a felvett összeg meghaladja
+                az adózót megillető levonást.
+              label: Fogyatékossággal élő leszármazottak utáni korrekció. Az előlegfizetés
+                összege
+            x-chin6or5dpi6ipbeehin6bj4cli7aor3d5nms:
+              help: Az adózót az adómegállapítási időszakban megillető levonás összege
+                a 35/2006. sz. törvény 81 bis cikke szerint.
+              label: Fogyatékossággal élő leszármazottak utáni korrekció. A levonás
+                összege
+            x-chin6or5dpi6ipbeehin6bjed5j0:
+              help: Annak a fogyatékossággal élő leszármazottnak az adóazonosító száma,
+                akire tekintettel a levonást igénybe vették.
+              label: Fogyatékossággal élő leszármazottak utáni korrekció. A leszármazott
+                adóazonosító száma
+            x-chin6or5dpi6ipbeehin6bjedtmm4sj5:
+              help: A fogyatékossággal élő leszármazott első vezetékneve, szóköz,
+                második vezetékneve, szóköz és teljes utóneve.
+              label: Fogyatékossággal élő leszármazottak utáni korrekció. A leszármazott
+                vezeték- és utóneve
+            x-cpgmqqbcd5giqrjldlin4rrjc4n62ojfdpniqobeehkm6qbgc5i6u:
+              help: Az adómegállapítási időszakban ténylegesen felvett levonási előleg
+                összege. Korrekcióra akkor kerül sor, ha a felvett összeg meghaladja
+                az adózót megillető levonást.
+              label: Nagycsaládos korrekció. Az előlegfizetés összege
+            x-cpgmqqbcd5giqrjldlin4rrjc4n68pb4elhm6qbfdo:
+              help: Az adózót az adómegállapítási időszakban megillető levonás összege
+                a 35/2006. sz. törvény 81 bis cikke szerint.
+              label: Nagycsaládos korrekció. A levonás összege
+            x-cpgmqqbcd5giqrjldlin4rrjc4n78qbkelm6u:
+              help: Az autonóm közösség által kiállított hivatalos nagycsaládos igazolványon
+                szereplő azonosító szám.
+              label: Nagycsaládos korrekció. A nagycsaládos igazolvány azonosító száma
+            x-e9in0shec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              help: A képviselő vezetékneve természetes személy esetén, illetve teljes
+                cégneve jogi személy vagy szervezet esetén.
+              label: A képviselő vezetékneve vagy cégneve
+            x-e9in0shedpkmc:
+              help: Az adózó nevében a bevallást benyújtó személy vagy szervezet adóazonosító
+                száma. Üresen marad, ha az adózó maga nyújtja be.
+              label: A képviselő adóazonosító száma
+            x-e9in0shedpnmqojick:
+              help: A képviselő utóneve, ha a képviselő természetes személy. Egyébként
+                üres.
+              label: A képviselő utóneve
+            x-e9in6tbcehgm8rpec4mmirj7e9in6obi:
+              help: A korrekció alapján fizetendő teljes összeg. A rekordterv a (558-557+573-572+589-588+591-590)
+                kifejezést tünteti fel, amely nem tartalmazza az ugyanabban a rekordban
+                szereplő [574]/[575] házastársi párt; ezért ezt a rovatot az adózó
+                adja meg, nem számítjuk.
+              label: A korrekció eredményeként fizetendő összeg
+          construct:
+            modelo-122-regularizacion:
+              field:
+                title: null
+          field:
+            label: null

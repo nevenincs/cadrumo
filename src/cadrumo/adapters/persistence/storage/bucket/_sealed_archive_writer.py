@@ -71,7 +71,7 @@ def write_sealed_archive(
     target_path: Path,
     *,
     header: ExportArchiveHeader,
-    payload_envelope_bytes: bytes,
+    payload_bytes: bytes,
 ) -> None:
     """Write the sealed archive at ``target_path``.
 
@@ -83,13 +83,31 @@ def write_sealed_archive(
         header: Strict-validated :class:`ExportArchiveHeader`. The
             writer serialises it to UTF-8 JSON as the first archive
             member.
-        payload_envelope_bytes: The encrypted payload bytes (already
-            wrapped in an :class:`Envelope` by the caller). Written
-            as the second and last archive member.
+        payload_bytes: The sealed payload, OPAQUE to this
+            writer. It is written byte-for-byte as the second and last
+            archive member and is never parsed, validated or interpreted
+            here.
+
+            This deliberately does NOT require an
+            :class:`~adapters.persistence.storage.Envelope`, and said so
+            once by mistake. The archive is a transport: its guarantee is
+            verbatim carriage, and binding it to one payload type would
+            couple the transport to whichever caller happened to be first.
+            Parsing here would be worse than useless -- it would let the
+            transport REFUSE a sealed payload it could not understand,
+            which for encrypted material is a liability rather than a
+            safeguard.
+
+            Opaque is not unconstrained. Empty is refused below, because
+            an empty payload yields a structurally valid archive carrying
+            nothing to decrypt. Beyond that the caller owns the payload's
+            shape, its decryption, and its integrity: this layer verifies
+            no digest, including the header's ``manifest_digest``, which
+            it carries rather than checks.
 
     Raises:
         SealedArchiveWriteError: When ``target_path`` carries the wrong
-            suffix, already exists, ``payload_envelope_bytes`` is empty,
+            suffix, already exists, ``payload_bytes`` is empty,
             or the underlying IO write fails.
     """
     if target_path.name.endswith(FORMER_PRODUCT_BUCKET_BUNDLE_SUFFIX):
@@ -103,9 +121,9 @@ def write_sealed_archive(
     # The payload member carries encrypted material, so zero bytes is never a
     # legitimate value. An empty payload produced a structurally valid archive
     # that round-tripped cleanly and carried nothing to decrypt.
-    if not payload_envelope_bytes:
+    if not payload_bytes:
         raise SealedArchiveWriteError(
-            "sealed-archive write refused: payload_envelope_bytes is empty; there would be nothing to decrypt",
+            "sealed-archive write refused: payload_bytes is empty; there would be nothing to decrypt",
         )
     if target_path.exists():
         raise SealedArchiveWriteError(
@@ -126,8 +144,8 @@ def write_sealed_archive(
         with tarfile.open(staging_path, mode="w:gz") as archive:
             header_info = _normalised_tarinfo(HEADER_MEMBER_NAME, len(header_bytes), instant)
             archive.addfile(header_info, io.BytesIO(header_bytes))
-            payload_info = _normalised_tarinfo(PAYLOAD_MEMBER_NAME, len(payload_envelope_bytes), instant)
-            archive.addfile(payload_info, io.BytesIO(payload_envelope_bytes))
+            payload_info = _normalised_tarinfo(PAYLOAD_MEMBER_NAME, len(payload_bytes), instant)
+            archive.addfile(payload_info, io.BytesIO(payload_bytes))
         os.replace(staging_path, target_path)
     except OSError as exc:
         _discard_staging_archive(staging_path)

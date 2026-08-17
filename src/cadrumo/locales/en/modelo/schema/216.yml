@@ -1,0 +1,77 @@
+modelo:
+  schema:
+    '216':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2024-y-siguientes:
+          casilla:
+            '05':
+              help: null
+              label: Number of income items. Dividends and other income from holdings
+                in the equity of entities
+            '06':
+              help: null
+              label: Number of income items. Other income
+            '07':
+              help: null
+              label: Number of income items. Total
+            08:
+              help: null
+              label: Withholding and advance payment tax base. Dividends and other
+                income from holdings in the equity of entities
+            09:
+              help: null
+              label: Withholding and advance payment tax base. Other income
+            '10':
+              help: null
+              label: Withholding and advance payment tax base. Total
+            '11':
+              help: null
+              label: Withholdings and advance payments. Dividends and other income
+                from holdings in the equity of entities
+            '12':
+              help: null
+              label: Withholdings and advance payments. Other income
+            '13':
+              help: null
+              label: Withholdings and advance payments. Total
+            '14':
+              help: null
+              label: Income not subject to withholding or advance payment. Number
+                of income items. Dividends and other income from holdings in the equity
+                of entities
+            '15':
+              help: null
+              label: Income not subject to withholding or advance payment. Number
+                of income items. Other income
+            '16':
+              help: null
+              label: Income not subject to withholding or advance payment. Number
+                of income items. Total
+            '17':
+              help: null
+              label: Income not subject to withholding or advance payment. Tax base.
+                Dividends and other income from holdings in the equity of entities
+            '18':
+              help: null
+              label: Income not subject to withholding or advance payment. Tax base.
+                Other income
+            '19':
+              help: null
+              label: Income not subject to withholding or advance payment. Tax base.
+                Total
+            '20':
+              help: null
+              label: Amounts payable from prior returns for the same item, year and
+                period
+            '21':
+              help: null
+              label: Result payable
+          construct:
+            modelo-216-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null

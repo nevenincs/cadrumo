@@ -1,0 +1,3572 @@
+modelo:
+  schema:
+    '490':
+      field:
+        official_name: null
+        title: null
+      revision:
+        '2021':
+          casilla:
+            490-01-declaracion-complementaria-995:
+              help: null
+              label: Supplementary return
+            490-01-declaracion-negativa-1009:
+              help: null
+              label: Nil return
+            490-01-grupo-denominacion-388:
+              help: null
+              label: Group identification. Group name
+            490-01-grupo-dominante-515:
+              help: null
+              label: Group identification. Parent entity
+            490-01-grupo-pais-dominante-513:
+              help: null
+              label: Group identification. Country of residence of the parent entity
+            490-01-identificacion-email-154:
+              help: null
+              label: Identification. Email address
+            490-01-identificacion-nif-representante-254:
+              help: null
+              label: Identification. Representative's tax ID (NIF)
+            490-01-identificacion-nombre-representante-263:
+              help: null
+              label: Identification. Representative's company name or full name
+            490-01-indicador-pagina-complementaria-12:
+              help: null
+              label: Supplementary page indicator
+            490-01-ingreso-bic-swift-950:
+              help: null
+              label: Payment or refund. BIC/SWIFT code
+            490-01-ingreso-iban-961:
+              help: null
+              label: Payment or refund. IBAN
+            490-01-justificante-anterior-996:
+              help: null
+              label: Receipt number of the previous return
+            490-01-tipo-declaracion-13:
+              help: null
+              label: Return type
+            490-02-indicador-pagina-complementaria-12:
+              help: null
+              label: Supplementary page indicator
+            490-02-regularizacion-ejercicio-1285:
+              help: null
+              label: Adjustment (art. 10.3 Law). Tax year
+            490-02-regularizacion-ejercicio-13:
+              help: null
+              label: Adjustment (art. 10.3 Law). Tax year
+            490-02-regularizacion-ejercicio-437:
+              help: null
+              label: Adjustment (art. 10.3 Law). Tax year
+            490-02-regularizacion-ejercicio-861:
+              help: null
+              label: Adjustment (art. 10.3 Law). Tax year
+            liq-base-imponible-total-13:
+              help: null
+              label: Assessment. Total taxable base for the period [13]
+            liq-cuota-integra-16:
+              help: null
+              label: Assessment. Gross tax [16]
+            liq-datos-base-11:
+              help: null
+              label: Assessment. 3. Data transmission services. Taxable base [11]
+            liq-datos-ing-10:
+              help: null
+              label: Assessment. 3. Data transmission services. Total revenue [10]
+            liq-datos-reg-base-12:
+              help: null
+              label: Assessment. 3. Data transmission services. Taxable base adjustment
+                (art. 10.3) [12]
+            liq-indicador-regularizacion-A:
+              help: null
+              label: Assessment. Adjustment indicator (art. 10.3 Law 4/2020) [A]
+            liq-interm-a-base-05:
+              help: null
+              label: Assessment. 2.A. Online intermediation services with underlying
+                supply of goods or services. Taxable base [05]
+            liq-interm-a-ing-04:
+              help: null
+              label: Assessment. 2.A. Online intermediation services with underlying
+                supply of goods or services. Total revenue [04]
+            liq-interm-a-reg-base-06:
+              help: null
+              label: Assessment. 2.A. Online intermediation services with underlying
+                supply of goods or services. Taxable base adjustment (art. 10.3) [06]
+            liq-interm-b-base-08:
+              help: null
+              label: Assessment. 2.B. Other online intermediation services. Taxable
+                base [08]
+            liq-interm-b-ing-07:
+              help: null
+              label: Assessment. 2.B. Other online intermediation services. Total
+                revenue [07]
+            liq-interm-b-reg-base-09:
+              help: null
+              label: Assessment. 2.B. Other online intermediation services. Taxable
+                base adjustment (art. 10.3) [09]
+            liq-publi-base-02:
+              help: null
+              label: Assessment. 1. Online advertising services. Taxable base [02]
+            liq-publi-ing-01:
+              help: null
+              label: Assessment. 1. Online advertising services. Total revenue [01]
+            liq-publi-reg-base-03:
+              help: null
+              label: Assessment. 1. Online advertising services. Taxable base adjustment
+                (art. 10.3) [03]
+            liq-reg-periodos-anteriores-14:
+              help: null
+              label: Assessment. Amount of the taxable base adjustment for earlier
+                periods (art. 10.3 Law 4/2020) [14]
+            liq-tipo-15:
+              help: null
+              label: Assessment. Tax rate [15]
+            liq21-ajuste-cuota-integra-17:
+              help: null
+              label: Assessment. Gross tax adjustment for the adjusted period [17]
+            liq21-resultado-19:
+              help: null
+              label: Assessment result [19]
+            reg-total-cuota-101:
+              help: null
+              label: Total adjustment (tax) [101]
+            reg21-base-negativa-15:
+              help: null
+              label: Negative taxable base adjustment (b). Q3 [15]
+            reg21-base-negativa-2:
+              help: null
+              label: Negative taxable base adjustment (b). Q1 [2]
+            reg21-base-negativa-21:
+              help: null
+              label: Negative taxable base adjustment (b). Q4 [21]
+            reg21-base-negativa-27:
+              help: null
+              label: Negative taxable base adjustment (b). Q1 [27]
+            reg21-base-negativa-34:
+              help: null
+              label: Negative taxable base adjustment (b). Q2 [34]
+            reg21-base-negativa-40:
+              help: null
+              label: Negative taxable base adjustment (b). Q3 [40]
+            reg21-base-negativa-46:
+              help: null
+              label: Negative taxable base adjustment (b). Q4 [46]
+            reg21-base-negativa-52:
+              help: null
+              label: Negative taxable base adjustment (b). Q1 [52]
+            reg21-base-negativa-59:
+              help: null
+              label: Negative taxable base adjustment (b). Q2 [59]
+            reg21-base-negativa-65:
+              help: null
+              label: Negative taxable base adjustment (b). Q3 [65]
+            reg21-base-negativa-71:
+              help: null
+              label: Negative taxable base adjustment (b). Q4 [71]
+            reg21-base-negativa-77:
+              help: null
+              label: Negative taxable base adjustment (b). Q1 [77]
+            reg21-base-negativa-84:
+              help: null
+              label: Negative taxable base adjustment (b). Q2 [84]
+            reg21-base-negativa-9:
+              help: null
+              label: Negative taxable base adjustment (b). Q2 [9]
+            reg21-base-negativa-90:
+              help: null
+              label: Negative taxable base adjustment (b). Q3 [90]
+            reg21-base-negativa-96:
+              help: null
+              label: Negative taxable base adjustment (b). Q4 [96]
+            reg21-base-positiva-1:
+              help: null
+              label: Positive taxable base adjustment (a). Q1 [1]
+            reg21-base-positiva-14:
+              help: null
+              label: Positive taxable base adjustment (a). Q3 [14]
+            reg21-base-positiva-20:
+              help: null
+              label: Positive taxable base adjustment (a). Q4 [20]
+            reg21-base-positiva-26:
+              help: null
+              label: Positive taxable base adjustment (a). Q1 [26]
+            reg21-base-positiva-33:
+              help: null
+              label: Positive taxable base adjustment (a). Q2 [33]
+            reg21-base-positiva-39:
+              help: null
+              label: Positive taxable base adjustment (a). Q3 [39]
+            reg21-base-positiva-45:
+              help: null
+              label: Positive taxable base adjustment (a). Q4 [45]
+            reg21-base-positiva-51:
+              help: null
+              label: Positive taxable base adjustment (a). Q1 [51]
+            reg21-base-positiva-58:
+              help: null
+              label: Positive taxable base adjustment (a). Q2 [58]
+            reg21-base-positiva-64:
+              help: null
+              label: Positive taxable base adjustment (a). Q3 [64]
+            reg21-base-positiva-70:
+              help: null
+              label: Positive taxable base adjustment (a). Q4 [70]
+            reg21-base-positiva-76:
+              help: null
+              label: Positive taxable base adjustment (a). Q1 [76]
+            reg21-base-positiva-8:
+              help: null
+              label: Positive taxable base adjustment (a). Q2 [8]
+            reg21-base-positiva-83:
+              help: null
+              label: Positive taxable base adjustment (a). Q2 [83]
+            reg21-base-positiva-89:
+              help: null
+              label: Positive taxable base adjustment (a). Q3 [89]
+            reg21-base-positiva-95:
+              help: null
+              label: Positive taxable base adjustment (a). Q4 [95]
+            reg21-base-total-10:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q2 [10]
+            reg21-base-total-16:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q3 [16]
+            reg21-base-total-22:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q4 [22]
+            reg21-base-total-28:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q1 [28]
+            reg21-base-total-3:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q1 [3]
+            reg21-base-total-35:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q2 [35]
+            reg21-base-total-41:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q3 [41]
+            reg21-base-total-47:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q4 [47]
+            reg21-base-total-53:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q1 [53]
+            reg21-base-total-60:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q2 [60]
+            reg21-base-total-66:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q3 [66]
+            reg21-base-total-72:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q4 [72]
+            reg21-base-total-78:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q1 [78]
+            reg21-base-total-85:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q2 [85]
+            reg21-base-total-91:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q3 [91]
+            reg21-base-total-97:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q4 [97]
+            reg21-cuota-negativa-12:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q2 [12]
+            reg21-cuota-negativa-18:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q3 [18]
+            reg21-cuota-negativa-24:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q4 [24]
+            reg21-cuota-negativa-31:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q1 [31]
+            reg21-cuota-negativa-37:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q2 [37]
+            reg21-cuota-negativa-43:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q3 [43]
+            reg21-cuota-negativa-49:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q4 [49]
+            reg21-cuota-negativa-56:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q1 [56]
+            reg21-cuota-negativa-6:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q1 [6]
+            reg21-cuota-negativa-62:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q2 [62]
+            reg21-cuota-negativa-68:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q3 [68]
+            reg21-cuota-negativa-74:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q4 [74]
+            reg21-cuota-negativa-81:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q1 [81]
+            reg21-cuota-negativa-87:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q2 [87]
+            reg21-cuota-negativa-93:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q3 [93]
+            reg21-cuota-negativa-99:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q4 [99]
+            reg21-cuota-positiva-11:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q2 [11]
+            reg21-cuota-positiva-17:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q3 [17]
+            reg21-cuota-positiva-23:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q4 [23]
+            reg21-cuota-positiva-30:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q1 [30]
+            reg21-cuota-positiva-36:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q2 [36]
+            reg21-cuota-positiva-42:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q3 [42]
+            reg21-cuota-positiva-48:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q4 [48]
+            reg21-cuota-positiva-5:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q1 [5]
+            reg21-cuota-positiva-55:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q1 [55]
+            reg21-cuota-positiva-61:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q2 [61]
+            reg21-cuota-positiva-67:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q3 [67]
+            reg21-cuota-positiva-73:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q4 [73]
+            reg21-cuota-positiva-80:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q1 [80]
+            reg21-cuota-positiva-86:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q2 [86]
+            reg21-cuota-positiva-92:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q3 [92]
+            reg21-cuota-positiva-98:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q4 [98]
+            reg21-cuota-total-100:
+              help: null
+              label: Total tax adjustment (g = e + f). Q4 [100]
+            reg21-cuota-total-13:
+              help: null
+              label: Total tax adjustment (g = e + f). Q2 [13]
+            reg21-cuota-total-19:
+              help: null
+              label: Total tax adjustment (g = e + f). Q3 [19]
+            reg21-cuota-total-25:
+              help: null
+              label: Total tax adjustment (g = e + f). Q4 [25]
+            reg21-cuota-total-32:
+              help: null
+              label: Total tax adjustment (g = e + f). Q1 [32]
+            reg21-cuota-total-38:
+              help: null
+              label: Total tax adjustment (g = e + f). Q2 [38]
+            reg21-cuota-total-44:
+              help: null
+              label: Total tax adjustment (g = e + f). Q3 [44]
+            reg21-cuota-total-50:
+              help: null
+              label: Total tax adjustment (g = e + f). Q4 [50]
+            reg21-cuota-total-57:
+              help: null
+              label: Total tax adjustment (g = e + f). Q1 [57]
+            reg21-cuota-total-63:
+              help: null
+              label: Total tax adjustment (g = e + f). Q2 [63]
+            reg21-cuota-total-69:
+              help: null
+              label: Total tax adjustment (g = e + f). Q3 [69]
+            reg21-cuota-total-7:
+              help: null
+              label: Total tax adjustment (g = e + f). Q1 [7]
+            reg21-cuota-total-75:
+              help: null
+              label: Total tax adjustment (g = e + f). Q4 [75]
+            reg21-cuota-total-82:
+              help: null
+              label: Total tax adjustment (g = e + f). Q1 [82]
+            reg21-cuota-total-88:
+              help: null
+              label: Total tax adjustment (g = e + f). Q2 [88]
+            reg21-cuota-total-94:
+              help: null
+              label: Total tax adjustment (g = e + f). Q3 [94]
+            reg21-tipo-29-645:
+              help: null
+              label: Tax rate (d). Q1 [29]
+            reg21-tipo-29-648:
+              help: null
+              label: Tax rate (d). Q2 [29]
+            reg21-tipo-29-651:
+              help: null
+              label: Tax rate (d). Q3 [29]
+            reg21-tipo-29-654:
+              help: null
+              label: Tax rate (d). Q4 [29]
+            reg21-tipo-4-221:
+              help: null
+              label: Tax rate (d). Q1 [4]
+            reg21-tipo-4-224:
+              help: null
+              label: Tax rate (d). Q2 [4]
+            reg21-tipo-4-227:
+              help: null
+              label: Tax rate (d). Q3 [4]
+            reg21-tipo-4-230:
+              help: null
+              label: Tax rate (d). Q4 [4]
+            reg21-tipo-54-1069:
+              help: null
+              label: Tax rate (d). Q1 [54]
+            reg21-tipo-54-1072:
+              help: null
+              label: Tax rate (d). Q2 [54]
+            reg21-tipo-54-1075:
+              help: null
+              label: Tax rate (d). Q3 [54]
+            reg21-tipo-54-1078:
+              help: null
+              label: Tax rate (d). Q4 [54]
+            reg21-tipo-79-1493:
+              help: null
+              label: Tax rate (d). Q1 [79]
+            reg21-tipo-79-1496:
+              help: null
+              label: Tax rate (d). Q2 [79]
+            reg21-tipo-79-1499:
+              help: null
+              label: Tax rate (d). Q3 [79]
+            reg21-tipo-79-1502:
+              help: null
+              label: Tax rate (d). Q4 [79]
+            resultado-a-deducir-18:
+              help: null
+              label: 'Result. To be deducted (supplementary self-assessments only):
+                result of the earlier return or returns for the same year and period
+                [18]'
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+          construct:
+            modelo-490-autoliquidacion:
+              field:
+                title: null
+          field:
+            label: null
+        2022-1t:
+          casilla:
+            490-01-declaracion-complementaria-995:
+              help: null
+              label: Supplementary return
+            490-01-declaracion-negativa-1009:
+              help: null
+              label: Nil return
+            490-01-grupo-denominacion-388:
+              help: null
+              label: Group identification. Group name
+            490-01-grupo-dominante-515:
+              help: null
+              label: Group identification. Parent entity
+            490-01-grupo-pais-dominante-513:
+              help: null
+              label: Group identification. Country of residence of the parent entity
+            490-01-identificacion-email-154:
+              help: null
+              label: Identification. Email address
+            490-01-identificacion-nif-representante-254:
+              help: null
+              label: Identification. Representative's tax ID (NIF)
+            490-01-identificacion-nombre-representante-263:
+              help: null
+              label: Identification. Representative's company name or full name
+            490-01-indicador-pagina-complementaria-12:
+              help: null
+              label: Supplementary page indicator
+            490-01-ingreso-bic-swift-950:
+              help: null
+              label: Payment or refund. BIC/SWIFT code
+            490-01-ingreso-iban-961:
+              help: null
+              label: Payment or refund. IBAN
+            490-01-justificante-anterior-996:
+              help: null
+              label: Receipt number of the previous return
+            490-01-tipo-declaracion-13:
+              help: null
+              label: Return type
+            490-02-indicador-pagina-complementaria-12:
+              help: null
+              label: Supplementary page indicator
+            490-02-regularizacion-ejercicio-1285:
+              help: null
+              label: Adjustment (art. 10.3 Law). Tax year
+            490-02-regularizacion-ejercicio-13:
+              help: null
+              label: Adjustment (art. 10.3 Law). Tax year
+            490-02-regularizacion-ejercicio-437:
+              help: null
+              label: Adjustment (art. 10.3 Law). Tax year
+            490-02-regularizacion-ejercicio-861:
+              help: null
+              label: Adjustment (art. 10.3 Law). Tax year
+            liq-base-imponible-total-13:
+              help: null
+              label: Assessment. Total taxable base for the period [13]
+            liq-cuota-integra-16:
+              help: null
+              label: Assessment. Gross tax [16]
+            liq-datos-base-11:
+              help: null
+              label: Assessment. 3. Data transmission services. Taxable base [11]
+            liq-datos-ing-10:
+              help: null
+              label: Assessment. 3. Data transmission services. Total revenue [10]
+            liq-datos-reg-base-12:
+              help: null
+              label: Assessment. 3. Data transmission services. Taxable base adjustment
+                (art. 10.3) [12]
+            liq-indicador-regularizacion-A:
+              help: null
+              label: Assessment. Adjustment indicator (art. 10.3 Law 4/2020) [A]
+            liq-interm-a-base-05:
+              help: null
+              label: Assessment. 2.A. Online intermediation services with underlying
+                supply of goods or services. Taxable base [05]
+            liq-interm-a-ing-04:
+              help: null
+              label: Assessment. 2.A. Online intermediation services with underlying
+                supply of goods or services. Total revenue [04]
+            liq-interm-a-reg-base-06:
+              help: null
+              label: Assessment. 2.A. Online intermediation services with underlying
+                supply of goods or services. Taxable base adjustment (art. 10.3) [06]
+            liq-interm-b-base-08:
+              help: null
+              label: Assessment. 2.B. Other online intermediation services. Taxable
+                base [08]
+            liq-interm-b-ing-07:
+              help: null
+              label: Assessment. 2.B. Other online intermediation services. Total
+                revenue [07]
+            liq-interm-b-reg-base-09:
+              help: null
+              label: Assessment. 2.B. Other online intermediation services. Taxable
+                base adjustment (art. 10.3) [09]
+            liq-publi-base-02:
+              help: null
+              label: Assessment. 1. Online advertising services. Taxable base [02]
+            liq-publi-ing-01:
+              help: null
+              label: Assessment. 1. Online advertising services. Total revenue [01]
+            liq-publi-reg-base-03:
+              help: null
+              label: Assessment. 1. Online advertising services. Taxable base adjustment
+                (art. 10.3) [03]
+            liq-reg-periodos-anteriores-14:
+              help: null
+              label: Assessment. Amount of the taxable base adjustment for earlier
+                periods (art. 10.3 Law 4/2020) [14]
+            liq-tipo-15:
+              help: null
+              label: Assessment. Tax rate [15]
+            liq21-ajuste-cuota-integra-17:
+              help: null
+              label: Assessment. Gross tax adjustment for the adjusted period [17]
+            liq21-resultado-19:
+              help: null
+              label: Assessment result [19]
+            reg-total-cuota-101:
+              help: null
+              label: Total adjustment (tax) [101]
+            reg21-base-negativa-15:
+              help: null
+              label: Negative taxable base adjustment (b). Q3 [15]
+            reg21-base-negativa-2:
+              help: null
+              label: Negative taxable base adjustment (b). Q1 [2]
+            reg21-base-negativa-21:
+              help: null
+              label: Negative taxable base adjustment (b). Q4 [21]
+            reg21-base-negativa-27:
+              help: null
+              label: Negative taxable base adjustment (b). Q1 [27]
+            reg21-base-negativa-34:
+              help: null
+              label: Negative taxable base adjustment (b). Q2 [34]
+            reg21-base-negativa-40:
+              help: null
+              label: Negative taxable base adjustment (b). Q3 [40]
+            reg21-base-negativa-46:
+              help: null
+              label: Negative taxable base adjustment (b). Q4 [46]
+            reg21-base-negativa-52:
+              help: null
+              label: Negative taxable base adjustment (b). Q1 [52]
+            reg21-base-negativa-59:
+              help: null
+              label: Negative taxable base adjustment (b). Q2 [59]
+            reg21-base-negativa-65:
+              help: null
+              label: Negative taxable base adjustment (b). Q3 [65]
+            reg21-base-negativa-71:
+              help: null
+              label: Negative taxable base adjustment (b). Q4 [71]
+            reg21-base-negativa-77:
+              help: null
+              label: Negative taxable base adjustment (b). Q1 [77]
+            reg21-base-negativa-84:
+              help: null
+              label: Negative taxable base adjustment (b). Q2 [84]
+            reg21-base-negativa-9:
+              help: null
+              label: Negative taxable base adjustment (b). Q2 [9]
+            reg21-base-negativa-90:
+              help: null
+              label: Negative taxable base adjustment (b). Q3 [90]
+            reg21-base-negativa-96:
+              help: null
+              label: Negative taxable base adjustment (b). Q4 [96]
+            reg21-base-positiva-1:
+              help: null
+              label: Positive taxable base adjustment (a). Q1 [1]
+            reg21-base-positiva-14:
+              help: null
+              label: Positive taxable base adjustment (a). Q3 [14]
+            reg21-base-positiva-20:
+              help: null
+              label: Positive taxable base adjustment (a). Q4 [20]
+            reg21-base-positiva-26:
+              help: null
+              label: Positive taxable base adjustment (a). Q1 [26]
+            reg21-base-positiva-33:
+              help: null
+              label: Positive taxable base adjustment (a). Q2 [33]
+            reg21-base-positiva-39:
+              help: null
+              label: Positive taxable base adjustment (a). Q3 [39]
+            reg21-base-positiva-45:
+              help: null
+              label: Positive taxable base adjustment (a). Q4 [45]
+            reg21-base-positiva-51:
+              help: null
+              label: Positive taxable base adjustment (a). Q1 [51]
+            reg21-base-positiva-58:
+              help: null
+              label: Positive taxable base adjustment (a). Q2 [58]
+            reg21-base-positiva-64:
+              help: null
+              label: Positive taxable base adjustment (a). Q3 [64]
+            reg21-base-positiva-70:
+              help: null
+              label: Positive taxable base adjustment (a). Q4 [70]
+            reg21-base-positiva-76:
+              help: null
+              label: Positive taxable base adjustment (a). Q1 [76]
+            reg21-base-positiva-8:
+              help: null
+              label: Positive taxable base adjustment (a). Q2 [8]
+            reg21-base-positiva-83:
+              help: null
+              label: Positive taxable base adjustment (a). Q2 [83]
+            reg21-base-positiva-89:
+              help: null
+              label: Positive taxable base adjustment (a). Q3 [89]
+            reg21-base-positiva-95:
+              help: null
+              label: Positive taxable base adjustment (a). Q4 [95]
+            reg21-base-total-10:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q2 [10]
+            reg21-base-total-16:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q3 [16]
+            reg21-base-total-22:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q4 [22]
+            reg21-base-total-28:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q1 [28]
+            reg21-base-total-3:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q1 [3]
+            reg21-base-total-35:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q2 [35]
+            reg21-base-total-41:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q3 [41]
+            reg21-base-total-47:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q4 [47]
+            reg21-base-total-53:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q1 [53]
+            reg21-base-total-60:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q2 [60]
+            reg21-base-total-66:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q3 [66]
+            reg21-base-total-72:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q4 [72]
+            reg21-base-total-78:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q1 [78]
+            reg21-base-total-85:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q2 [85]
+            reg21-base-total-91:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q3 [91]
+            reg21-base-total-97:
+              help: null
+              label: Total taxable base adjustment (c = a + b). Q4 [97]
+            reg21-cuota-negativa-12:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q2 [12]
+            reg21-cuota-negativa-18:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q3 [18]
+            reg21-cuota-negativa-24:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q4 [24]
+            reg21-cuota-negativa-31:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q1 [31]
+            reg21-cuota-negativa-37:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q2 [37]
+            reg21-cuota-negativa-43:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q3 [43]
+            reg21-cuota-negativa-49:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q4 [49]
+            reg21-cuota-negativa-56:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q1 [56]
+            reg21-cuota-negativa-6:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q1 [6]
+            reg21-cuota-negativa-62:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q2 [62]
+            reg21-cuota-negativa-68:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q3 [68]
+            reg21-cuota-negativa-74:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q4 [74]
+            reg21-cuota-negativa-81:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q1 [81]
+            reg21-cuota-negativa-87:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q2 [87]
+            reg21-cuota-negativa-93:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q3 [93]
+            reg21-cuota-negativa-99:
+              help: null
+              label: Negative tax adjustment (f = b × d). Q4 [99]
+            reg21-cuota-positiva-11:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q2 [11]
+            reg21-cuota-positiva-17:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q3 [17]
+            reg21-cuota-positiva-23:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q4 [23]
+            reg21-cuota-positiva-30:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q1 [30]
+            reg21-cuota-positiva-36:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q2 [36]
+            reg21-cuota-positiva-42:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q3 [42]
+            reg21-cuota-positiva-48:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q4 [48]
+            reg21-cuota-positiva-5:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q1 [5]
+            reg21-cuota-positiva-55:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q1 [55]
+            reg21-cuota-positiva-61:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q2 [61]
+            reg21-cuota-positiva-67:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q3 [67]
+            reg21-cuota-positiva-73:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q4 [73]
+            reg21-cuota-positiva-80:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q1 [80]
+            reg21-cuota-positiva-86:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q2 [86]
+            reg21-cuota-positiva-92:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q3 [92]
+            reg21-cuota-positiva-98:
+              help: null
+              label: Positive tax adjustment (e = a × d). Q4 [98]
+            reg21-cuota-total-100:
+              help: null
+              label: Total tax adjustment (g = e + f). Q4 [100]
+            reg21-cuota-total-13:
+              help: null
+              label: Total tax adjustment (g = e + f). Q2 [13]
+            reg21-cuota-total-19:
+              help: null
+              label: Total tax adjustment (g = e + f). Q3 [19]
+            reg21-cuota-total-25:
+              help: null
+              label: Total tax adjustment (g = e + f). Q4 [25]
+            reg21-cuota-total-32:
+              help: null
+              label: Total tax adjustment (g = e + f). Q1 [32]
+            reg21-cuota-total-38:
+              help: null
+              label: Total tax adjustment (g = e + f). Q2 [38]
+            reg21-cuota-total-44:
+              help: null
+              label: Total tax adjustment (g = e + f). Q3 [44]
+            reg21-cuota-total-50:
+              help: null
+              label: Total tax adjustment (g = e + f). Q4 [50]
+            reg21-cuota-total-57:
+              help: null
+              label: Total tax adjustment (g = e + f). Q1 [57]
+            reg21-cuota-total-63:
+              help: null
+              label: Total tax adjustment (g = e + f). Q2 [63]
+            reg21-cuota-total-69:
+              help: null
+              label: Total tax adjustment (g = e + f). Q3 [69]
+            reg21-cuota-total-7:
+              help: null
+              label: Total tax adjustment (g = e + f). Q1 [7]
+            reg21-cuota-total-75:
+              help: null
+              label: Total tax adjustment (g = e + f). Q4 [75]
+            reg21-cuota-total-82:
+              help: null
+              label: Total tax adjustment (g = e + f). Q1 [82]
+            reg21-cuota-total-88:
+              help: null
+              label: Total tax adjustment (g = e + f). Q2 [88]
+            reg21-cuota-total-94:
+              help: null
+              label: Total tax adjustment (g = e + f). Q3 [94]
+            reg21-tipo-29-645:
+              help: null
+              label: Tax rate (d). Q1 [29]
+            reg21-tipo-29-648:
+              help: null
+              label: Tax rate (d). Q2 [29]
+            reg21-tipo-29-651:
+              help: null
+              label: Tax rate (d). Q3 [29]
+            reg21-tipo-29-654:
+              help: null
+              label: Tax rate (d). Q4 [29]
+            reg21-tipo-4-221:
+              help: null
+              label: Tax rate (d). Q1 [4]
+            reg21-tipo-4-224:
+              help: null
+              label: Tax rate (d). Q2 [4]
+            reg21-tipo-4-227:
+              help: null
+              label: Tax rate (d). Q3 [4]
+            reg21-tipo-4-230:
+              help: null
+              label: Tax rate (d). Q4 [4]
+            reg21-tipo-54-1069:
+              help: null
+              label: Tax rate (d). Q1 [54]
+            reg21-tipo-54-1072:
+              help: null
+              label: Tax rate (d). Q2 [54]
+            reg21-tipo-54-1075:
+              help: null
+              label: Tax rate (d). Q3 [54]
+            reg21-tipo-54-1078:
+              help: null
+              label: Tax rate (d). Q4 [54]
+            reg21-tipo-79-1493:
+              help: null
+              label: Tax rate (d). Q1 [79]
+            reg21-tipo-79-1496:
+              help: null
+              label: Tax rate (d). Q2 [79]
+            reg21-tipo-79-1499:
+              help: null
+              label: Tax rate (d). Q3 [79]
+            reg21-tipo-79-1502:
+              help: null
+              label: Tax rate (d). Q4 [79]
+            resultado-a-deducir-18:
+              help: null
+              label: 'Result. To be deducted (supplementary self-assessments only):
+                result of the earlier return or returns for the same year and period
+                [18]'
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+          construct:
+            modelo-490-autoliquidacion:
+              field:
+                title: null
+          field:
+            label: null
+        2022-2t-4t:
+          casilla:
+            490-01-declaracion-complementaria-1054:
+              help: null
+              label: Supplementary return
+            490-01-declaracion-negativa-1068:
+              help: null
+              label: Nil return
+            490-01-grupo-denominacion-388:
+              help: null
+              label: Group identification. Group name
+            490-01-grupo-dominante-515:
+              help: null
+              label: Group identification. Parent entity
+            490-01-grupo-pais-dominante-513:
+              help: null
+              label: Group identification. Country of residence of the parent entity
+            490-01-identificacion-email-154:
+              help: null
+              label: Identification. Email address
+            490-01-identificacion-nif-representante-254:
+              help: null
+              label: Identification. Representative's tax ID (NIF)
+            490-01-identificacion-nombre-representante-263:
+              help: null
+              label: Identification. Representative's company name or full name
+            490-01-indicador-pagina-complementaria-12:
+              help: null
+              label: Supplementary page indicator
+            490-01-ingreso-bic-swift-1009:
+              help: null
+              label: Payment or refund. BIC/SWIFT code
+            490-01-ingreso-iban-1020:
+              help: null
+              label: Payment or refund. IBAN
+            490-01-justificante-anterior-1055:
+              help: null
+              label: Receipt number of the previous return
+            490-01-tipo-declaracion-13:
+              help: null
+              label: Return type
+            490-02-indicador-pagina-complementaria-12:
+              help: null
+              label: Supplementary page indicator
+            490-02-regularizacion-ejercicio-13:
+              help: null
+              label: Adjustment (art. 10.3 Law 4/2020). Tax year
+            490-02-regularizacion-ejercicio-909:
+              help: null
+              label: Adjustment (art. 10.3 Law 4/2020). Tax year
+            490-03-indicador-pagina-complementaria-12:
+              help: null
+              label: Supplementary page indicator
+            490-03-regularizacion-ejercicio-13:
+              help: null
+              label: Adjustment (art. 10.3 Law 4/2020). Tax year
+            490-03-regularizacion-ejercicio-909:
+              help: null
+              label: Adjustment (art. 10.3 Law 4/2020). Tax year
+            ajuste-cuota-integra-reg-estado-19:
+              help: null
+              label: Adjustment to gross tax for the adjusted periods attributable
+                to the State [19]
+            ajuste-cuota-integra-regularizacion-18:
+              help: null
+              label: Adjustment to gross tax for the adjusted periods [18]
+            cuota-integra-estado-17:
+              help: null
+              label: Gross tax attributable to the State Administration [17]
+            liq-base-imponible-total-13:
+              help: null
+              label: Assessment. Total taxable base for the period [13]
+            liq-cuota-integra-16:
+              help: null
+              label: Assessment. Gross tax [16]
+            liq-datos-base-11:
+              help: null
+              label: Assessment. 3. Data transmission services. Taxable base [11]
+            liq-datos-ing-10:
+              help: null
+              label: Assessment. 3. Data transmission services. Total revenue [10]
+            liq-datos-reg-base-12:
+              help: null
+              label: Assessment. 3. Data transmission services. Taxable base adjustment
+                (art. 10.3) [12]
+            liq-indicador-regularizacion-A:
+              help: null
+              label: Assessment. Adjustment indicator (art. 10.3 Law 4/2020) [A]
+            liq-interm-a-base-05:
+              help: null
+              label: Assessment. 2.A. Online intermediation services with underlying
+                supply of goods or services. Taxable base [05]
+            liq-interm-a-ing-04:
+              help: null
+              label: Assessment. 2.A. Online intermediation services with underlying
+                supply of goods or services. Total revenue [04]
+            liq-interm-a-reg-base-06:
+              help: null
+              label: Assessment. 2.A. Online intermediation services with underlying
+                supply of goods or services. Taxable base adjustment (art. 10.3) [06]
+            liq-interm-b-base-08:
+              help: null
+              label: Assessment. 2.B. Other online intermediation services. Taxable
+                base [08]
+            liq-interm-b-ing-07:
+              help: null
+              label: Assessment. 2.B. Other online intermediation services. Total
+                revenue [07]
+            liq-interm-b-reg-base-09:
+              help: null
+              label: Assessment. 2.B. Other online intermediation services. Taxable
+                base adjustment (art. 10.3) [09]
+            liq-publi-base-02:
+              help: null
+              label: Assessment. 1. Online advertising services. Taxable base [02]
+            liq-publi-ing-01:
+              help: null
+              label: Assessment. 1. Online advertising services. Total revenue [01]
+            liq-publi-reg-base-03:
+              help: null
+              label: Assessment. 1. Online advertising services. Taxable base adjustment
+                (art. 10.3) [03]
+            liq-reg-periodos-anteriores-14:
+              help: null
+              label: Assessment. Amount of the taxable base adjustment for earlier
+                periods (art. 10.3 Law 4/2020) [14]
+            liq-tipo-15:
+              help: null
+              label: Assessment. Tax rate [15]
+            reg-ajuste-distribucion-120:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q1 [120]
+            reg-ajuste-distribucion-141:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q2 [141]
+            reg-ajuste-distribucion-162:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q3 [162]
+            reg-ajuste-distribucion-183:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q1 [183]
+            reg-ajuste-distribucion-204:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q1 [204]
+            reg-ajuste-distribucion-225:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q2 [225]
+            reg-ajuste-distribucion-246:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q3 [246]
+            reg-ajuste-distribucion-267:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q1 [267]
+            reg-ajuste-distribucion-288:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q1 [288]
+            reg-ajuste-distribucion-309:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q2 [309]
+            reg-ajuste-distribucion-330:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q3 [330]
+            reg-ajuste-distribucion-351:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q1 [351]
+            reg-ajuste-distribucion-36:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q1 [36]
+            reg-ajuste-distribucion-57:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q2 [57]
+            reg-ajuste-distribucion-78:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q3 [78]
+            reg-ajuste-distribucion-99:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q1 [99]
+            reg-ajuste-total-estado-100:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q4 [100]
+            reg-ajuste-total-estado-121:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q1 [121]
+            reg-ajuste-total-estado-142:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q2 [142]
+            reg-ajuste-total-estado-163:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q3 [163]
+            reg-ajuste-total-estado-184:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q4 [184]
+            reg-ajuste-total-estado-205:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q1 [205]
+            reg-ajuste-total-estado-226:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q2 [226]
+            reg-ajuste-total-estado-247:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q3 [247]
+            reg-ajuste-total-estado-268:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q4 [268]
+            reg-ajuste-total-estado-289:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q1 [289]
+            reg-ajuste-total-estado-310:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q2 [310]
+            reg-ajuste-total-estado-331:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q3 [331]
+            reg-ajuste-total-estado-352:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q4 [352]
+            reg-ajuste-total-estado-37:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q1 [37]
+            reg-ajuste-total-estado-58:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q2 [58]
+            reg-ajuste-total-estado-79:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q3 [79]
+            reg-base-declarada-111:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q1 [111]
+            reg-base-declarada-132:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q2 [132]
+            reg-base-declarada-153:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q3 [153]
+            reg-base-declarada-174:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q4 [174]
+            reg-base-declarada-195:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q1 [195]
+            reg-base-declarada-216:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q2 [216]
+            reg-base-declarada-237:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q3 [237]
+            reg-base-declarada-258:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q4 [258]
+            reg-base-declarada-27:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q1 [27]
+            reg-base-declarada-279:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q1 [279]
+            reg-base-declarada-300:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q2 [300]
+            reg-base-declarada-321:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q3 [321]
+            reg-base-declarada-342:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q4 [342]
+            reg-base-declarada-48:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q2 [48]
+            reg-base-declarada-69:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q3 [69]
+            reg-base-declarada-90:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q4 [90]
+            reg-base-negativa-113:
+              help: null
+              label: Negative taxable base adjustment (c). Q1 [113]
+            reg-base-negativa-134:
+              help: null
+              label: Negative taxable base adjustment (c). Q2 [134]
+            reg-base-negativa-155:
+              help: null
+              label: Negative taxable base adjustment (c). Q3 [155]
+            reg-base-negativa-176:
+              help: null
+              label: Negative taxable base adjustment (c). Q4 [176]
+            reg-base-negativa-197:
+              help: null
+              label: Negative taxable base adjustment (c). Q1 [197]
+            reg-base-negativa-218:
+              help: null
+              label: Negative taxable base adjustment (c). Q2 [218]
+            reg-base-negativa-239:
+              help: null
+              label: Negative taxable base adjustment (c). Q3 [239]
+            reg-base-negativa-260:
+              help: null
+              label: Negative taxable base adjustment (c). Q4 [260]
+            reg-base-negativa-281:
+              help: null
+              label: Negative taxable base adjustment (c). Q1 [281]
+            reg-base-negativa-29:
+              help: null
+              label: Negative taxable base adjustment (c). Q1 [29]
+            reg-base-negativa-302:
+              help: null
+              label: Negative taxable base adjustment (c). Q2 [302]
+            reg-base-negativa-323:
+              help: null
+              label: Negative taxable base adjustment (c). Q3 [323]
+            reg-base-negativa-344:
+              help: null
+              label: Negative taxable base adjustment (c). Q4 [344]
+            reg-base-negativa-50:
+              help: null
+              label: Negative taxable base adjustment (c). Q2 [50]
+            reg-base-negativa-71:
+              help: null
+              label: Negative taxable base adjustment (c). Q3 [71]
+            reg-base-negativa-92:
+              help: null
+              label: Negative taxable base adjustment (c). Q4 [92]
+            reg-base-positiva-112:
+              help: null
+              label: Positive taxable base adjustment (b). Q1 [112]
+            reg-base-positiva-133:
+              help: null
+              label: Positive taxable base adjustment (b). Q2 [133]
+            reg-base-positiva-154:
+              help: null
+              label: Positive taxable base adjustment (b). Q3 [154]
+            reg-base-positiva-175:
+              help: null
+              label: Positive taxable base adjustment (b). Q4 [175]
+            reg-base-positiva-196:
+              help: null
+              label: Positive taxable base adjustment (b). Q1 [196]
+            reg-base-positiva-217:
+              help: null
+              label: Positive taxable base adjustment (b). Q2 [217]
+            reg-base-positiva-238:
+              help: null
+              label: Positive taxable base adjustment (b). Q3 [238]
+            reg-base-positiva-259:
+              help: null
+              label: Positive taxable base adjustment (b). Q4 [259]
+            reg-base-positiva-28:
+              help: null
+              label: Positive taxable base adjustment (b). Q1 [28]
+            reg-base-positiva-280:
+              help: null
+              label: Positive taxable base adjustment (b). Q1 [280]
+            reg-base-positiva-301:
+              help: null
+              label: Positive taxable base adjustment (b). Q2 [301]
+            reg-base-positiva-322:
+              help: null
+              label: Positive taxable base adjustment (b). Q3 [322]
+            reg-base-positiva-343:
+              help: null
+              label: Positive taxable base adjustment (b). Q4 [343]
+            reg-base-positiva-49:
+              help: null
+              label: Positive taxable base adjustment (b). Q2 [49]
+            reg-base-positiva-70:
+              help: null
+              label: Positive taxable base adjustment (b). Q3 [70]
+            reg-base-positiva-91:
+              help: null
+              label: Positive taxable base adjustment (b). Q4 [91]
+            reg-base-total-114:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q1 [114]
+            reg-base-total-135:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q2 [135]
+            reg-base-total-156:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q3 [156]
+            reg-base-total-177:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q4 [177]
+            reg-base-total-198:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q1 [198]
+            reg-base-total-219:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q2 [219]
+            reg-base-total-240:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q3 [240]
+            reg-base-total-261:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q4 [261]
+            reg-base-total-282:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q1 [282]
+            reg-base-total-30:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q1 [30]
+            reg-base-total-303:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q2 [303]
+            reg-base-total-324:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q3 [324]
+            reg-base-total-345:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q4 [345]
+            reg-base-total-51:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q2 [51]
+            reg-base-total-72:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q3 [72]
+            reg-base-total-93:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q4 [93]
+            reg-cuota-estado-119:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q1 [119]
+            reg-cuota-estado-140:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q2 [140]
+            reg-cuota-estado-161:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q3 [161]
+            reg-cuota-estado-182:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q4 [182]
+            reg-cuota-estado-203:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q1 [203]
+            reg-cuota-estado-224:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q2 [224]
+            reg-cuota-estado-245:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q3 [245]
+            reg-cuota-estado-266:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q4 [266]
+            reg-cuota-estado-287:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q1 [287]
+            reg-cuota-estado-308:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q2 [308]
+            reg-cuota-estado-329:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q3 [329]
+            reg-cuota-estado-35:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q1 [35]
+            reg-cuota-estado-350:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q4 [350]
+            reg-cuota-estado-56:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q2 [56]
+            reg-cuota-estado-77:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q3 [77]
+            reg-cuota-estado-98:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q4 [98]
+            reg-cuota-negativa-117:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q1 [117]
+            reg-cuota-negativa-138:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q2 [138]
+            reg-cuota-negativa-159:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q3 [159]
+            reg-cuota-negativa-180:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q4 [180]
+            reg-cuota-negativa-201:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q1 [201]
+            reg-cuota-negativa-222:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q2 [222]
+            reg-cuota-negativa-243:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q3 [243]
+            reg-cuota-negativa-264:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q4 [264]
+            reg-cuota-negativa-285:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q1 [285]
+            reg-cuota-negativa-306:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q2 [306]
+            reg-cuota-negativa-327:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q3 [327]
+            reg-cuota-negativa-33:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q1 [33]
+            reg-cuota-negativa-348:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q4 [348]
+            reg-cuota-negativa-54:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q2 [54]
+            reg-cuota-negativa-75:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q3 [75]
+            reg-cuota-negativa-96:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q4 [96]
+            reg-cuota-positiva-116:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q1 [116]
+            reg-cuota-positiva-137:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q2 [137]
+            reg-cuota-positiva-158:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q3 [158]
+            reg-cuota-positiva-179:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q4 [179]
+            reg-cuota-positiva-200:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q1 [200]
+            reg-cuota-positiva-221:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q2 [221]
+            reg-cuota-positiva-242:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q3 [242]
+            reg-cuota-positiva-263:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q4 [263]
+            reg-cuota-positiva-284:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q1 [284]
+            reg-cuota-positiva-305:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q2 [305]
+            reg-cuota-positiva-32:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q1 [32]
+            reg-cuota-positiva-326:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q3 [326]
+            reg-cuota-positiva-347:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q4 [347]
+            reg-cuota-positiva-53:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q2 [53]
+            reg-cuota-positiva-74:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q3 [74]
+            reg-cuota-positiva-95:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q4 [95]
+            reg-cuota-total-118:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q1 [118]
+            reg-cuota-total-139:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q2 [139]
+            reg-cuota-total-160:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q3 [160]
+            reg-cuota-total-181:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q4 [181]
+            reg-cuota-total-202:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q1 [202]
+            reg-cuota-total-223:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q2 [223]
+            reg-cuota-total-244:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q3 [244]
+            reg-cuota-total-265:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q4 [265]
+            reg-cuota-total-286:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q1 [286]
+            reg-cuota-total-307:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q2 [307]
+            reg-cuota-total-328:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q3 [328]
+            reg-cuota-total-34:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q1 [34]
+            reg-cuota-total-349:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q4 [349]
+            reg-cuota-total-55:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q2 [55]
+            reg-cuota-total-76:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q3 [76]
+            reg-cuota-total-97:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q4 [97]
+            reg-tipo-115:
+              help: null
+              label: Tax rate (e). Q1 [115]
+            reg-tipo-136:
+              help: null
+              label: Tax rate (e). Q2 [136]
+            reg-tipo-157:
+              help: null
+              label: Tax rate (e). Q3 [157]
+            reg-tipo-178:
+              help: null
+              label: Tax rate (e). Q4 [178]
+            reg-tipo-199:
+              help: null
+              label: Tax rate (e). Q1 [199]
+            reg-tipo-220:
+              help: null
+              label: Tax rate (e). Q2 [220]
+            reg-tipo-241:
+              help: null
+              label: Tax rate (e). Q3 [241]
+            reg-tipo-262:
+              help: null
+              label: Tax rate (e). Q4 [262]
+            reg-tipo-283:
+              help: null
+              label: Tax rate (e). Q1 [283]
+            reg-tipo-304:
+              help: null
+              label: Tax rate (e). Q2 [304]
+            reg-tipo-31:
+              help: null
+              label: Tax rate (e). Q1 [31]
+            reg-tipo-325:
+              help: null
+              label: Tax rate (e). Q3 [325]
+            reg-tipo-346:
+              help: null
+              label: Tax rate (e). Q4 [346]
+            reg-tipo-52:
+              help: null
+              label: Tax rate (e). Q2 [52]
+            reg-tipo-73:
+              help: null
+              label: Tax rate (e). Q3 [73]
+            reg-tipo-94:
+              help: null
+              label: Tax rate (e). Q4 [94]
+            reg-total-cuota-363:
+              help: null
+              label: Total adjustment (tax) [363]
+            reg-total-cuota-estado-364:
+              help: null
+              label: Total adjustment attributable to the State Administration [364]
+            resultado-a-deducir-25:
+              help: null
+              label: 'Result. To be deducted (supplementary self-assessments only):
+                result of the earlier return or returns for the same year and period
+                [25]'
+            resultado-liquidacion-26:
+              help: null
+              label: Assessment result [26]
+            terr-alava-20:
+              help: null
+              label: Taxation by territory. Álava [20]
+            terr-alava-con-reg-102:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q4
+                [102]
+            terr-alava-con-reg-123:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q1
+                [123]
+            terr-alava-con-reg-144:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q2
+                [144]
+            terr-alava-con-reg-165:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q3
+                [165]
+            terr-alava-con-reg-186:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q4
+                [186]
+            terr-alava-con-reg-207:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q1
+                [207]
+            terr-alava-con-reg-228:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q2
+                [228]
+            terr-alava-con-reg-249:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q3
+                [249]
+            terr-alava-con-reg-270:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q4
+                [270]
+            terr-alava-con-reg-291:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q1
+                [291]
+            terr-alava-con-reg-312:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q2
+                [312]
+            terr-alava-con-reg-333:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q3
+                [333]
+            terr-alava-con-reg-354:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q4
+                [354]
+            terr-alava-con-reg-39:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q1
+                [39]
+            terr-alava-con-reg-60:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q2
+                [60]
+            terr-alava-con-reg-81:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q3
+                [81]
+            terr-alava-per-101:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q4 [101]
+            terr-alava-per-122:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q1 [122]
+            terr-alava-per-143:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q2 [143]
+            terr-alava-per-164:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q3 [164]
+            terr-alava-per-185:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q4 [185]
+            terr-alava-per-206:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q1 [206]
+            terr-alava-per-227:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q2 [227]
+            terr-alava-per-248:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q3 [248]
+            terr-alava-per-269:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q4 [269]
+            terr-alava-per-290:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q1 [290]
+            terr-alava-per-311:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q2 [311]
+            terr-alava-per-332:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q3 [332]
+            terr-alava-per-353:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q4 [353]
+            terr-alava-per-38:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q1 [38]
+            terr-alava-per-59:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q2 [59]
+            terr-alava-per-80:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q3 [80]
+            terr-comun-24:
+              help: null
+              label: Taxation by territory. Common territory [24]
+            terr-comun-con-reg-110:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q4 [110]
+            terr-comun-con-reg-131:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q1 [131]
+            terr-comun-con-reg-152:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q2 [152]
+            terr-comun-con-reg-173:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q3 [173]
+            terr-comun-con-reg-194:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q4 [194]
+            terr-comun-con-reg-215:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q1 [215]
+            terr-comun-con-reg-236:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q2 [236]
+            terr-comun-con-reg-257:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q3 [257]
+            terr-comun-con-reg-278:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q4 [278]
+            terr-comun-con-reg-299:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q1 [299]
+            terr-comun-con-reg-320:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q2 [320]
+            terr-comun-con-reg-341:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q3 [341]
+            terr-comun-con-reg-362:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q4 [362]
+            terr-comun-con-reg-47:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q1 [47]
+            terr-comun-con-reg-68:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q2 [68]
+            terr-comun-con-reg-89:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q3 [89]
+            terr-comun-per-109:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q4 [109]
+            terr-comun-per-130:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q1 [130]
+            terr-comun-per-151:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q2 [151]
+            terr-comun-per-172:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q3 [172]
+            terr-comun-per-193:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q4 [193]
+            terr-comun-per-214:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q1 [214]
+            terr-comun-per-235:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q2 [235]
+            terr-comun-per-256:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q3 [256]
+            terr-comun-per-277:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q4 [277]
+            terr-comun-per-298:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q1 [298]
+            terr-comun-per-319:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q2 [319]
+            terr-comun-per-340:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q3 [340]
+            terr-comun-per-361:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q4 [361]
+            terr-comun-per-46:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q1 [46]
+            terr-comun-per-67:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q2 [67]
+            terr-comun-per-88:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q3 [88]
+            terr-guipuzcoa-21:
+              help: null
+              label: Taxation by territory. Gipuzkoa [21]
+            terr-guipuzcoa-con-reg-104:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q4 [104]
+            terr-guipuzcoa-con-reg-125:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q1 [125]
+            terr-guipuzcoa-con-reg-146:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q2 [146]
+            terr-guipuzcoa-con-reg-167:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q3 [167]
+            terr-guipuzcoa-con-reg-188:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q4 [188]
+            terr-guipuzcoa-con-reg-209:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q1 [209]
+            terr-guipuzcoa-con-reg-230:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q2 [230]
+            terr-guipuzcoa-con-reg-251:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q3 [251]
+            terr-guipuzcoa-con-reg-272:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q4 [272]
+            terr-guipuzcoa-con-reg-293:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q1 [293]
+            terr-guipuzcoa-con-reg-314:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q2 [314]
+            terr-guipuzcoa-con-reg-335:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q3 [335]
+            terr-guipuzcoa-con-reg-356:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q4 [356]
+            terr-guipuzcoa-con-reg-41:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q1 [41]
+            terr-guipuzcoa-con-reg-62:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q2 [62]
+            terr-guipuzcoa-con-reg-83:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q3 [83]
+            terr-guipuzcoa-per-103:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q4 [103]
+            terr-guipuzcoa-per-124:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q1 [124]
+            terr-guipuzcoa-per-145:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q2 [145]
+            terr-guipuzcoa-per-166:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q3 [166]
+            terr-guipuzcoa-per-187:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q4 [187]
+            terr-guipuzcoa-per-208:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q1 [208]
+            terr-guipuzcoa-per-229:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q2 [229]
+            terr-guipuzcoa-per-250:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q3 [250]
+            terr-guipuzcoa-per-271:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q4 [271]
+            terr-guipuzcoa-per-292:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q1 [292]
+            terr-guipuzcoa-per-313:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q2 [313]
+            terr-guipuzcoa-per-334:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q3 [334]
+            terr-guipuzcoa-per-355:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q4 [355]
+            terr-guipuzcoa-per-40:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q1 [40]
+            terr-guipuzcoa-per-61:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q2 [61]
+            terr-guipuzcoa-per-82:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q3 [82]
+            terr-vizcaya-22:
+              help: null
+              label: Taxation by territory. Bizkaia [22]
+            terr-vizcaya-con-reg-106:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q4
+                [106]
+            terr-vizcaya-con-reg-127:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q1
+                [127]
+            terr-vizcaya-con-reg-148:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q2
+                [148]
+            terr-vizcaya-con-reg-169:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q3
+                [169]
+            terr-vizcaya-con-reg-190:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q4
+                [190]
+            terr-vizcaya-con-reg-211:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q1
+                [211]
+            terr-vizcaya-con-reg-232:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q2
+                [232]
+            terr-vizcaya-con-reg-253:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q3
+                [253]
+            terr-vizcaya-con-reg-274:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q4
+                [274]
+            terr-vizcaya-con-reg-295:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q1
+                [295]
+            terr-vizcaya-con-reg-316:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q2
+                [316]
+            terr-vizcaya-con-reg-337:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q3
+                [337]
+            terr-vizcaya-con-reg-358:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q4
+                [358]
+            terr-vizcaya-con-reg-43:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q1
+                [43]
+            terr-vizcaya-con-reg-64:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q2
+                [64]
+            terr-vizcaya-con-reg-85:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q3
+                [85]
+            terr-vizcaya-per-105:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q4 [105]
+            terr-vizcaya-per-126:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q1 [126]
+            terr-vizcaya-per-147:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q2 [147]
+            terr-vizcaya-per-168:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q3 [168]
+            terr-vizcaya-per-189:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q4 [189]
+            terr-vizcaya-per-210:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q1 [210]
+            terr-vizcaya-per-231:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q2 [231]
+            terr-vizcaya-per-252:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q3 [252]
+            terr-vizcaya-per-273:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q4 [273]
+            terr-vizcaya-per-294:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q1 [294]
+            terr-vizcaya-per-315:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q2 [315]
+            terr-vizcaya-per-336:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q3 [336]
+            terr-vizcaya-per-357:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q4 [357]
+            terr-vizcaya-per-42:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q1 [42]
+            terr-vizcaya-per-63:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q2 [63]
+            terr-vizcaya-per-84:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q3 [84]
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+          construct:
+            modelo-490-autoliquidacion:
+              field:
+                title: null
+          field:
+            label: null
+        2023-y-siguientes:
+          casilla:
+            490-01-declaracion-complementaria-1054:
+              help: null
+              label: Supplementary return
+            490-01-declaracion-negativa-1068:
+              help: null
+              label: Nil return
+            490-01-grupo-denominacion-388:
+              help: null
+              label: Group identification. Group name
+            490-01-grupo-dominante-515:
+              help: null
+              label: Group identification. Parent entity
+            490-01-grupo-pais-dominante-513:
+              help: null
+              label: Group identification. Country of residence of the parent entity
+            490-01-identificacion-email-154:
+              help: null
+              label: Identification. Email address
+            490-01-identificacion-nif-representante-254:
+              help: null
+              label: Identification. Representative's tax ID (NIF)
+            490-01-identificacion-nombre-representante-263:
+              help: null
+              label: Identification. Representative's company name or full name
+            490-01-indicador-pagina-complementaria-12:
+              help: null
+              label: Supplementary page indicator
+            490-01-ingreso-bic-swift-1009:
+              help: null
+              label: Payment or refund. BIC/SWIFT code
+            490-01-ingreso-iban-1020:
+              help: null
+              label: Payment or refund. IBAN
+            490-01-justificante-anterior-1055:
+              help: null
+              label: Receipt number of the previous return
+            490-01-tipo-declaracion-13:
+              help: null
+              label: Return type
+            490-02-indicador-pagina-complementaria-12:
+              help: null
+              label: Supplementary page indicator
+            490-02-regularizacion-ejercicio-13:
+              help: null
+              label: Adjustment (art. 10.3 Law 4/2020). Tax year
+            490-02-regularizacion-ejercicio-909:
+              help: null
+              label: Adjustment (art. 10.3 Law 4/2020). Tax year
+            490-03-indicador-pagina-complementaria-12:
+              help: null
+              label: Supplementary page indicator
+            490-03-regularizacion-ejercicio-13:
+              help: null
+              label: Adjustment (art. 10.3 Law 4/2020). Tax year
+            490-03-regularizacion-ejercicio-909:
+              help: null
+              label: Adjustment (art. 10.3 Law 4/2020). Tax year
+            ajuste-cuota-integra-reg-estado-19:
+              help: null
+              label: Adjustment to gross tax for the adjusted periods attributable
+                to the State [19]
+            ajuste-cuota-integra-regularizacion-18:
+              help: null
+              label: Adjustment to gross tax for the adjusted periods [18]
+            cuota-integra-estado-17:
+              help: null
+              label: Gross tax attributable to the State Administration [17]
+            liq-base-imponible-total-13:
+              help: null
+              label: Assessment. Total taxable base for the period [13]
+            liq-cuota-integra-16:
+              help: null
+              label: Assessment. Gross tax [16]
+            liq-datos-base-11:
+              help: null
+              label: Assessment. 3. Data transmission services. Taxable base [11]
+            liq-datos-ing-10:
+              help: null
+              label: Assessment. 3. Data transmission services. Total revenue [10]
+            liq-datos-reg-base-12:
+              help: null
+              label: Assessment. 3. Data transmission services. Taxable base adjustment
+                (art. 10.3) [12]
+            liq-indicador-regularizacion-A:
+              help: null
+              label: Assessment. Adjustment indicator (art. 10.3 Law 4/2020) [A]
+            liq-interm-a-base-05:
+              help: null
+              label: Assessment. 2.A. Online intermediation services with underlying
+                supply of goods or services. Taxable base [05]
+            liq-interm-a-ing-04:
+              help: null
+              label: Assessment. 2.A. Online intermediation services with underlying
+                supply of goods or services. Total revenue [04]
+            liq-interm-a-reg-base-06:
+              help: null
+              label: Assessment. 2.A. Online intermediation services with underlying
+                supply of goods or services. Taxable base adjustment (art. 10.3) [06]
+            liq-interm-b-base-08:
+              help: null
+              label: Assessment. 2.B. Other online intermediation services. Taxable
+                base [08]
+            liq-interm-b-ing-07:
+              help: null
+              label: Assessment. 2.B. Other online intermediation services. Total
+                revenue [07]
+            liq-interm-b-reg-base-09:
+              help: null
+              label: Assessment. 2.B. Other online intermediation services. Taxable
+                base adjustment (art. 10.3) [09]
+            liq-publi-base-02:
+              help: null
+              label: Assessment. 1. Online advertising services. Taxable base [02]
+            liq-publi-ing-01:
+              help: null
+              label: Assessment. 1. Online advertising services. Total revenue [01]
+            liq-publi-reg-base-03:
+              help: null
+              label: Assessment. 1. Online advertising services. Taxable base adjustment
+                (art. 10.3) [03]
+            liq-reg-periodos-anteriores-14:
+              help: null
+              label: Assessment. Amount of the taxable base adjustment for earlier
+                periods (art. 10.3 Law 4/2020) [14]
+            liq-tipo-15:
+              help: null
+              label: Assessment. Tax rate [15]
+            reg-ajuste-distribucion-120:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q1 [120]
+            reg-ajuste-distribucion-141:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q2 [141]
+            reg-ajuste-distribucion-162:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q3 [162]
+            reg-ajuste-distribucion-183:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q1 [183]
+            reg-ajuste-distribucion-204:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q1 [204]
+            reg-ajuste-distribucion-225:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q2 [225]
+            reg-ajuste-distribucion-246:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q3 [246]
+            reg-ajuste-distribucion-267:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q1 [267]
+            reg-ajuste-distribucion-288:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q1 [288]
+            reg-ajuste-distribucion-309:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q2 [309]
+            reg-ajuste-distribucion-330:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q3 [330]
+            reg-ajuste-distribucion-351:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q1 [351]
+            reg-ajuste-distribucion-36:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q1 [36]
+            reg-ajuste-distribucion-57:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q2 [57]
+            reg-ajuste-distribucion-78:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q3 [78]
+            reg-ajuste-distribucion-99:
+              help: null
+              label: Adjustment to State-attributable tax for a change in territorial
+                distribution (j). Q1 [99]
+            reg-ajuste-total-estado-100:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q4 [100]
+            reg-ajuste-total-estado-121:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q1 [121]
+            reg-ajuste-total-estado-142:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q2 [142]
+            reg-ajuste-total-estado-163:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q3 [163]
+            reg-ajuste-total-estado-184:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q4 [184]
+            reg-ajuste-total-estado-205:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q1 [205]
+            reg-ajuste-total-estado-226:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q2 [226]
+            reg-ajuste-total-estado-247:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q3 [247]
+            reg-ajuste-total-estado-268:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q4 [268]
+            reg-ajuste-total-estado-289:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q1 [289]
+            reg-ajuste-total-estado-310:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q2 [310]
+            reg-ajuste-total-estado-331:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q3 [331]
+            reg-ajuste-total-estado-352:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q4 [352]
+            reg-ajuste-total-estado-37:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q1 [37]
+            reg-ajuste-total-estado-58:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q2 [58]
+            reg-ajuste-total-estado-79:
+              help: null
+              label: Total gross tax adjustment for the adjusted period attributable
+                to the State (k = i + j). Q3 [79]
+            reg-base-declarada-111:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q1 [111]
+            reg-base-declarada-132:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q2 [132]
+            reg-base-declarada-153:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q3 [153]
+            reg-base-declarada-174:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q4 [174]
+            reg-base-declarada-195:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q1 [195]
+            reg-base-declarada-216:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q2 [216]
+            reg-base-declarada-237:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q3 [237]
+            reg-base-declarada-258:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q4 [258]
+            reg-base-declarada-27:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q1 [27]
+            reg-base-declarada-279:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q1 [279]
+            reg-base-declarada-300:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q2 [300]
+            reg-base-declarada-321:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q3 [321]
+            reg-base-declarada-342:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q4 [342]
+            reg-base-declarada-48:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q2 [48]
+            reg-base-declarada-69:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q3 [69]
+            reg-base-declarada-90:
+              help: null
+              label: Taxable base declared in the period being adjusted (a). Q4 [90]
+            reg-base-negativa-113:
+              help: null
+              label: Negative taxable base adjustment (c). Q1 [113]
+            reg-base-negativa-134:
+              help: null
+              label: Negative taxable base adjustment (c). Q2 [134]
+            reg-base-negativa-155:
+              help: null
+              label: Negative taxable base adjustment (c). Q3 [155]
+            reg-base-negativa-176:
+              help: null
+              label: Negative taxable base adjustment (c). Q4 [176]
+            reg-base-negativa-197:
+              help: null
+              label: Negative taxable base adjustment (c). Q1 [197]
+            reg-base-negativa-218:
+              help: null
+              label: Negative taxable base adjustment (c). Q2 [218]
+            reg-base-negativa-239:
+              help: null
+              label: Negative taxable base adjustment (c). Q3 [239]
+            reg-base-negativa-260:
+              help: null
+              label: Negative taxable base adjustment (c). Q4 [260]
+            reg-base-negativa-281:
+              help: null
+              label: Negative taxable base adjustment (c). Q1 [281]
+            reg-base-negativa-29:
+              help: null
+              label: Negative taxable base adjustment (c). Q1 [29]
+            reg-base-negativa-302:
+              help: null
+              label: Negative taxable base adjustment (c). Q2 [302]
+            reg-base-negativa-323:
+              help: null
+              label: Negative taxable base adjustment (c). Q3 [323]
+            reg-base-negativa-344:
+              help: null
+              label: Negative taxable base adjustment (c). Q4 [344]
+            reg-base-negativa-50:
+              help: null
+              label: Negative taxable base adjustment (c). Q2 [50]
+            reg-base-negativa-71:
+              help: null
+              label: Negative taxable base adjustment (c). Q3 [71]
+            reg-base-negativa-92:
+              help: null
+              label: Negative taxable base adjustment (c). Q4 [92]
+            reg-base-positiva-112:
+              help: null
+              label: Positive taxable base adjustment (b). Q1 [112]
+            reg-base-positiva-133:
+              help: null
+              label: Positive taxable base adjustment (b). Q2 [133]
+            reg-base-positiva-154:
+              help: null
+              label: Positive taxable base adjustment (b). Q3 [154]
+            reg-base-positiva-175:
+              help: null
+              label: Positive taxable base adjustment (b). Q4 [175]
+            reg-base-positiva-196:
+              help: null
+              label: Positive taxable base adjustment (b). Q1 [196]
+            reg-base-positiva-217:
+              help: null
+              label: Positive taxable base adjustment (b). Q2 [217]
+            reg-base-positiva-238:
+              help: null
+              label: Positive taxable base adjustment (b). Q3 [238]
+            reg-base-positiva-259:
+              help: null
+              label: Positive taxable base adjustment (b). Q4 [259]
+            reg-base-positiva-28:
+              help: null
+              label: Positive taxable base adjustment (b). Q1 [28]
+            reg-base-positiva-280:
+              help: null
+              label: Positive taxable base adjustment (b). Q1 [280]
+            reg-base-positiva-301:
+              help: null
+              label: Positive taxable base adjustment (b). Q2 [301]
+            reg-base-positiva-322:
+              help: null
+              label: Positive taxable base adjustment (b). Q3 [322]
+            reg-base-positiva-343:
+              help: null
+              label: Positive taxable base adjustment (b). Q4 [343]
+            reg-base-positiva-49:
+              help: null
+              label: Positive taxable base adjustment (b). Q2 [49]
+            reg-base-positiva-70:
+              help: null
+              label: Positive taxable base adjustment (b). Q3 [70]
+            reg-base-positiva-91:
+              help: null
+              label: Positive taxable base adjustment (b). Q4 [91]
+            reg-base-total-114:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q1 [114]
+            reg-base-total-135:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q2 [135]
+            reg-base-total-156:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q3 [156]
+            reg-base-total-177:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q4 [177]
+            reg-base-total-198:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q1 [198]
+            reg-base-total-219:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q2 [219]
+            reg-base-total-240:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q3 [240]
+            reg-base-total-261:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q4 [261]
+            reg-base-total-282:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q1 [282]
+            reg-base-total-30:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q1 [30]
+            reg-base-total-303:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q2 [303]
+            reg-base-total-324:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q3 [324]
+            reg-base-total-345:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q4 [345]
+            reg-base-total-51:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q2 [51]
+            reg-base-total-72:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q3 [72]
+            reg-base-total-93:
+              help: null
+              label: Total taxable base adjustment (d = b + c). Q4 [93]
+            reg-cuota-estado-119:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q1 [119]
+            reg-cuota-estado-140:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q2 [140]
+            reg-cuota-estado-161:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q3 [161]
+            reg-cuota-estado-182:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q4 [182]
+            reg-cuota-estado-203:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q1 [203]
+            reg-cuota-estado-224:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q2 [224]
+            reg-cuota-estado-245:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q3 [245]
+            reg-cuota-estado-266:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q4 [266]
+            reg-cuota-estado-287:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q1 [287]
+            reg-cuota-estado-308:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q2 [308]
+            reg-cuota-estado-329:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q3 [329]
+            reg-cuota-estado-35:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q1 [35]
+            reg-cuota-estado-350:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q4 [350]
+            reg-cuota-estado-56:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q2 [56]
+            reg-cuota-estado-77:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q3 [77]
+            reg-cuota-estado-98:
+              help: null
+              label: Adjustment to tax attributable to the State (i = h × m). Q4 [98]
+            reg-cuota-negativa-117:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q1 [117]
+            reg-cuota-negativa-138:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q2 [138]
+            reg-cuota-negativa-159:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q3 [159]
+            reg-cuota-negativa-180:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q4 [180]
+            reg-cuota-negativa-201:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q1 [201]
+            reg-cuota-negativa-222:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q2 [222]
+            reg-cuota-negativa-243:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q3 [243]
+            reg-cuota-negativa-264:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q4 [264]
+            reg-cuota-negativa-285:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q1 [285]
+            reg-cuota-negativa-306:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q2 [306]
+            reg-cuota-negativa-327:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q3 [327]
+            reg-cuota-negativa-33:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q1 [33]
+            reg-cuota-negativa-348:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q4 [348]
+            reg-cuota-negativa-54:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q2 [54]
+            reg-cuota-negativa-75:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q3 [75]
+            reg-cuota-negativa-96:
+              help: null
+              label: Negative gross tax adjustment (g = c × e). Q4 [96]
+            reg-cuota-positiva-116:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q1 [116]
+            reg-cuota-positiva-137:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q2 [137]
+            reg-cuota-positiva-158:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q3 [158]
+            reg-cuota-positiva-179:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q4 [179]
+            reg-cuota-positiva-200:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q1 [200]
+            reg-cuota-positiva-221:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q2 [221]
+            reg-cuota-positiva-242:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q3 [242]
+            reg-cuota-positiva-263:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q4 [263]
+            reg-cuota-positiva-284:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q1 [284]
+            reg-cuota-positiva-305:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q2 [305]
+            reg-cuota-positiva-32:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q1 [32]
+            reg-cuota-positiva-326:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q3 [326]
+            reg-cuota-positiva-347:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q4 [347]
+            reg-cuota-positiva-53:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q2 [53]
+            reg-cuota-positiva-74:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q3 [74]
+            reg-cuota-positiva-95:
+              help: null
+              label: Positive gross tax adjustment (f = b × e). Q4 [95]
+            reg-cuota-total-118:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q1 [118]
+            reg-cuota-total-139:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q2 [139]
+            reg-cuota-total-160:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q3 [160]
+            reg-cuota-total-181:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q4 [181]
+            reg-cuota-total-202:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q1 [202]
+            reg-cuota-total-223:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q2 [223]
+            reg-cuota-total-244:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q3 [244]
+            reg-cuota-total-265:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q4 [265]
+            reg-cuota-total-286:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q1 [286]
+            reg-cuota-total-307:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q2 [307]
+            reg-cuota-total-328:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q3 [328]
+            reg-cuota-total-34:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q1 [34]
+            reg-cuota-total-349:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q4 [349]
+            reg-cuota-total-55:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q2 [55]
+            reg-cuota-total-76:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q3 [76]
+            reg-cuota-total-97:
+              help: null
+              label: Total gross tax adjustment (h = f + g). Q4 [97]
+            reg-tipo-115:
+              help: null
+              label: Tax rate (e). Q1 [115]
+            reg-tipo-136:
+              help: null
+              label: Tax rate (e). Q2 [136]
+            reg-tipo-157:
+              help: null
+              label: Tax rate (e). Q3 [157]
+            reg-tipo-178:
+              help: null
+              label: Tax rate (e). Q4 [178]
+            reg-tipo-199:
+              help: null
+              label: Tax rate (e). Q1 [199]
+            reg-tipo-220:
+              help: null
+              label: Tax rate (e). Q2 [220]
+            reg-tipo-241:
+              help: null
+              label: Tax rate (e). Q3 [241]
+            reg-tipo-262:
+              help: null
+              label: Tax rate (e). Q4 [262]
+            reg-tipo-283:
+              help: null
+              label: Tax rate (e). Q1 [283]
+            reg-tipo-304:
+              help: null
+              label: Tax rate (e). Q2 [304]
+            reg-tipo-31:
+              help: null
+              label: Tax rate (e). Q1 [31]
+            reg-tipo-325:
+              help: null
+              label: Tax rate (e). Q3 [325]
+            reg-tipo-346:
+              help: null
+              label: Tax rate (e). Q4 [346]
+            reg-tipo-52:
+              help: null
+              label: Tax rate (e). Q2 [52]
+            reg-tipo-73:
+              help: null
+              label: Tax rate (e). Q3 [73]
+            reg-tipo-94:
+              help: null
+              label: Tax rate (e). Q4 [94]
+            reg-total-cuota-363:
+              help: null
+              label: Total adjustment (tax) [363]
+            reg-total-cuota-estado-364:
+              help: null
+              label: Total adjustment attributable to the State Administration [364]
+            resultado-a-deducir-25:
+              help: null
+              label: 'Result. To be deducted (supplementary self-assessments only):
+                result of the earlier return or returns for the same year and period
+                [25]'
+            resultado-liquidacion-26:
+              help: null
+              label: Assessment result [26]
+            terr-alava-20:
+              help: null
+              label: Taxation by territory. Álava [20]
+            terr-alava-con-reg-102:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q4
+                [102]
+            terr-alava-con-reg-123:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q1
+                [123]
+            terr-alava-con-reg-144:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q2
+                [144]
+            terr-alava-con-reg-165:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q3
+                [165]
+            terr-alava-con-reg-186:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q4
+                [186]
+            terr-alava-con-reg-207:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q1
+                [207]
+            terr-alava-con-reg-228:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q2
+                [228]
+            terr-alava-con-reg-249:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q3
+                [249]
+            terr-alava-con-reg-270:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q4
+                [270]
+            terr-alava-con-reg-291:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q1
+                [291]
+            terr-alava-con-reg-312:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q2
+                [312]
+            terr-alava-con-reg-333:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q3
+                [333]
+            terr-alava-con-reg-354:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q4
+                [354]
+            terr-alava-con-reg-39:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q1
+                [39]
+            terr-alava-con-reg-60:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q2
+                [60]
+            terr-alava-con-reg-81:
+              help: null
+              label: Taxation by territory. Álava. % including the adjustment. Q3
+                [81]
+            terr-alava-per-101:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q4 [101]
+            terr-alava-per-122:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q1 [122]
+            terr-alava-per-143:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q2 [143]
+            terr-alava-per-164:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q3 [164]
+            terr-alava-per-185:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q4 [185]
+            terr-alava-per-206:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q1 [206]
+            terr-alava-per-227:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q2 [227]
+            terr-alava-per-248:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q3 [248]
+            terr-alava-per-269:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q4 [269]
+            terr-alava-per-290:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q1 [290]
+            terr-alava-per-311:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q2 [311]
+            terr-alava-per-332:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q3 [332]
+            terr-alava-per-353:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q4 [353]
+            terr-alava-per-38:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q1 [38]
+            terr-alava-per-59:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q2 [59]
+            terr-alava-per-80:
+              help: null
+              label: Taxation by territory. Álava. % for the period being adjusted.
+                Q3 [80]
+            terr-comun-24:
+              help: null
+              label: Taxation by territory. Common territory [24]
+            terr-comun-con-reg-110:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q4 [110]
+            terr-comun-con-reg-131:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q1 [131]
+            terr-comun-con-reg-152:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q2 [152]
+            terr-comun-con-reg-173:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q3 [173]
+            terr-comun-con-reg-194:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q4 [194]
+            terr-comun-con-reg-215:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q1 [215]
+            terr-comun-con-reg-236:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q2 [236]
+            terr-comun-con-reg-257:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q3 [257]
+            terr-comun-con-reg-278:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q4 [278]
+            terr-comun-con-reg-299:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q1 [299]
+            terr-comun-con-reg-320:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q2 [320]
+            terr-comun-con-reg-341:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q3 [341]
+            terr-comun-con-reg-362:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q4 [362]
+            terr-comun-con-reg-47:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q1 [47]
+            terr-comun-con-reg-68:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q2 [68]
+            terr-comun-con-reg-89:
+              help: null
+              label: Taxation by territory. Common territory. % including the adjustment.
+                Q3 [89]
+            terr-comun-per-109:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q4 [109]
+            terr-comun-per-130:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q1 [130]
+            terr-comun-per-151:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q2 [151]
+            terr-comun-per-172:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q3 [172]
+            terr-comun-per-193:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q4 [193]
+            terr-comun-per-214:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q1 [214]
+            terr-comun-per-235:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q2 [235]
+            terr-comun-per-256:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q3 [256]
+            terr-comun-per-277:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q4 [277]
+            terr-comun-per-298:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q1 [298]
+            terr-comun-per-319:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q2 [319]
+            terr-comun-per-340:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q3 [340]
+            terr-comun-per-361:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q4 [361]
+            terr-comun-per-46:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q1 [46]
+            terr-comun-per-67:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q2 [67]
+            terr-comun-per-88:
+              help: null
+              label: Taxation by territory. Common territory. % for the period being
+                adjusted. Q3 [88]
+            terr-guipuzcoa-21:
+              help: null
+              label: Taxation by territory. Gipuzkoa [21]
+            terr-guipuzcoa-con-reg-104:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q4 [104]
+            terr-guipuzcoa-con-reg-125:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q1 [125]
+            terr-guipuzcoa-con-reg-146:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q2 [146]
+            terr-guipuzcoa-con-reg-167:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q3 [167]
+            terr-guipuzcoa-con-reg-188:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q4 [188]
+            terr-guipuzcoa-con-reg-209:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q1 [209]
+            terr-guipuzcoa-con-reg-230:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q2 [230]
+            terr-guipuzcoa-con-reg-251:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q3 [251]
+            terr-guipuzcoa-con-reg-272:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q4 [272]
+            terr-guipuzcoa-con-reg-293:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q1 [293]
+            terr-guipuzcoa-con-reg-314:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q2 [314]
+            terr-guipuzcoa-con-reg-335:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q3 [335]
+            terr-guipuzcoa-con-reg-356:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q4 [356]
+            terr-guipuzcoa-con-reg-41:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q1 [41]
+            terr-guipuzcoa-con-reg-62:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q2 [62]
+            terr-guipuzcoa-con-reg-83:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % including the adjustment.
+                Q3 [83]
+            terr-guipuzcoa-per-103:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q4 [103]
+            terr-guipuzcoa-per-124:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q1 [124]
+            terr-guipuzcoa-per-145:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q2 [145]
+            terr-guipuzcoa-per-166:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q3 [166]
+            terr-guipuzcoa-per-187:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q4 [187]
+            terr-guipuzcoa-per-208:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q1 [208]
+            terr-guipuzcoa-per-229:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q2 [229]
+            terr-guipuzcoa-per-250:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q3 [250]
+            terr-guipuzcoa-per-271:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q4 [271]
+            terr-guipuzcoa-per-292:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q1 [292]
+            terr-guipuzcoa-per-313:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q2 [313]
+            terr-guipuzcoa-per-334:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q3 [334]
+            terr-guipuzcoa-per-355:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q4 [355]
+            terr-guipuzcoa-per-40:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q1 [40]
+            terr-guipuzcoa-per-61:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q2 [61]
+            terr-guipuzcoa-per-82:
+              help: null
+              label: Taxation by territory. Gipuzkoa. % for the period being adjusted.
+                Q3 [82]
+            terr-navarra-23:
+              help: null
+              label: Taxation by territory. Navarre [23]
+            terr-navarra-con-reg-108:
+              help: null
+              label: Taxation by territory. Navarre. % including the adjustment. Q4
+                [108]
+            terr-navarra-con-reg-129:
+              help: null
+              label: Taxation by territory. Navarre. % including the adjustment. Q1
+                [129]
+            terr-navarra-con-reg-150:
+              help: null
+              label: Taxation by territory. Navarre. % including the adjustment. Q2
+                [150]
+            terr-navarra-con-reg-171:
+              help: null
+              label: Taxation by territory. Navarre. % including the adjustment. Q3
+                [171]
+            terr-navarra-con-reg-192:
+              help: null
+              label: Taxation by territory. Navarre. % including the adjustment. Q4
+                [192]
+            terr-navarra-con-reg-213:
+              help: null
+              label: Taxation by territory. Navarre. % including the adjustment. Q1
+                [213]
+            terr-navarra-con-reg-234:
+              help: null
+              label: Taxation by territory. Navarre. % including the adjustment. Q2
+                [234]
+            terr-navarra-con-reg-255:
+              help: null
+              label: Taxation by territory. Navarre. % including the adjustment. Q3
+                [255]
+            terr-navarra-con-reg-276:
+              help: null
+              label: Taxation by territory. Navarre. % including the adjustment. Q4
+                [276]
+            terr-navarra-con-reg-297:
+              help: null
+              label: Taxation by territory. Navarre. % including the adjustment. Q1
+                [297]
+            terr-navarra-con-reg-318:
+              help: null
+              label: Taxation by territory. Navarre. % including the adjustment. Q2
+                [318]
+            terr-navarra-con-reg-339:
+              help: null
+              label: Taxation by territory. Navarre. % including the adjustment. Q3
+                [339]
+            terr-navarra-con-reg-360:
+              help: null
+              label: Taxation by territory. Navarre. % including the adjustment. Q4
+                [360]
+            terr-navarra-con-reg-45:
+              help: null
+              label: Taxation by territory. Navarre. % including the adjustment. Q1
+                [45]
+            terr-navarra-con-reg-66:
+              help: null
+              label: Taxation by territory. Navarre. % including the adjustment. Q2
+                [66]
+            terr-navarra-con-reg-87:
+              help: null
+              label: Taxation by territory. Navarre. % including the adjustment. Q3
+                [87]
+            terr-navarra-per-107:
+              help: null
+              label: Taxation by territory. Navarre. % for the period being adjusted.
+                Q4 [107]
+            terr-navarra-per-128:
+              help: null
+              label: Taxation by territory. Navarre. % for the period being adjusted.
+                Q1 [128]
+            terr-navarra-per-149:
+              help: null
+              label: Taxation by territory. Navarre. % for the period being adjusted.
+                Q2 [149]
+            terr-navarra-per-170:
+              help: null
+              label: Taxation by territory. Navarre. % for the period being adjusted.
+                Q3 [170]
+            terr-navarra-per-191:
+              help: null
+              label: Taxation by territory. Navarre. % for the period being adjusted.
+                Q4 [191]
+            terr-navarra-per-212:
+              help: null
+              label: Taxation by territory. Navarre. % for the period being adjusted.
+                Q1 [212]
+            terr-navarra-per-233:
+              help: null
+              label: Taxation by territory. Navarre. % for the period being adjusted.
+                Q2 [233]
+            terr-navarra-per-254:
+              help: null
+              label: Taxation by territory. Navarre. % for the period being adjusted.
+                Q3 [254]
+            terr-navarra-per-275:
+              help: null
+              label: Taxation by territory. Navarre. % for the period being adjusted.
+                Q4 [275]
+            terr-navarra-per-296:
+              help: null
+              label: Taxation by territory. Navarre. % for the period being adjusted.
+                Q1 [296]
+            terr-navarra-per-317:
+              help: null
+              label: Taxation by territory. Navarre. % for the period being adjusted.
+                Q2 [317]
+            terr-navarra-per-338:
+              help: null
+              label: Taxation by territory. Navarre. % for the period being adjusted.
+                Q3 [338]
+            terr-navarra-per-359:
+              help: null
+              label: Taxation by territory. Navarre. % for the period being adjusted.
+                Q4 [359]
+            terr-navarra-per-44:
+              help: null
+              label: Taxation by territory. Navarre. % for the period being adjusted.
+                Q1 [44]
+            terr-navarra-per-65:
+              help: null
+              label: Taxation by territory. Navarre. % for the period being adjusted.
+                Q2 [65]
+            terr-navarra-per-86:
+              help: null
+              label: Taxation by territory. Navarre. % for the period being adjusted.
+                Q3 [86]
+            terr-vizcaya-22:
+              help: null
+              label: Taxation by territory. Bizkaia [22]
+            terr-vizcaya-con-reg-106:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q4
+                [106]
+            terr-vizcaya-con-reg-127:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q1
+                [127]
+            terr-vizcaya-con-reg-148:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q2
+                [148]
+            terr-vizcaya-con-reg-169:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q3
+                [169]
+            terr-vizcaya-con-reg-190:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q4
+                [190]
+            terr-vizcaya-con-reg-211:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q1
+                [211]
+            terr-vizcaya-con-reg-232:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q2
+                [232]
+            terr-vizcaya-con-reg-253:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q3
+                [253]
+            terr-vizcaya-con-reg-274:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q4
+                [274]
+            terr-vizcaya-con-reg-295:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q1
+                [295]
+            terr-vizcaya-con-reg-316:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q2
+                [316]
+            terr-vizcaya-con-reg-337:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q3
+                [337]
+            terr-vizcaya-con-reg-358:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q4
+                [358]
+            terr-vizcaya-con-reg-43:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q1
+                [43]
+            terr-vizcaya-con-reg-64:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q2
+                [64]
+            terr-vizcaya-con-reg-85:
+              help: null
+              label: Taxation by territory. Bizkaia. % including the adjustment. Q3
+                [85]
+            terr-vizcaya-per-105:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q4 [105]
+            terr-vizcaya-per-126:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q1 [126]
+            terr-vizcaya-per-147:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q2 [147]
+            terr-vizcaya-per-168:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q3 [168]
+            terr-vizcaya-per-189:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q4 [189]
+            terr-vizcaya-per-210:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q1 [210]
+            terr-vizcaya-per-231:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q2 [231]
+            terr-vizcaya-per-252:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q3 [252]
+            terr-vizcaya-per-273:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q4 [273]
+            terr-vizcaya-per-294:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q1 [294]
+            terr-vizcaya-per-315:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q2 [315]
+            terr-vizcaya-per-336:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q3 [336]
+            terr-vizcaya-per-357:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q4 [357]
+            terr-vizcaya-per-42:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q1 [42]
+            terr-vizcaya-per-63:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q2 [63]
+            terr-vizcaya-per-84:
+              help: null
+              label: Taxation by territory. Bizkaia. % for the period being adjusted.
+                Q3 [84]
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+          construct:
+            modelo-490-autoliquidacion:
+              field:
+                title: null
+          field:
+            label: null

@@ -1,0 +1,60 @@
+modelo:
+  schema:
+    '117':
+      field:
+        official_name: Modelo 117. Retenciones e ingresos a cuenta. Rentas o ganancias
+          patrimoniales obtenidas como consecuencia de las transmisiones o reembolsos
+          de acciones y participaciones de instituciones de inversion colectiva.
+        title: Retenciones e ingresos a cuenta - rentas o ganancias por transmision
+          o reembolso de acciones y participaciones de IIC
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Numero de perceptores por transmisiones o reembolsos de acciones
+                y participaciones de IIC
+            '02':
+              help: null
+              label: Base de retenciones e ingresos a cuenta por transmisiones o reembolsos
+                de acciones y participaciones de IIC
+            '03':
+              help: null
+              label: Retenciones e ingresos a cuenta por transmisiones o reembolsos
+                de acciones y participaciones de IIC
+            '04':
+              help: null
+              label: Numero de perceptores por transmisiones de derechos de suscripcion
+            '05':
+              help: null
+              label: Base de retenciones e ingresos a cuenta por transmisiones de
+                derechos de suscripcion
+            '06':
+              help: null
+              label: Retenciones e ingresos a cuenta por transmisiones de derechos
+                de suscripcion
+            '07':
+              help: null
+              label: Base del pago a cuenta previsto en la disposicion adicional decimonovena
+                de la Ley 35/2006
+            08:
+              help: null
+              label: Pago a cuenta previsto en la disposicion adicional decimonovena
+                de la Ley 35/2006
+            09:
+              help: null
+              label: 'Total liquidacion: suma de retenciones, ingresos a cuenta, pagos
+                a cuenta y regularizacion'
+            '10':
+              help: null
+              label: Resultados a ingresar de anteriores declaraciones por el mismo
+                concepto, ejercicio y periodo
+            '11':
+              help: null
+              label: Resultado a ingresar
+          construct:
+            modelo-117-total-liquidacion-calculation:
+              field:
+                title: Modelo 117 total liquidación / resultado a ingresar
+          field:
+            label: Orden EHA/3435/2007, ejercicios 2019 y siguientes

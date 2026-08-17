@@ -1,0 +1,92 @@
+modelo:
+  schema:
+    '130':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: Ingressos acumulats de l'activitat econòmica.
+              label: Ingressos
+            '02':
+              help: Despeses acumulades de l'activitat econòmica.
+              label: Despeses
+            '03':
+              help: Rendiment net de les activitats econòmiques en estimació directa,
+                calculat com ingressos menys despeses.
+              label: Rendiment net
+            '04':
+              help: Import del pagament fraccionat per activitats en estimació directa
+                abans de pagaments previs i retencions.
+              label: Import del pagament fraccionat
+            '05':
+              help: Pagaments fraccionats ja realitzats anteriorment en el mateix
+                exercici per activitats en estimació directa.
+              label: Pagaments fraccionats anteriors
+            '06':
+              help: Retencions i ingressos a compte suportats durant el període per
+                activitats en estimació directa.
+              label: Retencions i ingressos a compte
+            '07':
+              help: Resultat parcial de l'apartat I després de restar pagaments previs
+                i retencions al pagament fraccionat d'estimació directa.
+              label: Resultat parcial de l'apartat I
+            08:
+              help: Volum d'ingressos del trimestre procedent d'activitats agrícoles,
+                ramaderes, forestals o pesqueres.
+              label: Volum d'ingressos del trimestre
+            09:
+              help: Import del pagament fraccionat per activitats agrícoles, ramaderes,
+                forestals o pesqueres.
+              label: Import del pagament fraccionat
+            '10':
+              help: Retencions i ingressos a compte suportats durant el període per
+                activitats agrícoles, ramaderes, forestals o pesqueres.
+              label: Retencions i ingressos a compte
+            '11':
+              help: Resultat parcial de l'apartat II després de restar les retencions
+                al pagament fraccionat agrari, ramader, forestal o pesquer.
+              label: Resultat parcial de l'apartat II
+            '12':
+              help: Suma dels resultats parcials dels apartats I i II.
+              label: Suma dels resultats parcials
+            '13':
+              help: Minoració aplicable quan els rendiments nets entren dins el llindar
+                regulador del Model 130.
+              label: Minoració per rendiments nets
+            '14':
+              help: Import restant després d'aplicar la minoració per rendiments nets.
+              label: Import net després de la minoració
+            '15':
+              help: Deducció per resultats negatius de trimestres anteriors del mateix
+                exercici.
+              label: Resultats negatius de trimestres anteriors
+            '16':
+              help: Deducció per inversió en l'habitatge habitual quan s'aplica el
+                règim transitori.
+              label: Deducció per inversió en habitatge habitual
+            '17':
+              help: Diferència després d'aplicar resultats negatius anteriors i, si
+                escau, la deducció per habitatge habitual.
+              label: Diferència
+            '18':
+              help: Import a ingressar ja declarat en autoliquidacions anteriors del
+                mateix període i exercici.
+              label: Resultat a ingressar d'autoliquidacions anteriors
+            '19':
+              help: Import final a ingressar del Model 130 després de totes les deduccions
+                i autoliquidacions anteriors.
+              label: Resultat final
+            saldo-negativo-fin-periodo:
+              help: Llavor de traspàs calculada quan la casella 17 és negativa, usada
+                com a deducció a la casella 15 d'un trimestre posterior.
+              label: Saldo negatiu traslladable a períodes posteriors (màx. 0, -casella
+                17)
+          construct:
+            modelo-130-direct-estimation-instalment:
+              field:
+                title: null
+          field:
+            label: null

@@ -1,0 +1,115 @@
+modelo:
+  schema:
+    '111':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Munkaviszonyból származó pénzbeli jövedelmek - kedvezményezettek
+                száma
+            '02':
+              help: null
+              label: Munkaviszonyból származó pénzbeli jövedelmek - kifizetett összeg
+            '03':
+              help: null
+              label: Munkaviszonyból származó pénzbeli jövedelmek - levont adó összege
+            '04':
+              help: null
+              label: Munkaviszonyból származó természetbeni jövedelmek - kedvezményezettek
+                száma
+            '05':
+              help: null
+              label: Munkaviszonyból származó természetbeni jövedelmek - juttatás
+                értéke
+            '06':
+              help: null
+              label: Munkaviszonyból származó természetbeni jövedelmek - előlegfizetés
+                összege
+            '07':
+              help: null
+              label: Gazdasági tevékenységből származó pénzbeli jövedelmek - kedvezményezettek
+                száma
+            08:
+              help: null
+              label: Gazdasági tevékenységből származó pénzbeli jövedelmek - kifizetett
+                összeg
+            09:
+              help: null
+              label: Gazdasági tevékenységből származó pénzbeli jövedelmek - levont
+                adó összege
+            '10':
+              help: null
+              label: Gazdasági tevékenységből származó természetbeni jövedelmek -
+                kedvezményezettek száma
+            '11':
+              help: null
+              label: Gazdasági tevékenységből származó természetbeni jövedelmek -
+                juttatás értéke
+            '12':
+              help: null
+              label: Gazdasági tevékenységből származó természetbeni jövedelmek -
+                előlegfizetés összege
+            '13':
+              help: null
+              label: Pénzbeli nyeremények - kedvezményezettek száma
+            '14':
+              help: null
+              label: Pénzbeli nyeremények - kifizetett összeg
+            '15':
+              help: null
+              label: Pénzbeli nyeremények - levont adó összege
+            '16':
+              help: null
+              label: Természetbeni nyeremények - kedvezményezettek száma
+            '17':
+              help: null
+              label: Természetbeni nyeremények - juttatás értéke
+            '18':
+              help: null
+              label: Természetbeni nyeremények - előlegfizetés összege
+            '19':
+              help: null
+              label: Erdészeti pénzbeli tőkenyereségek - kedvezményezettek száma
+            '20':
+              help: null
+              label: Erdészeti pénzbeli tőkenyereségek - kifizetett összeg
+            '21':
+              help: null
+              label: Erdészeti pénzbeli tőkenyereségek - levont adó összege
+            '22':
+              help: null
+              label: Erdészeti természetbeni tőkenyereségek - kedvezményezettek száma
+            '23':
+              help: null
+              label: Erdészeti természetbeni tőkenyereségek - juttatás értéke
+            '24':
+              help: null
+              label: Erdészeti természetbeni tőkenyereségek - előlegfizetés összege
+            '25':
+              help: null
+              label: Képmáshoz fűződő jogok átengedése - kedvezményezettek száma
+            '26':
+              help: null
+              label: Képmáshoz fűződő jogok átengedése - kifizetett ellenérték
+            '27':
+              help: null
+              label: Képmáshoz fűződő jogok átengedése - előlegfizetés összege
+            '28':
+              help: null
+              label: Forrásadó és előlegfizetés összesen
+            '29':
+              help: null
+              label: Korábbi önadózások eredménye
+            '30':
+              help: null
+              label: Befizetendő eredmény
+          construct:
+            modelo-111-withholding-workflow:
+              field:
+                title: null
+          field:
+            label: null

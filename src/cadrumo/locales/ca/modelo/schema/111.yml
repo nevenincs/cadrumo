@@ -1,0 +1,107 @@
+modelo:
+  schema:
+    '111':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Rendiments del treball dineraris nombre de perceptors
+            '02':
+              help: null
+              label: Rendiments del treball dineraris import de percepcions
+            '03':
+              help: null
+              label: Rendiments del treball dineraris import de retencions
+            '04':
+              help: null
+              label: Rendiments del treball en espècie nombre de perceptors
+            '05':
+              help: null
+              label: Rendiments del treball en espècie valor de percepcions
+            '06':
+              help: null
+              label: Rendiments del treball en espècie import d'ingressos a compte
+            '07':
+              help: null
+              label: Rendiments d'activitats econòmiques dineraris nombre de perceptors
+            08:
+              help: null
+              label: Rendiments d'activitats econòmiques dineraris import de percepcions
+            09:
+              help: null
+              label: Rendiments d'activitats econòmiques dineraris import de retencions
+            '10':
+              help: null
+              label: Rendiments d'activitats econòmiques en espècie nombre de perceptors
+            '11':
+              help: null
+              label: Rendiments d'activitats econòmiques en espècie valor de percepcions
+            '12':
+              help: null
+              label: Rendiments d'activitats econòmiques en espècie import d'ingressos
+                a compte
+            '13':
+              help: null
+              label: Premis dineraris nombre de perceptors
+            '14':
+              help: null
+              label: Premis dineraris import de percepcions
+            '15':
+              help: null
+              label: Premis dineraris import de retencions
+            '16':
+              help: null
+              label: Premis en espècie nombre de perceptors
+            '17':
+              help: null
+              label: Premis en espècie valor de percepcions
+            '18':
+              help: null
+              label: Premis en espècie import d'ingressos a compte
+            '19':
+              help: null
+              label: Guanys patrimonials forestals dineraris nombre de perceptors
+            '20':
+              help: null
+              label: Guanys patrimonials forestals dineraris import de percepcions
+            '21':
+              help: null
+              label: Guanys patrimonials forestals dineraris import de retencions
+            '22':
+              help: null
+              label: Guanys patrimonials forestals en espècie nombre de perceptors
+            '23':
+              help: null
+              label: Guanys patrimonials forestals en espècie valor de percepcions
+            '24':
+              help: null
+              label: Guanys patrimonials forestals en espècie import d'ingressos a
+                compte
+            '25':
+              help: null
+              label: Cessió de drets d'imatge nombre de perceptors
+            '26':
+              help: null
+              label: Cessió de drets d'imatge contraprestacions satisfetes
+            '27':
+              help: null
+              label: Cessió de drets d'imatge import d'ingressos a compte
+            '28':
+              help: null
+              label: Total retencions i ingressos a compte
+            '29':
+              help: null
+              label: Resultat d'autoliquidacions anteriors
+            '30':
+              help: null
+              label: Resultat a ingressar
+          construct:
+            modelo-111-withholding-workflow:
+              field:
+                title: null
+          field:
+            label: null

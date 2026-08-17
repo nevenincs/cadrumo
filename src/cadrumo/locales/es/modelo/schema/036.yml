@@ -1,0 +1,130 @@
+modelo:
+  schema:
+    '036':
+      field:
+        official_name: Modelo 036. Declaración censal de alta, modificación y baja
+          en el Censo de empresarios, profesionales y retenedores.
+        title: Censo de empresarios, profesionales y retenedores
+      revision:
+        2025-02-03-y-siguientes:
+          casilla:
+            x-chim6r1ecdgnasr15koj2c0:
+              help: null
+              label: Solicitud de Número de Identificación Fiscal (NIF)
+            x-chim6r1ecdgnasr15koj2c8:
+              help: null
+              label: Alta en el censo de empresarios, profesionales y retenedores
+            x-chim6r1ecdgnasr15koj4c0:
+              help: null
+              label: Solicitud de NIF definitivo, disponiendo de NIF provisional
+            x-chim6r1ecdgnasr15koj4c8:
+              help: null
+              label: Solicitud de nueva tarjeta acreditativa del NIF
+            x-chim6r1ecdgnasr15koj4cg:
+              help: null
+              label: Modificación domicilio fiscal. (páginas 2A, 2B y 2C)
+            x-chim6r1ecdgnasr15koj4co:
+              help: null
+              label: Modificación domicilio social o de gestión administrativa. (páginas
+                2A y 2B)
+            x-chim6r1ecdgnasr15koj4d0:
+              help: null
+              label: Modificación y baja domicilio a efectos de notificaciones. (páginas
+                2A, 2B y 2C)
+            x-chim6r1ecdgnasr15koj4d8:
+              help: null
+              label: Modificación de otros datos identificativos/dominio. (páginas
+                2A, 2B y 2C)
+            x-chim6r1ecdgnasr15koj4dg:
+              help: null
+              label: Modificación datos representantes (página 3)
+            x-chim6r1ecdgnasr15koj4do:
+              help: null
+              label: Modificación datos relativos a actividades económicas y locales
+                (página 4)
+            x-chim6r1ecdgnasr15koj4e0:
+              help: null
+              label: Modificación de la condición de Gran Empresa o Admón. Pública
+                de presupuesto superior a 6.000.000 de euros (página 5)
+            x-chim6r1ecdgnasr15koj4e8:
+              help: null
+              label: Solicitud de alta/baja en el registro de devolución mensual (página
+                5)
+            x-chim6r1ecdgnasr15koj6c0:
+              help: null
+              label: Solicitud de alta/baja en el registro de operadores intracomunitarios
+                (página 5)
+            x-chim6r1ecdgnasr15koj6c8:
+              help: null
+              label: Modificación datos relativos al Impuesto sobre el Valor Añadido
+                (página 5)
+            x-chim6r1ecdgnasr15koj6cg:
+              help: null
+              label: Modificación datos relativos al Impuesto sobre la Renta de las
+                Personas Físicas (página 6)
+            x-chim6r1ecdgnasr15koj6co:
+              help: null
+              label: Modificación datos relativos al Impuesto sobre Sociedades (página
+                6)
+            x-chim6r1ecdgnasr15koj6d0:
+              help: null
+              label: Modificación datos relativos al Impuesto sobre la Renta de no
+                Residentes correspondiente a establecimientos permanentes o a entidades
+                en atribución de rentas constituidas en el extranjero con presencia
+                en territorio español (página 6)
+            x-chim6r1ecdgnasr15koj6d8:
+              help: null
+              label: Opción/renuncia por el Régimen fiscal especial del Título II
+                de la Ley 49/2002 (página 6)
+            x-chim6r1ecdgnasr15koj6dg:
+              help: null
+              label: Modificación datos relativos a retenciones e ingresos a cuenta
+                (página 7)
+            x-chim6r1ecdgnasr15koj6do:
+              help: null
+              label: Modificación datos relativos a otros Impuestos (página 7)
+            x-chim6r1ecdgnasr15koj6e0:
+              help: null
+              label: Modificación datos relativos a regímenes especiales del comercio
+                intracomunitario (página 7)
+            x-chim6r1ecdgnasr15koj6e8:
+              help: null
+              label: Modificación datos relativos a la relación de socios, miembros
+                o partícipes (página 8)
+            x-chim6r1ecdgnasr15koj8c0:
+              help: null
+              label: Dejar de ejercer todas las actividades empresariales y/o profesionales
+                (personas jurídicas y entidades, sin liquidación. Entidades inactivas)
+            x-chim6r1ecdgnasr15koj8cg:
+              help: null
+              label: Modificación y baja de datos de teléfonos y direcciones electrónicas
+                para recibir avisos de la AEAT, TEA Y DGT. (páginas 2A, 2B y 2C)
+            x-chim6r1ecdgnasr15koj8co:
+              help: null
+              label: Comunicación de opción y renuncia a la llevanza de los Libros
+                registro del IVA a través de la Sede electrónica de la AEAT (página
+                5)
+            x-chim6r1ecdgnasr15koj8d0:
+              help: null
+              label: Solicitud de rehabilitación de NIF
+            x-chim6r1ecdgnasr15koj8d8:
+              help: null
+              label: Modificación de datos relativos a Titulares reales (página 10)
+            x-chim6r1ecdgnasr15koj8dg:
+              help: null
+              label: Modificación entidades en liquidación.
+            x-chim6r1ecdgnasr15kojac0:
+              help: null
+              label: Baja en el censo de empresarios, profesionales y retenedores
+            x-chim6r1eclr6arjk5llmirj4:
+              help: null
+              label: Tipo de declaracion censal
+            x-chim6r1eepkmepbecdkm2b9i60p3a:
+              help: null
+              label: Vigencia normativa desde 3 de febrero de 2025
+          construct:
+            modelo-036-censo-foundation:
+              field:
+                title: Modelo 036 censo foundation
+          field:
+            label: Modelo 036 desde 3 de febrero de 2025

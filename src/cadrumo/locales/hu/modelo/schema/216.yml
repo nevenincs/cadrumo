@@ -1,0 +1,78 @@
+modelo:
+  schema:
+    '216':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2024-y-siguientes:
+          casilla:
+            '05':
+              help: null
+              label: Jövedelmek száma. Osztalék és társaságok saját tőkéjében fennálló
+                részesedésből származó egyéb jövedelem
+            '06':
+              help: null
+              label: Jövedelmek száma. Egyéb jövedelmek
+            '07':
+              help: null
+              label: Jövedelmek száma. Összesen
+            08:
+              help: null
+              label: Levonások és előlegfizetések adóalapja. Osztalék és társaságok
+                saját tőkéjében fennálló részesedésből származó egyéb jövedelem
+            09:
+              help: null
+              label: Levonások és előlegfizetések adóalapja. Egyéb jövedelmek
+            '10':
+              help: null
+              label: Levonások és előlegfizetések adóalapja. Összesen
+            '11':
+              help: null
+              label: Levonások és előlegfizetések. Osztalék és társaságok saját tőkéjében
+                fennálló részesedésből származó egyéb jövedelem
+            '12':
+              help: null
+              label: Levonások és előlegfizetések. Egyéb jövedelmek
+            '13':
+              help: null
+              label: Levonások és előlegfizetések. Összesen
+            '14':
+              help: null
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Jövedelmek
+                száma. Osztalék és társaságok saját tőkéjében fennálló részesedésből
+                származó egyéb jövedelem
+            '15':
+              help: null
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Jövedelmek
+                száma. Egyéb jövedelmek
+            '16':
+              help: null
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Jövedelmek
+                száma. Összesen
+            '17':
+              help: null
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Adóalap.
+                Osztalék és társaságok saját tőkéjében fennálló részesedésből származó
+                egyéb jövedelem
+            '18':
+              help: null
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Adóalap.
+                Egyéb jövedelmek
+            '19':
+              help: null
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Adóalap.
+                Összesen
+            '20':
+              help: null
+              label: Korábbi bevallásokból befizetendő összegek ugyanazon tétel, év
+                és időszak esetén
+            '21':
+              help: null
+              label: Befizetendő eredmény
+          construct:
+            modelo-216-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null

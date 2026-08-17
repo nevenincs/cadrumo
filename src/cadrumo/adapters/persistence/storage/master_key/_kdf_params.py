@@ -12,15 +12,15 @@ materialises the OWASP 2024 Password Storage Cheat Sheet baseline:
 - ``salt`` = 16 bytes
 - ``output_length`` = 32 bytes
 
-Validators reject parameter sets outside the supported window so a
-tampered ``master.kdf`` cannot drive the KDF into a weaker regime at unlock.
+Validators reject parameter sets outside the supported window, so no
+supplied parameter set can drive the KDF into a weaker regime at unlock.
 
 The window constants live here rather than in a package-level module of
 their own. They were separated originally because a second, manifest-side
 record declared the same axes and could not import this package without
-closing a cycle. That record no longer exists, so the separation held open
-nothing; the two remaining readers of the window -- this record and the
-on-disk ``master.kdf`` record beside it -- are both inside this package.
+closing a cycle. Both that record and the on-disk key store it validated
+have since been deleted with the shared-master surface, leaving this record
+as the window's only reader.
 
 Widening the window is a deliberate edit here; a *cost bump* raises a
 store's enrolled parameters within it and stays non-breaking.
@@ -69,8 +69,9 @@ class KdfParams(BaseModel):
     """OWASP-baseline Argon2id parameters with strict validation.
 
     The constructor for a new enrolment. It reads the window declared above
-    rather than restating one, which is what keeps it in agreement with the
-    on-disk ``master.kdf`` record that validates the same axes.
+    rather than restating one. It once shared that window with an on-disk
+    record validating the same axes; that record is deleted, so the window now
+    has a single reader and the agreement it enforced is no longer at risk.
     """
 
     model_config = _STRICT_FROZEN

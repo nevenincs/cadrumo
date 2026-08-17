@@ -1,0 +1,26 @@
+modelo:
+  schema:
+    '308':
+      field:
+        official_name: 'Modelo 308. Impuesto sobre el Valor Añadido. Solicitud de
+          devolución: Recargo de equivalencia, artículo 30 bis del Reglamento del
+          IVA, artículo 21.4 de la Ley del IVA y sujetos pasivos ocasionales.'
+        title: IVA. Solicitud de devolución (recargo de equivalencia, art 30 bis,
+          sujetos pasivos ocasionales)
+      revision:
+        2009-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la solicitud
+            x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
+              help: null
+              label: Tipo de solicitud (recargo de equivalencia / art 30 bis / art
+                21.4 / sujeto pasivo ocasional / régimen simplificado transporte)
+          construct:
+            modelo-308-iva-solicitud-devolucion:
+              field:
+                title: Modelo 308 IVA solicitud de devolucion
+          field:
+            label: Modelo 308 ejercicios 2009 y siguientes (Orden EHA/3786/2008, ad-hoc
+              segun tipo de operador)

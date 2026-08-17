@@ -52,7 +52,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SRC_ROOT = Path(__file__).parent.parent.parent.parent  # src/cadrumo
 _LOCALES_DIR = _SRC_ROOT / "locales"
-_CANONICAL_LOCALE = _LOCALES_DIR / "es.yml"
+_CANONICAL_LOCALE = _LOCALES_DIR / "es"
 
 # There is no skip list. The one that existed was keyed by bare file STEM, so
 # it matched by name anywhere in the tree: "conftest" silently exempted 23
@@ -145,8 +145,15 @@ def _collect_tr_call_sites(src_root: Path) -> dict[str, list[frozenset[str]]]:
 @pytest.fixture(scope="module")
 def canonical_locale() -> dict[str, str]:
     """Flat dotted-key → value mapping from the canonical Spanish locale."""
-    raw = yaml.safe_load(_CANONICAL_LOCALE.read_text(encoding="utf-8"))
-    return _flatten_locale(raw or {})
+    result: dict[str, str] = {}
+    if _CANONICAL_LOCALE.is_dir():
+        for shard in _CANONICAL_LOCALE.rglob("*.yml"):
+            raw = yaml.safe_load(shard.read_text(encoding="utf-8"))
+            result.update(_flatten_locale(raw or {}))
+    elif _CANONICAL_LOCALE.is_file():
+        raw = yaml.safe_load(_CANONICAL_LOCALE.read_text(encoding="utf-8"))
+        result.update(_flatten_locale(raw or {}))
+    return result
 
 
 @pytest.fixture(scope="module")

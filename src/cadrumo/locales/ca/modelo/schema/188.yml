@@ -1,0 +1,24 @@
+modelo:
+  schema:
+    '188':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '03':
+              help: null
+              label: Base de retencions i ingressos a compte
+            '04':
+              help: null
+              label: Retencions i ingressos a compte declarats
+            '05':
+              help: null
+              label: Total de retencions del resum anual
+          construct:
+            modelo-188-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null

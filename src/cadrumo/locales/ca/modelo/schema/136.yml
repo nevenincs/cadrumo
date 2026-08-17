@@ -1,0 +1,88 @@
+modelo:
+  schema:
+    '136':
+      field:
+        official_name: null
+        title: null
+      revision:
+        '2026':
+          casilla:
+            '01':
+              help: null
+              label: Import del premi obtingut pel bitllet, cupó o aposta premiada
+            '02':
+              help: null
+              label: Import o valor del premi que correspon individualment al declarant
+            '03':
+              help: null
+              label: Quantia exempta del gravamen especial
+            '04':
+              help: null
+              label: Base imposable
+            '05':
+              help: null
+              label: Quota del gravamen especial
+            '06':
+              help: null
+              label: Resultats a ingressar d'autoliquidacions anteriors pel mateix
+                concepte i corresponents al mateix premi
+            '07':
+              help: null
+              label: Resultat a ingressar
+            09:
+              help: null
+              label: Import ingressat a favor del Tresor Públic
+            autoliquidacion-complementaria:
+              help: null
+              label: Autoliquidació complementària
+            declarante-nif:
+              help: null
+              label: Número d'identificació fiscal (NIF)
+            declarante-nombre:
+              help: null
+              label: Cognoms i nom o raó social
+            ejercicio-declaracion:
+              help: null
+              label: Exercici
+            fecha-celebracion:
+              help: null
+              label: Data de celebració
+            fecha-cobro-premio:
+              help: null
+              label: Data de cobrament del premi
+            forma-pago:
+              help: null
+              label: Forma de pagament
+            iban:
+              help: null
+              label: Codi IBAN
+            justificante-anterior:
+              help: null
+              label: Número de justificant identificatiu de l'autoliquidació anterior
+            loteria-apuesta-denominacion:
+              help: null
+              label: Denominació de la loteria o aposta
+            organizador-codigo-pais:
+              help: null
+              label: Codi de país de l'organisme o entitat organitzadora
+            organizador-denominacion:
+              help: null
+              label: Denominació o raó social de l'organisme o entitat organitzadora
+            organizador-pais:
+              help: null
+              label: País de l'organisme o entitat organitzadora
+            periodo-declaracion:
+              help: null
+              label: Període
+            precio-unitario:
+              help: null
+              label: Preu unitari
+            provincia-residencia-irpf:
+              help: null
+              label: Codi de la província de residència habitual del contribuent IRPF
+          construct:
+            modelo-136-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null

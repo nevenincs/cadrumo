@@ -24,7 +24,7 @@ def _area_display(area: StorageArea) -> str:
     return tr(f"cli.config.storage.values.area.{area.value}", default=area.value)
 
 
-_REASON_KEYS = {
+_REASON_LOCALE_KEYS = {
     "the area contains durable state": "cli.config.storage.errors.reason.durable_state",
     "the taxonomy declares no reclaimable targets": "cli.config.storage.errors.reason.no_reclaimable_targets",
     "a selected target is not root-scoped": "cli.config.storage.errors.reason.not_root_scoped",
@@ -43,7 +43,7 @@ class StorageReclaimRefusedError(StorageManagementError):
         entry_count: int,
         reason: str,
     ) -> None:
-        display_reason = tr(_REASON_KEYS[reason], default=reason)
+        display_reason = tr(_REASON_LOCALE_KEYS[reason], default=reason)
         super().__init__(
             tr(
                 "cli.config.storage.errors.reclaim_area_refused",

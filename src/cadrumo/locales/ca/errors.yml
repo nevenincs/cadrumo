@@ -1,0 +1,1196 @@
+errors:
+  auth:
+    auth_aeat_login_assertion: No s'ha pogut generar la verificació posterior a l'inici
+      de sessió amb l'AEAT.
+    auth_aeat_session_expired: La sessió autenticada amb l'AEAT ha caducat. Torna
+      a autenticar-te per continuar.
+    auth_auth: S'ha produït un error d'autenticació amb l'AEAT.
+    auth_auth_authenticator_persisted_session_invalid: La sessió de navegador desada
+      amb l'AEAT no és fiable. Torna a autenticar-te.
+    auth_auth_certificate: S'ha produït un error en l'autenticació amb certificat.
+    auth_auth_certificate_expired: El certificat digital ha caducat. Renova el certificat
+      per poder autenticar-te.
+    auth_auth_certificate_load: No s'han pogut llegir les dades del certificat PKCS#12.
+      Comprova que el fitxer no estigui malmès.
+    auth_auth_certificate_nif_parse: No s'ha pogut extreure cap NIF ni NIE del titular
+      del certificat. Comprova que el certificat sigui de persona física.
+    auth_auth_certificate_password: La contrasenya del certificat falta o és incorrecta.
+      Defineix la variable d'entorn amb la contrasenya correcta.
+    auth_auth_certificate_pre_expiry: El certificat digital està a punt de caducar.
+      Renova'l abans que expiri per evitar interrupcions.
+    auth_auth_clave_movil_clave_movil_approval_timeout: L'autenticació Cl@ve no s'ha
+      completat a temps. Aprova la sol·licitud al teu dispositiu i torna-ho a provar.
+    auth_auth_clave_movil_clave_movil_configuration: Falten ajustos obligatoris de
+      Cl@ve Móvil o són incorrectes. Revisa la configuració de Cl@ve.
+    auth_auth_configuration: Falten ajustos d'autenticació obligatoris o són incorrectes.
+      Revisa la configuració d'autenticació.
+    auth_auth_provider_cleanup: El proveïdor d'autenticació no ha pogut alliberar
+      tots els recursos del navegador. Torna a provar el tancament abans d'iniciar
+      una altra sessió.
+    auth_auth_validation: Els paràmetres d'autenticació no han superat la validació.
+      Corregeix els valors indicats i torna-ho a provar.
+    auth_former_product_session_state: Cadrumo ha detectat estat de sessió d'un producte
+      retirat i es nega a llegir-lo, moure'l, re-xifrar-lo, eliminar-lo o adoptar-lo.
+    auth_google: S'ha produït un error en l'autenticació amb Google.
+    auth_google_client_not_registered: No hi ha cap client OAuth d'escriptori de Google
+      registrat per al perfil actiu. Registra un client per fer servir les funcions
+      de Google.
+    auth_google_client_revoked: El client OAuth d'escriptori de Google registrat ha
+      estat revocat. Registra un client nou.
+    auth_google_expired: El testimoni d'actualització de Google ha caducat pel límit
+      de 7 dies dels projectes en proves. Torna a autoritzar l'accés a Google.
+    auth_google_revoked: El testimoni d'actualització de Google ha estat revocat.
+      Torna a autoritzar l'accés a Google.
+    auth_google_scope_insufficient: Els permisos concedits a Google no inclouen tots
+      els necessaris per a aquesta operació. Torna a autoritzar concedint tots els
+      permisos sol·licitats.
+    auth_outbound_storage_permission: Les credencials actives no tenen el permís necessari
+      per a aquesta operació d'emmagatzematge.
+    auth_session_corrupt: Les metadades de la sessió desada no es poden llegir. Torna
+      a autenticar-te per crear una sessió nova.
+    auth_session_deserialization: Les dades de sessió d'autenticació emmagatzemades
+      no s'han pogut deserialitzar. Torneu a autenticar-vos per crear una sessió nova.
+    auth_session_unavailable: No hi ha cap sessió activa verificada amb l'AEAT disponible.
+      Autentica't abans de continuar.
+    auth_storage_bucket_recovery_verification: El codi de recuperació introduït no
+      és vàlid. Torna a escriure les 24 paraules exactament com apareixen a la còpia
+      de seguretat.
+    auth_storage_keyring_unavailable: L'anell de claus del sistema operatiu no està
+      disponible. Comprova que hi hagi un magatzem de credencials instal·lat i actiu.
+    auth_storage_master_key_material_missing: No existeix material de clau mestra.
+      L'emmagatzematge segur encara no està aprovisionat.
+    auth_storage_master_key_unavailable: No s'ha pogut obtenir la clau mestra de cap
+      proveïdor. Comprova l'anell de claus o la frase de contrasenya de la còpia de
+      seguretat.
+    clave_movil_identity_checksum: L'identificador de Cl@ve Móvil té una forma vàlida
+      però la seva lletra de control no coincideix amb els dígits. Revisa l'última
+      lletra del document i torna-ho a provar.
+  calc:
+    age_at_year_end_no_filing_year: 'Error intern: el càlcul de l''edat a final d''exercici
+      no té exercici de declaració.'
+    binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
+    bound_casilla_binding_value_missing: La vinculació {binding_id} no té cap valor
+      assignat.
+    bound_input_smuggled_without_binding_value: 'Error intern: casella d''entrada
+      vinculada passada sense valor de vinculació.'
+    bound_projection_inconsistent: 'Error intern: la projecció vinculada és inconsistent.'
+    bracket_negative_base: El paràmetre escalonat {parameter_id} no accepta una base
+      negativa {base}.
+    bracket_no_coverage: El paràmetre escalonat {parameter_id} no té cap tram que
+      cobreixi la base {base}.
+    bracket_no_window: El paràmetre escalonat {parameter_id} no té cap tram vàlid
+      per a {as_of}.
+    casilla_constraint_violation: 'La casella {casilla_id} amb valor {value} infringeix
+      la restricció declarada: {violation}. Refs: {legal_refs}.'
+    casilla_referenced_before_evaluation: La casella {casilla_id} s'ha referenciat
+      abans d'avaluar la seva fórmula.
+    computed_supplied_as_input: 'No es poden subministrar com a entrada les caselles
+      calculades: {casilla_ids}.'
+    date_binding_used_as_decimal_leaf: 'Error intern: vinculació de data usada com
+      a fulla decimal.'
+    date_binding_value_missing: Falta el valor de la vinculació de data.
+    dispatch_key_unknown: 'La clau de despatx {dispatch_key!r} no és a la taula de
+      l''operador {op} sobre la vinculació {binding_id} (claus declarades: {available_keys}).'
+    dispatch_parameter_kind: El paràmetre {parameter_id} no encaixa amb l'operador
+      {op}; s'esperava un paràmetre escalar (decimal / dinerari / enter / ràtio).
+    divide_by_zero: La fórmula amb operador {op} divideix entre zero.
+    empty_expression: Expressió de fórmula buida.
+    enum_binding_value_missing: La vinculació enumerada {binding_id} no té cap valor
+      assignat (requerida per l'operador {op}).
+    lookup_dispatch_arg_count: L'operador {op} de la fórmula espera {expected} arguments.
+    lookup_dispatch_arg_kind: L'operador {op} de la fórmula requereix que {position}
+      sigui una fulla de tipus {expected_kind}.
+    m100_art85_boolean_invalid: La casella booleana de l'article 85 del Model 100
+      ha de ser 0 o 1.
+    m100_art85_catastral_value_negative: El valor cadastral de l'article 85 del Model
+      100 no pot ser negatiu.
+    m100_art85_disposal_percentage_invalid: El percentatge d'ús mixt de l'article
+      85 del Model 100 ha de ser superior a 0 i com a màxim 100.
+    m100_art85_imputation_days_invalid: Els dies d'imputació de l'article 85 del Model
+      100 han de ser un nombre enter entre 1 i 365.
+    m100_art85_input_negative: Les entrades numèriques de l'article 85 del Model 100
+      no poden ser negatives.
+    m100_art85_mixed_use_inputs_without_flag: Els dies o el percentatge d'ús mixt
+      de l'article 85 del Model 100 requereixen que la casella d'ús mixt estigui marcada.
+    m100_art85_no_catastral_base_missing: La imputació de l'article 85 del Model 100
+      sense valor cadastral requereix caselles de base substitutiva que no hi són.
+    m100_art85_revision_flag_invalid: L'indicador de valor cadastral revisat de l'article
+      85 del Model 100 ha de ser el valor oficial X de la casella.
+    m210_gastos_deducibles_negative: Les gastos_deducibles M210 %{casilla_id} no poden
+      ser negatives; valor rebut %{value}.
+    m210_gastos_deducibles_not_allowed: Les gastos_deducibles M210 %{casilla_id} només
+      s'admeten en la via UE/EEE de l'article 24.6; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.
+    m210_imputation_coefficient_invalid: El coeficient d'imputació immobiliària M210
+      %{casilla_id} ha de ser un dels tipus de l'art. 85 declarats al registre (%{allowed_values});
+      valor rebut %{value}.
+    m210_imputation_days_invalid: Els dies d'imputació M210 %{casilla_id} han de ser
+      un enter entre 1 i %{max_days}; valor rebut %{value}.
+    m210_imputation_no_catastral_value_missing: La imputació immobiliària M210 sense
+      valor cadastral requereix un valor d'adquisició o valor comprovat per l'Administració
+      positiu (%{acquisition_casilla_id}, %{administrative_casilla_id}).
+    m210_imputation_no_filing_year: La imputació immobiliària M210 requereix un exercici
+      de declaració no nul.
+    parameter_unknown: El paràmetre {parameter_id} no està registrat.
+    relation_value_missing: La relació {relation_id} no té cap valor assignat.
+    text_input_non_text_casillas: 'Entrada de text subministrada per a caselles no
+      textuals: %{casilla_ids}.'
+    unknown_input_casillas: 'Identificadors de casella d''entrada desconeguts: {casilla_ids}.'
+    unknown_text_input_casillas: 'Identificadors de casella d''entrada de text desconeguts:
+      %{casilla_ids}.'
+    unsupported_comparison_op: 'Operador de comparació no ames: %{op}.'
+    unsupported_op: 'Operador de fórmula no ames: %{op}.'
+  censo:
+    bucket_id_blank: El servei de sincronització censal requereix un bucket de perfil.
+    certificado_extraction_unpinned: La lectura del certificat emès encara no està
+      suportada; introdueix les dades censals manualment.
+    certificado_not_a_pdf: El fitxer proporcionat no és un PDF; s'esperava el Certificado
+      de Situación Censal descarregat de la Seu.
+  context_labels:
+    area: àrea
+    entry_count: nombre d'entrades
+    reason: motiu
+  error:
+    error_access_gate_submission: La política de control d'accés ha rebutjat una operació
+      d'enviament.
+    error_access_gate_submission_preflight: La comprovació prèvia del control d'accés
+      ha rebutjat una operació d'escriptura.
+    error_aggregation_config: S'ha violat un invariant de composició del servei d'agregació.
+    error_application_live: L'orquestració de la lectura en viu de l'AEAT ha fallat.
+    error_application_live_iva_surface_timeout: La superfície de lectura d'IVA en
+      viu ha esgotat el temps abans de retornar evidència de l'AEAT.
+    error_application_registry: L'orquestració del registre de models ha fallat o
+      ha estat rebutjada.
+    error_borrador_artefact_not_recognised: El PDF no coincideix amb cap format d'esborrany
+      del Model 100 conegut.
+    error_cadrumo_async_resource_cleanup: Ha fallat la neteja asíncrona de recursos;
+      torneu a intentar la neteja abans de continuar.
+    error_cadrumo_core: S'ha produït un error intern en l'aplicació.
+    error_cadrumo_core_not_found: No s'ha trobat el recurs o registre sol·licitat.
+    error_cadrumo_observability: S'ha produït un error en la telemetria de l'aplicació.
+    error_calc_sheets_engine: El motor d'exportació de fulls de càlcul ha trobat un
+      estat irresoluble en generar el pla d'exportació.
+    error_calc_sheets_parity: L'escenari del bastiment de paritat fa referència a
+      casilla.id que no es troben a la instantània del registre.
+    error_calc_sheets_record: Una operació de registre de full de càlcul ha fallat
+      per un índex de columna invàlid o una adreça A1 malformada.
+    error_calculations_registry: S'ha produït un error en carregar, resoldre o validar
+      el registre de càlcul.
+    error_calculations_registry_load: Els fitxers del registre de càlcul no s'han
+      pogut interpretar.
+    error_calculations_registry_snapshot: No s'ha pogut seleccionar una instantània
+      del registre vàlida per a la declaració.
+    error_calculations_registry_validation: Les definicions del registre de càlcul
+      són incompletes o contradictòries.
+    error_categories: S'ha produït un error en les categories de despesa.
+    error_categories_validation: Un registre de categoria no ha superat la validació.
+    error_certificado_censal: L'operació amb el Certificado de Situación Censal ha
+      fallat.
+    error_config_boundary: L'ordre de configuració ha trobat un error intern inesperat.
+    error_corpus_search: No s'ha pogut completar la cerca local al corpus.
+    error_deadlines_deadline: S'ha produït un error en el càlcul de terminis.
+    error_deadlines_missing_windows: Falten les finestres de termini de presentació.
+    error_deadlines_profile: El perfil d'autònom no s'ha pogut carregar o validar
+      per al càlcul de terminis.
+    error_deadlines_schedule_computation: El motor no ha pogut generar un calendari
+      de terminis vàlid. Comprova l'any sol·licitat i les dades del perfil.
+    error_deadlines_validation: Un registre de termini no ha superat la validació.
+    error_decimal_format: 'S''ha produït un error de format decimal: el valor és None
+      però no s''ha configurat cap substitut.'
+    error_declaracion_template_not_detected: No s'ha pogut detectar automàticament
+      la versió de plantilla del PDF de la declaració.
+    error_domain_submission: S'ha produït un error en el domini d'enviament.
+    error_domain_submission_preflight: L'esborrany no ha superat la comprovació prèvia
+      d'enviament local.
+    error_domain_validation: Un identificador o model de domini no és vàlid.
+    error_filing_amendment: S'ha produït un error relacionat amb la declaració complementària.
+    error_filing_application: S'ha produït un error en la capa d'aplicació de declaracions.
+    error_filing_builder: Ha fallat la selecció o execució del generador de la declaració.
+    error_filing_computation: El generador no ha pogut avaluar una casella amb fórmula.
+    error_filing_draft: S'ha produït un error en l'esborrany de la declaració.
+    error_filing_export: Ha fallat l'exportació de l'esborrany al format de l'AEAT.
+    error_filing_export_validation: Un valor o disposició de l'exportació no és vàlid.
+    error_financial_aggregation: S'ha produït un error en agregar les transaccions
+      financeres.
+    error_financial_aggregation_period: El període de declaració sol·licitat no s'ha
+      pogut interpretar sense ambigüitat.
+    error_financial_aggregation_validation: Les dades o l'estat de l'agregació no
+      són vàlids.
+    error_financial_attachments_attachment: S'ha produït un error en el servei de
+      justificants.
+    error_financial_attachments_attachment_not_found: No s'ha trobat el justificant
+      sol·licitat.
+    error_financial_invoices_invoice: S'ha produït un error en el catàleg de factures.
+    error_financial_invoices_invoice_catalogue: El catàleg de factures no és vàlid
+      o és inconsistent.
+    error_financial_invoices_invoice_link: No s'ha pogut enllaçar la factura amb la
+      transacció.
+    error_financial_invoices_invoice_not_found: No s'ha trobat la factura sol·licitada.
+    error_financial_iva: S'ha produït un error en el càlcul de l'IVA.
+    error_financial_iva_catalogue: El catàleg d'IVA no s'ha pogut carregar, resoldre
+      o validar.
+    error_financial_iva_category_not_found: No s'ha trobat la categoria d'IVA sol·licitada
+      al catàleg.
+    error_financial_iva_classification: No s'ha pogut classificar l'IVA de manera
+      determinista.
+    error_financial_iva_rate_not_found: No s'ha trobat cap tipus d'IVA per a l'estat
+      membre i el tipus sol·licitats.
+    error_financial_iva_rate_overlap: Dos tipus d'IVA comparteixen una finestra de
+      vigència.
+    error_financial_provider: S'ha produït un error en importar el document financer.
+    error_financial_provider_config: Una subclasse de proveïdor financer té declaracions
+      d'atributs de corpus invàlides o que manquen.
+    error_financial_transactions_transaction: S'ha produït un error en el catàleg
+      de transaccions.
+    error_financial_usage_ratios_usage_ratio: S'ha produït un error en els percentatges
+      d'ús.
+    error_flow: El flux guiat ha fallat.
+    error_invoice_link_inconsistency: L'enllaç ha deixat la factura i la transacció
+      dessincronitzades. Revisa tots dos catàlegs manualment.
+    error_invoice_validation: Un registre de factura no ha superat la validació.
+    error_iva_prorrata: S'ha produït un error en el càlcul de la prorrata de l'IVA.
+    error_iva_prorrata_input: Les dades d'entrada de la prorrata de l'IVA infringeixen
+      les seves invariants.
+    error_iva_prorrata_sector: Les dades de separació sectorial de la prorrata de
+      l'IVA són inconsistents.
+    error_iva_validation: Un valor de l'IVA no és vàlid.
+    error_justificante: S'ha produït un error relacionat amb el justificant.
+    error_justificante_csv_not_found: El PDF no conté un Codi Segur de Verificació.
+    error_llm: S'ha produït un error en el model de llenguatge.
+    error_manuals_manual: S'ha produït un error relacionat amb els manuals.
+    error_manuals_manual_not_found: No s'ha trobat el manual, any o part sol·licitats.
+    error_manuals_manual_review_required: Un registre de manual no té metadades de
+      revisió.
+    error_manuals_rule_extraction: L'extracció de regles del manual no està disponible.
+    error_manuals_validation: Un registre de manual no ha superat la validació.
+    error_modelo_aggregation_binding: Els bindings d'agregació derivats del bucket
+      entren en conflicte amb les dades indicades.
+    error_modelo_amendment_evidence_missing: No es pot complementar una declaració
+      que no té evidència oficial importada. Importa primer el justificant de la declaració
+      original.
+    error_modelo_amendment_target_state: No es pot complementar una declaració que
+      no està en estat vigent; ja ha estat substituïda per una de posterior.
+    error_modelo_calculation_registry_unavailable: No s'ha pogut resoldre la instantània
+      del registre per al model, any i període de la unitat de treball.
+    error_modelo_calculation_revision_not_found: No s'ha trobat la revisió de càlcul
+      sol·licitada.
+    error_modelo_calculation_revision_state: La transició d'estat sol·licitada no
+      és compatible amb l'estat actual de la revisió de càlcul.
+    error_modelo_casilla_provenance_missing: Una casella del resultat del motor no
+      té definició al registre.
+    error_modelo_external_filing_import: No s'ha pogut desar la declaració externa
+      importada. Comprova els valors de les caselles i la referència d'evidència.
+    error_modelo_filing_record_not_found: No s'ha trobat la declaració registrada
+      sol·licitada.
+    error_modelo_iva_wallet_reconciliation_blocked: 'El càlcul del Model 303 està
+      bloquejat: cal la reconciliació del wallet d''IVA'
+    error_modelo_verification_report_not_found: No s'ha trobat l'informe de verificació
+      sol·licitat.
+    error_modelo_work_unit_already_discarded: La unitat de treball ja està descartada.
+    error_modelo_work_unit_mutation_refused: No es pot modificar una unitat de treball
+      descartada.
+    error_modelo_work_unit_not_found: No s'ha trobat la unitat de treball sol·licitada.
+    error_modelos: S'ha produït un error en els models tributaris.
+    error_modelos_validation: Un codi de model infringeix les seves invariants de
+      forma.
+    error_observation_key: Un component de la clau d'observació no compleix el contracte
+      del repositori.
+    error_outbound_storage_not_found: No existeix l'objecte o l'espai d'emmagatzematge
+      sol·licitat.
+    error_outbound_storage_path_too_long: El camí d'emmagatzematge resolt supera el
+      límit MAX_PATH de Windows.
+    error_pdf_import_pdf_modelo_import: Ha fallat la importació de la declaració des
+      del PDF.
+    error_period: S'ha produït un error relacionat amb el període.
+    error_period_validation: El token de període indicat no té un format vàlid.
+    error_portals_portal_registry: S'ha produït un error en el registre de portals
+      de l'AEAT.
+    error_portals_unknown_portal: El portal de l'AEAT indicat no existeix.
+    error_portals_validation: Les metadades d'un portal no han superat la validació.
+    error_profile_amortization_ledger: Una operació del llibre d'amortitzacions del
+      perfil no és vàlida.
+    error_profile_asset_record: Un registre d'actiu del perfil té una estructura no
+      vàlida.
+    error_profile_bienes_inversion_record: Un registre de regularització d'IVA per
+      béns d'inversió no és estructuralment vàlid.
+    error_profile_inventory_ledger: Una operació del llibre d'inventari del perfil
+      no és vàlida.
+    error_profile_prorrata_register_record: Un registre de prorrata d'IVA entre períodes
+      no és estructuralment vàlid.
+    error_profile_tax_residence: S'ha produït un error en el perfil de residència
+      fiscal.
+    error_profile_validation: Un registre de perfil no ha superat la validació.
+    error_redaction: Un auxiliar de redacció ha rebut un argument del tipus incorrecte.
+    error_renta: S'ha produït un error en el càlcul de la declaració de la Renda.
+    error_renta_profile_completeness_warning: 'Declaració obligatòria RETMAR: aquest
+      treballador figura inscrit al RETMAR. Des de 2023, els treballadors inscrits
+      al règim especial de la Seguretat Social del mar han de presentar declaració
+      de l''IRPF independentment del nivell d''ingressos (Ley 35/2006 Art. 96 BOE-A-2006-20764).'
+    error_renta_validation: Un valor de la declaració de la Renda no és vàlid.
+    error_rental_amortization_cap_exceeded: L'amortització acumulada superaria el
+      límit legal de l'actiu arrendat.
+    error_rental_contract_not_found: No s'ha trobat el contracte de lloguer indicat.
+    error_rental_finca_not_found: No s'ha trobat la finca indicada.
+    error_rental_register: S'ha produït un error en el registre de lloguers.
+    error_rental_tier_resolution: Les dades del contracte de lloguer són inconsistents
+      i no s'ha pogut determinar el tram de reducció aplicable.
+    error_rental_validation: Un registre de lloguer no ha superat la validació.
+    error_resources_backend: S'ha produït un error en llegir les dades incloses en
+      l'aplicació.
+    error_resources_load: No s'ha pogut carregar un recurs inclòs en l'aplicació.
+    error_resources_not_found: No s'ha trobat el recurs inclòs sol·licitat.
+    error_resources_validation: Un fitxer inclòs en l'aplicació no ha superat la validació
+      estricta.
+    error_retention: No s'ha pogut avaluar la política de conservació de registres
+      tributaris.
+    error_review: S'ha produït un error en la revisió.
+    error_sede: S'ha produït un error en la Seu electrònica de l'AEAT.
+    error_sede_browser_adapter_type: L'objecte de pàgina del navegador ha retornat
+      un tipus inesperat al límit de l'adaptador Sede.
+    error_sede_expediente_not_found: No s'ha trobat cap expedient que coincideixi
+      amb el filtre sol·licitat.
+    error_sede_navigation: Ha fallat un pas de navegació en la Seu de l'AEAT.
+    error_storage_bucket: S'ha produït un error en el cicle de vida del bucket d'emmagatzematge.
+    error_storage_bucket_path_too_long: El camí del directori del bucket supera el
+      límit MAX_PATH de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més
+      curt o activa LongPathsEnabled (vegeu `aeat config check`).
+    error_storage_management: No s'ha pogut llegir ni alliberar l'arbre d'emmagatzematge
+      local.
+    error_submission_validation: Un model d'enviament no ha superat la validació.
+    error_telemetry_schema: Una clau de mètrica de telemetria no està registrada a
+      l'esquema tancat de mètriques de la seva ordre.
+    error_transaction_catalogue: El catàleg de transaccions no és vàlid o és inconsistent.
+    error_transaction_classification_rule: Una regla de classificació del llibre major
+      no és vàlida.
+    error_transaction_llm_classifier: Ha fallat la classificació de la transacció
+      amb el model de llenguatge.
+    error_transaction_not_found: No s'ha trobat la transacció sol·licitada.
+    error_transaction_persistence: No s'ha pogut desar el catàleg de transaccions.
+    error_transaction_validation: Un valor d'una transacció no és vàlid.
+    error_usage_ratios_validation: Un perfil de percentatges d'ús infringeix les seves
+      invariants de domini.
+    error_user_profile: S'ha produït un error en el perfil d'usuari.
+    error_wizard: S'ha produït un error en l'assistent.
+    error_wizard_compile: El catàleg de l'assistent està mal format i no s'ha pogut
+      compilar.
+    error_workflow: S'ha produït un error en el flux de treball.
+    error_workflow_component: Un component del flux de treball ha llançat una excepció
+      inesperada.
+    m145_communication_record_not_found: Cap registre local de comunicació del Model
+      145 coincideix amb l'id sol·licitat.
+    m145_communication_service: Ha fallat una operació del servei local de comunicació
+      del Model 145.
+    modelo_calculation_revision_selector: La selecció de revisió de càlcul ha fallat.
+    modelo_calculation_revision_selector_not_found: Cap revisió de càlcul coincideix
+      amb el selector indicat.
+    modelo_compare_no_revisions: No s'han trobat revisions de càlcul comparables.
+    modelo_compare_no_usable_revisions: Hi ha revisions comparables, però cap es pot
+      utilitzar per a aquesta comparació.
+    modelo_compare_no_work_units: No s'han trobat unitats de treball de model comparables.
+    modelo_project_no_m130_revisions: No hi ha revisions de càlcul del Model 130 per
+      a l'exercici sol·licitat.
+    modelo_project_no_m130_units: No hi ha unitats de treball del Model 130 per a
+      l'exercici sol·licitat.
+    modelo_projection: Ha fallat la projecció del model.
+    modelo_work_address_not_found: No hi ha cap unitat de treball de model activa
+      que coincideixi amb el model, l'exercici i el període sol·licitats.
+    modelo_work_selector: El selector de treball de modelo ha fallat.
+    modelo_work_selector_unit_not_found: No s'ha trobat la unitat de treball de modelo
+      seleccionada.
+  fail:
+    censo_sync: La sincronització del cens del Model 036 ha fallat.
+    currency_error: Ha fallat la normalització de la moneda.
+    declaration_parse: No s'ha pogut interpretar l'exportació de la declaració presentada
+      per a la conciliació.
+    exchange_rate_provider: El proveïdor de tipus de canvi no ha respost.
+    fail_acceleration_receipt_revocation: No s'ha pogut eliminar l'accés ràpid d'inici
+      de sessió desat d'aquest perfil; encara és al disc.
+    fail_access_gate_authorization_manifest: No s'ha pogut carregar el manifest d'autorització
+      de models o conté una entrada d'habilitació no vàlida.
+    fail_borrador_parse: No s'ha pogut interpretar el PDF de l'esborrany del Model
+      100 com una declaració.
+    fail_browser_evasion: No s'ha pogut aplicar la configuració d'evasió del navegador.
+    fail_browser_session_browser: S'ha produït un error en la sessió del navegador.
+    fail_browser_validation: Els paràmetres del navegador no han superat la validació.
+    fail_certificado_censal_parse: No s'ha pogut llegir el document del Certificado
+      de Situación Censal.
+    fail_cli_command_group_unavailable: 'No s''ha pogut carregar el grup d''ordres
+      ''%{group}'': falta el mòdul requerit ''%{module}''. Aquesta instal·lació és
+      incompleta.'
+    fail_declaracion_parse: No s'ha pogut interpretar el PDF com una declaració.
+    fail_export: S'ha produït un error en exportar cap a l'AEAT.
+    fail_export_format: L'esborrany de la declaració no s'ha pogut serialitzar al
+      format BOE indicat.
+    fail_filing_import: No s'ha pogut importar la declaració des del PDF del justificant.
+    fail_financial_attachments_attachment_persistence: El magatzem de justificants
+      no ha pogut llegir o escriure les dades.
+    fail_financial_invoices_invoice_persistence: No s'ha pogut desar o llegir el catàleg
+      de factures.
+    fail_financial_ledger_storage: No s'ha pogut resoldre o fer servir l'emmagatzematge
+      del llibre del bucket.
+    fail_financial_usage_ratios_usage_ratio_persistence: No s'ha pogut llegir o escriure
+      el perfil de percentatges d'ús.
+    fail_google_adc_stale: No s'han pogut renovar les credencials predeterminades
+      d'aplicació (ADC). Executeu gcloud auth application-default login.
+    fail_google_adc_unavailable: No s'han trobat credencials predeterminades d'aplicació
+      (ADC) en aquest equip. Executeu gcloud auth application-default login.
+    fail_google_browser_open: No s'ha pogut obrir el navegador per mostrar la pàgina
+      de consentiment de Google. Obre l'enllaç manualment.
+    fail_google_loopback_bind: El receptor HTTP local no ha pogut obrir un port. Tanca
+      altres aplicacions que el puguin estar fent servir i torna-ho a provar.
+    fail_google_network: No s'ha pogut contactar amb el servidor de Google. Comprova
+      la connexió a internet i torna-ho a provar.
+    fail_justificante_parse: No s'ha pogut interpretar el PDF com un justificant.
+    fail_llm_cache: No s'ha pogut llegir, escriure o interpretar una entrada de la
+      memòria cau del model de llenguatge.
+    fail_llm_pdf_rasterisation: No s'ha pogut renderitzar el PDF per a l'entrada de
+      visió local.
+    fail_llm_provider: El proveïdor del model de llenguatge ha retornat un error irrecuperable.
+    fail_llm_rate_limit: El proveïdor del model de llenguatge ha rebutjat la sol·licitud
+      per límit d'ús. Espera uns minuts i torna-ho a provar.
+    fail_llm_transient_transport: La petició no ha arribat al motor del model de llenguatge
+      i s'ha exhaurit el pressupost de reintents.
+    fail_manuals_manual_parse: Un registre de manual no ha superat la validació de
+      l'esquema.
+    fail_modelo_calculation_revision_persistence: No s'ha pogut desar o llegir el
+      catàleg de revisions de càlcul.
+    fail_modelo_filing_record_persistence: No s'ha pogut desar o llegir el catàleg
+      de declaracions registrades.
+    fail_modelo_verification_report_persistence: No s'ha pogut desar o llegir el catàleg
+      d'informes de verificació.
+    fail_modelo_work_unit_persistence: No s'ha pogut desar o llegir el catàleg d'unitats
+      de treball.
+    fail_notificacion_parse: No s'ha pogut interpretar el document de la notificació
+      de l'AEAT.
+    fail_observability_run_trace_persistence: El magatzem de traces d'execució no
+      ha pogut completar una operació del sistema de fitxers.
+    fail_outbound_storage: S'ha produït un error en el proveïdor d'emmagatzematge.
+    fail_outbound_storage_network: No s'ha pogut contactar amb el servei d'emmagatzematge.
+      Comprova la connexió a internet i torna-ho a provar.
+    fail_outbound_storage_unavailable: El servei d'emmagatzematge no està disponible
+      temporalment. Espera uns minuts i torna-ho a provar.
+    fail_repair_decision_not_found: No s'ha trobat la decisió de reparació sol.licitada.
+    fail_review_source_load: El fitxer d'origen existeix però no s'ha pogut interpretar.
+    fail_sancion_arithmetic: Els imports impresos al document de sanció no quadren
+      entre ells.
+    fail_sancion_parse: El document de sanció no s'ha pogut llegir completament; no
+      es retorna cap registre parcial.
+    fail_secure_storage: S'ha produït un error en l'emmagatzematge segur.
+    fail_sede_justificante_fetch: La descàrrega del justificant en PDF des de la Seu
+      de l'AEAT ha fallat o el fitxer no és vàlid.
+    fail_sede_parse: No s'ha pogut interpretar la pàgina capturada de la Seu de l'AEAT.
+    fail_sede_validation: Les dades capturades de la Seu de l'AEAT no tenen la forma
+      esperada.
+    fail_site_health: La comprovació d'estat del lloc ha fallat.
+    fail_snapshot_not_found: No s'ha trobat la instantània sol.licitada.
+    fail_storage: S'ha produït un error en l'emmagatzematge.
+    fail_storage_blob_not_found: No s'ha trobat l'objecte sol·licitat al magatzem
+      xifrat.
+    fail_storage_bucket_recovery_unavailable: No s'ha pogut carregar la còpia de recuperació
+      del bucket actiu. És possible que la recuperació no s'hagi configurat mai.
+    fail_storage_persistence: S'ha produït un error de persistència en l'emmagatzematge
+      segur.
+    fail_storage_profile_custody: No s'ha pogut completar la custòdia del perfil.
+    fail_storage_repository: Una operació de repositori ha fallat.
+    fail_storage_repository_setup: Error en inicialitzar el repositori d'emmagatzematge.
+    fail_storage_secret_not_found: No s'ha trobat cap secret per a la clau sol·licitada.
+    fail_storage_secret_store: S'ha produït un error d'entrada o sortida en el magatzem
+      de secrets.
+    fail_storage_secure_object_revision_conflict: L'objecte segur ha canviat per una
+      altra escriptura; torna'l a carregar i reintenta-ho amb la revisió actual.
+    fail_storage_secure_object_upsert: No s'ha pogut persistir l'objecte segur. Reviseu
+      la ruta d'emmagatzematge i torneu-ho a provar.
+    fail_user_profile_not_found: No s'ha trobat la secció o el camp sol·licitat del
+      perfil d'usuari.
+    fail_user_profile_schema_load: No s'ha pogut carregar l'esquema del perfil d'usuari.
+    fixed_width_record_render: No s'ha pogut generar el registre d'exportació d'amplada
+      fixa.
+    ledger_check: Una comprovació de consistència del llibre ha detectat un problema
+      que impedeix continuar.
+    ledger_link: No s'ha pogut vincular una transacció del llibre a un binding de
+      model.
+    missing_exchange_rate: Falta el tipus de canvi per a la data i la moneda indicades.
+    modelo_036_lifecycle: S'ha produït un error en el cicle de vida del Model 036
+      (alta, modificació o baixa).
+    modelo_export: S'ha produït un error en exportar la revisió del model.
+    modelo_export_manifest: No s'ha pogut construir o validar el manifest d'exportació
+      del model.
+    overview: S'ha produït un error en generar el resum.
+    overview_agenda: No s'han pogut enumerar les properes accions del resum.
+    overview_backlog: No s'han pogut classificar les obligacions vençudes del resum.
+    overview_calendar: No s'ha pogut muntar el calendari del resum per al període
+      sol·licitat.
+    overview_explain: No s'ha pogut descompondre l'explicació del resum per a l'obligació
+      sol·licitada.
+    profile_export: S'ha produït un error en exportar l'arxiu del perfil.
+    profile_import: S'ha produït un error en importar l'arxiu del perfil.
+    reconciliation: S'ha produït un error en conciliar les declaracions periòdiques
+      amb el resum anual.
+    stale_exchange_rate: L'únic tipus de canvi disponible està fora del marge de frescor
+      acceptable.
+  financial:
+    source_file_is_symlink: 'El camí del fitxer origen és un enllaç simbòlic, la qual
+      cosa no està permesa per a la ingesta de dades fiscals: {path}'
+    source_file_not_found: 'El fitxer d''origen no existeix: {path}'
+    source_file_too_large: 'El fitxer origen és massa gran: {path} ({size_bytes} bytes;
+      màxim {max_bytes} bytes)'
+    unsupported_date_format: 'Format de data no vàlid a {label}: {raw}. Useu {expected_format}.'
+  identity:
+    cif_check_char_mismatch_mixed: 'El caràcter de control del CIF és incorrecte (tipus
+      {kind}): s''esperava {expected} o {alt}, s''ha obtingut {got}.'
+    cif_check_digit_mismatch: 'El dígit de control del CIF és incorrecte (tipus {kind}):
+      s''esperava {expected}, s''ha obtingut {got}.'
+    cif_check_letter_mismatch_kind: 'La lletra de control del CIF és incorrecta (tipus
+      {kind}): s''esperava {expected}, s''ha obtingut {got}.'
+    cif_control_char_invalid: El caràcter de control del CIF a {candidate} ha de ser
+      un dígit o una lletra majúscula, no {got}.
+    cif_invalid_shape: '{candidate} no té la forma d''un CIF: un CIF és una lletra
+      inicial (A-H, J, N, P-S, U, V o W) seguida de 7 dígits i un caràcter de control.'
+    document_empty: El document d'identitat és buit.
+    nie_check_letter_mismatch: 'La lletra de control del NIE és incorrecta: per a
+      {body} la lletra de control ha de ser {expected}, no {got}. Corregeix el NIE
+      a {body}{expected}.'
+    nie_invalid_shape: '{candidate} no té la forma d''un NIE: un NIE comença per X,
+      Y o Z, seguit de 7 dígits i una lletra de control.'
+    nif_check_letter_mismatch: 'La lletra de control del NIF és incorrecta: per a
+      {digits} la lletra de control ha de ser {expected}, no {got}. Corregeix el NIF
+      a {digits}{expected}.'
+    nif_invalid_shape: '{candidate} no té la forma d''un NIF: un NIF són 8 dígits
+      seguits d''una lletra de control.'
+    tax_id_invalid_length: Un identificador fiscal espanyol ha de tenir 9 caràcters;
+      {candidate} en té {length}. Introdueix un NIF, NIE o CIF (un caràcter inicial,
+      7 o 8 dígits i un caràcter de control).
+    tax_id_unrecognised_leader: '{candidate} no comença per un caràcter d''identificador
+      fiscal reconegut ({leader}). Un NIF comença per un dígit o K/L/M, un NIE per
+      X, Y o Z, i un CIF per A-H, J, N, P-S, U, V o W.'
+    validate_expects_str: La validació d'identitat espera un valor de text; s'ha obtingut
+      {got_type}.
+  integrity:
+    integrity_active_profile_pointer: El punter de perfil actiu no és vàlid; repara
+      el perfil seleccionat abans de continuar.
+    integrity_apoderado_configuration_identity: La configuració d'apoderat emmagatzemada
+      no pertany al perfil des del qual s'ha llegit.
+    integrity_cadrumo_core_validation: Una comprovació interna d'integritat de dades
+      no s'ha superat.
+    integrity_cli_output_schema: El registre d'esquemes de sortida de la CLI està
+      mal configurat.
+    integrity_corpus_anchor_resolution: Una àncora del corpus inclòs no es resol exactament
+      en una unitat extreta.
+    integrity_filing_amendment_validation: La declaració complementària infringeix
+      una invariant legal o d'estructura.
+    integrity_filing_validation: La validació de la declaració ha detectat un problema
+      que impedeix continuar.
+    integrity_financial_attachments_attachment_validation: El justificant adjunt no
+      ha superat la validació. Comprova el fitxer i torna a adjuntar-lo.
+    integrity_identity_document: El document d'identitat indicat no és un NIF, NIE
+      ni CIF espanyol vàlid.
+    integrity_justificante_verification: La verificació del justificant amb l'AEAT
+      no s'ha pogut completar.
+    integrity_manuals_manifest: El manifest del manual no ha superat les comprovacions
+      d'esquema o de resum.
+    integrity_observability_aeat_corpus_drift: La reproducció ha detectat que el corpus
+      de referència de l'AEAT ha canviat respecte al registrat.
+    integrity_observability_run_trace_validation: La traça d'execució desada no ha
+      superat la validació estricta.
+    integrity_outbound_storage: El contingut descarregat no ha superat les comprovacions
+      d'integritat (resum, mida o etiqueta).
+    integrity_outbound_storage_corruption: S'ha detectat corrupció a l'emmagatzematge
+      de sortida.
+    integrity_period: 'Error intern: no s''ha pogut construir un període vàlid a partir
+      de l''any i el codi indicats.'
+    integrity_portals_portal_integrity: El registre de portals de l'AEAT infringeix
+      una invariant estructural.
+    integrity_profile_answer_type: Un camp de resposta de perfil ha rebut un tipus
+      inesperat.
+    integrity_profile_bucket_mismatch: El perfil %{profile_id} no pertany al bucket
+      %{bucket_id}; un bucket de perfil conté exactament una identitat de perfil.
+    integrity_profile_snapshot_hash_mismatch: El resum de la instantània del perfil
+      no coincideix amb la projecció actual.
+    integrity_profile_snapshot_not_found: No existeix cap instantània de perfil amb
+      l'identificador indicat.
+    integrity_repair_integrity: La comprovació d'integritat de reparació ha fallat.
+    integrity_storage_blob: El resum SHA-256 d'un objecte emmagatzemat no coincideix
+      amb el del seu manifest.
+    integrity_storage_bucket_validation: Un paràmetre del dipòsit o camp del manifest
+      no ha superat la validació.
+    integrity_storage_classification: La classe de sensibilitat declarada d'un registre
+      és incompatible amb el seu repositori.
+    integrity_storage_corpus_bundle: El paquet del corpus no s'ha pogut analitzar
+      ni verificar.
+    integrity_storage_corpus_bundle_signature: No s'ha pogut verificar la signatura
+      d'autenticitat del paquet de corpus.
+    integrity_storage_corpus_bundle_signing_key_not_found: No s'ha trobat cap parell
+      de claus de signatura del paquet de corpus al camí sol·licitat.
+    integrity_storage_corpus_bundle_verification: El paquet del corpus no ha superat
+      la verificació de sumes de comprovació respecte al seu manifest incorporat.
+    integrity_storage_corpus_manifest: El manifest del corpus no s'ha pogut llegir
+      o validar.
+    integrity_storage_corpus_manifest_drift: 'El corpus en disc difereix del que descriu
+      el seu manifest: s''han afegit, eliminat o modificat fitxers.'
+    integrity_storage_corpus_manifest_tamper: El resum autoverificable del manifest
+      del corpus no coincideix amb el seu contingut. El manifest pot estar malmès
+      o manipulat.
+    integrity_storage_decryption: El desxifratge d'un objecte emmagatzemat ha fallat.
+      Les dades poden estar malmeses o la clau no és correcta.
+    integrity_storage_encryption: S'ha produït un error de xifratge o desxifratge
+      en l'emmagatzematge segur.
+    integrity_storage_envelope_version: La versió d'un objecte en disc no coincideix
+      amb la que espera l'aplicació.
+    integrity_storage_key_derivation: Ha fallat un pas de derivació de clau en l'emmagatzematge
+      segur.
+    integrity_storage_namespace_registry: Una clau o definició del registre d'espais
+      de noms ha violat un invariant d'inicialització.
+    integrity_storage_nonce_collision: S'ha detectat una col·lisió de nonce en l'emmagatzematge
+      segur.
+    integrity_storage_path_containment: Una ruta calculada se surt del directori arrel
+      configurat.
+    integrity_storage_profile_custody_record: El registre de custòdia del perfil no
+      és vàlid o ha estat alterat.
+    integrity_storage_retention_policy: Les metadades de retenció d'un registre infringeixen
+      la política de la seva classificació.
+    integrity_storage_secure_object_batch_size: La mida del lot d'iteració d'objectes
+      segurs ha de ser com a mínim 1; s'ha rebut %{batch_size}.
+    integrity_storage_secure_object_hashed_key_length: 'La clau hash de l''objecte
+      segur té una longitud no vàlida: %{length} bytes.'
+    integrity_storage_secure_object_raw_bytes: 'Les metadades de bytes sense processar
+      de l''objecte segur tenen un tipus no admès: %{value_type}.'
+    integrity_storage_secure_object_revision_ancestry_json: El camp d'ascendència
+      de revisió d'un objecte segur emmagatzemat no conté JSON vàlid.
+    integrity_storage_secure_object_revision_ancestry_shape: El camp d'ascendència
+      de revisió d'un objecte segur emmagatzemat té una forma d'identificador no vàlida.
+    integrity_storage_secure_object_row_identity: Un objecte segur emmagatzemat no
+      reconstrueix la clau amb què està arxivat; el registre va ser substituït o arxivat
+      incorrectament.
+    integrity_storage_secure_object_unreadable: Un objecte segur emmagatzemat no s'ha
+      pogut desxifrar amb la clau mestra actual.
+    integrity_storage_validation: Un paràmetre d'emmagatzematge no ha superat la validació.
+    profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
+      o integritat. No importis arxius d'origen no fiable.
+  internal:
+    cli_outbound_payload_boundary: Cadrumo ha construït un registre intern que no
+      ha superat la seva pròpia validació. La teva ordre era correcta; això és un
+      defecte de Cadrumo. Comunica-ho indicant l'ordre que vas executar.
+    internal_active_profile_pointer_transaction: 'Error intern: la propietat de la
+      transacció del punter de perfil actiu no és vàlida.'
+    internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat,
+      no per un problema de dades emmagatzemades. Consulteu els registres de diagnòstic
+      per veure què ha fallat.
+    internal_flow_copy_resolution: 'Error intern: el flux guiat no ha pogut resoldre
+      els seus textos de presentació.'
+    internal_flow_validator_registry: 'Error intern: el registre de validadors del
+      flux guiat ha rebutjat l''operació.'
+    internal_master_key_reentrant: 'Error intern: el proveïdor de la clau mestra s''ha
+      invocat de manera reentrant; tanca la sessió activa abans de tornar a entrar-hi.'
+    internal_observability_run_context_missing: 'Error intern: s''ha intentat registrar
+      un esdeveniment de telemetria fora d''un context d''execució actiu.'
+    internal_operation_declaration_breach: 'Error intern: un executor d''operació
+      ha reclamat una fase, un efecte, un recurs o una interacció que la seva definició
+      no declara.'
+    internal_output_rendering: 'Error intern: la sortida de l''ordre no s''ha pogut
+      representar de manera segura.'
+    internal_profile_keys_registration: 'Error intern: no s''han pogut registrar les
+      claus del perfil.'
+    internal_profile_project_answers_not_registered: 'Error intern: les respostes
+      del projecte de perfil no estan registrades.'
+    internal_profile_registration: 'Error intern: no s''ha pogut registrar el perfil.'
+    internal_wipe_type: 'Error intern: l''operació d''esborrat segur ha rebut un valor
+      que no pot sobreescriure.'
+    internal_wizard_catalogue_already_registered: 'Error intern: el catàleg de l''assistent
+      ja està registrat.'
+    internal_wizard_catalogue_not_registered: 'Error intern: el catàleg de l''assistent
+      no està registrat.'
+    internal_workflow_abort_signal: 'Error intern: una etapa del flux de treball ha
+      emès un senyal de cancel·lació.'
+    internal_workflow_unhandled: 'Error intern: una etapa del flux de treball ha llançat
+      una excepció no controlada.'
+  iva:
+    category_has_no_legal_basis: Aquesta categoria d'IVA no té base legal al catàleg
+      i no es pot citar.
+    citation_legal_reference_absent: La referència legal de la citació no consta al
+      catàleg legal del registre.
+    cite_requires_catalogue_or_date: Citar una categoria d'IVA requereix un catàleg
+      explícit o una data d'efecte.
+    rate_member_state_unregistered: El registre de tipus d'IVA no conté cap tipus
+      per a l'estat membre sol·licitat.
+    rate_registry_coverage_gap: El registre de tipus d'IVA inclòs no arriba a aquesta
+      data per a aquest tram, de manera que el tipus no es pot confirmar. És un límit
+      de la nostra cobertura, no una afirmació que el tipus fos il·legal.
+    rate_slot_not_in_force: Aquest tipus d'IVA no estava en vigor per al seu tram
+      a Espanya en la data de l'operació.
+  locked:
+    locked_access_gate_live_submit_forbidden: L'enviament en viu a l'AEAT està permanentment
+      prohibit. Aquesta aplicació construeix, valida i exporta declaracions; la presentació
+      s'ha de fer fora de l'aplicació.
+    locked_auth_acquisition: Un altre procés està adquirint l'autenticació amb l'AEAT
+      en aquest moment. Espera que acabi i torna-ho a provar.
+    locked_google_keychain: L'anell de claus del sistema operatiu que desa les credencials
+      de Google està bloquejat o no és accessible. Desbloqueja l'anell de claus i
+      torna-ho a provar.
+    locked_storage_bucket_busy: El bucket d'emmagatzematge l'està utilitzant un altre
+      procés. Espera que aquest procés acabi i torna-ho a provar.
+    locked_storage_bucket_session: Aquesta operació requereix un bucket d'emmagatzematge
+      desbloquejat. Executa `aeat config login NAME` i torna-ho a provar.
+    locked_storage_lock_acquisition: No s'ha pogut obtenir el bloqueig exclusiu de
+      fitxer dins del temps d'espera. Un altre procés el reté; espera i torna-ho a
+      provar.
+  prefix:
+    auth: Autenticació.
+    error: Error.
+    fail: Ha fallat.
+    integrity: Integritat.
+    internal: Intern.
+    locked: Bloquejat.
+    refused: Rebutjat.
+  refused:
+    auth_configure_no_active_bucket: No es pot configurar l'autenticació sense un
+      perfil actiu. Crea un perfil amb `aeat config profile create NOM` i torna-ho
+      a provar.
+    auth_profile_identity_mismatch: La identitat del perfil actiu no pot ser titular
+      de la sessió d'autenticació sol·licitada.
+    bootstrap_already_complete: L'arrencada de l'emmagatzematge segur ja està completa.
+      Fes servir aeat config login NAME per activar un perfil existent o aeat config
+      profile create NAME per afegir-ne un altre.
+    censal_read_identity: La lectura censal no correspon al contribuent d'aquest perfil.
+    clave_credentials_incomplete: Al mode d'autenticació Cl@ve seleccionat li falta
+      una credencial que necessita.
+    ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
+      model perquè encara no es pot presentar.
+    m145_communication_record_ambiguous: El prefix de l'id de registre de comunicació
+      del Model 145 coincideix amb diversos registres.
+    m145_communication_record_export: El registre local de comunicació del Model 145
+      no s'ha pogut exportar.
+    m145_communication_record_transition: El registre local de comunicació del Model
+      145 no permet aquesta transició d'estat.
+    m145_communication_record_validation: L'operació local de comunicació del Model
+      145 està bloquejada per la validació.
+    modelo_036_prior_alta_required: No es pot sol·licitar una modificació o baixa
+      del Model 036 sense una alta prèvia.
+    modelo_036_terminal_state: El registre del Model 036 ja està en estat de baixa;
+      no admet més operacions.
+    modelo_184_share_sum: Els percentatges de participació dels membres del Model
+      184 han de sumar exactament el 100 %.
+    modelo_210_agrupacion_renta_rows: Les rendes agrupades anuals del Model 210 han
+      de formar una agrupació única i vàlida (un codi, un tipus, un bé identificat
+      i un pagador, excepte l'excepció de múltiples pagadors).
+    modelo_347_threshold: Les operacions del Model 347 per sobre del llindar informatiu
+      requereixen cobertura declarativa explícita.
+    modelo_349_country_prefix_context: 'El model 349 rebutja el prefix de país {country_code}
+      per a la clau d''operació {clave_operacion} en {filing_year}/{period}: {reason}.
+      Fonament: instruccions AEAT Brexit IVA NIF-IVA / model 349.'
+    modelo_ambiguous_semantic_role_casilla: Més d'una casella usa el rol semàntic
+      %{semantic_role}; usa el casilla.id canònic exacte.
+    modelo_calculate_binding_input: La sobreescriptura de --binding indicada no s'ha
+      pogut resoldre per a la revisió activa.
+    modelo_calculate_casilla_input: La sobreescriptura de casella indicada no s'ha
+      pogut resoldre per a la revisió activa.
+    modelo_calculate_decimal_input: El valor de sobreescriptura de càlcul indicat
+      no té forma decimal.
+    modelo_calculate_detail_rows: Les files de detall indicades incompleixen les condicions
+      de càlcul del model.
+    modelo_calculate_input: El valor d'entrada de càlcul del model indicat per l'operador
+      no és vàlid.
+    modelo_calculate_relation_input: La sobreescriptura de --relation indicada no
+      s'ha pogut resoldre per a la revisió activa.
+    modelo_calculate_semantic_role: La revisió del registre no declara el rol semàntic
+      requerit per la drecera.
+    modelo_calculate_shortcut_input: Les entrades agrupades de la drecera de càlcul
+      estan incompletes.
+    modelo_calculate_text_input: El valor de sobreescriptura de --casilla indicat
+      no és vàlid per a una casella de text.
+    modelo_calculation_revision_selector_ambiguous: El selector de revisió de càlcul
+      coincideix amb més d'una revisió; refineu el selector.
+    modelo_calculation_revision_selector_state: La revisió de càlcul seleccionada
+      no està en un estat utilitzable per a aquesta operació.
+    modelo_compare_need_two_years: La comparació requereix dos exercicis fiscals diferents.
+    modelo_export_cross_bucket: La revisió apuntada pertany a un bucket diferent del
+      perfil actiu. L'exportació només opera dins el bucket del perfil actiu.
+    modelo_export_no_active_bucket: L'exportació necessita un perfil actiu. Crea o
+      selecciona un perfil i torna-ho a provar.
+    modelo_project_invalid_decimal_override: Una sobrescriptura de projecció no és
+      un import decimal vàlid.
+    modelo_revision_pick: No s'ha pogut seleccionar la revisió de càlcul indicada.
+    modelo_work_period_token: Període de model no vàlid.
+    modelo_work_registry_year_mismatch: La revisió de registre seleccionada no cobreix
+      l'exercici fiscal sol·licitat.
+    modelo_work_selector_ambiguous: Més d'una unitat de treball de modelo coincideix
+      amb el selector.
+    modelo_work_selector_contradiction: Els arguments del selector de treball de modelo
+      es contradiuen.
+    modelo_work_selector_no_active_bucket: Seleccioneu un perfil actiu abans de resoldre
+      una unitat de treball de modelo.
+    modelo_work_selector_revision_conflict: La unitat de treball de modelo seleccionada
+      pertany a una altra revisió.
+    profile_capsule_archive: No s'ha pogut escriure o llegir l'arxiu de còpia del
+      perfil
+    profile_capsule_source: L'origen indicat no és una càpsula de perfil llegible
+    profile_import_collision: L'identificador del perfil importat coincideix amb un
+      que ja existeix.
+    profile_locked: Aquesta operació requereix un perfil desbloquejat. Executa `aeat
+      config login NAME` i torna-ho a provar.
+    profile_name_collision: El nom de perfil indicat ja s'està utilitzant. Tria un
+      nom diferent.
+    profile_passphrase_rotation: No s'ha pogut canviar la contrasenya del perfil.
+    profile_registration: No s'ha pogut registrar el perfil.
+    reconciliation_cross_bucket: La unitat de treball apuntada pertany a un bucket
+      diferent del perfil actiu. La conciliació només opera dins el bucket del perfil
+      actiu.
+    reconciliation_declaration_source_unsupported: La conciliació a partir d'una declaració
+      encara no està disponible.
+    reconciliation_drift: La conciliació ha detectat una discrepància aritmètica o
+      d'identitat entre declaracions. Revisa els imports abans de continuar.
+    reconciliation_evidence_invalid: No s'ha pogut llegir el PDF. Comproveu que el
+      fitxer és el justificant de l'AEAT i no un altre document, i que no està malmès.
+      Torneu a executar `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`
+      amb el fitxer correcte.
+    refused_access_gate_live_read_not_enabled: L'accés de lectura en viu a l'AEAT
+      està desactivat. Aquesta operació no pot contactar amb l'AEAT amb la configuració
+      actual.
+    refused_aeat_record_multi_recipient: El registre declarat anomena més d'un destinatari,
+      de manera que no pot convertir-se en un assentament de contrapart única. Concilieu-lo
+      per destinatari.
+    refused_apoderado_invalid_represented_nif: L'identificador fiscal del representat
+      no és un NIF, NIE o CIF vàlid.
+    refused_apoderado_live_check_unavailable: La comprovació en viu d'apoderaments
+      no està disponible o ha fallat el contacte amb l'AEAT.
+    refused_apoderado_not_configured: No hi ha cap apoderat configurat. Configura
+      l'apoderat abans de consultar-ne l'estat.
+    refused_apoderado_unknown_scope: L'àmbit d'apoderament indicat no és al catàleg
+      disponible.
+    refused_application_live_input: La sol·licitud de lectura en viu a l'AEAT no es
+      pot executar amb les dades indicades.
+    refused_application_registry_input: La sol·licitud al registre de models no es
+      pot executar amb les dades indicades.
+    refused_auth_certificate_source_not_found: L'origen de certificat indicat no està
+      registrat.
+    refused_auth_configure_dangling_active_profile: El punter de perfil actiu no resol
+      a un bucket registrat.
+    refused_auth_diagnostic_payload: 'Refusat: la càrrega de diagnòstic d''autenticació
+      no és vàlida.'
+    refused_auth_diagnostic_phone_state: El valor d’estat del telèfon proporcionat
+      no es reconeix. Utilitzeu un dels valors vàlids d’estat de telèfon de l’operador.
+    refused_auth_login_live_tests_disabled: Les proves d'inici de sessió en viu estan
+      deshabilitades.
+    refused_auth_login_precondition: La precondició per a l'inici de sessió d'autenticació
+      no es compleix.
+    refused_auth_provider_reserved: El proveïdor d'autenticació seleccionat està reservat
+      però no implementat.
+    refused_calculations_casilla_constraint: Un valor de casella calculat queda fora
+      dels límits declarats per a aquesta casella. Revisa les dades d'entrada del
+      càlcul.
+    refused_cli_boundary: L'ordre ha rebutjat la sol·licitud.
+    refused_cli_log_level_resolution: Les opcions de nivell de registre indicades
+      són contradictòries. Fes servir només una de --quiet, --verbose o --debug.
+    refused_cli_non_tty: Aquesta ordre necessita una entrada interactiva, però l'entrada
+      estàndard està redirigida. Executa-la en una terminal interactiva.
+    refused_cli_validation_boundary: L'entrada de l'ordre no ha superat la validació.
+      Comproveu els arguments o executeu `aeat --help`.
+    refused_config_reset_unconfirmed: El restabliment de la configuració no s'ha confirmat.
+      Torna a executar l'ordre confirmant l'operació.
+    refused_corpus_search_input: No s'ha pogut satisfer la sol·licitud de cerca al
+      corpus.
+    refused_diagnostic_model_invariant: 'Refusat: invariant del model de diagnòstic
+      incomplit.'
+    refused_einvoice_xml_parse: No s'ha pogut llegir l'XML de la factura electrònica
+      i s'ha rebutjat en lloc d'interpretar-lo parcialment.
+    refused_evidence_bundle_ambiguous: El prefix de l'identificador del paquet d'evidències
+      coincideix amb més d'un paquet en aquest bucket.
+    refused_evidence_bundle_not_found: No existeix cap paquet d'evidències amb l'identificador
+      indicat.
+    refused_evidence_bundle_verification: La verificació del paquet d'evidències ha
+      fallat i l'operació no s'ha forçat.
+    refused_export_field: S'ha violat un invariant de validació de camp durant l'exportació
+      tabular.
+    refused_export_format: El format de serialització d'exportació sol·licitat no
+      és compatible.
+    refused_filing_calculate: El càlcul o resum de la declaració no ha superat les
+      seves invariants.
+    refused_financial_aggregation_category_coverage: Una transacció no té cobertura
+      de categoria o de perfil. Classifica la transacció abans d'agregar.
+    refused_financial_aggregation_missing_classification: Encara hi ha transaccions
+      del període sense classificar. Classifica-les totes abans d'agregar.
+    refused_financial_aggregation_unsupported_modelo: No hi ha cap contracte d'agregació
+      disponible per al model sol·licitat.
+    refused_financial_bank_statement_parse: L'anàlisi de l'extracte bancari financer
+      ha fallat.
+    refused_financial_ledger_no_active_bucket: L'operació del llibre necessita un
+      perfil actiu. Crea o selecciona un perfil i torna-ho a provar.
+    refused_financial_ledger_transaction_id_prefix: El prefix d'identificador de transacció
+      no coincideix amb cap transacció o coincideix amb diverses. Indica un prefix
+      més llarg.
+    refused_financial_provider_invalid_source: El document d'origen no es pot llegir
+      o la seva estructura no és vàlida.
+    refused_financial_provider_unsupported_source: Cap proveïdor pot interpretar aquest
+      document d'origen.
+    refused_financial_provider_validation: Un camp del document financer (data o import)
+      no ha superat la validació.
+    refused_financial_usage_ratios_censo_mismatch: Un percentatge d'ús d'oficina a
+      casa desat no coincideix amb el cens, que és la font legal vinculant. Alinea'l
+      amb el valor del cens.
+    refused_flow_answer: El flux guiat ha rebutjat la resposta.
+    refused_flow_checkpoint: El flux guiat ha rebutjat l'operació de desar i reprendre.
+    refused_flow_navigation: El flux guiat ha rebutjat la petició de navegació.
+    refused_flow_run_abandoned: El flux guiat es va cancel·lar abans de completar-se;
+      no es va presentar res.
+    refused_flow_submit: El flux guiat ha rebutjat l'enviament.
+    refused_flow_unsupported_console: El flux guiat no es pot executar perquè aquesta
+      consola no pot mostrar preguntes interactives.
+    refused_google_impersonation: IAM ha rebutjat emetre un testimoni de suplantació
+      per al compte de servei de destinació. Concediu-li el rol roles/iam.serviceAccountTokenCreator.
+    refused_google_non_interactive: L'inici de sessió de Google necessita un terminal
+      interactiu amb navegador; executa'l des d'una shell interactiva.
+    refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona
+      un perfil o fes servir --profile.
+    refused_google_unsecured_mode: No es pot autoritzar Google en mode d'emmagatzematge
+      no xifrat amb un perfil que porta un NIF real.
+    refused_google_validation: Els paràmetres de Google indicats no han superat la
+      validació.
+    refused_inventory_actividad_conflict: Ja existeix un inventari per a aquesta activitat
+      i aquest any.
+    refused_inventory_actividad_not_found: No existeix cap inventari per a l'activitat
+      i l'any indicats.
+    refused_inventory_service_input: Una dada indicada infringeix el contracte de
+      l'inventari. Corregeix l'entrada i torna-ho a provar.
+    refused_iva_compensation_decimal_parse: 'Refusat: l''import de compensació d''IVA
+      no s''ha pogut interpretar com a decimal.'
+    refused_iva_compensation_year_range: 'Refusat: l''exercici de compensació d''IVA
+      és fora del rang acceptat.'
+    refused_iva_wallet_reconciliation_invariant: Les entrades de conciliació de la
+      cartera IVA incompleixen un invariant obligatori. Comproveu la configuració
+      d'antiguitat de la cartera i torneu-ho a intentar.
+    refused_ledger_confirmation_blocked: Aquest document té troballes que una persona
+      ha de resoldre abans de poder-lo confirmar.
+    refused_ledger_counterparty_establishment_conflict: Aquesta contrapart ja està
+      confirmada com a establerta en un altre territori; retireu el fet confirmat
+      abans de substituir-lo.
+    refused_ledger_counterparty_establishment_input: No es pot confirmar un fet d'establiment
+      amb un identificador de contrapart que no valida.
+    refused_ledger_evidence_input: Una dada d'evidència indicada infringeix el contracte
+      de la factura de compra. Corregeix l'entrada i torna-ho a provar.
+    refused_ledger_evidence_not_found: No existeix cap evidència de factura de compra
+      amb l'identificador indicat.
+    refused_live_borrador_snapshot_not_found: No existeix cap instantània de l'esborrany
+      del Model 100 amb l'identificador indicat.
+    refused_live_deudas_snapshot_not_found: No existeix cap instantània de deudas
+      amb l'identificador indicat.
+    refused_live_expedientes_snapshot_not_found: No existeix cap instantània d'expedients
+      amb l'identificador indicat.
+    refused_live_justificante_capture_snapshot_not_found: No existeix cap captura
+      de justificant
+    refused_live_notification_document_not_found: Cap document desat correspon a aquesta
+      notificació.
+    refused_live_notifications_snapshot_not_found: No existeix cap instantània de
+      notificacions amb l'identificador indicat.
+    refused_live_portal_not_found: No existeix cap portal de l'AEAT amb l'identificador
+      indicat.
+    refused_live_verify_observation_not_found: No existeix cap observació de verificació
+      amb l'identificador indicat.
+    refused_llm_busy: Aquest equip ja executa el màxim configurat de peticions al
+      model de llenguatge en local.
+    refused_llm_config: La configuració del client de model de llenguatge no és vàlida
+      o està incompleta.
+    refused_llm_consent: S'ha rebutjat la lectura del document fora de l'equip perquè
+      no s'ha atorgat el consentiment per a la transmissió externa.
+    refused_llm_contention: Aquest equip no té memòria lliure mesurada per carregar
+      el model de llenguatge ara mateix.
+    refused_llm_validation: Un objecte del model de llenguatge no ha superat la validació.
+    refused_modelo_100_borrador_binding: Els valors de l'esborrany del Model 100 no
+      es poden fer servir per al càlcul.
+    refused_modelo_amendment_complementaria_liability_decrease: Una complementària
+      no pot disminuir legalment el deute declarat abans de la unificació de l'autoliquidació
+      rectificativa. Utilitzeu el procediment de sol·licitud de rectificació per a
+      una correcció que redueixi el deute.
+    refused_modelo_amendment_kind_not_permitted: El tipus de rectificació sol·licitat
+      no està legalment disponible per al període de declaració resolt. El conjunt
+      de tipus acceptats figura en el context de l'error.
+    refused_modelo_amendment_override_casilla: Una sobreescriptura de la declaració
+      complementària apunta a una casella que el registre no declara per a aquest
+      model, any i període.
+    refused_modelo_amendment_verification: El mapa de caselles corregit de la declaració
+      complementària no ha superat la verificació. Falten caselles obligatòries.
+    refused_modelo_applicability_filter: S'ha trobat un nom de filtre d'aplicabilitat
+      desconegut al registre. Es tracta d'un error d'autoria del registre; actualitzeu
+      la taula de despacho de filtres.
+    refused_modelo_charge_account_missing: S ha triat una domiciliacio pero no hi
+      ha cap compte de carrec registrat.
+    refused_modelo_m303_rectificativa_motive: Les rectificatives del model 303 requereixen
+      exactament un motiu canònic en un disseny de registre aplicable i revisat; el
+      motiu està prohibit en els altres casos.
+    refused_modelo_payment_election_capability: El metode de pagament escollit encara
+      no esta disponible.
+    refused_modelo_payment_election_incompatible: L opcio de pagament escollida requereix
+      un resultat positiu.
+    refused_modelo_prior_domiciliation_election: S'ha rebutjat la baixa o modificació
+      de la domiciliació prèvia perquè manca o no és vàlida la rectificativa del model
+      303 o la prova oficial de la presentació base U.
+    refused_modelo_refund_account_missing: S'ha sol·licitat una devolució però no
+      hi ha cap compte de devolució configurat; l'AEAT no pot pagar una devolució
+      sense un compte. Configureu un compte de devolució o compenseu el crèdit (compensar).
+    refused_modelo_refund_election_not_eligible: S'ha sol·licitat una devolució en
+      un període on no està disponible; només l'últim període de declaració de l'any
+      permet la devolució a un no inscrit a REDEME.
+    refused_no_active_profile: Aquesta operació necessita un perfil actiu. Crea o
+      selecciona un perfil i torna-ho a provar.
+    refused_operator_surface_contract: La superfície sol·licitada queda fora del contracte
+      acceptat.
+    refused_outbound_storage_conflict: L'operació d'emmagatzematge col·lisiona amb
+      un objecte que ja existeix.
+    refused_outbound_storage_quota: L'emmagatzematge ha rebutjat l'operació perquè
+      s'ha esgotat la quota.
+    refused_outbound_storage_validation: Els paràmetres de l'operació d'emmagatzematge
+      no han superat la validació.
+    refused_output_format: El format de sortida sol·licitat no és compatible.
+    refused_pension_reduccion_computation: Una entrada del càlcul de reducció fiscal
+      per pensions ha incomplert una condició numèrica; corregeix els imports indicats.
+    refused_profile_already_exists: Ja existeix un perfil amb aquestes dades.
+    refused_profile_asset_validation: Un registre d'actiu del perfil no ha superat
+      la validació.
+    refused_profile_basis_cap_exceeded: L'amortització acumulada superaria la base
+      de cost de l'actiu.
+    refused_profile_bienes_inversion_validation: Un registre de regularització d'IVA
+      per béns d'inversió no ha superat la validació.
+    refused_profile_binding_resolution: Una dada del perfil necessària per al càlcul
+      no s'ha pogut resoldre al canal de vincle correcte.
+    refused_profile_displaced_session_retirement: No s'ha pogut revocar la sessió
+      emmagatzemada del perfil seleccionat anteriorment, de manera que no s'ha creat
+      el perfil nou.
+    refused_profile_foral_regime: El règim foral seleccionat no està modelat per aquest
+      perfil. Selecciona un règim admès.
+    refused_profile_inventory_validation: Un llibre d'inventari del perfil no ha superat
+      la validació.
+    refused_profile_label_ambiguous: 'Refusat: l''etiqueta del perfil és ambigua.'
+    refused_profile_lifo_forbidden: La valoració d'existències pel mètode LIFO no
+      està admesa fiscalment. Fes servir FIFO, preu mitjà ponderat o cost mitjà.
+    refused_profile_login_throttled: Massa intents d'inici de sessió fallits. Espera
+      %{seconds} segons abans de tornar-ho a intentar.
+    refused_profile_not_configured: La verificació de la declaració de la Renda necessita
+      un perfil de residència fiscal. Completa el perfil abans de continuar.
+    refused_profile_not_found: No existeix cap perfil amb l'identificador indicat.
+    refused_profile_preflight_missing: La comprovació prèvia del model no ha trobat
+      una dada de perfil obligatòria. Completa el perfil abans de continuar.
+    refused_profile_prorrata_register_validation: Un registre de prorrata d'IVA entre
+      períodes no ha superat la validació.
+    refused_profile_schema_validation: Les dades del perfil infringeixen el contracte
+      de l'esquema. Corregeix els valors indicats.
+    refused_renta_maritime_exemption_inactive: 'L''exempció DA 41 LIRPF (flota tonyinaire)
+      està inactiva: no s''ha concedit l''autorització d''ajuts d''Estat de la UE
+      per al 2024/2025. L''AEAT confirma la seva no aplicabilitat en la guia oficial
+      de 2024. Activeu-la només després que es concedeixi l''autorització europea
+      (Ley 35/2006 DA 41 BOE-A-2006-20764, afegida per la Ley 26/2014 BOE-A-2014-12327).'
+    refused_retention_floor: 'Esborrament rebutjat: %{retained_record_count} registre(s)
+      tributari(s) presentat(s) encara són dins del termini legal de conservació (Llei
+      58/2003, LGT art. 66 i 70). La data més primerenca d''esborrament segur és %{earliest_safe_erase_date}.
+      Espereu fins aleshores o torneu a executar amb --override-retention i --reason
+      per forçar-ho.'
+    refused_review_edit_parse: No s'ha pogut interpretar `--set CLAU=VALOR`. Comprova
+      la sintaxi del valor indicat.
+    refused_review_filter_parse: No s'ha pogut interpretar `--filter CLAU=VALOR`.
+      Comprova la sintaxi del filtre indicat.
+    refused_review_kind_reserved: El valor de `--kind` indicat està reservat i no
+      es pot fer servir.
+    refused_source_mesh_invariant: 'Refusat: invariant de la malla de fonts incomplit.'
+    refused_storage_bucket_already_present: La importació col·lisiona amb un bucket
+      d'emmagatzematge que ja existeix.
+    refused_storage_bucket_no_active: No s'ha pogut determinar cap bucket actiu. Selecciona
+      un perfil i torna-ho a provar.
+    refused_storage_master_key_no_active_session: El xifratge requereix una sessió
+      activa. Executa `aeat config login NAME` i torna-ho a provar.
+    refused_storage_profile_custody: Aquesta operació de custòdia del perfil està
+      rebutjada.
+    refused_storage_profile_custody_password: Aquesta contrasenya no es pot representar
+      de manera segura per a la custòdia del perfil.
+    refused_storage_reclaim: 'Es rebutja alliberar aquesta àrea d''emmagatzematge:
+      el seu cicle de vida declarat conserva el contingut.'
+    refused_storage_reclaim_unconfirmed: Alliberar una àrea d'emmagatzematge elimina
+      dades i requereix confirmació.
+    refused_storage_secret_already_exists: Ja existeix un secret amb aquesta clau.
+      Fes servir l'opció de sobreescriptura si el vols reemplaçar.
+    refused_storage_session_expired: La sessió activa ha caducat per inactivitat.
+      Torna a activar-la amb aeat config login NAME.
+    refused_storage_unsecured_mode: L'emmagatzematge sense xifrar s'ha sol·licitat
+      sense l'habilitació necessària. No és segur per a dades reals.
+    refused_tabular_source_unreadable: El fitxer tabular no s'ha pogut descodificar,
+      o no conté cap taula amb fila de capçalera.
+    refused_taxation_comparison: La comparació tributària conjunta/individual no es
+      pot realitzar per a aquest model o instantània.
+    refused_topic_catalogue_empty: El catàleg de temes inclòs no conté cap tema.
+    refused_topic_not_found: No s'ha trobat el tema sol·licitat.
+    refused_user_profile_validation: Un valor del perfil d'usuari no és vàlid. Corregeix
+      la dada indicada.
+    refused_wizard_answer_type: Un camp de resposta de l'assistent ha rebut un tipus
+      inesperat al límit tipat.
+    refused_wizard_missing_flag: L'execució amb --quiet ha omès una pregunta obligatòria.
+      Aporta el valor que falta o executa l'assistent de manera interactiva.
+    refused_wizard_status: L'assistent no ha pogut resoldre el perfil actiu.
+    refused_wizard_unsupported_console: El terminal actual no admet l'assistent interactiu.
+      Executa'l en una terminal compatible.
+    refused_wizard_validation: Una resposta de l'assistent no ha superat la validació.
+      Corregeix el valor indicat.
+    refused_workflow_aborted: El flux de treball s'ha cancel·lat.
+    refused_workflow_input_mismatch: La sol·licitud d'entrada del flux de treball
+      no coincideix amb la revisió de càlcul. Executa `aeat app modelo work calculate`
+      per generar una revisió nova.
+    refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
+    submission_preflight_auth_describe_failed: El proveïdor d'autenticació no s'ha
+      pogut descriure ({cause_type}).
+    submission_preflight_auth_not_ready: El proveïdor d'autenticació {kind} no està
+      llest (configured={configured} available={available}). {operator_impact}
+    submission_preflight_deadline_closed: La finestra de termini per al model {modelo}
+      període {period} no és oberta el {today}.
+    submission_preflight_draft_not_approved: L'esborrany no està aprovat per a la
+      presentació (estat={status}).
+    submission_preflight_draft_stale: L'aprovació de l'esborrany ha caducat; revisa
+      i aprova l'esborrany de nou.
+    submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
+      de severitat ERROR; resol-les abans de presentar.
+    unsupported_currency: El codi de moneda indicat no és compatible.
+  snapshot:
+    ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
+      el model %{modelo_id}: %{candidate_ids}.'
+    ambiguous_revision_selection_year_only: 'Més d''una revisió del registre coincideix
+      amb el model %{modelo_id}: %{candidate_ids}. Indiqueu el període de declaració,
+      o una data de referència, per seleccionar-ne una.'
+    modelo_not_registered: El model no està registrat al registre.
+    no_revision_for_period: Cap revisió del registre cobreix el model %{modelo_id}
+      exercici %{filing_year} període %{period}.
+  storage:
+    engine:
+      create_failed: No s'ha pogut crear el motor de base de dades d'emmagatzematge.
+        Comprova la ruta d'emmagatzematge configurada i torna-ho a provar.
+      empty_database_url: L'URL de base de dades configurada és buida. Selecciona
+        un perfil o configura l'emmagatzematge abans de tornar-ho a provar.
+    namespace:
+      classification_mismatch: L'espai de noms d'objecte segur %{namespace} està registrat
+        amb sensibilitat %{expected}, però el cridador ha usat %{classification}.
+      object_key_grammar_mismatch: 'L''espai de noms d''objecte segur %{namespace}
+        declara la gramàtica de clau %{object_key_grammar}, i la clau utilitzada no
+        la compleix: %{reason}'
+      schema_mismatch: L'espai de noms d'objecte segur %{namespace} està registrat
+        amb esquema %{expected}, però el cridador ha usat l'esquema %{schema_version}.
+      schema_upgrade_path_missing: 'No hi ha ruta d''actualització d''esquema per
+        a l''espai de noms {namespace}: falta un actualitzador des de la versió {missing_from_version}
+        cap a {expected}.'
+      schema_upgrader_already_registered: Ja hi ha un actualitzador d'esquema registrat
+        per a l'espai de noms {namespace} des de la versió {from_version}.
+      schema_version_from_future: La versió d'esquema emmagatzemada {schema_version}
+        de l'espai de noms {namespace} és més recent del que admet aquesta aplicació
+        (fins a {expected}); no es pot llegir.
+      unknown_classification: 'L''espai de noms d''objectes segurs %{namespace} conté
+        una sensibilitat desconeguda: %{classification}.'
+      unregistered: L'espai de noms d'objecte segur %{namespace} no està registrat
+        per a l'emmagatzematge runtime.
+    runtime:
+      cold_bootstrap_active_profile_refused: L'emmagatzematge d'arrencada en fred
+        només està disponible abans de seleccionar un bucket de perfil actiu.
+      cold_bootstrap_explicit_database_refused: L'emmagatzematge d'arrencada en fred
+        no pot ometre una ruta de base de dades explícita.
+      not_ready: 'El runtime d''emmagatzematge no està preparat per a emmagatzematge
+        vinculat al perfil: %{details}'
+    stored_data_validation_boundary: Un registre de perfil o flux de treball emmagatzemat
+      ja no coincideix amb l'esquema esperat - les dades al disc han divergit del
+      format actual. Executa `aeat config repair` per diagnosticar i recuperar.
+  transaction:
+    import_source_invalid: l'origen no és un extracte bancari vàlid
+    ledger_import_failed: 'No es pot importar l''extracte bancari: {reason}'
+    ledger_import_requires_bucket: La importació d'un extracte bancari requereix un
+      perfil actiu, llevat del mode de prova.
+    unknown_ledger_provider: 'Proveïdor de llibre {provider!r} desconegut. Proveïdors
+      reconeguts: {providers}.'

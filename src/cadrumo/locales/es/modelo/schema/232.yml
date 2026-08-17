@@ -1,0 +1,355 @@
+modelo:
+  schema:
+    '232':
+      casilla:
+        continuidad:
+          actividad-cnae:
+            help: null
+            label: C.N.A.E. de la actividad principal
+          filing-year:
+            help: null
+            label: Ejercicio de devengo
+      field:
+        official_name: Modelo 232. Declaración informativa de operaciones vinculadas
+          y de operaciones y situaciones relacionadas con países o territorios calificados
+          como paraísos fiscales.
+        title: Operaciones vinculadas y paraísos fiscales (informativa anual)
+      revision:
+        2016-2017:
+          casilla:
+            vinculada-1-fjo:
+              help: null
+              label: null
+            vinculada-1-importe:
+              help: null
+              label: null
+            vinculada-1-ingreso-pago:
+              help: null
+              label: null
+            vinculada-1-metodo-valoracion:
+              help: null
+              label: null
+            vinculada-1-nif:
+              help: null
+              label: null
+            vinculada-1-provincia-pais:
+              help: null
+              label: null
+            vinculada-1-razon-social:
+              help: null
+              label: null
+            vinculada-1-reservado-nombre:
+              help: null
+              label: null
+            vinculada-1-tipo-operacion:
+              help: null
+              label: null
+            vinculada-1-tipo-vinculacion:
+              help: null
+              label: null
+            vinculada-2-fjo:
+              help: null
+              label: null
+            vinculada-2-importe:
+              help: null
+              label: null
+            vinculada-2-ingreso-pago:
+              help: null
+              label: null
+            vinculada-2-metodo-valoracion:
+              help: null
+              label: null
+            vinculada-2-nif:
+              help: null
+              label: null
+            vinculada-2-provincia-pais:
+              help: null
+              label: null
+            vinculada-2-razon-social:
+              help: null
+              label: null
+            vinculada-2-reservado-nombre:
+              help: null
+              label: null
+            vinculada-2-tipo-operacion:
+              help: null
+              label: null
+            vinculada-2-tipo-vinculacion:
+              help: null
+              label: null
+            vinculada-3-fjo:
+              help: null
+              label: null
+            vinculada-3-importe:
+              help: null
+              label: null
+            vinculada-3-ingreso-pago:
+              help: null
+              label: null
+            vinculada-3-metodo-valoracion:
+              help: null
+              label: null
+            vinculada-3-nif:
+              help: null
+              label: null
+            vinculada-3-provincia-pais:
+              help: null
+              label: null
+            vinculada-3-razon-social:
+              help: null
+              label: null
+            vinculada-3-reservado-nombre:
+              help: null
+              label: null
+            vinculada-3-tipo-operacion:
+              help: null
+              label: null
+            vinculada-3-tipo-vinculacion:
+              help: null
+              label: null
+            vinculada-4-fjo:
+              help: null
+              label: null
+            vinculada-4-importe:
+              help: null
+              label: null
+            vinculada-4-ingreso-pago:
+              help: null
+              label: null
+            vinculada-4-metodo-valoracion:
+              help: null
+              label: null
+            vinculada-4-nif:
+              help: null
+              label: null
+            vinculada-4-provincia-pais:
+              help: null
+              label: null
+            vinculada-4-razon-social:
+              help: null
+              label: null
+            vinculada-4-reservado-nombre:
+              help: null
+              label: null
+            vinculada-4-tipo-operacion:
+              help: null
+              label: null
+            vinculada-4-tipo-vinculacion:
+              help: null
+              label: null
+            vinculada-5-fjo:
+              help: null
+              label: null
+            vinculada-5-importe:
+              help: null
+              label: null
+            vinculada-5-ingreso-pago:
+              help: null
+              label: null
+            vinculada-5-metodo-valoracion:
+              help: null
+              label: null
+            vinculada-5-nif:
+              help: null
+              label: null
+            vinculada-5-provincia-pais:
+              help: null
+              label: null
+            vinculada-5-razon-social:
+              help: null
+              label: null
+            vinculada-5-reservado-nombre:
+              help: null
+              label: null
+            vinculada-5-tipo-operacion:
+              help: null
+              label: null
+            vinculada-5-tipo-vinculacion:
+              help: null
+              label: null
+            x-chim6r1ecdn62p8:
+              help: null
+              label: C.N.A.E. de la actividad principal
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio de devengo
+            x-chim6r1eehkn0rpdcll6asj3d5hmiro:
+              help: null
+              label: Tipo de ejercicio (12 meses naturales / 12 meses 365 días / inferior
+                a 12 meses)
+          construct:
+            modelo-232-informative:
+              field:
+                title: Modelo 232 informative declaration of operaciones vinculadas
+                  and paraisos fiscales
+          field:
+            label: Modelo 232 ejercicios 2016-2017 (Orden HFP/816/2017 v13)
+        2018-y-siguientes:
+          casilla:
+            vinculada-1-fjo:
+              help: null
+              label: 'Related party 1: Foreign national identification'
+            vinculada-1-importe:
+              help: null
+              label: 'Related party 1: Amount'
+            vinculada-1-ingreso-pago:
+              help: null
+              label: 'Related party 1: Income/payment indicator'
+            vinculada-1-metodo-valoracion:
+              help: null
+              label: 'Related party 1: Valuation method'
+            vinculada-1-nif:
+              help: null
+              label: 'Related party 1: NIF / NIE / CIF'
+            vinculada-1-provincia-pais:
+              help: null
+              label: 'Related party 1: Province or country'
+            vinculada-1-razon-social:
+              help: null
+              label: 'Related party 1: Business name'
+            vinculada-1-reservado-nombre:
+              help: null
+              label: 'Related party 1: Reserved field'
+            vinculada-1-tipo-operacion:
+              help: null
+              label: 'Related party 1: Type of transaction'
+            vinculada-1-tipo-vinculacion:
+              help: null
+              label: 'Related party 1: Type of relationship'
+            vinculada-2-fjo:
+              help: null
+              label: 'Related party 2: Foreign national identification'
+            vinculada-2-importe:
+              help: null
+              label: 'Related party 2: Amount'
+            vinculada-2-ingreso-pago:
+              help: null
+              label: 'Related party 2: Income/payment indicator'
+            vinculada-2-metodo-valoracion:
+              help: null
+              label: 'Related party 2: Valuation method'
+            vinculada-2-nif:
+              help: null
+              label: 'Related party 2: NIF / NIE / CIF'
+            vinculada-2-provincia-pais:
+              help: null
+              label: 'Related party 2: Province or country'
+            vinculada-2-razon-social:
+              help: null
+              label: 'Related party 2: Business name'
+            vinculada-2-reservado-nombre:
+              help: null
+              label: 'Related party 2: Reserved field'
+            vinculada-2-tipo-operacion:
+              help: null
+              label: 'Related party 2: Type of transaction'
+            vinculada-2-tipo-vinculacion:
+              help: null
+              label: 'Related party 2: Type of relationship'
+            vinculada-3-fjo:
+              help: null
+              label: 'Related party 3: Foreign national identification'
+            vinculada-3-importe:
+              help: null
+              label: 'Related party 3: Amount'
+            vinculada-3-ingreso-pago:
+              help: null
+              label: 'Related party 3: Income/payment indicator'
+            vinculada-3-metodo-valoracion:
+              help: null
+              label: 'Related party 3: Valuation method'
+            vinculada-3-nif:
+              help: null
+              label: 'Related party 3: NIF / NIE / CIF'
+            vinculada-3-provincia-pais:
+              help: null
+              label: 'Related party 3: Province or country'
+            vinculada-3-razon-social:
+              help: null
+              label: 'Related party 3: Business name'
+            vinculada-3-reservado-nombre:
+              help: null
+              label: 'Related party 3: Reserved field'
+            vinculada-3-tipo-operacion:
+              help: null
+              label: 'Related party 3: Type of transaction'
+            vinculada-3-tipo-vinculacion:
+              help: null
+              label: 'Related party 3: Type of relationship'
+            vinculada-4-fjo:
+              help: null
+              label: 'Related party 4: Foreign national identification'
+            vinculada-4-importe:
+              help: null
+              label: 'Related party 4: Amount'
+            vinculada-4-ingreso-pago:
+              help: null
+              label: 'Related party 4: Income/payment indicator'
+            vinculada-4-metodo-valoracion:
+              help: null
+              label: 'Related party 4: Valuation method'
+            vinculada-4-nif:
+              help: null
+              label: 'Related party 4: NIF / NIE / CIF'
+            vinculada-4-provincia-pais:
+              help: null
+              label: 'Related party 4: Province or country'
+            vinculada-4-razon-social:
+              help: null
+              label: 'Related party 4: Business name'
+            vinculada-4-reservado-nombre:
+              help: null
+              label: 'Related party 4: Reserved field'
+            vinculada-4-tipo-operacion:
+              help: null
+              label: 'Related party 4: Type of transaction'
+            vinculada-4-tipo-vinculacion:
+              help: null
+              label: 'Related party 4: Type of relationship'
+            vinculada-5-fjo:
+              help: null
+              label: 'Related party 5: Foreign national identification'
+            vinculada-5-importe:
+              help: null
+              label: 'Related party 5: Amount'
+            vinculada-5-ingreso-pago:
+              help: null
+              label: 'Related party 5: Income/payment indicator'
+            vinculada-5-metodo-valoracion:
+              help: null
+              label: 'Related party 5: Valuation method'
+            vinculada-5-nif:
+              help: null
+              label: 'Related party 5: NIF / NIE / CIF'
+            vinculada-5-provincia-pais:
+              help: null
+              label: 'Related party 5: Province or country'
+            vinculada-5-razon-social:
+              help: null
+              label: 'Related party 5: Business name'
+            vinculada-5-reservado-nombre:
+              help: null
+              label: 'Related party 5: Reserved field'
+            vinculada-5-tipo-operacion:
+              help: null
+              label: 'Related party 5: Type of transaction'
+            vinculada-5-tipo-vinculacion:
+              help: null
+              label: 'Related party 5: Type of relationship'
+            x-chim6r1ecdn62p8:
+              help: null
+              label: C.N.A.E. de la actividad principal
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio de devengo
+            x-chim6r1eehkn0rpdcll6asj3d5hmiro:
+              help: null
+              label: Tipo de ejercicio (12 meses naturales / 12 meses 365 dias / inferior
+                a 12 meses)
+          construct:
+            modelo-232-informative:
+              field:
+                title: Modelo 232 informative declaration of operaciones vinculadas
+                  and paraisos fiscales
+          field:
+            label: Modelo 232 ejercicios 2018 y siguientes (Orden HFP/816/2017 v14)

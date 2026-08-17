@@ -19,11 +19,9 @@ import pytest
 
 from .....core import DirectoryEntryKind, exclusive_file_lock, scan_directory
 from .....tests.master_key import EphemeralMasterKeyProvider
-from .....tests.secure_sql import dev_test_database_password
 from .. import (
     EncryptedBlobStore,
     Envelope,
-    FileFallbackMasterKeyProvider,
     SecretRecord,
     SecretStore,
     SensitivityClass,
@@ -39,22 +37,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _SECRET_CREATED_AT = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
 _SECRET_EXPIRES_AT = _SECRET_CREATED_AT + timedelta(hours=12)
 _ENVELOPE_WRITTEN_AT = datetime(2026, 5, 25, 14, 0, 0, tzinfo=UTC)
-
-
-def _file_master_provider(tmp_path: Path) -> FileFallbackMasterKeyProvider:
-    return FileFallbackMasterKeyProvider(
-        store_dir=tmp_path / "fallback-store",
-        passphrase_callback=dev_test_database_password,
-    )
-
-
-def test_master_key_persists_across_provider_instances(tmp_path: Path) -> None:
-    """The file-backend master key is stable across re-binding the provider."""
-    first = _file_master_provider(tmp_path)
-    key_a = first.provision_master_key()
-
-    second = _file_master_provider(tmp_path)
-    assert second.get_master_key() == key_a
 
 
 def test_full_chain_secret_round_trip(tmp_path: Path) -> None:

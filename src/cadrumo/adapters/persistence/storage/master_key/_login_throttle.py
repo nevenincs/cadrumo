@@ -38,9 +38,9 @@ from pydantic import BaseModel, Field
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.logging import get_logger
+from .....core.atomic_write import atomic_write_hardened_bytes
 from .....core.time import UtcInstant
 from .._storage_path_definitions import LOGIN_THROTTLE_FILENAME
-from ._master_key_io import atomic_write_secure_bytes
 
 _log = get_logger(__name__)
 
@@ -147,7 +147,7 @@ def _write_state(path: Path, state: LoginThrottleState) -> None:
         sort_keys=True,
     ).encode(_UTF_8_ENCODING)
     path.parent.mkdir(parents=True, exist_ok=True)
-    atomic_write_secure_bytes(path, payload + b"\n")
+    atomic_write_hardened_bytes(path, payload + b"\n")
 
 
 def _evaluate_state(state: LoginThrottleState, now: datetime) -> ThrottleEvaluation:

@@ -1,0 +1,91 @@
+modelo:
+  schema:
+    '130':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: Az adóévben elért összesített vállalkozási bevétel.
+              label: Bevételek
+            '02':
+              help: Az adóévben elért összesített vállalkozási kiadás.
+              label: Kiadások
+            '03':
+              help: A közvetlen becslésű gazdasági tevékenységek nettó jövedelme,
+                a bevételek és kiadások különbözeteként.
+              label: Nettó jövedelem
+            '04':
+              help: A közvetlen becslésű tevékenységek részletfizetési összege a korábbi
+                befizetések és levonások előtt.
+              label: Részletfizetés összege
+            '05':
+              help: Ugyanazon adóév korábbi időszakaiban már teljesített részletfizetések
+                közvetlen becslésű tevékenységekre.
+              label: Korábbi részletfizetések
+            '06':
+              help: Az időszakban elszenvedett levonások és előlegbefizetések közvetlen
+                becslésű tevékenységekre.
+              label: Levonások és előlegbefizetések
+            '07':
+              help: Az I. rész részeredménye a korábbi befizetések és levonások levonása
+                után.
+              label: I. rész részeredménye
+            08:
+              help: A negyedév bevételi volumene mezőgazdasági, állattenyésztési,
+                erdészeti vagy halászati tevékenységekből.
+              label: A negyedév bevételi volumene
+            09:
+              help: A mezőgazdasági, állattenyésztési, erdészeti vagy halászati tevékenységek
+                részletfizetési összege.
+              label: Részletfizetés összege
+            '10':
+              help: Az időszakban elszenvedett levonások és előlegbefizetések mezőgazdasági,
+                állattenyésztési, erdészeti vagy halászati tevékenységekre.
+              label: Levonások és előlegbefizetések
+            '11':
+              help: A II. rész részeredménye a levonások mezőgazdasági, állattenyésztési,
+                erdészeti vagy halászati részletfizetésből való levonása után.
+              label: II. rész részeredménye
+            '12':
+              help: Az I. és II. rész részeredményeinek összege.
+              label: Részeredmények összege
+            '13':
+              help: A Modelo 130 szabályozási küszöbe alapján alkalmazható nettó jövedelmi
+                csökkentés.
+              label: Nettó jövedelem miatti csökkentés
+            '14':
+              help: A nettó jövedelmi csökkentés alkalmazása után fennmaradó összeg.
+              label: Csökkentés utáni nettó összeg
+            '15':
+              help: Ugyanazon adóév korábbi negyedéveiből származó negatív eredmények
+                levonása.
+              label: Korábbi negyedévek negatív eredményei
+            '16':
+              help: A fő lakóhelybe történő beruházás kedvezménye, ha az átmeneti
+                szabályozás alkalmazható.
+              label: Lakóhelyi ingatlanberuházási kedvezmény
+            '17':
+              help: Különbözet a korábbi negyedévek negatív eredményei és az esetleges
+                lakóhelyi kedvezmény alkalmazása után.
+              label: Különbözet
+            '18':
+              help: Ugyanazon időszakra és évre vonatkozó korábbi önadózásokban már
+                fizetendőként bevallott összeg.
+              label: Korábbi önadózásokban fizetendőként szereplő összeg
+            '19':
+              help: A Modelo 130 végső fizetendő összege minden levonás és korábbi
+                önadózás után.
+              label: Végső eredmény
+            saldo-negativo-fin-periodo:
+              help: Számított átvihető érték, amikor a 17. mező negatív; későbbi negyedévben
+                a 15. mező levonásaként használható.
+              label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -17. mező)
+          construct:
+            modelo-130-direct-estimation-instalment:
+              field:
+                title: null
+          field:
+            label: null

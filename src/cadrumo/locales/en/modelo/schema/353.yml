@@ -1,0 +1,128 @@
+modelo:
+  schema:
+    '353':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2008-2025:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Tax year the self-assessment relates to
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Monthly period (01..12)
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: Self-charged VAT on intra-Community acquisitions - group aggregate
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: Total deductible VAT (group aggregate)
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: Total VAT due (group aggregate)
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4cli7aor9c9m6ab9j68p0:
+              help: null
+              label: Group aggregate deductible amount reconciled from members' Modelo
+                322 returns
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4clr6arj7c5i62b9j68p0:
+              help: null
+              label: Group aggregate VAT due reconciled from members' Modelo 322 returns
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbjiclpnar3kc5i6ub9j68p0:
+              help: null
+              label: Group aggregate result reconciled from members' Modelo 322 returns
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: VAT charged at the standard rate (21%) - group aggregate
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: VAT charged at the reduced rate (10%) - group aggregate
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: VAT charged at the super-reduced rate (4%) - group aggregate
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: Group result (aggregate VAT due minus aggregate deductible VAT)
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: VAT borne on ordinary domestic transactions - group aggregate
+          construct:
+            modelo-353-iva-grupo-agregado:
+              field:
+                title: null
+          field:
+            label: Modelo 353 tax years 2008 to 2025 (Orden EHA/3434/2007)
+        2026-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Total result (sum of the member entities' results) [01]
+            '02':
+              help: null
+              label: Amounts to offset outstanding from earlier years [02]
+            '03':
+              help: null
+              label: Result ([01] - [08]) [03]
+            '04':
+              help: null
+              label: 'To deduct: result of earlier self-assessments for the same item,
+                year and period [04]'
+            '05':
+              help: null
+              label: Result of the self-assessment ([03] - [04]) [05]
+            08:
+              help: null
+              label: Amounts to offset from earlier periods applied in this period
+                [08]
+            09:
+              help: null
+              label: Amounts to offset from earlier periods carried to later periods
+                ([02]-[08]) [09]
+            '10':
+              help: null
+              label: Payment on account for supplies of petrol, diesel and biofuels
+                attributable to the State Administration [10]
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Tax year the self-assessment relates to
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Monthly period (01..12)
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4cli7aor9c9m6ab9j68p0:
+              help: null
+              label: Group aggregate deductible amount reconciled from members' Modelo
+                322 returns
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4clr6arj7c5i62b9j68p0:
+              help: null
+              label: Group aggregate VAT due reconciled from members' Modelo 322 returns
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbjiclpnar3kc5i6ub9j68p0:
+              help: null
+              label: Group aggregate result reconciled from members' Modelo 322 returns
+          construct:
+            modelo-353-iva-grupo-agregado:
+              field:
+                title: null
+          field:
+            label: Modelo 353 tax year 2026 onwards (Orden EHA/3434/2007)

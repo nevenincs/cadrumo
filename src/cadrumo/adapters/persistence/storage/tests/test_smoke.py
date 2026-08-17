@@ -47,10 +47,8 @@ def test_runtime_master_key_and_namespace_boundaries_are_public() -> None:
     """Critical storage boundaries must be imported from the package root."""
     expected_exports = {
         "MasterKeyProvider",
-        "activate_master_key_provider",
         "activate_session",
         "get_active_master_key",
-        "get_master_key_provider",
         "has_active_bucket_session",
         "inspect_bucket_storage_runtime",
         "inspect_storage_runtime",

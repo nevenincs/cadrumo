@@ -153,7 +153,7 @@ STANDING_LITERAL_VERSION_DECLARATIONS: Final[Mapping[tuple[str, str, str], str]]
     ): _UNNAMED_SOLE_DECLARATION,
     (
         "src/cadrumo/domain/calculations/registry/_schema_exports.py",
-        "M303FilingEnvelopeDefinition",
+        "FilingEnvelopeDefinition",
         "schema_version",
     ): (
         f"{_UNNAMED_SOLE_DECLARATION} This declares an envelope GRAMMAR rather than an instance, "

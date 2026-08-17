@@ -1,0 +1,77 @@
+modelo:
+  schema:
+    '130':
+      field:
+        official_name: Impuesto sobre la Renta de las Personas Físicas. Actividades
+          económicas en estimación directa. Pago fraccionado.
+        title: IRPF pago fraccionado estimación directa
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Ingresos
+            '02':
+              help: null
+              label: Gastos
+            '03':
+              help: null
+              label: Rendimiento neto
+            '04':
+              help: null
+              label: Importe del pago fraccionado
+            '05':
+              help: null
+              label: Pagos fraccionados anteriores
+            '06':
+              help: null
+              label: Retenciones e ingresos a cuenta
+            '07':
+              help: null
+              label: Resultado parcial apartado I
+            08:
+              help: null
+              label: Volumen de ingresos del trimestre
+            09:
+              help: null
+              label: Importe del pago fraccionado
+            '10':
+              help: null
+              label: Retenciones e ingresos a cuenta
+            '11':
+              help: null
+              label: Resultado parcial apartado II
+            '12':
+              help: null
+              label: Suma de resultados parciales
+            '13':
+              help: null
+              label: Minoracion por rendimientos netos
+            '14':
+              help: null
+              label: Neto tras minoracion
+            '15':
+              help: null
+              label: Resultados negativos de trimestres anteriores
+            '16':
+              help: null
+              label: Deduccion por inversion en vivienda habitual
+            '17':
+              help: null
+              label: Diferencia
+            '18':
+              help: null
+              label: Resultado a ingresar de autoliquidaciones anteriores
+            '19':
+              help: null
+              label: Resultado final
+            saldo-negativo-fin-periodo:
+              help: null
+              label: Saldo negativo trasladable a periodos posteriores (max 0, -casilla
+                17)
+          construct:
+            modelo-130-direct-estimation-instalment:
+              field:
+                title: Modelo 130 direct-estimation instalment filing
+          field:
+            label: Orden HAP/258/2015, ejercicios 2019 y siguientes

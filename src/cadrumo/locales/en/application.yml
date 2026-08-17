@@ -1,0 +1,1476 @@
+application:
+  auth:
+    acquisition_lock:
+      errors:
+        acquire_failed: AEAT auth lock could not be acquired after stale-lock recovery.
+        lock_held: Another AEAT auth operation is already in progress for this profile.
+          Do not start a second Cl@ve request; wait for the running process to finish
+          or let the lock expire if that process crashed.
+    certificate:
+      health:
+        file_missing: The configured certificate file (%{path}) does not exist. Restore
+          the file or run 'aeat config auth configure --provider certificate --file
+          PATH' with a valid path.
+        path_unset: No certificate file has been selected. Run 'aeat config auth configure
+          --provider certificate --file PATH' to set one.
+        unavailable: Certificate health is unavailable; see debug logs for diagnostic
+          details.
+      load:
+        password_unset: No certificate password is configured. Set the certificate
+          password before continuing.
+        path_unset: No certificate file is configured. Run 'aeat config auth configure
+          --provider certificate --file PATH' to set one.
+    clave_movil:
+      health:
+        identity_unset: No DNI/NIE has been configured for Cl@ve Móvil. Configure
+          one before continuing.
+        operator_completion_required: Ready; requires operator-mediated Cl@ve completion.
+    errors:
+      provider_reserved: Authentication provider {provider} is reserved and not yet
+        implemented.
+      session_field_not_datetime: Persisted session field {field} must be a datetime
+        or ISO-8601 string.
+    operator:
+      alignment:
+        both_missing_detail: Neither the Cl@ve identity (CADRUMO_CLAVE_MOVIL_DNI_NIE)
+          nor the active profile tax id is set. Set both to the same DNI/NIE before
+          live AEAT auth.
+        clave_identity_missing_detail: The Cl@ve identity (CADRUMO_CLAVE_MOVIL_DNI_NIE)
+          is not set, so it cannot be compared with the active profile tax id. Set
+          it to the DNI/NIE of the active profile.
+        mismatch_detail: The Cl@ve identity DNI/NIE '%{clave_identity}' does not match
+          the active profile tax id '%{profile_tax_id}'. Live AEAT auth would bind
+          one taxpayer's session to another profile. Switch to the profile whose tax
+          id matches the Cl@ve DNI/NIE, or correct whichever value is wrong.
+        profile_tax_id_missing_detail: The active profile has no tax id, so it cannot
+          be compared with the Cl@ve identity. Set the profile tax id to the DNI/NIE
+          used for Cl@ve.
+      errors:
+        certificate_file_required: The certificate provider requires a certificate
+          file. Run `aeat config auth configure --provider certificate --file PATH`
+          with the path to your PKCS#12 (.p12/.pfx) bundle.
+        certificate_file_unresolved: The certificate path '%{certificate_path}' does
+          not resolve to an existing file. Run `aeat config auth configure --provider
+          certificate --file PATH` with a path to your PKCS#12 (.p12/.pfx) bundle.
+        certificate_secret_mutation_in_progress: A certificate secret change is still
+          being recovered for this profile. Retry that same secret command before
+          changing authentication configuration.
+        certificate_source_not_found: Certificate source '%{name}' is not registered.
+          Run `aeat config auth certificate list` to see registered sources, or `aeat
+          config auth certificate register --name %{name} --file PATH` to register
+          it.
+        cleanup_in_progress: An authentication logout or reset is still being recovered
+          for this profile. Resume that operation before changing authentication configuration.
+        dangling_active_profile: Active profile pointer '%{active_profile}' does not
+          resolve to a registered profile bucket. Run aeat config profile list to
+          inspect registered profiles, then aeat config login NAME or aeat config
+          profile create NAME.
+        no_active_bucket: No active profile bucket; run `aeat config profile create
+          NAME` before configuring auth.
+        provider_not_configured: No authentication provider is configured; specify
+          --provider or configure one first.
+        requires_custody_session: Auth operation targets profile '%{bucket_id}' at
+          %{storage_root}, but that profile has no open custody session. Run aeat
+          config login for that profile, then retry.
+        revoke_requires_custody_session: The AEAT session for profile '%{bucket_id}'
+          was NOT revoked and remains usable. It is stored encrypted inside that profile,
+          so only unlocking that profile - with aeat config login - revokes it.
+        scope_conflict: Choose either --provider or --all, not both.
+        unreadable_active_profile: Active profile '%{active_profile}' has a bucket
+          manifest but no readable profile record (status=%{status}). Run `%{next_action}`
+          before configuring authentication.
+      login:
+        refused_certificate_file_missing: 'Cannot log in: the configured certificate
+          file (%{path}) does not exist. Restore the file or reconfigure the path
+          before continuing.'
+        refused_certificate_path_unset: 'Cannot log in: no certificate file has been
+          selected yet. Run ''aeat config auth configure --provider certificate --file
+          PATH'' before continuing.'
+        refused_clave_movil_identity_unset: 'Cannot log in with Cl@ve Móvil: no DNI/NIE
+          has been configured yet. Configure one before continuing.'
+        refused_live_tests_disabled: 'Live login is disabled by the safety gate: the
+          tool only builds and verifies locally. Enable live tests if you really intend
+          to connect to AEAT, then re-run this command. Requested provider: %{provider}.'
+      probe:
+        certificate_corrupt: The certificate file is not a valid PKCS#12 envelope
+          or the password is missing; it cannot be parsed.
+        certificate_corrupt_detail: 'The certificate cannot be interpreted: %{error}.'
+        certificate_expired: The certificate expired %{days} days ago. Renew it before
+          authenticating.
+        certificate_expiring: The certificate expires in %{days} days. Plan the renewal.
+        certificate_file_missing: The configured certificate file (%{path}) does not
+          exist.
+        certificate_ok: Certificate valid; expires in %{days} days.
+        certificate_path_unset: No certificate file has been selected.
+        certificate_unreadable: The certificate file cannot be read (%{error}).
+        clave_movil_identity_invalid: 'The DNI/NIE configured for Cl@ve Móvil is not
+          valid: %{error}.'
+        clave_movil_identity_ok: The DNI/NIE configured for Cl@ve Móvil has a valid
+          shape.
+        clave_movil_identity_unset: No DNI/NIE has been configured for Cl@ve Móvil.
+        no_provider: No auth provider is configured; nothing to probe locally.
+        no_session: No persisted AEAT session token on disk; run `aeat config auth
+          login` to acquire one.
+        session_expired: Session expired
+        session_live: Session active
+    provider_impact:
+      certificate_ready: Certificate auth is ready. The operator keeps the same CLI
+        filing flow for AEAT-backed reads; every provider uses the same command workflow.
+      generic_ready: '%{label} is ready. The operator keeps the same CLI filing flow
+        while this provider plugs into the shared auth protocol.'
+      unavailable: '%{label} is configured but not ready yet. The operator can still
+        produce, verify, and export filings locally, but AEAT-backed reads stay unavailable
+        until auth is fixed.'
+      unconfigured: The operator can still produce, verify, and export filings locally,
+        but AEAT-backed reads stay unavailable until an auth provider is configured.
+    sessions:
+      errors:
+        clave_contraste_missing: The non-QR Cl@ve Móvil route needs the contraste
+          printed on your document. Record %{nie_field} on the active profile for
+          a NIE, or %{dni_field} for a DNI, before any AEAT session can be used.
+        clave_identity_malformed: The Cl@ve identity is not a valid Spanish tax identifier,
+          so it cannot be confirmed to belong to this profile.
+        clave_identity_missing: Cl@ve live auth requires a DNI/NIE. Record it on the
+          active profile as %{identity_field}, or configure it for the provider with
+          `aeat config auth configure`, before any AEAT session can be used.
+        clave_identity_profile_mismatch: Cl@ve Móvil identity does not match the active
+          profile tax identity; switch to the matching profile or update the profile
+          before live AEAT auth.
+        clave_route_missing: Cl@ve Móvil live authentication requires %{route_field}.
+          Open Identification in the profile manager, choose QR code or Request in
+          app, save it, and retry sync.
+        corrupt_session: Your saved authentication session is damaged and cannot be
+          read. Run `aeat config auth logout` and then `aeat config auth test`.
+        no_session: No active AEAT session; run `aeat config auth test` before reading
+          AEAT data.
+        profile_identity_cleared: Live AEAT authentication needs the active profile's
+          fiscal ID, and this profile has none. Restore %{requirements} on the profile,
+          then authenticate again.
+        profile_identity_malformed: This profile's fiscal identity is not a valid
+          Spanish tax identifier, so a Cl@ve session cannot be confirmed to belong
+          to it.
+        profile_tax_id_missing: Cl@ve Móvil live auth requires the active profile
+          to carry %{requirements}.
+        provider_close_failed: AEAT browser session could not be closed safely; retry
+          authentication before reading AEAT data.
+        sede_rejected: AEAT session is not accepted by the AEAT Sede; run `aeat config
+          auth test` before reading AEAT data.
+        session_expired: AEAT session is expired; run `aeat config auth test` before
+          reading AEAT data.
+        session_identity_profile_mismatch: AEAT session identity does not match the
+          active profile tax identity; clear auth sessions and authenticate the matching
+          profile before live AEAT reads.
+        state_missing: AEAT session state is missing; run `aeat config auth test`
+          before reading AEAT data.
+        verify_failed: AEAT session could not be verified; run `aeat config auth test`
+          before reading AEAT data.
+  calculations:
+    binding_prefill:
+      errors:
+        observation_merge_key_conflict: 'Observations for different modelo, year or
+          period keys cannot be merged: {primary_modelo} {primary_filing_year} {primary_period}
+          against {overlay_modelo} {overlay_filing_year} {overlay_period}.'
+        selector_filing_year_delta_type: The registry binding selector 'filing_year_delta'
+          must be a whole number or a numeric string; it carries {observed_type}.
+          Correct the binding selector in the registry.
+        selector_source_periods_member_type: Every entry in the registry binding selector
+          'source_periods' must be a period code. Correct the binding selector in
+          the registry.
+        selector_source_periods_type: The registry binding selector 'source_periods'
+          must be a period code or a tuple of period codes; it carries {observed_type}.
+          Correct the binding selector in the registry.
+    errors:
+      observation_displaces_official_evidence_app_filing: 'This modelo, year and period
+        already holds evidence captured from AEAT ({existing_source_kind}), so a locally
+        computed filing cannot be saved over it. A local recalculation is not the
+        authority for what was filed: if it is correct, file the correction with AEAT
+        and pull the result back. The captured evidence cannot be recovered through
+        any path this application exposes.'
+      observation_displaces_official_evidence_manual: This modelo, year and period
+        already holds evidence captured from AEAT ({existing_source_kind}). Saving
+        a manual figure here replaces it, and the replaced evidence cannot be recovered
+        through any path this application exposes. Re-run with the replace-official-evidence
+        option if displacing it is intended.
+    iva_compensation:
+      errors:
+        annual_partition_casilla_ids_noncanonical: Modelo 303 compensation observations
+          must use the casilla identifiers declared by revision {revision_id}; {casilla_ids}
+          are not declared.
+        correction_missing: No seeded compensation record exists for %{filing_year}/%{period};
+          correction overwrites an existing seed, it does not create one.
+        history_casilla_undeclared: Casilla {casilla_id} is not declared by modelo
+          {modelo} revision {revision_id}, so no legal reference can be attached to
+          it. Correct the casilla reference.
+        history_operand_ref_value_arity: Casilla {casilla_id} supplies {operand_ref_count}
+          operand references but {operand_value_count} operand values, so its formula
+          provenance would be incomplete.
+        history_operand_refs_diverge_from_formula: Casilla {casilla_id} supplies operand
+          references {supplied_operand_refs} but formula {formula_id} projects {formula_operand_refs}.
+        history_operand_refs_without_formula: Casilla {casilla_id} supplies operand
+          references but modelo {modelo} revision {revision_id} declares no formula
+          for it.
+        local_recurrence_modelo_303_only: Local IVA compensation recurrence is reconstructed
+          only for Modelo 303; modelo {modelo} was supplied.
+        modelo_303_only: IVA compensation history only accepts Modelo 303 observations.
+        modelo_390_only: IVA compensation annual summary only accepts Modelo 390 observations.
+        observed_casilla_ids_noncanonical: IVA compensation observations must use
+          the casilla identifiers declared by modelo {modelo} revision {revision};
+          {casilla_ids} are not declared.
+        repository_backend_split: The Modelo 303 observation store and the IVA compensation
+          history store must share one encrypted backend so both writes settle together.
+        seed_conflict: An IVA compensation state already exists for this period; seeding
+          would overwrite stored history.
+    iva_wallet:
+      errors:
+        decision_blocks_calculation: The IVA wallet decision for {target_year} {target_period}
+          is blocked by the divergence {divergence}. Resolve the divergence before
+          calculating.
+        decision_no_selected_amount: The IVA wallet decision for {target_year} {target_period}
+          carries no selected amount, so no compensation value can be bound.
+        decision_repository_backend_split: The IVA wallet decision store and the calculation
+          observation store must share one encrypted backend when the decision is
+          persisted.
+        decision_target_mismatch: The stored IVA wallet decision targets {decision_target_year}
+          {decision_target_period} but the work unit is {context_filing_year} {context_period}.
+        modelo_303_only: IVA compensation wallet reconciliation applies only to Modelo
+          303; modelo {modelo} was supplied.
+    m303_carry:
+      errors:
+        available_compensation_amount_missing: The validated Modelo 303 carry envelope
+          carries no available compensation amount in casilla {casilla_id}.
+        available_compensation_formula_missing: Revision {revision_id} declares no
+          formula for casilla {target_casilla_id}, so the generated-basis available
+          compensation cannot cite one.
+        carry_operands_disagree_with_formula: The carry operands {derivation_operands}
+          disagree with the registry formula operands {registry_operands}. Only a
+          registry correction can resolve this; there is no safe automatic recovery.
+        declaration_type_code_invalid: The declaration type source header at {source_locator}
+          carries {value}, which is not a result disposition code.
+        declaration_type_code_not_admitted: The declaration type source header at
+          {source_locator} carries {value}, a code the Modelo 303 diseño de registros
+          does not admit.
+        disposition_resultado_sign_incompatible: The declared disposition {disposition}
+          could not have been selected for a filed resultado of {resultado}. Only
+          the taxpayer can decide which one is correct; there is no safe automatic
+          recovery.
+        duplicate_declaration_type_headers: Modelo 303 carry evidence carries {header_count}
+          {header_key} source headers; exactly one is required.
+        envelope_not_normalized: Modelo 303 carry history requires an already normalised
+          disposition-aware available and generated pair. Re-ingest the filed observation.
+        generated_compensation_amount_missing: The validated Modelo 303 carry envelope
+          carries no generated compensation amount in casilla {casilla_id}.
+        incomplete_supported_operands: 'Modelo 303 carry normalisation cannot derive
+          the available compensation from the casillas present: {casilla_ids}.'
+        invalid_registry_observation: Modelo 303 carry ingress requires a registry
+          modelo observation; it received {observed_type}.
+        local_disposition_header_disagreement: The locally filed result disposition
+          {typed_disposition} disagrees with the declaration type header {header_disposition}.
+          Only the taxpayer can decide which one was filed; there is no safe automatic
+          recovery.
+        local_filing_disposition_required: Local Modelo 303 filing carry evidence
+          must carry the result disposition determined at the filing boundary; the
+          {source_kind} evidence carries none.
+        local_filing_provenance_required: A local Modelo 303 filing disposition must
+          retain its app_filing provenance; it carries {provenance_kind}.
+        non_m303_envelope: Modelo 303 carry history accepts only Modelo 303 observations;
+          modelo {modelo} was supplied.
+        official_declaration_type_header_required: Official Modelo 303 carry evidence
+          must carry exactly one {header_key} source header; the {source_kind} evidence
+          carries none.
+        official_disposition_header_disagreement: The typed result disposition {typed_disposition}
+          disagrees with the AEAT declaration type header {header_disposition}. Only
+          the taxpayer can decide which one was filed; there is no safe automatic
+          recovery.
+        resultado_casilla_required: Modelo 303 carry normalisation requires the filed
+          resultado casilla {casilla_id}, which the observation does not carry.
+        supplied_available_contradicts_derivation: The supplied available compensation
+          {supplied_available} contradicts the {basis} derivation {derived_available}.
+          Only the taxpayer can decide which figure was filed; there is no safe automatic
+          recovery.
+        supplied_pair_contradicts_derivation: The supplied available and generated
+          pair {supplied_available} and {supplied_generated} contradicts the {basis}
+          derivation {derived_generated}. Only the taxpayer can decide which figures
+          were filed; there is no safe automatic recovery.
+        unsupported_provenance: Modelo 303 carry normalisation accepts only official
+          AEAT evidence or a local app filing; the evidence carries {source_kind}.
+    maritime_exemption:
+      errors:
+        art_7p_inputs_required: Art. 7.p) eligibility applies, so both the annual
+          salary and the qualifying days are required. Supply the missing figures.
+        rebeca_input_required: REBECA eligibility applies, so the gross navigation
+          income is required. Supply the missing figure.
+    observations:
+      errors:
+        casilla_ids_noncanonical: Calculation observations must use the casilla identifiers
+          declared by modelo {modelo} revision {revision_id}; {casilla_ids} are not
+          declared.
+        decision_taxpayer_nif_blank: The taxpayer NIF on the reconciliation decision
+          must not be blank.
+        filing_year_out_of_range: The observation filing year {filing_year} is outside
+          the supported range {minimum} to {maximum}.
+        iva_wallet_target_year_out_of_range: The IVA wallet target year {target_year}
+          is outside the supported range {minimum} to {maximum}.
+        member_nif_blank: The grupo member NIF must not be blank when it widens the
+          observation key.
+        period_type_invalid: The observation key requires a period value; it received
+          {observed_type}.
+        registry_snapshot_missing: The casilla identifiers cannot be validated because
+          no registry revision resolves for modelo {modelo}, year {filing_year}, period
+          {period}.
+        taxpayer_nif_blank: The taxpayer NIF must not be blank when it forms the IVA
+          wallet decision key.
+    row_set:
+      errors:
+        grouping_dispatch_fell_through: 'The row-set grouping {grouping} resolved
+          to an assembler that did not run. Report this: the dispatch table is inconsistent.'
+        grouping_has_no_assembler: The row-set grouping {grouping} has no assembler
+          in this application; the groupings without one are {unassemblable_groupings}.
+        percepcion_clave_missing: Row {row_index} declares no clave. A percepción
+          must state its AEAT clave, per the Modelo 190 and 193 diseño de registros,
+          registro de tipo 2. Supply the clave.
+        percepcion_clave_unsupported: Row {row_index} declares the AEAT clave {clave},
+          which this application does not support.
+        row_assembly_failed: 'Row {row_index} could not be assembled: {validation_error_detail}.
+          Correct the row and pull again.'
+        row_index_not_positive: The row-set cell row index must be a positive whole
+          number; it carries {row_index}.
+  filing:
+    build_draft:
+      errors:
+        binding_data_type_unsupported: The registry binding declares a data type no
+          filing input channel supports.
+        binding_family_has_no_input_channel: The registry binding's value family has
+          no filing input channel.
+        binding_provenance_missing: The registry binding is missing its legal and
+          source grounding.
+        binding_row_key_not_positive_integer: A binding input row key must be a positive
+          whole number.
+        binding_text_value_invalid: The binding text value does not match its declared
+          registry data type.
+        binding_value_not_boolean: The binding input value is not a recognised yes
+          or no value.
+        binding_value_not_integer: The binding input value must be a whole number.
+        date_binding_not_iso: The date binding value is not an ISO 8601 date.
+        findings_under_fail_on_warning: Draft validation produced findings while warnings
+          are treated as blocking.
+        input_key_noncanonical_casilla: A filing input key uses a non-canonical casilla
+          reference.
+        input_key_not_string: Filing input keys must be text registry identifiers.
+        input_key_padded: Filing input keys must not carry leading or trailing spaces.
+        input_key_unknown: A filing input key is not declared by the registry revision.
+        input_not_decimal: The filing input value must be a decimal amount.
+        period_type_invalid: The filing period must be a typed period value.
+        registry_calculation_failed: The registry calculation failed for this draft.
+        registry_snapshot_unavailable: No registry snapshot is available for this
+          modelo and period.
+        schema_version_snapshot_mismatch: The schema provider version does not match
+          the registry snapshot.
+        text_casilla_invalid: The casilla text value does not match its declared registry
+          data type.
+        text_casilla_not_string: The casilla text input must be a text value.
+    calculate:
+      errors:
+        repair_hints_forbidden: Repair hints are accepted only when blockers must
+          be resolved.
+        repair_hints_required: Repair hints are required when blockers must be resolved.
+    complementaria:
+      errors:
+        justificante_csv_absent: The complementaria requires the original filing's
+          justificante CSV.
+        no_changed_casilla: The complementaria requires at least one changed casilla.
+        original_draft_addressing_mismatch: The original filing and the stored draft
+          declare a different modelo or period.
+        original_draft_snapshot_stale: The original draft was not built from the active
+          registry snapshot.
+        original_submission_csv_blank: The original filing must carry an official
+          justificante CSV.
+        original_submission_fields_missing: The original filing is missing required
+          fields.
+        original_submission_shape_invalid: The original filing does not match the
+          expected record shape.
+    errors:
+      amendment_not_persisted: no persisted amendment with id %{amendment_id}
+      complementaria_taxpayer_identity_absent: 'complementaria requires a declared
+        taxpayer identity: the submitted filing''s profile_tax_id is %{submitted_tax_id}
+        while the original draft declares %{draft_tax_id}'
+      complementaria_taxpayer_identity_malformed: 'complementaria cannot confirm one
+        taxpayer: the submitted filing''s profile_tax_id %{submitted_tax_id} is not
+        a valid NIF, NIE or CIF, and the original draft declares %{draft_tax_id}'
+      complementaria_taxpayer_identity_mismatch: 'complementaria taxpayer identity
+        diverges: the submitted filing declares profile_tax_id %{submitted_tax_id}
+        and the original draft declares %{draft_tax_id}; both must name one taxpayer'
+      import_failed: 'cannot import modelo %{modelo}: %{detail}'
+      modelo_not_in_registry: modelo %{modelo} is not present in the calculation registry
+      original_draft_not_persisted: original draft %{draft_id} is not persisted
+      period_ejercicio_mismatch: 'modelo %{modelo}: cannot canonicalise period %{period}
+        for ejercicio %{ejercicio}'
+      unexpected_ejercicio: 'modelo %{modelo}: unexpected ejercicio %{ejercicio};
+        want four-digit year'
+      unknown_severity_threshold: The severity threshold is not a known severity level.
+    export:
+      errors:
+        draft_not_approved: Export requires an approved draft.
+        draft_snapshot_stale: Export requires a draft built from the active registry
+          snapshot.
+        layout_not_renderable: This modelo cannot produce a local declaration export
+          file.
+        post_write_verification_refused: Post-write verification refused the exported
+          declaration file.
+        receipt_artefact_unreadable: The export receipt names a file that cannot be
+          read.
+        receipt_byte_size_mismatch: The exported file's size does not match the export
+          receipt.
+        receipt_digest_mismatch: The exported file's digest does not match the export
+          receipt.
+        rendered_payload_empty: The export layout produced an empty declaration payload.
+        verify_draft_snapshot_stale: Verification requires a draft built from the
+          active registry snapshot.
+    export_parity:
+      errors:
+        aux_block_undeclared: The export layout cannot write the declaration's mandatory
+          Aux block.
+        casilla_metadata_drift: Casilla numbering or segmento drifts from the registry
+          record design.
+        rate_boxes_understate_total: The rate boxes do not account for their own declared
+          total.
+        record_emit_order_drift: The export would emit records out of the registry-declared
+          order.
+        record_emit_order_duplicated: Export records share an emit order, so the record
+          sequence is ambiguous.
+        required_casillas_omitted: The export would omit required casillas the official
+          record files.
+    import:
+      errors:
+        period_token_undeclared: The period token is not declared by the active registry
+          revision.
+        period_token_unrepresentable: The period token cannot be represented as a
+          filing period.
+    m303_exonerado_390:
+      errors:
+        record_design_snapshot_mismatch: The exonerado-390 record design does not
+          match the selected snapshot.
+        record_design_source_not_snapshot_owned: The exonerado-390 record design source
+          is not owned by the snapshot.
+    m303_export_applicability:
+      errors:
+        filing_facts_absent: Modelo 303 export requires assembled filing facts.
+        filing_facts_period_mismatch: The Modelo 303 filing facts do not match the
+          export period.
+        layout_not_snapshot_owned: The Modelo 303 export layout is not owned by the
+          selected snapshot.
+        producer_snapshot_incomplete: The Modelo 303 filing producer snapshot is incomplete.
+        producer_snapshot_wrong_modelo: The producer snapshot does not belong to Modelo
+          303.
+        regularisation_result_not_canonical: The Modelo 303 regularisation result
+          is not the canonical projection.
+        snapshot_period_mismatch: The Modelo 303 registry snapshot does not match
+          the export period.
+    m303_prorrata_activity_rows:
+      errors:
+        activity_rows_incomplete: The Modelo 303 per-activity prorrata rows are incomplete.
+    review:
+      errors:
+        approved_by_blank: The approver identifier must not be blank.
+        draft_not_ready: Only drafts ready to submit may be approved.
+        registry_review_mismatch: 'The draft does not match the registry review surface:
+          %{codes}.'
+      stale_reasons:
+        approval_basis_version_changed: approval basis version changed
+        category_profiles_changed: category profiles changed
+        draft_payload_changed: draft payload changed
+        draft_review_changed: draft validation surface changed
+        invoice_catalogue_changed: invoice catalogue changed
+        prior_filing_observations_changed: prior filing observations changed
+        profile_activity_changed: taxpayer profile activity changed
+        review_checksum_mismatch: The stored approval checksum does not match its
+          approval basis
+        schema_formula_changed: schema or formula provenance changed
+        transaction_catalogue_changed: transaction catalogue changed
+        unknown: '%{reason}'
+    runtime:
+      errors:
+        active_profile_load_failed: 'The active filing profile could not be loaded:
+          %{reason}.'
+        ambiguous_casilla_schema: 'Internal error: the runtime casilla schema is ambiguous
+          (duplicate casilla.id values or dangling formula references).'
+        blank_modelo_selection: Requested modelo selection must not contain blank
+          modelo ids.
+        filing_year_period_mismatch: 'Internal error: filing year {filing_year} does
+          not match the supplied period {period}.'
+        filing_year_period_pair: filing_year and period must be supplied together.
+        modelo_not_in_registry: Modelo %{modelo} is not present in the calculation
+          registry.
+        modelo_revision_missing: Modelo %{modelo} has no revisions.
+        period_type: 'Internal error: the runtime schema provider requires a Period
+          object; received {period_type}.'
+        provider_year_missing: Modelo %{modelo} revision %{revision} has no provider
+          year.
+        registry_empty: The registry root %{registry_root_name} has no modelo definitions.
+        registry_empty_for_period: The registry root has no modelo definitions for
+          year %{filing_year} period %{period}.
+        registry_missing_requested_modelos: 'The registry root is missing requested
+          modelo definitions: %{modelos}.'
+        unsupported_casilla_data_type: 'Unsupported registry casilla data type: %{data_type}.'
+  flows:
+    errors:
+      answer_target_not_visible: 'Flow {flow_id} cannot record an answer for {page_key}:
+        that question is not currently visible.'
+      checkpoint_unavailable_mode: Flow {flow_id} does not offer save-and-exit in
+        mode {mode}; its {answered_count} answers live in this session only.
+      copy_locale_key_unresolved: Display copy key {ref} is not present in the locale
+        catalogue.
+      copy_ref_unresolved: Copy source {kind} resolved no text for reference {ref}.
+      copy_source_duplicate: A copy source resolver is already registered for kind
+        {kind}.
+      copy_source_locale_builtin: The locale-key copy source is built in and cannot
+        be re-registered.
+      copy_source_unregistered: No copy source resolver is registered for kind {kind},
+        required by reference {ref}.
+      jump_target_not_visible: 'Flow {flow_id} cannot jump to {page_key}: that question
+        is not currently visible.'
+      reset_target_unknown: Flow {flow_id} has no question or stored answer named
+        {page_key} to reset.
+      scripted_answer_rejected: 'The scripted answer for {page_key} was rejected by
+        validation: {message_keys}.'
+      scripted_queue_overflow: The scripted run used {consumed_count} answers and
+        finished with {remaining_count} unused; the script does not match the flow.
+      scripted_queue_underflow: The scripted run ran out of answers at required question
+        {page_key}, after {consumed_count} answers.
+      submit_blocked: 'Flow {flow_id} cannot be submitted: {blocking_count} blocking
+        findings and {required_remaining} required questions are still open.'
+      unknown_repeating_group: Flow {flow_id} declares no repeating group named {group_id}.
+      validator_id_blank: A flow validator must be registered under a non-empty id.
+      validator_id_duplicate: A flow validator is already registered under id {validator_id}.
+      validator_id_unknown: No flow validator is registered under id {validator_id};
+        {registered_count} validators are registered.
+  inventory:
+    service:
+      errors:
+        actividad_conflict: An inventory ledger already exists for activity %{actividad_id}
+          and year %{year}. Run `aeat app ledger inventory list` to see the existing
+          ledgers.
+        actividad_not_found: No inventory ledger exists for activity %{actividad_id}
+          and year %{year}. Run `aeat app ledger inventory list` to see the existing
+          ledgers.
+        duplicate_movement_id: The inventory ledger already contains movement %{movement_id}.
+          Run `aeat app ledger inventory list` to see the recorded movements.
+        invalid_valuation_method: 'The inventory valuation method is not supported:
+          %{valuation_method}.'
+  invoices:
+    bulk_import:
+      errors:
+        country_unanswerable: 'The import file has no counterparty country column
+          and no country was declared for the import. Add a country_code column, or
+          declare one country for the whole file. Unmapped columns: {unmapped_columns}'
+        file_read_failed: The bulk invoice import file could not be read.
+        formula_cell: The bulk invoice import file contains a formula cell at row
+          {row}, column {column}; formula cached values are not accepted.
+        missing_columns: 'The bulk invoice import file is missing required columns:
+          {missing_columns}'
+        unreadable_table: 'The bulk invoice import file carries no readable table:
+          {detail}'
+        unsupported_extension: The bulk invoice import file must be .csv or .xlsx
+          (got {extension}).
+    creation:
+      errors:
+        duplicate_invoice: 'An invoice with the same identity already exists in the
+          catalogue: %{invoice_id}.'
+        intracom_operation_type_required: 'An intra-community supply must state its
+          Modelo 349 operation type: the category alone cannot tell an ordinary entrega
+          intracomunitaria (clave E) from a supply following an exempt importation
+          (clave M, or H via a fiscal representative).'
+        unsupported_iva_rate: 'IVA rate %{iva_rate} is not recognised; use one of:
+          %{accepted}.'
+    lifecycle:
+      errors:
+        ambiguous_invoice_prefix: 'The invoice id prefix %{invoice_id} is ambiguous;
+          it matches: %{candidates}.'
+        empty_invoice_patch: An invoice correction must state at least one field to
+          change.
+        invoice_id_required: An invoice id is required.
+        invoice_not_found: 'Catalogue invoice not found: %{invoice_id}.'
+        remove_linked_invoice: 'Cannot remove invoice %{invoice_id} while it is still
+          linked to transactions: %{linked_transaction_ids}. Unlink them first.'
+    linking:
+      errors:
+        linked_invoice_not_found: Invoice %{invoice_id} was not found after applying
+          the link update.
+        transaction_not_found: Transaction %{transaction_id} was not found in the
+          transaction catalogue.
+    wizard:
+      errors:
+        build_failed: 'invoice wizard refused: %{detail}'
+        field_errors: 'invoice wizard refused %{field_count} field(s): %{detail}'
+  iva_wallet:
+    decision_reason:
+      aeat_wallet_uncrosschecked: The latest valid AEAT wallet observation was selected;
+        no local recurrence was available to cross-check it against.
+      aeat_wallet_validated: The latest valid AEAT wallet observation matches the
+        local recurrence for the previous Modelo 303 compensación.
+      caller_zero_matches_local_authority: The caller-supplied zero matches the persisted
+        local zero authority.
+      filed_history_requires_override: There is no AEAT wallet evidence; the filed-history
+        recurrence requires an express taxpayer override before the automatic result
+        is produced.
+      filed_history_zero: The recorded filed-history evidence for Modelo 303 establishes
+        a zero compensación to carry forward.
+      first_period_zero_activity_start_uncontrasted: 'UNCROSSCHECKED: The first-period
+        zero rests on the operator-declared activity start date; Cadrumo cannot verify
+        that date against current AEAT censal information.'
+      first_period_zero_aeat_wallet: The AEAT wallet confirms the previous compensación
+        is zero in the first recorded IVA period.
+      first_period_zero_local_recurrence: An initial local zero establishes that no
+        previous compensación exists in the first recorded IVA period.
+      local_evidence_unreadable: A previous Modelo 303 record exists, but it cannot
+        be read as previous-compensación evidence and no AEAT wallet observation is
+        available.
+      local_recurrence_requires_override: The AEAT wallet is unavailable; the local
+        recurrence requires an express taxpayer override before the automatic result
+        is produced.
+      local_recurrence_zero: The local Modelo 303 recurrence establishes a zero compensación
+        to carry forward.
+      no_usable_authority: There is no AEAT wallet observation and no usable local
+        recurrence for the previous Modelo 303 compensación.
+      stale_wallet_local_recurrence_requires_override: The AEAT wallet observation
+        is stale; the local recurrence requires an express taxpayer override before
+        the automatic result is produced.
+      stale_wallet_no_local_recurrence: The AEAT wallet observation is stale and no
+        alternative local recurrence is available.
+      taxpayer_override: The express taxpayer override was selected; the separately
+        recorded operator explanation states its evidential basis.
+      wallet_local_recurrence_divergence: The AEAT wallet and the local recurrence
+        diverge; a review is required before the automatic result is produced.
+  ledger:
+    errors:
+      evidence_attachment_requires_ids: Ledger evidence attachment requires purchase
+        evidence or attachment ids.
+      evidence_detachment_requires_ids: Ledger evidence detachment requires at least
+        one attachment id.
+      evidence_detachment_unknown_attachment: The ledger transaction does not carry
+        attachment(s) %{attachment_ids}.
+      idempotency_key_conflict: The idempotency key already identifies a stored transaction
+        with different details. Use a new idempotency key for a different movement,
+        or omit the key to append a deliberate duplicate.
+      purchase_evidence_already_set: 'Ledger transaction already has a purchase_invoice_evidence_id,
+        and it cannot be replaced in place. Detaching evidence is not implemented:
+        remove the transaction and re-add it with the correct evidence.'
+      transaction_id_prefix_ambiguous: 'transaction id prefix %{prefix} matches %{count}
+        transactions: %{matches}'
+      transaction_id_prefix_empty: transaction id prefix is empty
+      transaction_id_prefix_no_match: no transaction matches id prefix %{prefix}
+      transaction_id_prefix_non_hex: transaction id prefix %{prefix} contains non-hex
+        characters
+      transaction_id_prefix_too_long: transaction id prefix %{prefix} is longer than
+        %{max_length} characters
+      transaction_not_found: 'transaction not found: %{transaction_id}'
+    evidence:
+      errors:
+        document_already_confirmed: 'This document already produced invoice %{stored_invoice_id},
+          and this confirmation differs on: %{divergent_fields}. Correct or remove
+          the stored invoice instead of confirming the same document twice.'
+  live:
+    borrador:
+      errors:
+        binding_value_key_blank: Borrador binding value keys must not be blank.
+        bucket_id_blank: Borrador bucket id must not be blank.
+        snapshot_id_blank: Borrador snapshot id must not be blank.
+        snapshot_not_found: No borrador snapshot matches the requested id.
+        snapshot_prefix_ambiguous: The borrador snapshot prefix matches multiple snapshots.
+    deudas:
+      errors:
+        bucket_id_blank: Deudas bucket id must not be blank.
+        snapshot_id_blank: Deudas snapshot id must not be blank.
+        snapshot_not_found: No deudas snapshot matches the requested id.
+        snapshot_prefix_ambiguous: The deudas snapshot prefix matches multiple snapshots.
+    expedientes:
+      errors:
+        bucket_id_blank: Expedientes bucket id must not be blank.
+        snapshot_id_blank: Expedientes snapshot id must not be blank.
+        snapshot_not_found: No expedientes snapshot matches the requested id.
+        snapshot_prefix_ambiguous: The expedientes snapshot prefix matches multiple
+          snapshots.
+    filed_data:
+      errors:
+        sync_run_repository_required: A persisted filed-data capture requires a sync-run
+          persistence repository.
+    filed_observations:
+      errors:
+        iva_history_promotion_failed: The filed Modelo 303 declaration could not be
+          promoted into IVA compensation history.
+        iva_history_reload_missing: The secure IVA compensation history did not reload
+          after persisting the Modelo 303 period.
+        observation_not_active: AEAT does not report that filed declaration as active,
+          so it is not persisted as calculation evidence.
+        quarter_ordinal_missing: The quarterly filed history period carries no quarter
+          ordinal.
+        registry_enrollment_failed: The filed observation could not be enrolled as
+          registry-grounded calculation evidence.
+    iva_wallet:
+      errors:
+        decision_reload_diverged: The persisted IVA wallet reconciliation decision
+          did not reload with identical evidence.
+        observation_reload_diverged: The persisted IVA wallet observation did not
+          reload with identical evidence.
+    justificante:
+      errors:
+        bucket_id_blank: Justificante capture bucket id must not be blank.
+        capture_axis_mismatch: The captured justificante does not match the live snapshot's
+          modelo and period.
+        csv_mismatch: The captured justificante CSV does not match the live snapshot
+          CSV.
+        evidence_overwrite_refused: The filing record already holds AEAT evidence,
+          which live-capture evidence will not overwrite.
+        evidence_snapshot_not_active: Only an active live-capture snapshot can be
+          stamped as filing evidence.
+        expediente_not_in_tree: The filed declaration references an expediente absent
+          from the expedientes tree.
+        filing_identity_unresolved: The filing profile tax identity could not be resolved,
+          so live-capture evidence is not stamped.
+        filing_record_mismatch: The captured justificante does not match the current
+          filing record.
+        filing_record_missing: No current filing record exists for that modelo and
+          period. File the period first.
+        metadata_snapshot_not_active: Only an active live-capture snapshot can register
+          justificante metadata.
+        modelo_unknown: The justificante capture modelo is not a known AEAT modelo.
+        no_filed_declaration: No filed declaration exists for that modelo and period,
+          so no justificante expediente can be resolved.
+        pdf_base64_empty: The justificante capture PDF payload decodes to no bytes.
+        pdf_base64_invalid: The justificante capture PDF payload is not valid base64.
+        pdf_sha256_mismatch: The justificante capture PDF digest does not match the
+          decoded PDF bytes.
+        snapshot_bucket_mismatch: The justificante capture snapshot does not belong
+          to the repository bucket.
+        snapshot_id_blank: Justificante capture snapshot id must not be blank.
+        snapshot_not_found: No justificante capture snapshot matches the requested
+          id.
+        snapshot_prefix_ambiguous: The justificante capture snapshot prefix matches
+          multiple snapshots.
+    notifications:
+      errors:
+        bucket_id_blank: Notifications bucket id must not be blank.
+        certificado_id_blank: The notification certificado id must not be blank.
+        certificado_not_in_any_snapshot: No captured notification list mentions that
+          certificado. Pull the notification list first.
+        document_conflict: 'A different document is already stored for that notification;
+          nothing was overwritten. Diverging: {diverging_fields}.'
+        document_not_found: No stored document matches that notification. Pull it
+          first.
+        document_prefix_ambiguous: That certificado prefix matches several stored
+          documents. Give the full id.
+        document_row_mismatch: That document belongs to a different notification and
+          was not stored.
+        snapshot_id_blank: Notifications snapshot id must not be blank.
+        snapshot_not_found: No notifications snapshot matches the requested id.
+        snapshot_prefix_ambiguous: The notifications snapshot prefix matches multiple
+          snapshots.
+    snapshot_base:
+      errors:
+        repository_bucket_mismatch: The snapshot repository reported a different bucket
+          than the one requested.
+        service_bucket_mismatch: The snapshot service bucket does not match its repository
+          bucket.
+        snapshot_bucket_mismatch: Snapshot payload bucket does not match the repository
+          bucket.
+        snapshot_key_mismatch: The snapshot is stored under a different snapshot's
+          key.
+        state_active_supersession_pointer: An active snapshot cannot carry a supersession
+          pointer.
+        state_discard_audit_required: A discarded snapshot requires both a discard
+          timestamp and a discarding actor.
+        state_discard_metadata_forbidden: Only a discarded snapshot can carry discard
+          metadata.
+        state_discarded_supersession_pointer: A discarded snapshot cannot carry a
+          supersession pointer.
+        state_supersession_pointer_required: A superseded snapshot must carry its
+          superseding snapshot id.
+    verify:
+      errors:
+        bucket_id_blank: Verify bucket id must not be blank.
+        observation_bucket_mismatch: Verify observation bucket does not match the
+          repository bucket.
+        observation_id_blank: Verify observation id must not be blank.
+        observation_id_mismatch: Verify observation id does not match the requested
+          observation.
+        observation_key_mismatch: Verify observation is stored under a different observation's
+          key.
+        observation_not_found: No verify observation matches the requested id.
+        observation_prefix_ambiguous: The verify observation prefix matches multiple
+          observations.
+  modelo:
+    borrador_binding:
+      errors:
+        caller_binding_keys_blank: Caller binding keys must not be blank.
+        decimal_value_invalid: Borrador value for numeric binding %{binding_id} must
+          be decimal-compatible.
+        forbidden_bindings: 'The borrador snapshot contains values that the registry
+          has not marked as AEAT-prefilled: %{bindings}.'
+        registry_snapshot_axis_mismatch: 'The registry snapshot axis does not match
+          the borrador binding command: snapshot year=%{snapshot_year} period=%{snapshot_period};
+          command year=%{filing_year} period=%{period}.'
+        registry_snapshot_modelo_mismatch: 'The registry snapshot modelo does not
+          match the borrador binding command: snapshot modelo=%{snapshot_modelo};
+          command modelo=%{command_modelo}.'
+        snapshot_axis_mismatch: 'The borrador snapshot does not match the calculation
+          axis: snapshot year=%{snapshot_year} period=%{snapshot_period}; calculation
+          year=%{filing_year} period=%{period}.'
+        snapshot_bucket_mismatch: The borrador snapshot does not belong to the active
+          bucket.
+        snapshot_load_failed: Cannot load the selected borrador snapshot; list active
+          snapshots with aeat app live borrador 100 list.
+        snapshot_not_active: Borrador snapshot is not active; list active snapshots
+          with `aeat app live borrador 100 list`.
+        unsupported_modelo: Borrador binding is not supported for modelo %{modelo};
+          the registry manifest must declare the borrador capability.
+    errors:
+      amendment_complementaria_liability_decrease: A complementaria for modelo {modelo}
+        filing year {filing_year} period {period} would lower the declared result
+        from {baseline_result} to {corrected_result}. Before the autoliquidación rectificativa
+        unification, a self-filed complementaria cannot lawfully decrease liability;
+        use the solicitud de rectificación procedure instead.
+      amendment_kind_not_permitted: 'The requested amendment kind {requested_kind}
+        is not legally available for modelo {modelo} filing year {filing_year} period
+        {period}. Accepted kinds for this period: {accepted_kinds}.'
+      amendment_registry_root_missing: Registry root %{registry_root} is missing;
+        amendment overrides cannot be validated.
+      amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved; amendment
+        overrides cannot be validated.
+      amendment_unknown_casillas: 'Amendment overrides target casilla ids that are
+        not declared in registry modelo %{modelo}, filing year %{filing_year}, period
+        %{period}: %{casillas}.'
+      amendment_verification_refused_missing_casillas: 'The amendment is incomplete:
+        required casilla ids are missing from the corrected map.'
+      amendment_verification_refused_no_snapshot: Registry has no snapshot for the
+        requested modelo, year, and period.
+      calculate_binding_is_date_sourced: --binding %{key} is a date-valued binding
+        sourced from the active profile (a taxpayer date fact such as the birth date);
+        it cannot be supplied through --binding, which carries only decimal and enum
+        values. Set it as a profile fact and recalculate.
+      calculate_binding_unknown: '--binding %{key} does not match any binding id in
+        this revision. Accepted binding ids: %{accepted}. Use `aeat app modelo bindings
+        list <MODELO>` to list valid binding ids.'
+      calculate_boolean_binding_encoding_invalid: 'Binding value for %{key} is a decimal-encoded
+        boolean flag and must be one of: %{accepted}. Received %{value}. Accepted
+        encoding: %{mapping}. Run ''aeat app modelo bindings list <MODELO>'' to see
+        each binding''s decimal encoding.'
+      calculate_casilla_noncanonical_ambiguous: '--casilla %{key} is not a canonical
+        casilla.id and is ambiguous. Candidate casilla.id values: %{accepted}. Supply
+        the exact canonical casilla.id'
+      calculate_casilla_noncanonical_refused: '--casilla %{key} is a printed casilla
+        number or form number or export reference, not a canonical casilla.id. Use
+        the canonical casilla.id instead: %{accepted}'
+      calculate_casilla_unknown: --casilla %{key} is not a canonical casilla.id in
+        this revision. Use `aeat app modelo casillas <MODELO>` to list valid casilla.id
+        values.
+      calculate_decimal_input_invalid: '%{flag} value for %{key} is not a decimal:
+        %{value}'
+      calculate_detail_casilla_unsupported: Casilla %{key} names a Modelo 180 perceptor/property
+        detail field, not a scalar decimal casilla input. The local work --casilla
+        channel only accepts scalar decimal casillas; Modelo 180 perceptor/property
+        detail rows are not supported on the public --row surface yet. Use aeat app
+        modelo aggregate --modelo 180 --retencion-observation for the supported annual
+        perceptor count/base/retenciones source.
+      calculate_m184_share_sum_invalid: Modelo 184 member-row share percentages must
+        sum to exactly 100%; got %{total} across %{count} rows.
+      calculate_m210_tipo_renta_fetch_gated: 'Modelo 210 tipo de renta code %{value}
+        is fetch-gated: its rate is not yet grounded in the bundled corpus, so it
+        cannot be filed yet. Accepted codes: %{accepted}.'
+      calculate_m210_tipo_renta_unknown: '%{value} is not a valid Modelo 210 tipo
+        de renta code. Accepted codes: %{accepted}. Codes pending grounding (not yet
+        fileable): %{fetch_gated}.'
+      calculate_m347_threshold_not_met: Modelo 347 counterparty %{nif} total %{total}
+        does not exceed the EUR %{threshold} threshold required by RD 1065/2007 art.
+        31.1.
+      calculate_pension_inputs_incomplete: The plan-pension rescue inputs must all
+        be supplied together.
+      calculate_relation_unknown: '--relation %{key} does not match any relation id
+        in this revision. Accepted relation ids: %{accepted}.'
+      calculate_sal_inputs_incomplete: The SAL/SLL reserve-special inputs must all
+        be supplied together.
+      calculate_semantic_role_ambiguous: The modelo revision has more than one casilla
+        with semantic role %{semantic_role}; the shortcut cannot choose a canonical
+        casilla.id safely.
+      calculate_semantic_role_missing: The modelo revision has no casilla with semantic
+        role %{semantic_role}.
+      calculate_text_casilla_numeric_value: The --casilla value for %{key} (%{label})
+        is a non-numeric data_type=%{data_type} declarante selector naming the contribuyente
+        who obtains the income, not an amount; got %{value}. Enter the income figure
+        in its own numeric casilla and reserve this casilla for the member selector.
+      calculate_text_input_empty: The --casilla value targets a text casilla and must
+        be a non-empty string.
+      calculate_typed_text_input_invalid: The --casilla value is not valid for that
+        casilla's declared type.
+      calculation_registry_root_missing: Registry root %{registry_root} is missing;
+        modelo calculation cannot continue.
+      calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved.
+      calculation_revision_not_found: No calculation revision found with id=%{calculation_revision_id}.
+      calculation_revision_parent_work_unit_discarded: Calculation revision %{calculation_revision_id}
+        belongs to discarded work unit %{work_unit_id}.
+      caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
+        bucket-derived source-bound casillas (source bound casillas): %{casillas}.'
+      computed_casilla_binding_conflict: 'Bucket-derived inputs target computed casillas
+        and cannot be overridden by external binding. Affected casillas: %{computed}.'
+      cross_period_clean_state_incomplete: Cross-period clean-state proof is incomplete
+        for modelo {modelo} {filing_year} {period}; {finding_count} finding(s) remain.
+      deductible_iva_evidence_missing: 'Deductible IVA ledger rows require linked
+        purchase invoice evidence. Link the invoice to the ledger row, then run work
+        verify again: verification refuses to complete while a deductible row has
+        no invoice, so the draft is still open and picks the evidence up.'
+      export_cross_bucket_refused: The addressed revision belongs to a bucket other
+        than the active profile bucket. Switch profile before exporting.
+      export_draft_approval_failed: Could not approve the draft for calculation revision
+        %{calculation_revision_id}.
+      export_draft_write_failed: Could not write the export file for calculation revision
+        %{calculation_revision_id}.
+      export_ledger_evidence_missing: Ledger-derived calculation revision %{calculation_revision_id}
+        lacks bundled ledger evidence or a resolvable ledger snapshot reference; verify
+        the revision again before exporting.
+      export_no_active_bucket: No active profile bucket; run `aeat config profile
+        create NAME` before exporting a modelo revision.
+      export_output_path_invalid: 'The export output path is not valid: {output_path}
+        ({reason}).'
+      export_period_unmappable: Work unit %{work_unit_id} carries period %{period},
+        which cannot be mapped to a registry filing period.
+      export_revision_state_refused: Calculation revision %{calculation_revision_id}
+        is not verified-complete or filed and cannot be exported.
+      export_unsupported: Modelo %{modelo} cannot be exported to fichero-BOE because
+        %{reason}. Calculation, verification, and local filing records may still exist,
+        but this command cannot produce an AEAT upload file for this modelo and does
+        not certify BOE/export correctness.
+      external_filing_evidence_reference_blank: External-filing import requires a
+        non-empty evidence_reference_id.
+      external_filing_no_casilla_values: External-filing import requires at least
+        one casilla value; the supplied mapping is empty.
+      external_import_duplicate_revision: Calculation revision %{calculation_revision_id}
+        already exists in the catalogue; an identical import was already recorded.
+      external_import_justificante_mismatch: External-filing import evidence %{evidence_reference_id}
+        does not match modelo %{modelo}, filing year %{filing_year}, period %{period}.
+      external_import_justificante_missing: External-filing import evidence %{evidence_reference_id}
+        (%{evidence_kind}) is not registered as a persisted justificante artifact.
+      external_import_m303_filing_evidence_required: Modelo 303 external import requires
+        complete typed filing-instance evidence and cannot infer it from casilla values.
+      external_import_registry_root_missing: Registry root %{registry_root} is missing;
+        imported casilla ids cannot be validated.
+      external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
+        filing year %{filing_year}, period %{period} could not be resolved; imported
+        casilla ids cannot be validated.
+      external_import_tax_id_missing: External-filing import evidence %{evidence_reference_id}
+        (%{evidence_kind}) requires the filing taxpayer tax id before it can be bound
+        to a justificante artifact.
+      external_import_unknown_casillas: 'External-filing import carries casilla ids
+        that are not declared in registry modelo %{modelo}, filing year %{filing_year},
+        period %{period}: %{casillas}.'
+      filed_observation_split_storage_context: The IVA compensation history store
+        is a different database than the calculation observation store
+      filing_record_not_found: No filing record found with id=%{filing_record_id}.
+      iva_wallet_amount_mismatch: 'IVA wallet reconciliation is blocked for Modelo
+        303: the supplied prior-compensation amount disagrees with the amount the
+        wallet authority holds. Re-run the wallet reconciliation, or correct the supplied
+        amount to match it.'
+      iva_wallet_backend_casilla_conflict: Backend casilla input for Modelo 303 prior
+        compensation conflicts with the IVA wallet reconciliation decision.
+      iva_wallet_blocked: 'IVA wallet reconciliation is blocked for Modelo 303 (%{divergence}):
+        %{reason}'
+      iva_wallet_caller_binding_conflict: Caller binding for Modelo 303 prior compensation
+        conflicts with the IVA wallet reconciliation decision.
+      iva_wallet_caller_casilla_conflict: Caller casilla input for Modelo 303 prior
+        compensation conflicts with the IVA wallet reconciliation decision.
+      iva_wallet_first_period_zero_ungrounded: 'IVA wallet reconciliation is blocked
+        for Modelo 303: this is the first period and a zero prior compensation has
+        no evidence behind it. Seed the opening balance explicitly, or pull the wallet
+        from AEAT, so the zero is stated rather than assumed.'
+      iva_wallet_not_seeded: 'Modelo 303 calculation requires a seeded IVA compensation
+        history. For the first M303 filing of a fresh profile, seed the opening balance
+        with zero: `aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD
+        --amount 0 --confirm`.'
+      iva_wallet_registry_snapshot_unavailable: 'IVA wallet reconciliation is blocked
+        for Modelo 303: the registry snapshot for this filing year and period could
+        not be resolved, so a first-period zero cannot be proven. Confirm the modelo,
+        year and period are registry-supported, then retry.'
+      iva_wallet_revision_amount_missing: 'IVA wallet reconciliation is blocked for
+        Modelo 303: the stored wallet decision carries no amount for this revision.
+        Re-seed the compensation history, or recalculate so the decision is rebuilt
+        with an amount.'
+      iva_wallet_selected_amount_missing: IVA wallet reconciliation decision has no
+        selected amount.
+      iva_wallet_supplied_decision_mismatch: Supplied IVA wallet reconciliation decision
+        does not match the persisted decision.
+      iva_wallet_target_mismatch: IVA wallet decision target %{target_year}/%{target_period}
+        does not match work unit %{filing_year}/%{period}.
+      iva_wallet_taxpayer_identity_missing: IVA wallet reconciliation cannot continue
+        without the work-unit taxpayer identity.
+      iva_wallet_taxpayer_mismatch: IVA wallet reconciliation taxpayer does not match
+        the Modelo 303 work unit.
+      iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type:
+        %{decision_type}.'
+      ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
+        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
+        %{period}` before calculating.'
+      m036_declaration_profile_bucket_mismatch: The M036 declaration names a different
+        profile than the bucket it would be recorded in
+      m210_ledger_manual_agrupacion_rows: Modelo 210 ledger source mode derives annual
+        grouped-renta rows from ledger classifications; do not provide manual agrupacion-renta
+        rows.
+      m210_ledger_source_requires_modelo_210: Modelo 210 ledger source mode can be
+        used only for Modelo 210 work units.
+      m210_ledger_source_selection_required: Modelo 210 ledger source mode requires
+        a raw official tipo-renta code selection.
+      m210_official_tipo_renta_selection_mismatch: Modelo 210 official tipo-renta
+        code %{official_tipo_renta_code} requires formula token %{expected_tipo_renta};
+        received %{tipo_renta}.
+      m303_filing_evidence_invalid: Modelo 303 filing-instance evidence failed validation.
+      novel_source_kind_rejected: 'Unrecognized calculation source kind(s) %{novel_source_kinds}
+        on revision %{revision_id}: the registry declares a binding source no enrolled
+        calculation resolver handles. Enroll a resolver or register it as deferred
+        before calculating.'
+      profile_readiness_missing: 'Profile is incomplete for Modelo %{modelo} %{filing_year}
+        %{period}; complete these profile facts first: %{missing}.'
+      profile_readiness_profile_missing: No persisted active profile exists for this
+        modelo work target; create or repair the profile before continuing.
+      profile_readiness_setup_incomplete: Profile setup is incomplete; finish the
+        setup flow before working on modelos.
+      profile_readiness_setup_incomplete_missing: 'Profile setup is incomplete; finish
+        the setup flow before working on modelos. Outstanding fields: %{missing}.'
+      recipient_decryption_failed: The recipient-encrypted package could not be decrypted;
+        the key does not match or the package was tampered with.
+      recipient_encryption_invalid_key: The recipient's public key is not a well-formed
+        X25519 public key.
+      recipient_encryption_key_not_found: No recipient encryption keypair has been
+        minted yet for this bucket.
+      recipient_registry_already_exists: Recipient %{recipient_id} is already registered.
+      recipient_registry_generic: An error occurred with the recipient fingerprint
+        registry.
+      recipient_registry_invalid_public_key: The supplied public key is not a valid
+        32-byte X25519 key (got %{length} bytes).
+      recipient_registry_load_failed: Unable to load the recipient fingerprint registry.
+      recipient_registry_not_found: No recipient is registered under id %{recipient_id}.
+      reconcile_declaration_unsupported: Declaration-PDF casilla-level reconcile is
+        not yet enrolled for this modelo; reconcile a downloaded justificante via
+        aeat app modelo reconcile file, or wait for this modelo to be enrolled.
+      reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
+        create NAME` before reconciling a work unit.
+      refund_election_not_eligible: Refund (devolver) was elected for Modelo %{modelo}
+        %{filing_year} %{period}, but a refund is only available in the year's last
+        filing period. Carry the credit forward (compensar), or make the election
+        in the last period.
+      review_only_workspace_no_authority: This review-only workspace carries no filing
+        authority; it may be read and verified but must never be treated as evidence
+        that calculation revision %{calculation_revision_id} has been or will be filed.
+      review_package_generic: An error occurred while building the review package.
+      review_package_integrity: 'Review package %{package_path} failed checksum verification:
+        %{detail}.'
+      review_package_revision_state: 'Calculation revision %{calculation_revision_id}
+        is in state %{state} and cannot be packaged for review; eligible states: %{eligible_states}.'
+      revision_pick_explicit_id_required: Explicit revision picks require calculation_revision_id.
+      revision_pick_id_requires_explicit_selector: calculation_revision_id is only
+        valid with the explicit revision selector.
+      verification_report_not_found: No verification report found with id=%{verification_report_id}.
+      work_period_token_invalid: '--period ''%{token}'' is not a valid period token
+        for modelo %{modelo}. Pass --year %{year} separately and use one of: %{tokens}.'
+      work_period_token_unrecognised: --period '%{token}' is not recognised. Pass
+        --year %{year} separately and use a period token such as 0A, Q1, 1T, or 01.
+      work_unit_already_discarded: The work unit is already discarded.
+      work_unit_create_discarded: This filing target was discarded. Creating it again
+        resolves to the same discarded work unit, so the target cannot be resumed.
+      work_unit_discarded_cannot_calculate: Work unit %{work_unit_id} is in state
+        %{work_unit_state} and cannot be calculated.
+      work_unit_discarded_cannot_import: Work unit %{work_unit_id} is in state %{work_unit_state}
+        and cannot be imported.
+      work_unit_filing_year_period_mismatch: Filing year %{filing_year} does not match
+        period year %{period_year} for %{period}.
+      work_unit_mutation_refused: The work unit is discarded, and re-creating the
+        same filing target is refused rather than returning a fresh unit.
+      work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
+      work_unit_revision_divergence: Work unit %{work_unit_id} was created against
+        registry revision %{work_unit_revision}, but the law-determined revision for
+        modelo %{modelo} %{filing_year} %{period} is now %{law_revision}. Re-create
+        the work unit to bind it to the current revision.
+      work_unit_revision_divergence_candidates: Persisted modelo work targets for
+        modelo %{modelo} %{filing_year} %{period} were created against registry revisions
+        %{stored_revision_ids}, but the law-determined revision is now %{resolved_revision_id}.
+        Re-create the work unit to bind it to the current revision.
+      workflow_gate_no_pending_obligation: 'No pending filing obligation for this
+        profile at the current date (the AEAT filing-obligation window is not open).
+        Filing-to-fichero does not require this step: export the verified-complete
+        revision with ''aeat app modelo export''; that is the local finish line. ''work
+        file'' is the optional internal mark-as-filed step for when the obligation
+        window is open.'
+      workflow_input_mismatch: Workflow input request does not match the calculation
+        revision.
+    findings:
+      art20_reduccion_possible: Net earnings %{rnt_id} of %{rnt_value} EUR may qualify
+        for the article 20 reduction %{reduccion_id}.
+      art52_reduccion_individual_sublimit_possible: Reduction %{reduccion_id} of %{reduccion_value}
+        EUR may exceed the individual sublimit of %{sublimit} EUR.
+      attribution_received_uncaptured: Casilla %{casilla_id} for %{filing_year} carries
+        %{casilla_value} EUR of attributed income that is not captured.
+      attribution_received_unfolded: Attributed income for %{filing_year} totalling
+        %{total_base} EUR is not folded into casilla %{casilla_id}.
+      cross_casilla_invariant_violated: A cross-casilla invariant declared by the
+        registry is violated in this revision.
+      cross_period_activity_start_missing: Modelo %{target_modelo} %{target_filing_year}
+        %{target_period} needs a declared activity start date.
+      cross_period_dependency_unclean: 'Source modelo %{source_modelo} %{source_filing_year}
+        %{source_period} is not clean: %{blocker_codes}.'
+      cross_period_first_year_fractional_suppression: 'Modelo %{source_modelo} %{source_filing_year}
+        %{source_period} is scoped out: activity started %{activity_start_date}.'
+      cross_period_m111_no_retenciones: Modelo %{source_modelo} %{source_filing_year}
+        %{source_period} declares no retenciones for %{target_modelo} %{target_filing_year}.
+      cross_period_modelo_not_applicable:
+        message: '%{source_modelo_count} source modelo(s) are not applicable to this
+          taxpayer: %{source_modelos}.'
+      cross_period_non_official_local_chain:
+        message: Modelo %{source_modelo} %{source_filing_year} %{source_period} rests
+          on a local chain (%{origin_code}), not official AEAT evidence.
+      cross_period_operator_declared_suppression: Modelo %{source_modelo} %{source_filing_year}
+        %{source_period} is suppressed by operator declaration (%{origin_code}).
+      cross_period_zero_value_previous_filing: Modelo %{source_modelo} %{source_filing_year}
+        %{source_period} carries a zero value into %{target_modelo} %{target_filing_year}.
+      cuota_less_ledger_row_base_missing: Transaction %{transaction_id} in IVA category
+        %{iva_category_code} has no declarable base.
+      dt12a_reduccion_antiquity_possible: Reduction %{reduccion_id} of %{reduccion_value}
+        EUR may qualify under the transitional disposition 12a antiquity rule.
+      dt12a_reduccion_possible: Income %{ingreso_id} of %{ingreso_value} EUR may qualify
+        for reduction %{reduccion_id}.
+      foreign_asset_redeclaration: 'Modelo %{modelo_code} %{filing_year}: foreign
+        asset %{position_key} in group %{group_code} rose from %{prior_value_eur}
+        EUR to %{current_value_eur} EUR, an increase of %{delta_value_eur} EUR above
+        the %{redeclaration_increase_threshold_eur} EUR redeclaration threshold.'
+      iva_wallet_precondition_failed: The IVA compensation wallet precondition failed
+        for this revision.
+      ledger_snapshot_drift: 'Modelo %{modelo} %{filing_year} %{period} drifted from
+        its anchored ledger snapshot: %{changed_count} changed, %{removed_count} removed.'
+      m210_agrupacion_renta_invalid: Modelo %{modelo_id} period %{period_code} has
+        an invalid income grouping (%{error_type}).
+      m210_convenio_lob_advisory: Country %{country_code} income type %{tipo_renta_code}
+        may be subject to a limitation-on-benefits clause (%{document_id}).
+      m210_rate_unavailable: No Modelo 210 rate could be resolved (%{reason_code}).
+      m303_m349_intracom_reconciliation_mismatch: 'Modelo 303 and 349 disagree for
+        %{period_code} %{filing_year}: %{m303_total} EUR against %{m349_total} EUR,
+        a gap of %{gap} EUR.'
+      madrid_nacimiento_adopcion_eligibility_advisory: Casilla %{casilla_id} with
+        weighted count %{weighted_count} may qualify for the Madrid birth or adoption
+        deduction.
+      missing_required_casilla: Required casilla %{casilla_id} carries no value.
+      modelo_202_modality_incomplete: 'The Modelo 202 modality is incomplete: profile
+        fact %{profile_fact_id} is missing.'
+      objective_estimation_exclusion_threshold_exceeded: 'Modelo %{modelo_id} %{filing_year}:
+        %{profile_field_id} declared %{declared} exceeds the %{parameter_id} threshold
+        of %{threshold}.'
+      oss_evidence_missing: This revision declares one-stop-shop activity but carries
+        no persisted OSS evidence.
+      oss_source_unrouted: A one-stop-shop source is not routed to any declarable
+        casilla.
+      pulled_filing_casilla_mismatch: Casilla %{casilla_number} for %{period_code}
+        %{filing_year} computed %{computed_value} against the filed %{filed_value}
+        (%{mismatch_kind}).
+      registry_advisory_predicate_fired: A registry advisory predicate fired for this
+        revision.
+      registry_snapshot_unresolved: The registry snapshot for this work target could
+        not be resolved.
+      suffered_retencion_capital_mobiliario_uncredited: This return declares rendimientos
+        del capital mobiliario del ahorro but credits no suffered retención. Enter
+        the amount from the payer's certificado de retenciones e ingresos a cuenta;
+        the taxpayer never filed the Modelo 123 that declares it, so this value cannot
+        be filled in automatically.
+      suffered_retencion_trabajo_uncredited: This return declares rendimientos del
+        trabajo but credits no suffered retención. Enter the amount from the payer's
+        certificado de retenciones e ingresos a cuenta; the taxpayer never filed the
+        Modelo 111 that declares it, so this value cannot be filled in automatically.
+      transaction_evidence_missing_deductible: A deductible transaction has no supporting
+        evidence.
+      transaction_evidence_missing_output: An output transaction has no supporting
+        evidence.
+    iva_wallet:
+      correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
+        Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing
+        seed.
+      correct_sealed_blocked: 'Correction refused: an already-filed Modelo 303 (%{blocking_filing_year}/%{blocking_period})
+        has consumed this seeded compensation basis. Changing it would alter a filed
+        return.'
+      override_fresh_wallet_blocked: 'Override refused: a current AEAT wallet reading
+        already resolves Modelo 303 %{filing_year}/%{period}. Fresh AEAT evidence
+        is authoritative and an override must not overrule it.'
+      override_sealed_blocked: 'Override refused: an already-filed Modelo 303 (%{blocking_filing_year}/%{blocking_period})
+        has consumed this period''s compensation basis. Recording an override would
+        alter a filed return.'
+      seed_negative_amount: The seed amount cannot be negative.
+      seed_no_nif: No NIF defined for the seed operation; associate one with the active
+        profile before seeding.
+    profile_binding:
+      errors:
+        date_value_type_invalid: Profile fact for date-channel binding %{binding_id}
+          must be a date; got %{value_type}.
+        decimal_value_type_invalid: Profile fact for Decimal-channel binding %{binding_id}
+          has unsupported value type %{value_type}.
+        enum_boolean_invalid: Profile fact for enum-channel binding %{binding_id}
+          resolved to a boolean; boolean facts are not valid enum dispatch keys.
+  overview:
+    errors:
+      horizon_days_not_positive: horizon_days must be positive; got %{horizon_days}
+    explain:
+      errors:
+        modelo_blank: Modelo identifier must not be blank.
+  registry:
+    errors:
+      citation_not_found: No registry citation matched the requested legal reference.
+      invalid_manual_id: Registry manual must be one of {allowed_manual_ids}; got
+        {manual_id}.
+      invalid_manual_rule_kind: Registry manual rule kind must be one of {allowed_rule_kinds};
+        got {rule_kind}.
+      invalid_topic_locale: Registry topic locale must be one of {allowed_locales};
+        got {locale_code}.
+      manual_section_not_found: Manual section {section} was not found in {manual_id}
+        {year} {part}.
+      manual_section_requires_structure: Manual section requires extracted structure
+        for {manual_key}.
+      no_revision_for_diff_year: 'No registry revision of {modelo} covers filing year
+        {filing_year}. Declared revisions: {available_revisions}.'
+  repair_integrity:
+    errors:
+      conflicting_list_filters: 'Repair list filters are mutually exclusive: {filters}.
+        Pass one filter or neither.'
+      decision_id_mismatch_list: Repair decision id does not match its re-derived
+        content id; refusing to list the decision entry.
+      decision_id_mismatch_load: Repair decision payload id does not match the requested
+        or re-derived content id; refusing to load the decision.
+      decision_id_mismatch_save: Repair decision id does not match its re-derived
+        content id; refusing to save the decision.
+      decision_not_found: Repair decision {decision_id} does not exist.
+  storage:
+    calc_sheets:
+      engine:
+        anchors:
+          final: RESULT
+          start: 'START: Entradas'
+        errors:
+          parameter_no_dated_value: The spreadsheet export engine could not find a
+            parameter value valid for the filing date.
+          unsupported_rounding: The spreadsheet export engine found an unsupported
+            registry rounding rule.
+        guide:
+          editable_cells: 'Edit only the cells in the ''Entradas'' tab. The other
+            tabs are protected: ''Cálculos'' contains derived formula cells, ''Procedencia''
+            audits each calculated casilla, and ''Tarifas'' mirrors the active parameters
+            used by formulas.'
+          period: '%{modelo_title} - period %{period} / %{filing_year}.'
+          pull_command: To pull your edits into local storage, run 'aeat config google
+            sync calc pull' from the CLI.
+          title: '%{modelo_title} - %{period}/%{filing_year}'
+        labels:
+          casilla: Casilla
+          cell: Cell
+          concept: Concept
+          fixed_quota: Fixed quota
+          formula: Formula
+          legal_refs: Legal refs
+          marginal_rate: Marginal rate
+          maximum_base: Maximum base
+          minimum_base: Minimum base
+          number: No.
+          rounding: Rounding
+          section: Section
+          source: Source
+          source_refs: Source refs
+          value: Value
+        protected:
+          calculos: Derived calculations - protected to preserve parity
+          evidencia: 'Generated evidence: read-only'
+          guide: Guide - protected
+          provenance: Provenance / audit trail - protected
+          tariffs: Tariffs / active parameters - protected
+      layout:
+        errors:
+          undeclared_reference: The spreadsheet layout references an item not declared
+            by the revision.
+          unresolved_reference: The spreadsheet layout does not contain a cell for
+            a referenced item.
+      parity:
+        errors:
+          seed_anchor_missing: The parity scenario input has no spreadsheet cell to
+            seed.
+          unknown_casilla_ids: The parity scenario references casilla ids that are
+            not in the registry snapshot.
+      records:
+        errors:
+          address_mismatch: The spreadsheet cell address does not match its row and
+            column.
+          duplicate_write_address: The spreadsheet export plan writes more than one
+            payload to the same cell.
+          frozen_view_empty: The spreadsheet frozen view must freeze at least one
+            row or column.
+          invalid_column_index: The spreadsheet record column index must be one-based
+            and positive.
+          invalid_column_letters: The spreadsheet record column letters are invalid.
+          range_malformed: The spreadsheet range boundaries are invalid.
+          tariff_shape_invalid: The spreadsheet tariff-table record shape is invalid.
+      translator:
+        errors:
+          translation_failed: The registry formula cannot be translated to a spreadsheet
+            formula.
+  user_profile:
+    errors:
+      censal_read_identity_absent: The censal read carried no tax identity, so it
+        cannot be confirmed to belong to this profile.
+      censal_read_identity_cleared: This profile's fiscal ID was cleared, so a censal
+        read cannot be confirmed to belong to it. Restore the fiscal ID and pull again.
+      censal_read_identity_mismatch: The censal read belongs to a different taxpayer
+        than this profile; it was not applied.
+      censal_read_identity_profile_malformed: This profile's fiscal ID is not a valid
+        Spanish tax identifier, so a census read cannot be confirmed to belong to
+        it. Correct the fiscal ID and pull again.
+      censal_read_identity_read_malformed: The census read's tax identity is not a
+        valid Spanish tax identifier, so it cannot be confirmed to belong to this
+        profile.
+      censal_read_identity_unset: 'Record your fiscal ID before pulling your census:
+        this profile has none yet, so the pull cannot confirm the record AEAT returns
+        is yours. Run aeat config profile edit to add it.'
+      lifecycle_schema_validation_failed: The profile data does not match the user-profile
+        schema.
+      no_active_profile_selected: No active profile selected.
+      passphrase_confirmation_mismatch: The new password and its confirmation do not
+        match
+      passphrase_current_rejected: The current password is not correct; the password
+        was not changed
+      profile_already_exists: Profile '%{profile}' already exists; run aeat config
+        login NAME to activate it or aeat config profile delete NAME first.
+      registration_displaced_session_not_retired: The profile could not be created.
+        The stored session of the profile it replaces could not be removed. Close
+        any program using the profile store and try again.
+      registration_label_blank: The profile name cannot be empty.
+      registration_passphrase_too_short: The password must be at least {minimum_length}
+        characters long.
+      repository_classification_mismatch: Secure-object namespace %{namespace} is
+        registered for sensitivity %{expected}, but the stored record's classification
+        is %{classification}.
+      repository_profile_bucket_mismatch: Profile %{profile_id} does not belong to
+        bucket %{bucket_id}; a profile bucket holds exactly one profile identity.
+      repository_profile_snapshot_missing: Profile snapshot was not found in the active
+        bucket.
+      repository_profile_snapshot_version_unsupported: Profile snapshot schema version
+        is newer than this application supports.
+      unsupported_bundle_schema_version: The bundle schema version is not supported
+        by this application version.
+    notices:
+      censo_divergences_open: '{count} profile or certificate field(s) still diverge
+        from the Certificado de Situación Censal and remain unresolved: {axes}.'
+  wizard:
+    errors:
+      command_input_invalid: 'The profile details are invalid: %{details}'
+      command_input_invalid_fallback: one or more profile fields failed validation
+      create_missing_filing_baseline: 'Profile creation is missing filing identity
+        details. Add these flags and run the command again: %{missing_flags}.'
+      descendant_rentas_not_a_valid_amount: The descendant's annual income is not
+        a valid amount. Enter euros with a dot for decimals, for example 1234.56.
+      edit_missing_filing_baseline: 'This profile edit would leave filing identity
+        details incomplete. Add these flags to the same command and run it again:
+        %{missing_flags}.'
+      persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
+        requires supplied_question_ids - edit is a patch, not a full rewrite.
+      persist_patch_unknown_question_id: Wizard patch references an unknown question
+        id.
+      profile_flag_required: Wizard requires --profile NAME (no implicit 'default'
+        fallback).
+      profile_label_taken: A profile named %{label} already exists. Pick a different
+        name, or run the edit flow to change that profile.
+      quiet_missing_flags: 'This --quiet run is missing required details. Add these
+        flags and run the command again: %{missing_flags}. Or run it without --quiet
+        from an interactive terminal to use the guided setup.'
+    next_hint:
+      modelo_work_create: aeat app modelo work create
+    notices:
+      ccaa_defaulted: No comunidad autónoma was chosen, so %{ccaa} was assumed for
+        this profile. Autonomic deductions and the autonomic part of the tax scale
+        are calculated for %{ccaa}. Set --tax-residence-ccaa to use a different comunidad.
+      modify_descendants_via_door: Descendants are not part of profile edit. Manage
+        them with '{command}'.
+      modify_no_resume: Changes in modify mode are staged only - leaving without submitting
+        discards them; save-and-resume is available on profile create only.
+      setup_saved_resume_later: 'Saved. Resume anytime with: aeat config profile create
+        %{name}'
+    output_labels:
+      active_profile: Active profile
+      next: Next
+      profile: Profile
+      status: Status
+    status:
+      errors:
+        missing_tax_id: 'The active profile has not supplied: %{requirements}.'
+        no_active_profile: No active profile configured.
+        projection_failed: Active profile fails wizard projection.
+        unexpected_projection_type: Setup flow answers did not project to SetupAnswers.
+  workflow:
+    errors:
+      adapter_missing_deadline_engine: Workflow engine requires a deadline_engine
+        adapter.
+      adapter_missing_filing_draft_builder: Workflow engine requires a filing_draft_builder
+        adapter.
+      adapter_missing_inputs_provider: Workflow engine requires a bucket-backed filing
+        inputs provider.
+      adapter_missing_submission_engine: Workflow engine requires a submission_engine
+        adapter.
+      no_active_profile_bucket: No active profile bucket.
+      no_run_for_period: No persisted workflow run found for modelo {modelo} period
+        {period}. Drive the workflow at least once before resuming.
+      profile_label_ambiguous: 'Profile label {label} is ambiguous: {count} active
+        buckets carry it.'
+      resume_refused_no_aborted_reason: Workflow run {run_id} is ABORTED without a
+        recorded reason; refusing to resume an inconsistent record.
+      resume_refused_no_obligation: Workflow run {run_id} carries no obligation; cannot
+        determine modelo and period for a retry.
+      resume_refused_not_aborted: 'Workflow run {run_id} cannot be resumed: it is
+        in {final_stage} state, not ABORTED.'
+      resume_refused_terminal_reason: Workflow run {run_id} aborted for {reason},
+        which is terminal by design and may not be resumed.
+      resume_revision_selector_invalid: Unknown resume revision selector {selector};
+        choose current, latest-draft, latest-verified, filed, or explicit.
+      resume_run_ambiguous: More than one workflow run matches modelo {modelo} period
+        {period}. Choose an exact workflow run id. {candidates}
+      resume_run_id_invalid: workflow_run_id must be a 16-character lowercase hex
+        id; got {run_id}.
+      resume_target_contradiction: 'Pass only one resume target: a workflow run id,
+        a work-unit id, a calculation revision id, or modelo/year/period.'
+      resume_target_invalid: Invalid resume target {target}. Use --modelo --year --period,
+        or run `aeat app modelo work runs`.
+      resume_target_required: Pass --modelo --year --period, a workflow run id, a
+        work-unit id, or a calculation revision id to resume.
+      resume_visible_target_incomplete: Natural-key resume requires --modelo, --year,
+        and --period together; got modelo={modelo}, year={year}, period={period}.
+      run_id_invalid_blank: Run identifier must not be blank.
+      run_id_invalid_separators: Run identifier must not contain path separators.
+      run_identity_mismatch: The stored workflow run does not match the run identifier
+        it was read under.
+      run_not_found: 'Workflow run not found: {run_id}.'
+      state_unreadable: Local configuration state could not be read.
+      state_write_invalid_payload: 'Workflow state could not be saved: invalid payload.'
+    results:
+      aborted: Workflow stopped before completion.
+      completed: Workflow completed.
+    steps:
+      already_filed: This filing is already recorded as submitted.
+      auth_certificate_invalid: Digital certificate is not valid.
+      auth_certificate_load_failed: Digital certificate could not be loaded.
+      auth_provider_unavailable: Selected authentication provider is unavailable.
+      deadline_absent: No filing deadline is available.
+      deadline_closed: Filing window is closed.
+      deadline_future: Filing window has not opened yet.
+      deadline_informational: Deadline information recorded.
+      deadline_missing: Filing deadline is unavailable.
+      deadline_open: Filing window is open.
+      deadline_overdue: Filing deadline has passed.
+      draft_build_failed: Draft could not be prepared.
+      draft_built: Draft prepared.
+      draft_identity_mismatch: Draft does not match the selected filing.
+      draft_not_ready: Draft is not ready for filing.
+      inbox_blocked: Inbox has blocking items.
+      inbox_clear: Inbox is clear.
+      inbox_skipped: Inbox check is not available.
+      preflight_completed: Filing checks completed.
+      preflight_failed: Filing checks could not be completed.
+      profile_loaded: Active profile loaded.
+      site_unavailable: The filing service is unavailable.
+      validation_clean: Validation completed without blocking issues.
+      validation_failed: Validation found blocking issues.
+      workflow_failure: Workflow could not be completed.

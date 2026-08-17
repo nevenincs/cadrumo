@@ -1,0 +1,22 @@
+modelo:
+  schema:
+    '308':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2009-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the request relates
+            x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
+              help: null
+              label: Request type (equivalence surcharge / art 30 bis / art 21.4 /
+                occasional taxable person / simplified transport regime)
+          construct:
+            modelo-308-iva-solicitud-devolucion:
+              field:
+                title: null
+          field:
+            label: null

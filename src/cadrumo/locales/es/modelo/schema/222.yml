@@ -1,0 +1,23 @@
+modelo:
+  schema:
+    '222':
+      field:
+        official_name: Modelo 222. Impuesto sobre Sociedades. Régimen de consolidación
+          fiscal. Pago fraccionado.
+        title: IS pago fraccionado régimen de consolidación fiscal (grupos)
+      revision:
+        2025-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere el pago fraccionado
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Modalidad del pago fraccionado (art. 40.2 cuota íntegra / art.
+                40.3 base imponible)
+          construct:
+            modelo-222-declaration-construct:
+              field:
+                title: Modelo 222 pago fraccionado en régimen de consolidación fiscal
+          field:
+            label: Orden HFP/227/2017 (modelo 222), ejercicios 2025 y siguientes

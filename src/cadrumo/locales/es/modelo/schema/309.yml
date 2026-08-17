@@ -1,0 +1,35 @@
+modelo:
+  schema:
+    '309':
+      field:
+        official_name: Modelo 309. Impuesto sobre el Valor Añadido. Declaración-liquidación
+          no periódica.
+        title: IVA. Declaración-liquidación no periódica
+      revision:
+        2004-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaración
+            x-chim6r1eehkn0rpdehp6ipr7clp0:
+              help: null
+              label: Tipo de trigger (medios de transporte nuevos / régimen agricola
+                / recargo de equivalencia / ejecucion forzosa)
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
+                (medios de transporte nuevos, etc.)
+            x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
+              help: null
+              label: Total cuota IVA no periódica (autorepercutido + soportado-recargo)
+            x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
+              help: null
+              label: Cuota IVA soportado por minoristas en recargo de equivalencia
+                (devolución a viajeros)
+          construct:
+            modelo-309-iva-no-periodica:
+              field:
+                title: Modelo 309 IVA declaracion-liquidacion no periodica
+          field:
+            label: Modelo 309 ejercicios 2004 y siguientes (Orden HAC/3625/2003 apartados
+              primero y tercero). Ad-hoc por trigger de obligacion no periodica.

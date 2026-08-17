@@ -1,0 +1,135 @@
+modelo:
+  schema:
+    '353':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2008-2025:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix l'autoliquidació
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període mensual (01..12)
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
+                - agregat del grup
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: Total quota d'IVA deduïble (agregat del grup)
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: Total quota d'IVA meritada (agregat del grup)
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4cli7aor9c9m6ab9j68p0:
+              help: null
+              label: Quota deduïble agregada del grup reconciliada des dels Models
+                322 dels membres
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4clr6arj7c5i62b9j68p0:
+              help: null
+              label: Quota meritada agregada del grup reconciliada des dels Models
+                322 dels membres
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbjiclpnar3kc5i6ub9j68p0:
+              help: null
+              label: Resultat agregat del grup reconciliat des dels Models 322 dels
+                membres
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: Quota d'IVA repercutit al tipus general (21%) - agregat del grup
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: Quota d'IVA repercutit al tipus reduït (10%) - agregat del grup
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: Quota d'IVA repercutit al tipus superreduït (4%) - agregat del
+                grup
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: Resultat del grup (quota meritada agregada - quota deduïble agregada)
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: Quota d'IVA suportat en operacions interiors corrents - agregat
+                del grup
+          construct:
+            modelo-353-iva-grupo-agregado:
+              field:
+                title: null
+          field:
+            label: Model 353 exercicis 2008 a 2025 (Ordre EHA/3434/2007)
+        2026-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Resultat total (sumatori del resultat d'entitats) [01]
+            '02':
+              help: null
+              label: Quotes a compensar pendents d'exercicis anteriors [02]
+            '03':
+              help: null
+              label: Resultat ([01] - [08]) [03]
+            '04':
+              help: null
+              label: 'A deduir: resultat d''autoliquidacions anteriors del mateix
+                concepte, exercici i període [04]'
+            '05':
+              help: null
+              label: Resultat de l'autoliquidació ([03] - [04]) [05]
+            08:
+              help: null
+              label: Quotes a compensar de períodes anteriors aplicades en aquest
+                període [08]
+            09:
+              help: null
+              label: Quotes a compensar de períodes previs pendents per a períodes
+                posteriors ([02]-[08]) [09]
+            '10':
+              help: null
+              label: Pagament a compte de lliuraments de gasolines, gasoils i biocarburants
+                atribuïble a l'Administració de l'Estat [10]
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix l'autoliquidació
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període mensual (01..12)
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4cli7aor9c9m6ab9j68p0:
+              help: null
+              label: Quota deduïble agregada del grup reconciliada des dels Models
+                322 dels membres
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4clr6arj7c5i62b9j68p0:
+              help: null
+              label: Quota meritada agregada del grup reconciliada des dels Models
+                322 dels membres
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbjiclpnar3kc5i6ub9j68p0:
+              help: null
+              label: Resultat agregat del grup reconciliat des dels Models 322 dels
+                membres
+          construct:
+            modelo-353-iva-grupo-agregado:
+              field:
+                title: null
+          field:
+            label: Model 353 exercici 2026 i següents (Ordre EHA/3434/2007)

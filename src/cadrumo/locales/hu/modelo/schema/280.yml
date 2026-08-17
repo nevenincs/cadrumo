@@ -1,0 +1,92 @@
+modelo:
+  schema:
+    '280':
+      field:
+        official_name: null
+        title: null
+      revision:
+        '2025':
+          casilla:
+            aportaciones-ejercicio:
+              help: null
+              label: null
+            base-retencion-practicada:
+              help: null
+              label: A levont forrásadó alapja
+            base-retenciones:
+              help: null
+              label: A forrásadó alapja
+            clave-alta:
+              help: null
+              label: null
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Kiegészítő vagy helyettesítő bevallás
+            declarado-nif:
+              help: null
+              label: null
+            declarado-nombre:
+              help: null
+              label: null
+            declarante-nif:
+              help: null
+              label: null
+            declarante-razon-social:
+              help: null
+              label: A bejelentő cégneve
+            ejercicio-declaracion:
+              help: null
+              label: null
+            extincion-plan:
+              help: null
+              label: null
+            fecha-apertura:
+              help: null
+              label: A megnyitás dátuma
+            fecha-extincion:
+              help: null
+              label: null
+            identificador-producto:
+              help: null
+              label: A szerződött termék azonosítója
+            importe-total-aportaciones:
+              help: null
+              label: A befizetések teljes összege
+            numero-identificativo-anterior:
+              help: null
+              label: A korábbi bevallás azonosító száma
+            numero-identificativo-declaracion:
+              help: null
+              label: A bevallás azonosító száma
+            numero-total-declarados:
+              help: null
+              label: A bejelentett személyek száma összesen
+            persona-relacion:
+              help: null
+              label: Kapcsolattartó személy
+            rendimientos-negativos-acumulados:
+              help: null
+              label: null
+            rendimientos-negativos-ejercicio:
+              help: null
+              label: null
+            rendimientos-negativos-imputables:
+              help: null
+              label: Betudható negatív hozamok
+            rendimientos-positivos-acumulados:
+              help: null
+              label: null
+            rendimientos-positivos-ejercicio:
+              help: null
+              label: null
+            representante-legal-nif:
+              help: null
+              label: A törvényes képviselő adószáma
+            tipo-identificador:
+              help: null
+              label: Az azonosító típusa
+            tipo-plan-ahorro:
+              help: null
+              label: A hosszú távú megtakarítási terv típusa
+          field:
+            label: null

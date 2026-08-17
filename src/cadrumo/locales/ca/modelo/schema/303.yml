@@ -1,0 +1,4286 @@
+modelo:
+  schema:
+    '303':
+      casilla:
+        continuidad:
+          dr303-01:
+            help: null
+            label: IVA meritat, règim general tipus superreduït 4% - base imposable
+          dr303-02:
+            help: null
+            label: IVA meritat, règim general tipus superreduït 4% - percentatge del
+              tipus
+          dr303-03:
+            help: null
+            label: IVA meritat, règim general tipus superreduït 4% - quota
+          dr303-04:
+            help: null
+            label: IVA meritat, règim general tipus reduït 10% - base imposable
+          dr303-05:
+            help: null
+            label: IVA meritat, règim general tipus reduït 10% - percentatge del tipus
+          dr303-06:
+            help: null
+            label: IVA meritat, règim general tipus reduït 10% - quota
+          dr303-07:
+            help: null
+            label: IVA meritat, règim general tipus general 21% - base imposable
+          dr303-08:
+            help: null
+            label: IVA meritat, règim general tipus general 21% - percentatge del
+              tipus
+          dr303-09:
+            help: null
+            label: IVA meritat, règim general tipus general 21% - quota
+          dr303-10:
+            help: null
+            label: IVA meritat per adquisicions intracomunitàries de béns i serveis
+              - base
+          dr303-108:
+            help: null
+            label: Rectificativa - altres ajustos en supòsits determinats per discrepància
+              de criteri administratiu
+          dr303-109:
+            help: null
+            label: Resultat - devolucions acordades per l'AEAT d'autoliquidacions
+              anteriors de l'exercici i període
+          dr303-11:
+            help: null
+            label: IVA meritat per adquisicions intracomunitàries de béns i serveis
+              - quota
+          dr303-111:
+            help: null
+            label: Rectificativa - import de la rectificació
+          dr303-112:
+            help: Import manual del pagament a compte per lliuraments de gasolines,
+              gasoils i biocarburants atribuït a l'Estat; minorarà la casella 71 del
+              model 303.
+            label: Pagament a compte per lliuraments de gasolines, gasoils i biocarburants
+              atribuït a l'Estat
+          dr303-12:
+            help: null
+            label: IVA meritat per altres operacions amb inversió del subjecte passiu
+              excloses les intracomunitàries - base
+          dr303-120:
+            help: null
+            label: Informació addicional - operacions no subjectes per regles de localització,
+              exclosa la casella 123
+          dr303-122:
+            help: null
+            label: Informació addicional - operacions subjectes a inversió del subjecte
+              passiu
+          dr303-123:
+            help: null
+            label: Informació addicional - operacions no subjectes per localització
+              en règims especials de finestreta única
+          dr303-124:
+            help: null
+            label: Informació addicional - operacions subjectes en règims especials
+              de finestreta única
+          dr303-13:
+            help: null
+            label: IVA meritat per altres operacions amb inversió del subjecte passiu
+              excloses les intracomunitàries - quota
+          dr303-14:
+            help: null
+            label: Modificació de bases i quotes d'IVA meritat - base imposable
+          dr303-15:
+            help: null
+            label: Modificació de bases i quotes d'IVA meritat - quota
+          dr303-150:
+            help: null
+            label: IVA meritat, règim general nou tipus tram 1 - base imposable
+          dr303-151:
+            help: null
+            label: IVA meritat, règim general nou tipus tram 1 - percentatge del tipus
+          dr303-152:
+            help: null
+            label: IVA meritat, règim general nou tipus tram 1 - quota
+          dr303-153:
+            help: null
+            label: IVA meritat, règim general nou tipus tram 2 - base imposable
+          dr303-154:
+            help: null
+            label: IVA meritat, règim general nou tipus tram 2 - percentatge del tipus
+          dr303-155:
+            help: null
+            label: IVA meritat, règim general nou tipus tram 2 - quota
+          dr303-156:
+            help: null
+            label: Recàrrec d'equivalència al 0,5% - base imposable
+          dr303-157:
+            help: null
+            label: Recàrrec d'equivalència al 0,5% - percentatge del tipus
+          dr303-158:
+            help: null
+            label: Recàrrec d'equivalència al 0,5% - quota
+          dr303-16:
+            help: null
+            label: Recàrrec d'equivalència al 1,0% - base imposable
+          dr303-165:
+            help: null
+            label: IVA meritat, règim general tipus 2% des de 2024 - base imposable
+          dr303-166:
+            help: null
+            label: IVA meritat, règim general tipus 2% des de 2024 - percentatge del
+              tipus
+          dr303-167:
+            help: null
+            label: IVA meritat, règim general tipus 2% des de 2024 - quota
+          dr303-168:
+            help: null
+            label: Nou tipus de recàrrec d'equivalència des de 2024 - base imposable
+          dr303-169:
+            help: null
+            label: Nou tipus de recàrrec d'equivalència des de 2024 - percentatge
+              del tipus
+          dr303-17:
+            help: null
+            label: Recàrrec d'equivalència al 1,0% - percentatge del tipus
+          dr303-170:
+            help: null
+            label: Nou tipus de recàrrec d'equivalència des de 2024 - quota
+          dr303-18:
+            help: null
+            label: Recàrrec d'equivalència al 1,0% - quota
+          dr303-19:
+            help: null
+            label: Recàrrec d'equivalència al 1,4% - base imposable
+          dr303-20:
+            help: null
+            label: Recàrrec d'equivalència al 1,4% - percentatge del tipus
+          dr303-21:
+            help: null
+            label: Recàrrec d'equivalència al 1,4% - quota
+          dr303-22:
+            help: null
+            label: Recàrrec d'equivalència al 5,2% - base imposable
+          dr303-23:
+            help: null
+            label: Recàrrec d'equivalència al 5,2% - percentatge del tipus
+          dr303-24:
+            help: null
+            label: Recàrrec d'equivalència al 5,2% - quota
+          dr303-25:
+            help: null
+            label: Modificació de bases i quotes del recàrrec d'equivalència - base
+              imposable
+          dr303-26:
+            help: null
+            label: Modificació de bases i quotes del recàrrec d'equivalència - quota
+          dr303-27:
+            help: null
+            label: Total quota meritada
+          dr303-28:
+            help: null
+            label: IVA deduïble en operacions interiors corrents - base
+          dr303-29:
+            help: null
+            label: IVA deduïble en operacions interiors corrents - quota
+          dr303-30:
+            help: null
+            label: IVA deduïble en operacions interiors de béns d'inversió - base
+          dr303-31:
+            help: null
+            label: IVA deduïble en operacions interiors de béns d'inversió - quota
+          dr303-32:
+            help: null
+            label: IVA deduïble en importacions de béns corrents - base
+          dr303-33:
+            help: null
+            label: IVA deduïble en importacions de béns corrents - quota
+          dr303-34:
+            help: null
+            label: IVA deduïble en importacions de béns d'inversió - base
+          dr303-35:
+            help: null
+            label: IVA deduïble en importacions de béns d'inversió - quota
+          dr303-36:
+            help: null
+            label: IVA deduïble en adquisicions intracomunitàries corrents - base
+          dr303-37:
+            help: null
+            label: IVA deduïble en adquisicions intracomunitàries corrents - quota
+          dr303-38:
+            help: null
+            label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
+              - base
+          dr303-39:
+            help: null
+            label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
+              - quota
+          dr303-40:
+            help: null
+            label: Rectificació de deduccions - base
+          dr303-41:
+            help: null
+            label: Rectificació de deduccions - quota
+          dr303-42:
+            help: null
+            label: Compensacions del règim especial d'agricultura, ramaderia i pesca
+              - quota
+          dr303-43:
+            help: null
+            label: Regularització de béns d'inversió - quota
+          dr303-44:
+            help: null
+            label: Regularització de prorrata per percentatge definitiu - quota
+          dr303-45:
+            help: null
+            label: Total a deduir - quota
+          dr303-47:
+            help: null
+            label: Règim simplificat, 1T-2T-3T - suma d'ingressos a compte del conjunt
+              d'activitats
+          dr303-48:
+            help: null
+            label: Règim simplificat, 4T - suma de quotes derivades del conjunt d'activitats
+          dr303-49:
+            help: null
+            label: Règim simplificat, 4T - suma d'ingressos a compte realitzats en
+              l'exercici
+          dr303-50:
+            help: null
+            label: Règim simplificat, 4T - resultat ([48] - [49])
+          dr303-51:
+            help: null
+            label: Règim simplificat - quotes meritades per adquisicions intracomunitàries
+              de béns
+          dr303-52:
+            help: null
+            label: Règim simplificat - quotes meritades per lliuraments d'actius fixos
+          dr303-53:
+            help: null
+            label: Règim simplificat - quotes meritades d'IVA meritat per inversió
+              del subjecte passiu
+          dr303-54:
+            help: null
+            label: Règim simplificat - total quota resultant
+          dr303-55:
+            help: null
+            label: Règim simplificat - IVA deduïble per adquisició o importació d'actius
+              fixos
+          dr303-56:
+            help: null
+            label: Règim simplificat - IVA deduïble per regularització de béns d'inversió
+          dr303-57:
+            help: null
+            label: Règim simplificat - total IVA deduïble ([55] + [56])
+          dr303-58:
+            help: null
+            label: Resultat del règim simplificat ([54] - [57])
+          dr303-59:
+            help: null
+            label: Informació addicional - lliuraments intracomunitaris de béns i
+              serveis
+          dr303-60:
+            help: null
+            label: Informació addicional - exportacions i operacions assimilades
+          dr303-62:
+            help: null
+            label: Informació addicional - lliuraments de criteri de caixa meritats
+              art. 75 LIVA - base imposable
+          dr303-63:
+            help: null
+            label: Informació addicional - lliuraments de criteri de caixa meritats
+              art. 75 LIVA - quota
+          dr303-65:
+            help: null
+            label: Resultat - percentatge atribuïble a l'Administració de l'Estat
+          dr303-68:
+            help: null
+            label: Resultat - resultat de regularització anual de tributació conjunta
+          dr303-70:
+            help: null
+            label: Resultat - resultats a ingressar d'autoliquidacions anteriors de
+              l'exercici i període
+          dr303-74:
+            help: null
+            label: Informació addicional - adquisicions de criteri de caixa - base
+              imposable
+          dr303-75:
+            help: null
+            label: Informació addicional - adquisicions de criteri de caixa - quota
+          dr303-76:
+            help: null
+            label: Resultat - regularització de quotes art. 80 cinc 5a LIVA
+          dr303-77:
+            help: null
+            label: Resultat - IVA a l'importació liquidat per la Duana pendent d'ingrés
+          filing-period:
+            help: null
+            label: Període trimestral
+          filing-year:
+            help: null
+            label: Exercici fiscal de l'autoliquidació
+          iva-base-autorepercutida-intracomunitaria-devengado:
+            help: Suma la base imposable autorepercutida meritada en adquisicions
+              intracomunitàries.
+            label: Base imposable autorepercutida meritada en adquisicions intracomunitàries
+          iva-compensacion-aplicada-periodo:
+            help: null
+            label: Compensacions de períodes anteriors aplicades en aquest període
+          iva-compensacion-disponible-fin-periodo:
+            help: null
+            label: Saldo de compensació disponible al final del període
+          iva-compensacion-generada-periodo:
+            help: null
+            label: Saldo a compensar generat en aquest període
+          iva-compensacion-pendiente-anteriores:
+            help: null
+            label: Quotes a compensar pendents de períodes anteriors
+          iva-compensacion-pendiente-posteriores:
+            help: null
+            label: Compensacions de períodes anteriors pendents per a períodes posteriors
+          iva-cuota-autorepercutida-interior-deducible:
+            help: null
+            label: IVA autorepercutit deduïble en operacions interiors
+          iva-cuota-autorepercutida-interior-devengado:
+            help: null
+            label: IVA autorepercutit meritat en operacions interiors
+          iva-cuota-autorepercutida-intracomunitaria:
+            help: null
+            label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
+          iva-cuota-autorepercutida-intracomunitaria-deducible:
+            help: null
+            label: IVA autorepercutit deduïble en adquisicions intracomunitàries
+          iva-cuota-autorepercutida-intracomunitaria-devengado:
+            help: null
+            label: IVA autorepercutit meritat en adquisicions intracomunitàries
+          iva-cuota-deducible-total:
+            help: null
+            label: Total quota d'IVA deduïble
+          iva-cuota-devengada-total:
+            help: null
+            label: Total quota d'IVA meritada
+          iva-cuota-repercutida-general:
+            help: Quota total d'IVA repercutit calculada al tipus general del 21%.
+            label: Quota IVA repercutit al tipus general (21%)
+          iva-cuota-repercutida-reducido:
+            help: null
+            label: Quota d'IVA repercutit al tipus reduït (10%)
+          iva-cuota-repercutida-reducido-transitorio:
+            help: Casella transitòria del RD-ley 4/2024 per al tipus reduït, que conviu
+              amb el tipus reduït ordinari del 10%.
+            label: Quota d’IVA repercutit al tipus reduït transitori (5%/7,5%)
+          iva-cuota-repercutida-super-reducido:
+            help: null
+            label: Quota d'IVA repercutit al tipus superreduït (4%)
+          iva-cuota-repercutida-super-reducido-transitorio:
+            help: Casella transitòria del RD-ley 4/2024 per al tipus superreduït,
+              que conviu amb el tipus superreduït ordinari del 4%.
+            label: Quota d’IVA repercutit al tipus superreduït transitori (2%)
+          iva-cuota-soportada-importaciones:
+            help: null
+            label: Quota d'IVA suportat deduïble en importacions de béns corrents
+          iva-cuota-soportada-interiores:
+            help: null
+            label: Quota IVA suportat en operacions interiors corrents
+          iva-prorrata-porcentaje:
+            help: null
+            label: Percentatge de prorrata general
+          iva-prorrata-volumen-con-derecho:
+            help: null
+            label: Volum anual d'operacions que originen dret a deducció
+          iva-prorrata-volumen-total:
+            help: null
+            label: Volum anual total d'operacions
+          iva-regularizacion-inversiones:
+            help: null
+            label: Regularització de béns d'inversió
+          iva-resultado-regimen-general:
+            help: null
+            label: Resultat del règim general
+          m303-deducciones-sector-1-domestic-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-domestic-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-domestic-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-domestic-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-investment-regularisation:
+            help: null
+            label: null
+          m303-deducciones-sector-1-reagp-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-reagp-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-rectification-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-rectification-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-total:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-investment-regularisation:
+            help: null
+            label: null
+          m303-deducciones-sector-2-reagp-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-reagp-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-rectification-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-rectification-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-total:
+            help: null
+            label: null
+          m303-exonerado-390-107:
+            help: null
+            label: null
+          m303-exonerado-390-125:
+            help: null
+            label: null
+          m303-exonerado-390-126:
+            help: null
+            label: null
+          m303-exonerado-390-127:
+            help: null
+            label: null
+          m303-exonerado-390-128:
+            help: null
+            label: null
+          m303-exonerado-390-79:
+            help: null
+            label: null
+          m303-exonerado-390-80:
+            help: null
+            label: null
+          m303-exonerado-390-81:
+            help: null
+            label: null
+          m303-exonerado-390-83:
+            help: null
+            label: null
+          m303-exonerado-390-84:
+            help: null
+            label: null
+          m303-exonerado-390-86:
+            help: null
+            label: null
+          m303-exonerado-390-88:
+            help: null
+            label: null
+          m303-exonerado-390-89:
+            help: null
+            label: null
+          m303-exonerado-390-90:
+            help: null
+            label: null
+          m303-exonerado-390-91:
+            help: null
+            label: null
+          m303-exonerado-390-92:
+            help: null
+            label: null
+          m303-exonerado-390-93:
+            help: null
+            label: null
+          m303-exonerado-390-94:
+            help: null
+            label: null
+          m303-exonerado-390-95:
+            help: null
+            label: null
+          m303-exonerado-390-96:
+            help: null
+            label: null
+          m303-exonerado-390-97:
+            help: null
+            label: null
+          m303-exonerado-390-98:
+            help: null
+            label: null
+          m303-exonerado-390-99:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-tipo:
+            help: null
+            label: null
+      construct:
+        modelo-303-iva-autoliquidacion:
+          field:
+            title: null
+      field:
+        official_name: null
+        title: null
+      revision:
+        2009-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: IVA meritat, règim general tipus superreduït 4% - base imposable
+            '02':
+              help: null
+              label: IVA meritat, règim general tipus superreduït 4% - percentatge
+                del tipus
+            '03':
+              help: null
+              label: IVA meritat, règim general tipus superreduït 4% - quota
+            '04':
+              help: null
+              label: IVA meritat, règim general tipus reduït 10% - base imposable
+            '05':
+              help: null
+              label: IVA meritat, règim general tipus reduït 10% - percentatge del
+                tipus
+            '06':
+              help: null
+              label: IVA meritat, règim general tipus reduït 10% - quota
+            '07':
+              help: null
+              label: IVA meritat, règim general tipus general 21% - base imposable
+            08:
+              help: null
+              label: IVA meritat, règim general tipus general 21% - percentatge del
+                tipus
+            09:
+              help: null
+              label: IVA meritat, règim general tipus general 21% - quota
+            '10':
+              help: null
+              label: IVA meritat per adquisicions intracomunitàries de béns i serveis
+                - base
+            '108':
+              help: null
+              label: Rectificativa - altres ajustos en supòsits determinats per discrepància
+                de criteri administratiu
+            '109':
+              help: null
+              label: Resultat - devolucions acordades per l'AEAT d'autoliquidacions
+                anteriors de l'exercici i període
+            '11':
+              help: null
+              label: IVA meritat per adquisicions intracomunitàries de béns i serveis
+                - quota
+            '111':
+              help: null
+              label: Rectificativa - import de la rectificació
+            '12':
+              help: null
+              label: IVA meritat per altres operacions amb inversió del subjecte passiu
+                excloses les intracomunitàries - base
+            '120':
+              help: null
+              label: Informació addicional - operacions no subjectes per regles de
+                localització, exclosa la casella 123
+            '122':
+              help: null
+              label: Informació addicional - operacions subjectes a inversió del subjecte
+                passiu
+            '123':
+              help: null
+              label: Informació addicional - operacions no subjectes per localització
+                en règims especials de finestreta única
+            '124':
+              help: null
+              label: Informació addicional - operacions subjectes en règims especials
+                de finestreta única
+            '13':
+              help: null
+              label: IVA meritat per altres operacions amb inversió del subjecte passiu
+                excloses les intracomunitàries - quota
+            '14':
+              help: null
+              label: Modificació de bases i quotes d'IVA meritat - base imposable
+            '15':
+              help: null
+              label: Modificació de bases i quotes d'IVA meritat - quota
+            '150':
+              help: null
+              label: IVA meritat, règim general nou tipus tram 1 - base imposable
+            '151':
+              help: null
+              label: IVA meritat, règim general nou tipus tram 1 - percentatge del
+                tipus
+            '152':
+              help: null
+              label: IVA meritat, règim general nou tipus tram 1 - quota
+            '153':
+              help: null
+              label: IVA meritat, règim general nou tipus tram 2 - base imposable
+            '154':
+              help: null
+              label: IVA meritat, règim general nou tipus tram 2 - percentatge del
+                tipus
+            '155':
+              help: null
+              label: IVA meritat, règim general nou tipus tram 2 - quota
+            '156':
+              help: null
+              label: Recàrrec d'equivalència al 0,5% - base imposable
+            '157':
+              help: null
+              label: Recàrrec d'equivalència al 0,5% - percentatge del tipus
+            '158':
+              help: null
+              label: Recàrrec d'equivalència al 0,5% - quota
+            '16':
+              help: null
+              label: Recàrrec d'equivalència al 1,0% - base imposable
+            '165':
+              help: null
+              label: IVA meritat, règim general tipus 2% des de 2024 - base imposable
+            '166':
+              help: null
+              label: IVA meritat, règim general tipus 2% des de 2024 - percentatge
+                del tipus
+            '167':
+              help: null
+              label: IVA meritat, règim general tipus 2% des de 2024 - quota
+            '168':
+              help: null
+              label: Nou tipus de recàrrec d'equivalència des de 2024 - base imposable
+            '169':
+              help: null
+              label: Nou tipus de recàrrec d'equivalència des de 2024 - percentatge
+                del tipus
+            '17':
+              help: null
+              label: Recàrrec d'equivalència al 1,0% - percentatge del tipus
+            '170':
+              help: null
+              label: Nou tipus de recàrrec d'equivalència des de 2024 - quota
+            '18':
+              help: null
+              label: Recàrrec d'equivalència al 1,0% - quota
+            '19':
+              help: null
+              label: Recàrrec d'equivalència al 1,4% - base imposable
+            '20':
+              help: null
+              label: Recàrrec d'equivalència al 1,4% - percentatge del tipus
+            '21':
+              help: null
+              label: Recàrrec d'equivalència al 1,4% - quota
+            '22':
+              help: null
+              label: Recàrrec d'equivalència al 5,2% - base imposable
+            '23':
+              help: null
+              label: Recàrrec d'equivalència al 5,2% - percentatge del tipus
+            '24':
+              help: null
+              label: Recàrrec d'equivalència al 5,2% - quota
+            '25':
+              help: null
+              label: Modificació de bases i quotes del recàrrec d'equivalència - base
+                imposable
+            '26':
+              help: null
+              label: Modificació de bases i quotes del recàrrec d'equivalència - quota
+            '27':
+              help: null
+              label: Total quota meritada
+            '28':
+              help: null
+              label: IVA deduïble en operacions interiors corrents - base
+            '29':
+              help: null
+              label: IVA deduïble en operacions interiors corrents - quota
+            '30':
+              help: null
+              label: IVA deduïble en operacions interiors de béns d'inversió - base
+            '31':
+              help: null
+              label: IVA deduïble en operacions interiors de béns d'inversió - quota
+            '32':
+              help: null
+              label: IVA deduïble en importacions de béns corrents - base
+            '33':
+              help: null
+              label: IVA deduïble en importacions de béns corrents - quota
+            '34':
+              help: null
+              label: IVA deduïble en importacions de béns d'inversió - base
+            '35':
+              help: null
+              label: IVA deduïble en importacions de béns d'inversió - quota
+            '36':
+              help: null
+              label: IVA deduïble en adquisicions intracomunitàries corrents - base
+            '37':
+              help: null
+              label: IVA deduïble en adquisicions intracomunitàries corrents - quota
+            '38':
+              help: null
+              label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
+                - base
+            '39':
+              help: null
+              label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
+                - quota
+            '40':
+              help: null
+              label: Rectificació de deduccions - base
+            '41':
+              help: null
+              label: Rectificació de deduccions - quota
+            '42':
+              help: null
+              label: Compensacions del règim especial d'agricultura, ramaderia i pesca
+                - quota
+            '43':
+              help: null
+              label: Regularització de béns d'inversió - quota
+            '44':
+              help: null
+              label: Regularització de prorrata per percentatge definitiu - quota
+            '45':
+              help: null
+              label: Total a deduir - quota
+            '47':
+              help: null
+              label: Règim simplificat, 1T-2T-3T - suma d'ingressos a compte del conjunt
+                d'activitats
+            '48':
+              help: null
+              label: Règim simplificat, 4T - suma de quotes derivades del conjunt
+                d'activitats
+            '49':
+              help: null
+              label: Règim simplificat, 4T - suma d'ingressos a compte realitzats
+                en l'exercici
+            '50':
+              help: null
+              label: Règim simplificat, 4T - resultat ([48] - [49])
+            '51':
+              help: null
+              label: Règim simplificat - quotes meritades per adquisicions intracomunitàries
+                de béns
+            '52':
+              help: null
+              label: Règim simplificat - quotes meritades per lliuraments d'actius
+                fixos
+            '53':
+              help: null
+              label: Règim simplificat - quotes meritades d'IVA meritat per inversió
+                del subjecte passiu
+            '54':
+              help: null
+              label: Règim simplificat - total quota resultant
+            '55':
+              help: null
+              label: Règim simplificat - IVA deduïble per adquisició o importació
+                d'actius fixos
+            '56':
+              help: null
+              label: Règim simplificat - IVA deduïble per regularització de béns d'inversió
+            '57':
+              help: null
+              label: Règim simplificat - total IVA deduïble ([55] + [56])
+            '58':
+              help: null
+              label: Resultat del règim simplificat ([54] - [57])
+            '59':
+              help: null
+              label: Informació addicional - lliuraments intracomunitaris de béns
+                i serveis
+            '60':
+              help: null
+              label: Informació addicional - exportacions i operacions assimilades
+            '62':
+              help: null
+              label: Informació addicional - lliuraments de criteri de caixa meritats
+                art. 75 LIVA - base imposable
+            '63':
+              help: null
+              label: Informació addicional - lliuraments de criteri de caixa meritats
+                art. 75 LIVA - quota
+            '64':
+              help: null
+              label: Resultat - suma de resultats ([46] + [58] + [76])
+            '65':
+              help: null
+              label: Resultat - percentatge atribuïble a l'Administració de l'Estat
+            '66':
+              help: null
+              label: Resultat - import atribuïble a l'Administració de l'Estat
+            '68':
+              help: null
+              label: Resultat - resultat de regularització anual de tributació conjunta
+            '70':
+              help: null
+              label: Resultat - resultats a ingressar d'autoliquidacions anteriors
+                de l'exercici i període
+            '71':
+              help: null
+              label: Resultat final ([69] - [70] + [109])
+            '74':
+              help: null
+              label: Informació addicional - adquisicions de criteri de caixa - base
+                imposable
+            '75':
+              help: null
+              label: Informació addicional - adquisicions de criteri de caixa - quota
+            '76':
+              help: null
+              label: Resultat - regularització de quotes art. 80 cinc 5a LIVA
+            '77':
+              help: null
+              label: Resultat - IVA a l'importació liquidat per la Duana pendent d'ingrés
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici fiscal de l'autoliquidació
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període trimestral
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: IVA autorepercutit deduïble en operacions interiors
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: IVA autorepercutit meritat en operacions interiors
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: IVA autorepercutit deduïble en adquisicions intracomunitàries
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: IVA autorepercutit meritat en adquisicions intracomunitàries
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: Compensacions de períodes anteriors aplicades en aquest període
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: Saldo de compensació disponible al final del període
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: Saldo a compensar generat en aquest període
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: Quotes a compensar pendents de períodes anteriors
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: Compensacions de períodes anteriors pendents per a períodes posteriors
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: Total quota d'IVA deduïble
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: Total quota d'IVA meritada
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: Percentatge de prorrata general
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: Volum anual d'operacions que originen dret a deducció
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: Volum anual total d'operacions
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: Regularització de béns d'inversió
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: Quota IVA repercutit al tipus general (21%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: Quota d'IVA repercutit al tipus reduït (10%)
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: Quota d'IVA repercutit al tipus superreduït (4%)
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: Resultat de l'autoliquidació
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: Resultat del règim general
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: Quota d'IVA suportat deduïble en importacions de béns corrents
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: Quota IVA suportat en operacions interiors corrents
+          field:
+            label: null
+        '2023':
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '107':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: null
+        2024-desde-09-y-3t:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '107':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: null
+        2024-hasta-08-y-2t:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '107':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: null
+        '2025':
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '107':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: null
+        2026-y-siguientes:
+          casilla:
+            '01':
+              help: 'Casella 01: base imposable de l''IVA meritat en el règim general
+                al tipus superreduït del 4%.'
+              label: IVA meritat, règim general tipus superreduït 4% - base imposable
+            '02':
+              help: 'Casella 02: percentatge del tipus de l''IVA meritat en el règim
+                general al tipus superreduït del 4%.'
+              label: IVA meritat, règim general tipus superreduït 4% - percentatge
+                del tipus
+            '03':
+              help: 'Casella 03: quota d''IVA meritat en el règim general al tipus
+                superreduït del 4%.'
+              label: IVA meritat, règim general tipus superreduït 4% - quota
+            '04':
+              help: 'Casella 04: base imposable de l''IVA meritat en el règim general
+                al tipus reduït del 10%.'
+              label: IVA meritat, règim general tipus reduït 10% - base imposable
+            '05':
+              help: 'Casella 05: percentatge del tipus de l''IVA meritat en el règim
+                general al tipus reduït del 10%.'
+              label: IVA meritat, règim general tipus reduït 10% - percentatge del
+                tipus
+            '06':
+              help: 'Casella 06: quota d''IVA meritat en el règim general al tipus
+                reduït del 10%.'
+              label: IVA meritat, règim general tipus reduït 10% - quota
+            '07':
+              help: 'Casella 07: base imposable de l''IVA meritat en el règim general
+                al tipus general del 21%.'
+              label: IVA meritat, règim general tipus general 21% - base imposable
+            08:
+              help: 'Casella 08: percentatge del tipus de l''IVA meritat en el règim
+                general al tipus general del 21%.'
+              label: IVA meritat, règim general tipus general 21% - percentatge del
+                tipus
+            09:
+              help: 'Casella 09: quota d''IVA meritat en el règim general al tipus
+                general del 21%.'
+              label: IVA meritat, règim general tipus general 21% - quota
+            '10':
+              help: 'Casella 10: base de l''IVA meritat per adquisicions intracomunitàries
+                de béns i serveis.'
+              label: IVA meritat per adquisicions intracomunitàries de béns i serveis
+                - base
+            '107':
+              help: null
+              label: null
+            '108':
+              help: 'Casella 108: altres ajustos en una autoliquidació rectificativa
+                per supòsits determinats per discrepància de criteri administratiu.'
+              label: Rectificativa - altres ajustos en supòsits determinats per discrepància
+                de criteri administratiu
+            '109':
+              help: 'Casella 109: devolucions acordades per l''AEAT en autoliquidacions
+                anteriors del mateix exercici i període.'
+              label: Resultat - devolucions acordades per l'AEAT d'autoliquidacions
+                anteriors de l'exercici i període
+            '11':
+              help: 'Casella 11: quota d''IVA meritat per adquisicions intracomunitàries
+                de béns i serveis.'
+              label: IVA meritat per adquisicions intracomunitàries de béns i serveis
+                - quota
+            '111':
+              help: 'Casella 111: import de la rectificació declarat en una autoliquidació
+                rectificativa.'
+              label: Rectificativa - import de la rectificació
+            '112':
+              help: null
+              label: null
+            '12':
+              help: 'Casella 12: base de l''IVA meritat per altres operacions amb
+                inversió del subjecte passiu excloses les intracomunitàries.'
+              label: IVA meritat per altres operacions amb inversió del subjecte passiu
+                excloses les intracomunitàries - base
+            '120':
+              help: 'Casella 120: informació addicional sobre operacions no subjectes
+                per regles de localització, exclosa la casella 123.'
+              label: Informació addicional - operacions no subjectes per regles de
+                localització, exclosa la casella 123
+            '122':
+              help: 'Casella 122: informació addicional sobre operacions subjectes
+                a inversió del subjecte passiu.'
+              label: Informació addicional - operacions subjectes a inversió del subjecte
+                passiu
+            '123':
+              help: 'Casella 123: informació addicional sobre operacions no subjectes
+                per regles de localització en règims especials de finestreta única.'
+              label: Informació addicional - operacions no subjectes per localització
+                en règims especials de finestreta única
+            '124':
+              help: 'Casella 124: informació addicional sobre operacions subjectes
+                en règims especials de finestreta única.'
+              label: Informació addicional - operacions subjectes en règims especials
+                de finestreta única
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: 'Casella 13: quota d''IVA meritat per altres operacions amb inversió
+                del subjecte passiu excloses les intracomunitàries.'
+              label: IVA meritat per altres operacions amb inversió del subjecte passiu
+                excloses les intracomunitàries - quota
+            '14':
+              help: 'Casella 14: base imposable de la modificació de bases i quotes
+                d''IVA meritat.'
+              label: Modificació de bases i quotes d'IVA meritat - base imposable
+            '15':
+              help: 'Casella 15: quota de la modificació de bases i quotes d''IVA
+                meritat.'
+              label: Modificació de bases i quotes d'IVA meritat - quota
+            '150':
+              help: 'Casella 150: base imposable de l''IVA meritat en el règim general
+                nou tipus tram 1.'
+              label: IVA meritat, règim general nou tipus tram 1 - base imposable
+            '151':
+              help: 'Casella 151: percentatge del tipus de l''IVA meritat en el règim
+                general nou tipus tram 1.'
+              label: IVA meritat, règim general nou tipus tram 1 - percentatge del
+                tipus
+            '152':
+              help: 'Casella 152: quota d''IVA meritat en el règim general nou tipus
+                tram 1.'
+              label: IVA meritat, règim general nou tipus tram 1 - quota
+            '153':
+              help: 'Casella 153: base imposable de l''IVA meritat en el règim general
+                nou tipus tram 2.'
+              label: IVA meritat, règim general nou tipus tram 2 - base imposable
+            '154':
+              help: 'Casella 154: percentatge del tipus de l''IVA meritat en el règim
+                general nou tipus tram 2.'
+              label: IVA meritat, règim general nou tipus tram 2 - percentatge del
+                tipus
+            '155':
+              help: 'Casella 155: quota d''IVA meritat en el règim general nou tipus
+                tram 2.'
+              label: IVA meritat, règim general nou tipus tram 2 - quota
+            '156':
+              help: 'Casella 156: base imposable del recàrrec d''equivalència al 0,5%.'
+              label: Recàrrec d'equivalència al 0,5% - base imposable
+            '157':
+              help: 'Casella 157: percentatge del tipus del recàrrec d''equivalència
+                al 0,5%.'
+              label: Recàrrec d'equivalència al 0,5% - percentatge del tipus
+            '158':
+              help: 'Casella 158: quota del recàrrec d''equivalència al 0,5%.'
+              label: Recàrrec d'equivalència al 0,5% - quota
+            '16':
+              help: 'Casella 16: base imposable del recàrrec d''equivalència al 1,0%.'
+              label: Recàrrec d'equivalència al 1,0% - base imposable
+            '165':
+              help: 'Casella 165: base imposable de l''IVA meritat en el règim general
+                al tipus del 2% des de 2024.'
+              label: IVA meritat, règim general tipus 2% des de 2024 - base imposable
+            '166':
+              help: 'Casella 166: percentatge del tipus de l''IVA meritat en el règim
+                general al tipus del 2% des de 2024.'
+              label: IVA meritat, règim general tipus 2% des de 2024 - percentatge
+                del tipus
+            '167':
+              help: 'Casella 167: quota d''IVA meritat en el règim general al tipus
+                del 2% des de 2024.'
+              label: IVA meritat, règim general tipus 2% des de 2024 - quota
+            '168':
+              help: 'Casella 168: base imposable del nou tipus de recàrrec d''equivalència
+                des de 2024.'
+              label: Nou tipus de recàrrec d'equivalència des de 2024 - base imposable
+            '169':
+              help: 'Casella 169: percentatge del tipus del nou recàrrec d''equivalència
+                des de 2024.'
+              label: Nou tipus de recàrrec d'equivalència des de 2024 - percentatge
+                del tipus
+            '17':
+              help: 'Casella 17: percentatge del tipus del recàrrec d''equivalència
+                al 1,0%.'
+              label: Recàrrec d'equivalència al 1,0% - percentatge del tipus
+            '170':
+              help: 'Casella 170: quota del nou recàrrec d''equivalència des de 2024.'
+              label: Nou tipus de recàrrec d'equivalència des de 2024 - quota
+            '18':
+              help: 'Casella 18: quota del recàrrec d''equivalència al 1,0%.'
+              label: Recàrrec d'equivalència al 1,0% - quota
+            '19':
+              help: 'Casella 19: base imposable del recàrrec d''equivalència al 1,4%.'
+              label: Recàrrec d'equivalència al 1,4% - base imposable
+            '20':
+              help: 'Casella 20: percentatge del tipus del recàrrec d''equivalència
+                al 1,4%.'
+              label: Recàrrec d'equivalència al 1,4% - percentatge del tipus
+            '21':
+              help: 'Casella 21: quota del recàrrec d''equivalència al 1,4%.'
+              label: Recàrrec d'equivalència al 1,4% - quota
+            '22':
+              help: 'Casella 22: base imposable del recàrrec d''equivalència al 5,2%.'
+              label: Recàrrec d'equivalència al 5,2% - base imposable
+            '23':
+              help: 'Casella 23: percentatge del tipus del recàrrec d''equivalència
+                al 5,2%.'
+              label: Recàrrec d'equivalència al 5,2% - percentatge del tipus
+            '24':
+              help: 'Casella 24: quota del recàrrec d''equivalència al 5,2%.'
+              label: Recàrrec d'equivalència al 5,2% - quota
+            '25':
+              help: 'Casella 25: base imposable de la modificació de bases i quotes
+                del recàrrec d''equivalència.'
+              label: Modificació de bases i quotes del recàrrec d'equivalència - base
+                imposable
+            '26':
+              help: 'Casella 26: quota de la modificació de bases i quotes del recàrrec
+                d''equivalència.'
+              label: Modificació de bases i quotes del recàrrec d'equivalència - quota
+            '27':
+              help: 'Casella 27: total de la quota meritada.'
+              label: Total quota meritada
+            '28':
+              help: 'Casella 28: base de l''IVA deduïble en operacions interiors corrents.'
+              label: IVA deduïble en operacions interiors corrents - base
+            '29':
+              help: 'Casella 29: quota d''IVA deduïble en operacions interiors corrents.'
+              label: IVA deduïble en operacions interiors corrents - quota
+            '30':
+              help: 'Casella 30: base de l''IVA deduïble en operacions interiors de
+                béns d''inversió.'
+              label: IVA deduïble en operacions interiors de béns d'inversió - base
+            '31':
+              help: 'Casella 31: quota d''IVA deduïble en operacions interiors de
+                béns d''inversió.'
+              label: IVA deduïble en operacions interiors de béns d'inversió - quota
+            '32':
+              help: 'Casella 32: base de l''IVA deduïble en importacions de béns corrents.'
+              label: IVA deduïble en importacions de béns corrents - base
+            '33':
+              help: 'Casella 33: quota d''IVA deduïble en importacions de béns corrents.'
+              label: IVA deduïble en importacions de béns corrents - quota
+            '34':
+              help: 'Casella 34: base de l''IVA deduïble en importacions de béns d''inversió.'
+              label: IVA deduïble en importacions de béns d'inversió - base
+            '35':
+              help: 'Casella 35: quota d''IVA deduïble en importacions de béns d''inversió.'
+              label: IVA deduïble en importacions de béns d'inversió - quota
+            '36':
+              help: 'Casella 36: base de l''IVA deduïble en adquisicions intracomunitàries
+                corrents.'
+              label: IVA deduïble en adquisicions intracomunitàries corrents - base
+            '37':
+              help: 'Casella 37: quota d''IVA deduïble en adquisicions intracomunitàries
+                corrents.'
+              label: IVA deduïble en adquisicions intracomunitàries corrents - quota
+            '38':
+              help: 'Casella 38: base de l''IVA deduïble en adquisicions intracomunitàries
+                de béns d''inversió.'
+              label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
+                - base
+            '39':
+              help: 'Casella 39: quota d''IVA deduïble en adquisicions intracomunitàries
+                de béns d''inversió.'
+              label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
+                - quota
+            '40':
+              help: 'Casella 40: base de la rectificació de deduccions.'
+              label: Rectificació de deduccions - base
+            '41':
+              help: 'Casella 41: quota de la rectificació de deduccions.'
+              label: Rectificació de deduccions - quota
+            '42':
+              help: 'Casella 42: quota de compensacions del règim especial d''agricultura,
+                ramaderia i pesca.'
+              label: Compensacions del règim especial d'agricultura, ramaderia i pesca
+                - quota
+            '43':
+              help: 'Casella 43: quota de regularització de béns d''inversió.'
+              label: Regularització de béns d'inversió - quota
+            '44':
+              help: 'Casella 44: quota de regularització de prorrata per percentatge
+                definitiu.'
+              label: Regularització de prorrata per percentatge definitiu - quota
+            '45':
+              help: 'Casella 45: total de la quota d''IVA a deduir.'
+              label: Total a deduir - quota
+            '47':
+              help: 'Casella 47: suma d''ingressos a compte del conjunt d''activitats
+                en règim simplificat en el 1T, 2T o 3T.'
+              label: Règim simplificat, 1T-2T-3T - suma d'ingressos a compte del conjunt
+                d'activitats
+            '48':
+              help: 'Casella 48: suma de quotes derivades del conjunt d''activitats
+                en règim simplificat en el 4T.'
+              label: Règim simplificat, 4T - suma de quotes derivades del conjunt
+                d'activitats
+            '49':
+              help: 'Casella 49: suma d''ingressos a compte realitzats durant l''exercici
+                en règim simplificat en el 4T.'
+              label: Règim simplificat, 4T - suma d'ingressos a compte realitzats
+                en l'exercici
+            '50':
+              help: 'Casella 50: resultat del règim simplificat en el 4T, calculat
+                com la casella 48 menys la casella 49.'
+              label: Règim simplificat, 4T - resultat ([48] - [49])
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: 'Casella 51: quotes d''IVA meritades per adquisicions intracomunitàries
+                de béns en règim simplificat.'
+              label: Règim simplificat - quotes meritades per adquisicions intracomunitàries
+                de béns
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: 'Casella 52: quotes d''IVA meritades per lliuraments d''actius
+                fixos en règim simplificat.'
+              label: Règim simplificat - quotes meritades per lliuraments d'actius
+                fixos
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: 'Casella 53: quotes d''IVA meritades en règim simplificat per
+                operacions amb inversió del subjecte passiu.'
+              label: Règim simplificat - quotes meritades d'IVA meritat per inversió
+                del subjecte passiu
+            '54':
+              help: 'Casella 54: total de la quota resultant en règim simplificat.'
+              label: Règim simplificat - total quota resultant
+            '55':
+              help: 'Casella 55: IVA deduïble per adquisició o importació d''actius
+                fixos en règim simplificat.'
+              label: Règim simplificat - IVA deduïble per adquisició o importació
+                d'actius fixos
+            '56':
+              help: 'Casella 56: IVA deduïble per regularització de béns d''inversió
+                en règim simplificat.'
+              label: Règim simplificat - IVA deduïble per regularització de béns d'inversió
+            '57':
+              help: 'Casella 57: total d''IVA deduïble en règim simplificat, calculat
+                com la casella 55 més la casella 56.'
+              label: Règim simplificat - total IVA deduïble ([55] + [56])
+            '58':
+              help: 'Casella 58: resultat del règim simplificat, calculat com la casella
+                54 menys la casella 57.'
+              label: Resultat del règim simplificat ([54] - [57])
+            '59':
+              help: 'Casella 59: informació addicional sobre lliuraments intracomunitaris
+                de béns i serveis.'
+              label: Informació addicional - lliuraments intracomunitaris de béns
+                i serveis
+            '60':
+              help: 'Casella 60: informació addicional sobre exportacions i operacions
+                assimilades.'
+              label: Informació addicional - exportacions i operacions assimilades
+            '62':
+              help: 'Casella 62: base imposable de lliuraments de criteri de caixa
+                meritats segons l''article 75 LIVA.'
+              label: Informació addicional - lliuraments de criteri de caixa meritats
+                art. 75 LIVA - base imposable
+            '63':
+              help: 'Casella 63: quota de lliuraments de criteri de caixa meritats
+                segons l''article 75 LIVA.'
+              label: Informació addicional - lliuraments de criteri de caixa meritats
+                art. 75 LIVA - quota
+            '64':
+              help: null
+              label: null
+            '65':
+              help: 'Casella 65: percentatge del resultat atribuïble a l''Administració
+                de l''Estat.'
+              label: Resultat - percentatge atribuïble a l'Administració de l'Estat
+            '66':
+              help: null
+              label: null
+            '68':
+              help: 'Casella 68: resultat de regularització anual de tributació conjunta.'
+              label: Resultat - resultat de regularització anual de tributació conjunta
+            '70':
+              help: 'Casella 70: resultats a ingressar procedents d''autoliquidacions
+                anteriors del mateix exercici i període.'
+              label: Resultat - resultats a ingressar d'autoliquidacions anteriors
+                de l'exercici i període
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: 'Casella 74: base imposable d''adquisicions en el règim de criteri
+                de caixa.'
+              label: Informació addicional - adquisicions de criteri de caixa - base
+                imposable
+            '75':
+              help: 'Casella 75: quota d''adquisicions en el règim de criteri de caixa.'
+              label: Informació addicional - adquisicions de criteri de caixa - quota
+            '76':
+              help: 'Casella 76: ajust del resultat per regularització de quotes segons
+                l''article 80.cinc.5a LIVA.'
+              label: Resultat - regularització de quotes art. 80 cinc 5a LIVA
+            '77':
+              help: 'Casella 77: IVA a la importació liquidat per la Duana que resta
+                pendent d''ingrés.'
+              label: Resultat - IVA a l'importació liquidat per la Duana pendent d'ingrés
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Exercici fiscal al qual es refereix l'autoliquidació.
+              label: Exercici fiscal de l'autoliquidació
+            x-chim6r1ee1in4qbfchng:
+              help: 'Període trimestral de l''autoliquidació: 1T, 2T, 3T o 4T.'
+              label: Període trimestral
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: IVA autorepercutit deduïble en operacions interiors subjectes
+                a inversió del subjecte passiu.
+              label: IVA autorepercutit deduïble en operacions interiors
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: IVA autorepercutit meritat en operacions interiors subjectes a
+                inversió del subjecte passiu.
+              label: IVA autorepercutit meritat en operacions interiors
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: Quota d'IVA autorepercutit en adquisicions intracomunitàries subjectes
+                a inversió del subjecte passiu.
+              label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: IVA autorepercutit deduïble en adquisicions intracomunitàries
+                de béns i serveis.
+              label: IVA autorepercutit deduïble en adquisicions intracomunitàries
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: IVA autorepercutit meritat en adquisicions intracomunitàries de
+                béns i serveis.
+              label: IVA autorepercutit meritat en adquisicions intracomunitàries
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: Suma la base imposable autorepercutida meritada en adquisicions
+                intracomunitàries.
+              label: Base imposable autorepercutida meritada en adquisicions intracomunitàries
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: Quotes pendents de períodes anteriors aplicades en aquest període.
+              label: Compensacions de períodes anteriors aplicades en aquest període
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: Saldo d'IVA a compensar disponible per traslladar a períodes posteriors.
+              label: Saldo de compensació disponible al final del període
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: Saldo d'IVA a compensar generat per l'autoliquidació d'aquest
+                període.
+              label: Saldo a compensar generat en aquest període
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: Quotes d'IVA a compensar que resten pendents de períodes anteriors.
+              label: Quotes a compensar pendents de períodes anteriors
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: Compensacions d'IVA de períodes anteriors que resten pendents
+                per a períodes posteriors.
+              label: Compensacions de períodes anteriors pendents per a períodes posteriors
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: Total de la quota d'IVA deduïble, inclòs l'IVA suportat interior
+                i l'IVA autorepercutit deduïble.
+              label: Total quota d'IVA deduïble
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: Total de la quota d'IVA meritada, inclòs l'IVA repercutit i l'IVA
+                autorepercutit aplicable.
+              label: Total quota d'IVA meritada
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: Percentatge de prorrata general calculat a partir del volum amb
+                dret a deducció sobre el volum total.
+              label: Percentatge de prorrata general
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: Volum anual d'operacions que originen dret a deduir l'IVA.
+              label: Volum anual d'operacions que originen dret a deducció
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: Volum anual total d'operacions emprat per al càlcul de la prorrata
+                general.
+              label: Volum anual total d'operacions
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: Regularització de l'IVA corresponent a béns d'inversió.
+              label: Regularització de béns d'inversió
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: Total d'IVA repercutit calculat al tipus general del 21%.
+              label: Quota IVA repercutit al tipus general (21%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: Total d'IVA repercutit calculat al tipus reduït del 10%.
+              label: Quota d'IVA repercutit al tipus reduït (10%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: Total d'IVA repercutit calculat al tipus superreduït del 4%.
+              label: Quota d'IVA repercutit al tipus superreduït (4%)
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: Resultat del règim general calculat com IVA meritat menys IVA
+                deduïble.
+              label: Resultat del règim general
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: IVA suportat deduïble en importacions de béns corrents.
+              label: Quota d'IVA suportat deduïble en importacions de béns corrents
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: Total d'IVA suportat pagat en compres interiors de béns i serveis
+                corrents.
+              label: Quota IVA suportat en operacions interiors corrents
+          field:
+            label: null

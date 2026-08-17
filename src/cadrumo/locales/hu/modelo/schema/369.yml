@@ -1,0 +1,81 @@
+modelo:
+  schema:
+    '369':
+      field:
+        official_name: null
+        title: null
+      revision:
+        esquema-exterior:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az önadózás vonatkozási éve
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: A bevallás időszaka
+            x-d5r62bj5f1q6asj9dtp2sorldtq62bbkdtq62r0:
+              help: null
+              label: A nem uniós szabályozás szerinti áthárított HÉA összesen (célországonkénti
+                összegek összege)
+            x-d5r62bj5f1q6asj9dtp2sp355ppmasjmd5hmaspdcdqmut31:
+              help: null
+              label: DE célországba áthárított HÉA - nyújtott szolgáltatások (nem
+                uniós szabályozás)
+          construct:
+            modelo-369-esquema-exterior:
+              field:
+                title: null
+          field:
+            label: null
+        esquema-importacion:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az önadózás vonatkozási éve
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: A bevallás időszaka
+            x-d5r62bj9dlo6usjkc5hmirre5phnarrkc4mn8rrkc5m0:
+              help: null
+              label: Az importszabályozás szerinti áthárított HÉA összesen (IOSS,
+                célországonkénti összeg)
+            x-d5r62bj9dlo6usjkc5hmirre5pi6abjcdtriqtj1dhqmabb3elnn8o8:
+              help: null
+              label: IOSS HÉA a DE célországba - behozott áruk távértékesítése ≤ 150
+                EUR (LIVA 163. quinvicies cikk)
+          construct:
+            modelo-369-esquema-importacion:
+              field:
+                title: null
+          field:
+            label: null
+        esquema-union:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az önadózás tárgyát képező adóév
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: A bevallás időszaka
+            x-d5r62bjldpkmurhecdqmut315lq6ut31dg:
+              help: null
+              label: Az uniós rendszer felszámított IVA-összesen (célországok és folyamattípusok
+                közötti összeg)
+            x-d5r62bjldpkmurhechiisprfdti76bb4d5pn8obecdiiqorldtq62:
+              help: null
+              label: OSS uniós rendszer IVA-összege DE célországba - távértékesítések
+                + elektronikus felületek
+            x-d5r62bjldpkmurhechiissr5e9r6ior5ecmm6tbfehgg:
+              help: null
+              label: OSS uniós rendszer IVA-összege DE célországba - nyújtott szolgáltatások
+                (LIVA 163. unvicies cikk)
+            x-d5r62bjldpkmurhecpp2ssr5e9r6ior5ecmm6tbfehgg:
+              help: null
+              label: OSS uniós rendszer IVA-összege FR célországba - nyújtott szolgáltatások
+                (LIVA 163. unvicies cikk)
+          construct:
+            modelo-369-esquema-union:
+              field:
+                title: null
+          field:
+            label: null

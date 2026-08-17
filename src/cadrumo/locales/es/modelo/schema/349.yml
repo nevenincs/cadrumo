@@ -1,0 +1,76 @@
+modelo:
+  schema:
+    '349':
+      field:
+        official_name: Modelo 349. Declaración Informativa. Declaración recapitulativa
+          de operaciones intracomunitarias.
+        title: Declaración recapitulativa de operaciones intracomunitarias
+      revision:
+        2020-y-siguientes:
+          casilla:
+            x-chim6r1ecdgmqoj9dsmn0pbid5nm8qb3d5i62p0:
+              help: null
+              label: Indicador de cambio de periodicidad en la obligación de declarar
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: null
+              label: Declaración complementaria o sustitutiva
+            x-chim6r1ed5mn0rriehiiqrrgclp62or9dtn6aso:
+              help: null
+              label: Importe de las operaciones intracomunitarias
+            x-chim6r1ed5mn0rriehiiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Importe de las rectificaciones
+            x-chim6r1edpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: null
+              label: NIF del representante legal del declarante
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: null
+              label: Número identificativo de la declaración
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: null
+              label: Número identificativo de la declaración anterior
+            x-chim6r1edpqmqpbidsmmus35e9gm8rriclpg:
+              help: null
+              label: Numero total de operadores intracomunitarios
+            x-chim6r1edpqmqpbidsmn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Numero total de operadores intracomunitarios con rectificaciones
+            x-dto2sobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
+              help: null
+              label: Apellidos y nombre o razon social del operador intracomunitario
+            x-dto2soj1ediiqqbde1nmsqb2dhig:
+              help: null
+              label: Base imponible o importe de la operacion intracomunitaria
+            x-dto2sorcc5r6abbfe1in4ob3d5nms:
+              help: null
+              label: Clave de operacion intracomunitaria
+            x-dto2sorfchkmerpde1gmiso:
+              help: null
+              label: Codigo pais del operador comunitario
+            x-dto2srj9comm6rrdeln6it31e9kmu:
+              help: null
+              label: NIF del operador comunitario
+            x-e9im6t1ec9gn6p9dc5n78pbid5nn4:
+              help: null
+              label: Base imponible declarada anteriormente
+            x-e9im6t1ec9gn6p9de9im6t39cpkm6ob4c4:
+              help: null
+              label: Base imponible o importes rectificados
+            x-e9im6t1ecll6asj3d5hmirpde9im6t39cpkm6ob4ds:
+              help: null
+              label: Ejercicio rectificado
+            x-e9im6t1ee1in4qbfchniqsj5cdq6ipj9cdgm8ro:
+              help: null
+              label: Periodo rectificado
+            x-edqn6t39ehqn8rpec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              help: null
+              label: null
+            x-edqn6t39ehqn8rpedpkmc:
+              help: null
+              label: null
+          construct:
+            modelo-349-informative:
+              field:
+                title: Modelo 349 informative intra-community operations declaration
+          field:
+            label: Modelo 349 ejercicio 2020 y siguientes (Orden HAC/174/2020)

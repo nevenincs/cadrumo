@@ -1,0 +1,33 @@
+modelo:
+  schema:
+    '309':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2004-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1eehkn0rpdehp6ipr7clp0:
+              help: null
+              label: Tipus de desencadenant (mitjans de transport nous / règim agrícola
+                / recàrrec d'equivalència / execució forçosa)
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: Quota d'IVA autorepercutida en adquisicions intracomunitàries
+                (mitjans de transport nous, etc.)
+            x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
+              help: null
+              label: Total de quota d'IVA no periòdica (autorepercutida + suportada-recàrrec)
+            x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
+              help: null
+              label: Quota d'IVA suportat per minoristes en recàrrec d'equivalència
+                (devolució a viatgers)
+          construct:
+            modelo-309-iva-no-periodica:
+              field:
+                title: null
+          field:
+            label: null

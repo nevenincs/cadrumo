@@ -1,0 +1,123 @@
+modelo:
+  schema:
+    '122':
+      field:
+        official_name: Modelo 122. Impuesto sobre la Renta de las Personas Físicas.
+          Deducciones por familia numerosa o por personas con discapacidad a cargo.
+          Regularización del derecho a la deducción por contribuyentes no obligados
+          a presentar declaración.
+        title: IRPF regularización de la deducción por familia numerosa / discapacidad
+      revision:
+        2017-y-siguientes:
+          casilla:
+            x-c5pm6pbechkmarjkckmm8rrj5lk6iqjfecn62ojfdpniqobeehkm6qbgc5i6u:
+              help: Importe del abono anticipado de la deducción efectivamente percibido
+                en el periodo impositivo. La regularización procede cuando lo percibido
+                excede de la deducción a la que se tenía derecho.
+              label: Regularización ascendiente separado legalmente o sin vínculo
+                matrimonial con dos hijos. Importe del abono anticipado
+            x-c5pm6pbechkmarjkckmm8rrj5lk6iqjfecn68pb4elhm6qbfdo:
+              help: Importe de la deducción a que el contribuyente tenía derecho en
+                el periodo impositivo, conforme al artículo 81 bis de la Ley 35/2006.
+              label: Regularización ascendiente separado legalmente o sin vínculo
+                matrimonial con dos hijos. Importe de la deducción
+            x-c5pm6pbechkmarjkclpisob2dtn6ubb1dpq6ior9e1gm8ro:
+              help: Importe del abono anticipado de la deducción efectivamente percibido
+                en el periodo impositivo. La regularización procede cuando lo percibido
+                excede de la deducción a la que se tenía derecho.
+              label: Regularización ascendientes con discapacidad. Importe del abono
+                anticipado
+            x-c5pm6pbechkmarjkclpisp35chqm6or9dtn0:
+              help: Importe de la deducción a que el contribuyente tenía derecho en
+                el periodo impositivo, conforme al artículo 81 bis de la Ley 35/2006.
+              label: Regularización ascendientes con discapacidad. Importe de la deducción
+            x-c5pm6pbechkmarjkclpisrj9co:
+              help: NIF del ascendiente con discapacidad por el que se practicó la
+                deducción.
+              label: Regularización ascendientes con discapacidad. NIF del ascendiente
+            x-c5pm6pbechkmarjkclpisrjfdlh74p8:
+              help: Primer apellido, un espacio, segundo apellido, un espacio y nombre
+                completo del ascendiente con discapacidad.
+              label: Regularización ascendientes con discapacidad. Apellidos y nombre
+                del ascendiente
+            x-cdnmsublctiisob2dtn6ubb1dpq6ior9e1gm8ro:
+              help: Importe del abono anticipado de la deducción efectivamente percibido
+                en el periodo impositivo. La regularización procede cuando lo percibido
+                excede de la deducción a la que se tenía derecho.
+              label: Regularización cónyuge no separado con discapacidad. Importe
+                del abono anticipado
+            x-cdnmsublctiisp35chqm6or9dtn0:
+              help: Importe de la deducción a que el contribuyente tenía derecho en
+                el periodo impositivo, conforme al artículo 81 bis de la Ley 35/2006.
+              label: Regularización cónyuge no separado con discapacidad. Importe
+                de la deducción
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la regularización
+            x-chim6r1ee1gmeqbec4mm6rrde1m6arb5dpq62sj9c4:
+              help: Se consigna una C cuando la página es complementaria de otra presentada
+                anteriormente; en otro caso se deja en blanco.
+              label: Indicador de página complementaria
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración (originaria / sustitutiva / complementaria)
+            x-chin6or5dpi6ipbeehin6bj1c9nmsrpdc5n78qb3d5o62p3f:
+              help: Importe del abono anticipado de la deducción efectivamente percibido
+                en el periodo impositivo. La regularización procede cuando lo percibido
+                excede de la deducción a la que se tenía derecho.
+              label: Regularización descendientes con discapacidad. Importe del abono
+                anticipado
+            x-chin6or5dpi6ipbeehin6bj4cli7aor3d5nms:
+              help: Importe de la deducción a que el contribuyente tenía derecho en
+                el periodo impositivo, conforme al artículo 81 bis de la Ley 35/2006.
+              label: Regularización descendientes con discapacidad. Importe de la
+                deducción
+            x-chin6or5dpi6ipbeehin6bjed5j0:
+              help: NIF del descendiente con discapacidad por el que se practicó la
+                deducción.
+              label: Regularización descendientes con discapacidad. NIF del descendiente
+            x-chin6or5dpi6ipbeehin6bjedtmm4sj5:
+              help: Primer apellido, un espacio, segundo apellido, un espacio y nombre
+                completo del descendiente con discapacidad.
+              label: Regularización descendientes con discapacidad. Apellidos y nombre
+                del descendiente
+            x-cpgmqqbcd5giqrjldlin4rrjc4n62ojfdpniqobeehkm6qbgc5i6u:
+              help: Importe del abono anticipado de la deducción efectivamente percibido
+                en el periodo impositivo. La regularización procede cuando lo percibido
+                excede de la deducción a la que se tenía derecho.
+              label: Regularización familia numerosa. Importe del abono anticipado
+            x-cpgmqqbcd5giqrjldlin4rrjc4n68pb4elhm6qbfdo:
+              help: Importe de la deducción a que el contribuyente tenía derecho en
+                el periodo impositivo, conforme al artículo 81 bis de la Ley 35/2006.
+              label: Regularización familia numerosa. Importe de la deducción
+            x-cpgmqqbcd5giqrjldlin4rrjc4n78qbkelm6u:
+              help: Número de identificación que figura en el título oficial de familia
+                numerosa expedido por la comunidad autónoma.
+              label: Regularización familia numerosa. Número de identificación del
+                título de familia numerosa
+            x-e9in0shec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              help: Apellidos del representante si es persona física, o su razón social
+                completa si es persona jurídica o entidad.
+              label: Apellidos o razón social del representante
+            x-e9in0shedpkmc:
+              help: NIF de la persona o entidad que presenta la autoliquidación en
+                representación del contribuyente. Se deja en blanco cuando el contribuyente
+                presenta por sí mismo.
+              label: NIF del representante
+            x-e9in0shedpnmqojick:
+              help: Nombre del representante cuando se trata de una persona física.
+                En otro caso se rellena a blancos.
+              label: Nombre del representante
+            x-e9in6tbcehgm8rpec4mmirj7e9in6obi:
+              help: Importe total a ingresar por la regularización. El diseño de registro
+                imprime la expresión (558-557+573-572+589-588+591-590), que no incluye
+                el par de cónyuge [574]/[575] declarado en el mismo registro; por
+                eso esta casilla se toma del contribuyente y no se calcula.
+              label: Resultado de la regularización a ingresar
+          construct:
+            modelo-122-regularizacion:
+              field:
+                title: Modelo 122 regularización de la deducción por familia numerosa
+                  / discapacidad
+          field:
+            label: Modelo 122 (orden-hfp-105-2017), ejercicios 2017 y siguientes

@@ -67,79 +67,10 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.SECRETS,
         "secrets",
-        consumer_module="adapters/persistence/storage/master_key/_master_key.py",
+        consumer_module="adapters/persistence/storage/blob_store/_materialisation.py",
         settings_field="cadrumo_secret_store_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
-    ),
-    # ── Fixed layout: within the secret store ────────────────────────────────
-    # The most security-load-bearing filenames in the product -- the wrapped
-    # master key, its KDF sidecar, and the locks guarding first-time
-    # provisioning -- were ungoverned literal joins onto ``cadrumo_secret_store_dir``
-    # / ``self._store_dir`` before these members existed, exactly the nested-path
-    # gap the taxonomy exists to close (see ``BUCKET_MANIFEST`` / ``BUCKET_LOCK``,
-    # the same class already closed for the bucket layout).
-    #
-    # ``subpath`` is written root-relative (``secrets/...``) for documentation,
-    # but these five members deliberately carry no ``settings_field`` and are
-    # NOT safe to resolve via :func:`storage_path`: unlike the bucket layout,
-    # ``SECRETS`` above is itself :attr:`StorageOverridePolicy.OPERATOR_OVERRIDABLE`,
-    # so ``storage_path(SECRETS_MASTER_KEY)`` (root + this literal subpath) would
-    # silently disagree with the real location whenever an operator overrides
-    # ``cadrumo_secret_store_dir`` away from its default. The consumer keeps
-    # resolving through the settings field / ``self._store_dir`` it already reads
-    # (which honours that override correctly) and cross-references only the bare
-    # filename off these members -- see ``_master_key.py`` and ``_custody.py``.
-    _location(
-        StorageCategory.SECRETS_MASTER_KEY,
-        "secrets/master.key",
-        consumer_module="adapters/persistence/storage/master_key/_master_key.py",
-        node_kind=StorageNodeKind.FILE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.SECRETS_MASTER_KDF,
-        "secrets/master.kdf",
-        consumer_module="adapters/persistence/storage/master_key/_master_key.py",
-        node_kind=StorageNodeKind.FILE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.SECRETS_MASTER_LOCK,
-        "secrets/master.lock",
-        consumer_module="adapters/persistence/storage/master_key/_master_key.py",
-        node_kind=StorageNodeKind.FILE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.SECRETS_KEYRING_LOCK,
-        "secrets/keyring.lock",
-        consumer_module="adapters/persistence/storage/master_key/_master_key.py",
-        node_kind=StorageNodeKind.FILE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.SECRETS_MASTER_RECOVERY_KEY,
-        "secrets/master.recovery.key",
-        dormant_reason=(
-            "The shared-master recovery half that wrapped this file has no live caller: "
-            "adapters/persistence/storage/master_key/_recovery.py states in its own module "
-            "docstring that no code path writes master.recovery.key, because per-profile "
-            "password custody supersedes the shared-master surface. The location follows that "
-            "surface and is retired with it."
-        ),
-        node_kind=StorageNodeKind.FILE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
     ),
     _location(
         StorageCategory.BLOBS,
@@ -644,10 +575,16 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
     ),
+    # This member names a RETIRED artefact, kept because the name is still
+    # needed to RECOGNISE it on a pre-cutover store; nothing writes one and no
+    # path definition declares it.  Its consumer is therefore the refusal
+    # detector, the one reader that must have the name, and not a layout
+    # module.  Naming a retired member is not declaring a current format --
+    # do not infer from this declaration that a current bucket has one.
     _location(
         StorageCategory.BUCKET_MANIFEST,
         "manifest.toml",
-        consumer_module="adapters/persistence/storage/_storage_path_definitions.py",
+        consumer_module="adapters/persistence/storage/custody/_capsule_discovery.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,

@@ -1,0 +1,820 @@
+aggregation:
+  grouping:
+    errors:
+      unsupported_modelo: No hi ha cap contracte d'agregació registrat per al model
+        sol·licitat.
+  invoice_retencion:
+    errors:
+      euro_figures_unavailable_after_defect_sweep: Les xifres en euros no estan disponibles
+        en una factura que ha superat l'escombrat de defectes.
+      perceptor_tax_id_unavailable_after_defect_sweep: L'identificador fiscal del
+        perceptor no està disponible en una factura que ha superat l'escombrat de
+        defectes.
+      projection_defects_repeat: Una projecció de retenció de factura repeteix el
+        mateix defecte.
+      projection_outcome_ambiguous: Una projecció de retenció de factura ha de portar
+        o una observació o defectes, mai tots dos ni cap.
+  irnr_income_ledger:
+    diagnostics:
+      foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} és de
+        font estrangera; l'art. 13 del TRLIRNR l'exclou de la projecció de rendiments
+        íntegres de font espanyola del Model 210.
+      incomplete_m210_classification: L'operació entrant de font espanyola no té una
+        classificació explícita de renda del Model 210; la projecció de l'IRNR mai
+        no infereix un codi oficial de tipus de renda a partir de irpf_category.
+      source_jurisdiction_unresolved: source_jurisdiction no està resolta (None) en
+        una candidata entrant del Model 210; l'art. 13 del TRLIRNR només admet rendes
+        de font espanyola en aquesta projecció de l'IRNR.
+      tipo_renta_code_not_declared: El codi oficial de tipus de renda %{tipo_renta_code}
+        del Model 210 no està declarat per a la revisió i el període de presentació
+        %{period} seleccionats.
+    errors:
+      official_tipo_renta_parameter_count: La revisió %{revision_id} del Model 210
+        ha de declarar exactament un paràmetre de codi oficial de tipus de renda.
+  iva_ledger:
+    errors:
+      bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
+        bucket d'agregació sol·licitat.
+      candidate_outside_period: La candidatura queda fora del període.
+      differentiated_sector_inactive_for_filing_year: Un sector diferenciat està inactiu
+        per a l'exercici.
+      differentiated_sector_without_filing_year_entry: Un sector diferenciat no té
+        entrada de registre per a l'exercici.
+      differentiated_sector_without_provisional_percentage: Un sector diferenciat
+        no té percentatge provisional resolt.
+      domestic_identification_on_intra_community_transaction: Una identificació a
+        efectes de l'IVA espanyola no és vàlida per a una operació intracomunitària.
+      eu_member_state_on_export_transaction: Les operacions d'exportació o assimilades
+        no poden portar un Estat membre de la UE; rebut %{member_state}.
+      injected_repositories_missing_bienes_inversion_authority: Els repositoris d'IVA
+        injectats requereixen una autoritat explícita de béns d'inversió.
+      input_facts_missing_deduction_authority: Els fets d'IVA suportat requereixen
+        una autoritat de deducció exacta.
+      investment_observations_missing_bienes_inversion_authority: Les observacions
+        d'IVA d'inversió requereixen el registre explícit de béns d'inversió i una
+        autoritat de perfil coincident.
+      missing_counterparty_establishment_on_export: Una exportació està exempta perquè
+        l'operació surt de la Unió, de manera que depèn d'on estigui ESTABLERTA la
+        contrapart. Registreu el país de la contrapart; un codi absent o no assignat
+        no estableix res, i la seva identificació a efectes d'IVA no pot respondre-hi.
+      missing_counterparty_identification_state: Una operació intracomunitària requereix
+        l'Estat membre en què la contrapart està identificada a efectes de l'IVA.
+      output_facts_carry_deduction_authority: Els fets d'IVA repercutit no poden portar
+        autoritat de deducció.
+      rectification_consumed_more_than_once: Un fet d'IVA ja corregit només es pot
+        rectificar una vegada.
+      sectorized_apportionment_duplicate_sectors: El repartiment sectoritzat d'IVA
+        declara el mateix sector més d'una vegada.
+      sectorized_especial_missing_input_classification: La prorrata especial sectoritzada
+        requereix una classificació d'entrada explícita.
+      sectorized_input_inactive_sector: Una entrada d'IVA sectoritzada referencia
+        un sector inactiu.
+      sectorized_input_missing_sector_identity: Una entrada d'IVA sectoritzada no
+        aporta identitat de sector explícita.
+      sectorized_input_unknown_sector: Una entrada d'IVA sectoritzada referencia un
+        sector desconegut.
+      unsupported_iva_category: 'Error intern: categoria d''IVA no admesa per a l''agregació.'
+  m303_arrivals:
+    errors:
+      prorrata_register_contradictory_transition_evidence: El registre de prorrata
+        recull alhora una opció i una revocació per al mateix exercici.
+      prorrata_register_incomplete_current_year_declaration: El registre de prorrata
+        no té una declaració explícita i completa per a l'exercici en curs.
+      prorrata_revocacion_without_prior_year_especial: La revocació de prorrata especial
+        no té estat de registre especial de l'exercici anterior per als sectors afectats.
+      prorrata_transition_contradictory_evidence: Les entrades de transició de prorrata
+        especial contradiuen la transició declarada.
+      prorrata_transition_entry_without_evidence: Una entrada de transició de prorrata
+        especial no aporta evidència de transició.
+      prorrata_transition_evidence_without_declared_transition: S'ha aportat evidència
+        de transició de prorrata especial sense una transició declarada.
+      prorrata_transition_evidence_wrong_filing_year: L'evidència de registre de transició
+        de prorrata especial pertany a un altre exercici.
+      prorrata_transition_missing_register_evidence: La transició de prorrata especial
+        declarada no té evidència de registre que la fonamenti.
+      prorrata_transition_not_applicable_for_period: L'evidència de transició de prorrata
+        especial només s'aplica en l'últim període del Model 303 de l'exercici.
+      recipient_fact_disagrees_with_ledger_evidence: La dada de destinatari d'operacions
+        en criteri de caixa no concorda amb la seva evidència d'assentaments en règim
+        del proveïdor.
+      supplier_regime_aggregation_period_mismatch: El període de l'agregació d'IVA
+        no coincideix amb el període de declaració sol·licitat.
+      supplier_regime_blank_ledger_identity: L'evidència d'arribada en règim del proveïdor
+        conté una identitat d'assentament en blanc.
+      supplier_regime_duplicate_ledger_evidence: L'evidència d'arribada en règim del
+        proveïdor repeteix el mateix assentament.
+      supplier_regime_observations_outside_period: L'agregació d'IVA conté observacions
+        datades fora del període de declaració sol·licitat.
+  modelo_bindings:
+    errors:
+      invoice_line_currency_unconverted: Una línia de factura està denominada en moneda
+        estrangera sense tipus de canvi a euros resolt, per la qual cosa no es pot
+        declarar en aquest model.
+      unsupported_period: Període de model no admès per a l'agregació del llibre.
+  oss_ioss:
+    errors:
+      invoice_line_currency_unconverted: Una línia de factura OSS/IOSS està denominada
+        en moneda estrangera sense tipus de canvi a euros resolt, per la qual cosa
+        no es pot declarar en aquest model.
+      invoice_line_rate_kind_unclassifiable: Una línia de factura OSS/IOSS té un tipus
+        d'IVA que no es pot classificar en cap tram, per la qual cosa la seva quota
+        no es pot declarar en aquest model.
+      iva_amount_mismatches_destination_rate: L'import d'IVA persistit no concorda
+        amb el tipus de l'Estat membre de destinació més enllà de la tolerància d'un
+        cèntim.
+  per_modelo:
+    errors:
+      unsupported_modelo: Model no admès per a l'agregació per model
+  renta_ledger:
+    errors:
+      annual_period_required: Es requereix un període anual per a l'agregació del
+        llibre de Renda.
+      bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
+        bucket sol·licitat del llibre de Renda.
+      invoice_bucket_mismatch: El bucket del repositori de factures no coincideix
+        amb el bucket sol·licitat del llibre de Renda.
+      modelo_mismatch: El model tributari no coincideix amb el model esperat del llibre
+        de Renda.
+      period_mismatch: El període no coincideix amb el període esperat del llibre
+        de Renda.
+      quarterly_period_required: Es requereix un període trimestral per a l'agregació
+        d'ingressos del Model 130 (p.ex. 2024Q1).
+      unsupported_period: Es requereix un període anual per a l'agregació d'ingressos
+        del Model 100 (p.ex. 2024-0A).
+  retenciones:
+    errors:
+      filing_year_out_of_range: El exercici %{filing_year} queda fora del rang admès
+        %{min_year}-%{max_year}.
+      invoice_retencion_collision: La(es) observació(ons) de retenció de la(es) factura(es)
+        %{source_object_ids} es van declarar manualment i també mitjançant --received-invoice-retencion;
+        elimineu el duplicat abans d'agregar.
+      perceptor_nif_blank: El NIF del perceptor no pot estar buit.
+      perceptor_observations_missing: No hi ha observacions de retencions per perceptor
+        per al model %{modelo} %{filing_year} %{period}; la font %{source_kind} no
+        es pot resoldre.
+  service:
+    errors:
+      currency_conversion_required: L'import en moneda estrangera requereix una conversió
+        a euros abans de poder-se agregar.
+      envelope_modelo_mismatch: El model de l'embolcall no coincideix amb el model
+        esperat.
+      envelope_period_mismatch: El període de l'embolcall no coincideix amb el període
+        esperat.
+      envelope_provider_payload_mismatch: La càrrega del proveïdor de l'embolcall
+        no coincideix amb l'esperada.
+      observations_mismatch: Les observacions retornades no coincideixen amb les esperades.
+      per_modelo_modelos_not_unique: Els models per model no són únics.
+      per_modelo_providers_not_unique: Els proveïdors per model no són únics.
+      provider_modelos_not_unique: Els models del proveïdor no són únics.
+      result_source_kinds_not_unique: Els tipus de font del resultat no són únics.
+      source_kinds_mismatch: Els tipus de font no coincideixen amb la taxonomia acceptada.
+  source_mesh:
+    errors:
+      ambiguous_source_disposition: 'Error intern: el tipus de font de vinculació
+        {source_kind} és en més d''un estat de disposició de la malla de fonts, o
+        en cap.'
+      annual_summary_handoff_duplicate: Més d'un resolutor ha proporcionat el traspàs
+        immutable del resum anual del model 303 (primer {first_resolver}; segon {second_resolver}).
+      binding_source_mismatch: source_kind i binding_source fan referència a families
+        d'origen de binding diferents.
+      duplicate_binding_owner: 'Error intern: propietari de vinculació duplicat a
+        la malla de fonts.'
+      duplicate_bound_casilla_owner: 'Error intern: propietari de casella vinculada
+        duplicat a la malla de fonts.'
+      duplicate_relation_owner: 'Error intern: propietari de relació duplicat a la
+        malla de fonts.'
+      duplicate_row_binding_owner: 'Error intern: propietari de vinculació de fila
+        duplicat a la malla de fonts.'
+      out_of_window_summary_date_span_invalid: La data màxima de presentació d'un
+        resum fora de finestra no pot ser anterior a la seva data mínima.
+      out_of_window_summary_incomplete: Un resum fora de finestra ha d'establir conjuntament
+        el recompte, la data mínima de presentació i la data màxima de presentació.
+      owned_sources_blank: Les fonts propietat de la malla de fonts no poden contenir
+        tipus de font en blanc.
+      owned_sources_duplicate: Les fonts propietat de la malla de fonts han de ser
+        úniques.
+      relation_provenance_incomplete: La procedència de la relació ha d'incloure model
+        d'origen, exercici, períodes, caselles, referències legals i referències d'origen.
+      row_binding_index_invalid: 'Error intern: l''índex de fila de la vinculació
+        ha de ser 1 o superior.'
+      row_binding_value_invalid: 'Error intern: el valor decimal de la vinculació
+        de fila no és vàlid.'
+      source_transaction_ids_blank: Els identificadors de transacció de la malla de
+        fonts no poden contenir blancs.
+      source_transaction_ids_duplicate: Els identificadors de transacció de la malla
+        de fonts han de ser únics.
+      unresolved_binding_ids_blank: 'Error intern: els ids de vinculació sense resoldre
+        no poden estar en blanc.'
+      unresolved_binding_ids_duplicate: 'Error intern: els ids de vinculació sense
+        resoldre no poden estar duplicats.'
+      unresolved_relation_ids_blank: 'Error intern: els ids de relació sense resoldre
+        no poden estar en blanc.'
+      unresolved_relation_ids_duplicate: 'Error intern: els ids de relació sense resoldre
+        no poden estar duplicats.'
+auth:
+  catalogue:
+    certificate_description: Autenticació basada en certificat X.509 (FNMT-RCM o una
+      altra autoritat reconeguda). Compatible amb tots els fluxos de la seu electrònica.
+    certificate_label: Certificat digital
+    clave_movil_description: Autenticació amb aprovació push al mòbil del titular
+      registrat a Cl@ve. Requereix DNI/NIE, registre a Cl@ve i el dispositiu vinculat.
+    clave_movil_label: Cl@ve Móvil
+    clave_permanente_description: Autenticació amb DNI/NIE i contrasenya mitjançant
+      el proveïdor d'identitat Cl@ve Permanente. Automatitzable sense intervenció
+      per als fluxos de lectura de l'AEAT; requereix DNI/NIE i contrasenya.
+    clave_permanente_label: Cl@ve Permanente
+    clave_pin_description: Slot reservat i tancat per a Cl@ve PIN.
+    clave_pin_label: Cl@ve PIN
+    dnie_pkcs_description: Slot reservat i tancat per a DNI-e PKCS.
+    dnie_pkcs_label: DNI-e PKCS
+categories:
+  registry:
+    amortizacion_vivienda_afecto:
+      label: Amortització de l'habitatge afecte a l'activitat
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (Ley 35/2006 art. 30.2.5.b regla 4a, amortització de l'habitatge afecte).
+    arrendamiento_local:
+      label: Lloguer del local de negoci
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
+    arrendamiento_vivienda_afecta: Part del lloguer de l'habitatge afecta a l'activitat
+    arrendamiento_vivienda_afecto:
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (Ley 35/2006 art. 29.2 i art. 28.1, lloguer de l'habitatge afecte).
+    asesoria_contable:
+      label: Honoraris d'assessoria comptable
+      notes: Despesa íntegrament deduïble, com a servei professional independent (Ley
+        35/2006 art. 28.1).
+    asesoria_fiscal:
+      label: Honoraris d'assessoria fiscal
+      notes: Despesa íntegrament deduïble, com a servei professional independent (Ley
+        35/2006 art. 28.1).
+    asesoria_juridica:
+      label: Honoraris d'assessoria jurídica
+      notes: Despesa íntegrament deduïble, com a servei professional independent (Ley
+        35/2006 art. 28.1).
+    comunidad_vivienda_afecto:
+      label: Despeses de comunitat de l'habitatge afecte a l'activitat
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (Ley 35/2006 art. 30.2.5.b regla 2a, despeses de titularitat de l'habitatge).
+    cuotas_autonomos_ss:
+      notes: Despesa íntegrament deduïble; les quotes del RETA són una condició legal
+        per exercir l'activitat.
+    cuotas_colegiales:
+      label: Quotes de col·legi professional
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
+    cuotas_reta: Quotes d'autònoms a la Seguretat Social (RETA)
+    formacion_profesional:
+      label: Formació professional
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, altres serveis exteriors).
+    gastos_bancarios:
+      label: Despeses bancàries
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, despeses financeres
+        i bancàries).
+    gastos_financieros:
+      label: Despeses financeres
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, despeses financeres
+        i bancàries).
+    hardware_amortizable:
+      label: Maquinari informàtic amortitzable
+      notes: Íntegrament deduïble mitjançant amortització (Ley 35/2006 art. 28.1,
+        amortització de l'immobilitzat).
+    home_office_agua: Aigua de l'habitatge-oficina
+    home_office_gas: Gas de l'habitatge-oficina
+    home_office_internet: Internet de l'habitatge-oficina
+    home_office_luz: Electricitat de l'habitatge-oficina
+    ibi_local_afecto:
+      label: IBI del local de negoci
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 14 LIS, per remissió;
+        tributs fiscalment deduïbles).
+    ibi_vivienda_afecto:
+      label: IBI de l'habitatge afecte a l'activitat
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (Ley 35/2006 art. 30.2.5.b regla 2a, tributs no estatals de l'habitatge).
+    manutencion_dietas_extranjero:
+      notes: 'Deduïble fins a un límit diari legal: 48,08 EUR/dia sense pernoctació,
+        91,35 EUR/dia amb pernoctació (Ley 6/2017 / Ley IRPF art. 30.2.5.c, Reglamento
+        IRPF art. 9.A.3.a).'
+      statutory_cap_variants:
+        con-pernocta:
+          label: Amb pernoctació
+        sin-pernocta:
+          label: Sense pernoctació
+    manutencion_dietas_nacional:
+      notes: 'Deduïble fins a un límit diari legal: 26,67 EUR/dia sense pernoctació,
+        53,34 EUR/dia amb pernoctació (Ley 6/2017 / Ley IRPF art. 30.2.5.c, Reglamento
+        IRPF art. 9.A.3.a).'
+      statutory_cap_variants:
+        con-pernocta:
+          label: Amb pernoctació
+        sin-pernocta:
+          label: Sense pernoctació
+    manutencion_extranjero: Dietes de manutenció a l'estranger (menjar i estada)
+    manutencion_nacional: Dietes de manutenció nacionals (menjar i estada)
+    material_oficina:
+      label: Material d'oficina
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
+    mobiliario_amortizable:
+      label: Mobiliari amortitzable
+      notes: Íntegrament deduïble mitjançant amortització (Ley 35/2006 art. 28.1,
+        amortització de l'immobilitzat).
+    mutualidad_alternativa:
+      label: Aportació a mutualitat alternativa
+      notes: Deduïble fins a un límit legal de 15.000 EUR/any per contribuent, per
+        a una mutualitat alternativa que substitueix el RETA (Guia AEAT Renda, Cotitzacions
+        al RETA).
+    publicidad_marketing:
+      label: Publicitat i màrqueting
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, altres serveis exteriors).
+    reparaciones_conservacion:
+      label: Reparacions i conservació
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
+    seguros_rc: Assegurança de responsabilitat civil professional
+    seguros_responsabilidad_civil:
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
+    seguros_salud: Assegurança de salut de l'autònom
+    seguros_salud_autonomo:
+      notes: Deduïble fins a un límit legal de 500 EUR/any per contribuent (Ley 35/2006
+        art. 30.2.5.c regla 1a, primes d'assegurança de malaltia).
+    software_suscripcion:
+      label: Subscripcions de programari
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
+    subcontratacion:
+      label: Honoraris de subcontractació
+      notes: Despesa íntegrament deduïble, com a servei professional independent (Ley
+        35/2006 art. 28.1).
+    suministros_cliente_directos:
+      label: Subministraments facturats directament al client
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
+    suministros_home_office_agua:
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
+        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
+    suministros_home_office_gas:
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
+        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
+    suministros_home_office_internet:
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
+        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
+    suministros_home_office_luz:
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
+        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
+    suministros_local_afecto:
+      label: Subministraments del local afecte
+      notes: 'Despesa totalment deduible: l''immoble on es desenvolupa l''activitat
+        esta afecte (Llei 35/2006 art. 29.1.a) i els seus subministraments son despesa
+        deduible (art. 28.1). No s''aplica la regla del 30 per cent de l''art. 30.2.5.b,
+        reservada a l''habitatge habitual parcialment afecte.'
+    telefonia_fija:
+      label: Despesa de telefonia fixa
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
+        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
+    telefonia_movil:
+      label: Despesa de telefonia mòbil
+      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
+        22, afectació exclusiva de l'element patrimonial).
+    tributos_deducibles: Altres tributs fiscalment deduïbles
+    tributos_fiscalmente_deducibles:
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 14 LIS, per remissió).
+    vehiculo_combustible:
+      label: Combustible del vehicle
+      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
+        22, afectació exclusiva del vehicle).
+    vehiculo_mantenimiento:
+      label: Manteniment del vehicle
+      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
+        22, afectació exclusiva del vehicle).
+    vehiculo_parking:
+      label: Despeses d'aparcament
+      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
+        22, afectació exclusiva del vehicle).
+    vehiculo_peaje:
+      label: Despeses de peatge
+      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
+        22, afectació exclusiva del vehicle).
+    vehiculo_seguro:
+      label: Assegurança del vehicle
+      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
+        22, afectació exclusiva del vehicle).
+    viajes_alojamiento:
+      label: Allotjament de viatge
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, altres serveis exteriors).
+    viajes_transporte:
+      label: Transport de viatge
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, altres serveis exteriors).
+core:
+  profile:
+    errors:
+      output_language_type: L'idioma de sortida del perfil ha de ser un codi d'idioma
+        admès en forma de text.
+      registration_duplicate_callable: La implementació de respostes del projecte
+        s'ha registrat dues vegades amb invocables distintos; s'ha de registrar exactament
+        una vegada.
+entries:
+  portal_calendario_contribuyente:
+    label: Calendari del contribuent
+    purpose: Calendari anual de terminis i obligacions tributàries.
+  portal_cert_selection:
+    label: Selecció de certificat electrònic
+    notes:
+      '0': El navegador ha de tenir el certificat instal·lat al seu magatzem.
+    purpose: Passarel·la de selecció del certificat digital per autenticar-se.
+  portal_cert_validation_rest:
+    label: Validació de certificats electrònics
+    purpose: Servei de comprovació de validesa de certificats digitals.
+  portal_clave_gestiones:
+    label: Cl@ve PIN - Gestions
+    purpose: Gestió i obtenció del Cl@ve PIN d'accés temporal.
+  portal_clave_idp_root:
+    label: Cl@ve - Identificació electrònica
+    purpose: Proveïdor d'identitat Cl@ve per a l'autenticació davant l'AEAT.
+  portal_clave_sede_entry:
+    label: Accés amb Cl@ve
+    purpose: Punt d'accés a la Seu mitjançant el sistema Cl@ve.
+  portal_consulta_pagos:
+    label: Consulta de pagaments i devolucions
+    purpose: Consulta de l'estat de pagaments i devolucions tributàries.
+  portal_dnie_sede_entry:
+    label: Accés amb DNI electrònic
+    purpose: Punt d'accés a la Seu mitjançant el DNIe.
+  portal_domiciliacion_bancaria:
+    label: Domiciliació bancària de pagaments
+    purpose: Domiciliació bancària d'autoliquidacions i pagaments tributaris.
+  portal_m036_censal:
+    label: Model 036 - Declaració censal
+    purpose: Alta, modificació i baixa en el cens d'empresaris i professionals.
+  portal_m037_censal_simplificada:
+    label: Model 037 - Declaració censal simplificada (retirat)
+    notes:
+      '0': Suprimit per l'Ordre HAC/1526/2024, amb efecte des de 2025-02-03.
+      '1': Utilitzeu el Model 036 per a qualsevol tràmit censal posterior.
+    purpose: Declaració censal simplificada per a autònoms, suprimida el 2025.
+  portal_m100_renta:
+    label: Model 100 - Declaració de la Renda (IRPF)
+    purpose: Declaració anual de l'Impost sobre la Renda de les Persones Físiques.
+  portal_m111_retenciones_trabajo:
+    label: Model 111 - Retencions del treball i activitats
+    purpose: Autoliquidació de retencions i ingressos a compte de l'IRPF sobre rendiments
+      del treball.
+  portal_m115_retenciones_arrendamientos:
+    label: Model 115 - Retencions per arrendament d'immobles
+    purpose: Autoliquidació de retencions de l'IRPF per lloguer d'immobles urbans.
+  portal_m123_retenciones_capital:
+    label: Model 123 - Retencions del capital mobiliari
+    purpose: Autoliquidació de retencions de l'IRPF sobre rendiments del capital mobiliari.
+  portal_m130_pago_fraccionado_ed:
+    label: Model 130 - Pagament fraccionat IRPF (estimació directa)
+    purpose: Pagament fraccionat trimestral de l'IRPF per a autònoms en estimació
+      directa.
+  portal_m131_pago_fraccionado_eo:
+    label: Model 131 - Pagament fraccionat IRPF (estimació objectiva)
+    purpose: Pagament fraccionat trimestral de l'IRPF per a autònoms en estimació
+      objectiva (mòduls).
+  portal_m180_resumen_arrendamientos:
+    label: Model 180 - Resum anual d'arrendaments
+    purpose: Resum anual de retencions per arrendament d'immobles urbans.
+  portal_m190_resumen_trabajo:
+    label: Model 190 - Resum anual de retencions del treball
+    purpose: Resum anual de retencions i ingressos a compte sobre rendiments del treball.
+  portal_m193_resumen_capital:
+    label: Model 193 - Resum anual de retencions del capital
+    purpose: Resum anual de retencions sobre rendiments del capital mobiliari.
+  portal_m200_sociedades_anual:
+    label: Model 200 - Impost sobre Societats
+    purpose: Declaració anual de l'Impost sobre Societats.
+  portal_m202_sociedades_fraccionado:
+    label: Model 202 - Pagament fraccionat de l'Impost sobre Societats
+    purpose: Pagament fraccionat a compte de l'Impost sobre Societats.
+  portal_m232_vinculadas:
+    label: Model 232 - Operacions vinculades
+    purpose: Declaració informativa d'operacions amb persones o entitats vinculades.
+  portal_m303_iva_autoliquidacion:
+    label: Model 303 - Autoliquidació de l'IVA
+    purpose: Autoliquidació periòdica de l'Impost sobre el Valor Afegit.
+  portal_m347_operaciones_terceros:
+    label: Model 347 - Operacions amb terceres persones
+    purpose: Declaració informativa anual d'operacions amb tercers superiors a 3.005,06
+      €.
+  portal_m349_intracomunitarias:
+    label: Model 349 - Operacions intracomunitàries
+    purpose: Declaració recapitulativa d'operacions intracomunitàries de béns i serveis.
+  portal_m369_oss_ioss:
+    label: Model 369 - Finestreta única IVA (OSS/IOSS)
+    purpose: Autoliquidació de l'IVA en els règims de finestreta única OSS i IOSS.
+  portal_m390_resumen_iva:
+    label: Model 390 - Resum anual de l'IVA
+    purpose: Declaració resum anual de l'Impost sobre el Valor Afegit.
+  portal_m720_bienes_extranjero:
+    label: Model 720 - Béns i drets a l'estranger
+    purpose: Declaració informativa de béns i drets situats a l'estranger.
+  portal_m840_iae:
+    label: Model 840 - Impost sobre Activitats Econòmiques
+    purpose: Declaració de l'Impost sobre Activitats Econòmiques (IAE).
+  portal_mi_area_personal:
+    label: La Meva Àrea Personal
+    purpose: Àrea personal autenticada del contribuent a la Seu.
+  portal_mis_documentos_pendientes_firma:
+    label: Documents pendents de signatura
+    purpose: Portasignatures amb els documents pendents de signatura electrònica.
+  portal_mis_expedientes:
+    label: Els meus expedients
+    purpose: Consulta de l'estat dels expedients i tràmits del contribuent.
+  portal_mis_notificaciones:
+    label: Les meves notificacions
+    purpose: Bústia electrònica de notificacions i comunicacions de l'AEAT.
+  portal_pago_autoliquidacion_cuenta:
+    label: Pagament d'autoliquidació per càrrec en compte
+    purpose: Pagament d'autoliquidacions mitjançant càrrec en compte bancari.
+  portal_pago_autoliquidacion_tarjeta_bizum:
+    label: Pagament d'autoliquidació amb targeta o Bizum
+    purpose: Pagament d'autoliquidacions amb targeta bancària o Bizum.
+  portal_pago_liquidaciones_deudas:
+    label: Pagament de liquidacions i deutes
+    purpose: Pagament de liquidacions practicades per l'AEAT i deutes tributaris.
+  portal_pre303_ayuda:
+    label: Pre303 - Servei d'ajuda al Model 303
+    purpose: Servei d'ajuda Pre303 per preparar l'esborrany del Model 303.
+  portal_presentar_consultar_index:
+    label: Presentar i consultar declaracions
+    purpose: Índex de models per presentar o consultar declaracions.
+  portal_renta_web_borrador:
+    label: Renta WEB - Esborrany IRPF
+    notes:
+      '0': L'esborrany es genera a partir de les dades fiscals de l'AEAT.
+    purpose: Servei Renta WEB per revisar i presentar l'esborrany de l'IRPF.
+  portal_sede_root:
+    label: AEAT Seu Electrònica
+    purpose: Pàgina d'inici de la Seu Electrònica de l'AEAT.
+filing:
+  validation:
+    deadline_missed: Termini de presentació vençut
+    formula_divergence: Divergència en el càlcul de la fórmula
+    out_of_range: Valor fora de rang permès
+    required_missing: Falta camp obligatori
+    schema_mismatch: Discrepància amb l'esquema esperat
+ledger:
+  evidence:
+    reader:
+      operation_failed: Ha fallat l'operació del lector de justificants
+live:
+  errors:
+    expediente_not_found: No s'ha trobat l'expedient sol.licitat a l'AEAT.
+    iva_history_modelo_303_only: L'historial d'IVA només està disponible per al Model
+      303.
+    target_period_year_mismatch: L'any objectiu no coincideix amb l'exercici del període
+      objectiu.
+    year_range_invalid: El rang d'exercicis indicat no és vàlid.
+  filed:
+    pull:
+      submitted_file_extraction_failed: 'La declaració del model {modelo} {period}
+        {ejercicio} (expedient {expediente_id}) no s''ha pogut llegir mitjançant el
+        disseny del fitxer presentat. El PDF de la declaració, si l''AEAT el va proporcionar,
+        continua sent l''única via d''extracció. Motiu de l''analitzador: {reason}'
+    pull_all:
+      denominator_note_profile: Mesurat sobre {expected} parell(s) que esperen les
+        dades declarades pel mateix contribuent. Uns altres {offered_only} parell(s)
+        provenen només de la llista d'opcions que ofereix l'AEAT i no sustenten cap
+        afirmació de cobertura.
+      denominator_note_register_only: 'Sense denominador propi del contribuent: els
+        {offered_only} parells recorreguts provenen de la llista d''opcions que ofereix
+        l''AEAT, la vinculació de la qual a aquest NIF no està confirmada. Aquesta
+        execució no mesura res.'
+      expected_but_not_found: 'El vostre perfil declarat espera una declaració en
+        {count} parell(s) model/exercici per als quals el registre de l''AEAT no en
+        va retornar cap: {pairs}. Comproveu si es van arribar a presentar.'
+      found_more_than_expected: El registre de l'AEAT conté {raw_count} declaracions
+        del model {modelo} {period} {ejercicio}; s'ha conservat el registre més recent
+        ({expediente}) i s'han substituït {superseded} d'anterior(s).
+      recapture_divergence: 'Tornar a capturar el model {modelo} {period} {ejercicio}
+        ha canviat {count} valor(s) de casella observats anteriorment: {casillas}.
+        L''AEAT pot tenir una declaració rectificada.'
+llm:
+  evidence:
+    consent:
+      dispatch_refused: 'Rebutjat: aquesta sol·licitud llegeix un document del contribuent
+        i l''enviaria al proveïdor extern %{provider} sense una autorització de consentiment
+        per a aquesta invocació.'
+      mint_refused: 'Rebutjat: la lectura externa de documents del contribuent no
+        està permesa per a aquesta invocació.'
+mcp:
+  call:
+    timeout: '''{command}'' ha superat el límit de temps del nivell {tier} ({seconds}s)
+      i s''ha cancel.lat. Torna-ho a provar o executa l''ordre aeat equivalent en
+      un terminal.'
+    timeout_may_complete: '''{command}'' ha superat el seu límit de temps; és possible
+      que l''operació encara s''estigui completant en segon pla. Torna a executar-la
+      amb la mateixa clau d''idempotència per comprovar-ho: la garantia d''idempotència
+      fa que el reintent sigui segur i mai duplica l''escriptura.'
+  elicitation:
+    confirm:
+      consequence_handoff: Això genera el document de presentació que el contribuent
+        presentarà davant l'AEAT pel seu compte. Confirmar no envia res enlloc.
+      consequence_local: Això modifica dades locals del perfil de contribuent actiu.
+      declined: '''{command}'' no ha estat confirmat per l''usuari ({outcome}); no
+        s''ha executat res.'
+      field_description: Executar '{command}' ara?
+      message: Confirma l'execució de '{command}'. {consequence} Respon sí per continuar
+        o no per aturar.
+    refusal:
+      blocked: '''{command}'' està bloquejat permanentment: la presentació en línia
+        davant l''AEAT està prohibida per disseny. Exporta localment; el contribuent
+        presenta pel seu compte.'
+      no_channel: '''{command}'' requereix confirmació humana i aquest client no admet
+        la funció de preguntes (elicitation). Executa''l des d''un client que pugui
+        fer-te preguntes, o executa l''ordre equivalent de Cadrumo CLI (`aeat`) directament
+        en un terminal.'
+  faithfulness:
+    advisory: 'AVÍS DE FIDELITAT: els arguments de la crida citen imports [{values}]
+      que cap resultat d''eina d''aquesta sessió ha produït. Verifica la xifra amb
+      una lectura de calculate/revision abans de confiar-hi.'
+  harness:
+    off_host_consent: 'Avís de privadesa - llegiu-lo abans de continuar. Aquesta consola
+      la controla un assistent d''IA que s''executa en el proveïdor de LLM que trieu.
+      Les vostres paraules, i les xifres amb què treballa l''assistent (imports, valors
+      de casella, obligacions), s''envien a aquest proveïdor per operar la consola.
+      Els vostres DOCUMENTS D''ORIGEN - factures, extractes bancaris i qualsevol byte
+      d''evidència - MAI no surten del vostre equip: romanen en emmagatzematge local
+      xifrat i mai no es transmeten. Si actueu per compte d''un tercer (un gestor
+      o professional), confirmeu que això és acceptable abans de continuar.'
+  identity_gate:
+    elicitation_echo: 'Actuant com el perfil del contribuent: %{label}.'
+    first_mutation_refused: 'Rebutjat: confirma el contribuent actiu abans del primer
+      canvi d''aquesta sessió. Una presentació o edició mai no s''ha d''executar sota
+      la identitat equivocada. Executa whoami (o ''config profile status'' / ''overview
+      status'') per veure quin contribuent està actiu i torna-ho a provar; una sola
+      lectura d''identitat ho desbloqueja durant la sessió fins que canviis de perfil.'
+  persona:
+    handoff_denied: '''{command}'' és la frontera irreversible de lliurament de la
+      presentació, propietat de la persona ''{owner}''; la persona ''{persona}'' la
+      té denegada estructuralment. Lliura la unitat de treball verificada a la sessió
+      del verificador per produir l''exportació o el marcador de registre.'
+  serving:
+    warm_degraded: '''{command}'' s''ha ates pel transport de subprocés perquè el
+      runtime en calent estava {reason}; el resultat és idèntic, només més lent. El
+      servei en calent es reprèn quan s''allibera la crida lenta.'
+overview:
+  no_aeat_history: Aquest perfil no té cap presentació confirmada per l'AEAT.
+  no_aeat_history_sociedades: Aquest perfil no té cap presentació confirmada per l'AEAT.
+    La recuperació automàtica no pot obtenir l'historial de presentacions de l'Impost
+    sobre Societats (model 200/202); consulti'l directament a la seu electrònica de
+    l'AEAT.
+provisioning:
+  model:
+    licence:
+      non_commercial_advisory: El model %{model} està subjecte a la %{licence}, que
+        no permet l'ús comercial. L'heu indicat de manera explícita, així que Cadrumo
+        l'utilitzarà, però una gestoria comercial necessita una llicència a part de
+        l'editor.
+review:
+  adapters:
+    errors:
+      drafts_load_failed: No s han pogut carregar els esborranys de presentació des
+        del backend segur.
+      invoices_load_failed: No s'han pogut carregar les factures de l'adaptador.
+      transactions_load_failed: No s'han pogut carregar les transaccions de l'adaptador.
+  edit:
+    errors:
+      parse_failed: No s'ha pogut interpretar el token d'edició. El valor indicat
+        s'ha ocultat.
+  filing:
+    draft_placeholder_summary: Esborrany pendent
+    finding_summary: Incidència detectada a l'esborrany
+    stale_approval_summary: L'aprovació de l'esborrany ha caducat
+  filter:
+    errors:
+      parse_failed: No s'ha pogut interpretar el token de filtre. El valor indicat
+        s'ha ocultat.
+  invoice:
+    summary: Justificant pendent de revisió
+  operator:
+    errors:
+      item_not_found: No s'ha trobat l'element sol.licitat a la cua de revisió.
+      reserved_kind: El tipus de revisió està reservat i no és un element de revisió
+        emès.
+      unknown_kind: 'Tipus d''element de revisió desconegut. Valors --kind admesos:
+        %{accepted_kinds}.'
+  transaction:
+    summary: Transacció pendent de classificació
+sheets:
+  detalle:
+    headers:
+      acquisition_date: Data d'adquisició
+      amount: Import
+      amount_donated: Import donat
+      asset_class_code: Clau del bé
+      asset_identifier: Identificació del bé
+      base_imponible: Base imposable
+      base_imponible_assigned: Base imposable atribuïda
+      clave: Clau
+      counterparty_legal_name: Raó social de la contrapart
+      counterparty_tax_id: NIF de la contrapart
+      country_code: Codi de país
+      currency_code: Codi de divisa
+      deduction_percentage: Percentatge de deducció
+      donor_legal_name: Nom o raó social del donant
+      donor_tax_id: NIF del donant
+      ingreso_a_cuenta: Ingrés a compte
+      is_recurrent: Donatiu recurrent
+      member_legal_name: Raó social del membre
+      member_state_code: Estat membre
+      member_tax_id: NIF del membre
+      operation_date: Data de l'operació
+      operation_kind_code: Clau d'operació
+      party_legal_name: Raó social
+      party_tax_id: NIF
+      perceptor_legal_name: Cognoms i nom del perceptor
+      perceptor_tax_id: NIF del perceptor
+      percibido_dinerario: Percepcions dineràries
+      percibido_especie: Percepcions en espècie
+      rectified_base_previous: Base imposable anterior (rectificació)
+      rectified_period: Període rectificat
+      rectified_year: Exercici rectificat
+      refund_amount: Import a retornar
+      retencion_practicada: Retenció practicada
+      share_percentage: Percentatge de participació
+      subclave: Subclau
+      supplier_tax_id: NIF del proveïdor
+      transfer_pricing_method_code: Mètode de valoració
+      valuation_amount: Valoració
+topic:
+  authentication:
+    body: L'autenticació AEAT usa Cl@ve Mòbil (push al mòbil registrat) o un certificat
+      digital (FNMT / equivalent). Configura un proveïdor amb 'aeat config auth configure
+      --provider certificate' i verifica amb 'aeat config auth test'.
+    title: Autenticació amb l'AEAT
+  calendar:
+    body: El calendari mostra les obligacions de presentació (models i períodes) dins
+      d'un rang. Requereix un perfil amb règim IVA declarat perquè el motor no assumeixi
+      valors per defecte.
+    title: Calendari d'obligacions
+  casilla:
+    body: Una casella és un camp numerat d'un model. Les caselles poden ser manuals,
+      calculades o derivades de bindings. 'aeat app modelo casillas <modelo>' les
+      llista.
+    title: Caselles
+  formats:
+    body: La CLI emet sortida en text, JSON, taula o csv segons '--format'. JSON és
+      recomanat per a automatització; text per a inspecció humana.
+    title: Formats de sortida
+  irpf-regime:
+    body: Règim IRPF d'un autònom. Estimació directa (normal o simplificada) o estimació
+      objectiva (mòduls). Determina quins models de pagament fraccionat apliquen (130
+      vs 131).
+    title: Règim IRPF
+  iva-regime:
+    body: Règim IVA aplicable al contribuent. General, simplificat, recàrrec d'equivalència,
+      exempt, REAGP o REBU. Determina el model 303 trimestral i el resum anual 390.
+    title: Règim IVA
+  modelos:
+    body: Catàleg de models tributaris AEAT (303, 130, 100, 347, 349, 111, 115, 184,
+      etc.). Cada model té el seu calendari, caselles i regles d'aplicabilitat. 'aeat
+      app modelo list' enumera els disponibles.
+    title: Models tributaris
+  pago-fraccionado:
+    body: Pagament a compte de l'IRPF que fa un autònom cada trimestre. El model 130
+      aplica a estimació directa; el 131 a estimació objectiva. El càlcul usa les
+      dades del trimestre i, en alguns casos, les de l'exercici anterior.
+    title: Pagament fraccionat IRPF
+  profile:
+    body: El perfil local conté la teva identificació fiscal (NIF), activitat principal,
+      règim IVA / IRPF i enrolaments opcionals (SII, Verifactu, intracomunitari).
+      Edita'l amb 'aeat config profile edit NAME'.
+    title: Perfil del contribuent
+  providers:
+    body: Proveïdors d'autenticació suportats; cadascun té requeriments diferents.
+      'aeat config auth --help' els llista amb els prerequisits.
+    title: Proveïdors d'autenticació
+  recargo-extemporaneo:
+    body: La presentació fora de termini sense requeriment previ de l'AEAT acumula
+      un recàrrec de l'1% per mes (fins al 12%) durant el primer any i 15% més interessos
+      després de 12 mesos. Base legal Ley 58/2003 art-27.
+    title: Recàrrec per presentació extemporània
+  regimens:
+    body: Conjunt de règims fiscals aplicables a un autònom. Els dos eixos principals
+      són IVA (general, simplificat, recàrrec d'equivalència, exempt) i IRPF (directa,
+      objectiva).
+    title: Règims fiscals
+  sii:
+    body: Subministrament Immediat d'Informació de l'IVA. Obliga qui liquida IVA mensualment,
+      incloses grans empreses, grups d'IVA i contribuents REDEME, a portar els llibres
+      registre a la seu de l'AEAT.
+    title: SII
+  verifactu:
+    body: Requisits del RD 1007/2023 per als sistemes informàtics de facturació. La
+      fita actual és l'1 de gener de 2027 per als contribuents de l'Impost sobre Societats
+      de l'art. 3.1.a i l'1 de juliol de 2027 per a la resta d'obligats de l'art.
+      3.1.
+    title: VERI*FACTU
+transactions:
+  import:
+    batch_id_collision: 'Fila omesa: coincideix amb l''identificador d''una altra
+      fila del mateix fitxer.'
+    message_053465: Transacció duplicada detectada dins de l'arxiu importat.
+    message_082074: Transacció duplicada ja present al llibre major.
+    message_185962: L'arxiu d'origen no conté transaccions vàlides.
+    message_829073: 'Possible buit: més de 35 dies entre transaccions.'
+    unreadable: Arxiu il·legible o format no suportat
+    verified: Importació verificada amb èxit

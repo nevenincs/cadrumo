@@ -47,13 +47,8 @@ def test_profile_switch_cannot_observe_prior_bucket_engine(tmp_path: Path) -> No
     fresh engine is created. The stale-engine window the audit found
     (``persistence-global-engine-lifecycle``) is closed at the boundary.
     """
-    # Each profile needs its own storage root, and custody creates its
-    # directories one child at a time against a pinned parent rather than
-    # recursively, so the fixture supplies the existing parent.
     root_a = tmp_path / "a"
     root_b = tmp_path / "b"
-    root_a.mkdir()
-    root_b.mkdir()
 
     with isolated_runtime_profile(tmp_path=root_a, bucket_id=_BUCKET_A_ID) as profile_a:
         engine_a = get_engine(profile_a.settings)

@@ -1,0 +1,34 @@
+modelo:
+  schema:
+    '309':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2004-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az adóbevallás vonatkozási éve
+            x-chim6r1eehkn0rpdehp6ipr7clp0:
+              help: null
+              label: Kiváltó esemény típusa (új közlekedési eszközök / mezőgazdasági
+                szabályozás / egyenértékűségi felár / végrehajtási eljárás)
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: Önmagával szemben áthárított HÉA közösségi beszerzések esetén
+                (új közlekedési eszközök stb.)
+            x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
+              help: null
+              label: Nem időszakos HÉA összesen (önmagával szemben áthárított + felár
+                előzetesen felszámított)
+            x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
+              help: null
+              label: Kiskereskedők által viselt előzetesen felszámított HÉA az egyenértékűségi
+                felár keretében (utasoknak járó visszatérítés)
+          construct:
+            modelo-309-iva-no-periodica:
+              field:
+                title: null
+          field:
+            label: null

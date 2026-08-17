@@ -1,0 +1,24 @@
+modelo:
+  schema:
+    '188':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '03':
+              help: null
+              label: Levonások és előlegfizetések adóalapja
+            '04':
+              help: null
+              label: Bejelentett levonások és előlegfizetések
+            '05':
+              help: null
+              label: Az éves összesítő teljes levonása
+          construct:
+            modelo-188-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null

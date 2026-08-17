@@ -218,11 +218,7 @@ def test_attachment_store_put_file_deduplicates_by_digest(tmp_path: Path) -> Non
     source_file = source_dir / "invoice.pdf"
     source_file.write_bytes(b"%PDF-1.4\n%put-file-dedup-canary\n" + b"\x00" * 128)
 
-    # Custody creates its directories one child at a time against a pinned
-    # parent -- deliberately not recursively, so no check-then-create window
-    # opens -- which makes an existing parent the fixture's responsibility.
     profile_dir = tmp_path / "profile"
-    profile_dir.mkdir()
 
     with isolated_runtime_profile(tmp_path=profile_dir, bucket_id=_BUCKET_ID):
         store = AttachmentStore()

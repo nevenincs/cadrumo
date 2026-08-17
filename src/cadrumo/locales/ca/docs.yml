@@ -1,0 +1,267 @@
+docs:
+  casilla:
+    binding_source:
+      atribucion_member: des dels membres en atribució de rendes
+      bienes_inversion_regularizacion: des de la regularització de béns d'inversió
+      borrador: des de l'esborrany de l'AEAT
+      collectible_invoice: des de les factures emeses
+      donativo_donor: des dels donants registrats
+      foreign_asset: des dels seus béns a l'estranger
+      iva_compensation_annual_partition: des de la compensació d'IVA de l'exercici
+      iva_wallet_decision: des de la seva decisió de compensació d'IVA
+      ledger_impatriado_income_aggregation: des dels seus ingressos del règim d'impatriats
+      ledger_irnr_income_aggregation: des dels seus ingressos d'IRNR
+      ledger_iva_aggregation: des dels seus apunts d'IVA
+      ledger_oss_aggregation: des dels seus apunts d'OSS
+      ledger_renta_gastos_estimacion_directa_aggregation: des de les seves despeses
+        en estimació directa
+      ledger_renta_gastos_pago_fraccionado_aggregation: des de les seves despeses
+        del pagament fraccionat
+      ledger_renta_income_aggregation: des dels seus ingressos registrats
+      ledger_transaction: des dels seus moviments registrats
+      m303_regimen_simplificado_annual_summary: des del resum anual del règim simplificat
+        del model 303
+      manual_input: des d'un valor que vostè aporta
+      payable_invoice: des de les factures rebudes
+      previous_filing: des de la seva declaració anterior
+      profile: des del seu perfil de contribuent
+      prorrata_regularizacion: des de la regularització de prorrata
+      purchase_invoice_evidence: des dels justificants de les seves factures de compra
+      refund_operation: des de les seves operacions de devolució
+      related_party_operation: des de les seves operacions vinculades
+      relation_prefill: des del resultat d'un model relacionat
+      retenciones_aggregation: des de les retencions registrades
+      withholding: des de les retencions suportades
+    cadence:
+      ad_hoc: Es presenta quan es produeix el fet
+      annual: Es presenta anualment
+      monthly: Es presenta mensualment
+      profile_based: Es presenta segons el seu perfil
+      quarterly: Es presenta trimestralment
+    chrome:
+      alternative_join: ', o'
+      binding: Vincle de dades
+      casilla_count: '{casillas} caselles en {sections} seccions'
+      casilla_id: Identificador de casella
+      casilla_index: Totes les caselles
+      casilla_index_hint: Trieu una casella per anar-hi.
+      derived_from: a partir de
+      established_by: Establert per
+      formula: Fórmula
+      general_section: General
+      index_intro: Una pàgina per model. Cada casella indica com s'omple (la introdueix
+        vostè, es calcula a partir d'altres caselles o s'omple des dels seus registres),
+        on figura en el model oficial i quina norma l'estableix.
+      index_title: Referència de caselles
+      legal_basis: Base legal
+      list_and: i
+      not_on_official_form: No figura en el model oficial
+      page_heading: 'Model {modelo}: {title}'
+      record_design_number: Número del disseny de registre
+      registry_identifiers: Identificadors del registre
+      registry_section: Secció del registre
+      required: Obligatòria
+      revisions: Revisions
+      sections_nav: Seccions d'aquest model
+      segmento: Segment {segmento}
+      semantic_role: Rol semàntic
+      sources: Fonts
+    data_type:
+      bic: BIC
+      boolean: Sí o no
+      ccaa_code: Codi de comunitat autònoma
+      country_code: Codi de país
+      date: Data
+      decimal: Nombre decimal
+      iban: IBAN
+      integer: Nombre enter
+      money: Import en euros
+      municipality_code: Codi de municipi
+      name: Nom
+      nif: NIF
+      nif_iva: NIF-IVA
+      period_code: Període
+      postal_code: Codi postal
+      province_code: Codi de província
+      ratio: Percentatge
+      text: Text
+      year: Exercici
+    input_kind:
+      bound: S'omple automàticament
+      computed: Es calcula automàticament
+      informational: Només informativa
+      manual: Ho introdueix vostè
+      projection_only: S'omple des de la seva fila d'origen
+    input_kind_count:
+      bound: omplertes des dels seus registres
+      computed: calculades
+      informational: només informatives
+      manual: que introdueix vostè
+      projection_only: omplertes des de la seva fila d'origen
+    legal_kind:
+      instruction: Instruccions de l'AEAT
+    length:
+      at_least: Com a mínim {min} caràcters
+      at_most: Com a màxim {max} caràcters
+      between: De {min} a {max} caràcters
+    value_enum: 'Un de: {values}'
+    value_range:
+      at_least: Com a mínim {min}
+      at_most: Com a màxim {max}
+      between: Entre {min} i {max}
+      non_negative: Zero o més
+      non_positive: Zero o menys
+  cli:
+    automation:
+      exit_auth: Cal autenticació o les credencials han caducat.
+      exit_codes_heading: Codis de sortida
+      exit_conflict: Conflicte o fallada de condició prèvia.
+      exit_forbidden: Operació no permesa per la política.
+      exit_general: Error general o operació rebutjada.
+      exit_internal: Error intern inesperat.
+      exit_not_found: Recurs no trobat.
+      exit_partial: Èxit parcial (alguns elements han funcionat i d'altres no).
+      exit_success: Correcte.
+      exit_unavailable: Servei extern no disponible.
+      exit_usage: Ús incorrecte de la CLI (indicador erroni, argument absent).
+      exit_validation: Error de validació en les dades proporcionades per l'usuari.
+      intro: 'Feu servir aquesta pàgina quan programeu invocacions d''``aeat``: documenta
+        els codis de sortida del procés i el comportament de sortida TTY/JSON que
+        comparteixen totes les ordres.'
+      output_contract_body: Quan la sortida va a un TTY, la CLI emet text enriquit
+        llegible per persones. Quan es passa ``--format json`` (o quan la sortida
+        es redirigeix), la CLI emet un únic document JSON per invocació. Les ordres
+        que han adoptat el ``SchemaEnvelope`` embolcallen el seu resultat com a ``{envelope}``.
+        Les ordres encara no migrades emeten la seva càrrega directament.
+      output_contract_heading: Contracte de sortida TTY i JSON
+      table_code_header: Codi
+      table_meaning_header: Significat
+      title: Codis de sortida i contracte de sortida
+    command:
+      bare_payload_note: Aquesta ordre emet una càrrega simple (encara sense embolcall).
+        L'estructura de la sortida és pròpia de cada ordre; consulteu ``--help`` per
+        a més detalls.
+      group_fallback: Grup d'ordres.
+      no_description: Sense descripció.
+      no_description_available: No hi ha cap descripció disponible.
+      output_schema_heading: Esquema de sortida
+      parameters_heading: Paràmetres
+      path_label: Ruta de l'ordre
+      registry_key_label: Clau del registre
+      schema_envelope_note: Aquesta ordre emet un ``SchemaEnvelope`` el camp ``result``
+        del qual es valida contra ``{schema}``.
+    env:
+      default_empty: buit
+      default_unset: sense definir
+      secrets_note: L'aplicació no imprimeix mai els secrets i apareixen marcats com
+        a `(secret)` més amunt. Els valors predeterminats marcats com a `(derived)`
+        es calculen en temps d'execució a partir de l'arrel d'emmagatzematge o de
+        la ubicació del projecte.
+    family:
+      choose_group_heading: Trieu un grup d'ordres
+      direct_commands_heading: Ordres directes
+      direct_commands_intro: Aquestes ordres estan muntades directament a ``aeat {family}``,
+        sense cap grup de verbs intermedi.
+      group_link_line: Obrir :doc:`{target}` per a ``aeat {family} {group}``.
+      index_link_line: Obrir :doc:`/cli/index` per a la pàgina principal de la referència
+        de la CLI.
+      intro: '``aeat {family}`` s''organitza per grup de verbs principal. La pàgina
+        de cada grup comença amb la seva sortida real de ``--help``, seguida de totes
+        les ordres finals que conté.'
+      open_group_link: Obrir la referència d'``aeat {family} {group}``
+      title: '{command}: referència d''ordres'
+    index:
+      app_card: 'Ordres del flux de treball operatiu: llibre de moviments, models,
+        calendaris de presentació, comprovacions del registre, captures en directe
+        i cues de revisió.'
+      choose_family_heading: Trieu una família d'ordres
+      config_card: 'Ordres locals de configuració i manteniment: perfils, autenticació,
+        integració amb Google, comprovacions de reparació i superfícies de reinici.'
+      english_help_note: Les cadenes d'ajuda es mostren en anglès. En temps d'execució
+        la CLI respecta l'idioma de sortida actiu (``--language`` / ``CADRUMO_OUTPUT_LANGUAGE``).
+      flag_debug: Activa el registre de nivell de depuració.
+      flag_detail: Mostra informació de versió ampliada, inclòs el resum del registre.
+      flag_format: Format de sortida (``text`` o ``json``).
+      flag_help: Mostra el document d'ajuda curat i acaba.
+      flag_language: Sobreescriu l'idioma de sortida (``es``, ``en``, ``ca``, ``hu``).
+      flag_profile: Activa un perfil amb nom per a aquesta invocació.
+      flag_quiet: Suprimeix la sortida informativa.
+      flag_verbose: Activa la sortida detallada.
+      flag_version: Mostra la versió del paquet i acaba.
+      global_flags_heading: Indicadors globals
+      global_flags_intro: L'ordre arrel ``aeat`` accepta aquests indicadors i s'apliquen
+        a totes les invocacions.
+      intro: 'La CLI ``aeat`` exposa dues famílies d''ordres de primer nivell: ``config``
+        (configuració local, cicle de vida del perfil, diagnòstics) i ``app`` (flux
+        de treball fiscal operatiu). Aquesta referència documenta les {count} ordres
+        finals.'
+      next_app: Obrir :doc:`app` per a les ordres del flux de treball operatiu.
+      next_automation: Obrir :doc:`automation` per als codis de sortida i el contracte
+        de sortida TTY/JSON.
+      next_config: Obrir :doc:`config` per a les ordres locals de configuració i manteniment.
+      next_howto: Obrir :doc:`/how-to/index` per a les guies d'inici i les guies de
+        tasques.
+      next_schemas: Obrir :doc:`schemas` per al registre d'esquemes de sortida JSON.
+      open_family_link: Obrir la referència d'``aeat {family}``
+      start_here: Comenceu pels enllaços de família de sota. Feu servir les pàgines
+        generades de cada família d'ordres per conèixer els indicadors, arguments,
+        claus de registre i esquemes de sortida exactes; feu servir aquesta pàgina
+        per al comportament de nivell arrel que s'aplica a totes les ordres.
+      title: Referència de la CLI
+      where_next_heading: Per on continuar
+    param:
+      argument_optional: Argument, opcional.
+      argument_required: Argument, obligatori.
+      option_optional: Opció, opcional.
+      option_required: Opció, obligatòria.
+    schemas:
+      group_entries: '{count} entrades: {keys}'
+      summary: Les {count} rutes d'ordre següents tenen un ``OutputSchema`` registrat.
+        Les superfícies de crida de retorn de grup ({groups}) es llisten a part.
+      title: Registre d'esquemes de sortida
+      tooling_note: Aquesta pàgina està pensada sobretot per a qui crea eines. Si
+        executeu les ordres a mà, les :doc:`pàgines de família <index>` acostumen
+        a ser un punt d'entrada millor.
+  glossary:
+    entry:
+      broader: Terme genèric
+      domain: Àmbit
+      legal_basis: Base legal
+      related: Relacionat
+      undefined: Encara no hi ha cap definició disponible en aquesta llengua.
+    intro: Termes fiscals espanyols utilitzats a la documentació. Cada terme enllaça
+      amb la seva base legal quan n'hi ha. Cerqueu un terme; la definició és la mateixa
+      allà on s'hi faci referència.
+    title: Glossari
+  legal:
+    index:
+      intro: Les lleis, reials decrets i ordres ministerials espanyoles en què es
+        fonamenten els càlculs de Cadrumo. Cada pàgina recull les disposicions citades
+        d'un text i enllaça cadascuna amb la seva redacció oficial al BOE.
+      title: Referència legal
+    page:
+      intro: Publicat al Butlletí Oficial de l'Estat com a {document}. Els càlculs
+        de Cadrumo citen {count} disposicions d'aquest text; cadascuna enllaça més
+        avall amb la seva redacció oficial al BOE.
+    provision:
+      boe_is_official: El text consolidat del Butlletí Oficial de l'Estat és la redacció
+        oficial.
+      in_force_between: En vigor des de {start} fins a {end}
+      in_force_from: En vigor des de {start}
+      in_force_until: En vigor fins a {end}
+      official_wording: Text oficial, en extracte (en espanyol)
+      published: publicat el {date}
+      read_on_boe: Llegir {citation} al BOE
+    record:
+      authority: Autoritat
+      boe_document: Document del BOE
+      bundled_corpus: Corpus inclòs
+      catalogue_id: Identificador del catàleg
+      consolidated_as_of: Consolidat a data de
+      evidence_tier: Nivell d'evidència
+      instrument_kind: Tipus de norma
+      note: Nota del catalogador
+      review_status: Estat de revisió
+      reviewed_at: Data de revisió
+      reviewed_by: Revisat per
+      title: Fitxa del catàleg

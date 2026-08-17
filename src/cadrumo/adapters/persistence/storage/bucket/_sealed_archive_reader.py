@@ -43,16 +43,29 @@ class SealedArchiveContents:
     """Decoded sealed-archive contents ready for downstream decryption.
 
     The reader returns this aggregate so the caller composes its
-    own decryption + validation pipeline without re-parsing the
-    archive. ``payload_envelope_bytes`` is opaque to this layer —
-    the caller deserialises it via the existing :class:`Envelope`
-    pipeline.
+    own decryption and validation pipeline without re-parsing the
+    archive.
+
+    ``payload_bytes`` is OPAQUE to this layer, in both
+    directions: the writer stored whatever it was handed, and this
+    reader returns those bytes verbatim without parsing, validating or
+    verifying them. It names no payload type on purpose. An
+    :class:`~adapters.persistence.storage.Envelope` is one thing a
+    caller may put here and was for a time the only one, which is how
+    the writer's own documentation came to promise it; the transport
+    never required it and must not, or it could refuse a sealed payload
+    it merely failed to recognise.
+
+    Integrity is the caller's, not this layer's. No digest is checked
+    here -- the header's ``manifest_digest`` is carried, not verified --
+    so a caller that needs to know the bytes are the bytes it sealed
+    must check that itself.
     """
 
     __test__: ClassVar[bool] = False
 
     header: ExportArchiveHeader
-    payload_envelope_bytes: bytes
+    payload_bytes: bytes
 
 
 def _read_member_info(archive: tarfile.TarFile, member: tarfile.TarInfo) -> bytes:
@@ -191,7 +204,7 @@ def read_sealed_archive(source_path: Path) -> SealedArchiveContents:
             f"sealed-archive read of {source_path!s} failed at IO layer: {type(exc).__name__}: {exc}",
         ) from exc
 
-    return SealedArchiveContents(header=header, payload_envelope_bytes=payload_bytes)
+    return SealedArchiveContents(header=header, payload_bytes=payload_bytes)
 
 
 def _validate_layout(member_names: tuple[str, ...]) -> None:

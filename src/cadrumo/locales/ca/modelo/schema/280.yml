@@ -1,0 +1,92 @@
+modelo:
+  schema:
+    '280':
+      field:
+        official_name: null
+        title: null
+      revision:
+        '2025':
+          casilla:
+            aportaciones-ejercicio:
+              help: null
+              label: Aportacions efectuades en l'exercici
+            base-retencion-practicada:
+              help: null
+              label: Base de la retenció practicada
+            base-retenciones:
+              help: null
+              label: Base de retencions
+            clave-alta:
+              help: null
+              label: Clau d'alta
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaració complementària o substitutiva
+            declarado-nif:
+              help: null
+              label: NIF del declarat
+            declarado-nombre:
+              help: null
+              label: Cognoms i nom del declarat
+            declarante-nif:
+              help: null
+              label: NIF del declarant
+            declarante-razon-social:
+              help: null
+              label: Raó social del declarant
+            ejercicio-declaracion:
+              help: null
+              label: Exercici de declaració
+            extincion-plan:
+              help: null
+              label: Extinció del Pla d'Estalvi a Llarg Termini
+            fecha-apertura:
+              help: null
+              label: Data d'obertura
+            fecha-extincion:
+              help: null
+              label: Data d'extinció
+            identificador-producto:
+              help: null
+              label: Identificador del producte contractat
+            importe-total-aportaciones:
+              help: null
+              label: Import total d'aportacions
+            numero-identificativo-anterior:
+              help: null
+              label: Número identificatiu de la declaració anterior
+            numero-identificativo-declaracion:
+              help: null
+              label: Número identificatiu de la declaració
+            numero-total-declarados:
+              help: null
+              label: Nombre total de declarats
+            persona-relacion:
+              help: null
+              label: Persona amb qui relacionar-se
+            rendimientos-negativos-acumulados:
+              help: null
+              label: Rendiments negatius acumulats
+            rendimientos-negativos-ejercicio:
+              help: null
+              label: Rendiments negatius obtinguts durant l'exercici
+            rendimientos-negativos-imputables:
+              help: null
+              label: Rendiments negatius imputables
+            rendimientos-positivos-acumulados:
+              help: null
+              label: Rendiments positius acumulats
+            rendimientos-positivos-ejercicio:
+              help: null
+              label: Rendiments positius obtinguts durant l'exercici
+            representante-legal-nif:
+              help: null
+              label: NIF del representant legal
+            tipo-identificador:
+              help: null
+              label: Tipus d'identificador
+            tipo-plan-ahorro:
+              help: null
+              label: Tipus de Pla d'Estalvi a Llarg Termini
+          field:
+            label: null

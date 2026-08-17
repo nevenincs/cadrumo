@@ -1,0 +1,37 @@
+modelo:
+  schema:
+    '128':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Kedvezményezettek száma
+            '02':
+              help: null
+              label: Visszatartások és előlegfizetések alapja
+            '03':
+              help: null
+              label: Visszatartások és előlegfizetések
+            '04':
+              help: null
+              label: Kedvezményezettek száma (kiegészítő blokk)
+            '05':
+              help: null
+              label: Visszatartások és előlegfizetések alapja (kiegészítő blokk)
+            '06':
+              help: null
+              label: Korábbi, azonos tárgyú, adóévre és időszakra vonatkozó bevallások
+                befizetendő összege
+            '07':
+              help: null
+              label: Befizetendő összeg
+          construct:
+            modelo-128-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null

@@ -1,0 +1,1190 @@
+errors:
+  auth:
+    auth_aeat_login_assertion: No se pudo generar la verificación posterior al inicio
+      de sesión con la AEAT.
+    auth_aeat_session_expired: La sesión autenticada con la AEAT ha caducado. Vuelve
+      a autenticarte para continuar.
+    auth_auth: Se produjo un error de autenticación con la AEAT.
+    auth_auth_authenticator_persisted_session_invalid: La sesión de navegador guardada
+      con la AEAT no es fiable. Vuelve a autenticarte.
+    auth_auth_certificate: Se produjo un error en la autenticación con certificado.
+    auth_auth_certificate_expired: El certificado digital ha caducado. Renueva el
+      certificado para poder autenticarte.
+    auth_auth_certificate_load: No se pudieron leer los datos del certificado PKCS#12.
+      Comprueba que el archivo no esté dañado.
+    auth_auth_certificate_nif_parse: No se pudo extraer ningún NIF ni NIE del titular
+      del certificado. Comprueba que el certificado sea de persona física.
+    auth_auth_certificate_password: La contraseña del certificado falta o es incorrecta.
+      Define la variable de entorno con la contraseña correcta.
+    auth_auth_certificate_pre_expiry: El certificado digital está a punto de caducar.
+      Renuévalo antes de que expire para evitar interrupciones.
+    auth_auth_clave_movil_clave_movil_approval_timeout: La autenticación Cl@ve no
+      se completó a tiempo. Aprueba la solicitud en tu dispositivo y vuelve a intentarlo.
+    auth_auth_clave_movil_clave_movil_configuration: Faltan ajustes obligatorios de
+      Cl@ve Móvil o son incorrectos. Revisa la configuración de Cl@ve.
+    auth_auth_configuration: Faltan ajustes de autenticación obligatorios o son incorrectos.
+      Revisa la configuración de autenticación.
+    auth_auth_provider_cleanup: El proveedor de autenticación no pudo liberar todos
+      los recursos del navegador. Reintenta el cierre antes de iniciar otra sesión.
+    auth_auth_validation: Los parámetros de autenticación no superaron la validación.
+      Corrige los valores indicados y vuelve a intentarlo.
+    auth_former_product_session_state: Cadrumo detectó estado de sesión de un producto
+      retirado y se niega a leerlo, moverlo, re-cifrarlo, eliminarlo o adoptarlo.
+    auth_google: Se produjo un error en la autenticación con Google.
+    auth_google_client_not_registered: No hay ningún cliente OAuth de escritorio de
+      Google registrado para el perfil activo. Registra un cliente para usar funciones
+      de Google.
+    auth_google_client_revoked: El cliente OAuth de escritorio de Google registrado
+      ha sido revocado. Registra un cliente nuevo.
+    auth_google_expired: El token de actualización de Google ha caducado por el límite
+      de 7 días de los proyectos en pruebas. Vuelve a autorizar el acceso a Google.
+    auth_google_revoked: El token de actualización de Google ha sido revocado. Vuelve
+      a autorizar el acceso a Google.
+    auth_google_scope_insufficient: Los permisos concedidos a Google no incluyen todos
+      los necesarios para esta operación. Vuelve a autorizar concediendo todos los
+      permisos solicitados.
+    auth_outbound_storage_permission: Las credenciales activas no tienen el permiso
+      necesario para esta operación de almacenamiento.
+    auth_session_corrupt: Los metadatos de la sesión guardada no se pueden leer. Vuelve
+      a autenticarte para crear una sesión nueva.
+    auth_session_deserialization: Los datos de sesión de autenticación almacenados
+      no se pudieron deserializar. Vuelve a autenticarte para crear una sesión nueva.
+    auth_session_unavailable: No hay ninguna sesión activa verificada con la AEAT
+      disponible. Autentícate antes de continuar.
+    auth_storage_bucket_recovery_verification: El código de recuperación introducido
+      no es válido. Vuelve a escribir las 24 palabras exactamente como aparecen en
+      la copia de seguridad.
+    auth_storage_keyring_unavailable: El llavero del sistema operativo no está disponible.
+      Comprueba que haya un almacén de credenciales instalado y activo.
+    auth_storage_master_key_material_missing: No existe material de clave maestra.
+      El almacenamiento seguro aún no está aprovisionado.
+    auth_storage_master_key_unavailable: No se pudo obtener la clave maestra de ningún
+      proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
+    clave_movil_identity_checksum: El identificador de Cl@ve Móvil tiene una forma
+      válida pero su letra de control no coincide con los dígitos. Revisa la última
+      letra del documento e inténtalo de nuevo.
+  calc:
+    age_at_year_end_no_filing_year: 'Error interno: el cálculo de edad a fin de ejercicio
+      no tiene ejercicio de declaración.'
+    binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
+    bound_casilla_binding_value_missing: La vinculación {binding_id} no tiene valor
+      asignado.
+    bound_input_smuggled_without_binding_value: 'Error interno: casilla de entrada
+      vinculada pasada sin valor de vinculación.'
+    bound_projection_inconsistent: 'Error interno: la proyección vinculada es inconsistente.'
+    bracket_negative_base: El parámetro escalonado {parameter_id} no acepta una base
+      negativa {base}.
+    bracket_no_coverage: El parámetro escalonado {parameter_id} no tiene tramo que
+      cubra la base {base}.
+    bracket_no_window: El parámetro escalonado {parameter_id} no tiene tramo válido
+      para {as_of}.
+    casilla_constraint_violation: 'La casilla {casilla_id} con valor {value} infringe
+      su restricción declarada: {violation}. Refs: {legal_refs}.'
+    casilla_referenced_before_evaluation: La casilla {casilla_id} se referenció antes
+      de evaluar su fórmula.
+    computed_supplied_as_input: 'No se pueden suministrar como entrada las casillas
+      calculadas: {casilla_ids}.'
+    date_binding_used_as_decimal_leaf: 'Error interno: vinculación de fecha utilizada
+      como hoja decimal.'
+    date_binding_value_missing: Falta el valor de la vinculación de fecha.
+    dispatch_key_unknown: 'La clave de despacho {dispatch_key!r} no está en la tabla
+      del operador {op} sobre la vinculación {binding_id} (claves declaradas: {available_keys}).'
+    dispatch_parameter_kind: El parámetro {parameter_id} no encaja con el operador
+      {op}; se esperaba un parámetro escalar (decimal / dinerario / entero / ratio).
+    divide_by_zero: La fórmula con operador {op} divide entre cero.
+    empty_expression: Expresión de fórmula vacía.
+    enum_binding_value_missing: La vinculación enumerada {binding_id} no tiene valor
+      asignado (requerida por el operador {op}).
+    lookup_dispatch_arg_count: El operador {op} de la fórmula espera {expected} argumentos.
+    lookup_dispatch_arg_kind: El operador {op} de la fórmula requiere que {position}
+      sea una hoja de tipo {expected_kind}.
+    m100_art85_boolean_invalid: La casilla booleana del artículo 85 del Modelo 100
+      debe ser 0 o 1.
+    m100_art85_catastral_value_negative: El valor catastral del artículo 85 del Modelo
+      100 no puede ser negativo.
+    m100_art85_disposal_percentage_invalid: El porcentaje de uso mixto del artículo
+      85 del Modelo 100 debe ser mayor que 0 y como máximo 100.
+    m100_art85_imputation_days_invalid: Los días de imputación del artículo 85 del
+      Modelo 100 deben ser un número entero entre 1 y 365.
+    m100_art85_input_negative: Las entradas numéricas del artículo 85 del Modelo 100
+      no pueden ser negativas.
+    m100_art85_mixed_use_inputs_without_flag: Los días o el porcentaje de uso mixto
+      del artículo 85 del Modelo 100 requieren que la casilla de uso mixto esté marcada.
+    m100_art85_no_catastral_base_missing: La imputación del artículo 85 del Modelo
+      100 sin valor catastral requiere casillas de base sustitutiva que no están presentes.
+    m100_art85_revision_flag_invalid: El indicador de valor catastral revisado del
+      artículo 85 del Modelo 100 debe ser el valor oficial X de la casilla.
+    m210_gastos_deducibles_negative: Los gastos_deducibles M210 %{casilla_id} no pueden
+      ser negativos; valor recibido %{value}.
+    m210_gastos_deducibles_not_allowed: Los gastos_deducibles M210 %{casilla_id} solo
+      se admiten en la ruta UE/EEE del artículo 24.6; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.
+    m210_imputation_coefficient_invalid: El coeficiente de imputación inmobiliaria
+      M210 %{casilla_id} debe ser uno de los tipos del art. 85 declarados en el registro
+      (%{allowed_values}); valor recibido %{value}.
+    m210_imputation_days_invalid: Los días de imputación M210 %{casilla_id} deben
+      ser un entero entre 1 y %{max_days}; valor recibido %{value}.
+    m210_imputation_no_catastral_value_missing: La imputación inmobiliaria M210 sin
+      valor catastral requiere un valor de adquisición o valor comprobado por la Administración
+      positivo (%{acquisition_casilla_id}, %{administrative_casilla_id}).
+    m210_imputation_no_filing_year: La imputación inmobiliaria M210 requiere un ejercicio
+      de declaración no nulo.
+    parameter_unknown: El parámetro {parameter_id} no está registrado.
+    relation_value_missing: La relación {relation_id} no tiene valor asignado.
+    text_input_non_text_casillas: 'Entrada de texto suministrada para casillas no
+      textuales: %{casilla_ids}.'
+    unknown_input_casillas: 'Identificadores de casilla de entrada desconocidos: {casilla_ids}.'
+    unknown_text_input_casillas: 'Identificadores de casilla de entrada de texto desconocidos:
+      %{casilla_ids}.'
+    unsupported_comparison_op: 'Operador de comparación no admitido: %{op}.'
+    unsupported_op: 'Operador de fórmula no admitido: %{op}.'
+  censo:
+    bucket_id_blank: El servicio de sincronización censal requiere un bucket de perfil.
+    certificado_extraction_unpinned: La lectura del certificado emitido aún no está
+      soportada; introduce los datos censales manualmente.
+    certificado_not_a_pdf: El archivo proporcionado no es un PDF; se esperaba el Certificado
+      de Situación Censal descargado de la Sede.
+  context_labels:
+    area: área
+    entry_count: número de entradas
+    reason: motivo
+  error:
+    error_access_gate_submission: La política de control de acceso rechazó una operación
+      de envío.
+    error_access_gate_submission_preflight: La comprobación previa del control de
+      acceso rechazó una operación de escritura.
+    error_aggregation_config: Se ha violado un invariante de composición del servicio
+      de agregación.
+    error_application_live: La orquestación de la lectura en vivo de la AEAT falló.
+    error_application_live_iva_surface_timeout: La superficie de lectura de IVA en
+      vivo agotó el tiempo antes de devolver evidencia de la AEAT.
+    error_application_registry: La orquestación del registro de modelos falló o fue
+      rechazada.
+    error_borrador_artefact_not_recognised: El PDF no coincide con ningún formato
+      de borrador de Modelo 100 conocido.
+    error_cadrumo_async_resource_cleanup: Falló la limpieza asíncrona de recursos;
+      vuelva a intentar la limpieza antes de continuar.
+    error_cadrumo_core: Se produjo un error interno en la aplicación.
+    error_cadrumo_core_not_found: No se encontró el recurso o registro solicitado.
+    error_cadrumo_observability: Se produjo un error en la telemetría de la aplicación.
+    error_calc_sheets_engine: El motor de exportación de hojas de cálculo encontró
+      un estado irresoluble al generar el plan de exportación.
+    error_calc_sheets_parity: El escenario del arnés de paridad hace referencia a
+      casilla.id que no están presentes en la instantánea del registro.
+    error_calc_sheets_record: Una operación de registro de hoja de cálculo falló por
+      un índice de columna inválido o una dirección A1 malformada.
+    error_calculations_registry: Se produjo un error al cargar, resolver o validar
+      el registro de cálculo.
+    error_calculations_registry_load: Los archivos del registro de cálculo no se pudieron
+      interpretar.
+    error_calculations_registry_snapshot: No se pudo seleccionar un snapshot del registro
+      válido para la declaración.
+    error_calculations_registry_validation: Las definiciones del registro de cálculo
+      están incompletas o son contradictorias.
+    error_categories: Se produjo un error en las categorías de gasto.
+    error_categories_validation: Un registro de categoría no superó la validación.
+    error_certificado_censal: La operación con el Certificado de Situación Censal
+      ha fallado.
+    error_config_boundary: El comando de configuración encontró un error interno inesperado.
+    error_corpus_search: No se pudo completar la búsqueda local en el corpus.
+    error_deadlines_deadline: Se produjo un error en el cálculo de plazos.
+    error_deadlines_missing_windows: Faltan las ventanas de plazo de presentación.
+    error_deadlines_profile: El perfil de autónomo no se pudo cargar o validar para
+      el cálculo de plazos.
+    error_deadlines_schedule_computation: El motor no pudo generar un calendario de
+      plazos válido. Comprueba el año solicitado y los datos del perfil.
+    error_deadlines_validation: Un registro de plazo no superó la validación.
+    error_decimal_format: 'Se produjo un error de formato decimal: el valor es None
+      pero no se configuró un sustituto.'
+    error_declaracion_template_not_detected: No se pudo detectar automáticamente la
+      versión de plantilla del PDF de la declaración.
+    error_domain_submission: Se produjo un error en el dominio de envío.
+    error_domain_submission_preflight: El borrador no superó la comprobación previa
+      de envío local.
+    error_domain_validation: Un identificador o modelo de dominio no es válido.
+    error_filing_amendment: Se produjo un error relacionado con la declaración complementaria.
+    error_filing_application: Se produjo un error en la capa de aplicación de declaraciones.
+    error_filing_builder: Falló la selección o ejecución del generador de la declaración.
+    error_filing_computation: El generador no pudo evaluar una casilla con fórmula.
+    error_filing_draft: Se produjo un error en el borrador de la declaración.
+    error_filing_export: Falló la exportación del borrador al formato de la AEAT.
+    error_filing_export_validation: Un valor o disposición de la exportación no es
+      válido.
+    error_financial_aggregation: Se produjo un error al agregar las transacciones
+      financieras.
+    error_financial_aggregation_period: El periodo de declaración solicitado no se
+      pudo interpretar sin ambigüedad.
+    error_financial_aggregation_validation: Los datos o el estado de la agregación
+      no son válidos.
+    error_financial_attachments_attachment: Se produjo un error en el servicio de
+      justificantes.
+    error_financial_attachments_attachment_not_found: No se encontró el justificante
+      solicitado.
+    error_financial_invoices_invoice: Se produjo un error en el catálogo de facturas.
+    error_financial_invoices_invoice_catalogue: El catálogo de facturas no es válido
+      o es inconsistente.
+    error_financial_invoices_invoice_link: No se pudo enlazar la factura con la transacción.
+    error_financial_invoices_invoice_not_found: No se encontró la factura solicitada.
+    error_financial_iva: Se produjo un error en el cálculo del IVA.
+    error_financial_iva_catalogue: El catálogo de IVA no se pudo cargar, resolver
+      o validar.
+    error_financial_iva_category_not_found: No se encontró la categoría de IVA solicitada
+      en el catálogo.
+    error_financial_iva_classification: No se pudo clasificar el IVA de forma determinista.
+    error_financial_iva_rate_not_found: No se encontró un tipo de IVA para el estado
+      miembro y el tipo solicitados.
+    error_financial_iva_rate_overlap: Dos tipos de IVA comparten una ventana de vigencia.
+    error_financial_provider: Se produjo un error al importar el documento financiero.
+    error_financial_provider_config: Una subclase de proveedor financiero tiene declaraciones
+      de atributos de corpus inválidas o faltantes.
+    error_financial_transactions_transaction: Se produjo un error en el catálogo de
+      transacciones.
+    error_financial_usage_ratios_usage_ratio: Se produjo un error en los porcentajes
+      de uso.
+    error_flow: El flujo guiado falló.
+    error_invoice_link_inconsistency: El enlace entre catálogos dejó la factura y
+      la transacción desincronizadas. Revisa ambos catálogos manualmente.
+    error_invoice_validation: Un registro de factura no superó la validación.
+    error_iva_prorrata: Se produjo un error en el cálculo de la prorrata del IVA.
+    error_iva_prorrata_input: Los datos de entrada de la prorrata del IVA infringen
+      sus invariantes.
+    error_iva_prorrata_sector: Los datos de separación sectorial de la prorrata del
+      IVA son inconsistentes.
+    error_iva_validation: Un valor del IVA no es válido.
+    error_justificante: Se produjo un error relacionado con el justificante.
+    error_justificante_csv_not_found: El PDF no contiene un Código Seguro de Verificación.
+    error_llm: Se produjo un error en el modelo de lenguaje.
+    error_manuals_manual: Se produjo un error relacionado con los manuales.
+    error_manuals_manual_not_found: No se encontró el manual, año o parte solicitados.
+    error_manuals_manual_review_required: Un registro de manual no tiene metadatos
+      de revisión.
+    error_manuals_rule_extraction: La extracción de reglas del manual no está disponible.
+    error_manuals_validation: Un registro de manual no superó la validación.
+    error_modelo_aggregation_binding: Los bindings de agregación derivados del bucket
+      entran en conflicto con los datos indicados.
+    error_modelo_amendment_evidence_missing: No se puede complementar una declaración
+      que no tiene evidencia oficial importada. Importa primero el justificante de
+      la declaración original.
+    error_modelo_amendment_target_state: No se puede complementar una declaración
+      que no está en estado vigente; ya ha sido sustituida por otra posterior.
+    error_modelo_calculation_registry_unavailable: No se pudo resolver el snapshot
+      del registro para el modelo, año y periodo de la unidad de trabajo.
+    error_modelo_calculation_revision_not_found: No se encontró la revisión de cálculo
+      solicitada.
+    error_modelo_calculation_revision_state: La transición de estado solicitada no
+      es compatible con el estado actual de la revisión de cálculo.
+    error_modelo_casilla_provenance_missing: Una casilla del resultado del motor no
+      tiene definición en el registro.
+    error_modelo_external_filing_import: No se pudo guardar la declaración externa
+      importada. Comprueba los valores de las casillas y la referencia de evidencia.
+    error_modelo_filing_record_not_found: No se encontró la declaración registrada
+      solicitada.
+    error_modelo_iva_wallet_reconciliation_blocked: 'El cálculo del Modelo 303 está
+      bloqueado: se requiere la reconciliación del wallet de IVA'
+    error_modelo_verification_report_not_found: No se encontró el informe de verificación
+      solicitado.
+    error_modelo_work_unit_already_discarded: La unidad de trabajo ya está descartada.
+    error_modelo_work_unit_mutation_refused: No se puede modificar una unidad de trabajo
+      descartada.
+    error_modelo_work_unit_not_found: No se encontró la unidad de trabajo solicitada.
+    error_modelos: Se produjo un error en los modelos tributarios.
+    error_modelos_validation: Un código de modelo infringe sus invariantes de forma.
+    error_observation_key: Un componente de la clave de observación no cumple el contrato
+      del repositorio.
+    error_outbound_storage_not_found: No existe el objeto o el espacio de almacenamiento
+      solicitado.
+    error_outbound_storage_path_too_long: La ruta de almacenamiento resuelta supera
+      el límite MAX_PATH de Windows.
+    error_pdf_import_pdf_modelo_import: Falló la importación de la declaración desde
+      el PDF.
+    error_period: Se produjo un error relacionado con el periodo.
+    error_period_validation: El token de periodo indicado no tiene un formato válido.
+    error_portals_portal_registry: Se produjo un error en el registro de portales
+      de la AEAT.
+    error_portals_unknown_portal: El portal de la AEAT indicado no existe.
+    error_portals_validation: Los metadatos de un portal no superaron la validación.
+    error_profile_amortization_ledger: Una operación del libro de amortizaciones del
+      perfil no es válida.
+    error_profile_asset_record: Un registro de activo del perfil tiene una estructura
+      no válida.
+    error_profile_bienes_inversion_record: Un registro de regularización de IVA por
+      bienes de inversión no es estructuralmente válido.
+    error_profile_inventory_ledger: Una operación del libro de inventario del perfil
+      no es válida.
+    error_profile_prorrata_register_record: Un registro de prorrata de IVA entre periodos
+      no es estructuralmente válido.
+    error_profile_tax_residence: Se produjo un error en el perfil de residencia fiscal.
+    error_profile_validation: Un registro de perfil no superó la validación.
+    error_redaction: Un helper de redacción recibió un argumento del tipo incorrecto.
+    error_renta: Se produjo un error en el cálculo de la declaración de la Renta.
+    error_renta_profile_completeness_warning: 'Aviso de declaración obligatoria RETMAR:
+      este trabajador figura inscrito en RETMAR. Desde enero de 2023, todos los trabajadores
+      inscritos en RETMAR deben presentar declaración del IRPF independientemente
+      del nivel de ingresos (Ley 35/2006 Art. 96 BOE-A-2006-20764).'
+    error_renta_validation: Un valor de la declaración de la Renta no es válido.
+    error_rental_amortization_cap_exceeded: La amortización acumulada superaría el
+      límite legal del activo arrendado.
+    error_rental_contract_not_found: No se encontró el contrato de alquiler indicado.
+    error_rental_finca_not_found: No se encontró la finca indicada.
+    error_rental_register: Se produjo un error en el registro de alquileres.
+    error_rental_tier_resolution: Los datos del contrato de alquiler son inconsistentes
+      y no se pudo determinar el tramo de reducción aplicable.
+    error_rental_validation: Un registro de alquiler no superó la validación.
+    error_resources_backend: Se produjo un error al leer los datos incluidos en la
+      aplicación.
+    error_resources_load: No se pudo cargar un recurso incluido en la aplicación.
+    error_resources_not_found: No se encontró el recurso incluido solicitado.
+    error_resources_validation: Un archivo incluido en la aplicación no superó la
+      validación estricta.
+    error_retention: No se ha podido evaluar la política de conservación de registros
+      tributarios.
+    error_review: Se produjo un error en la revisión.
+    error_sede: Se produjo un error en la Sede electrónica de la AEAT.
+    error_sede_browser_adapter_type: El objeto de página del navegador devolvió un
+      tipo inesperado en el límite del adaptador Sede.
+    error_sede_expediente_not_found: No se encontró ningún expediente que coincida
+      con el filtro solicitado.
+    error_sede_navigation: Falló un paso de navegación en la Sede de la AEAT.
+    error_storage_bucket: Se produjo un error en el ciclo de vida del bucket de almacenamiento.
+    error_storage_bucket_path_too_long: La ruta del directorio del bucket supera el
+      límite MAX_PATH de Windows. Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más
+      corta o habilite LongPathsEnabled (véase `aeat config check`).
+    error_storage_management: No se ha podido leer ni liberar el árbol de almacenamiento
+      local.
+    error_submission_validation: Un modelo de envío no superó la validación.
+    error_telemetry_schema: Una clave de métrica de telemetría no está registrada
+      en el esquema cerrado de métricas de su comando.
+    error_transaction_catalogue: El catálogo de transacciones no es válido o es inconsistente.
+    error_transaction_classification_rule: Una regla de clasificación del libro mayor
+      no es válida.
+    error_transaction_llm_classifier: Falló la clasificación de la transacción con
+      el modelo de lenguaje.
+    error_transaction_not_found: No se encontró la transacción solicitada.
+    error_transaction_persistence: No se pudo guardar el catálogo de transacciones.
+    error_transaction_validation: Un valor de una transacción no es válido.
+    error_usage_ratios_validation: Un perfil de porcentajes de uso infringe sus invariantes
+      de dominio.
+    error_user_profile: Se produjo un error en el perfil de usuario.
+    error_wizard: Se produjo un error en el asistente.
+    error_wizard_compile: El catálogo del asistente está mal formado y no se pudo
+      compilar.
+    error_workflow: Se produjo un error en el flujo de trabajo.
+    error_workflow_component: Un componente del flujo de trabajo lanzó una excepción
+      inesperada.
+    m145_communication_record_not_found: Ningún registro local de comunicación del
+      Modelo 145 coincide con el id solicitado.
+    m145_communication_service: Falló una operación del servicio local de comunicación
+      del Modelo 145.
+    modelo_calculation_revision_selector: La selección de revisión de cálculo falló.
+    modelo_calculation_revision_selector_not_found: Ninguna revisión de cálculo coincide
+      con el selector indicado.
+    modelo_compare_no_revisions: No se encontraron revisiones de cálculo comparables.
+    modelo_compare_no_usable_revisions: Existen revisiones comparables, pero ninguna
+      se puede usar para esta comparación.
+    modelo_compare_no_work_units: No se encontraron unidades de trabajo de modelo
+      comparables.
+    modelo_project_no_m130_revisions: No hay revisiones de cálculo del Modelo 130
+      para el ejercicio solicitado.
+    modelo_project_no_m130_units: No hay unidades de trabajo del Modelo 130 para el
+      ejercicio solicitado.
+    modelo_projection: Falló la proyección del modelo.
+    modelo_work_address_not_found: No hay una unidad de trabajo de modelo activa que
+      coincida con el modelo, ejercicio y periodo solicitados.
+    modelo_work_selector: El selector de trabajo de modelo falló.
+    modelo_work_selector_unit_not_found: No se encontró la unidad de trabajo de modelo
+      seleccionada.
+  fail:
+    censo_sync: La sincronización del censo del Modelo 036 falló.
+    currency_error: Falló la normalización de la moneda.
+    declaration_parse: No se pudo interpretar la exportación de la declaración presentada
+      para la conciliación.
+    exchange_rate_provider: El proveedor de tipos de cambio no respondió.
+    fail_acceleration_receipt_revocation: No se ha podido eliminar el acceso rápido
+      de inicio de sesión guardado de este perfil; sigue en el disco.
+    fail_access_gate_authorization_manifest: No se pudo cargar el manifiesto de autorización
+      de modelos o contiene una entrada de habilitación no válida.
+    fail_borrador_parse: No se pudo interpretar el PDF del borrador de Modelo 100
+      como una declaración.
+    fail_browser_evasion: No se pudo aplicar la configuración de evasión del navegador.
+    fail_browser_session_browser: Se produjo un error en la sesión del navegador.
+    fail_browser_validation: Los parámetros del navegador no superaron la validación.
+    fail_certificado_censal_parse: No se ha podido leer el documento del Certificado
+      de Situación Censal.
+    fail_cli_command_group_unavailable: 'No se pudo cargar el grupo de comandos ''%{group}'':
+      falta el módulo requerido ''%{module}''. Esta instalación está incompleta.'
+    fail_declaracion_parse: No se pudo interpretar el PDF como una declaración.
+    fail_export: Se produjo un error al exportar hacia la AEAT.
+    fail_export_format: El borrador de la declaración no se pudo serializar al formato
+      BOE indicado.
+    fail_filing_import: No se pudo importar la declaración desde el PDF del justificante.
+    fail_financial_attachments_attachment_persistence: El almacén de justificantes
+      no pudo leer o escribir los datos.
+    fail_financial_invoices_invoice_persistence: No se pudo guardar o leer el catálogo
+      de facturas.
+    fail_financial_ledger_storage: No se pudo resolver o usar el almacenamiento del
+      libro del bucket.
+    fail_financial_usage_ratios_usage_ratio_persistence: No se pudo leer o escribir
+      el perfil de porcentajes de uso.
+    fail_google_adc_stale: No se han podido renovar las credenciales predeterminadas
+      de aplicación (ADC). Ejecute gcloud auth application-default login.
+    fail_google_adc_unavailable: No se han encontrado credenciales predeterminadas
+      de aplicación (ADC) en este equipo. Ejecute gcloud auth application-default
+      login.
+    fail_google_browser_open: No se pudo abrir el navegador para mostrar la página
+      de consentimiento de Google. Abre el enlace manualmente.
+    fail_google_loopback_bind: El receptor HTTP local no pudo abrir un puerto. Cierra
+      otras aplicaciones que puedan estar usándolo y vuelve a intentarlo.
+    fail_google_network: No se pudo contactar con el servidor de Google. Comprueba
+      tu conexión a internet y vuelve a intentarlo.
+    fail_justificante_parse: No se pudo interpretar el PDF como un justificante.
+    fail_llm_cache: No se pudo leer, escribir o interpretar una entrada de la caché
+      del modelo de lenguaje.
+    fail_llm_pdf_rasterisation: No se pudo renderizar el PDF para la entrada de visión
+      local.
+    fail_llm_provider: El proveedor del modelo de lenguaje devolvió un error irrecuperable.
+    fail_llm_rate_limit: El proveedor del modelo de lenguaje rechazó la solicitud
+      por límite de uso. Espera unos minutos y vuelve a intentarlo.
+    fail_llm_transient_transport: La petición no llegó al motor del modelo de lenguaje
+      y se agotó el presupuesto de reintentos.
+    fail_manuals_manual_parse: Un registro de manual no superó la validación del esquema.
+    fail_modelo_calculation_revision_persistence: No se pudo guardar o leer el catálogo
+      de revisiones de cálculo.
+    fail_modelo_filing_record_persistence: No se pudo guardar o leer el catálogo de
+      declaraciones registradas.
+    fail_modelo_verification_report_persistence: No se pudo guardar o leer el catálogo
+      de informes de verificación.
+    fail_modelo_work_unit_persistence: No se pudo guardar o leer el catálogo de unidades
+      de trabajo.
+    fail_notificacion_parse: No se pudo interpretar el documento de la notificación
+      de la AEAT.
+    fail_observability_run_trace_persistence: El almacén de trazas de ejecución no
+      pudo completar una operación del sistema de archivos.
+    fail_outbound_storage: Se produjo un error en el proveedor de almacenamiento.
+    fail_outbound_storage_network: No se pudo contactar con el servicio de almacenamiento.
+      Comprueba tu conexión a internet y vuelve a intentarlo.
+    fail_outbound_storage_unavailable: El servicio de almacenamiento está temporalmente
+      no disponible. Espera unos minutos y vuelve a intentarlo.
+    fail_repair_decision_not_found: No se encontró la decisión de reparación solicitada.
+    fail_review_source_load: El archivo de origen existe pero no se pudo interpretar.
+    fail_sancion_arithmetic: Los importes impresos en el documento de sanción no cuadran
+      entre sí.
+    fail_sancion_parse: El documento de sanción no se pudo leer por completo; no se
+      devuelve ningún registro parcial.
+    fail_secure_storage: Se produjo un error en el almacenamiento seguro.
+    fail_sede_justificante_fetch: La descarga del justificante en PDF desde la Sede
+      de la AEAT falló o el archivo no es válido.
+    fail_sede_parse: No se pudo interpretar la página capturada de la Sede de la AEAT.
+    fail_sede_validation: Los datos capturados de la Sede de la AEAT no tienen la
+      forma esperada.
+    fail_site_health: La comprobación de estado del sitio falló.
+    fail_snapshot_not_found: No se encontró la instantánea solicitada.
+    fail_storage: Se produjo un error en el almacenamiento.
+    fail_storage_blob_not_found: No se encontró el objeto solicitado en el almacén
+      cifrado.
+    fail_storage_bucket_recovery_unavailable: No se pudo cargar la copia de recuperación
+      del bucket activo. Es posible que la recuperación no se haya configurado nunca.
+    fail_storage_persistence: Se produjo un error de persistencia en el almacenamiento
+      seguro.
+    fail_storage_profile_custody: No se ha podido completar la custodia del perfil.
+    fail_storage_repository: Una operación de repositorio falló.
+    fail_storage_repository_setup: Error al inicializar el repositorio de almacenamiento.
+    fail_storage_secret_not_found: No se encontró ningún secreto para la clave solicitada.
+    fail_storage_secret_store: Se produjo un error de entrada o salida en el almacén
+      de secretos.
+    fail_storage_secure_object_revision_conflict: El objeto seguro cambió por otra
+      escritura; vuelve a cargarlo e inténtalo de nuevo con la revisión actual.
+    fail_storage_secure_object_upsert: No se pudo persistir el objeto seguro. Revise
+      la ruta de almacenamiento y vuelva a intentarlo.
+    fail_user_profile_not_found: No se encontró la sección o el campo solicitado del
+      perfil de usuario.
+    fail_user_profile_schema_load: No se pudo cargar el esquema del perfil de usuario.
+    fixed_width_record_render: No se ha podido generar el registro de exportación
+      de ancho fijo.
+    ledger_check: Una comprobación de consistencia del libro detectó un problema que
+      impide continuar.
+    ledger_link: No se pudo vincular una transacción del libro a un binding de modelo.
+    missing_exchange_rate: Falta el tipo de cambio para la fecha y la moneda indicadas.
+    modelo_036_lifecycle: Se produjo un error en el ciclo de vida del Modelo 036 (alta,
+      modificación o baja).
+    modelo_export: Se produjo un error al exportar la revisión del modelo.
+    modelo_export_manifest: No se pudo construir o validar el manifiesto de exportación
+      del modelo.
+    overview: Se produjo un error al generar el resumen.
+    overview_agenda: No se pudieron enumerar las próximas acciones del resumen.
+    overview_backlog: No se pudieron clasificar las obligaciones vencidas del resumen.
+    overview_calendar: No se pudo montar el calendario del resumen para el periodo
+      solicitado.
+    overview_explain: No se pudo descomponer la explicación del resumen para la obligación
+      solicitada.
+    profile_export: Se produjo un error al exportar el archivo del perfil.
+    profile_import: Se produjo un error al importar el archivo del perfil.
+    reconciliation: Se produjo un error al conciliar las declaraciones periódicas
+      con el resumen anual.
+    stale_exchange_rate: El único tipo de cambio disponible está fuera del margen
+      de frescura aceptable.
+  financial:
+    source_file_is_symlink: 'La ruta del archivo origen es un enlace simbólico, lo
+      cual no está permitido para la ingesta de datos fiscales: {path}'
+    source_file_not_found: 'El archivo de origen no existe: {path}'
+    source_file_too_large: 'El archivo origen es demasiado grande: {path} ({size_bytes}
+      bytes; máximo {max_bytes} bytes)'
+    unsupported_date_format: 'Formato de fecha no válido en {label}: {raw}. Use {expected_format}.'
+  identity:
+    cif_check_char_mismatch_mixed: 'El carácter de control del CIF es incorrecto (tipo
+      {kind}): se esperaba {expected} o {alt}, se obtuvo {got}.'
+    cif_check_digit_mismatch: 'El dígito de control del CIF es incorrecto (tipo {kind}):
+      se esperaba {expected}, se obtuvo {got}.'
+    cif_check_letter_mismatch_kind: 'La letra de control del CIF es incorrecta (tipo
+      {kind}): se esperaba {expected}, se obtuvo {got}.'
+    cif_control_char_invalid: El carácter de control del CIF en {candidate} debe ser
+      un dígito o una letra mayúscula, no {got}.
+    cif_invalid_shape: '{candidate} no tiene la forma de un CIF: un CIF es una letra
+      inicial (A-H, J, N, P-S, U, V o W) seguida de 7 dígitos y un carácter de control.'
+    document_empty: El documento de identidad está vacío.
+    nie_check_letter_mismatch: 'La letra de control del NIE es incorrecta: para {body}
+      la letra de control debe ser {expected}, no {got}. Corrige el NIE a {body}{expected}.'
+    nie_invalid_shape: '{candidate} no tiene la forma de un NIE: un NIE empieza por
+      X, Y o Z, seguido de 7 dígitos y una letra de control.'
+    nif_check_letter_mismatch: 'La letra de control del NIF es incorrecta: para {digits}
+      la letra de control debe ser {expected}, no {got}. Corrige el NIF a {digits}{expected}.'
+    nif_invalid_shape: '{candidate} no tiene la forma de un NIF: un NIF son 8 dígitos
+      seguidos de una letra de control.'
+    tax_id_invalid_length: Un identificador fiscal español debe tener 9 caracteres;
+      {candidate} tiene {length}. Introduce un NIF, NIE o CIF (un carácter inicial,
+      7 u 8 dígitos y un carácter de control).
+    tax_id_unrecognised_leader: '{candidate} no empieza por un carácter de identificador
+      fiscal reconocido ({leader}). Un NIF empieza por un dígito o K/L/M, un NIE por
+      X, Y o Z, y un CIF por A-H, J, N, P-S, U, V o W.'
+    validate_expects_str: La validación de identidad espera un valor de texto; se
+      obtuvo {got_type}.
+  integrity:
+    integrity_active_profile_pointer: El puntero de perfil activo no es válido; repara
+      el perfil seleccionado antes de continuar.
+    integrity_apoderado_configuration_identity: La configuración de apoderado almacenada
+      no pertenece al perfil desde el que se ha leído.
+    integrity_cadrumo_core_validation: Una comprobación interna de integridad de datos
+      no se superó.
+    integrity_cli_output_schema: El registro de esquemas de salida de la CLI está
+      mal configurado.
+    integrity_corpus_anchor_resolution: Un ancla del corpus incluido no se resuelve
+      exactamente en una unidad extraída.
+    integrity_filing_amendment_validation: La declaración complementaria infringe
+      una invariante legal o de estructura.
+    integrity_filing_validation: La validación de la declaración detectó un problema
+      que impide continuar.
+    integrity_financial_attachments_attachment_validation: El justificante adjunto
+      no superó la validación. Comprueba el archivo y vuelve a adjuntarlo.
+    integrity_identity_document: El documento de identidad indicado no es un NIF,
+      NIE ni CIF español válido.
+    integrity_justificante_verification: La verificación del justificante con la AEAT
+      no se pudo completar.
+    integrity_manuals_manifest: El manifiesto del manual no superó las comprobaciones
+      de esquema o de hash.
+    integrity_observability_aeat_corpus_drift: La reproducción detectó que el corpus
+      de referencia de la AEAT ha cambiado respecto al registrado.
+    integrity_observability_run_trace_validation: La traza de ejecución guardada no
+      superó la validación estricta.
+    integrity_outbound_storage: El contenido descargado no superó las comprobaciones
+      de integridad (hash, tamaño o etiqueta).
+    integrity_outbound_storage_corruption: Un fichero de metadatos sidecar contiene
+      un campo con un tipo inesperado; el objeto de almacenamiento está corrupto.
+    integrity_period: 'Error interno: no se pudo construir un periodo válido a partir
+      del año y el código indicados.'
+    integrity_portals_portal_integrity: El registro de portales de la AEAT infringe
+      una invariante estructural.
+    integrity_profile_answer_type: Un campo de respuesta de perfil recibió un tipo
+      inesperado.
+    integrity_profile_bucket_mismatch: El perfil %{profile_id} no pertenece al bucket
+      %{bucket_id}; un bucket de perfil contiene exactamente una identidad de perfil.
+    integrity_profile_snapshot_hash_mismatch: El hash del snapshot del perfil no coincide
+      con la proyección actual.
+    integrity_profile_snapshot_not_found: No existe ningún snapshot de perfil con
+      el identificador indicado.
+    integrity_repair_integrity: La comprobación de integridad de reparación ha fallado.
+    integrity_storage_blob: El hash SHA-256 de un objeto almacenado no coincide con
+      el de su manifiesto.
+    integrity_storage_bucket_validation: Un parámetro del depósito o campo del manifiesto
+      no superó la validación.
+    integrity_storage_classification: La clase de sensibilidad declarada de un registro
+      es incompatible con su repositorio.
+    integrity_storage_corpus_bundle: El paquete del corpus no pudo analizarse ni verificarse.
+    integrity_storage_corpus_bundle_signature: No se pudo verificar la firma de autenticidad
+      del paquete de corpus.
+    integrity_storage_corpus_bundle_signing_key_not_found: No se encontró ningún par
+      de claves de firma del paquete de corpus en la ruta solicitada.
+    integrity_storage_corpus_bundle_verification: El paquete del corpus no superó
+      la verificación de sumas de comprobación frente a su manifiesto incorporado.
+    integrity_storage_corpus_manifest: El manifiesto del corpus no se pudo leer o
+      validar.
+    integrity_storage_corpus_manifest_drift: 'El corpus en disco difiere de lo que
+      describe su manifiesto: se han añadido, eliminado o modificado archivos.'
+    integrity_storage_corpus_manifest_tamper: El resumen autoverificable del manifiesto
+      del corpus no coincide con su contenido. El manifiesto puede estar dañado o
+      manipulado.
+    integrity_storage_decryption: El descifrado de un objeto almacenado falló. Los
+      datos pueden estar dañados o la clave no es correcta.
+    integrity_storage_encryption: Se produjo un error de cifrado o descifrado en el
+      almacenamiento seguro.
+    integrity_storage_envelope_version: La versión de un objeto en disco no coincide
+      con la que espera la aplicación.
+    integrity_storage_key_derivation: Falló un paso de derivación de clave en el almacenamiento
+      seguro.
+    integrity_storage_namespace_registry: Una clave o definición del registro de espacios
+      de nombres violó un invariante de inicialización.
+    integrity_storage_nonce_collision: Se detectó una colisión de nonce en el almacenamiento
+      seguro.
+    integrity_storage_path_containment: Una ruta calculada se sale del directorio
+      raíz configurado.
+    integrity_storage_profile_custody_record: El registro de custodia del perfil no
+      es válido o ha sido alterado.
+    integrity_storage_retention_policy: Los metadatos de retención de un registro
+      infringen la política de su clasificación.
+    integrity_storage_secure_object_batch_size: El tamaño de lote de iteración de
+      objetos seguros debe ser al menos 1; se recibió %{batch_size}.
+    integrity_storage_secure_object_hashed_key_length: El digest de búsqueda sin procesar
+      del objeto seguro debe tener 32 bytes; se recibieron %{length}.
+    integrity_storage_secure_object_raw_bytes: 'Los metadatos de bytes sin procesar
+      del objeto seguro tienen un tipo no admitido: %{value_type}.'
+    integrity_storage_secure_object_revision_ancestry_json: El campo de ascendencia
+      de revisión de un objeto seguro almacenado no contiene JSON válido.
+    integrity_storage_secure_object_revision_ancestry_shape: El campo de ascendencia
+      de revisión de un objeto seguro almacenado tiene una forma de identificador
+      no válida.
+    integrity_storage_secure_object_row_identity: Un objeto seguro almacenado no reconstruye
+      la clave con la que está archivado; el registro fue sustituido o archivado incorrectamente.
+    integrity_storage_secure_object_unreadable: Un objeto seguro almacenado no se
+      pudo descifrar con la clave maestra actual.
+    integrity_storage_validation: Un parámetro de almacenamiento no superó la validación.
+    profile_import_signature: El archivo de perfil no superó la comprobación de firma
+      o integridad. No importes archivos de origen no fiable.
+  internal:
+    cli_outbound_payload_boundary: Cadrumo ha construido un registro interno que no
+      ha superado su propia validación. Tu comando era correcto; esto es un defecto
+      de Cadrumo. Comunícalo indicando el comando que ejecutaste.
+    internal_active_profile_pointer_transaction: 'Error interno: la propiedad de la
+      transacción del puntero de perfil activo no es válida.'
+    internal_cli_unexpected_boundary: El comando falló por un error interno inesperado,
+      no por un problema de datos almacenados. Consulte los registros de diagnóstico
+      para ver qué falló.
+    internal_flow_copy_resolution: 'Error interno: el flujo guiado no pudo resolver
+      sus textos de presentación.'
+    internal_flow_validator_registry: 'Error interno: el registro de validadores del
+      flujo guiado rechazó la operación.'
+    internal_master_key_reentrant: 'Error interno: el proveedor de clave maestra se
+      invocó de forma reentrante; cierra la sesión activa antes de volver a entrar.'
+    internal_observability_run_context_missing: 'Error interno: se intentó registrar
+      un evento de telemetría fuera de un contexto de ejecución activo.'
+    internal_operation_declaration_breach: 'Error interno: un ejecutor de operación
+      reclamó una fase, un efecto, un recurso o una interacción que su definición
+      no declara.'
+    internal_output_rendering: 'Error interno: la salida del comando no se pudo representar
+      de forma segura.'
+    internal_profile_keys_registration: 'Error interno: no se pudieron registrar las
+      claves del perfil.'
+    internal_profile_project_answers_not_registered: 'Error interno: las respuestas
+      del proyecto de perfil no están registradas.'
+    internal_profile_registration: 'Error interno: no se pudo registrar el perfil.'
+    internal_wipe_type: 'Error interno: la operación de borrado seguro recibió un
+      valor que no puede sobrescribir.'
+    internal_wizard_catalogue_already_registered: 'Error interno: el catálogo del
+      asistente ya está registrado.'
+    internal_wizard_catalogue_not_registered: 'Error interno: el catálogo del asistente
+      no está registrado.'
+    internal_workflow_abort_signal: 'Error interno: una etapa del flujo de trabajo
+      emitió una señal de cancelación.'
+    internal_workflow_unhandled: 'Error interno: una etapa del flujo de trabajo lanzó
+      una excepción no controlada.'
+  iva:
+    category_has_no_legal_basis: Esa categoría de IVA no tiene base legal en el catálogo
+      y no se puede citar.
+    citation_legal_reference_absent: La referencia legal de la cita no figura en el
+      catálogo legal del registro.
+    cite_requires_catalogue_or_date: Citar una categoría de IVA requiere un catálogo
+      explícito o una fecha de efecto.
+    rate_member_state_unregistered: El registro de tipos de IVA no contiene tipos
+      para el estado miembro solicitado.
+    rate_registry_coverage_gap: El registro de tipos de IVA incluido no alcanza esa
+      fecha para ese tramo, por lo que el tipo no se puede confirmar. Es un límite
+      de nuestra cobertura, no una afirmación de que el tipo fuera ilegal.
+    rate_slot_not_in_force: Ese tipo de IVA no estaba en vigor para su tramo en España
+      en la fecha de la operación.
+  locked:
+    locked_access_gate_live_submit_forbidden: El envío en vivo a la AEAT está permanentemente
+      prohibido. Esta aplicación construye, valida y exporta declaraciones; la presentación
+      debe realizarse fuera de la aplicación.
+    locked_auth_acquisition: Otro proceso está adquiriendo la autenticación con la
+      AEAT en este momento. Espera a que termine y vuelve a intentarlo.
+    locked_google_keychain: El llavero del sistema operativo que guarda las credenciales
+      de Google está bloqueado o no es accesible. Desbloquea el llavero y vuelve a
+      intentarlo.
+    locked_storage_bucket_busy: El bucket de almacenamiento está en uso por otro proceso.
+      Espera a que ese proceso termine y vuelve a intentarlo.
+    locked_storage_bucket_session: Esta operación requiere un bucket de almacenamiento
+      desbloqueado. Ejecuta `aeat config login NAME` y vuelve a intentarlo.
+    locked_storage_lock_acquisition: No se pudo obtener el bloqueo exclusivo de archivo
+      dentro del tiempo de espera. Otro proceso lo retiene; espera y vuelve a intentarlo.
+  prefix:
+    auth: Autenticación.
+    error: Error.
+    fail: Falló.
+    integrity: Integridad.
+    internal: Interno.
+    locked: Bloqueado.
+    refused: Rechazado.
+  refused:
+    auth_configure_no_active_bucket: No se puede configurar la autenticación sin un
+      perfil activo. Crea un perfil con `aeat config profile create NOMBRE` y vuelve
+      a intentarlo.
+    auth_profile_identity_mismatch: La identidad del perfil activo no puede ser titular
+      de la sesión de autenticación solicitada.
+    bootstrap_already_complete: El arranque del almacenamiento seguro ya está completo.
+      Usa aeat config login NAME para activar un perfil existente o aeat config profile
+      create NAME para añadir otro perfil.
+    censal_read_identity: La lectura censal no corresponde al contribuyente de este
+      perfil.
+    clave_credentials_incomplete: Al modo de autenticación Cl@ve seleccionado le falta
+      una credencial que necesita.
+    ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
+      porque aún no se puede presentar.
+    m145_communication_record_ambiguous: El prefijo del id de registro de comunicación
+      del Modelo 145 coincide con varios registros.
+    m145_communication_record_export: El registro local de comunicación del Modelo
+      145 no pudo exportarse.
+    m145_communication_record_transition: El registro local de comunicación del Modelo
+      145 no permite esa transición de estado.
+    m145_communication_record_validation: La operación local de comunicación del Modelo
+      145 está bloqueada por la validación.
+    modelo_036_prior_alta_required: No se puede solicitar una modificación o baja
+      del Modelo 036 sin un alta previa.
+    modelo_036_terminal_state: El registro del Modelo 036 ya está en estado de baja;
+      no admite más operaciones.
+    modelo_184_share_sum: Los porcentajes de participación de los miembros del Modelo
+      184 deben sumar exactamente el 100 %.
+    modelo_210_agrupacion_renta_rows: Las rentas agrupadas anuales del Modelo 210
+      deben formar una agrupación única y válida (un código, un tipo, un bien identificado
+      y un pagador, salvo la excepción de múltiples pagadores).
+    modelo_347_threshold: Las operaciones del Modelo 347 por encima del umbral informativo
+      requieren cobertura declarativa explícita.
+    modelo_349_country_prefix_context: 'El Modelo 349 rechaza el prefijo de país {country_code}
+      para la clave de operación {clave_operacion} en {filing_year}/{period}: {reason}.
+      Fundamento: instrucciones AEAT Brexit IVA NIF-IVA / Modelo 349.'
+    modelo_ambiguous_semantic_role_casilla: Mas de una casilla usa el rol semantico
+      %{semantic_role}; usa el casilla.id canónico exacto.
+    modelo_calculate_binding_input: La sobrescritura de --binding indicada no se pudo
+      resolver para la revisión activa.
+    modelo_calculate_casilla_input: La sobrescritura de casilla indicada no se pudo
+      resolver para la revisión activa.
+    modelo_calculate_decimal_input: El valor de sobrescritura de cálculo indicado
+      no tiene forma decimal.
+    modelo_calculate_detail_rows: Las filas de detalle indicadas incumplen las condiciones
+      de cálculo del modelo.
+    modelo_calculate_input: El valor de entrada de cálculo del modelo indicado por
+      el operador no es válido.
+    modelo_calculate_relation_input: La sobrescritura de --relation indicada no se
+      pudo resolver para la revisión activa.
+    modelo_calculate_semantic_role: La revisión del registro no declara el rol semántico
+      requerido por el atajo.
+    modelo_calculate_shortcut_input: Las entradas agrupadas del atajo de cálculo están
+      incompletas.
+    modelo_calculate_text_input: El valor de sobrescritura de --casilla indicado no
+      es válido para una casilla de texto.
+    modelo_calculation_revision_selector_ambiguous: El selector de revisión de cálculo
+      coincide con más de una revisión; refine el selector.
+    modelo_calculation_revision_selector_state: La revisión de cálculo seleccionada
+      no está en un estado utilizable para esta operación.
+    modelo_compare_need_two_years: La comparación requiere dos ejercicios fiscales
+      distintos.
+    modelo_export_cross_bucket: La revisión apuntada pertenece a un bucket distinto
+      del perfil activo. La exportación solo opera dentro del bucket del perfil activo.
+    modelo_export_no_active_bucket: La exportación necesita un perfil activo. Crea
+      o selecciona un perfil y vuelve a intentarlo.
+    modelo_project_invalid_decimal_override: Una sobrescritura de proyección no es
+      un importe decimal válido.
+    modelo_revision_pick: No se pudo seleccionar la revisión de cálculo indicada.
+    modelo_work_period_token: Periodo de modelo no válido.
+    modelo_work_registry_year_mismatch: La revisión de registro seleccionada no cubre
+      el ejercicio fiscal solicitado.
+    modelo_work_selector_ambiguous: Mas de una unidad de trabajo de modelo coincide
+      con el selector.
+    modelo_work_selector_contradiction: Los argumentos del selector de trabajo de
+      modelo se contradicen.
+    modelo_work_selector_no_active_bucket: Seleccione un perfil activo antes de resolver
+      una unidad de trabajo de modelo.
+    modelo_work_selector_revision_conflict: La unidad de trabajo de modelo seleccionada
+      pertenece a otra revisión.
+    profile_capsule_archive: No se ha podido escribir o leer el archivo de copia del
+      perfil
+    profile_capsule_source: El origen indicado no es una cápsula de perfil legible
+    profile_import_collision: El identificador del perfil importado coincide con uno
+      que ya existe.
+    profile_locked: Esta operación requiere un perfil desbloqueado. Ejecuta `aeat
+      config login NAME` y vuelve a intentarlo.
+    profile_name_collision: El nombre de perfil indicado ya está en uso. Elige un
+      nombre distinto.
+    profile_passphrase_rotation: No se ha podido cambiar la contraseña del perfil.
+    profile_registration: No se ha podido registrar el perfil.
+    reconciliation_cross_bucket: La unidad de trabajo apuntada pertenece a un bucket
+      distinto del perfil activo. La conciliación solo opera dentro del bucket del
+      perfil activo.
+    reconciliation_declaration_source_unsupported: La conciliación a partir de una
+      declaración todavía no está disponible.
+    reconciliation_drift: La conciliación detectó una discrepancia aritmética o de
+      identidad entre declaraciones. Revisa los importes antes de continuar.
+    reconciliation_evidence_invalid: No se ha podido leer el PDF. Compruebe que el
+      archivo es el justificante de la AEAT y no otro documento, y que no está dañado.
+      Vuelva a ejecutar `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`
+      con el archivo correcto.
+    refused_access_gate_live_read_not_enabled: El acceso de lectura en vivo a la AEAT
+      está desactivado. Esta operación no puede contactar con la AEAT en la configuración
+      actual.
+    refused_aeat_record_multi_recipient: El registro declarado nombra a más de un
+      destinatario, por lo que no puede convertirse en un asiento de contraparte única.
+      Concílielo por destinatario.
+    refused_apoderado_invalid_represented_nif: El identificador fiscal del representado
+      no es un NIF, NIE o CIF válido.
+    refused_apoderado_live_check_unavailable: La comprobación en vivo de apoderamientos
+      no está disponible o falló el contacto con la AEAT.
+    refused_apoderado_not_configured: No hay ningún apoderado configurado. Configura
+      el apoderado antes de consultar su estado.
+    refused_apoderado_unknown_scope: El ámbito de apoderamiento indicado no está en
+      el catálogo disponible.
+    refused_application_live_input: La solicitud de lectura en vivo a la AEAT no se
+      puede ejecutar con los datos indicados.
+    refused_application_registry_input: La solicitud al registro de modelos no se
+      puede ejecutar con los datos indicados.
+    refused_auth_certificate_source_not_found: El origen de certificado indicado no
+      está registrado.
+    refused_auth_configure_dangling_active_profile: El puntero de perfil activo no
+      resuelve a un bucket registrado.
+    refused_auth_diagnostic_payload: 'Rechazado: la carga de diagnóstico de autenticación
+      no es válida.'
+    refused_auth_diagnostic_phone_state: El valor de estado del teléfono proporcionado
+      no se reconoce. Utilice uno de los valores válidos de estado de teléfono del
+      operador.
+    refused_auth_login_live_tests_disabled: Las pruebas de inicio de sesión en vivo
+      están deshabilitadas.
+    refused_auth_login_precondition: La precondición para el inicio de sesión de autenticación
+      no se cumple.
+    refused_auth_provider_reserved: El proveedor de autenticación seleccionado está
+      reservado pero no implementado.
+    refused_calculations_casilla_constraint: Un valor de casilla calculado queda fuera
+      de los límites declarados para esa casilla. Revisa los datos de entrada del
+      cálculo.
+    refused_cli_boundary: El comando rechazó la solicitud.
+    refused_cli_log_level_resolution: Las opciones de nivel de registro indicadas
+      son contradictorias. Usa solo una de --quiet, --verbose o --debug.
+    refused_cli_non_tty: Este comando necesita una entrada interactiva, pero la entrada
+      estándar está redirigida. Ejecútalo en una terminal interactiva.
+    refused_cli_validation_boundary: La entrada del comando no superó la validación.
+      Compruebe los argumentos o ejecute `aeat --help`.
+    refused_config_reset_unconfirmed: El restablecimiento de la configuración no se
+      confirmó. Vuelve a ejecutar el comando confirmando la operación.
+    refused_corpus_search_input: No se pudo satisfacer la solicitud de búsqueda en
+      el corpus.
+    refused_diagnostic_model_invariant: 'Rechazado: invariante del modelo de diagnóstico
+      incumplida.'
+    refused_einvoice_xml_parse: No se ha podido leer el XML de la factura electrónica
+      y se ha rechazado en lugar de interpretarlo parcialmente.
+    refused_evidence_bundle_ambiguous: El prefijo del identificador del paquete de
+      evidencias coincide con más de un paquete en este bucket.
+    refused_evidence_bundle_not_found: No existe ningún paquete de evidencias con
+      el identificador indicado.
+    refused_evidence_bundle_verification: La verificación del paquete de evidencias
+      falló y la operación no se forzó.
+    refused_export_field: Se ha violado un invariante de validación de campo durante
+      la exportación tabular.
+    refused_export_format: El formato de serialización de exportación solicitado no
+      está soportado.
+    refused_filing_calculate: El cálculo o resumen de la declaración no superó sus
+      invariantes.
+    refused_financial_aggregation_category_coverage: Una transacción no tiene cobertura
+      de categoría o de perfil. Clasifica la transacción antes de agregar.
+    refused_financial_aggregation_missing_classification: Aún hay transacciones del
+      periodo sin clasificar. Clasifícalas todas antes de agregar.
+    refused_financial_aggregation_unsupported_modelo: No hay un contrato de agregación
+      disponible para el modelo solicitado.
+    refused_financial_bank_statement_parse: El análisis del extracto bancario financiero
+      ha fallado.
+    refused_financial_ledger_no_active_bucket: La operación del libro necesita un
+      perfil activo. Crea o selecciona un perfil y vuelve a intentarlo.
+    refused_financial_ledger_transaction_id_prefix: El prefijo de identificador de
+      transacción no coincide con ninguna transacción o coincide con varias. Indica
+      un prefijo más largo.
+    refused_financial_provider_invalid_source: El documento de origen no se puede
+      leer o su estructura no es válida.
+    refused_financial_provider_unsupported_source: Ningún proveedor puede interpretar
+      este documento de origen.
+    refused_financial_provider_validation: Un campo del documento financiero (fecha
+      o importe) no superó la validación.
+    refused_financial_usage_ratios_censo_mismatch: Un porcentaje de uso de oficina
+      en casa guardado no coincide con el censo, que es la fuente legal vinculante.
+      Alinéalo con el valor del censo.
+    refused_flow_answer: El flujo guiado rechazó la respuesta.
+    refused_flow_checkpoint: El flujo guiado rechazó la operación de guardar y reanudar.
+    refused_flow_navigation: El flujo guiado rechazó la petición de navegación.
+    refused_flow_run_abandoned: El flujo guiado se canceló antes de completarse; no
+      se presentó nada.
+    refused_flow_submit: El flujo guiado rechazó el envío.
+    refused_flow_unsupported_console: El flujo guiado no puede ejecutarse porque esta
+      consola no puede mostrar preguntas interactivas.
+    refused_google_impersonation: IAM ha rechazado emitir un token de suplantación
+      para la cuenta de servicio de destino. Concédale el rol roles/iam.serviceAccountTokenCreator.
+    refused_google_non_interactive: El inicio de sesión de Google necesita un terminal
+      interactivo con navegador; ejecútalo desde una shell interactiva.
+    refused_google_profile_unbound: No hay ningún perfil activo vinculado. Selecciona
+      un perfil o usa --profile.
+    refused_google_unsecured_mode: No se puede autorizar Google en modo de almacenamiento
+      no cifrado con un perfil que lleva un NIF real.
+    refused_google_validation: Los parámetros de Google indicados no superaron la
+      validación.
+    refused_inventory_actividad_conflict: Ya existe un inventario para esa actividad
+      y ese año.
+    refused_inventory_actividad_not_found: No existe ningún inventario para la actividad
+      y el año indicados.
+    refused_inventory_service_input: Un dato indicado infringe el contrato del inventario.
+      Corrige la entrada y vuelve a intentarlo.
+    refused_iva_compensation_decimal_parse: 'Rechazado: el importe de compensación
+      de IVA no se pudo interpretar como decimal.'
+    refused_iva_compensation_year_range: 'Rechazado: el ejercicio de compensación
+      de IVA esta fuera del rango aceptado.'
+    refused_iva_wallet_reconciliation_invariant: Las entradas de conciliación de la
+      cartera IVA incumplen un invariante obligatorio. Compruebe la configuración
+      de antigüedad de la cartera y vuelva a intentarlo.
+    refused_ledger_confirmation_blocked: Este documento tiene hallazgos que una persona
+      debe resolver antes de poder confirmarlo.
+    refused_ledger_counterparty_establishment_conflict: Esta contraparte ya está confirmada
+      como establecida en otro territorio; retire el hecho confirmado antes de sustituirlo.
+    refused_ledger_counterparty_establishment_input: No se puede confirmar un hecho
+      de establecimiento con un identificador de contraparte que no valida.
+    refused_ledger_evidence_input: Un dato de evidencia indicado infringe el contrato
+      de la factura de compra. Corrige la entrada y vuelve a intentarlo.
+    refused_ledger_evidence_not_found: No existe ninguna evidencia de factura de compra
+      con el identificador indicado.
+    refused_live_borrador_snapshot_not_found: No existe ningún snapshot del borrador
+      de Modelo 100 con el identificador indicado.
+    refused_live_deudas_snapshot_not_found: No existe ningún snapshot de deudas con
+      el identificador indicado.
+    refused_live_expedientes_snapshot_not_found: No existe ningún snapshot de expedientes
+      con el identificador indicado.
+    refused_live_justificante_capture_snapshot_not_found: No existe ninguna captura
+      de justificante
+    refused_live_notification_document_not_found: Ningún documento guardado corresponde
+      a esa notificación.
+    refused_live_notifications_snapshot_not_found: No existe ningún snapshot de notificaciones
+      con el identificador indicado.
+    refused_live_portal_not_found: No existe ningún portal de la AEAT con el identificador
+      indicado.
+    refused_live_verify_observation_not_found: No existe ninguna observación de verificación
+      con el identificador indicado.
+    refused_llm_busy: Este equipo ya ejecuta el máximo configurado de peticiones al
+      modelo de lenguaje en local.
+    refused_llm_config: La configuración del cliente de modelo de lenguaje no es válida
+      o está incompleta.
+    refused_llm_consent: Se ha rechazado la lectura del documento fuera del equipo
+      porque no se ha otorgado el consentimiento para la transmisión externa.
+    refused_llm_contention: Este equipo no tiene memoria libre medida para cargar
+      el modelo de lenguaje ahora mismo.
+    refused_llm_validation: Un objeto del modelo de lenguaje no superó la validación.
+    refused_modelo_100_borrador_binding: Los valores del borrador de Modelo 100 no
+      se pueden usar para el cálculo.
+    refused_modelo_amendment_complementaria_liability_decrease: Una complementaria
+      no puede disminuir legalmente la deuda declarada antes de la unificación de
+      la autoliquidación rectificativa. Utilice el procedimiento de solicitud de rectificación
+      para una corrección que reduzca la deuda.
+    refused_modelo_amendment_kind_not_permitted: El tipo de rectificación solicitado
+      no está legalmente disponible para el período de declaración resuelto. El conjunto
+      de tipos aceptados figura en el contexto del error.
+    refused_modelo_amendment_override_casilla: Una sobrescritura de la declaración
+      complementaria apunta a una casilla que el registro no declara para ese modelo,
+      año y periodo.
+    refused_modelo_amendment_verification: El mapa de casillas corregido de la declaración
+      complementaria no superó la verificación. Faltan casillas obligatorias.
+    refused_modelo_applicability_filter: Se encontró un nombre de filtro de aplicabilidad
+      desconocido en el registro. Se trata de un error de autoría del registro; actualice
+      la tabla de despacho de filtros.
+    refused_modelo_charge_account_missing: Se ha elegido una domiciliacion pero no
+      hay una cuenta de cargo registrada.
+    refused_modelo_m303_rectificativa_motive: Las rectificativas del modelo 303 requieren
+      exactamente un motivo canónico en un diseño de registro aplicable y revisado;
+      el motivo está prohibido en los demás casos.
+    refused_modelo_payment_election_capability: El metodo de pago elegido aun no esta
+      disponible.
+    refused_modelo_payment_election_incompatible: La opcion de pago elegida requiere
+      un resultado positivo.
+    refused_modelo_prior_domiciliation_election: Se ha rechazado la baja o modificacion
+      de la domiciliacion previa porque falta o no es valida la rectificativa del
+      modelo 303 o la prueba oficial de la presentacion base U.
+    refused_modelo_refund_account_missing: Se solicitó una devolución pero no hay
+      ninguna cuenta de devolución configurada; la AEAT no puede pagar una devolución
+      sin una cuenta. Configure una cuenta de devolución o compense el crédito (compensar).
+    refused_modelo_refund_election_not_eligible: Se solicitó una devolución en un
+      periodo donde no está disponible; solo el último periodo de declaración del
+      año permite la devolución a un no inscrito en REDEME.
+    refused_no_active_profile: Esta operación necesita un perfil activo. Crea o selecciona
+      un perfil y vuelve a intentarlo.
+    refused_operator_surface_contract: La superficie solicitada queda fuera del contrato
+      aceptado.
+    refused_outbound_storage_conflict: La operación de almacenamiento colisiona con
+      un objeto que ya existe.
+    refused_outbound_storage_quota: El almacenamiento rechazó la operación porque
+      se ha agotado la cuota.
+    refused_outbound_storage_validation: Los parámetros de la operación de almacenamiento
+      no superaron la validación.
+    refused_output_format: El formato de salida solicitado no es compatible.
+    refused_pension_reduccion_computation: La comprobación de la reducción de un plan
+      de pensiones (DT 12ª LIRPF) recibió un importe que incumple una condición numérica.
+      Corrige los importes indicados.
+    refused_profile_already_exists: Ya existe un perfil con esos datos.
+    refused_profile_asset_validation: Un registro de activo del perfil no superó la
+      validación.
+    refused_profile_basis_cap_exceeded: La amortización acumulada superaría la base
+      de coste del activo.
+    refused_profile_bienes_inversion_validation: Un registro de regularización de
+      IVA por bienes de inversión no superó la validación.
+    refused_profile_binding_resolution: Un dato del perfil necesario para el cálculo
+      no se pudo resolver en el canal de vínculo correcto.
+    refused_profile_displaced_session_retirement: No se ha podido revocar la sesión
+      almacenada del perfil seleccionado anteriormente, por lo que no se ha creado
+      el perfil nuevo.
+    refused_profile_foral_regime: El régimen foral seleccionado no está modelado por
+      este perfil. Selecciona un régimen admitido.
+    refused_profile_inventory_validation: Un libro de inventario del perfil no superó
+      la validación.
+    refused_profile_label_ambiguous: 'Rechazado: la etiqueta del perfil es ambigua.'
+    refused_profile_lifo_forbidden: La valoración de existencias por el método LIFO
+      no está admitida fiscalmente. Usa FIFO, precio medio ponderado o coste medio.
+    refused_profile_login_throttled: Demasiados intentos de inicio de sesión fallidos.
+      Espera %{seconds} segundos antes de volver a intentarlo.
+    refused_profile_not_configured: La verificación de la declaración de la Renta
+      necesita un perfil de residencia fiscal. Completa el perfil antes de continuar.
+    refused_profile_not_found: No existe ningún perfil con el identificador indicado.
+    refused_profile_preflight_missing: La comprobación previa del modelo no encontró
+      un dato de perfil obligatorio. Completa el perfil antes de continuar.
+    refused_profile_prorrata_register_validation: Un registro de prorrata de IVA entre
+      periodos no superó la validación.
+    refused_profile_schema_validation: Los datos del perfil infringen el contrato
+      del esquema. Corrige los valores indicados.
+    refused_renta_maritime_exemption_inactive: 'La exención DA 41 LIRPF (flota atunera)
+      está inactiva: no se ha concedido la autorización de ayudas de Estado de la
+      UE para 2024/2025. La AEAT confirma su no aplicabilidad. Active esta exención
+      solo tras la concesión de la autorización europea (Ley 35/2006 DA 41 BOE-A-2006-20764,
+      añadida por Ley 26/2014 BOE-A-2014-12327).'
+    refused_retention_floor: 'Borrado rechazado: %{retained_record_count} registro(s)
+      tributario(s) presentado(s) siguen dentro del plazo legal de conservación (Ley
+      58/2003, LGT art. 66 y 70). La fecha más temprana de borrado seguro es %{earliest_safe_erase_date}.
+      Espere hasta esa fecha o vuelva a ejecutar con --override-retention y --reason
+      para forzarlo.'
+    refused_review_edit_parse: No se pudo interpretar `--set CLAVE=VALOR`. Comprueba
+      la sintaxis del valor indicado.
+    refused_review_filter_parse: No se pudo interpretar `--filter CLAVE=VALOR`. Comprueba
+      la sintaxis del filtro indicado.
+    refused_review_kind_reserved: El valor de `--kind` indicado está reservado y no
+      se puede usar.
+    refused_source_mesh_invariant: 'Rechazado: invariante de la malla de fuentes incumplida.'
+    refused_storage_bucket_already_present: La importación colisiona con un bucket
+      de almacenamiento que ya existe.
+    refused_storage_bucket_no_active: No se pudo determinar ningún bucket activo.
+      Selecciona un perfil y vuelve a intentarlo.
+    refused_storage_master_key_no_active_session: El cifrado requiere una sesión activa.
+      Ejecuta `aeat config login NAME` y vuelve a intentarlo.
+    refused_storage_profile_custody: Esta operación de custodia del perfil está rechazada.
+    refused_storage_profile_custody_password: Esta contraseña no se puede representar
+      de forma segura para la custodia del perfil.
+    refused_storage_reclaim: 'Se rechaza liberar esta área de almacenamiento: su ciclo
+      de vida declarado conserva su contenido.'
+    refused_storage_reclaim_unconfirmed: Liberar un área de almacenamiento elimina
+      datos y requiere confirmación.
+    refused_storage_secret_already_exists: Ya existe un secreto con esa clave. Usa
+      la opción de sobrescritura si quieres reemplazarlo.
+    refused_storage_session_expired: La sesión activa ha caducado por inactividad.
+      Vuelve a activarla con aeat config login NAME.
+    refused_storage_unsecured_mode: El almacenamiento sin cifrar se solicitó sin la
+      habilitación necesaria. No es seguro para datos reales.
+    refused_tabular_source_unreadable: El archivo tabular no se pudo descodificar,
+      o no contiene ninguna tabla con fila de encabezado.
+    refused_taxation_comparison: La comparación tributaria conjunta/individual no
+      puede realizarse para este modelo o instantánea.
+    refused_topic_catalogue_empty: El catálogo de temas incluido no contiene ningún
+      tema.
+    refused_topic_not_found: No se encontró el tema solicitado.
+    refused_user_profile_validation: Un valor del perfil de usuario no es válido.
+      Corrige el dato indicado.
+    refused_wizard_answer_type: Un campo de respuesta del asistente recibió un tipo
+      inesperado en el límite tipado.
+    refused_wizard_missing_flag: La ejecución con --quiet omitió una pregunta obligatoria.
+      Aporta el valor que falta o ejecuta el asistente de forma interactiva.
+    refused_wizard_status: El asistente no pudo resolver el perfil activo.
+    refused_wizard_unsupported_console: El terminal actual no admite el asistente
+      interactivo. Ejecútalo en una terminal compatible.
+    refused_wizard_validation: Una respuesta del asistente no superó la validación.
+      Corrige el valor indicado.
+    refused_workflow_aborted: El flujo de trabajo se canceló.
+    refused_workflow_input_mismatch: La solicitud de entrada del flujo de trabajo
+      no coincide con la revisión de cálculo. Ejecuta aeat app modelo work calculate
+      para generar una revisión nueva.
+    refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
+      reanudar.
+    submission_preflight_auth_describe_failed: El proveedor de autenticación no pudo
+      describirse ({cause_type}).
+    submission_preflight_auth_not_ready: El proveedor de autenticación {kind} no está
+      listo (configured={configured} available={available}). {operator_impact}
+    submission_preflight_deadline_closed: La ventana de plazo para el modelo {modelo}
+      periodo {period} no está abierta el {today}.
+    submission_preflight_draft_not_approved: El borrador no está aprobado para presentación
+      (estado={status}).
+    submission_preflight_draft_stale: La aprobación del borrador está caducada; revisa
+      y aprueba el borrador de nuevo.
+    submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
+      de severidad ERROR; resuélvelas antes de presentar.
+    unsupported_currency: El código de moneda indicado no es compatible.
+  snapshot:
+    ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
+      modelo %{modelo_id}: %{candidate_ids}.'
+    ambiguous_revision_selection_year_only: 'Más de una revisión del registro coincide
+      con el modelo %{modelo_id}: %{candidate_ids}. Indique el periodo de declaración,
+      o una fecha de referencia, para seleccionar una de ellas.'
+    modelo_not_registered: El modelo no está registrado en el registro.
+    no_revision_for_period: Ninguna revisión del registro cubre el modelo %{modelo_id}
+      ejercicio %{filing_year} periodo %{period}.
+  storage:
+    engine:
+      create_failed: No se pudo crear el motor de base de datos de almacenamiento.
+        Comprueba la ruta de almacenamiento configurada y vuelve a intentarlo.
+      empty_database_url: La URL de base de datos configurada está vacía. Selecciona
+        un perfil o configura el almacenamiento antes de volver a intentarlo.
+    namespace:
+      classification_mismatch: El espacio de nombres de objeto seguro %{namespace}
+        está registrado con sensibilidad %{expected}, pero el llamador usó %{classification}.
+      object_key_grammar_mismatch: 'El espacio de nombres de objeto seguro %{namespace}
+        declara la gramática de clave %{object_key_grammar}, y la clave utilizada
+        no la cumple: %{reason}'
+      schema_mismatch: El espacio de nombres de objeto seguro %{namespace} está registrado
+        con esquema %{expected}, pero el llamador usó el esquema %{schema_version}.
+      schema_upgrade_path_missing: 'No hay ruta de actualización de esquema para el
+        espacio de nombres {namespace}: falta un actualizador desde la versión {missing_from_version}
+        hacia {expected}.'
+      schema_upgrader_already_registered: Ya hay un actualizador de esquema registrado
+        para el espacio de nombres {namespace} desde la versión {from_version}.
+      schema_version_from_future: La versión de esquema almacenada {schema_version}
+        del espacio de nombres {namespace} es más reciente de lo que admite esta aplicación
+        (hasta {expected}); no se puede leer.
+      unknown_classification: 'El espacio de nombres de objetos seguros %{namespace}
+        contiene una sensibilidad desconocida: %{classification}.'
+      unregistered: El espacio de nombres de objeto seguro %{namespace} no está registrado
+        para almacenamiento runtime.
+    runtime:
+      cold_bootstrap_active_profile_refused: El almacenamiento de arranque en frío
+        solo está disponible antes de seleccionar un bucket de perfil activo.
+      cold_bootstrap_explicit_database_refused: El almacenamiento de arranque en frío
+        no puede omitir una ruta de base de datos explícita.
+      not_ready: 'El runtime de almacenamiento no está listo para almacenamiento vinculado
+        a perfil: %{details}'
+    stored_data_validation_boundary: Un registro de perfil o flujo de trabajo almacenado
+      ya no coincide con el esquema esperado - los datos en disco han divergido del
+      formato actual. Ejecuta `aeat config repair` para diagnosticar y recuperar.
+  transaction:
+    import_source_invalid: el origen no es un extracto bancario válido
+    ledger_import_failed: 'No se puede importar el extracto bancario: {reason}'
+    ledger_import_requires_bucket: La importación de un extracto bancario requiere
+      un perfil activo, salvo en modo de prueba.
+    unknown_ledger_provider: 'Proveedor de libro {provider!r} desconocido. Proveedores
+      reconocidos: {providers}.'

@@ -1,0 +1,351 @@
+modelo:
+  schema:
+    '232':
+      casilla:
+        continuidad:
+          actividad-cnae:
+            help: null
+            label: A főtevékenység NACE-kódja
+          filing-year:
+            help: null
+            label: Az esedékesség éve
+      field:
+        official_name: null
+        title: null
+      revision:
+        2016-2017:
+          casilla:
+            vinculada-1-fjo:
+              help: null
+              label: null
+            vinculada-1-importe:
+              help: null
+              label: null
+            vinculada-1-ingreso-pago:
+              help: null
+              label: null
+            vinculada-1-metodo-valoracion:
+              help: null
+              label: null
+            vinculada-1-nif:
+              help: null
+              label: null
+            vinculada-1-provincia-pais:
+              help: null
+              label: null
+            vinculada-1-razon-social:
+              help: null
+              label: null
+            vinculada-1-reservado-nombre:
+              help: null
+              label: null
+            vinculada-1-tipo-operacion:
+              help: null
+              label: null
+            vinculada-1-tipo-vinculacion:
+              help: null
+              label: null
+            vinculada-2-fjo:
+              help: null
+              label: null
+            vinculada-2-importe:
+              help: null
+              label: null
+            vinculada-2-ingreso-pago:
+              help: null
+              label: null
+            vinculada-2-metodo-valoracion:
+              help: null
+              label: null
+            vinculada-2-nif:
+              help: null
+              label: null
+            vinculada-2-provincia-pais:
+              help: null
+              label: null
+            vinculada-2-razon-social:
+              help: null
+              label: null
+            vinculada-2-reservado-nombre:
+              help: null
+              label: null
+            vinculada-2-tipo-operacion:
+              help: null
+              label: null
+            vinculada-2-tipo-vinculacion:
+              help: null
+              label: null
+            vinculada-3-fjo:
+              help: null
+              label: null
+            vinculada-3-importe:
+              help: null
+              label: null
+            vinculada-3-ingreso-pago:
+              help: null
+              label: null
+            vinculada-3-metodo-valoracion:
+              help: null
+              label: null
+            vinculada-3-nif:
+              help: null
+              label: null
+            vinculada-3-provincia-pais:
+              help: null
+              label: null
+            vinculada-3-razon-social:
+              help: null
+              label: null
+            vinculada-3-reservado-nombre:
+              help: null
+              label: null
+            vinculada-3-tipo-operacion:
+              help: null
+              label: null
+            vinculada-3-tipo-vinculacion:
+              help: null
+              label: null
+            vinculada-4-fjo:
+              help: null
+              label: null
+            vinculada-4-importe:
+              help: null
+              label: null
+            vinculada-4-ingreso-pago:
+              help: null
+              label: null
+            vinculada-4-metodo-valoracion:
+              help: null
+              label: null
+            vinculada-4-nif:
+              help: null
+              label: null
+            vinculada-4-provincia-pais:
+              help: null
+              label: null
+            vinculada-4-razon-social:
+              help: null
+              label: null
+            vinculada-4-reservado-nombre:
+              help: null
+              label: null
+            vinculada-4-tipo-operacion:
+              help: null
+              label: null
+            vinculada-4-tipo-vinculacion:
+              help: null
+              label: null
+            vinculada-5-fjo:
+              help: null
+              label: null
+            vinculada-5-importe:
+              help: null
+              label: null
+            vinculada-5-ingreso-pago:
+              help: null
+              label: null
+            vinculada-5-metodo-valoracion:
+              help: null
+              label: null
+            vinculada-5-nif:
+              help: null
+              label: null
+            vinculada-5-provincia-pais:
+              help: null
+              label: null
+            vinculada-5-razon-social:
+              help: null
+              label: null
+            vinculada-5-reservado-nombre:
+              help: null
+              label: null
+            vinculada-5-tipo-operacion:
+              help: null
+              label: null
+            vinculada-5-tipo-vinculacion:
+              help: null
+              label: null
+            x-chim6r1ecdn62p8:
+              help: null
+              label: A főtevékenység NACE-kódja
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az esedékesség éve
+            x-chim6r1eehkn0rpdcll6asj3d5hmiro:
+              help: null
+              label: Üzleti év típusa (12 naptári hónap / 12 hónap 365 nap / 12 hónapnál
+                rövidebb)
+          construct:
+            modelo-232-informative:
+              field:
+                title: null
+          field:
+            label: null
+        2018-y-siguientes:
+          casilla:
+            vinculada-1-fjo:
+              help: null
+              label: 'Kapcsolt vállalkozás 1: Külföldi azonosító'
+            vinculada-1-importe:
+              help: null
+              label: 'Kapcsolt vállalkozás 1: Összeg'
+            vinculada-1-ingreso-pago:
+              help: null
+              label: 'Kapcsolt vállalkozás 1: Bevétel/kifizetés jelző'
+            vinculada-1-metodo-valoracion:
+              help: null
+              label: 'Kapcsolt vállalkozás 1: Értékelési módszer'
+            vinculada-1-nif:
+              help: null
+              label: 'Kapcsolt vállalkozás 1: NIF / NIE / CIF'
+            vinculada-1-provincia-pais:
+              help: null
+              label: 'Kapcsolt vállalkozás 1: Tartomány vagy ország'
+            vinculada-1-razon-social:
+              help: null
+              label: 'Kapcsolt vállalkozás 1: Cégnév'
+            vinculada-1-reservado-nombre:
+              help: null
+              label: 'Kapcsolt vállalkozás 1: Fenntartott mező'
+            vinculada-1-tipo-operacion:
+              help: null
+              label: 'Kapcsolt vállalkozás 1: Ügylettípus'
+            vinculada-1-tipo-vinculacion:
+              help: null
+              label: 'Kapcsolt vállalkozás 1: Kapcsolat típusa'
+            vinculada-2-fjo:
+              help: null
+              label: 'Kapcsolt vállalkozás 2: Külföldi azonosító'
+            vinculada-2-importe:
+              help: null
+              label: 'Kapcsolt vállalkozás 2: Összeg'
+            vinculada-2-ingreso-pago:
+              help: null
+              label: 'Kapcsolt vállalkozás 2: Bevétel/kifizetés jelző'
+            vinculada-2-metodo-valoracion:
+              help: null
+              label: 'Kapcsolt vállalkozás 2: Értékelési módszer'
+            vinculada-2-nif:
+              help: null
+              label: 'Kapcsolt vállalkozás 2: NIF / NIE / CIF'
+            vinculada-2-provincia-pais:
+              help: null
+              label: 'Kapcsolt vállalkozás 2: Tartomány vagy ország'
+            vinculada-2-razon-social:
+              help: null
+              label: 'Kapcsolt vállalkozás 2: Cégnév'
+            vinculada-2-reservado-nombre:
+              help: null
+              label: 'Kapcsolt vállalkozás 2: Fenntartott mező'
+            vinculada-2-tipo-operacion:
+              help: null
+              label: 'Kapcsolt vállalkozás 2: Ügylettípus'
+            vinculada-2-tipo-vinculacion:
+              help: null
+              label: 'Kapcsolt vállalkozás 2: Kapcsolat típusa'
+            vinculada-3-fjo:
+              help: null
+              label: 'Kapcsolt vállalkozás 3: Külföldi azonosító'
+            vinculada-3-importe:
+              help: null
+              label: 'Kapcsolt vállalkozás 3: Összeg'
+            vinculada-3-ingreso-pago:
+              help: null
+              label: 'Kapcsolt vállalkozás 3: Bevétel/kifizetés jelző'
+            vinculada-3-metodo-valoracion:
+              help: null
+              label: 'Kapcsolt vállalkozás 3: Értékelési módszer'
+            vinculada-3-nif:
+              help: null
+              label: 'Kapcsolt vállalkozás 3: NIF / NIE / CIF'
+            vinculada-3-provincia-pais:
+              help: null
+              label: 'Kapcsolt vállalkozás 3: Tartomány vagy ország'
+            vinculada-3-razon-social:
+              help: null
+              label: 'Kapcsolt vállalkozás 3: Cégnév'
+            vinculada-3-reservado-nombre:
+              help: null
+              label: 'Kapcsolt vállalkozás 3: Fenntartott mező'
+            vinculada-3-tipo-operacion:
+              help: null
+              label: 'Kapcsolt vállalkozás 3: Ügylettípus'
+            vinculada-3-tipo-vinculacion:
+              help: null
+              label: 'Kapcsolt vállalkozás 3: Kapcsolat típusa'
+            vinculada-4-fjo:
+              help: null
+              label: 'Kapcsolt vállalkozás 4: Külföldi azonosító'
+            vinculada-4-importe:
+              help: null
+              label: 'Kapcsolt vállalkozás 4: Összeg'
+            vinculada-4-ingreso-pago:
+              help: null
+              label: 'Kapcsolt vállalkozás 4: Bevétel/kifizetés jelző'
+            vinculada-4-metodo-valoracion:
+              help: null
+              label: 'Kapcsolt vállalkozás 4: Értékelési módszer'
+            vinculada-4-nif:
+              help: null
+              label: 'Kapcsolt vállalkozás 4: NIF / NIE / CIF'
+            vinculada-4-provincia-pais:
+              help: null
+              label: 'Kapcsolt vállalkozás 4: Tartomány vagy ország'
+            vinculada-4-razon-social:
+              help: null
+              label: 'Kapcsolt vállalkozás 4: Cégnév'
+            vinculada-4-reservado-nombre:
+              help: null
+              label: 'Kapcsolt vállalkozás 4: Fenntartott mező'
+            vinculada-4-tipo-operacion:
+              help: null
+              label: 'Kapcsolt vállalkozás 4: Ügylettípus'
+            vinculada-4-tipo-vinculacion:
+              help: null
+              label: 'Kapcsolt vállalkozás 4: Kapcsolat típusa'
+            vinculada-5-fjo:
+              help: null
+              label: 'Kapcsolt vállalkozás 5: Külföldi azonosító'
+            vinculada-5-importe:
+              help: null
+              label: 'Kapcsolt vállalkozás 5: Összeg'
+            vinculada-5-ingreso-pago:
+              help: null
+              label: 'Kapcsolt vállalkozás 5: Bevétel/kifizetés jelző'
+            vinculada-5-metodo-valoracion:
+              help: null
+              label: 'Kapcsolt vállalkozás 5: Értékelési módszer'
+            vinculada-5-nif:
+              help: null
+              label: 'Kapcsolt vállalkozás 5: NIF / NIE / CIF'
+            vinculada-5-provincia-pais:
+              help: null
+              label: 'Kapcsolt vállalkozás 5: Tartomány vagy ország'
+            vinculada-5-razon-social:
+              help: null
+              label: 'Kapcsolt vállalkozás 5: Cégnév'
+            vinculada-5-reservado-nombre:
+              help: null
+              label: 'Kapcsolt vállalkozás 5: Fenntartott mező'
+            vinculada-5-tipo-operacion:
+              help: null
+              label: 'Kapcsolt vállalkozás 5: Ügylettípus'
+            vinculada-5-tipo-vinculacion:
+              help: null
+              label: 'Kapcsolt vállalkozás 5: Kapcsolat típusa'
+            x-chim6r1ecdn62p8:
+              help: null
+              label: A fő tevékenység CNAE-kódja
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az adóztatandó esemény adóéve
+            x-chim6r1eehkn0rpdcll6asj3d5hmiro:
+              help: null
+              label: Adóév típusa (12 naptári hónap / 12 hónap 365 nap / 12 hónapnál
+                rövidebb)
+          construct:
+            modelo-232-informative:
+              field:
+                title: null
+          field:
+            label: null

@@ -1,0 +1,86 @@
+modelo:
+  schema:
+    '189':
+      field:
+        official_name: null
+        title: null
+      revision:
+        '2025':
+          casilla:
+            clave-identificacion:
+              help: null
+              label: Az azonosítás módjának kódja
+            clave-mercado:
+              help: null
+              label: A piac típuskódja
+            clave-representacion:
+              help: null
+              label: Az értékpapír megjelenítési kódja
+            clave-titularidad:
+              help: null
+              label: A tulajdonlás típuskódja
+            clave-valor:
+              help: null
+              label: Az értékpapír típuskódja
+            codigo-pais:
+              help: null
+              label: Országkód
+            codigo-provincia:
+              help: null
+              label: Tartománykód
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Kiegészítő vagy helyettesítő bevallás
+            declarado-nif:
+              help: null
+              label: A bejelentett fél adószáma
+            declarado-nombre:
+              help: null
+              label: A bejelentett fél neve, cégneve vagy elnevezése
+            declarante-nif:
+              help: null
+              label: A bejelentő adószáma
+            declarante-razon-social:
+              help: null
+              label: A bejelentő cégneve
+            ejercicio-declaracion:
+              help: null
+              label: A bevallás éve
+            identificacion-valores:
+              help: null
+              label: Az értékpapírok azonosítója
+            nominal-unitario-valores:
+              help: null
+              label: Az értékpapírok egységnyi névértéke
+            numero-identificativo-anterior:
+              help: null
+              label: A korábbi bevallás azonosító száma
+            numero-justificante:
+              help: null
+              label: A bevallás igazolásszáma
+            numero-total-declarados:
+              help: null
+              label: A bejelentett felek teljes száma
+            numero-valores:
+              help: null
+              label: Az értékpapírok száma
+            persona-relacion:
+              help: null
+              label: Kapcsolattartó személy
+            porcentaje-participacion:
+              help: null
+              label: Tulajdoni hányad százaléka
+            representante-legal-nif:
+              help: null
+              label: A törvényes képviselő adószáma
+            tipo-soporte:
+              help: null
+              label: Az adathordozó típusa
+            valoracion:
+              help: null
+              label: Értékelés
+            valoracion-total:
+              help: null
+              label: Teljes értékelés
+          field:
+            label: null

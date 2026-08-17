@@ -54,7 +54,6 @@ _DEFAULT_RUNTIME_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _DEFAULT_PRIMARY_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _DEFAULT_SECONDARY_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 
-
 def reap_profile_session_keys(storage_root: Path) -> None:
     """Revoke every current session receipt discoverable under ``storage_root``.
 
@@ -375,12 +374,13 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
     where the system under test must create the bucket directory,
     manifest, pointer, and per-bucket database.
 
-    The file backend is configured with the dev-test passphrase so
-    ``get_master_key_provider()`` calls inside ``profile create`` and
-    related verbs resolve a working provider without needing
-    ``CADRUMO_SECRET_STORE_BACKEND=unsecured``.
+    The dev-test passphrase is configured so the profile-creation verbs
+    resolve a working credential. It no longer selects a process-wide key
+    store: the shared-master backends are deleted, and the key a bucket
+    opens under is its own, minted per profile by the custody package.
     """
 
+    tmp_path.mkdir(parents=True, exist_ok=True)
     storage_root = tmp_path / "cadrumo-storage"
     passphrase = load_settings().cadrumo_dev_test_database_password
     with override_settings(
@@ -424,6 +424,17 @@ def isolated_runtime_profile(
     DEK, active-profile settings route, active bucket session, and
     runtime-owned secure-object repository.
 
+    The handed ``tmp_path`` is materialised here rather than assumed. Custody
+    anchors every component of a directory it is about to write into and
+    refuses an absent one -- a deliberate refusal, since anchoring identity
+    before writing is what closes the check-then-create window -- so a caller
+    passing a subdirectory that does not exist yet failed on setup with an
+    identity-anchoring refusal that named nothing about the real cause. That
+    trap caught five call sites across three modules before it was closed here.
+    A helper that yields a LOCATION its callers must separately remember to
+    create is a footgun, and the fix belongs at the helper rather than in a
+    comment repeated at each call site.
+
     The bucket is a genuine ``BUCKET_DEK_V1`` bucket: the file backend is
     configured with the dev-test passphrase (as
     :func:`isolated_profile_storage_root` does) so the wrapped DEK is
@@ -431,6 +442,7 @@ def isolated_runtime_profile(
     nested :func:`open_test_profile_session` re-resolves on the read path.
     """
 
+    tmp_path.mkdir(parents=True, exist_ok=True)
     storage_root = tmp_path / "cadrumo-storage"
     passphrase = load_settings().cadrumo_dev_test_database_password
     opened_at = datetime.now(UTC).replace(microsecond=0)

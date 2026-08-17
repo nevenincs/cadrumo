@@ -1,0 +1,399 @@
+flows:
+  compare_select:
+    candidate: '{label} (origen: {provenance})'
+    defer_label: Decidir esto más tarde
+  confirm:
+    'no': 'No'
+    'yes': Sí
+  errors:
+    blank_required: 'Este campo es obligatorio: introduce un valor.'
+    checkbox_required: Selecciona al menos una opción.
+    checkbox_unknown: 'Opción desconocida; valores aceptados: %{choices}.'
+    checkpoint_store_missing: El flujo {flow_id} ofrece guardar y salir en el modo
+      {mode}, pero no hay ningún almacén de puntos de guardado conectado, así que
+      la ejecución se ha rechazado en lugar de perder tus respuestas.
+    invalid_confirm: Responde sí o no.
+    invalid_date: Introduce una fecha con el formato AAAA-MM-DD (por ejemplo 2026-05-14).
+    invalid_decimal: Introduce un importe con punto decimal (por ejemplo 1234.56).
+    invalid_integer: Introduce un número entero.
+    select_unknown: 'Elige uno de los valores aceptados: %{choices}.'
+    tui_abandoned: El flujo {flow_id} se cerró en el modo {mode} antes de enviarlo
+      o guardarlo; no se ha registrado nada.
+    unexpected_app_type: La pantalla interactiva no está asociada a una aplicación
+      de flujo.
+    unsupported_console: Esta consola no puede mostrar preguntas interactivas. Ejecuta
+      el flujo desde un terminal real o guíalo con un archivo de respuestas.
+  login:
+    cancel_button: Cancelar
+    intro: Elige el perfil que quieres abrir y escribe la contraseña que lo protege.
+      No se desbloquea nada hasta que la contraseña se acepte.
+    password_hint: La contraseña que elegiste al crear este perfil. No se puede restablecer.
+    password_label: Contraseña
+    profile_label: Perfil
+    refusal:
+      password_required: Escribe la contraseña de este perfil.
+      unlock_failed: No se ha podido abrir el perfil.
+    section: Perfil y contraseña
+    title: Inicia sesión en tu perfil
+    unlock_button: Iniciar sesión
+  manager:
+    action:
+      abandoned: Sin cambios.
+      add_row: Añadir una fila
+      add_row_done: Se ha añadido la fila %{index} de %{section}.
+      add_row_empty: No se ha rellenado nada, así que no se ha añadido ninguna fila.
+      add_row_incomplete: A la fila le faltan datos obligatorios, así que no se ha
+        guardado nada.
+      add_row_none: Este esquema de perfil no declara ninguna sección con filas.
+      add_row_required: Es obligatorio; la fila no se puede añadir sin este dato.
+      add_row_section: A qué sección se añade
+      auth_clave_incomplete: A Cl@ve todavía le falta %{missing}. No se ha guardado
+        nada.
+      auth_clave_movil_route_app_request: Solicitud en la aplicación
+      auth_clave_movil_route_qr: Código QR en un navegador visible
+      auth_contraste_missing: 'La solicitud en la aplicación de Cl@ve Móvil necesita
+        un dato de contraste del documento: %{nie_field} para un NIE o %{dni_field}
+        para un DNI. Abra Identificación, rellene el campo aplicable y vuelva a intentar
+        la sincronización.'
+      auth_fecha_validez_invalid: Introduzca la fecha de validez como AAAA-MM-DD,
+        por ejemplo 1990-01-31.
+      auth_tax_id_invalid: Ese NIF o NIE no es válido. Compruebe la letra final e
+        introdúzcalo tal y como figura en su documento, por ejemplo 12345678Z.
+      busy: Todavía hay otra operación en curso. Espera a que termine.
+      censal_pull: Rellenar con los datos censales de la AEAT
+      censal_pull_auth_incomplete: Su identificación está incompleta, así que aún
+        no se puede leer la AEAT. Complétela primero.
+      censal_pull_cleared: 'La AEAT todavía tiene un valor para los campos que usted
+        vació: %{paths}. Se han dejado vacíos; vaciarlos aquí no cambia el registro
+        de la AEAT.'
+      censal_pull_contested: 'La AEAT discrepa de lo que usted declaró en: %{paths}.
+        Su respuesta se mantiene; resuelva cada caso usted mismo.'
+      censal_pull_done: 'Datos censales de la AEAT leídos: %{adopted} campo(s) rellenados,
+        %{unchanged} ya coincidentes, %{diverging} discrepantes.'
+      censal_pull_no_provider: Elija cómo se identifica ante la AEAT antes de leer
+        sus datos censales.
+      certificate: Certificado
+      certificate_active: Certificado activo
+      certificate_done: 'Identificación: %{provider}; certificado activo: %{name}.'
+      export: Exportar copia
+      export_destination: Ruta del archivo de destino
+      export_done: Copia cifrada escrita en %{destination}.
+      export_passphrase: Contraseña que protegerá la copia
+      failed: La operación no se completó.
+      filed_history_pull_all: Traer historial de declaraciones de la AEAT
+      filed_history_pull_all_done: '{captured} declaración(es) capturada(s), {refused}
+        rechazada(s); cartera de IVA: {iva_wallet_status}; notificaciones: {notificaciones_status}.'
+      filed_history_pull_all_refused: 'No se pudieron leer estos pares y NO se declararon
+        vacíos: {pairs}. Repita la operación para reintentarlo.'
+      google_export: Exportar a Google Sheets
+      google_export_done: Modelo %{modelo} exportado a %{spreadsheet_url}.
+      google_export_modelo: Modelo
+      google_export_period: Periodo
+      google_export_year: Año
+      google_export_year_invalid: Introduce un año entre 2000 y 2099.
+      logout: Cerrar sesión
+      logout_done: Sesión cerrada.
+      provider:
+        certificate: Certificado electrónico
+        clave_movil: Cl@ve Móvil
+        clave_permanente: Cl@ve Permanente
+      working: Ejecutando {action}...
+    actions:
+      section: Acciones
+    choice_unavailable: Opción no disponible
+    column:
+      field: Campo
+      state: Estado
+      value: Valor
+    edit:
+      cancel: Cancelar
+      clear: Borrar
+      masked_kept: Este valor está oculto, por eso el campo empieza vacío. Déjalo
+        vacío para conservar el valor guardado o escribe uno nuevo para sustituirlo.
+      refused:
+        boolean: '''%{value}'' no es una respuesta de sí o no. Responde Sí o No.'
+        date: '''%{value}'' no es una fecha. Usa el formato AAAA-MM-DD - por ejemplo
+          1978-03-15.'
+        email: '''%{value}'' no es una dirección de correo electrónico. Introduce
+          una con la forma nombre@ejemplo.com.'
+        enum: '''%{value}'' no se acepta aquí. Elige uno de: %{accepted}.'
+        numeric: '''%{value}'' no es un número que este campo acepte%{accepted}. Introduce
+          un número, con punto para los decimales.'
+      required_blank: '{field} es obligatorio, así que no puede quedar en blanco.
+        Introduce un valor o cancela para dejarlo sin cambios.'
+      save: Guardar
+      shape:
+        date: 'Formato: AAAA-MM-DD - por ejemplo 1978-03-15.'
+        decimal: Un número, con punto para los decimales - por ejemplo 1234.56.
+        email: Una dirección de correo electrónico - por ejemplo nombre@ejemplo.es.
+        integer: Un número entero, sin separador de miles.
+        money: Un importe en euros, con punto para los decimales - por ejemplo 1234.56.
+      write_failed: No se ha podido guardar el campo. Vuelve a intentarlo.
+      write_in_flight: Se está guardando el campo anterior. Espera a que termine y
+        vuelve a intentarlo.
+    field_unavailable: Campo de perfil no disponible
+    language:
+      unavailable: Este perfil no ofrece un ajuste de idioma.
+    namespace_detail: detalle {number}
+    next_step_modelo: Los datos declarados de este perfil lo dirigen al Modelo {modelo}.
+    required_field_unavailable: Campo obligatorio del perfil
+    section_title: '{title} - {present}/{total}'
+    title: 'Perfil: {profile}'
+  modelo_review:
+    column:
+      action: Acción
+      blocked_by: Bloqueada por
+      casilla: Casilla
+      casilla_id: ID de casilla
+      code: Código
+      concrete: Origen concreto
+      declared: Origen declarado
+      expectation_id: ID de expectativa
+      facts: Hechos
+      grounding: Fundamentación
+      kind: Tipo
+      label: Etiqueta
+      message: Mensaje
+      official: Representación oficial
+      realised: Valor materializado
+      schema: Esquema
+      severity: Gravedad
+    filter:
+      absent: Ausente
+      all: Todos los valores
+      binding_presence: Presencia de vínculo
+      binding_resolved: Resolución del vínculo
+      binding_source: Origen concreto del vínculo
+      casilla_blocker: Acción bloqueante de casilla
+      casilla_blocker_presence: Presencia de bloqueo de casilla
+      estado_casilla_oficial: Estado de casilla oficial
+      filters: Filtros
+      finding_kind: Tipo de incidencia
+      finding_severity: Gravedad de la incidencia
+      formula_presence: Presencia de fórmula
+      input_kind: Tipo de entrada declarado
+      no_matching_blockers: Ningún bloqueo coincide con los filtros activos.
+      no_matching_casillas: Ninguna casilla coincide con los filtros activos.
+      no_matching_findings: Ninguna incidencia coincide con los filtros activos.
+      option:
+        binding_source:
+          atribucion_member: Miembro de atribución de rentas
+          bienes_inversion_regularizacion: Regularización de bienes de inversión
+          borrador: Borrador de la AEAT
+          collectible_invoice: Factura emitida
+          donativo_donor: Donante
+          foreign_asset: Activo extranjero
+          iva_compensation_annual_partition: Compensación anual de IVA
+          iva_wallet_decision: Decisión de saldo de IVA
+          ledger_impatriado_income_aggregation: Totales de ingresos de impatriados
+          ledger_irnr_income_aggregation: Totales de ingresos de no residentes
+          ledger_iva_aggregation: Totales del libro de IVA
+          ledger_oss_aggregation: Totales del libro OSS
+          ledger_renta_gastos_estimacion_directa_aggregation: Totales de gastos en
+            estimación directa
+          ledger_renta_gastos_pago_fraccionado_aggregation: Totales de gastos del
+            pago fraccionado
+          ledger_renta_income_aggregation: Totales de ingresos
+          ledger_transaction: Movimiento del libro
+          m303_regimen_simplificado_annual_summary: Resumen régimen simplificado (modelo
+            303)
+          manual_input: Entrada manual
+          payable_invoice: Factura recibida
+          previous_filing: Declaración anterior
+          profile: Perfil
+          prorrata_regularizacion: Regularización de prorrata
+          purchase_invoice_evidence: Evidencia de factura de compra
+          refund_operation: Operación de reembolso
+          related_party_operation: Operación vinculada
+          relation_prefill: Declaración relacionada
+          retenciones_aggregation: Totales de retenciones
+          withholding: Registro de retención
+        estado_casilla_oficial:
+          addressed: Representada directamente
+          represented_via_binding: Representada mediante vínculo
+          undefined: Sin definir
+        finding_kind:
+          advisory: Aviso
+          blocking_rule: Regla bloqueante
+          cross_period_dependency_unclean: Dependencia anterior no limpia
+          missing_required_casilla: Falta una casilla obligatoria
+          reconciliation_mismatch: Discrepancia de conciliación
+        finding_severity:
+          blocking: Bloqueante
+          warning: Advertencia
+        input_kind:
+          bound: Vinculada
+          computed: Calculada
+          informational: Informativa
+          manual: Manual
+          projection_only: Solo proyección
+        operator_action:
+          capture_external_evidence: Capturar evidencia externa
+          complete_document_evidence: Completar evidencia documental
+          confirm_group_membership: Confirmar pertenencia al grupo
+          file_prior_period: Presentar periodo anterior
+          import_ledger_data: Importar datos del libro
+          re_verify: Verificar de nuevo
+          resolve_identity: Resolver identidad
+          resolve_revision_mismatch: Resolver discrepancia de revisión
+          resolve_value_divergence: Resolver diferencia de valor
+          review_advisory: Revisar aviso
+          set_profile_fact: Completar dato del perfil
+          supply_manual_input: Aportar dato manual
+        origin_anomaly:
+          broken_calculation_chain: Cadena de cálculo interrumpida
+          operator_override: Sustitución del operador
+        realised_kind:
+          COMPUTED: Calculado
+          DEFAULT: Predeterminado
+          EMPTY: Vacío
+          INHERITED: Heredado
+          LITERAL: Literal
+        relation_channel:
+          alternate_binding: Vínculo alternativo
+          formula_binding: Vínculo de fórmula
+          formula_relation: Relación de fórmula
+          primary_binding: Vínculo principal
+      origin_anomaly: Anomalía de origen
+      origin_anomaly_presence: Presencia de anomalía de origen
+      present: Presente
+      realised_kind: Tipo de valor realizado
+      record_blocker: Acción bloqueante del registro
+      relation_channel: Canal de relación
+      relation_presence: Presencia de relación
+      reset: Restablecer filtros
+      resolved: Resuelto
+      unresolved: Sin resolver
+    summary:
+      calculation_revision: Revisión del cálculo
+      lifecycle_state: Estado del ciclo de vida
+      progress: Progreso
+      registry_revision: Revisión del registro
+      verification_outcome: Resultado de la verificación
+      work_unit: Unidad de trabajo
+    title: Modelo {modelo} · {filing_year} · {period}
+  progress:
+    current_answer: 'Respuesta actual: {value}'
+    current_answer_secret: 'Respuesta actual: (oculta)'
+    failure_mode: 'Atención: {text}'
+    format_hint: 'Formato: {hint}'
+    legal_ref: 'Base legal: %{ref} - %{label}'
+    optional: Opcional
+    page_header: Pregunta {position} de {total} - sección {section}
+    required: Obligatorio
+  registration:
+    confirm_label: Repite la contraseña
+    create_button: Crear perfil
+    intro: 'Elige un nombre para este perfil y una contraseña que lo proteja. No hace
+      falta nada más: tu perfil existe en cuanto continúes, y completas el resto cuando
+      quieras.'
+    password_hint: Al menos {minimum_length} caracteres. Varias palabras corrientes
+      seguidas son más fáciles de recordar y más difíciles de adivinar que una sola
+      palabra corta y complicada.
+    password_label: Contraseña
+    refusal:
+      confirmation_mismatch: Las dos contraseñas no coinciden.
+      username_required: Introduce un nombre para este perfil.
+    section: Nombre y contraseña
+    strength:
+      fair: Razonable.
+      strong: Fuerte.
+      too_short: 'Demasiado corta: se requieren al menos {minimum_length} caracteres.'
+      weak: Aceptada, pero débil. Alargarla ayuda más que añadir símbolos.
+    title: Crea tu perfil
+    username_hint: Cómo aparece este perfil en las listas. Puedes cambiarlo más adelante.
+    username_label: Nombre del perfil
+    why_password: 'Tus datos fiscales se quedan en este ordenador y no se envían a
+      ningún sitio. La contraseña los cifra en el disco, de modo que no se pueden
+      leer sin ti. No se puede restablecer: si la pierdes, los datos son irrecuperables.'
+  review:
+    action_edit: Editar una respuesta
+    action_prompt: ¿Qué quieres hacer?
+    action_restart: Empezar de nuevo
+    action_save_exit: Guardar y salir
+    action_submit: Enviar
+    column_answer: Respuesta
+    column_question: Pregunta
+    column_registered: Registrado
+    column_status: Estado
+    edit_not_editable: La pregunta {page_key} ya no se puede editar.
+    edit_unknown: No existe ninguna pregunta con el número {number}.
+    edit_which: '¿Qué número de pregunta quieres editar? '
+    header: Revisión - {answered} preguntas respondidas.
+    header_tui: 'Revisión - {answered} respondidas, {remaining} obligatorias pendientes,
+      listo para enviar: {eligible}'
+    mode_create: creación del perfil
+    mode_modify: edición del perfil
+    orphan_marker: (ya no se pregunta)
+    page_deferred: 'La pregunta %{page_key} está aplazada: decide antes de presentar.'
+    page_invalid: La pregunta %{page_key} tiene una respuesta no válida.
+    page_stale: 'Revisa la pregunta %{page_key}: cambió una respuesta anterior.'
+    question_unavailable: Pregunta ya no disponible
+    required_unanswered: La pregunta obligatoria %{page_key} está sin responder.
+    reset_stale_confirm: La pregunta {page_key} ya no se plantea. ¿Borrar su respuesta
+      guardada?
+    reset_stale_done: Se ha borrado la respuesta guardada de {page_key}.
+    restart_confirm: ¿Empezar de nuevo y descartar todas las respuestas?
+    row: '{number}. {page_key} - estado: {status}'
+    save_unavailable: Guardar y salir no está disponible en el modo {mode}; completa
+      el flujo de una sola vez.
+    section_unavailable: Sección no disponible
+  status:
+    auth:
+      absolute_deadline: Límite absoluto de la sesión
+      certificate_source: Origen del certificado
+      idle_deadline: Límite de inactividad de la sesión
+      login_not_ready: sin verificar
+      login_ready: listo
+      provider: Proveedor
+      provider_none: sin configurar
+      provider_unknown: Proveedor desconocido
+      status: Acceso
+      subject: Titular
+    binding_quit: Salir
+    masked_value: (oculto)
+    profile:
+      column:
+        field: Campo
+        value: Valor
+      field_unavailable: Campo no disponible
+      none: No hay ningún perfil activo.
+      repeated_field: '{label} (elemento {row})'
+      value_unavailable: Valor no disponible
+    profiles:
+      column:
+        active: Activo
+        label: Perfil
+        status: Estado
+      none: No hay perfiles registrados.
+      status:
+        complete: completo
+        incomplete: incompleto
+        unknown: desconocido
+    section:
+      auth: Autenticación
+      notices: Avisos
+      profile: Perfil activo
+      profiles: Perfiles
+    title: Estado
+  tui:
+    binding_back: Anterior
+    binding_reset: Restablecer
+    binding_restart: Reiniciar
+    binding_return: Volver
+    binding_review: Resumen
+    binding_save_exit: Guardar y salir
+    binding_submit: Presentar
+    button_back: Atrás
+    button_next: Siguiente
+    button_review: Revisión
+    choice_unavailable: Opción no disponible
+    confirm_restart:
+      cancel: Cancelar
+      confirm: Reiniciar
+      message: Esto borra todas las respuestas dadas hasta ahora y vuelve a la primera
+        página. No se puede deshacer.
+      title: ¿Reiniciar todo el proceso?
+    header: '{flow} - pregunta {position} de {total}, sección {section}'
+    header_single_section: '{flow} - pregunta {position} de {total}'
+    section_unavailable: Sección no disponible

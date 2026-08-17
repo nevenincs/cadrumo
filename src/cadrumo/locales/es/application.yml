@@ -1,0 +1,1608 @@
+application:
+  auth:
+    acquisition_lock:
+      errors:
+        acquire_failed: No se pudo adquirir el bloqueo de autenticación AEAT tras
+          la recuperación del bloqueo obsoleto.
+        lock_held: Ya hay otra operación de autenticación AEAT en curso para este
+          perfil. No inicies una segunda petición de Cl@ve; espera a que termine el
+          proceso en curso o deja expirar el bloqueo si ese proceso ha fallado.
+    certificate:
+      health:
+        file_missing: El archivo de certificado configurado (%{path}) no existe. Recupera
+          el archivo o ejecuta 'aeat config auth configure --provider certificate
+          --file RUTA' con una ruta válida.
+        path_unset: No se ha seleccionado un archivo de certificado. Ejecuta 'aeat
+          config auth configure --provider certificate --file RUTA' para indicarlo.
+        unavailable: El estado del certificado no está disponible; consulta los registros
+          de depuración para los detalles de diagnóstico.
+      load:
+        password_unset: No hay contraseña de certificado configurada. Configura la
+          contraseña del certificado antes de continuar.
+        path_unset: No hay archivo de certificado configurado. Ejecuta 'aeat config
+          auth configure --provider certificate --file RUTA' para indicarlo.
+    clave_movil:
+      health:
+        identity_unset: No se ha configurado un DNI/NIE para Cl@ve Móvil. Configúralo
+          antes de continuar.
+        operator_completion_required: Preparado; requiere finalización de Cl@ve mediada
+          por el operador.
+    errors:
+      provider_reserved: El proveedor de autenticación {provider} está reservado y
+        no está implementado.
+      session_field_not_datetime: El campo {field} de sesión persistida debe ser una
+        fecha-hora o cadena ISO-8601.
+    operator:
+      alignment:
+        both_missing_detail: No están configurados ni la identidad Cl@ve (CADRUMO_CLAVE_MOVIL_DNI_NIE)
+          ni el identificador fiscal del perfil activo. Configura ambos con el mismo
+          DNI/NIE antes de la autenticación AEAT en directo.
+        clave_identity_missing_detail: La identidad Cl@ve (CADRUMO_CLAVE_MOVIL_DNI_NIE)
+          no está configurada, por lo que no se puede comparar con el identificador
+          fiscal del perfil activo. Configúrala con el DNI/NIE del perfil activo.
+        mismatch_detail: El DNI/NIE de la identidad Cl@ve '%{clave_identity}' no coincide
+          con el identificador fiscal del perfil activo '%{profile_tax_id}'. La autenticación
+          AEAT en directo vincularía la sesión de un contribuyente a otro perfil.
+          Cambia al perfil cuyo identificador fiscal coincida con el DNI/NIE de Cl@ve,
+          o corrige el valor que sea erróneo.
+        profile_tax_id_missing_detail: El perfil activo no tiene identificador fiscal,
+          por lo que no se puede comparar con la identidad Cl@ve. Configura el identificador
+          fiscal del perfil con el DNI/NIE usado para Cl@ve.
+      errors:
+        certificate_file_required: El proveedor de certificado requiere un archivo
+          de certificado. Ejecuta `aeat config auth configure --provider certificate
+          --file RUTA` con la ruta a tu paquete PKCS#12 (.p12/.pfx).
+        certificate_file_unresolved: La ruta del certificado '%{certificate_path}'
+          no resuelve a un archivo existente. Ejecuta `aeat config auth configure
+          --provider certificate --file RUTA` con una ruta a tu paquete PKCS#12 (.p12/.pfx).
+        certificate_secret_mutation_in_progress: Aún se está recuperando un cambio
+          del secreto de certificado para este perfil. Reintenta el mismo comando
+          de secreto antes de cambiar la configuración de autenticación.
+        certificate_source_not_found: El origen de certificado '%{name}' no está registrado.
+          Ejecute `aeat config auth certificate list` para ver los orígenes registrados,
+          o `aeat config auth certificate register --name %{name} --file RUTA` para
+          registrarlo.
+        cleanup_in_progress: Aún se está recuperando un cierre o reinicio de autenticación
+          para este perfil. Reanuda esa operación antes de cambiar la configuración
+          de autenticación.
+        dangling_active_profile: El puntero de perfil activo '%{active_profile}' no
+          resuelve a un bucket de perfil registrado. Ejecuta aeat config profile list
+          para inspeccionar los perfiles registrados y después aeat config login NAME
+          o aeat config profile create NAME.
+        no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile create
+          NAME` antes de configurar la autenticación.
+        provider_not_configured: No hay ningún proveedor de autenticación configurado;
+          indica --provider o configura uno primero.
+        requires_custody_session: La operación de autenticación apunta al perfil '%{bucket_id}'
+          en %{storage_root}, pero ese perfil no tiene una sesión de custodia abierta.
+          Ejecute aeat config login para ese perfil y vuelva a intentarlo.
+        revoke_requires_custody_session: La sesión de la AEAT del perfil '%{bucket_id}'
+          NO se ha revocado y sigue activa. Está guardada cifrada dentro de ese perfil,
+          por lo que solo desbloquear ese perfil -con aeat config login- la revoca.
+        scope_conflict: Elige --provider o --all, pero no ambos.
+        unreadable_active_profile: 'El perfil activo ''%{active_profile}'' tiene un
+          manifiesto de bucket pero no tiene un registro de perfil legible (status=%{status}).
+          Siguiente acción: %{next_action}.'
+      login:
+        refused_certificate_file_missing: 'No se puede iniciar sesión: el archivo
+          de certificado configurado (%{path}) no existe. Recupera el archivo o vuelve
+          a configurar la ruta antes de continuar.'
+        refused_certificate_path_unset: 'No se puede iniciar sesión: aún no se ha
+          seleccionado un archivo de certificado. Ejecuta ''aeat config auth configure
+          --provider certificate --file RUTA'' antes de continuar.'
+        refused_clave_movil_identity_unset: 'No se puede iniciar sesión con Cl@ve
+          Móvil: aún no se ha configurado un DNI/NIE. Configúralo antes de continuar.'
+        refused_live_tests_disabled: 'El inicio de sesión en directo está deshabilitado
+          por seguridad: la herramienta sólo construye y verifica localmente. Habilita
+          la opción de pruebas en directo si realmente quieres conectarte a la AEAT,
+          y vuelve a ejecutar este comando. Proveedor solicitado: %{provider}.'
+      probe:
+        certificate_corrupt: El archivo de certificado no es un PKCS#12 válido o falta
+          la contraseña; no se puede analizar.
+        certificate_corrupt_detail: 'El certificado no se puede interpretar: %{error}.'
+        certificate_expired: El certificado ha caducado hace %{days} días. Renuévalo
+          antes de la autenticación.
+        certificate_expiring: El certificado caduca dentro de %{days} días. Programa
+          la renovación.
+        certificate_file_missing: El archivo de certificado configurado (%{path})
+          no existe.
+        certificate_ok: Certificado válido; caduca dentro de %{days} días.
+        certificate_path_unset: No se ha seleccionado un archivo de certificado.
+        certificate_unreadable: El archivo de certificado no se puede leer (%{error}).
+        clave_movil_identity_invalid: 'El DNI/NIE configurado para Cl@ve Móvil no
+          es válido: %{error}.'
+        clave_movil_identity_ok: El DNI/NIE configurado para Cl@ve Móvil tiene una
+          forma válida.
+        clave_movil_identity_unset: No se ha configurado un DNI/NIE para Cl@ve Móvil.
+        no_provider: No hay ningún proveedor de autenticación configurado; nada que
+          comprobar localmente.
+        no_session: No hay ningún token de sesión AEAT persistido en disco; ejecuta
+          `aeat config auth login` para obtener uno.
+        session_expired: Hay un token de sesión AEAT persistido en disco pero ha superado
+          su límite de inactividad; ejecuta `aeat config auth login --fresh` para
+          renovarlo.
+        session_live: Hay un token de sesión AEAT persistido en disco y dentro de
+          su límite de inactividad.
+    provider_impact:
+      certificate_ready: La autenticación con certificado está lista. El operador
+        mantiene el mismo flujo de presentación en la CLI para lecturas respaldadas
+        por la AEAT; todos los proveedores utilizan el mismo flujo de comandos.
+      generic_ready: '%{label} está listo. El operador mantiene el mismo flujo de
+        presentación en la CLI mientras este proveedor se conecta al protocolo de
+        autenticación compartido.'
+      unavailable: '%{label} está configurado pero aún no está listo. El operador
+        todavía puede generar, verificar y exportar presentaciones localmente, pero
+        las lecturas respaldadas por la AEAT permanecerán no disponibles hasta que
+        se solucione la autenticación.'
+      unconfigured: El operador todavía puede generar, verificar y exportar presentaciones
+        localmente, pero las lecturas respaldadas por la AEAT permanecerán no disponibles
+        hasta que se configure un proveedor de autenticación.
+    sessions:
+      errors:
+        clave_contraste_missing: La ruta Cl@ve Móvil sin QR necesita el contraste
+          impreso en tu documento. Registra %{nie_field} en el perfil activo si es
+          un NIE, o %{dni_field} si es un DNI, antes de usar cualquier sesión con
+          la AEAT.
+        clave_identity_malformed: La identidad de Cl@ve no es un NIF, NIE o CIF válido,
+          por lo que no se puede confirmar que pertenezca a este perfil.
+        clave_identity_missing: La autenticación en directo con Cl@ve exige un DNI/NIE.
+          Regístralo en el perfil activo como %{identity_field}, o configúralo para
+          el proveedor con `aeat config auth configure`, antes de usar cualquier sesión
+          con la AEAT.
+        clave_identity_profile_mismatch: La identidad de Cl@ve Móvil no coincide con
+          la identidad fiscal del perfil activo; cambia al perfil que coincida o actualiza
+          el perfil antes de la autenticación AEAT en directo.
+        clave_route_missing: La autenticación en vivo con Cl@ve Móvil requiere %{route_field}.
+          Abra Identificación en el gestor del perfil, elija Código QR o Solicitud
+          en la aplicación, guarde y reintente la sincronización.
+        corrupt_session: La sesión de autenticación guardada está dañada y no se puede
+          leer. Ejecuta `aeat config auth logout` y después `aeat config auth test`.
+        no_session: No hay sesión AEAT activa; ejecuta `aeat config auth test` antes
+          de leer datos AEAT.
+        profile_identity_cleared: La autenticación en directo con la AEAT necesita
+          el ID fiscal del perfil activo, y este perfil no lo tiene. Restaura %{requirements}
+          en el perfil y vuelve a autenticarte.
+        profile_identity_malformed: La identidad fiscal de este perfil no es un NIF,
+          NIE o CIF válido, por lo que no se puede confirmar que la sesión Cl@ve le
+          pertenezca.
+        profile_tax_id_missing: La autenticación en directo con Cl@ve Móvil exige
+          que el perfil activo incluya %{requirements}.
+        provider_close_failed: No se pudo cerrar de forma segura la sesión del navegador
+          AEAT; repite la autenticación antes de leer datos AEAT.
+        sede_rejected: La sesión AEAT no es aceptada por la Sede; ejecuta `aeat config
+          auth test` antes de leer datos AEAT.
+        session_expired: La sesión AEAT ha caducado; ejecuta `aeat config auth test`
+          antes de leer datos AEAT.
+        session_identity_profile_mismatch: La identidad de la sesión AEAT no coincide
+          con la identidad fiscal del perfil activo; borra las sesiones de autenticación
+          y autentica el perfil que coincida antes de las lecturas AEAT en directo.
+        state_missing: Falta el estado de la sesión AEAT; ejecuta `aeat config auth
+          test` antes de leer datos AEAT.
+        verify_failed: No se ha podido verificar la sesión AEAT; ejecuta `aeat config
+          auth test` antes de leer datos AEAT.
+  calculations:
+    binding_prefill:
+      errors:
+        observation_merge_key_conflict: 'No se pueden fusionar observaciones con distinta
+          clave de modelo, ejercicio o periodo: {primary_modelo} {primary_filing_year}
+          {primary_period} frente a {overlay_modelo} {overlay_filing_year} {overlay_period}.'
+        selector_filing_year_delta_type: El selector de vinculación del registro 'filing_year_delta'
+          debe ser un número entero o una cadena numérica; contiene {observed_type}.
+          Corrija el selector en el registro.
+        selector_source_periods_member_type: Cada entrada del selector de vinculación
+          del registro 'source_periods' debe ser un código de periodo. Corrija el
+          selector en el registro.
+        selector_source_periods_type: El selector de vinculación del registro 'source_periods'
+          debe ser un código de periodo o una tupla de códigos de periodo; contiene
+          {observed_type}. Corrija el selector en el registro.
+    errors:
+      observation_displaces_official_evidence_app_filing: 'Este modelo, ejercicio
+        y periodo ya contiene evidencia capturada de la AEAT ({existing_source_kind}),
+        por lo que no se puede guardar encima una declaracion calculada localmente.
+        Un recalculo local no es la autoridad sobre lo presentado: si es correcto,
+        presente la correccion ante la AEAT y descargue el resultado. La evidencia
+        capturada no se puede recuperar por ninguna via que exponga esta aplicacion.'
+      observation_displaces_official_evidence_manual: Este modelo, ejercicio y periodo
+        ya contiene evidencia capturada de la AEAT ({existing_source_kind}). Guardar
+        aqui una cifra manual la sustituye, y la evidencia sustituida no se puede
+        recuperar por ninguna via que exponga esta aplicacion. Vuelva a ejecutarlo
+        con la opcion de sustituir evidencia oficial si la sustitucion es intencionada.
+    iva_compensation:
+      errors:
+        annual_partition_casilla_ids_noncanonical: Las observaciones de compensación
+          del Modelo 303 deben usar los identificadores de casilla declarados por
+          la revisión {revision_id}; {casilla_ids} no están declarados.
+        correction_missing: No existe ningún registro de compensación sembrado para
+          %{filing_year}/%{period}; la corrección sobrescribe una siembra existente,
+          no la crea.
+        history_casilla_undeclared: La casilla {casilla_id} no está declarada en el
+          modelo {modelo} revisión {revision_id}, por lo que no se le puede adjuntar
+          ninguna referencia legal. Corrija la referencia de la casilla.
+        history_operand_ref_value_arity: La casilla {casilla_id} aporta {operand_ref_count}
+          referencias de operando y {operand_value_count} valores de operando, por
+          lo que su procedencia de fórmula quedaría incompleta.
+        history_operand_refs_diverge_from_formula: La casilla {casilla_id} aporta
+          las referencias de operando {supplied_operand_refs}, pero la fórmula {formula_id}
+          proyecta {formula_operand_refs}.
+        history_operand_refs_without_formula: La casilla {casilla_id} aporta referencias
+          de operando, pero el modelo {modelo} revisión {revision_id} no declara ninguna
+          fórmula para ella.
+        local_recurrence_modelo_303_only: La recurrencia local de compensación de
+          IVA solo se reconstruye para el Modelo 303; se ha indicado el modelo {modelo}.
+        modelo_303_only: El historial de compensación de IVA solo acepta observaciones
+          del Modelo 303.
+        modelo_390_only: El resumen anual de compensación de IVA solo acepta observaciones
+          del Modelo 390.
+        observed_casilla_ids_noncanonical: Las observaciones de compensación de IVA
+          deben usar los identificadores de casilla declarados por el modelo {modelo}
+          revisión {revision}; {casilla_ids} no están declarados.
+        repository_backend_split: El almacén de observaciones del Modelo 303 y el
+          del historial de compensación de IVA deben compartir un único backend cifrado
+          para que ambas escrituras se confirmen a la vez.
+        seed_conflict: Ya existe un estado de compensación de IVA para este periodo;
+          la semilla sobrescribiría el historial almacenado.
+    iva_wallet:
+      errors:
+        decision_blocks_calculation: La decisión de la cartera de IVA para {target_year}
+          {target_period} está bloqueada por la divergencia {divergence}. Resuelva
+          la divergencia antes de calcular.
+        decision_no_selected_amount: La decisión de la cartera de IVA para {target_year}
+          {target_period} no contiene ningún importe seleccionado, por lo que no se
+          puede vincular ningún valor de compensación.
+        decision_repository_backend_split: El almacén de decisiones de la cartera
+          de IVA y el de observaciones de cálculo deben compartir un único backend
+          cifrado cuando la decisión se persiste.
+        decision_target_mismatch: La decisión almacenada de la cartera de IVA apunta
+          a {decision_target_year} {decision_target_period}, pero la unidad de trabajo
+          es {context_filing_year} {context_period}.
+        modelo_303_only: La conciliación de la cartera de compensación de IVA solo
+          se aplica al Modelo 303; se ha indicado el modelo {modelo}.
+    m303_carry:
+      errors:
+        available_compensation_amount_missing: El sobre de arrastre validado del Modelo
+          303 no lleva ningún importe de compensación disponible en la casilla {casilla_id}.
+        available_compensation_formula_missing: La revisión {revision_id} no declara
+          ninguna fórmula para la casilla {target_casilla_id}, por lo que la compensación
+          disponible con base en la generada no puede citar ninguna.
+        carry_operands_disagree_with_formula: Los operandos de arrastre {derivation_operands}
+          no coinciden con los operandos de la fórmula del registro {registry_operands}.
+          Solo una corrección del registro puede resolverlo; no hay recuperación automática
+          segura.
+        declaration_type_code_invalid: La cabecera de origen de tipo de declaración
+          en {source_locator} lleva {value}, que no es un código de disposición de
+          resultado.
+        declaration_type_code_not_admitted: La cabecera de origen de tipo de declaración
+          en {source_locator} lleva {value}, un código que el diseño de registros
+          del Modelo 303 no admite.
+        disposition_resultado_sign_incompatible: La disposición declarada {disposition}
+          no pudo haberse seleccionado para un resultado presentado de {resultado}.
+          Solo el contribuyente puede decidir cuál es correcta; no hay recuperación
+          automática segura.
+        duplicate_declaration_type_headers: La evidencia de arrastre del Modelo 303
+          lleva {header_count} cabeceras de origen {header_key}; se requiere exactamente
+          una.
+        envelope_not_normalized: El historial de arrastre del Modelo 303 requiere
+          un par disponible y generada ya normalizado y consciente de la disposición.
+          Vuelva a ingerir la observación presentada.
+        generated_compensation_amount_missing: El sobre de arrastre validado del Modelo
+          303 no lleva ningún importe de compensación generada en la casilla {casilla_id}.
+        incomplete_supported_operands: 'La normalización del arrastre del Modelo 303
+          no puede derivar la compensación disponible a partir de las casillas presentes:
+          {casilla_ids}.'
+        invalid_registry_observation: La entrada de arrastre del Modelo 303 requiere
+          una observación de modelo del registro; ha recibido {observed_type}.
+        local_disposition_header_disagreement: La disposición de resultado presentada
+          localmente {typed_disposition} no coincide con la cabecera de tipo de declaración
+          {header_disposition}. Solo el contribuyente puede decidir cuál se presentó;
+          no hay recuperación automática segura.
+        local_filing_disposition_required: La evidencia de arrastre de una presentación
+          local del Modelo 303 debe llevar la disposición de resultado determinada
+          en el momento de la presentación; la evidencia {source_kind} no lleva ninguna.
+        local_filing_provenance_required: La disposición de una presentación local
+          del Modelo 303 debe conservar su procedencia app_filing; lleva {provenance_kind}.
+        non_m303_envelope: El historial de arrastre del Modelo 303 solo admite observaciones
+          del Modelo 303; se ha indicado el modelo {modelo}.
+        official_declaration_type_header_required: La evidencia oficial de arrastre
+          del Modelo 303 debe llevar exactamente una cabecera de origen {header_key};
+          la evidencia {source_kind} no lleva ninguna.
+        official_disposition_header_disagreement: La disposición de resultado tipada
+          {typed_disposition} no coincide con la cabecera de tipo de declaración de
+          la AEAT {header_disposition}. Solo el contribuyente puede decidir cuál se
+          presentó; no hay recuperación automática segura.
+        resultado_casilla_required: La normalización del arrastre del Modelo 303 requiere
+          la casilla de resultado presentada {casilla_id}, que la observación no lleva.
+        supplied_available_contradicts_derivation: La compensación disponible aportada
+          {supplied_available} contradice la derivación {basis} {derived_available}.
+          Solo el contribuyente puede decidir qué importe se presentó; no hay recuperación
+          automática segura.
+        supplied_pair_contradicts_derivation: El par disponible y generada aportado
+          {supplied_available} y {supplied_generated} contradice la derivación {basis}
+          {derived_generated}. Solo el contribuyente puede decidir qué importes se
+          presentaron; no hay recuperación automática segura.
+        unsupported_provenance: La normalización del arrastre del Modelo 303 solo
+          admite evidencia oficial de la AEAT o una presentación local de la aplicación;
+          la evidencia lleva {source_kind}.
+    maritime_exemption:
+      errors:
+        art_7p_inputs_required: Se aplica la exención del art. 7.p), por lo que se
+          requieren tanto el salario anual como los días con derecho. Aporte los importes
+          que faltan.
+        rebeca_input_required: Se aplica la elegibilidad REBECA, por lo que se requiere
+          el rendimiento bruto de navegación. Aporte el importe que falta.
+    observations:
+      errors:
+        casilla_ids_noncanonical: Las observaciones de cálculo deben usar los identificadores
+          de casilla declarados por el modelo {modelo} revisión {revision_id}; {casilla_ids}
+          no están declarados.
+        decision_taxpayer_nif_blank: El NIF del contribuyente en la decisión de conciliación
+          no puede estar en blanco.
+        filing_year_out_of_range: El ejercicio de presentación {filing_year} de la
+          observación está fuera del rango admitido {minimum} a {maximum}.
+        iva_wallet_target_year_out_of_range: El ejercicio objetivo {target_year} de
+          la cartera de IVA está fuera del rango admitido {minimum} a {maximum}.
+        member_nif_blank: El NIF del miembro del grupo no puede estar en blanco cuando
+          amplía la clave de observación.
+        period_type_invalid: La clave de observación requiere un valor de periodo;
+          ha recibido {observed_type}.
+        registry_snapshot_missing: No se pueden validar los identificadores de casilla
+          porque no se resuelve ninguna revisión del registro para el modelo {modelo},
+          ejercicio {filing_year}, periodo {period}.
+        taxpayer_nif_blank: El NIF del contribuyente no puede estar en blanco cuando
+          forma la clave de decisión de la cartera de IVA.
+    row_set:
+      errors:
+        grouping_dispatch_fell_through: 'La agrupación de conjunto de filas {grouping}
+          se resolvió a un ensamblador que no se ejecutó. Comuníquelo: la tabla de
+          despacho es inconsistente.'
+        grouping_has_no_assembler: La agrupación de conjunto de filas {grouping} no
+          tiene ensamblador en esta aplicación; las agrupaciones sin uno son {unassemblable_groupings}.
+        percepcion_clave_missing: La fila {row_index} no declara ninguna clave. Una
+          percepción debe indicar su clave de la AEAT, según el diseño de registros
+          de los Modelos 190 y 193, registro de tipo 2. Aporte la clave.
+        percepcion_clave_unsupported: La fila {row_index} declara la clave de la AEAT
+          {clave}, que esta aplicación no admite.
+        row_assembly_failed: 'No se ha podido ensamblar la fila {row_index}: {validation_error_detail}.
+          Corrija la fila y vuelva a hacer el pull.'
+        row_index_not_positive: El índice de fila de la celda del conjunto de filas
+          debe ser un número entero positivo; contiene {row_index}.
+  filing:
+    build_draft:
+      errors:
+        binding_data_type_unsupported: El binding del registro declara un tipo de
+          dato que ningún canal de entrada admite.
+        binding_family_has_no_input_channel: La familia de valores del binding del
+          registro no tiene canal de entrada.
+        binding_provenance_missing: El binding del registro no declara su fundamento
+          legal ni sus fuentes.
+        binding_row_key_not_positive_integer: La clave de fila de una entrada de binding
+          debe ser un entero positivo.
+        binding_text_value_invalid: El valor de texto del binding no corresponde al
+          tipo de dato declarado en el registro.
+        binding_value_not_boolean: El valor de entrada del binding no es un sí o no
+          reconocido.
+        binding_value_not_integer: El valor de entrada del binding debe ser un número
+          entero.
+        date_binding_not_iso: El valor del binding de fecha no es una fecha ISO 8601.
+        findings_under_fail_on_warning: La validación del borrador produjo avisos
+          y los avisos se tratan como bloqueantes.
+        input_key_noncanonical_casilla: Una clave de entrada usa una referencia de
+          casilla no canónica.
+        input_key_not_string: Las claves de entrada deben ser identificadores de registro
+          en texto.
+        input_key_padded: Las claves de entrada no deben llevar espacios al principio
+          ni al final.
+        input_key_unknown: Una clave de entrada no está declarada por la revisión
+          del registro.
+        input_not_decimal: El valor de entrada debe ser un importe decimal.
+        period_type_invalid: El periodo de declaración debe ser un valor de periodo
+          tipado.
+        registry_calculation_failed: El cálculo del registro falló para este borrador.
+        registry_snapshot_unavailable: No hay snapshot de registro disponible para
+          este modelo y periodo.
+        schema_version_snapshot_mismatch: La versión del proveedor de esquema no coincide
+          con el snapshot del registro.
+        text_casilla_invalid: El valor de texto de la casilla no corresponde al tipo
+          de dato declarado en el registro.
+        text_casilla_not_string: La entrada de texto de la casilla debe ser un valor
+          de texto.
+    calculate:
+      errors:
+        repair_hints_forbidden: Las indicaciones de corrección solo se aceptan cuando
+          hay bloqueos que resolver.
+        repair_hints_required: Se requieren indicaciones de corrección cuando hay
+          bloqueos que resolver.
+    complementaria:
+      errors:
+        justificante_csv_absent: La complementaria requiere el CSV del justificante
+          de la declaración original.
+        no_changed_casilla: La complementaria requiere al menos una casilla modificada.
+        original_draft_addressing_mismatch: La declaración original y el borrador
+          guardado declaran distinto modelo o periodo.
+        original_draft_snapshot_stale: El borrador original no se construyó con el
+          snapshot de registro activo.
+        original_submission_csv_blank: La declaración original debe llevar un CSV
+          de justificante oficial.
+        original_submission_fields_missing: A la declaración original le faltan campos
+          obligatorios.
+        original_submission_shape_invalid: La declaración original no corresponde
+          a la forma de registro esperada.
+    errors:
+      amendment_not_persisted: no hay ninguna rectificación persistida con id %{amendment_id}
+      complementaria_taxpayer_identity_absent: 'la complementaria requiere una identidad
+        fiscal declarada: el profile_tax_id de la declaración presentada es %{submitted_tax_id}
+        mientras que el borrador original declara %{draft_tax_id}'
+      complementaria_taxpayer_identity_malformed: 'la complementaria no puede confirmar
+        un único contribuyente: el profile_tax_id %{submitted_tax_id} de la declaración
+        presentada no es un NIF, NIE o CIF válido, y el borrador original declara
+        %{draft_tax_id}'
+      complementaria_taxpayer_identity_mismatch: 'la identidad fiscal de la complementaria
+        diverge: la declaración presentada declara profile_tax_id %{submitted_tax_id}
+        y el borrador original declara %{draft_tax_id}; ambos deben nombrar al mismo
+        contribuyente'
+      import_failed: 'no se puede importar el modelo %{modelo}: %{detail}'
+      modelo_not_in_registry: el modelo %{modelo} no está presente en el registro
+        de cálculo
+      original_draft_not_persisted: el borrador original %{draft_id} no está persistido
+      period_ejercicio_mismatch: 'modelo %{modelo}: no se puede canonicalizar el periodo
+        %{period} para el ejercicio %{ejercicio}'
+      unexpected_ejercicio: 'modelo %{modelo}: ejercicio inesperado %{ejercicio};
+        se requiere un año de cuatro dígitos'
+      unknown_severity_threshold: El umbral de severidad no es un nivel de severidad
+        conocido.
+    export:
+      errors:
+        draft_not_approved: La exportación requiere un borrador aprobado.
+        draft_snapshot_stale: La exportación requiere un borrador construido con el
+          snapshot de registro activo.
+        layout_not_renderable: Este modelo no puede producir un fichero local de exportación
+          de la declaración.
+        post_write_verification_refused: La verificación posterior a la escritura
+          rechazó el fichero de declaración exportado.
+        receipt_artefact_unreadable: El recibo de exportación nombra un fichero que
+          no se puede leer.
+        receipt_byte_size_mismatch: El tamaño del fichero exportado no coincide con
+          el recibo de exportación.
+        receipt_digest_mismatch: El resumen del fichero exportado no coincide con
+          el recibo de exportación.
+        rendered_payload_empty: El diseño de exportación produjo un contenido de declaración
+          vacío.
+        verify_draft_snapshot_stale: La verificación requiere un borrador construido
+          con el snapshot de registro activo.
+    export_parity:
+      errors:
+        aux_block_undeclared: El diseño de exportación no puede escribir el bloque
+          Aux obligatorio de la declaración.
+        casilla_metadata_drift: La numeración o el segmento de casilla se desvía del
+          diseño de registro del registro.
+        rate_boxes_understate_total: Las casillas por tipo no cubren su propio total
+          declarado.
+        record_emit_order_drift: La exportación emitiría los registros fuera del orden
+          declarado en el registro.
+        record_emit_order_duplicated: Varios registros de exportación comparten orden
+          de emisión, así que la secuencia es ambigua.
+        required_casillas_omitted: La exportación omitiría casillas obligatorias que
+          el registro oficial declara.
+    import:
+      errors:
+        period_token_undeclared: El código de periodo no está declarado por la revisión
+          de registro activa.
+        period_token_unrepresentable: El código de periodo no puede representarse
+          como periodo de declaración.
+    m303_exonerado_390:
+      errors:
+        record_design_snapshot_mismatch: El diseño de registro exonerado-390 no coincide
+          con el snapshot seleccionado.
+        record_design_source_not_snapshot_owned: La fuente del diseño de registro
+          exonerado-390 no pertenece al snapshot.
+    m303_export_applicability:
+      errors:
+        filing_facts_absent: La exportación del modelo 303 requiere los datos de declaración
+          ensamblados.
+        filing_facts_period_mismatch: Los datos de declaración del modelo 303 no coinciden
+          con el periodo de exportación.
+        layout_not_snapshot_owned: El diseño de exportación del modelo 303 no pertenece
+          al snapshot seleccionado.
+        producer_snapshot_incomplete: El snapshot productor de la declaración del
+          modelo 303 está incompleto.
+        producer_snapshot_wrong_modelo: El snapshot productor no corresponde al modelo
+          303.
+        regularisation_result_not_canonical: El resultado de regularización del modelo
+          303 no es la proyección canónica.
+        snapshot_period_mismatch: El snapshot de registro del modelo 303 no coincide
+          con el periodo de exportación.
+    m303_prorrata_activity_rows:
+      errors:
+        activity_rows_incomplete: Las filas de prorrata por actividad del modelo 303
+          están incompletas.
+    review:
+      errors:
+        approved_by_blank: El identificador del aprobador no puede estar vacío.
+        draft_not_ready: Solo pueden aprobarse borradores listos para presentar.
+        registry_review_mismatch: 'El borrador no coincide con la superficie de revisión
+          del registro: %{codes}.'
+      stale_reasons:
+        approval_basis_version_changed: la versión de base de aprobación ha cambiado
+        category_profiles_changed: los perfiles de categoría han cambiado
+        draft_payload_changed: el contenido del borrador ha cambiado
+        draft_review_changed: la superficie de validación del borrador ha cambiado
+        invoice_catalogue_changed: el catálogo de facturas ha cambiado
+        prior_filing_observations_changed: las observaciones de declaraciones anteriores
+          han cambiado
+        profile_activity_changed: la actividad del perfil del contribuyente ha cambiado
+        review_checksum_mismatch: La suma de verificación de la aprobación no coincide
+          con su base de aprobación
+        schema_formula_changed: la procedencia del esquema o la fórmula ha cambiado
+        transaction_catalogue_changed: el catálogo de transacciones ha cambiado
+        unknown: '%{reason}'
+    runtime:
+      errors:
+        active_profile_load_failed: 'No se pudo cargar el perfil activo de presentación:
+          %{reason}.'
+        ambiguous_casilla_schema: 'Error interno: el esquema de casillas en tiempo
+          de ejecución es ambiguo (ids de casilla.id duplicados o referencias de fórmula
+          colgantes).'
+        blank_modelo_selection: La selección de modelos solicitada no puede contener
+          identificadores vacios.
+        filing_year_period_mismatch: 'Error interno: el ejercicio de declaración {filing_year}
+          no coincide con el periodo indicado {period}.'
+        filing_year_period_pair: filing_year y period deben indicarse juntos.
+        modelo_not_in_registry: El modelo %{modelo} no está presente en el registro
+          de cálculo.
+        modelo_revision_missing: El modelo %{modelo} no tiene revisiones.
+        period_type: 'Error interno: se requiere un objeto Period para el proveedor
+          de esquema en tiempo de ejecución; se recibió {period_type}.'
+        provider_year_missing: El modelo %{modelo} revisión %{revision} no tiene ejercicio
+          de proveedor.
+        registry_empty: La raíz del registro %{registry_root_name} no tiene definiciones
+          de modelo.
+        registry_empty_for_period: La raíz del registro no tiene definiciones de modelo
+          para el ejercicio %{filing_year} periodo %{period}.
+        registry_missing_requested_modelos: 'La raíz del registro no contiene las
+          definiciones de modelo solicitadas: %{modelos}.'
+        unsupported_casilla_data_type: 'Tipo de dato de casilla del registro no admitido:
+          %{data_type}.'
+  flows:
+    errors:
+      answer_target_not_visible: 'El flujo {flow_id} no puede registrar una respuesta
+        para {page_key}: esa pregunta no está visible ahora mismo.'
+      checkpoint_unavailable_mode: El flujo {flow_id} no ofrece guardar y salir en
+        el modo {mode}; sus {answered_count} respuestas solo existen en esta sesión.
+      copy_locale_key_unresolved: La clave de texto {ref} no existe en el catálogo
+        de traducciones.
+      copy_ref_unresolved: La fuente de texto {kind} no resolvió ningún texto para
+        la referencia {ref}.
+      copy_source_duplicate: Ya hay un resolutor de fuente de texto registrado para
+        el tipo {kind}.
+      copy_source_locale_builtin: La fuente de texto basada en claves de locale está
+        integrada y no se puede volver a registrar.
+      copy_source_unregistered: No hay ningún resolutor de fuente de texto registrado
+        para el tipo {kind}, que exige la referencia {ref}.
+      jump_target_not_visible: 'El flujo {flow_id} no puede saltar a {page_key}: esa
+        pregunta no está visible ahora mismo.'
+      reset_target_unknown: El flujo {flow_id} no tiene ninguna pregunta ni respuesta
+        guardada llamada {page_key} que reiniciar.
+      scripted_answer_rejected: 'La respuesta programada para {page_key} fue rechazada
+        por la validación: {message_keys}.'
+      scripted_queue_overflow: La ejecución programada usó {consumed_count} respuestas
+        y terminó con {remaining_count} sin usar; el guion no coincide con el flujo.
+      scripted_queue_underflow: La ejecución programada se quedó sin respuestas en
+        la pregunta obligatoria {page_key}, tras {consumed_count} respuestas.
+      submit_blocked: 'El flujo {flow_id} no se puede enviar: quedan {blocking_count}
+        hallazgos bloqueantes y {required_remaining} preguntas obligatorias sin responder.'
+      unknown_repeating_group: El flujo {flow_id} no declara ningún grupo repetible
+        llamado {group_id}.
+      validator_id_blank: Un validador de flujo debe registrarse con un identificador
+        no vacío.
+      validator_id_duplicate: Ya hay un validador de flujo registrado con el identificador
+        {validator_id}.
+      validator_id_unknown: No hay ningún validador de flujo registrado con el identificador
+        {validator_id}; hay {registered_count} validadores registrados.
+  inventory:
+    service:
+      errors:
+        actividad_conflict: Ya existe un libro de inventario para la actividad %{actividad_id}
+          y el ejercicio %{year}. Ejecute `aeat app ledger inventory list` para ver
+          los libros existentes.
+        actividad_not_found: No existe ningún libro de inventario para la actividad
+          %{actividad_id} y el ejercicio %{year}. Ejecute `aeat app ledger inventory
+          list` para ver los libros existentes.
+        duplicate_movement_id: El libro de inventario ya contiene el movimiento %{movement_id}.
+          Ejecute `aeat app ledger inventory list` para ver los movimientos registrados.
+        invalid_valuation_method: 'El método de valoración de inventario no está admitido:
+          %{valuation_method}.'
+  invoices:
+    bulk_import:
+      errors:
+        country_unanswerable: 'El fichero de importación no tiene columna de país
+          de la contraparte y no se ha indicado ningún país para la importación. Añada
+          una columna country_code o indique un país para todo el fichero. Columnas
+          no reconocidas: {unmapped_columns}'
+        file_read_failed: No se pudo leer el archivo de importación masiva de facturas.
+        formula_cell: El archivo de importación masiva de facturas contiene una celda
+          con fórmula en la fila {row}, columna {column}; no se aceptan los valores
+          en caché de las fórmulas.
+        missing_columns: 'Al archivo de importación masiva de facturas le faltan columnas
+          obligatorias: {missing_columns}'
+        unreadable_table: 'El archivo de importación masiva de facturas no contiene
+          ninguna tabla legible: {detail}'
+        unsupported_extension: El archivo de importación masiva de facturas debe ser
+          .csv o .xlsx (se recibió {extension}).
+    creation:
+      errors:
+        duplicate_invoice: 'Ya existe una factura con la misma identidad en el catálogo:
+          %{invoice_id}.'
+        intracom_operation_type_required: 'Una entrega intracomunitaria debe declarar
+          su clave de operación del Modelo 349: la categoría por sí sola no distingue
+          una entrega intracomunitaria ordinaria (clave E) de una entrega posterior
+          a una importación exenta (clave M, o H mediante representante fiscal).'
+        unsupported_iva_rate: 'El tipo de IVA %{iva_rate} no se reconoce; usa uno
+          de: %{accepted}.'
+    lifecycle:
+      errors:
+        ambiguous_invoice_prefix: 'El prefijo de identificador de factura %{invoice_id}
+          es ambiguo; coincide con: %{candidates}.'
+        empty_invoice_patch: Una corrección de factura debe indicar al menos un campo
+          a modificar.
+        invoice_id_required: Se requiere un identificador de factura.
+        invoice_not_found: 'Factura del catálogo no encontrada: %{invoice_id}.'
+        remove_linked_invoice: 'No se puede eliminar la factura %{invoice_id} mientras
+          siga vinculada a transacciones: %{linked_transaction_ids}. Desvincúlelas
+          primero.'
+    linking:
+      errors:
+        linked_invoice_not_found: No se encontró la factura %{invoice_id} después
+          de aplicar el enlace.
+        transaction_not_found: No se encontró la transacción %{transaction_id} en
+          el catálogo de transacciones.
+    wizard:
+      errors:
+        build_failed: 'el asistente de facturas rechazó: %{detail}'
+        field_errors: 'el asistente de facturas rechazó %{field_count} campo(s): %{detail}'
+  iva_wallet:
+    decision_reason:
+      aeat_wallet_uncrosschecked: Se ha seleccionado la última observación válida
+        de la cartera de la AEAT; no había recurrencia local disponible para contrastarla.
+      aeat_wallet_validated: La última observación válida de la cartera de la AEAT
+        coincide con la recurrencia local para la compensación anterior del Modelo
+        303.
+      caller_zero_matches_local_authority: El cero proporcionado por el llamador coincide
+        con la autoridad local de cero persistida.
+      filed_history_requires_override: No hay prueba de la cartera de la AEAT; la
+        recurrencia del historial presentado requiere una anulación expresa del contribuyente
+        antes de generar el resultado automático.
+      filed_history_zero: La prueba registrada del historial presentado del Modelo
+        303 establece una compensación a trasladar de cero.
+      first_period_zero_activity_start_uncontrasted: 'SIN CONTRASTAR: El cero del
+        primer período se basa en la fecha de inicio de actividad declarada por el
+        operador; Cadrumo no puede verificar esa fecha con la información censal actual
+        de la AEAT.'
+      first_period_zero_aeat_wallet: La cartera de la AEAT confirma que la compensación
+        anterior es cero en el primer período de IVA registrado.
+      first_period_zero_local_recurrence: Un cero local inicial establece que no existe
+        compensación anterior en el primer período de IVA registrado.
+      local_evidence_unreadable: Existe un registro anterior del Modelo 303, pero
+        no puede leerse como prueba de compensación anterior y no hay ninguna observación
+        disponible de la cartera de la AEAT.
+      local_recurrence_requires_override: La cartera de la AEAT no está disponible;
+        la recurrencia local requiere una anulación expresa del contribuyente antes
+        de generar el resultado automático.
+      local_recurrence_zero: La recurrencia local del Modelo 303 establece una compensación
+        a trasladar de cero.
+      no_usable_authority: No hay ninguna observación de la cartera de la AEAT ni
+        recurrencia local utilizable para la compensación anterior del Modelo 303.
+      stale_wallet_local_recurrence_requires_override: La observación de la cartera
+        de la AEAT está desactualizada; la recurrencia local requiere una anulación
+        expresa del contribuyente antes de generar el resultado automático.
+      stale_wallet_no_local_recurrence: La observación de la cartera de la AEAT está
+        desactualizada y no hay recurrencia local alternativa disponible.
+      taxpayer_override: Se ha seleccionado la anulación expresa del contribuyente;
+        la explicación del operador registrada por separado indica su fundamento probatorio.
+      wallet_local_recurrence_divergence: La cartera de la AEAT y la recurrencia local
+        difieren; se requiere una revisión antes de generar el resultado automático.
+  ledger:
+    errors:
+      evidence_attachment_requires_ids: El adjunto de evidencia del libro mayor requiere
+        evidencia de compra o identificadores de adjunto.
+      evidence_detachment_requires_ids: La separación de evidencia del libro requiere
+        al menos un id de adjunto.
+      evidence_detachment_unknown_attachment: La transacción del libro no lleva los
+        adjuntos %{attachment_ids}.
+      idempotency_key_conflict: La clave de idempotencia ya identifica una transacción
+        almacenada con datos distintos. Use una clave de idempotencia nueva para un
+        movimiento diferente, u omita la clave para añadir un duplicado deliberado.
+      purchase_evidence_already_set: 'La transacción del libro ya tiene un purchase_invoice_evidence_id
+        y no puede reemplazarse en su sitio. Desvincular la evidencia no está implementado:
+        elimine la transacción y vuelva a añadirla con la evidencia correcta.'
+      transaction_id_prefix_ambiguous: 'el prefijo de id de transacción %{prefix}
+        coincide con %{count} transacciones: %{matches}'
+      transaction_id_prefix_empty: el prefijo de id de transacción está vacío
+      transaction_id_prefix_no_match: ninguna transacción coincide con el prefijo
+        de id %{prefix}
+      transaction_id_prefix_non_hex: el prefijo de id de transacción %{prefix} contiene
+        caracteres no hexadecimales
+      transaction_id_prefix_too_long: el prefijo de id de transacción %{prefix} tiene
+        más de %{max_length} caracteres
+      transaction_not_found: 'transacción no encontrada: %{transaction_id}'
+    evidence:
+      errors:
+        document_already_confirmed: 'Este documento ya generó la factura %{stored_invoice_id},
+          y esta confirmación difiere en: %{divergent_fields}. Corrija o elimine la
+          factura almacenada en lugar de confirmar dos veces el mismo documento.'
+  live:
+    borrador:
+      errors:
+        binding_value_key_blank: Las claves de los valores de vinculación del borrador
+          no pueden estar vacías.
+        bucket_id_blank: El identificador del bucket del borrador no puede estar vacío.
+        snapshot_id_blank: El identificador del snapshot del borrador no puede estar
+          vacío.
+        snapshot_not_found: Ningún snapshot del borrador coincide con el identificador
+          solicitado.
+        snapshot_prefix_ambiguous: El prefijo del snapshot del borrador coincide con
+          varios snapshots.
+    deudas:
+      errors:
+        bucket_id_blank: El identificador del bucket de deudas no puede estar vacío.
+        snapshot_id_blank: El identificador de la instantánea de deudas no puede estar
+          vacío.
+        snapshot_not_found: No hay ninguna instantánea de deudas que coincida con
+          el identificador solicitado.
+        snapshot_prefix_ambiguous: El prefijo de la instantánea de deudas coincide
+          con varias instantáneas.
+    expedientes:
+      errors:
+        bucket_id_blank: El identificador del bucket de expedientes no puede estar
+          vacío.
+        snapshot_id_blank: El identificador de la instantánea de expedientes no puede
+          estar vacío.
+        snapshot_not_found: No hay ninguna instantánea de expedientes que coincida
+          con el identificador solicitado.
+        snapshot_prefix_ambiguous: El prefijo de la instantánea de expedientes coincide
+          con varias instantáneas.
+    filed_data:
+      errors:
+        sync_run_repository_required: Una captura persistida de datos presentados
+          requiere un repositorio de persistencia de ejecuciones de sincronización.
+    filed_observations:
+      errors:
+        iva_history_promotion_failed: La declaración presentada del Modelo 303 no
+          pudo incorporarse al histórico de compensación de IVA.
+        iva_history_reload_missing: El histórico seguro de compensación de IVA no
+          se recargó tras guardar el periodo del Modelo 303.
+        observation_not_active: La AEAT no informa esa declaración presentada como
+          activa, por lo que no se guarda como evidencia de cálculo.
+        quarter_ordinal_missing: El periodo trimestral del histórico presentado no
+          tiene ordinal de trimestre.
+        registry_enrollment_failed: La observación presentada no pudo inscribirse
+          como evidencia de cálculo fundamentada en el registro.
+    iva_wallet:
+      errors:
+        decision_reload_diverged: La decisión de conciliación de la cartera de IVA
+          no se recargó con evidencia idéntica.
+        observation_reload_diverged: La observación de la cartera de IVA no se recargó
+          con evidencia idéntica.
+    justificante:
+      errors:
+        bucket_id_blank: El identificador del bucket de la captura del justificante
+          no puede estar vacío.
+        capture_axis_mismatch: El justificante capturado no coincide con el modelo
+          y el periodo del snapshot en vivo.
+        csv_mismatch: El CSV del justificante capturado no coincide con el CSV del
+          snapshot en vivo.
+        evidence_overwrite_refused: El registro de presentación ya tiene evidencia
+          de la AEAT, que la evidencia de captura en vivo no sobrescribirá.
+        evidence_snapshot_not_active: Solo un snapshot de captura en vivo activo puede
+          sellarse como evidencia de presentación.
+        expediente_not_in_tree: La declaración presentada referencia un expediente
+          que no está en el árbol de expedientes.
+        filing_identity_unresolved: No se pudo resolver la identidad fiscal del perfil
+          de presentación, por lo que no se sella la evidencia de captura en vivo.
+        filing_record_mismatch: El justificante capturado no coincide con el registro
+          de presentación actual.
+        filing_record_missing: No existe registro de presentación actual para ese
+          modelo y periodo. Presente el periodo primero.
+        metadata_snapshot_not_active: Solo un snapshot de captura en vivo activo puede
+          registrar metadatos del justificante.
+        modelo_unknown: El modelo de la captura del justificante no es un modelo conocido
+          de la AEAT.
+        no_filed_declaration: No hay declaración presentada para ese modelo y periodo,
+          por lo que no se puede resolver el expediente del justificante.
+        pdf_base64_empty: El contenido PDF de la captura del justificante se decodifica
+          a cero bytes.
+        pdf_base64_invalid: El contenido PDF de la captura del justificante no es
+          base64 válido.
+        pdf_sha256_mismatch: El resumen del PDF de la captura del justificante no
+          coincide con los bytes PDF decodificados.
+        snapshot_bucket_mismatch: El snapshot de la captura del justificante no pertenece
+          al bucket del repositorio.
+        snapshot_id_blank: El identificador del snapshot de la captura del justificante
+          no puede estar vacío.
+        snapshot_not_found: Ningún snapshot de captura del justificante coincide con
+          el identificador solicitado.
+        snapshot_prefix_ambiguous: El prefijo del snapshot de captura del justificante
+          coincide con varios snapshots.
+    notifications:
+      errors:
+        bucket_id_blank: El identificador del bucket de notificaciones no puede estar
+          vacío.
+        certificado_id_blank: El identificador de certificado de la notificación no
+          puede estar vacío.
+        certificado_not_in_any_snapshot: Ninguna lista de notificaciones capturada
+          menciona ese certificado. Descargue antes la lista de notificaciones.
+        document_conflict: 'Ya hay guardado un documento distinto para esa notificación;
+          no se ha sobrescrito nada. Discrepan: {diverging_fields}.'
+        document_not_found: Ningún documento guardado corresponde a esa notificación.
+          Descárguelo primero.
+        document_prefix_ambiguous: Ese prefijo de certificado corresponde a varios
+          documentos guardados. Indique el identificador completo.
+        document_row_mismatch: Ese documento pertenece a otra notificación y no se
+          guardó.
+        snapshot_id_blank: El identificador de la instantánea de notificaciones no
+          puede estar vacío.
+        snapshot_not_found: No hay ninguna instantánea de notificaciones que coincida
+          con el identificador solicitado.
+        snapshot_prefix_ambiguous: El prefijo de instantánea de notificaciones coincide
+          con varias instantáneas.
+    snapshot_base:
+      errors:
+        repository_bucket_mismatch: El repositorio de snapshots informó un bucket
+          distinto del solicitado.
+        service_bucket_mismatch: El bucket del servicio de snapshots no coincide con
+          el bucket de su repositorio.
+        snapshot_bucket_mismatch: El bucket de la carga de la instantánea no coincide
+          con el bucket del repositorio.
+        snapshot_key_mismatch: La instantánea está almacenada bajo la clave de otra
+          instantánea.
+        state_active_supersession_pointer: Un snapshot activo no puede llevar un puntero
+          de sustitución.
+        state_discard_audit_required: Un snapshot descartado requiere marca de tiempo
+          de descarte y actor que lo descarta.
+        state_discard_metadata_forbidden: Solo un snapshot descartado puede llevar
+          metadatos de descarte.
+        state_discarded_supersession_pointer: Un snapshot descartado no puede llevar
+          un puntero de sustitución.
+        state_supersession_pointer_required: Un snapshot sustituido debe llevar el
+          identificador del snapshot que lo sustituye.
+    verify:
+      errors:
+        bucket_id_blank: El identificador del bucket de verificación no puede estar
+          vacío.
+        observation_bucket_mismatch: El bucket de la observación de verificación no
+          coincide con el bucket del repositorio.
+        observation_id_blank: El identificador de la observación de verificación no
+          puede estar vacío.
+        observation_id_mismatch: El identificador de la observación de verificación
+          no coincide con la observación solicitada.
+        observation_key_mismatch: La observación de verificación está almacenada bajo
+          la clave de otra observación.
+        observation_not_found: No hay ninguna observación de verificación que coincida
+          con el identificador solicitado.
+        observation_prefix_ambiguous: El prefijo de la observación de verificación
+          coincide con varias observaciones.
+  modelo:
+    borrador_binding:
+      errors:
+        caller_binding_keys_blank: Las claves de binding aportadas no pueden estar
+          en blanco.
+        decimal_value_invalid: El valor de borrador para el binding numérico %{binding_id}
+          debe ser compatible con decimal.
+        forbidden_bindings: 'El snapshot de borrador contiene valores que el registro
+          no ha marcado como AEAT-prefilled: %{bindings}.'
+        registry_snapshot_axis_mismatch: 'El eje del snapshot de registro no coincide
+          con el comando de binding de borrador: año del snapshot=%{snapshot_year}
+          periodo=%{snapshot_period}; año del comando=%{filing_year} periodo=%{period}.'
+        registry_snapshot_modelo_mismatch: 'El modelo del snapshot de registro no
+          coincide con el comando de binding de borrador: modelo del snapshot=%{snapshot_modelo};
+          modelo del comando=%{command_modelo}.'
+        snapshot_axis_mismatch: 'El snapshot de borrador no coincide con el eje del
+          cálculo: año del snapshot=%{snapshot_year} periodo=%{snapshot_period}; año
+          del calculo=%{filing_year} periodo=%{period}.'
+        snapshot_bucket_mismatch: El snapshot de borrador no pertenece al bucket activo.
+        snapshot_load_failed: No se puede cargar el snapshot de borrador seleccionado;
+          lista los snapshots activos con aeat app live borrador 100 list.
+        snapshot_not_active: El snapshot de borrador no está activo; lista los snapshots
+          activos con `aeat app live borrador 100 list`.
+        unsupported_modelo: El binding de borrador no está soportado para el modelo
+          %{modelo}; el manifiesto del registro debe declarar la capacidad de borrador.
+    errors:
+      amendment_complementaria_liability_decrease: Una complementaria para el modelo
+        {modelo}, ejercicio {filing_year}, período {period} rebajaría el resultado
+        declarado de {baseline_result} a {corrected_result}. Antes de la unificación
+        de la autoliquidación rectificativa, una complementaria presentada por el
+        propio obligado no puede disminuir legalmente la deuda; utilice el procedimiento
+        de solicitud de rectificación.
+      amendment_kind_not_permitted: 'El tipo de rectificación solicitado {requested_kind}
+        no está legalmente disponible para el modelo {modelo}, ejercicio {filing_year},
+        período {period}. Tipos aceptados para este período: {accepted_kinds}.'
+      amendment_registry_root_missing: Falta la raíz del registro {registry_root};
+        no se pueden validar las sobrescrituras de rectificación.
+      amendment_registry_snapshot_unresolved: No se pudo resolver el snapshot de registro
+        para el modelo {modelo}, ejercicio {filing_year}, periodo {period}; no se
+        pueden validar las sobrescrituras de rectificación.
+      amendment_unknown_casillas: 'Las sobrescrituras de rectificación apuntan a ids
+        de casilla no declarados en el registro para el modelo {modelo}, ejercicio
+        {filing_year}, periodo {period}: {casillas}.'
+      amendment_verification_refused_missing_casillas: 'La enmienda está incompleta:
+        faltan identificadores de casilla requeridos en el mapa corregido.'
+      amendment_verification_refused_no_snapshot: El registro no tiene una instantánea
+        para el modelo, año y período solicitados.
+      calculate_binding_is_date_sourced: --binding %{key} es un binding de tipo fecha
+        que se obtiene del perfil activo (un dato de fecha del contribuyente, como
+        la fecha de nacimiento); no puede aportarse mediante --binding, que solo admite
+        valores decimales y de enumeración. Definelo como dato del perfil y vuelve
+        a calcular.
+      calculate_binding_unknown: '--binding %{key} no coincide con ningún binding
+        de esta revisión. Bindings aceptados: %{accepted}. Use `aeat app modelo bindings
+        list <MODELO>` para listar los bindings válidos.'
+      calculate_boolean_binding_encoding_invalid: 'El valor del binding %{key} es
+        un indicador booleano codificado como decimal y debe ser uno de: %{accepted}.
+        Se recibió %{value}. Codificación aceptada: %{mapping}. Ejecuta ''aeat app
+        modelo bindings list <MODELO>'' para ver la codificación decimal de cada binding.'
+      calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no es un casilla.id
+        canónico y es ambiguo. Valores casilla.id candidatos: %{accepted}. Especifica
+        el casilla.id canónico exacto'
+      calculate_casilla_noncanonical_refused: '--casilla %{key} es un número de casilla
+        impreso o de formulario, o una referencia de exportación, no un casilla.id
+        canónico. Usa el casilla.id canónico en su lugar: %{accepted}'
+      calculate_casilla_unknown: --casilla %{key} no es un casilla.id canónico de
+        esta revisión. Usa `aeat app modelo casillas <MODELO>` para listar los casilla.id
+        válidos.
+      calculate_decimal_input_invalid: 'El valor %{flag} de %{key} no es decimal:
+        %{value}'
+      calculate_detail_casilla_unsupported: La casilla %{key} nombra un campo de detalle
+        de perceptor/inmueble del Modelo 180, no una casilla decimal escalar. El canal
+        local --casilla solo acepta casillas decimales escalares; las filas de detalle
+        de perceptor/inmueble del Modelo 180 aún no están soportadas en la superficie
+        pública --row. Usa aeat app modelo aggregate --modelo 180 --retencion-observation
+        para la fuente soportada de número de perceptores/base/retenciones anual.
+      calculate_m184_share_sum_invalid: Los porcentajes de participación de las filas
+        de miembro del modelo 184 deben sumar exactamente 100%; se obtuvo %{total}
+        en %{count} filas.
+      calculate_m210_tipo_renta_fetch_gated: 'El código de tipo de renta %{value}
+        del Modelo 210 está pendiente de fundamentación: su tipo de gravamen aún no
+        está fundamentado en el corpus incluido, por lo que todavía no puede presentarse.
+        Códigos aceptados: %{accepted}.'
+      calculate_m210_tipo_renta_unknown: '%{value} no es un código de tipo de renta
+        válido del Modelo 210. Códigos aceptados: %{accepted}. Códigos pendientes
+        de fundamentación (aún no presentables): %{fetch_gated}.'
+      calculate_m347_threshold_not_met: La contraparte %{nif} del modelo 347 suma
+        %{total}, que no supera el umbral de %{threshold} EUR exigido por el RD 1065/2007
+        art. 31.1.
+      calculate_pension_inputs_incomplete: Los datos del rescate del plan de pensiones
+        deben indicarse juntos.
+      calculate_relation_unknown: '--relation %{key} no coincide con ninguna relation
+        de esta revisión. Relations aceptadas: %{accepted}.'
+      calculate_sal_inputs_incomplete: Los datos de la reserva especial SAL/SLL deben
+        indicarse juntos.
+      calculate_semantic_role_ambiguous: La revisión del modelo contiene más de una
+        casilla con el rol semantico %{semantic_role}; el atajo no puede elegir un
+        casilla.id canónico de forma segura.
+      calculate_semantic_role_missing: La revisión del modelo no contiene ninguna
+        casilla con el rol semantico %{semantic_role}.
+      calculate_text_casilla_numeric_value: El valor de --casilla para %{key} (%{label})
+        corresponde a un selector de declarante de data_type=%{data_type} no numérico
+        que identifica al contribuyente que obtiene los rendimientos, no un importe;
+        se recibió %{value}. Introduce el importe en su propia casilla numérica y
+        reserva esta casilla para el selector de miembro.
+      calculate_text_input_empty: El valor de --casilla corresponde a una casilla
+        de texto y no puede estar vacío.
+      calculate_typed_text_input_invalid: El valor de --casilla no es válido para
+        el tipo declarado de esa casilla.
+      calculation_registry_root_missing: Falta la raíz del registro {registry_root};
+        el cálculo del modelo no puede continuar.
+      calculation_registry_snapshot_unresolved: No se pudo resolver el snapshot de
+        registro para el modelo {modelo}, ejercicio {filing_year}, periodo {period}.
+      calculation_revision_not_found: No existe ninguna revisión de cálculo con id=%{calculation_revision_id}.
+      calculation_revision_parent_work_unit_discarded: La revisión de cálculo {calculation_revision_id}
+        pertenece a la unidad de trabajo descartada {work_unit_id}.
+      caller_casilla_source_binding_conflict: 'Las entradas de casilla del operador
+        no pueden sobrescribir casillas vinculadas a una fuente derivada del bucket
+        (casillas vinculadas a fuente): %{casillas}.'
+      computed_casilla_binding_conflict: 'Las entradas procedentes del bucket tienen
+        como destino casillas calculadas; no se pueden sobreescribir con binding externo.
+        Casillas afectadas: %{computed}.'
+      cross_period_clean_state_incomplete: La prueba de estado limpio entre periodos
+        está incompleta para el modelo {modelo} {filing_year} {period}; quedan {finding_count}
+        hallazgo(s).
+      deductible_iva_evidence_missing: 'Las lineas del libro con IVA deducible requieren
+        una factura de compra vinculada. Vincula la factura a la linea y vuelve a
+        ejecutar work verify: la verificacion no se completa mientras una linea deducible
+        carezca de factura, por lo que el borrador sigue abierto y recoge la evidencia.'
+      export_cross_bucket_refused: La revisión indicada pertenece a un bucket distinto
+        del bucket del perfil activo. Cambia de perfil antes de exportar.
+      export_draft_approval_failed: No se pudo aprobar el borrador para la revisión
+        de cálculo %{calculation_revision_id}.
+      export_draft_write_failed: No se pudo escribir el archivo de exportación para
+        la revisión de cálculo %{calculation_revision_id}.
+      export_ledger_evidence_missing: La revisión de cálculo %{calculation_revision_id}
+        derivada del libro mayor no incluye evidencia del libro mayor ni una referencia
+        resoluble al snapshot; verifica la revisión otra vez antes de exportar.
+      export_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
+        create NAME` antes de exportar una revisión de modelo.
+      export_output_path_invalid: 'La ruta de salida de exportación no es válida:
+        {output_path} ({reason}).'
+      export_period_unmappable: La unidad de trabajo %{work_unit_id} contiene el periodo
+        %{period}, que no se puede asignar a un periodo de registro.
+      export_revision_state_refused: La revisión de cálculo %{calculation_revision_id}
+        no está verificada-completa ni presentada y no se puede exportar.
+      export_unsupported: El modelo %{modelo} no se puede exportar a fichero-BOE porque
+        %{reason}. El cálculo, la verificación y los registros locales de presentación
+        pueden existir, pero este comando no puede producir un archivo para subir
+        a la AEAT para este modelo ni certifica la corrección BOE/export.
+      external_filing_evidence_reference_blank: La importación de declaración externa
+        requiere un evidence_reference_id no vacío.
+      external_filing_no_casilla_values: La importación de declaración externa requiere
+        al menos un valor de casilla; el mapeo aportado está vacío.
+      external_import_duplicate_revision: La revisión de cálculo %{calculation_revision_id}
+        ya existe en el catálogo; ya se había registrado una importación idéntica.
+      external_import_justificante_mismatch: La evidencia de importación externa %{evidence_reference_id}
+        no coincide con el modelo %{modelo}, ejercicio %{filing_year}, periodo %{period}.
+      external_import_justificante_missing: La evidencia de importación externa %{evidence_reference_id}
+        (%{evidence_kind}) no está registrada como artefacto de justificante persistido.
+      external_import_m303_filing_evidence_required: La importación externa del modelo
+        303 requiere evidencia tipada completa de la instancia de declaración y no
+        puede inferirla de los valores de casillas.
+      external_import_registry_root_missing: Falta la raíz del registro {registry_root};
+        no se pueden validar los ids de casilla importados.
+      external_import_registry_snapshot_unresolved: No se pudo resolver el snapshot
+        de registro para el modelo {modelo}, ejercicio {filing_year}, periodo {period};
+        no se pueden validar los ids de casilla importados.
+      external_import_tax_id_missing: La evidencia de importación externa %{evidence_reference_id}
+        (%{evidence_kind}) requiere el NIF del contribuyente antes de vincularse a
+        un artefacto de justificante.
+      external_import_unknown_casillas: 'La importación de la declaración externa
+        contiene ids de casilla no declarados en el registro para el modelo {modelo},
+        ejercicio {filing_year}, periodo {period}: {casillas}.'
+      filed_observation_split_storage_context: El almacén del historial de compensación
+        de IVA es una base de datos distinta de la de observaciones de cálculo
+      filing_record_not_found: No existe ninguna declaración registrada con id=%{filing_record_id}.
+      iva_wallet_amount_mismatch: 'La conciliación del saldo IVA está bloqueada para
+        el Modelo 303: el importe de compensación anterior aportado no coincide con
+        el que mantiene la autoridad de la cartera. Vuelve a ejecutar la conciliación
+        o corrige el importe aportado para que coincida.'
+      iva_wallet_backend_casilla_conflict: El valor de casilla del backend para la
+        compensación previa del Modelo 303 entra en conflicto con la decisión de conciliación
+        de la cartera de IVA.
+      iva_wallet_blocked: 'La conciliación del saldo IVA está bloqueada para el Modelo
+        303 (%{divergence}): %{reason}'
+      iva_wallet_caller_binding_conflict: El binding aportado por el operador entra
+        en conflicto con la decisión de conciliación de la cartera de IVA para la
+        compensación previa del Modelo 303.
+      iva_wallet_caller_casilla_conflict: El valor de casilla aportado por el operador
+        entra en conflicto con la decisión de conciliación de la cartera de IVA para
+        la compensación previa del Modelo 303.
+      iva_wallet_first_period_zero_ungrounded: 'La conciliación del saldo IVA está
+        bloqueada para el Modelo 303: es el primer periodo y una compensación anterior
+        de cero no tiene respaldo. Inicializa el saldo de apertura de forma explícita
+        o descarga la cartera desde la AEAT, para que el cero quede declarado y no
+        supuesto.'
+      iva_wallet_not_seeded: 'El cálculo del Modelo 303 requiere un historial de compensación
+        IVA inicializado. Para la primera declaración de un perfil nuevo, inicializa
+        el saldo de apertura con cero: `aeat app modelo iva-wallet seed --filing-year
+        YEAR --period PERIOD --amount 0 --confirm`.'
+      iva_wallet_registry_snapshot_unavailable: 'La conciliación del saldo IVA está
+        bloqueada para el Modelo 303: no se ha podido resolver la instantánea del
+        registro para este ejercicio y periodo, por lo que no puede probarse un cero
+        de primer periodo. Comprueba que el modelo, el ejercicio y el periodo estén
+        soportados por el registro y vuelve a intentarlo.'
+      iva_wallet_revision_amount_missing: 'La conciliación del saldo IVA está bloqueada
+        para el Modelo 303: la decisión almacenada no contiene ningún importe para
+        esta revisión. Vuelve a inicializar el historial de compensación o recalcula
+        para reconstruir la decisión con importe.'
+      iva_wallet_selected_amount_missing: La decisión de conciliación de la cartera
+        de IVA no tiene un importe seleccionado.
+      iva_wallet_supplied_decision_mismatch: La decisión de conciliación de la cartera
+        de IVA aportada no coincide con la decisión persistida.
+      iva_wallet_target_mismatch: El objetivo de la decisión de cartera de IVA %{target_year}/%{target_period}
+        no coincide con la unidad de trabajo %{filing_year}/%{period}.
+      iva_wallet_taxpayer_identity_missing: La conciliación de la cartera de IVA no
+        puede continuar sin la identidad del contribuyente de la unidad de trabajo.
+      iva_wallet_taxpayer_mismatch: El contribuyente de la conciliación de la cartera
+        de IVA no coincide con la unidad de trabajo del Modelo 303.
+      iva_wallet_unsupported_decision_type: 'Tipo de decisión de cartera de IVA no
+        admitido: %{decision_type}.'
+      ledger_preflight_blocked: 'la comprobación previa del libro bloquea el cálculo
+        del modelo: transacción %{transaction_id} %{reason}: %{detail}. Ejecuta `aeat
+        app ledger preflight --period %{period}` antes de calcular.'
+      m036_declaration_profile_bucket_mismatch: La declaración del modelo 036 indica
+        un perfil distinto del bucket en el que se registraría
+      m210_ledger_manual_agrupacion_rows: El modo de fuente de libro mayor del Modelo
+        210 deriva las filas anuales de agrupación de rentas de las clasificaciones
+        del libro; no proporcione filas manuales de agrupación de rentas.
+      m210_ledger_source_requires_modelo_210: El modo de fuente de libro mayor del
+        Modelo 210 solo puede usarse en unidades de trabajo del Modelo 210.
+      m210_ledger_source_selection_required: El modo de fuente de libro mayor del
+        Modelo 210 requiere una selección de código oficial de tipo de renta sin proyectar.
+      m210_official_tipo_renta_selection_mismatch: El código oficial de tipo de renta
+        %{official_tipo_renta_code} del Modelo 210 requiere el valor de fórmula %{expected_tipo_renta};
+        se recibió %{tipo_renta}.
+      m303_filing_evidence_invalid: La evidencia de la instancia de declaración del
+        modelo 303 no superó la validación.
+      novel_source_kind_rejected: 'Tipo(s) de origen de cálculo no reconocido(s) %{novel_source_kinds}
+        en la revisión %{revision_id}: el registro declara un origen de vinculación
+        que ningún resolutor de cálculo gestiona. Registre un resolutor o márquelo
+        como diferido antes de calcular.'
+      profile_readiness_missing: 'El perfil está incompleto para el Modelo %{modelo}
+        %{filing_year} %{period}; completa antes estos datos de perfil: %{missing}.'
+      profile_readiness_profile_missing: No existe un perfil activo persistido para
+        este trabajo de modelo; crea o repara el perfil antes de continuar.
+      profile_readiness_setup_incomplete: La configuración del perfil está incompleta;
+        termina el asistente de configuración antes de trabajar con modelos.
+      profile_readiness_setup_incomplete_missing: 'La configuración del perfil está
+        incompleta; termina el asistente de configuración antes de trabajar con modelos.
+        Campos pendientes: %{missing}.'
+      recipient_decryption_failed: No se ha podido descifrar el paquete cifrado para
+        el destinatario; la clave no coincide o el paquete ha sido manipulado.
+      recipient_encryption_invalid_key: La clave pública del destinatario no es una
+        clave pública X25519 válida.
+      recipient_encryption_key_not_found: Aun no se ha generado ningún par de claves
+        de cifrado de destinatario para este bucket.
+      recipient_registry_already_exists: El destinatario %{recipient_id} ya está registrado.
+      recipient_registry_generic: Se ha producido un error en el registro de huellas
+        digitales de destinatarios.
+      recipient_registry_invalid_public_key: La clave pública proporcionada no es
+        una clave X25519 válida de 32 bytes (se recibieron %{length} bytes).
+      recipient_registry_load_failed: No se ha podido cargar el registro de huellas
+        digitales de destinatarios.
+      recipient_registry_not_found: No hay ningún destinatario registrado con el id
+        %{recipient_id}.
+      reconcile_declaration_unsupported: La reconciliación por casilla desde PDF de
+        declaración aún no está habilitada para este modelo; reconcilia un justificante
+        descargado con aeat app modelo reconcile file, o espera a que este modelo
+        se habilite.
+      reconcile_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
+        create NAME` antes de reconciliar una unidad de trabajo.
+      refund_election_not_eligible: Se eligió devolver para el Modelo %{modelo} %{filing_year}
+        %{period}, pero la devolución solo está disponible en el último periodo de
+        declaración del año. Arrastra el crédito (compensar) o elige la devolución
+        en el último periodo.
+      review_only_workspace_no_authority: Este espacio de trabajo de solo revisión
+        no tiene autoridad de presentación; puede leerse y verificarse, pero nunca
+        debe tratarse como prueba de que la revisión de cálculo %{calculation_revision_id}
+        ha sido o será presentada.
+      review_package_generic: Se produjo un error al generar el paquete de revisión.
+      review_package_integrity: 'El paquete de revisión %{package_path} no superó
+        la verificación de la suma de comprobación: %{detail}.'
+      review_package_revision_state: 'La revisión de cálculo %{calculation_revision_id}
+        está en estado %{state} y no puede empaquetarse para revisión; estados admitidos:
+        %{eligible_states}.'
+      revision_pick_explicit_id_required: La selección explícita de revisión requiere
+        calculation_revision_id.
+      revision_pick_id_requires_explicit_selector: calculation_revision_id solo es
+        válido con el selector de revisión explícita.
+      verification_report_not_found: No existe ningún informe de verificación con
+        id=%{verification_report_id}.
+      work_period_token_invalid: '--period ''%{token}'' no es un token de periodo
+        válido para el modelo %{modelo}. Indica --year %{year} por separado y usa
+        uno de: %{tokens}.'
+      work_period_token_unrecognised: --period '%{token}' no se reconoce. Indica --year
+        %{year} por separado y usa un token de periodo como 0A, Q1, 1T o 01.
+      work_unit_already_discarded: La unidad de trabajo ya está descartada.
+      work_unit_create_discarded: Este objetivo de declaracion fue descartado. Volver
+        a crearlo devuelve la misma unidad de trabajo descartada, por lo que no se
+        puede reanudar.
+      work_unit_discarded_cannot_calculate: La unidad de trabajo %{work_unit_id} está
+        en el estado %{work_unit_state} y no puede calcularse.
+      work_unit_discarded_cannot_import: La unidad de trabajo %{work_unit_id} está
+        en el estado %{work_unit_state} y no puede importarse.
+      work_unit_filing_year_period_mismatch: El ejercicio %{filing_year} no coincide
+        con el ejercicio %{period_year} del periodo %{period}.
+      work_unit_mutation_refused: La unidad de trabajo esta descartada, y volver a
+        crear el mismo objetivo de declaracion se rechaza en lugar de devolver una
+        unidad nueva.
+      work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
+      work_unit_revision_divergence: La unidad de trabajo %{work_unit_id} se creó
+        con la revisión de registro %{work_unit_revision}, pero la revisión determinada
+        por ley para el modelo %{modelo} %{filing_year} %{period} es ahora %{law_revision}.
+        Vuelva a crear la unidad de trabajo para vincularla a la revisión actual.
+      work_unit_revision_divergence_candidates: Los objetivos de trabajo persistidos
+        del modelo %{modelo} %{filing_year} %{period} se crearon con las revisiones
+        de registro %{stored_revision_ids}, pero la revisión determinada por la ley
+        es ahora %{resolved_revision_id}. Vuelva a crear la unidad de trabajo para
+        vincularla a la revisión actual.
+      workflow_gate_no_pending_obligation: 'No hay ninguna obligación de presentación
+        pendiente para este modelo/periodo en la fecha actual (la ventana de obligación
+        de presentación de la AEAT no está abierta). La presentación a fichero no
+        requiere este paso: exporta la revisión verificada-completa con ''aeat app
+        modelo export''; ese es el punto final local. ''work file'' es el paso interno
+        opcional para marcar como presentado cuando la ventana de obligación esté
+        abierta.'
+      workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
+        con la revisión de cálculo.
+    findings:
+      art20_reduccion_possible: El rendimiento neto %{rnt_id} de %{rnt_value} EUR
+        puede optar a la reducción del artículo 20 %{reduccion_id}.
+      art52_reduccion_individual_sublimit_possible: La reducción %{reduccion_id} de
+        %{reduccion_value} EUR puede superar el sublímite individual de %{sublimit}
+        EUR.
+      attribution_received_uncaptured: La casilla %{casilla_id} de %{filing_year}
+        contiene %{casilla_value} EUR de renta atribuida sin registrar.
+      attribution_received_unfolded: La renta atribuida de %{filing_year} por %{total_base}
+        EUR no se integra en la casilla %{casilla_id}.
+      cross_casilla_invariant_violated: Se incumple un invariante entre casillas declarado
+        por el registro en esta revisión.
+      cross_period_activity_start_missing: El modelo %{target_modelo} %{target_filing_year}
+        %{target_period} necesita una fecha de inicio de actividad declarada.
+      cross_period_dependency_unclean: 'El modelo origen %{source_modelo} %{source_filing_year}
+        %{source_period} no está limpio: %{blocker_codes}.'
+      cross_period_first_year_fractional_suppression: 'El modelo %{source_modelo}
+        %{source_filing_year} %{source_period} queda fuera de alcance: la actividad
+        comenzó el %{activity_start_date}.'
+      cross_period_m111_no_retenciones: El modelo %{source_modelo} %{source_filing_year}
+        %{source_period} no declara retenciones para %{target_modelo} %{target_filing_year}.
+      cross_period_modelo_not_applicable:
+        message: '%{source_modelo_count} modelo(s) origen no son aplicables a este
+          contribuyente: %{source_modelos}.'
+      cross_period_non_official_local_chain:
+        message: El modelo %{source_modelo} %{source_filing_year} %{source_period}
+          se apoya en una cadena local (%{origin_code}), no en evidencia oficial de
+          la AEAT.
+      cross_period_operator_declared_suppression: El modelo %{source_modelo} %{source_filing_year}
+        %{source_period} queda suprimido por declaración del operador (%{origin_code}).
+      cross_period_zero_value_previous_filing: El modelo %{source_modelo} %{source_filing_year}
+        %{source_period} traslada un valor cero a %{target_modelo} %{target_filing_year}.
+      cuota_less_ledger_row_base_missing: La transacción %{transaction_id} de la categoría
+        de IVA %{iva_category_code} no tiene base declarable.
+      dt12a_reduccion_antiquity_possible: La reducción %{reduccion_id} de %{reduccion_value}
+        EUR puede acogerse a la regla de antigüedad de la disposición transitoria
+        12a.
+      dt12a_reduccion_possible: El ingreso %{ingreso_id} de %{ingreso_value} EUR puede
+        optar a la reducción %{reduccion_id}.
+      foreign_asset_redeclaration: 'Modelo %{modelo_code} %{filing_year}: el bien
+        en el extranjero %{position_key} del grupo %{group_code} pasó de %{prior_value_eur}
+        EUR a %{current_value_eur} EUR, un incremento de %{delta_value_eur} EUR por
+        encima del umbral de redeclaración de %{redeclaration_increase_threshold_eur}
+        EUR.'
+      iva_wallet_precondition_failed: No se cumple la condición previa de la cartera
+        de compensación de IVA para esta revisión.
+      ledger_snapshot_drift: 'El modelo %{modelo} %{filing_year} %{period} se ha desviado
+        de su instantánea de libro anclada: %{changed_count} modificadas, %{removed_count}
+        eliminadas.'
+      m210_agrupacion_renta_invalid: El modelo %{modelo_id} periodo %{period_code}
+        tiene una agrupación de rentas no válida (%{error_type}).
+      m210_convenio_lob_advisory: El país %{country_code} y el tipo de renta %{tipo_renta_code}
+        pueden estar sujetos a una cláusula de limitación de beneficios (%{document_id}).
+      m210_rate_unavailable: No se ha podido resolver ningún tipo del modelo 210 (%{reason_code}).
+      m303_m349_intracom_reconciliation_mismatch: 'Los modelos 303 y 349 discrepan
+        en %{period_code} %{filing_year}: %{m303_total} EUR frente a %{m349_total}
+        EUR, una diferencia de %{gap} EUR.'
+      madrid_nacimiento_adopcion_eligibility_advisory: La casilla %{casilla_id} con
+        recuento ponderado %{weighted_count} puede optar a la deducción madrileña
+        por nacimiento o adopción.
+      missing_required_casilla: La casilla obligatoria %{casilla_id} no tiene valor.
+      modelo_202_modality_incomplete: 'La modalidad del modelo 202 está incompleta:
+        falta el dato de perfil %{profile_fact_id}.'
+      objective_estimation_exclusion_threshold_exceeded: 'Modelo %{modelo_id} %{filing_year}:
+        %{profile_field_id} declarado %{declared} supera el umbral %{parameter_id}
+        de %{threshold}.'
+      oss_evidence_missing: Esta revisión declara actividad de ventanilla única pero
+        no conserva evidencia de la OSS.
+      oss_source_unrouted: Una fuente de ventanilla única no está enrutada a ninguna
+        casilla declarable.
+      pulled_filing_casilla_mismatch: La casilla %{casilla_number} de %{period_code}
+        %{filing_year} calculó %{computed_value} frente a lo declarado %{filed_value}
+        (%{mismatch_kind}).
+      registry_advisory_predicate_fired: Se ha activado un predicado consultivo del
+        registro para esta revisión.
+      registry_snapshot_unresolved: No se ha podido resolver la instantánea del registro
+        para este objetivo de trabajo.
+      suffered_retencion_capital_mobiliario_uncredited: Esta declaración consigna
+        rendimientos del capital mobiliario del ahorro pero no acredita ninguna retención
+        soportada. Introduzca el importe del certificado de retenciones e ingresos
+        a cuenta del pagador; el contribuyente nunca presentó el Modelo 123 que lo
+        declara, por lo que este valor no puede rellenarse automáticamente.
+      suffered_retencion_trabajo_uncredited: Esta declaración consigna rendimientos
+        del trabajo pero no acredita ninguna retención soportada. Introduzca el importe
+        del certificado de retenciones e ingresos a cuenta del pagador; el contribuyente
+        nunca presentó el Modelo 111 que lo declara, por lo que este valor no puede
+        rellenarse automáticamente.
+      transaction_evidence_missing_deductible: Una transacción deducible no tiene
+        evidencia justificativa.
+      transaction_evidence_missing_output: Una transacción repercutida no tiene evidencia
+        justificativa.
+    iva_wallet:
+      correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
+        Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe
+        una siembra existente.
+      correct_sealed_blocked: 'Corrección rechazada: un Modelo 303 ya presentado (%{blocking_filing_year}/%{blocking_period})
+        ha consumido esta base de compensación sembrada. Cambiarla alteraría una declaración
+        presentada.'
+      override_fresh_wallet_blocked: 'Anulación rechazada: una lectura actual de la
+        cartera de AEAT ya resuelve el Modelo 303 %{filing_year}/%{period}. La evidencia
+        reciente de AEAT es la autoridad y una anulación no debe sustituirla.'
+      override_sealed_blocked: 'Anulación rechazada: un Modelo 303 ya presentado (%{blocking_filing_year}/%{blocking_period})
+        ha consumido la base de compensación de este periodo. Registrar una anulación
+        alteraría una declaración ya presentada.'
+      seed_negative_amount: El importe inicial no puede ser negativo.
+      seed_no_nif: No hay NIF definido para la operación de importe inicial; asócielo
+        al perfil activo.
+    profile_binding:
+      errors:
+        date_value_type_invalid: El dato de perfil para el binding de fecha %{binding_id}
+          debe ser una fecha; se recibió %{value_type}.
+        decimal_value_type_invalid: 'El dato de perfil para el binding de canal decimal
+          %{binding_id} tiene un tipo no soportado: %{value_type}.'
+        enum_boolean_invalid: El dato de perfil para el binding enum %{binding_id}
+          resolvio a booleano; los booleanos no son claves válidas de despacho enum.
+  overview:
+    errors:
+      horizon_days_not_positive: horizon_days debe ser positivo; se recibió %{horizon_days}
+    explain:
+      errors:
+        modelo_blank: El identificador de modelo no puede estar en blanco.
+  registry:
+    errors:
+      citation_not_found: No se encontró ninguna cita del registro para la referencia
+        legal solicitada.
+      invalid_manual_id: El manual del registro debe ser uno de {allowed_manual_ids};
+        se recibió {manual_id}.
+      invalid_manual_rule_kind: El tipo de regla del manual del registro debe ser
+        uno de {allowed_rule_kinds}; se recibió {rule_kind}.
+      invalid_topic_locale: El locale de temas del registro debe ser uno de {allowed_locales};
+        se recibió {locale_code}.
+      manual_section_not_found: No se encontró la sección {section} en {manual_id}
+        {year} {part}.
+      manual_section_requires_structure: La sección del manual requiere estructura
+        extraida para {manual_key}.
+      no_revision_for_diff_year: 'Ninguna revisión del registro de {modelo} cubre
+        el ejercicio {filing_year}. Revisiones declaradas: {available_revisions}.'
+  repair_integrity:
+    errors:
+      conflicting_list_filters: 'Los filtros de lista de reparación son mutuamente
+        excluyentes: {filters}. Usa un filtro o ninguno.'
+      decision_id_mismatch_list: El id de la decisión de reparación no coincide con
+        el id recalculado desde su contenido; se rechaza la entrada de la lista.
+      decision_id_mismatch_load: El id del contenido de la decisión de reparación
+        no coincide con el solicitado o recalculado; se rechaza la carga.
+      decision_id_mismatch_save: El id de la decisión de reparación no coincide con
+        el id recalculado desde su contenido; se rechaza el guardado.
+      decision_not_found: La decisión de reparación {decision_id} no existe.
+  storage:
+    calc_sheets:
+      engine:
+        anchors:
+          final: RESULTADO
+          start: 'INICIO: Entradas'
+        errors:
+          parameter_no_dated_value: El motor de exportación de hojas de cálculo no
+            encontró un valor de parámetro vigente para la fecha de devengo.
+          unsupported_rounding: El motor de exportación de hojas de cálculo encontró
+            una regla de redondeo del registro no admitida.
+        guide:
+          editable_cells: 'Edite únicamente las celdas de la pestaña ''Entradas''.
+            El resto de pestañas están protegidas: ''Cálculos'' contiene las casillas
+            derivadas con fórmulas, ''Procedencia'' audita cada casilla calculada
+            y ''Tarifas'' refleja los parámetros vigentes consultados por las fórmulas.'
+          period: '%{modelo_title} - período %{period} / %{filing_year}.'
+          pull_command: Para recoger sus ediciones en el almacenamiento local, ejecute
+            'aeat config google sync calc pull' desde la CLI.
+          title: '%{modelo_title} - %{period}/%{filing_year}'
+        labels:
+          casilla: Casilla
+          cell: Celda
+          concept: Concepto
+          fixed_quota: Cuota fija
+          formula: Fórmula
+          legal_refs: Ref. legales
+          marginal_rate: Tipo marginal
+          maximum_base: Base máxima
+          minimum_base: Base mínima
+          number: Nº
+          rounding: Redondeo
+          section: Sección
+          source: Origen
+          source_refs: Ref. fuentes
+          value: Valor
+        protected:
+          calculos: Cálculos derivados - protegido para preservar paridad
+          evidencia: 'Evidencia generada: solo lectura'
+          guide: Guía - protegido
+          provenance: Procedencia / pista de auditoría - protegido
+          tariffs: Tarifas / parámetros vigentes - protegido
+      layout:
+        errors:
+          undeclared_reference: El diseño de la hoja de cálculo referencia un elemento
+            no declarado por la revisión.
+          unresolved_reference: El diseño de la hoja de cálculo no contiene una celda
+            para un elemento referenciado.
+      parity:
+        errors:
+          seed_anchor_missing: La entrada del escenario de paridad no tiene una celda
+            de hoja de cálculo donde sembrarse.
+          unknown_casilla_ids: El escenario de paridad referencia casilla.id que no
+            están en la instantánea del registro.
+      records:
+        errors:
+          address_mismatch: La dirección de celda de la hoja de cálculo no coincide
+            con su fila y columna.
+          duplicate_write_address: El plan de exportación de hoja de cálculo escribe
+            más de una carga en la misma celda.
+          frozen_view_empty: La vista inmovilizada debe inmovilizar al menos una fila
+            o una columna.
+          invalid_column_index: El índice de columna del registro de hoja de cálculo
+            debe empezar en uno y ser positivo.
+          invalid_column_letters: Las letras de columna del registro de hoja de cálculo
+            no son válidas.
+          range_malformed: Los límites del rango de la hoja de cálculo no son válidos.
+          tariff_shape_invalid: La forma de la tabla de tarifas no es válida.
+      translator:
+        errors:
+          translation_failed: La fórmula del registro no se puede traducir a una fórmula
+            de hoja de cálculo.
+  user_profile:
+    errors:
+      censal_read_identity_absent: La lectura censal no incluye ningún NIF, por lo
+        que no puede confirmarse que corresponda a este perfil.
+      censal_read_identity_cleared: El NIF de este perfil se ha vaciado, por lo que
+        no puede confirmarse que la lectura censal le corresponda. Restaure el NIF
+        y vuelva a ejecutar la consulta.
+      censal_read_identity_mismatch: La lectura censal corresponde a un contribuyente
+        distinto al de este perfil; no se ha aplicado.
+      censal_read_identity_profile_malformed: El NIF de este perfil no es un identificador
+        fiscal español válido, por lo que no puede confirmarse que la lectura censal
+        le corresponda. Corrija el NIF y vuelva a ejecutar la consulta.
+      censal_read_identity_read_malformed: El NIF de la lectura censal no es un identificador
+        fiscal español válido, por lo que no puede confirmarse que corresponda a este
+        perfil.
+      censal_read_identity_unset: 'Registre su NIF antes de consultar su censo: este
+        perfil todavía no tiene ninguno, por lo que la consulta no puede confirmar
+        que el registro que devuelve la AEAT sea suyo. Ejecute aeat config profile
+        edit para añadirlo.'
+      lifecycle_schema_validation_failed: Los datos del perfil no coinciden con el
+        esquema de perfil de usuario.
+      no_active_profile_selected: No hay un perfil activo seleccionado.
+      passphrase_confirmation_mismatch: La nueva contraseña y su confirmación no coinciden
+      passphrase_current_rejected: La contraseña actual no es correcta; la contraseña
+        no se ha cambiado
+      profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
+        login NAME para activarlo o aeat config profile delete NAME primero.
+      registration_displaced_session_not_retired: No se ha podido crear el perfil.
+        No se ha podido eliminar la sesión almacenada del perfil al que sustituye.
+        Cierra cualquier programa que esté usando el almacén de perfiles e inténtalo
+        de nuevo.
+      registration_label_blank: El nombre del perfil no puede estar vacío.
+      registration_passphrase_too_short: La contraseña debe tener al menos {minimum_length}
+        caracteres.
+      repository_classification_mismatch: El espacio de nombres de objeto seguro %{namespace}
+        está registrado con sensibilidad %{expected}, pero la clasificación del registro
+        almacenado es %{classification}.
+      repository_profile_bucket_mismatch: El perfil %{profile_id} no pertenece al
+        bucket %{bucket_id}; un bucket de perfil contiene exactamente una identidad
+        de perfil.
+      repository_profile_snapshot_missing: No se encontró la instantánea de perfil
+        en el bucket activo.
+      repository_profile_snapshot_version_unsupported: La versión del esquema de la
+        instantánea de perfil es más reciente de lo que admite esta aplicación.
+      unsupported_bundle_schema_version: La versión del esquema del paquete no es
+        compatible con esta versión de la aplicación.
+    notices:
+      censo_divergences_open: '{count} dato(s) del perfil o del certificado siguen
+        difiriendo del Certificado de Situación Censal y quedan sin resolver: {axes}.'
+  wizard:
+    errors:
+      command_input_invalid: 'Los datos del perfil no superaron la validación: %{details}'
+      command_input_invalid_fallback: uno o más campos del perfil no superaron la
+        validación
+      create_missing_filing_baseline: 'A la creación del perfil le faltan datos de
+        identidad para presentar modelos. Añade estos flags y vuelve a ejecutar el
+        comando: %{missing_flags}.'
+      descendant_rentas_not_a_valid_amount: Las rentas anuales del descendiente no
+        son un importe válido. Introduce los euros con punto decimal, por ejemplo
+        1234.56.
+      edit_missing_filing_baseline: 'Esta edición dejaría incompletos los datos de
+        identidad para presentar modelos. Añade estos flags al mismo comando y vuelve
+        a ejecutarlo: %{missing_flags}.'
+      persist_answers_edit_requires_supplied_question_ids: 'persist_answers(mode=''edit'')
+        requiere supplied_question_ids: la edición es un parche, no una reescritura
+        completa.'
+      persist_patch_unknown_question_id: El parche del asistente referencia un id
+        de pregunta desconocido.
+      profile_flag_required: El asistente requiere --profile NAME (sin valor por defecto
+        'default' implícito).
+      profile_label_taken: Ya existe un perfil llamado %{label}. Elija otro nombre
+        o ejecute el flujo de edición para modificar ese perfil.
+      quiet_missing_flags: 'A esta ejecución con --quiet le faltan datos obligatorios.
+        Añade estos flags y vuelve a ejecutar el comando: %{missing_flags}. O ejecútalo
+        sin --quiet desde una terminal interactiva para usar el asistente guiado.'
+    next_hint:
+      modelo_work_create: aeat app modelo work create
+    notices:
+      ccaa_defaulted: No se eligió comunidad autónoma, por lo que se asumió %{ccaa}
+        para este perfil. Las deducciones autonómicas y el tramo autonómico de la
+        escala se calculan para %{ccaa}. Use --tax-residence-ccaa para elegir otra
+        comunidad.
+      modify_descendants_via_door: Los descendientes no forman parte de la edición
+        del perfil. Gestiónalos con '{command}'.
+      modify_no_resume: 'Los cambios en modo edición solo quedan preparados: salir
+        sin enviar los descarta; guardar y reanudar solo está disponible al crear
+        el perfil.'
+      setup_saved_resume_later: 'Guardado. Reanuda cuando quieras con: aeat config
+        profile create %{name}'
+    output_labels:
+      active_profile: Perfil activo
+      next: Siguiente
+      profile: Perfil
+      status: estado
+    status:
+      errors:
+        missing_tax_id: 'El perfil activo no ha indicado: %{requirements}.'
+        no_active_profile: No hay perfil activo configurado.
+        projection_failed: El perfil activo no supera la proyección del asistente.
+        unexpected_projection_type: Las respuestas del flujo de setup no se proyectaron
+          como SetupAnswers.
+  workflow:
+    errors:
+      adapter_missing_deadline_engine: El motor de flujo de trabajo requiere un adaptador
+        deadline_engine.
+      adapter_missing_filing_draft_builder: El motor de flujo de trabajo requiere
+        un adaptador filing_draft_builder.
+      adapter_missing_inputs_provider: El motor de flujo de trabajo requiere un proveedor
+        de entradas respaldado por depósito.
+      adapter_missing_submission_engine: El motor de flujo de trabajo requiere un
+        adaptador submission_engine.
+      no_active_profile_bucket: No hay un perfil activo.
+      no_run_for_period: No se encontró ejecución de flujo de trabajo para el modelo
+        {modelo} período {period}. Ejecute el flujo al menos una vez antes de reanudar.
+      profile_label_ambiguous: 'La etiqueta de perfil {label} es ambigua: {count}
+        depósitos activos la comparten.'
+      resume_refused_no_aborted_reason: La ejecución de flujo de trabajo {run_id}
+        está ABORTED sin razón registrada; se rechaza reanudar un registro inconsistente.
+      resume_refused_no_obligation: La ejecución {run_id} no tiene obligación asociada;
+        no se puede determinar el modelo y período para reintentar.
+      resume_refused_not_aborted: 'La ejecución de flujo de trabajo {run_id} no se
+        puede reanudar: está en estado {final_stage}, no ABORTED.'
+      resume_refused_terminal_reason: La ejecución {run_id} se abortó por {reason},
+        que es terminal por diseño y no puede reanudarse.
+      resume_revision_selector_invalid: 'Selector de revisión no reconocido para resume:
+        {selector}; elige current, latest-draft, latest-verified, filed o explicit.'
+      resume_run_ambiguous: Más de una ejecución de flujo de trabajo coincide con
+        el modelo {modelo} período {period}. Elija un id de ejecución exacto. {candidates}
+      resume_run_id_invalid: workflow_run_id debe ser un id hexadecimal en minúsculas
+        de 16 caracteres; se recibió {run_id}.
+      resume_target_contradiction: 'Indica solo un destino de resume: id de ejecución
+        de flujo, id de unidad de trabajo, id de revisión de cálculo, o modelo/año/periodo.'
+      resume_target_invalid: Destino de resume {target} inválido. Usa --modelo --year
+        --period o ejecuta `aeat app modelo work runs`.
+      resume_target_required: Indica --modelo --year --period, un id de ejecución
+        de flujo, un id de unidad de trabajo o un id de revisión de cálculo para reanudar.
+      resume_visible_target_incomplete: Resume por clave natural requiere --modelo,
+        --year y --period juntos; recibido modelo={modelo}, year={year}, period={period}.
+      run_id_invalid_blank: El identificador de ejecución no debe estar en blanco.
+      run_id_invalid_separators: El identificador de ejecución no debe contener separadores
+        de ruta.
+      run_identity_mismatch: La ejecución almacenada no coincide con el identificador
+        con el que se ha leído.
+      run_not_found: 'Ejecución de flujo de trabajo no encontrada: {run_id}.'
+      state_unreadable: No se pudo leer el estado de configuración local.
+      state_write_invalid_payload: 'No se pudo guardar el estado del flujo de trabajo:
+        carga útil no válida.'
+    results:
+      aborted: El flujo de trabajo se detuvo antes de completarse.
+      completed: Flujo de trabajo completado.
+    steps:
+      already_filed: Esta declaración ya consta como presentada.
+      auth_certificate_invalid: El certificado digital no es válido.
+      auth_certificate_load_failed: No se pudo cargar el certificado digital.
+      auth_provider_unavailable: El proveedor de autenticación seleccionado no está
+        disponible.
+      deadline_absent: No hay plazo de presentación disponible.
+      deadline_closed: El plazo de presentación está cerrado.
+      deadline_future: El plazo de presentación aún no se ha abierto.
+      deadline_informational: Información sobre el plazo registrada.
+      deadline_missing: El plazo de presentación no está disponible.
+      deadline_open: El plazo de presentación está abierto.
+      deadline_overdue: El plazo de presentación ha vencido.
+      draft_build_failed: No se pudo preparar el borrador.
+      draft_built: Borrador preparado.
+      draft_identity_mismatch: El borrador no corresponde a la declaración seleccionada.
+      draft_not_ready: El borrador no está listo para su presentación.
+      inbox_blocked: El buzón contiene elementos bloqueantes.
+      inbox_clear: El buzón está libre de bloqueos.
+      inbox_skipped: La comprobación del buzón no está disponible.
+      preflight_completed: Se completaron las comprobaciones previas a la presentación.
+      preflight_failed: No se pudieron completar las comprobaciones previas a la presentación.
+      profile_loaded: Perfil activo cargado.
+      site_unavailable: El servicio de presentación no está disponible.
+      validation_clean: La validación se completó sin incidencias bloqueantes.
+      validation_failed: La validación detectó incidencias bloqueantes.
+      workflow_failure: No se pudo completar el flujo de trabajo.

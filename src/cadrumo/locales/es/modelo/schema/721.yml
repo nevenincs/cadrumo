@@ -1,0 +1,44 @@
+modelo:
+  schema:
+    '721':
+      field:
+        official_name: Modelo 721. Declaración informativa sobre monedas virtuales
+          situadas en el extranjero.
+        title: Monedas virtuales en el extranjero (informativa anual)
+      revision:
+        2023-y-siguientes:
+          casilla:
+            ejercicio:
+              help: null
+              label: Ejercicio al que se refiere la declaracion de monedas virtuales
+                en el extranjero
+            tipo-declaracion:
+              help: null
+              label: Tipo de declaracion (originaria / complementaria / sustitutiva)
+            x-cdqn6t3fchkmubj3dti6iprf5lo62qbj:
+              help: null
+              label: Codigo de pais del custodio (ISO 3166-1 alfa-2)
+            x-cdqn6t3fchkmubjedtmm4sj55lp62ujfdomn6rr3d5gmo:
+              help: null
+              label: Nombre o razon social del custodio de la moneda virtual en el
+                extranjero
+            x-dlnmspb4c4n66r31epiiqt3fddims:
+              help: null
+              label: Identificador de la moneda virtual (ticker / token ID, p.ej.
+                BTC, ETH)
+            x-dlnmspb4c4n76obcchniqcph5li6ior9clmm4sj5:
+              help: null
+              label: Saldo o valor de la moneda virtual a 31 de diciembre expresado
+                en euros
+            x-dlnmspb4c4n76obcchniqqbed5hmiro:
+              help: null
+              label: Saldo o valor de la moneda virtual al inicio del periodo (para
+                variaciones significativas)
+          construct:
+            modelo-721-informative:
+              field:
+                title: Modelo 721 informative declaration of virtual currencies held
+                  abroad through custodian
+          field:
+            label: Modelo 721 ejercicios 2023 y siguientes (Orden HFP/886/2023; anexo
+              sustituido por Orden HAC/1504/2024 desde ejercicio 2024)

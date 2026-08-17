@@ -1,0 +1,69 @@
+modelo:
+  schema:
+    '165':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2013-y-siguientes:
+          casilla:
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaració complementària o substitutiva
+            declarante-razon-social:
+              help: null
+              label: Denominació o raó social del declarant
+            empresa-emergente:
+              help: null
+              label: Empresa emergent
+            fecha-adquisicion:
+              help: null
+              label: Data d'adquisició de les accions o participacions
+            fecha-constitucion:
+              help: null
+              label: Data de constitució
+            importe-fondos-propios:
+              help: null
+              label: Import dels fons propis
+            importe-suscripcion:
+              help: null
+              label: Import de la subscripció o adquisició
+            importe-total-suscripciones:
+              help: null
+              label: Import total de les subscripcions o adquisicions
+            numero-identificativo-anterior:
+              help: null
+              label: Número identificatiu de la declaració anterior
+            numero-identificativo-declaracion:
+              help: null
+              label: Número identificatiu de la declaració
+            numero-total-declarados:
+              help: null
+              label: Nombre total de declarats
+            persona-relacion:
+              help: null
+              label: Persona amb qui relacionar-se
+            porcentaje-participacion:
+              help: null
+              label: Percentatge de participació
+            representante-legal-nif:
+              help: null
+              label: NIF del representant legal
+            socio-nif:
+              help: null
+              label: NIF del soci o partícip
+            socio-nombre:
+              help: null
+              label: Cognoms i nom del soci o partícip
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-165-informative:
+              field:
+                title: null
+          field:
+            label: null

@@ -1,0 +1,108 @@
+modelo:
+  schema:
+    '036':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2025-02-03-y-siguientes:
+          casilla:
+            x-chim6r1ecdgnasr15koj2c0:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj2c8:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj4c0:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj4c8:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj4cg:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj4co:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj4d0:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj4d8:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj4dg:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj4do:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj4e0:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj4e8:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj6c0:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj6c8:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj6cg:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj6co:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj6d0:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj6d8:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj6dg:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj6do:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj6e0:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj6e8:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj8c0:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj8cg:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj8co:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj8d0:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj8d8:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15koj8dg:
+              help: null
+              label: null
+            x-chim6r1ecdgnasr15kojac0:
+              help: null
+              label: null
+            x-chim6r1eclr6arjk5llmirj4:
+              help: null
+              label: Nyilvántartási bevallás típusa
+            x-chim6r1eepkmepbecdkm2b9i60p3a:
+              help: null
+              label: Jogszabályi hatály 2025. február 3-tól
+          construct:
+            modelo-036-censo-foundation:
+              field:
+                title: null
+          field:
+            label: null

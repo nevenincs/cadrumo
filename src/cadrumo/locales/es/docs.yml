@@ -1,0 +1,270 @@
+docs:
+  casilla:
+    binding_source:
+      atribucion_member: desde los miembros en atribución de rentas
+      bienes_inversion_regularizacion: desde la regularización de bienes de inversión
+      borrador: desde el borrador de la AEAT
+      collectible_invoice: desde las facturas emitidas
+      donativo_donor: desde los donantes registrados
+      foreign_asset: desde sus bienes en el extranjero
+      iva_compensation_annual_partition: desde la compensación de IVA del ejercicio
+      iva_wallet_decision: desde su decisión de compensación de IVA
+      ledger_impatriado_income_aggregation: desde sus ingresos del régimen de impatriados
+      ledger_irnr_income_aggregation: desde sus ingresos de IRNR
+      ledger_iva_aggregation: desde sus apuntes de IVA
+      ledger_oss_aggregation: desde sus apuntes de OSS
+      ledger_renta_gastos_estimacion_directa_aggregation: desde sus gastos en estimación
+        directa
+      ledger_renta_gastos_pago_fraccionado_aggregation: desde sus gastos del pago
+        fraccionado
+      ledger_renta_income_aggregation: desde sus ingresos registrados
+      ledger_transaction: desde sus movimientos registrados
+      m303_regimen_simplificado_annual_summary: desde el resumen anual del régimen
+        simplificado del modelo 303
+      manual_input: desde un valor que usted aporta
+      payable_invoice: desde las facturas recibidas
+      previous_filing: desde su declaración anterior
+      profile: desde su perfil de contribuyente
+      prorrata_regularizacion: desde la regularización de prorrata
+      purchase_invoice_evidence: desde los justificantes de sus facturas de compra
+      refund_operation: desde sus operaciones de devolución
+      related_party_operation: desde sus operaciones vinculadas
+      relation_prefill: desde el resultado de un modelo relacionado
+      retenciones_aggregation: desde las retenciones registradas
+      withholding: desde las retenciones soportadas
+    cadence:
+      ad_hoc: Se presenta cuando ocurre el hecho
+      annual: Se presenta anualmente
+      monthly: Se presenta mensualmente
+      profile_based: Se presenta según su perfil
+      quarterly: Se presenta trimestralmente
+    chrome:
+      alternative_join: ', o'
+      binding: Vínculo de datos
+      casilla_count: '{casillas} casillas en {sections} secciones'
+      casilla_id: Identificador de casilla
+      casilla_index: Todas las casillas
+      casilla_index_hint: Seleccione una casilla para ir a ella.
+      derived_from: a partir de
+      established_by: Establecido por
+      formula: Fórmula
+      general_section: General
+      index_intro: Una página por modelo. Cada casilla indica cómo se rellena (la
+        introduce usted, se calcula a partir de otras casillas o se rellena desde
+        sus registros), dónde figura en el modelo oficial y qué norma la establece.
+      index_title: Referencia de casillas
+      legal_basis: Base legal
+      list_and: y
+      not_on_official_form: No figura en el modelo oficial
+      page_heading: 'Modelo {modelo}: {title}'
+      record_design_number: Número del diseño de registro
+      registry_identifiers: Identificadores del registro
+      registry_section: Sección del registro
+      required: Obligatoria
+      revisions: Revisiones
+      sections_nav: Secciones de este modelo
+      segmento: Segmento {segmento}
+      semantic_role: Rol semántico
+      sources: Fuentes
+    data_type:
+      bic: BIC
+      boolean: Sí o no
+      ccaa_code: Código de comunidad autónoma
+      country_code: Código de país
+      date: Fecha
+      decimal: Número decimal
+      iban: IBAN
+      integer: Número entero
+      money: Importe en euros
+      municipality_code: Código de municipio
+      name: Nombre
+      nif: NIF
+      nif_iva: NIF-IVA
+      period_code: Periodo
+      postal_code: Código postal
+      province_code: Código de provincia
+      ratio: Porcentaje
+      text: Texto
+      year: Ejercicio
+    input_kind:
+      bound: Se rellena automáticamente
+      computed: Se calcula automáticamente
+      informational: Solo informativa
+      manual: Lo introduce usted
+      projection_only: Se rellena desde su fila de origen
+    input_kind_count:
+      bound: rellenadas desde sus registros
+      computed: calculadas
+      informational: solo informativas
+      manual: que introduce usted
+      projection_only: rellenadas desde su fila de origen
+    legal_kind:
+      instruction: Instrucciones AEAT
+    length:
+      at_least: Al menos {min} caracteres
+      at_most: Como máximo {max} caracteres
+      between: De {min} a {max} caracteres
+    value_enum: 'Uno de: {values}'
+    value_range:
+      at_least: Al menos {min}
+      at_most: Como máximo {max}
+      between: Entre {min} y {max}
+      non_negative: Cero o más
+      non_positive: Cero o menos
+  cli:
+    automation:
+      exit_auth: Se requiere autenticación o las credenciales han caducado.
+      exit_codes_heading: Códigos de salida
+      exit_conflict: Conflicto o fallo de condición previa.
+      exit_forbidden: Operación no permitida por la política.
+      exit_general: Error general u operación rechazada.
+      exit_internal: Error interno inesperado.
+      exit_not_found: Recurso no encontrado.
+      exit_partial: Éxito parcial (algunos elementos han funcionado y otros no).
+      exit_success: Correcto.
+      exit_unavailable: Servicio externo no disponible.
+      exit_usage: Uso incorrecto de la CLI (indicador erróneo, argumento ausente).
+      exit_validation: Error de validación en los datos proporcionados por el usuario.
+      intro: 'Use esta página cuando programe invocaciones de ``aeat``: documenta
+        los códigos de salida del proceso y el comportamiento de salida TTY/JSON que
+        comparten todos los comandos.'
+      output_contract_body: Cuando la salida va a un TTY, la CLI emite texto enriquecido
+        legible por personas. Cuando se pasa ``--format json`` (o cuando la salida
+        se redirige), la CLI emite un único documento JSON por invocación. Los comandos
+        que han adoptado el ``SchemaEnvelope`` envuelven su resultado como ``{envelope}``.
+        Los comandos aún no migrados emiten su carga directamente.
+      output_contract_heading: Contrato de salida TTY y JSON
+      table_code_header: Código
+      table_meaning_header: Significado
+      title: Códigos de salida y contrato de salida
+    command:
+      bare_payload_note: Este comando emite una carga simple (todavía sin envoltorio).
+        La estructura de la salida es propia de cada comando; consulte ``--help``
+        para más detalles.
+      group_fallback: Grupo de comandos.
+      no_description: Sin descripción.
+      no_description_available: No hay descripción disponible.
+      output_schema_heading: Esquema de salida
+      parameters_heading: Parámetros
+      path_label: Ruta del comando
+      registry_key_label: Clave del registro
+      schema_envelope_note: Este comando emite un ``SchemaEnvelope`` cuyo campo ``result``
+        se valida contra ``{schema}``.
+    env:
+      default_empty: vacío
+      default_unset: sin definir
+      secrets_note: La aplicación nunca imprime los secretos y aparecen marcados como
+        `(secret)` más arriba. Los valores predeterminados marcados como `(derived)`
+        se calculan en tiempo de ejecución a partir de la raíz de almacenamiento o
+        de la ubicación del proyecto.
+    family:
+      choose_group_heading: Elija un grupo de comandos
+      direct_commands_heading: Comandos directos
+      direct_commands_intro: Estos comandos están montados directamente en ``aeat
+        {family}``, sin grupo de verbos intermedio.
+      group_link_line: Abrir :doc:`{target}` para ``aeat {family} {group}``.
+      index_link_line: Abrir :doc:`/cli/index` para la página principal de la referencia
+        de la CLI.
+      intro: '``aeat {family}`` está organizado por grupo de verbos principal. La
+        página de cada grupo empieza con su salida real de ``--help``, seguida de
+        todos los comandos finales que contiene.'
+      open_group_link: Abrir la referencia de ``aeat {family} {group}``
+      title: '{command}: referencia de comandos'
+    index:
+      app_card: 'Comandos del flujo de trabajo operativo: libro de movimientos, modelos,
+        calendarios de presentación, comprobaciones del registro, capturas en vivo
+        y colas de revisión.'
+      choose_family_heading: Elija una familia de comandos
+      config_card: 'Comandos locales de configuración y mantenimiento: perfiles, autenticación,
+        integración con Google, comprobaciones de reparación y superficies de reinicio.'
+      english_help_note: Las cadenas de ayuda se muestran en inglés. En tiempo de
+        ejecución la CLI respeta el idioma de salida activo (``--language`` / ``CADRUMO_OUTPUT_LANGUAGE``).
+      flag_debug: Activa el registro de nivel de depuración.
+      flag_detail: Muestra información de versión ampliada, incluido el resumen del
+        registro.
+      flag_format: Formato de salida (``text`` o ``json``).
+      flag_help: Muestra el documento de ayuda curado y termina.
+      flag_language: Sobrescribe el idioma de salida (``es``, ``en``, ``ca``, ``hu``).
+      flag_profile: Activa un perfil con nombre para esta invocación.
+      flag_quiet: Suprime la salida informativa.
+      flag_verbose: Activa la salida detallada.
+      flag_version: Muestra la versión del paquete y termina.
+      global_flags_heading: Indicadores globales
+      global_flags_intro: El comando raíz ``aeat`` acepta estos indicadores y se aplican
+        a todas las invocaciones.
+      intro: 'La CLI ``aeat`` expone dos familias de comandos de primer nivel: ``config``
+        (configuración local, ciclo de vida del perfil, diagnósticos) y ``app`` (flujo
+        de trabajo fiscal operativo). Esta referencia documenta los {count} comandos
+        finales.'
+      next_app: Abrir :doc:`app` para los comandos del flujo de trabajo operativo.
+      next_automation: Abrir :doc:`automation` para los códigos de salida y el contrato
+        de salida TTY/JSON.
+      next_config: Abrir :doc:`config` para los comandos locales de configuración
+        y mantenimiento.
+      next_howto: Abrir :doc:`/how-to/index` para las guías de inicio y las guías
+        de tareas.
+      next_schemas: Abrir :doc:`schemas` para el registro de esquemas de salida JSON.
+      open_family_link: Abrir la referencia de ``aeat {family}``
+      start_here: Empiece por los enlaces de familia que aparecen abajo. Use las páginas
+        generadas de cada familia de comandos para conocer los indicadores, argumentos,
+        claves de registro y esquemas de salida exactos; use esta página para el comportamiento
+        de nivel raíz que se aplica a todos los comandos.
+      title: Referencia de la CLI
+      where_next_heading: Por dónde seguir
+    param:
+      argument_optional: Argumento, opcional.
+      argument_required: Argumento, obligatorio.
+      option_optional: Opción, opcional.
+      option_required: Opción, obligatoria.
+    schemas:
+      group_entries: '{count} entradas: {keys}'
+      summary: Las siguientes {count} rutas de comando tienen un ``OutputSchema``
+        registrado. Las superficies de retrollamada de grupo ({groups}) se listan
+        aparte.
+      title: Registro de esquemas de salida
+      tooling_note: Esta página está pensada sobre todo para quienes crean herramientas.
+        Si ejecuta los comandos a mano, las :doc:`páginas de familia <index>` suelen
+        ser un mejor punto de entrada.
+  glossary:
+    entry:
+      broader: Término genérico
+      domain: Ámbito
+      legal_basis: Base legal
+      related: Relacionado
+      undefined: Todavía no hay definición disponible en este idioma.
+    intro: Términos fiscales españoles utilizados en la documentación. Cada término
+      enlaza con su base legal cuando existe. Busque un término; la definición es
+      la misma allí donde se le haga referencia.
+    title: Glosario
+  legal:
+    index:
+      intro: Las leyes, reales decretos y órdenes ministeriales españolas en las que
+        se fundamentan los cálculos de Cadrumo. Cada página recoge las disposiciones
+        citadas de un texto y enlaza cada una con su redacción oficial en el BOE.
+      title: Referencia legal
+    page:
+      intro: Publicado en el Boletín Oficial del Estado como {document}. Los cálculos
+        de Cadrumo citan {count} disposiciones de este texto; cada una enlaza más
+        abajo con su redacción oficial en el BOE.
+    provision:
+      boe_is_official: El texto consolidado del Boletín Oficial del Estado es la redacción
+        oficial.
+      in_force_between: En vigor desde {start} hasta {end}
+      in_force_from: En vigor desde {start}
+      in_force_until: En vigor hasta {end}
+      official_wording: Texto oficial, en extracto (en español)
+      published: publicado el {date}
+      read_on_boe: Leer {citation} en el BOE
+    record:
+      authority: Autoridad
+      boe_document: Documento del BOE
+      bundled_corpus: Corpus incluido
+      catalogue_id: Identificador del catálogo
+      consolidated_as_of: Consolidado a fecha de
+      evidence_tier: Nivel de evidencia
+      instrument_kind: Tipo de norma
+      note: Nota del catalogador
+      review_status: Estado de revisión
+      reviewed_at: Fecha de revisión
+      reviewed_by: Revisado por
+      title: Ficha del catálogo

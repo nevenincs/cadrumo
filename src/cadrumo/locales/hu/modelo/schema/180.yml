@@ -1,0 +1,303 @@
+modelo:
+  schema:
+    '180':
+      casilla:
+        continuidad:
+          devengo-year:
+            help: null
+            label: Az adóztatandó esemény adóéve
+          payee-inmueble-bloque:
+            help: null
+            label: A bérbe adott ingatlan tömbje
+          payee-inmueble-calificador-numero:
+            help: null
+            label: A bérbe adott ingatlan házszám-minősítője
+          payee-inmueble-codigo-municipio:
+            help: null
+            label: A bérbe adott ingatlan település kódja
+          payee-inmueble-codigo-postal:
+            help: null
+            label: A bérbe adott ingatlan irányítószáma
+          payee-inmueble-complemento:
+            help: null
+            label: A bérbe adott ingatlan cím kiegészítése
+          payee-inmueble-escalera:
+            help: null
+            label: A bérbe adott ingatlan lépcsőháza
+          payee-inmueble-localidad:
+            help: null
+            label: A bérbe adott ingatlan helysége
+          payee-inmueble-municipio:
+            help: null
+            label: A bérbe adott ingatlan települése
+          payee-inmueble-nombre-via:
+            help: null
+            label: A bérbe adott ingatlan közterületének neve
+          payee-inmueble-numero-casa:
+            help: null
+            label: A bérbe adott ingatlan házszáma
+          payee-inmueble-planta:
+            help: null
+            label: A bérbe adott ingatlan emelete
+          payee-inmueble-portal:
+            help: null
+            label: A bérbe adott ingatlan bejárata
+          payee-inmueble-provincia:
+            help: null
+            label: A bérbe adott ingatlan tartományának kódja
+          payee-inmueble-puerta:
+            help: null
+            label: A bérbe adott ingatlan ajtaja
+          payee-inmueble-referencia-catastral:
+            help: null
+            label: A bérbe adott ingatlan kataszteri hivatkozása
+          payee-inmueble-situacion:
+            help: null
+            label: Az ingatlan helyzete
+          payee-inmueble-tipo-numeracion:
+            help: null
+            label: A bérbe adott ingatlan számozásának típusa
+          payee-inmueble-tipo-via:
+            help: null
+            label: A bérbe adott ingatlan közterületének típusa
+          payee-modalidad-renta:
+            help: null
+            label: Jövedelem vagy hozam típusa
+          payee-name:
+            help: null
+            label: A kedvezményezett családi és utóneve, cégneve vagy megnevezése
+          payee-nif:
+            help: null
+            label: A kedvezményezett adóazonosító száma (NIF)
+          payee-province:
+            help: null
+            label: A kedvezményezett lakóhelye szerinti tartomány kódja
+          payee-representative-nif:
+            help: null
+            label: A kedvezményezett törvényes képviselőjének adóazonosító száma (NIF)
+          porcentaje-retencion:
+            help: null
+            label: Az alkalmazott forrásadó százaléka
+          total-perceptores-count:
+            help: null
+            label: Kedvezményezettek teljes száma
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-2022:
+          casilla:
+            x-chim6r1ec9gn6p9dehnn8obc:
+              help: null
+              label: A forrásadó és előlegfizetés teljes alapja
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: null
+              label: Kiegészítő vagy helyettesítő bevallás
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: null
+              label: A bevallás azonosító száma
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: null
+              label: Az előző bevallás azonosító száma
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: null
+              label: Forrásadó és előlegfizetés összesen
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: null
+              label: Kedvezményezettek teljes száma
+            x-e1in4opec9gn6p8:
+              help: null
+              label: A kedvezményezett forrásadó- és előlegfizetés-alapja
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: null
+              label: Az adóztatandó esemény adóéve
+            x-e1in4oped5n6qtb5c9m6abb2dhnn2tb5:
+              help: null
+              label: A bérbe adott ingatlan tömbje
+            x-e1in4oped5n6qtb5c9m6abb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: null
+              label: A bérbe adott ingatlan házszám-minősítője
+            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lmnarj9cdkn0qbf:
+              help: null
+              label: A bérbe adott ingatlan település kódja
+            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lo6usrkc5m0:
+              help: null
+              label: A bérbe adott ingatlan irányítószáma
+            x-e1in4oped5n6qtb5c9m6abb3dtmn0r35dlimst3f:
+              help: null
+              label: A bérbe adott ingatlan cím kiegészítése
+            x-e1in4oped5n6qtb5c9m6abb5edhm2r35e9gg:
+              help: null
+              label: A bérbe adott ingatlan lépcsőháza
+            x-e1in4oped5n6qtb5c9m6abbcdthm2r39chgm8:
+              help: null
+              label: A bérbe adott ingatlan helysége
+            x-e1in4oped5n6qtb5c9m6abbdeln6ior9e1kmu:
+              help: null
+              label: A bérbe adott ingatlan települése
+            x-e1in4oped5n6qtb5c9m6abbedtmm4sj55lr6io8:
+              help: null
+              label: A bérbe adott ingatlan közterületének neve
+            x-e1in4oped5n6qtb5c9m6abbeelmmasjf5lhm2sr1:
+              help: null
+              label: A bérbe adott ingatlan házszáma
+            x-e1in4oped5n6qtb5c9m6abbgdhgmst31:
+              help: null
+              label: A bérbe adott ingatlan emelete
+            x-e1in4oped5n6qtb5c9m6abbgdtp78obc:
+              help: null
+              label: A bérbe adott ingatlan bejárata
+            x-e1in4oped5n6qtb5c9m6abbge9nncqbecdkm2:
+              help: null
+              label: A bérbe adott ingatlan tartományának kódja
+            x-e1in4oped5n6qtb5c9m6abbgelin4t31:
+              help: null
+              label: A bérbe adott ingatlan ajtaja
+            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbeelmmasj1cdkmurg:
+              help: null
+              label: A bérbe adott ingatlan számozásának típusa
+            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbmd5gg:
+              help: null
+              label: A bérbe adott ingatlan közterületének típusa
+            x-e1in4opedlnm8obcd5i62p0:
+              help: null
+              label: Jövedelem vagy hozam típusa
+            x-e1in4opedpkmc:
+              help: null
+              label: A kedvezményezett adóazonosító száma (NIF)
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: null
+              label: A kedvezményezett törvényes képviselőjének adóazonosító száma
+                (NIF)
+            x-e1in4opedpnmqojick:
+              help: null
+              label: A kedvezményezett családi és utóneve, cégneve vagy megnevezése
+            x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
+              help: null
+              label: Az alkalmazott forrásadó százaléka
+            x-e1in4opee1p6utj9dphmio8:
+              help: null
+              label: A kedvezményezett lakóhelye szerinti tartomány kódja
+            x-e1in4opee9imcpbicln66qb15lhm2t31edq74obc:
+              help: null
+              label: A bérbe adott ingatlan kataszteri hivatkozása
+            x-e1in4opee9in8pbecdkmurj5ec:
+              help: null
+              label: A kedvezményezett forrásadója és előlegfizetése
+            x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
+              help: null
+              label: Az ingatlan helyzete
+          construct:
+            modelo-180-annual-summary:
+              field:
+                title: null
+          field:
+            label: null
+        2023-y-siguientes:
+          casilla:
+            x-chim6r1ec9gn6p9dehnn8obc:
+              help: null
+              label: A forrásadó és előlegfizetés teljes alapja
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: null
+              label: Kiegészítő vagy helyettesítő bevallás
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: null
+              label: A bevallás azonosító száma
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: null
+              label: Az előző bevallás azonosító száma
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: null
+              label: Forrásadó és előlegfizetés összesen
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: null
+              label: Kedvezményezettek teljes száma
+            x-e1in4opec9gn6p8:
+              help: null
+              label: A kedvezményezett forrásadó- és előlegfizetés-alapja
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: null
+              label: Az adóztatandó esemény adóéve
+            x-e1in4oped5n6qtb5c9m6abb2dhnn2tb5:
+              help: null
+              label: A bérbe adott ingatlan tömbje
+            x-e1in4oped5n6qtb5c9m6abb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: null
+              label: A bérbe adott ingatlan házszám-minősítője
+            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lmnarj9cdkn0qbf:
+              help: null
+              label: A bérbe adott ingatlan település kódja
+            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lo6usrkc5m0:
+              help: null
+              label: A bérbe adott ingatlan irányítószáma
+            x-e1in4oped5n6qtb5c9m6abb3dtmn0r35dlimst3f:
+              help: null
+              label: A bérbe adott ingatlan cím kiegészítése
+            x-e1in4oped5n6qtb5c9m6abb5edhm2r35e9gg:
+              help: null
+              label: A bérbe adott ingatlan lépcsőháza
+            x-e1in4oped5n6qtb5c9m6abbcdthm2r39chgm8:
+              help: null
+              label: A bérbe adott ingatlan helysége
+            x-e1in4oped5n6qtb5c9m6abbdeln6ior9e1kmu:
+              help: null
+              label: A bérbe adott ingatlan települése
+            x-e1in4oped5n6qtb5c9m6abbedtmm4sj55lr6io8:
+              help: null
+              label: A bérbe adott ingatlan közterületének neve
+            x-e1in4oped5n6qtb5c9m6abbeelmmasjf5lhm2sr1:
+              help: null
+              label: A bérbe adott ingatlan házszáma
+            x-e1in4oped5n6qtb5c9m6abbgdhgmst31:
+              help: null
+              label: A bérbe adott ingatlan emelete
+            x-e1in4oped5n6qtb5c9m6abbgdtp78obc:
+              help: null
+              label: A bérbe adott ingatlan bejárata
+            x-e1in4oped5n6qtb5c9m6abbge9nncqbecdkm2:
+              help: null
+              label: A bérbe adott ingatlan tartományának kódja
+            x-e1in4oped5n6qtb5c9m6abbgelin4t31:
+              help: null
+              label: A bérbe adott ingatlan ajtaja
+            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbeelmmasj1cdkmurg:
+              help: null
+              label: A bérbe adott ingatlan számozásának típusa
+            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbmd5gg:
+              help: null
+              label: A bérbe adott ingatlan közterületének típusa
+            x-e1in4opedlnm8obcd5i62p0:
+              help: null
+              label: Jövedelem vagy hozam típusa
+            x-e1in4opedpkmc:
+              help: null
+              label: A kedvezményezett adóazonosító száma (NIF)
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: null
+              label: A kedvezményezett törvényes képviselőjének adóazonosító száma
+                (NIF)
+            x-e1in4opedpnmqojick:
+              help: null
+              label: A kedvezményezett családi és utóneve, cégneve vagy megnevezése
+            x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
+              help: null
+              label: Az alkalmazott forrásadó százaléka
+            x-e1in4opee1p6utj9dphmio8:
+              help: null
+              label: A kedvezményezett lakóhelye szerinti tartomány kódja
+            x-e1in4opee9imcpbicln66qb15lhm2t31edq74obc:
+              help: null
+              label: A bérbe adott ingatlan kataszteri hivatkozása
+            x-e1in4opee9in8pbecdkmurj5ec:
+              help: null
+              label: A kedvezményezett forrásadója és előlegfizetése
+            x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
+              help: null
+              label: Az ingatlan helyzete
+          construct:
+            modelo-180-annual-summary:
+              field:
+                title: null
+          field:
+            label: null

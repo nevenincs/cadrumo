@@ -1,0 +1,144 @@
+modelo:
+  schema:
+    '576':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2007-y-siguientes:
+          casilla:
+            x-cdmn8bj1clp6urj1epiiqobedsmmcob2e9km6ob3d5nms:
+              help: null
+              label: Aeronaus. Any de fabricació
+            x-cdmn8bj1clp6urj1epiiqpj1c9p6ior1dpq6a:
+              help: null
+              label: Aeronaus. Fabricant
+            x-cdmn8bj1clp6urj1epiiqrbfchimoro:
+              help: null
+              label: Aeronaus. Model
+            x-cdmn8bj1clp6urj1epiiqs35edniqrb1f1kmqrpdchin6s35ctqma:
+              help: null
+              label: Aeronaus. Pes màxim a l'enlairament (kg)
+            x-cdmn8bj1clp6urj1epiiqsr5e9kma:
+              help: null
+              label: Aeronaus. Número de sèrie
+            x-cdmn8bj5dlh62sj3c5hmirre5lin6r3fe9gg:
+              help: null
+              label: Embarcacions. Eslora màxima (metres)
+            x-cdmn8bj5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
+              help: null
+              label: Embarcacions. Fabricant o importador
+            x-cdmn8bj5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
+              help: null
+              label: Embarcacions. Identificació (número de construcció)
+            x-cdmn8bj5dlh62sj3c5hmirre5lmmup35dhng:
+              help: null
+              label: Embarcacions. Model
+            x-cdmn8bj5dlh62sj3c5hmirre5lnm4sr5e9r62or9dtn6aso:
+              help: null
+              label: Embarcacions. Observacions
+            x-cdmn8bj6clhmgo9de1p6irb5e9giqrb1ehp6iorldhgm6qbfdo:
+              help: null
+              label: Data de primera matriculació, posada en servei o primera utilització
+            x-cdmn8bjbd5m6urb5ehp6uspdd1nn4obj5lqn6ro:
+              help: null
+              label: Quilòmetres recorreguts o nombre d'hores d'utilització
+            x-cdmn8bjceljm2shdc5i72tb9edkm6qbfdo:
+              help: null
+              label: Lloc d'adquisició del mitjà de transport
+            x-cdmn8bjeelincrpdelpm2p3f:
+              help: null
+              label: Mitjà de transport nou o usat
+            x-cdmn8bjmclk6iorldhniqoj1edq6ip3fe8:
+              help: null
+              label: Vehicles. Número d'identificació (bastidor)
+            x-cdmn8bjmclk6iorldhniqor1ehimerrid5giqor5:
+              help: null
+              label: Vehicles. Classificació segons la Directiva 70/156/CEE
+            x-cdmn8bjmclk6iorldhniqor9dhkmsp3ic5i62:
+              help: null
+              label: Vehicles. Cilindrada (c.c.)
+            x-cdmn8bjmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
+              help: null
+              label: Vehicles. Classificació per criteri de construcció i utilització
+                (RD 2822/1998)
+            x-cdmn8bjmclk6iorldhniqorfchkmerpdd5q7c:
+              help: null
+              label: Vehicles. Codi ITV
+            x-cdmn8bjmclk6iorldhniqpbdd5pmirreclpiqorf68:
+              help: null
+              label: Vehicles. Emissions de CO2 (grams/km)
+            x-cdmn8bjmclk6iorldhniqpbgd5jn4ob6ck:
+              help: null
+              label: Vehicles. Epígraf
+            x-cdmn8bjmclk6iorldhniqqbkeomn6pbid5ig:
+              help: null
+              label: Vehicles. Número de sèrie de la targeta ITV
+            x-cdmn8bjmclk6iorldhniqqbkeomn8qbgdsmn8obid9in8o8:
+              help: null
+              label: Vehicles. Tipus de targeta ITV
+            x-cdmn8bjmclk6iorldhniqrb1e9hm2:
+              help: null
+              label: Vehicles. Marca
+            x-cdmn8bjmclk6iorldhniqrbfchimorpdehkn0ro:
+              help: null
+              label: Vehicles. Model-tipus
+            x-cdmn8bjmclk6iorldhniqrbfehnn4:
+              help: null
+              label: Vehicles. Tipus de motor (gasolina, dièsel o altres)
+            x-cdmn8bjmclk6iorldhniqrr2edin4tj1cdkmurj5ec:
+              help: null
+              label: Vehicles. Observacions
+            x-chim6r1ecdgnasr15lk6aor8dsmmirbgdtn6iojcck:
+              help: null
+              label: Causa del fet imposable
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix l'autoliquidació
+            x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
+              help: null
+              label: Declaració complementària. Número de justificant de la declaració
+                anterior
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus d'autoliquidació (originària / substitutiva / complementària)
+            x-chim6r1eehkn0rpdehp62rjje1nn4t35:
+              help: null
+              label: 'Tipus de mitjà de transport (V: vehicles, E: embarcacions, A:
+                aeronaus)'
+            x-d5n78sjfchqm6t3fe8n6sqb6:
+              help: null
+              label: NIF de la persona que ha introduït el vehicle a Espanya
+            x-d5n78sjfchqm6t3fe8n6srrdc9p6a:
+              help: null
+              label: Cognoms i nom o raó social de qui ha introduït el vehicle a Espanya
+            x-dhkn2bj15li6ap3lcdkn4:
+              help: null
+              label: Liquidació. A deduir
+            x-dhkn2bj2c5pmabb9dlo6urj9c9m6a:
+              help: null
+              label: Liquidació. Base imposable
+            x-dhkn2bj2c5pmabb9dlo6urj9c9m6abbicli7aor9chgg:
+              help: null
+              label: Liquidació. Base imposable reduïda
+            x-dhkn2bj3elnn8o8:
+              help: null
+              label: Liquidació. Quota
+            x-dhkn2bj3elnn8o9dc4mmirj7e9in6obi:
+              help: null
+              label: Liquidació. Quota a ingressar
+            x-dhkn2bj4cli7aor3d5nmsbbcd5n6aobc:
+              help: null
+              label: Liquidació. Deducció lineal
+            x-dhkn2bjiclpnar3kc5i6u:
+              help: null
+              label: Liquidació. Resultat de la liquidació
+            x-dhkn2bjkd5o6u:
+              help: null
+              label: Liquidació. Tipus impositiu (%)
+          construct:
+            modelo-576-autoliquidacion:
+              field:
+                title: null
+          field:
+            label: null

@@ -1,0 +1,38 @@
+modelo:
+  schema:
+    '720':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2013-y-siguientes:
+          casilla:
+            x-cdqmarjkc5pisorfchkmerpdchiiqorlcln78o8:
+              help: null
+              label: Account code at a financial institution located abroad
+            x-cdqmarjkc5pistj1dhnn4ob3d5nms:
+              help: null
+              label: Valuation of an account at a financial institution located abroad
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Tax year the information refers to
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Type of return (original / replacement / supplementary)
+            x-d5n6qtb5c9m6aspeepgmorric5hmirre:
+              help: null
+              label: Valuation of real estate or real property rights located abroad
+            x-epgmorriclpisqb4cln78qb6d5hm2or9dtn0:
+              help: null
+              label: Identification of securities, rights, insurance policies or income
+                located abroad
+            x-epgmorriclpistj1dhnn4ob3d5nms:
+              help: null
+              label: Valuation of securities, rights, insurance policies or income
+                located abroad
+          construct:
+            modelo-720-informative:
+              field:
+                title: null
+          field:
+            label: null

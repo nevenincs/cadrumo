@@ -1,0 +1,780 @@
+modelo:
+  schema:
+    '202':
+      casilla:
+        continuidad:
+          is-pf-mod-40-2-a-ingresar:
+            help: null
+            label: A LIS 40.2. cikke szerinti módszer - Befizetendő
+          is-pf-mod-40-2-base-pago-fraccionado:
+            help: null
+            label: A LIS 40.2. cikke szerinti módszer - Az előlegfizetés alapja
+          is-pf-mod-40-2-resultado-declaracion-anterior:
+            help: null
+            label: A LIS 40.2. cikke szerinti módszer - A korábbi bevallás eredménye
+              (kiegészítő)
+          is-pf-mod-40-3-amortizacion-30pct-dism:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - 30%-os amortizációs költség
+              - Csökkenések
+          is-pf-mod-40-3-b1-base-pago-fraccionado:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Általános eset -
+              Előlegfizetés alapja
+          is-pf-mod-40-3-b1-compensacion-cuotas-neg-coop:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Negatív adók beszámítása
+              (szövetkezetek)
+          is-pf-mod-40-3-b1-dotaciones-art-11-12:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B1 blokk - A 11.12. cikk (LIS)
+              szerinti céltartalékok
+          is-pf-mod-40-3-b1-porcentaje:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Általános eset -
+              Százalék
+          is-pf-mod-40-3-b1-reserva-nivelacion-convertida-aum:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Átalakított kiegyenlítési
+              tartalék - Növekedések
+          is-pf-mod-40-3-b1-reserva-nivelacion-convertida-dis:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Átalakított kiegyenlítési
+              tartalék - Csökkenések
+          is-pf-mod-40-3-b1-resultado-previo:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Általános eset -
+              Előzetes eredmény
+          is-pf-mod-40-3-b2-base-pago-fraccionado:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Az előlegfizetés
+              alapja
+          is-pf-mod-40-3-b2-base-tipo-1:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Alap az 1. kulcshoz
+          is-pf-mod-40-3-b2-base-tipo-2:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Alap a 2. kulcshoz
+          is-pf-mod-40-3-b2-compensacion-cuotas-neg-coop:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Negatív adók beszámítása
+              (szövetkezetek)
+          is-pf-mod-40-3-b2-dotaciones-art-11-12-coop:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B2 blokk - A 11.12. cikk szerinti
+              céltartalékok (szövetkezetek)
+          is-pf-mod-40-3-b2-porcentaje-1:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B2 blokk - 1. százalék
+          is-pf-mod-40-3-b2-porcentaje-2:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B2 blokk - 2. százalék
+          is-pf-mod-40-3-b2-reserva-nivelacion-aumentos:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Kiegyenlítési tartalék
+              (LIS 105. cikk) - Növekedések
+          is-pf-mod-40-3-b2-reserva-nivelacion-disminuciones:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Kiegyenlítési tartalék
+              (LIS 105. cikk) - Csökkenések
+          is-pf-mod-40-3-b2-resultado-previo:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előzetes eredmény
+          is-pf-mod-40-3-base-imponible-previa:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - Előzetes adóalap
+          is-pf-mod-40-3-bonificaciones:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - A számított időszak adókedvezményei
+          is-pf-mod-40-3-cantidad-a-ingresar:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - Befizetendő összeg (a [32]
+              és [33] rovat közül a nagyobb)
+          is-pf-mod-40-3-compensacion-bases-negativas:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - Korábbi adóévek negatív adóalapjainak
+              beszámítása
+          is-pf-mod-40-3-correcciones-is-aumentos:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - Társasági adó szerinti korrekciók
+              - Növekedések
+          is-pf-mod-40-3-correcciones-is-disminuciones:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - Társasági adó szerinti korrekciók
+              - Csökkenések
+          is-pf-mod-40-3-minimo-a-ingresar:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - Minimális befizetendő összeg
+              (árbevétel >= 10 millió euró)
+          is-pf-mod-40-3-pagos-previos-territorio-comun:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - Korábbi időszakok közös területi
+              előlegfizetései
+          is-pf-mod-40-3-remanente-reserva-capitalizacion:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - A tőkésítési tartalék elégtelen
+              adóalap miatt fel nem használt maradványa
+          is-pf-mod-40-3-reserva-nivelacion-aumentos:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - Kiegyenlítési tartalék (LIS
+              105. cikk) - Növekedések
+          is-pf-mod-40-3-reserva-nivelacion-disminuciones:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - Kiegyenlítési tartalék (LIS
+              105. cikk) - Csökkenések
+          is-pf-mod-40-3-resto-correcciones-aumentos:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - Egyéb korrekciók - Növekedések
+          is-pf-mod-40-3-resto-correcciones-disminuciones:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - Egyéb korrekciók - Csökkenések
+          is-pf-mod-40-3-resultado:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - Eredmény
+          is-pf-mod-40-3-resultado-contable:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - Társasági adó utáni számviteli
+              eredmény
+          is-pf-mod-40-3-resultado-declaracion-anterior:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - A korábbi bevallás eredménye
+              (kiegészítő)
+          is-pf-mod-40-3-total-correcciones-aumentos:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - Korrekciók összesen - Növekedések
+          is-pf-mod-40-3-total-correcciones-disminuciones:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - Korrekciók összesen - Csökkenések
+          is-pf-mod-40-3-volumen-territorio-comun-pct:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - Közös területi ügyletek volumene
+              (%)
+          retenciones-ingresos-a-cuenta:
+            help: null
+            label: A LIS 40.3. cikke szerinti módszer - A számított időszak bevételeire
+              vonatkozó forrásadó és előlegfizetés
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-2022:
+          casilla:
+            '01':
+              help: null
+              label: A LIS 40.2. cikke szerinti módszer - Az előlegfizetés alapja
+            '02':
+              help: null
+              label: A LIS 40.2. cikke szerinti módszer - A korábbi bevallás eredménye
+                (kiegészítő)
+            '03':
+              help: null
+              label: A LIS 40.2. cikke szerinti módszer - Befizetendő
+            '04':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Társasági adó utáni számviteli
+                eredmény
+            '05':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Társasági adó szerinti korrekciók
+                - Növekedések
+            '06':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Társasági adó szerinti korrekciók
+                - Csökkenések
+            '07':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Egyéb korrekciók - Növekedések
+            08:
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Egyéb korrekciók - Csökkenések
+            '13':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Előzetes adóalap
+            '14':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Korábbi adóévek negatív
+                adóalapjainak beszámítása
+            '16':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Általános eset
+                - Előlegfizetés alapja
+            '17':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Általános eset
+                - Százalék
+            '18':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Általános eset
+                - Előzetes eredmény
+            '19':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Az előlegfizetés
+                alapja
+            '20':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Alap az 1. kulcshoz
+            '21':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - 1. százalék
+            '22':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előlegfizetés
+                összege, 1. kulcs
+            '23':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Alap a 2. kulcshoz
+            '24':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - 2. százalék
+            '25':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előlegfizetés
+                összege, 2. kulcs
+            '26':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előzetes eredmény
+            '27':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - A számított időszak adókedvezményei
+            '28':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - A számított időszak bevételeire
+                vonatkozó forrásadó és előlegfizetés
+            '29':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Közös területi ügyletek
+                volumene (%)
+            '30':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Korábbi időszakok közös
+                területi előlegfizetései
+            '31':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - A korábbi bevallás eredménye
+                (kiegészítő)
+            '32':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Eredmény
+            '33':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Minimális befizetendő összeg
+                (árbevétel >= 10 millió euró)
+            '34':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Befizetendő összeg (a [32]
+                és [33] rovat közül a nagyobb)
+            '37':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - 30%-os amortizációs költség
+                - Csökkenések
+            '38':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Korrekciók összesen - Növekedések
+            '39':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Korrekciók összesen - Csökkenések
+            '40':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Negatív adók beszámítása
+                (szövetkezetek)
+            '42':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Negatív adók beszámítása
+                (szövetkezetek)
+            '44':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - A tőkésítési tartalék elégtelen
+                adóalap miatt fel nem használt maradványa
+            '45':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Kiegyenlítési tartalék (LIS
+                105. cikk) - Növekedések
+            '46':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Kiegyenlítési tartalék (LIS
+                105. cikk) - Csökkenések
+            '47':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - A 11.12. cikk
+                (LIS) szerinti céltartalékok
+            '48':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Átalakított kiegyenlítési
+                tartalék - Növekedések
+            '49':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Átalakított kiegyenlítési
+                tartalék - Csökkenések
+            '50':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - A 11.12. cikk
+                szerinti céltartalékok (szövetkezetek)
+            '51':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Kiegyenlítési
+                tartalék (LIS 105. cikk) - Növekedések
+            '52':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Kiegyenlítési
+                tartalék (LIS 105. cikk) - Csökkenések
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
+              help: null
+              label: null
+          construct:
+            modelo-202-2019-2022-foundation:
+              field:
+                title: null
+          field:
+            label: null
+        2023-2024:
+          casilla:
+            '01':
+              help: null
+              label: A LIS 40.2. cikke szerinti módszer - Az előlegfizetés alapja
+            '02':
+              help: null
+              label: A LIS 40.2. cikke szerinti módszer - A korábbi bevallás eredménye
+                (kiegészítő)
+            '03':
+              help: null
+              label: A LIS 40.2. cikke szerinti módszer - Befizetendő
+            '04':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Társasági adó utáni számviteli
+                eredmény
+            '05':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Társasági adó szerinti korrekciók
+                - Növekedések
+            '06':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Társasági adó szerinti korrekciók
+                - Csökkenések
+            '07':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Egyéb korrekciók - Növekedések
+            08:
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Egyéb korrekciók - Csökkenések
+            '13':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Előzetes adóalap
+            '14':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Korábbi adóévek negatív
+                adóalapjainak beszámítása
+            '16':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Általános eset
+                - Előlegfizetés alapja
+            '17':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Általános eset
+                - Százalék
+            '18':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Általános eset
+                - Előzetes eredmény
+            '19':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Az előlegfizetés
+                alapja
+            '20':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Alap az 1. kulcshoz
+            '21':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - 1. százalék
+            '22':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előlegfizetés
+                összege, 1. kulcs
+            '23':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Alap a 2. kulcshoz
+            '24':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - 2. százalék
+            '25':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előlegfizetés
+                összege, 2. kulcs
+            '26':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előzetes eredmény
+            '27':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - A számított időszak adókedvezményei
+            '28':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - A számított időszak bevételeire
+                vonatkozó forrásadó és előlegfizetés
+            '29':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Közös területi ügyletek
+                volumene (%)
+            '30':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Korábbi időszakok közös
+                területi előlegfizetései
+            '31':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - A korábbi bevallás eredménye
+                (kiegészítő)
+            '32':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Eredmény
+            '33':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Minimális befizetendő összeg
+                (árbevétel >= 10 millió euró)
+            '34':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Befizetendő összeg (a [32]
+                és [33] rovat közül a nagyobb)
+            '37':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - 30%-os amortizációs költség
+                - Csökkenések
+            '38':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Korrekciók összesen - Növekedések
+            '39':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Korrekciók összesen - Csökkenések
+            '40':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Negatív adók beszámítása
+                (szövetkezetek)
+            '42':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Negatív adók beszámítása
+                (szövetkezetek)
+            '44':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - A tőkésítési tartalék elégtelen
+                adóalap miatt fel nem használt maradványa
+            '45':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Kiegyenlítési tartalék (LIS
+                105. cikk) - Növekedések
+            '46':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Kiegyenlítési tartalék (LIS
+                105. cikk) - Csökkenések
+            '47':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - A 11.12. cikk
+                (LIS) szerinti céltartalékok
+            '48':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Átalakított kiegyenlítési
+                tartalék - Növekedések
+            '49':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Átalakított kiegyenlítési
+                tartalék - Csökkenések
+            '50':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - A 11.12. cikk
+                szerinti céltartalékok (szövetkezetek)
+            '51':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Kiegyenlítési
+                tartalék (LIS 105. cikk) - Növekedések
+            '52':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Kiegyenlítési
+                tartalék (LIS 105. cikk) - Csökkenések
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
+              help: null
+              label: null
+          construct:
+            modelo-202-2023-2024-foundation:
+              field:
+                title: null
+          field:
+            label: null
+        2025-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: A LIS 40.2. cikke szerinti módszer - Az előlegfizetés alapja
+            '02':
+              help: null
+              label: A LIS 40.2. cikke szerinti módszer - A korábbi bevallás eredménye
+                (kiegészítő)
+            '03':
+              help: null
+              label: A LIS 40.2. cikke szerinti módszer - Befizetendő
+            '04':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Társasági adó utáni számviteli
+                eredmény
+            '05':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Társasági adó szerinti korrekciók
+                - Növekedések
+            '06':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Társasági adó szerinti korrekciók
+                - Csökkenések
+            '07':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Egyéb korrekciók - Növekedések
+            08:
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Egyéb korrekciók - Csökkenések
+            '13':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Előzetes adóalap
+            '14':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Korábbi adóévek negatív
+                adóalapjainak beszámítása
+            '16':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Általános eset
+                - Előlegfizetés alapja
+            '17':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Általános eset
+                - Százalék
+            '18':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Általános eset
+                - Előzetes eredmény
+            '19':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Az előlegfizetés
+                alapja
+            '20':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Alap az 1. kulcshoz
+            '21':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - 1. százalék
+            '22':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előlegfizetés
+                összege, 1. kulcs
+            '23':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Alap a 2. kulcshoz
+            '24':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - 2. százalék
+            '25':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előlegfizetés
+                összege, 2. kulcs
+            '26':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előzetes eredmény
+            '27':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - A számított időszak adókedvezményei
+            '28':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - A számított időszak bevételeire
+                vonatkozó forrásadó és előlegfizetés
+            '29':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Közös területi ügyletek
+                volumene (%)
+            '30':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Korábbi időszakok közös
+                területi előlegfizetései
+            '31':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - A korábbi bevallás eredménye
+                (kiegészítő)
+            '32':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Eredmény
+            '33':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Minimális befizetendő összeg
+                (árbevétel >= 10 millió euró)
+            '34':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Befizetendő összeg (a [32]
+                és [33] rovat közül a nagyobb)
+            '37':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - 30%-os amortizációs költség
+                - Csökkenések
+            '38':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Korrekciók összesen - Növekedések
+            '39':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Korrekciók összesen - Csökkenések
+            '40':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Negatív adók beszámítása
+                (szövetkezetek)
+            '42':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Negatív adók beszámítása
+                (szövetkezetek)
+            '44':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - A tőkésítési tartalék elégtelen
+                adóalap miatt fel nem használt maradványa
+            '45':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Kiegyenlítési tartalék (LIS
+                105. cikk) - Növekedések
+            '46':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Kiegyenlítési tartalék (LIS
+                105. cikk) - Csökkenések
+            '47':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - A 11.12. cikk
+                (LIS) szerinti céltartalékok
+            '48':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Átalakított kiegyenlítési
+                tartalék - Növekedések
+            '49':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Átalakított kiegyenlítési
+                tartalék - Csökkenések
+            '50':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - A 11.12. cikk
+                szerinti céltartalékok (szövetkezetek)
+            '51':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Kiegyenlítési
+                tartalék (LIS 105. cikk) - Növekedések
+            '52':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Kiegyenlítési
+                tartalék (LIS 105. cikk) - Csökkenések
+            '61':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Alap a 3. kulcshoz
+            '62':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - 3. százalék
+            '63':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előlegfizetés
+                összege, 3. kulcs
+            '64':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Alap a 4. kulcshoz
+            '65':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - 4. százalék
+            '66':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előlegfizetés
+                összege, 4. kulcs
+            '67':
+              help: null
+              label: A LIS 40.3. cikke szerinti módszer - Kiegészítő adó (IC) szerinti
+                korrekciók - Növekedések
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
+              help: null
+              label: null
+          construct:
+            modelo-202-foundation:
+              field:
+                title: null
+          field:
+            label: null

@@ -1,0 +1,133 @@
+modelo:
+  schema:
+    '353':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2008-2025:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az önadózás adóéve
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Havi időszak (01..12)
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: Közösségen belüli beszerzések után önmagára terhelt ÁFA - csoportösszesítés
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: Levonható ÁFA összesen (csoportösszesítés)
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: Keletkezett ÁFA összesen (csoportösszesítés)
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4cli7aor9c9m6ab9j68p0:
+              help: null
+              label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
+                levonható összeg
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4clr6arj7c5i62b9j68p0:
+              help: null
+              label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
+                keletkezett ÁFA
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbjiclpnar3kc5i6ub9j68p0:
+              help: null
+              label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
+                eredmény
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: Általános kulcs (21%) szerint felszámított ÁFA - csoportösszesítés
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: Csökkentett kulcs (10%) szerint felszámított ÁFA - csoportösszesítés
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: Szuperkedvezményes kulcs (4%) szerint felszámított ÁFA - csoportösszesítés
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: A csoport eredménye (összesített keletkezett ÁFA mínusz összesített
+                levonható ÁFA)
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: Folyó belföldi ügyletek után viselt ÁFA - csoportösszesítés
+          construct:
+            modelo-353-iva-grupo-agregado:
+              field:
+                title: null
+          field:
+            label: 353-as modelo, 2008-2025 adóévek (EHA/3434/2007 rendelet)
+        2026-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Teljes eredmény (a csoporttagok eredményeinek összege) [01]
+            '02':
+              help: null
+              label: Korábbi évekből fennmaradó, beszámítható összegek [02]
+            '03':
+              help: null
+              label: Eredmény ([01] - [08]) [03]
+            '04':
+              help: null
+              label: 'Levonandó: azonos jogcímű, évi és időszaki korábbi önadózások
+                eredménye [04]'
+            '05':
+              help: null
+              label: Az önadózás eredménye ([03] - [04]) [05]
+            08:
+              help: null
+              label: Korábbi időszakok beszámítható összegei, ebben az időszakban
+                felhasználva [08]
+            09:
+              help: null
+              label: Korábbi időszakok beszámítható összegei, későbbi időszakokra
+                átvive ([02]-[08]) [09]
+            '10':
+              help: null
+              label: Benzin, gázolaj és bioüzemanyag értékesítése utáni előleg, az
+                állami adóhatóságnak betudhatóan [10]
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az önadózás adóéve
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Havi időszak (01..12)
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4cli7aor9c9m6ab9j68p0:
+              help: null
+              label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
+                levonható összeg
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4clr6arj7c5i62b9j68p0:
+              help: null
+              label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
+                keletkezett ÁFA
+            x-d5r62bjiclhmurj3d5m6iob3d5nmsbjiclpnar3kc5i6ub9j68p0:
+              help: null
+              label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
+                eredmény
+          construct:
+            modelo-353-iva-grupo-agregado:
+              field:
+                title: null
+          field:
+            label: 353-as modelo, 2026-tól kezdődő adóévek (EHA/3434/2007 rendelet)

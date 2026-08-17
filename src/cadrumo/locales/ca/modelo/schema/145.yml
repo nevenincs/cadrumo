@@ -1,0 +1,187 @@
+modelo:
+  schema:
+    '145':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2012-01-31-y-siguientes:
+          casilla:
+            x-c5hnasr55lp6aor9c9nispbde1p6asr15limst39chgm8:
+              help: null
+              label: 7. Justificant de recepció, empresa o entitat pagadora
+            x-c5hnasr55lp6aor9c9nispj5cdk62bb1dpkmu:
+              help: null
+              label: null
+            x-c5hnasr55lp6aor9c9nispj5cdk62bb4d5gg:
+              help: null
+              label: null
+            x-c5hnasr55lp6aor9c9nispj5cdk62bbdclpg:
+              help: null
+              label: null
+            x-c5hnasr55lp6aor9c9nisr3lctgn4:
+              help: null
+              label: 7. Justificant de recepció, lloc
+            x-c5hnasr55lp6aor9c9nist39e1niqpj9e9mm2:
+              help: null
+              label: 7. Justificant de recepció, tipus de signatura
+            x-c5n7aobcd5i62p35ecmm2r39dlimst3fecn6irbgdtp78p9dc5n7aobc:
+              help: null
+              label: 4. Anualitats per aliments a favor dels fills, import anual
+            x-c5pm6pbechkmarjkckmj2bj1dpkmubbec5hmirb9cln78ro:
+              help: null
+              label: 3.1. Ascendents majors de 65 anys, any de naixement
+            x-c5pm6pbechkmarjkckmj2bj1f5qm8o9ddlnncqbcd5i62p0:
+              help: null
+              label: 3.1. Ascendents majors de 65 anys, ajuda de terceres persones
+                o mobilitat reduïda
+            x-c5pm6pbechkmarjkckmj2bj3dtn7cqbmcln66qb15lnn8sjfec:
+              help: null
+              label: 3.1. Ascendents majors de 65 anys, convivència amb altres descendents
+            x-c5pm6pbechkmarjkckmj2bj4d5pm6obgc5hmip31cgmmesj1chng:
+              help: null
+              label: 3.1. Ascendents majors de 65 anys, grau de discapacitat
+            x-c5pm6pbechkmarjkckmj4bj1dpkmubbec5hmirb9cln78ro:
+              help: null
+              label: 3.2. Ascendents majors de 65 anys, any de naixement
+            x-c5pm6pbechkmarjkckmj4bj1f5qm8o9ddlnncqbcd5i62p0:
+              help: null
+              label: 3.2. Ascendents majors de 65 anys, ajuda de terceres persones
+                o mobilitat reduïda
+            x-c5pm6pbechkmarjkckmj4bj3dtn7cqbmcln66qb15lnn8sjfec:
+              help: null
+              label: 3.2. Ascendents majors de 65 anys, convivència amb altres descendents
+            x-c5pm6pbechkmarjkckmj4bj4d5pm6obgc5hmip31cgmmesj1chng:
+              help: null
+              label: 3.2. Ascendents majors de 65 anys, grau de discapacitat
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9dc5n6iro:
+              help: null
+              label: null
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9dchkm2:
+              help: null
+              label: null
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9ddlin6:
+              help: null
+              label: null
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bbceljm2sg:
+              help: null
+              label: 6. Data i signatura de la comunicació, lloc
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bbkd5o6u:
+              help: null
+              label: 6. Data i signatura de la comunicació, tipus de signatura
+            x-cdnmqtbed5hm2or9dtn2ss31ctkmso9dcdnmqs3cclmmarjkc5p6io8:
+              help: null
+              label: Indicador de pàgina complementària
+            x-chin6or5dpi6ipbeehiiqc9ec5n6irpdc5i6us33d5nms:
+              help: null
+              label: 2.1. Fills i descendents menors de 25 anys, any d'adopció o acolliment
+            x-chin6or5dpi6ipbeehiiqc9ec5n6irpddpgm6qbdd5imst3f:
+              help: null
+              label: 2.1. Fills i descendents menors de 25 anys, any de naixement
+            x-chin6or5dpi6ipbeehiiqc9ec5snap315lmmutj9dhkm8ob4:
+              help: null
+              label: 2.1. Fills i descendents menors de 25 anys, ajuda de terceres
+                persones o mobilitat reduïda
+            x-chin6or5dpi6ipbeehiiqc9ecdnmqs3lehniqpbeehin4ro:
+              help: null
+              label: 2.1. Fills i descendents menors de 25 anys, còmput per enter
+            x-chin6or5dpi6ipbeehiiqc9echkn6or1e1gm6qb4c5i2qpric5i6u:
+              help: null
+              label: 2.1. Fills i descendents menors de 25 anys, grau de discapacitat
+            x-chin6or5dpi6ipbeehiiqchec5n6irpdc5i6us33d5nms:
+              help: null
+              label: 2.2. Fills i descendents menors de 25 anys, any d'adopció o acolliment
+            x-chin6or5dpi6ipbeehiiqchec5n6irpddpgm6qbdd5imst3f:
+              help: null
+              label: 2.2. Fills i descendents menors de 25 anys, any de naixement
+            x-chin6or5dpi6ipbeehiiqchec5snap315lmmutj9dhkm8ob4:
+              help: null
+              label: 2.2. Fills i descendents menors de 25 anys, ajuda de terceres
+                persones o mobilitat reduïda
+            x-chin6or5dpi6ipbeehiiqchecdnmqs3lehniqpbeehin4ro:
+              help: null
+              label: 2.2. Fills i descendents menors de 25 anys, còmput per enter
+            x-chin6or5dpi6ipbeehiiqchechkn6or1e1gm6qb4c5i2qpric5i6u:
+              help: null
+              label: 2.2. Fills i descendents menors de 25 anys, grau de discapacitat
+            x-chin6or5dpi6ipbeehiiqcpec5n6irpdc5i6us33d5nms:
+              help: null
+              label: 2.3. Fills i descendents menors de 25 anys, any d'adopció o acolliment
+            x-chin6or5dpi6ipbeehiiqcpec5n6irpddpgm6qbdd5imst3f:
+              help: null
+              label: 2.3. Fills i descendents menors de 25 anys, any de naixement
+            x-chin6or5dpi6ipbeehiiqcpec5snap315lmmutj9dhkm8ob4:
+              help: null
+              label: 2.3. Fills i descendents menors de 25 anys, ajuda de terceres
+                persones o mobilitat reduïda
+            x-chin6or5dpi6ipbeehiiqcpecdnmqs3lehniqpbeehin4ro:
+              help: null
+              label: 2.3. Fills i descendents menors de 25 anys, còmput per enter
+            x-chin6or5dpi6ipbeehiiqcpechkn6or1e1gm6qb4c5i2qpric5i6u:
+              help: null
+              label: 2.3. Fills i descendents menors de 25 anys, grau de discapacitat
+            x-chin6or5dpi6ipbeehiiqd1ec5n6irpdc5i6us33d5nms:
+              help: null
+              label: 2.4. Fills i descendents menors de 25 anys, any d'adopció o acolliment
+            x-chin6or5dpi6ipbeehiiqd1ec5n6irpddpgm6qbdd5imst3f:
+              help: null
+              label: 2.4. Fills i descendents menors de 25 anys, any de naixement
+            x-chin6or5dpi6ipbeehiiqd1ec5snap315lmmutj9dhkm8ob4:
+              help: null
+              label: 2.4. Fills i descendents menors de 25 anys, ajuda de terceres
+                persones o mobilitat reduïda
+            x-chin6or5dpi6ipbeehiiqd1ecdnmqs3lehniqpbeehin4ro:
+              help: null
+              label: 2.4. Fills i descendents menors de 25 anys, còmput per enter
+            x-chin6or5dpi6ipbeehiiqd1echkn6or1e1gm6qb4c5i2qpric5i6u:
+              help: null
+              label: 2.4. Fills i descendents menors de 25 anys, grau de discapacitat
+            x-e1imssr9dtn2qorfdlo6arjjc5q6usj9c4n6irbgdtp78p9dc5n7aobc:
+              help: null
+              label: 4. Pensió compensatòria a favor del cònjuge, import anual
+            x-e1in4or5e1q6ushec5n6irpddpgm6qbdd5imst3f:
+              help: null
+              label: 1. Any de naixement del perceptor
+            x-e1in4or5e1q6ushecdnmsublctiiqrj9co:
+              help: null
+              label: 1. NIF del cònjuge quan la situació familiar és 2
+            x-e1in4or5e1q6ushechkn6or1e1gm6qb4c5i2qobpeli62:
+              help: null
+              label: 1. Discapacitat del perceptor, ajuda de terceres persones o mobilitat
+                reduïda
+            x-e1in4or5e1q6ushechkn6or1e1gm6qb4c5i2qpric5i6u:
+              help: null
+              label: 1. Discapacitat del perceptor, grau reconegut
+            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mm2rj9ds:
+              help: null
+              label: null
+            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mm8qb1:
+              help: null
+              label: null
+            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mmqpbj:
+              help: null
+              label: null
+            x-e1in4or5e1q6ushedpkmc:
+              help: null
+              label: null
+            x-e1in4or5e1q6ushedpnmqojick:
+              help: null
+              label: 1. Nom del perceptor
+            x-e1in4or5e1q6ushee1p6irb5e8mm2s35dhm6ip3f:
+              help: null
+              label: 1. Primer cognom del perceptor
+            x-e1in4or5e1q6ushee1p6ur3fdpjm2or9dtn2qob3ehkncqb4c5i2qr31c9nn4obc:
+              help: null
+              label: 1. Prolongació de l'activitat laboral
+            x-e1in4or5e1q6usheedimetbechniqobgclm6oqb4ds:
+              help: null
+              label: 1. Segon cognom del perceptor
+            x-e1in4or5e1q6usheedkn8tb1cdkmurhdcpgmqqbcd5gn4:
+              help: null
+              label: 1. Situació familiar del perceptor
+            x-epkncqb5dpi62bb8c5h6it3lc5m2spj9dpgmsor9c5hmirre5lgmkpbec4:
+              help: null
+              label: 5. Pagaments per adquisició o rehabilitació d'habitatge habitual
+                amb finançament aliè
+          field:
+            label: null

@@ -1,0 +1,142 @@
+modelo:
+  schema:
+    '181':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2009-y-siguientes:
+          casilla:
+            cantidades-minorar-principal:
+              help: null
+              label: Quantitats destinades a minorar el principal del préstec
+            clave-intervencion:
+              help: null
+              label: Clau d'intervenció en l'operació
+            clave-tipo-identificacion:
+              help: null
+              label: Clau tipus d'identificació
+            codigo-provincia:
+              help: null
+              label: Codi de província
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaració complementària o substitutiva
+            declarado-nif:
+              help: null
+              label: NIF del declarat
+            declarado-nombre:
+              help: null
+              label: Cognoms i nom o raó social del declarat
+            declarante-razon-social:
+              help: null
+              label: Raó social del declarant
+            direccion-inmueble:
+              help: null
+              label: Adreça de l'immoble
+            duracion-operacion:
+              help: null
+              label: Durada de l'operació en mesos
+            fecha-operacion:
+              help: null
+              label: Data de l'operació
+            identificacion-operacion:
+              help: null
+              label: Identificació del préstec, crèdit o altra operació financera
+            importe-amortizacion-capital:
+              help: null
+              label: Import abonat en l'exercici en concepte d'amortització de capital
+            importe-gastos-financiacion:
+              help: null
+              label: Import abonat en l'exercici en concepte de despeses derivades
+                del finançament aliè
+            importe-intereses:
+              help: null
+              label: Import abonat en l'exercici en concepte d'interessos
+            importe-operacion:
+              help: null
+              label: Import del préstec, crèdit o altra operació financera
+            importe-reintegro-intereses:
+              help: null
+              label: Import meritat en l'exercici en concepte de reintegrament d'interessos
+            importe-total-capital-amortizado:
+              help: null
+              label: Import total del capital amortitzat
+            importe-total-gastos-financiacion:
+              help: null
+              label: Import total de les despeses derivades del finançament aliè
+            importe-total-intereses:
+              help: null
+              label: Import total dels interessos abonats en l'exercici
+            importe-total-saldos-pendientes:
+              help: null
+              label: Import total dels saldos pendents a 31 de desembre
+            intereses-indemnizatorios:
+              help: null
+              label: Interessos indemnitzatoris
+            numero-identificativo-anterior:
+              help: null
+              label: Número identificatiu de la declaració anterior
+            numero-identificativo-declaracion:
+              help: null
+              label: Número identificatiu de la declaració
+            numero-total-declarados:
+              help: null
+              label: Nombre total de registres declarats
+            origen-operacion:
+              help: null
+              label: Origen de l'operació
+            otras-cantidades-indemnizatorias:
+              help: null
+              label: Altres quantitats indemnitzatòries
+            persona-relacion:
+              help: null
+              label: Persona amb qui relacionar-se
+            porcentaje-financiacion-vivienda-habitual:
+              help: null
+              label: Percentatge del finançament destinat a l'habitatge habitual
+            porcentaje-participacion:
+              help: null
+              label: Percentatge de participació
+            prefijo-codigo-iban:
+              help: null
+              label: Prefix del codi IBAN
+            prestamista-nif:
+              help: null
+              label: NIF del prestador
+            prestamista-nombre:
+              help: null
+              label: Cognoms i nom o raó social del prestador
+            referencia-catastral:
+              help: null
+              label: Referència cadastral
+            representante-legal-nif:
+              help: null
+              label: NIF del representant legal
+            saldo-pendiente:
+              help: null
+              label: Saldo pendent a 31 de desembre
+            situacion-inmueble:
+              help: null
+              label: Situació de l'immoble
+            subclave-operacion:
+              help: null
+              label: Subclau d'operació
+            tipo-operacion:
+              help: null
+              label: Tipus d'operació
+            valor-tasacion-inmueble:
+              help: null
+              label: Valor de taxació de l'immoble objecte de garantia
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-181-informative:
+              field:
+                title: null
+          field:
+            label: null

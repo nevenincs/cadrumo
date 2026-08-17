@@ -1,0 +1,90 @@
+modelo:
+  schema:
+    '136':
+      field:
+        official_name: null
+        title: null
+      revision:
+        '2026':
+          casilla:
+            '01':
+              help: null
+              label: A nyertes sorsjegyért, szelvényért vagy fogadásért kapott nyeremény
+                összege
+            '02':
+              help: null
+              label: A bevallót egyénileg megillető nyeremény összege vagy értéke
+            '03':
+              help: null
+              label: A különadó alól mentes összeg
+            '04':
+              help: null
+              label: Adóalap
+            '05':
+              help: null
+              label: A különadó összege
+            '06':
+              help: null
+              label: Ugyanazon jogcímen és ugyanazon nyereményhez kapcsolódóan korábbi
+                önadózásokból befizetendő eredmények
+            '07':
+              help: null
+              label: Befizetendő eredmény
+            09:
+              help: null
+              label: Az Állami Kincstár javára befizetett összeg
+            autoliquidacion-complementaria:
+              help: null
+              label: Kiegészítő önadózás
+            declarante-nif:
+              help: null
+              label: Adóazonosító szám (NIF)
+            declarante-nombre:
+              help: null
+              label: Családi és utónév vagy cégnév
+            ejercicio-declaracion:
+              help: null
+              label: Adóév
+            fecha-celebracion:
+              help: null
+              label: A húzás időpontja
+            fecha-cobro-premio:
+              help: null
+              label: A nyeremény felvételének időpontja
+            forma-pago:
+              help: null
+              label: Fizetési mód
+            iban:
+              help: null
+              label: IBAN-kód
+            justificante-anterior:
+              help: null
+              label: A korábbi önadózás azonosító bizonylatszáma
+            loteria-apuesta-denominacion:
+              help: null
+              label: A sorsolás vagy fogadás megnevezése
+            organizador-codigo-pais:
+              help: null
+              label: A szervező szerv vagy szervezet országkódja
+            organizador-denominacion:
+              help: null
+              label: A szervező szerv vagy szervezet megnevezése vagy cégneve
+            organizador-pais:
+              help: null
+              label: A szervező szerv vagy szervezet országa
+            periodo-declaracion:
+              help: null
+              label: Időszak
+            precio-unitario:
+              help: null
+              label: Egységár
+            provincia-residencia-irpf:
+              help: null
+              label: Az SZJA-adózó szokásos tartózkodási helye szerinti tartomány
+                kódja
+          construct:
+            modelo-136-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null

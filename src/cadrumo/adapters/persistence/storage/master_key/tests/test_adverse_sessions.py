@@ -12,21 +12,13 @@ from ......core.config import SecretStoreBackend, Settings, override_settings
 from ...bucket import (
     BucketLockedError,
 )
-from ...errors import (
-    MasterKeyPassphraseMismatchError,
-)
-from .. import (
-    FileFallbackMasterKeyProvider,
-    activate_master_key_provider,
-)
 from .._active_session import (
     NoActiveBucketSessionError,
     activate_session,
     get_active_master_key,
-    has_active_bucket_session,
 )
 from .._bucket_session import BucketSession
-from ._master_key_support import _ALPHA, _publish_registration_capsule
+from ._master_key_support import _publish_registration_capsule
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -74,33 +66,6 @@ def test_expired_bucket_session_seals_before_refusing_active_master_key_reads() 
 
     assert exc_info.value.bucket_id == "expired"
     assert session.sealed is True
-
-
-def test_wrong_passphrase_activation_fails_without_opening_bucket_session(tmp_path: Path) -> None:
-    settings = _settings_with_store(tmp_path)
-    _write_registered_bucket(settings.cadrumo_local_storage_root, _ALPHA)
-    FileFallbackMasterKeyProvider(
-        store_dir=settings.cadrumo_secret_store_dir,
-        passphrase_callback=lambda: "right-passphrase",
-    ).provision_master_key()
-    wrong_provider = FileFallbackMasterKeyProvider(
-        store_dir=settings.cadrumo_secret_store_dir,
-        passphrase_callback=lambda: "wrong-passphrase",
-    )
-
-    with (
-        override_settings(
-            cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
-            cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
-            cadrumo_secret_store_backend=SecretStoreBackend.FILE,
-        ),
-        pytest.raises(MasterKeyPassphraseMismatchError),
-        activate_master_key_provider(wrong_provider, fallback_bucket_id=_ALPHA),
-    ):
-        pass
-
-    assert wrong_provider._session is None
-    assert has_active_bucket_session() is False
 
 
 def test_bucket_session_close_disposes_by_bucket_identity_under_explicit_database_url(

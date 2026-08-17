@@ -1,0 +1,121 @@
+modelo:
+  schema:
+    '210':
+      field:
+        official_name: null
+        title: null
+      revision:
+        '2025':
+          casilla:
+            base_imponible:
+              help: null
+              label: Adóalap
+            base_imponible_directa_g:
+              help: null
+              label: Adóalap (210 G)
+            base_imponible_directa_i:
+              help: null
+              label: Adóalap (210 I)
+            base_imponible_ganancias_h:
+              help: null
+              label: Adóalap ([12]+[16]) (210 H)
+            coeficiente_imputacion_inmobiliaria:
+              help: null
+              label: Ingatlan-tulajdonlás utáni vélelmezett jövedelem együtthatója
+            convenio_indicador:
+              help: null
+              label: Egyezmény
+            cuota_diferencial:
+              help: null
+              label: Differenciál adó
+            cuota_integra:
+              help: null
+              label: Bruttó adó
+            cuota_integra_reducida:
+              help: null
+              label: Csökkentett bruttó adó ([24]-[27])
+            cuota_ley_irnr:
+              help: null
+              label: IRNR törvény szerinti adó ([22]-[23])
+            deduccion_donativos:
+              help: null
+              label: Adományok utáni levonás
+            dias_imputacion:
+              help: null
+              label: Az imputálás napjai
+            exencion_dividendos:
+              help: null
+              label: Osztalékokra alkalmazott mentesség (éves korlát 1500 euró) (210
+                R)
+            exenciones_ley_irnr_indicador:
+              help: null
+              label: Az IRNR törvény szerinti mentességek, az osztalékok kivételével
+                (éves korlát 1500 euró)
+            ganancia_diferencia:
+              help: null
+              label: Megszerzés. Különbözet (210 H)
+            ganancia_importe:
+              help: null
+              label: Megszerzés. Nyereség (210 H)
+            ganancia_valor_adquisicion:
+              help: null
+              label: Megszerzés. Beszerzési érték (aktualizált) (210 H)
+            ganancia_valor_transmision:
+              help: null
+              label: Megszerzés. Átruházási érték (210 H)
+            gastos_deducibles:
+              help: null
+              label: Levonható költségek
+            ingreso_devolucion_anterior:
+              help: null
+              label: Korábbi befizetés/visszatérítés (kizárólag kiegészítő önadózás
+                esetén)
+            limite_convenio:
+              help: null
+              label: Egyezményes korlát
+            mejora_diferencia:
+              help: null
+              label: Felújítás vagy 2. megszerzés. Különbözet (210 H)
+            mejora_ganancia:
+              help: null
+              label: Felújítás vagy 2. megszerzés. Nyereség (210 H)
+            mejora_valor_adquisicion:
+              help: null
+              label: Felújítás vagy 2. megszerzés. Beszerzési érték (aktualizált)
+                (210 H)
+            mejora_valor_transmision:
+              help: null
+              label: Felújítás vagy 2. megszerzés. Átruházási érték (210 H)
+            porcentaje_convenio:
+              help: null
+              label: Egyezményes százalék (%)
+            reduccion_convenio:
+              help: null
+              label: Egyezményes csökkentés ([24]-[26])
+            rendimientos_integros:
+              help: null
+              label: Bruttó jövedelem
+            retencion_practicada:
+              help: null
+              label: Alkalmazott forrásadó
+            tipo_gravamen:
+              help: null
+              label: Adókulcs
+            tipo_renta:
+              help: null
+              label: Jövedelemtípus
+            valor_adquisicion:
+              help: null
+              label: Beszerzési érték
+            valor_catastral:
+              help: null
+              label: Kataszteri érték
+            valor_comprobado_administracion:
+              help: null
+              label: Az adóhatóság által megállapított érték
+          construct:
+            m210-irnr-calculation:
+              field:
+                title: null
+          field:
+            label: null

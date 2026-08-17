@@ -1,0 +1,1350 @@
+modelo:
+  schema:
+    '322':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2008-2025:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '107':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '159':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '160':
+              help: null
+              label: null
+            '161':
+              help: null
+              label: null
+            '162':
+              help: null
+              label: null
+            '163':
+              help: null
+              label: null
+            '164':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '171':
+              help: null
+              label: null
+            '172':
+              help: null
+              label: null
+            '173':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '46':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '61':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '67':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '69':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '72':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
+              help: null
+              label: null
+            x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
+              help: null
+              label: null
+            x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
+              help: null
+              label: null
+            x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
+              help: null
+              label: null
+            x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
+              help: null
+              label: null
+            x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
+              help: null
+              label: null
+            x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
+              help: null
+              label: null
+            x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
+              help: null
+              label: null
+            x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
+              help: null
+              label: null
+            x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
+              help: null
+              label: null
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
+              help: null
+              label: null
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
+              help: null
+              label: null
+            x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
+              help: null
+              label: null
+            x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
+              help: null
+              label: null
+            x-chim6r1ectp7as3f5ln7arb5e9ng:
+              help: null
+              label: null
+            x-chim6r1ectp7as3f5lp6ur0:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
+              help: null
+              label: null
+            x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
+              help: null
+              label: null
+            x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
+              help: null
+              label: null
+            x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
+              help: null
+              label: null
+            x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          construct:
+            modelo-322-iva-grupo-individual:
+              field:
+                title: null
+          field:
+            label: null
+        2026-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '107':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '112':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '159':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '160':
+              help: null
+              label: null
+            '161':
+              help: null
+              label: null
+            '162':
+              help: null
+              label: null
+            '163':
+              help: null
+              label: null
+            '164':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '171':
+              help: null
+              label: null
+            '172':
+              help: null
+              label: null
+            '173':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '46':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '61':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '67':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '69':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '72':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
+              help: null
+              label: Codi d'activitat - Altres 1a
+            x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
+              help: null
+              label: Epígraf IAE - Altres 1a
+            x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
+              help: null
+              label: Codi d'activitat - Altres 2a
+            x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
+              help: null
+              label: Epígraf IAE - Altres 2a
+            x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
+              help: null
+              label: Codi d'activitat - Altres 3a
+            x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
+              help: null
+              label: Epígraf IAE - Altres 3a
+            x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
+              help: null
+              label: Codi d'activitat - Altres 4a
+            x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
+              help: null
+              label: Epígraf IAE - Altres 4a
+            x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
+              help: null
+              label: Codi d'activitat - Altres 5a
+            x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
+              help: null
+              label: Epígraf IAE - Altres 5a
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
+              help: null
+              label: Codi d'activitat - Principal
+            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
+              help: null
+              label: Epígraf IAE - Principal
+            x-chim6r1echim8tb3cdkmurhde1gmerpdcdqmarjkc4mmeobjdtm6irj1ec:
+              help: null
+              label: Dret a deduir el pagament a compte de lliuraments de gasolines,
+                gasolis i biocarburants
+            x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
+              help: null
+              label: Destinatari d'operacions acollides al criteri de caixa
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
+              help: null
+              label: NIF de l'entitat dominant
+            x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
+              help: null
+              label: Exonerat de la declaració-resum anual, model 390
+            x-chim6r1ectp7as3f5ln7arb5e9ng:
+              help: null
+              label: Número de grup
+            x-chim6r1ectp7as3f5lp6ur0:
+              help: null
+              label: Dominant o dependent
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
+              help: null
+              label: 'Aplicació de la prorrata especial: opció o revocació'
+            x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
+              help: null
+              label: Inscrit al Registre de devolució mensual
+            x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
+              help: null
+              label: Acollit a la modalitat de l'article 163 sexies.Cinc LIVA
+            x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
+              help: null
+              label: Tributació exclusivament foral
+            x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
+              help: null
+              label: Volum anual d'operacions diferent de zero
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          construct:
+            modelo-322-iva-grupo-individual:
+              field:
+                title: null
+          field:
+            label: null

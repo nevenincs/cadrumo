@@ -1,0 +1,2002 @@
+modelo:
+  schema:
+    '714':
+      field:
+        official_name: Impuesto sobre el Patrimonio. Declaración
+        title: Modelo 714
+      revision:
+        '2021':
+          casilla:
+            declaracion-01:
+              help: null
+              label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
+                Otros inmuebles - Total bienes inmuebles naturaleza urbana
+            declaracion-02:
+              help: null
+              label: Bienes y derechos - B. Bienes inmuebles naturaleza rústica -
+                Total
+            declaracion-03:
+              help: null
+              label: Bienes y derechos - C. Bienes y derechos no exentos afectos activ.
+                empres. y profes. - Total
+            declaracion-04:
+              help: null
+              label: Bienes y derechos - D. Bienes y derechos exentos afectos activ.
+                empres. y profes. - Total (neto de deudas)
+            declaracion-05:
+              help: null
+              label: Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras,
+                imposiciones... - Total
+            declaracion-06:
+              help: null
+              label: Bienes y derechos - F1. Valores cesión terceros - Deuda pública,
+                obligaciones, bonos... - Total
+            declaracion-07:
+              help: null
+              label: Bienes y derechos - F2. Valores cesión terceros - Obligaciones,
+                bonos, certificados, pagarés...- Total
+            declaracion-08:
+              help: null
+              label: Bienes y derechos - G1. Valores no exentos - Acciones y particip.
+                Inst. Invers. Colectiva negociadas - Total
+            declaracion-09:
+              help: null
+              label: Bienes y derechos - G2. Valores no exentos - Acciones y particip.
+                fondos otras entidades - Total
+            declaracion-10:
+              help: null
+              label: Bienes y derechos - G3. Valores no exentos - Acciones y particip.
+                Inst. Invers. Colectiva no negociadas.- Total
+            declaracion-11:
+              help: null
+              label: Bienes y derechos - G4.Valores no exentos - Acciones y particip.
+                otras entidades jurídicas no negociadas - Total
+            declaracion-12:
+              help: null
+              label: Bienes y derechos - H1. Valores exentos - Acciones y particip.
+                entidades jurídicas negociadas - Total (neto deudas)
+            declaracion-13:
+              help: null
+              label: Bienes y derechos - H2. Valores exentos - Acciones y particip.
+                exentas entidades jurídicas no negociadas - Total (neto deudas)
+            declaracion-14:
+              help: null
+              label: Bienes y derechos - I. Seguros de vida - Total
+            declaracion-15:
+              help: null
+              label: Bienes y derechos - J. Rentas temporales y vitalicias - Total
+            declaracion-16:
+              help: null
+              label: Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario,
+                embarcaciones y aeronaves - Total
+            declaracion-17:
+              help: null
+              label: Bienes y derechos - L. Objetos de arte y antigüedades - Total
+            declaracion-18:
+              help: null
+              label: Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos
+                vivienda habitual) - Total
+            declaracion-19:
+              help: null
+              label: Bienes y derechos - N. Concesiones administrativas - Total
+            declaracion-20:
+              help: null
+              label: Bienes y derechos - O. Derechos derivados de la propiedad intelectual
+                o industrial - Total
+            declaracion-21:
+              help: null
+              label: Bienes y derechos - P. Opciones contractuales - Total
+            declaracion-22:
+              help: null
+              label: Bienes y derechos - R. Demás bienes y derechos de contenido económico
+                - Total
+            declaracion-23:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Total bienes y derechos
+                no exentos'
+            declaracion-24:
+              help: null
+              label: Deudas deducibles - Total
+            declaracion-26:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Reducción en concepto
+                de mínimo exento'
+            declaracion-28:
+              help: null
+              label: Patrimonio exento con progresividad - Bienes y derechos exentos,
+                excepto determinar tipo gravamen aplicable resto
+            declaracion-41:
+              help: null
+              label: Liquidación - Deducción impuestos extranjero - Importe de la
+                deducción
+            declaracion-42:
+              help: null
+              label: Liquidación - Bonificación cuota en Ceuta y Melilla - Valor neto
+                de los bienes y derechos en Ceuta y Melilla
+            declaracion-43:
+              help: null
+              label: Liquidación - Bonificación cuota en Ceuta y Melilla - Parte cuota
+                proporcional. corresponde dichos bienes y derechos
+            declaracion-44:
+              help: null
+              label: Liquidación - Bonificación cuota en Ceuta y Melilla - Importe
+                de la bonificación
+            declaracion-46:
+              help: null
+              label: Bienes y derechos - Q. Saldos en monedas virtuales - Total
+            declaracion-48:
+              help: null
+              label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
+                autonómicas - Importe total con derecho a deducción
+            declaracion-49:
+              help: null
+              label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
+                autonómicas - Importe aplicado
+            declaracion-50:
+              help: null
+              label: Liquidación - Deducciones y bonificaciones autonómicas - Bonificación
+                autonómica - Importe aplicado
+            declaracion-56:
+              help: null
+              label: Regularización declaración complementaria - Cuota ingresar anteriores
+                autoliquidaciones/liquidaciones
+            declaracion-57:
+              help: null
+              label: Regularización declaración complementaria - Diferencia a ingresar
+                resultado declaración complementaria
+            declaracion-60:
+              help: null
+              label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
+                Valor total vivienda habitual susceptible exención
+            declaracion-61:
+              help: null
+              label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
+                Valor exento
+            declaracion-62:
+              help: null
+              label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
+                Valor no exento
+            declaracion-63:
+              help: null
+              label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
+                Otros inmuebles - Total
+            declaracion-a:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Impuestos efectivamente satisfechos en el extranjero
+            declaracion-b:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Parte de la base liquidable gravada en el extranjero
+            declaracion-i:
+              help: null
+              label: Ingreso - Importe del ingreso
+            declaracion-negativa:
+              help: null
+              label: Declaración negativa
+            identificacion-1:
+              help: null
+              label: Modalidades especiales de tributación - En 2020 ha tenido su
+                residencia habitual fuera del territorio español y tributa por obligación
+                real
+            identificacion-10:
+              help: null
+              label: Declaración Complementaria
+            identificacion-12:
+              help: null
+              label: Si ha consignado la modalidad de la casilla 4 y desea optar por
+                la aplicación de la normativa autonómica
+            identificacion-15:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Tipo de Vía
+            identificacion-16:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Nombre de la Vía Pública
+            identificacion-17:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Tipo de numeración
+            identificacion-18:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Número de Casa
+            identificacion-19:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Calificador del número
+            identificacion-2:
+              help: null
+              label: Modalidades especiales de tributación - En 2020 ha dejado de
+                ser residente en territorio español pero sigue tributando por obligación
+                personal
+            identificacion-20:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Bloque
+            identificacion-21:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Portal
+            identificacion-22:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Escalera
+            identificacion-23:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Planta
+            identificacion-24:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Puerta
+            identificacion-25:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Datos complementarios del
+                domicilio
+            identificacion-26:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Localidad / Población (si
+                es distinta del municipio)
+            identificacion-27:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Código Postal
+            identificacion-28:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Nombre del Municipio
+            identificacion-29:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Provincia
+            identificacion-3:
+              help: null
+              label: Modalidades especiales de tributación - Comunidad Autónoma donde
+                radique el mayor de los bienes o derechos
+            identificacion-35:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Domicilio / Address
+            identificacion-36:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Datos complementarios
+                del domicilio
+            identificacion-37:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Población / Ciudad
+            identificacion-39:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Código Postal [ZIP]
+            identificacion-4:
+              help: null
+              label: Modalidades especiales de tributación - En 2020 ha tenido su
+                residencia fiscal en España, pero está sujeto por obligación real
+                al Impuesto sobre el Patrimonio por haber optado por el régimen especial,
+                artículo 93 Ley 35/2006, IRPF
+            identificacion-40:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Provincia / Región / Estado
+            identificacion-41:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - País
+            identificacion-42:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Código País
+            identificacion-8:
+              help: null
+              label: Comunidad o Ciudad Autónoma de residencia en 2020
+            x-c9kmarj5ecn66c9dehnn8obc:
+              help: null
+              label: Bienes y derechos - C1. No exentos afectos activ. empres. y profes.
+                (no inmuebles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              help: null
+              label: Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ.
+                empres. y profes. - Total
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaracion
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Idioma de la declaración
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Sujeto pasivo - Domicilio habitual - Código de provincia
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaración complementaria - Cuotas a ingresar de anteriores
+                autoliquidaciones o liquidaciones administrativas
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Clase de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Porcentaje de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Sujeto pasivo - Estado civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Fecha de la declaración - Año
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Fecha de la declaración - Día
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Fecha de la declaración - Localidad
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Fecha de la declaración - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Sujeto pasivo - Fecha de nacimiento
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Sujeto pasivo - Nacionalidad
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Régimen económico del matrimonio
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representante - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representante - Apellidos y nombre o razón social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Sujeto pasivo - Sexo
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingreso - Forma de pago
+            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Parte de la base imponible
+                del ahorro del IRPF
+            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Base Imponible'
+            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Base liquidable'
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
+              help: null
+              label: Liquidación - Cuota a ingresar - Cuota a ingresar
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
+              help: null
+              label: Liquidación - Cuota íntegra - Cuota íntegra
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Parte cuota íntegra del
+                Impuesto sobre el Patrimonio susceptible de limitación
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
+              help: null
+              label: Liquidación - Cuota minorada - Cuota minorada
+            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Dividendos y participaciones
+                en beneficios, no integrados en el IRPF
+            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
+              help: null
+              label: Liquidación - Límite cuota íntegra - a) Exceso
+            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Suma de las bases imponibles
+                del IRPF
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Parte cuotas íntegras IRPF,
+                saldo positivo ganancias y pérdidas patrimoniales...
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Cuotas íntegras del IRPF
+            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Límite conjunto de cuotas
+                del Impuesto sobre el Patrimonio y del IRPF
+            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
+              help: null
+              label: Liquidación - Límite cuota íntegra - b) 80% de la cuota íntegra
+                del Impuesto sobre el Patrimonio
+            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Suma de cuotas a efectos
+                del límite conjunto
+            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
+              help: null
+              label: Liquidación - Total cuota íntegra - Total cuota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Modelo 714 Impuesto sobre el Patrimonio cuota
+          field:
+            label: Impuesto sobre el Patrimonio 2021
+        '2022':
+          casilla:
+            declaracion-01:
+              help: null
+              label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
+                Otros inmuebles - Total bienes inmuebles naturaleza urbana
+            declaracion-02:
+              help: null
+              label: Bienes y derechos - B. Bienes inmuebles naturaleza rústica -
+                Total
+            declaracion-03:
+              help: null
+              label: Bienes y derechos - C. Bienes y derechos no exentos afectos activ.
+                empres. y profes. - Total
+            declaracion-04:
+              help: null
+              label: Bienes y derechos - D. Bienes y derechos exentos afectos activ.
+                empres. y profes. - Total (neto de deudas)
+            declaracion-05:
+              help: null
+              label: Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras,
+                imposiciones... - Total
+            declaracion-06:
+              help: null
+              label: Bienes y derechos - F1. Valores cesión terceros - Deuda pública,
+                obligaciones, bonos... - Total
+            declaracion-07:
+              help: null
+              label: Bienes y derechos - F2. Valores cesión terceros - Obligaciones,
+                bonos, certificados, pagarés...- Total
+            declaracion-08:
+              help: null
+              label: Bienes y derechos - G1. Valores no exentos - Acciones y particip.
+                Inst. Invers. Colectiva negociadas - Total
+            declaracion-09:
+              help: null
+              label: Bienes y derechos - G2. Valores no exentos - Acciones y particip.
+                fondos otras entidades - Total
+            declaracion-10:
+              help: null
+              label: Bienes y derechos - G3. Valores no exentos - Acciones y particip.
+                Inst. Invers. Colectiva no negociadas.- Total
+            declaracion-11:
+              help: null
+              label: Bienes y derechos - G4.Valores no exentos - Acciones y particip.
+                otras entidades jurídicas no negociadas - Total
+            declaracion-12:
+              help: null
+              label: Bienes y derechos - H1. Valores exentos - Acciones y particip.
+                entidades jurídicas negociadas - Total (neto deudas)
+            declaracion-13:
+              help: null
+              label: Bienes y derechos - H2. Valores exentos - Acciones y particip.
+                exentas entidades jurídicas no negociadas - Total (neto deudas)
+            declaracion-14:
+              help: null
+              label: Bienes y derechos - I. Seguros de vida - Total
+            declaracion-15:
+              help: null
+              label: Bienes y derechos - J. Rentas temporales y vitalicias - Total
+            declaracion-16:
+              help: null
+              label: Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario,
+                embarcaciones y aeronaves - Total
+            declaracion-17:
+              help: null
+              label: Bienes y derechos - L. Objetos de arte y antigüedades - Total
+            declaracion-18:
+              help: null
+              label: Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos
+                vivienda habitual) - Total
+            declaracion-19:
+              help: null
+              label: Bienes y derechos - N. Concesiones administrativas - Total
+            declaracion-20:
+              help: null
+              label: Bienes y derechos - O. Derechos derivados de la propiedad intelectual
+                o industrial - Total
+            declaracion-21:
+              help: null
+              label: Bienes y derechos - P. Opciones contractuales - Total
+            declaracion-22:
+              help: null
+              label: Bienes y derechos - R. Demás bienes y derechos de contenido económico
+                - Total
+            declaracion-23:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Total bienes y derechos
+                no exentos'
+            declaracion-24:
+              help: null
+              label: Deudas deducibles - Total
+            declaracion-26:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Reducción en concepto
+                de mínimo exento'
+            declaracion-28:
+              help: null
+              label: Patrimonio exento con progresividad - Bienes y derechos exentos,
+                excepto determinar tipo gravamen aplicable resto
+            declaracion-41:
+              help: null
+              label: Liquidación - Deducción impuestos extranjero - Importe de la
+                deducción
+            declaracion-42:
+              help: null
+              label: Liquidación - Bonificación cuota en Ceuta y Melilla - Valor neto
+                de los bienes y derechos en Ceuta y Melilla
+            declaracion-43:
+              help: null
+              label: Liquidación - Bonificación cuota en Ceuta y Melilla - Parte cuota
+                proporcional. corresponde dichos bienes y derechos
+            declaracion-44:
+              help: null
+              label: Liquidación - Bonificación cuota en Ceuta y Melilla - Importe
+                de la bonificación
+            declaracion-46:
+              help: null
+              label: Bienes y derechos - Q. Saldos en monedas virtuales - Total
+            declaracion-48:
+              help: null
+              label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
+                autonómicas - Importe total con derecho a deducción
+            declaracion-49:
+              help: null
+              label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
+                autonómicas - Importe aplicado
+            declaracion-50:
+              help: null
+              label: Liquidación - Deducciones y bonificaciones autonómicas - Bonificación
+                autonómica - Importe aplicado
+            declaracion-56:
+              help: null
+              label: Regularización declaración complementaria - Cuota ingresar anteriores
+                autoliquidaciones/liquidaciones
+            declaracion-57:
+              help: null
+              label: Regularización declaración complementaria - Diferencia a ingresar
+                resultado declaración complementaria
+            declaracion-60:
+              help: null
+              label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
+                Valor total vivienda habitual susceptible exención
+            declaracion-61:
+              help: null
+              label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
+                Valor exento
+            declaracion-62:
+              help: null
+              label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
+                Valor no exento
+            declaracion-63:
+              help: null
+              label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
+                Otros inmuebles - Total
+            declaracion-a:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Impuestos efectivamente satisfechos en el extranjero
+            declaracion-b:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Parte de la base liquidable gravada en el extranjero
+            declaracion-i:
+              help: null
+              label: Ingreso - Importe del ingreso
+            declaracion-negativa:
+              help: null
+              label: Declaración negativa
+            identificacion-1:
+              help: null
+              label: Modalidades especiales de tributación - En 2022 ha tenido su
+                residencia habitual fuera del territorio español y tributa por obligación
+                real
+            identificacion-10:
+              help: null
+              label: Declaración Complementaria
+            identificacion-12:
+              help: null
+              label: Si ha consignado la modalidad de la casilla 4 y desea optar por
+                la aplicación de la normativa autonómica
+            identificacion-15:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Tipo de Vía
+            identificacion-16:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Nombre de la Vía Pública
+            identificacion-17:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Tipo de numeración
+            identificacion-18:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Número de Casa
+            identificacion-19:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Calificador del número
+            identificacion-2:
+              help: null
+              label: Modalidades especiales de tributación - En 2022 ha dejado de
+                ser residente en territorio español pero sigue tributando por obligación
+                personal
+            identificacion-20:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Bloque
+            identificacion-21:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Portal
+            identificacion-22:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Escalera
+            identificacion-23:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Planta
+            identificacion-24:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Puerta
+            identificacion-25:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Datos complementarios del
+                domicilio
+            identificacion-26:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Localidad / Población (si
+                es distinta del municipio)
+            identificacion-27:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Código Postal
+            identificacion-28:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Nombre del Municipio
+            identificacion-29:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Provincia
+            identificacion-3:
+              help: null
+              label: Modalidades especiales de tributación - Comunidad Autónoma donde
+                radique el mayor de los bienes o derechos
+            identificacion-35:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Domicilio / Address
+            identificacion-36:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Datos complementarios
+                del domicilio
+            identificacion-37:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Población / Ciudad
+            identificacion-39:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Código Postal [ZIP]
+            identificacion-4:
+              help: null
+              label: Modalidades especiales de tributación - En 2022 ha tenido su
+                residencia fiscal en España, pero está sujeto por obligación real
+                al Impuesto sobre el Patrimonio por haber optado por el régimen especial,
+                artículo 93 Ley 35/2006, IRPF
+            identificacion-40:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Provincia / Región / Estado
+            identificacion-41:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - País
+            identificacion-42:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Código País
+            identificacion-8:
+              help: null
+              label: Comunidad o Ciudad Autónoma de residencia en 2022
+            x-c9kmarj5ecn66c9dehnn8obc:
+              help: null
+              label: Bienes y derechos - C1. No exentos afectos activ. empres. y profes.
+                (no inmuebles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              help: null
+              label: Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ.
+                empres. y profes. - Total
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaracion
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Idioma de la declaración
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Sujeto pasivo - Domicilio habitual - Código de provincia
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaración complementaria - Cuotas a ingresar de anteriores
+                autoliquidaciones o liquidaciones administrativas
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Clase de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Porcentaje de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Sujeto pasivo - Estado civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Fecha de la declaración - Año
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Fecha de la declaración - Día
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Fecha de la declaración - Localidad
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Fecha de la declaración - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Sujeto pasivo - Fecha de nacimiento
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Sujeto pasivo - Nacionalidad
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Régimen económico del matrimonio
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representante - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representante - Apellidos y nombre o razón social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Sujeto pasivo - Sexo
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingreso - Forma de pago
+            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Parte de la base imponible
+                del ahorro del IRPF
+            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Base Imponible'
+            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Base liquidable'
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
+              help: null
+              label: Liquidación - Cuota a ingresar - Cuota a ingresar
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
+              help: null
+              label: Liquidación - Cuota íntegra - Cuota íntegra
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Parte cuota íntegra del
+                Impuesto sobre el Patrimonio susceptible de limitación
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
+              help: null
+              label: Liquidación - Cuota minorada - Cuota minorada
+            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Dividendos y participaciones
+                en beneficios, no integrados en el IRPF
+            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
+              help: null
+              label: Liquidación - Límite cuota íntegra - a) Exceso
+            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Suma de las bases imponibles
+                del IRPF
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Parte cuotas íntegras IRPF,
+                saldo positivo ganancias y pérdidas patrimoniales...
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Cuotas íntegras del IRPF
+            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Límite conjunto de cuotas
+                del Impuesto sobre el Patrimonio y del IRPF
+            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
+              help: null
+              label: Liquidación - Límite cuota íntegra - b) 80% de la cuota íntegra
+                del Impuesto sobre el Patrimonio
+            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Suma de cuotas a efectos
+                del límite conjunto
+            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
+              help: null
+              label: Liquidación - Total cuota íntegra - Total cuota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Modelo 714 Impuesto sobre el Patrimonio cuota
+          field:
+            label: Impuesto sobre el Patrimonio 2022
+        '2023':
+          casilla:
+            declaracion-01:
+              help: null
+              label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
+                Otros inmuebles - Total bienes inmuebles naturaleza urbana
+            declaracion-02:
+              help: null
+              label: Bienes y derechos - B. Bienes inmuebles naturaleza rústica -
+                Total
+            declaracion-03:
+              help: null
+              label: Bienes y derechos - C. Bienes y derechos no exentos afectos activ.
+                empres. y profes. - Total
+            declaracion-04:
+              help: null
+              label: Bienes y derechos - D. Bienes y derechos exentos afectos activ.
+                empres. y profes. - Total (neto de deudas)
+            declaracion-05:
+              help: null
+              label: Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras,
+                imposiciones... - Total
+            declaracion-06:
+              help: null
+              label: Bienes y derechos - F1. Valores cesión terceros - Deuda pública,
+                obligaciones, bonos... - Total
+            declaracion-07:
+              help: null
+              label: Bienes y derechos - F2. Valores cesión terceros - Obligaciones,
+                bonos, certificados, pagarés...- Total
+            declaracion-08:
+              help: null
+              label: Bienes y derechos - G1. Valores no exentos - Acciones y particip.
+                Inst. Invers. Colectiva negociadas - Total
+            declaracion-09:
+              help: null
+              label: Bienes y derechos - G2. Valores no exentos - Acciones y particip.
+                fondos otras entidades - Total
+            declaracion-10:
+              help: null
+              label: Bienes y derechos - G3. Valores no exentos - Acciones y particip.
+                Inst. Invers. Colectiva no negociadas.- Total
+            declaracion-11:
+              help: null
+              label: Bienes y derechos - G4.Valores no exentos - Acciones y particip.
+                otras entidades jurídicas no negociadas - Total
+            declaracion-12:
+              help: null
+              label: Bienes y derechos - H1. Valores exentos - Acciones y particip.
+                entidades jurídicas negociadas - Total (neto deudas)
+            declaracion-13:
+              help: null
+              label: Bienes y derechos - H2. Valores exentos - Acciones y particip.
+                exentas entidades jurídicas no negociadas - Total (neto deudas)
+            declaracion-14:
+              help: null
+              label: Bienes y derechos - I. Seguros de vida - Total
+            declaracion-15:
+              help: null
+              label: Bienes y derechos - J. Rentas temporales y vitalicias - Total
+            declaracion-16:
+              help: null
+              label: Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario,
+                embarcaciones y aeronaves - Total
+            declaracion-17:
+              help: null
+              label: Bienes y derechos - L. Objetos de arte y antigüedades - Total
+            declaracion-18:
+              help: null
+              label: Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos
+                vivienda habitual) - Total
+            declaracion-19:
+              help: null
+              label: Bienes y derechos - N. Concesiones administrativas - Total
+            declaracion-20:
+              help: null
+              label: Bienes y derechos - O. Derechos derivados de la propiedad intelectual
+                o industrial - Total
+            declaracion-21:
+              help: null
+              label: Bienes y derechos - P. Opciones contractuales - Total
+            declaracion-22:
+              help: null
+              label: Bienes y derechos - R. Demás bienes y derechos de contenido económico
+                - Total
+            declaracion-23:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Total bienes y derechos
+                no exentos'
+            declaracion-24:
+              help: null
+              label: Deudas deducibles - Total
+            declaracion-26:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Reducción en concepto
+                de mínimo exento'
+            declaracion-28:
+              help: null
+              label: Patrimonio exento con progresividad - Bienes y derechos exentos,
+                excepto determinar tipo gravamen aplicable resto
+            declaracion-41:
+              help: null
+              label: Liquidación - Deducción impuestos extranjero - Importe de la
+                deducción
+            declaracion-42:
+              help: null
+              label: Liquidación - Bonificación cuota en Ceuta y Melilla - Valor neto
+                de los bienes y derechos en Ceuta y Melilla
+            declaracion-43:
+              help: null
+              label: Liquidación - Bonificación cuota en Ceuta y Melilla - Parte cuota
+                proporcional. corresponde dichos bienes y derechos
+            declaracion-44:
+              help: null
+              label: Liquidación - Bonificación cuota en Ceuta y Melilla - Importe
+                de la bonificación
+            declaracion-46:
+              help: null
+              label: Bienes y derechos - Q. Saldos en monedas virtuales - Total
+            declaracion-48:
+              help: null
+              label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
+                autonómicas - Importe total con derecho a deducción
+            declaracion-49:
+              help: null
+              label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
+                autonómicas - Importe aplicado
+            declaracion-50:
+              help: null
+              label: Liquidación - Deducciones y bonificaciones autonómicas - Bonificación
+                autonómica - Importe aplicado
+            declaracion-56:
+              help: null
+              label: Regularización declaración complementaria - Cuota ingresar anteriores
+                autoliquidaciones/liquidaciones
+            declaracion-57:
+              help: null
+              label: Regularización declaración complementaria - Diferencia a ingresar
+                resultado declaración complementaria
+            declaracion-60:
+              help: null
+              label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
+                Valor total vivienda habitual susceptible exención
+            declaracion-61:
+              help: null
+              label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
+                Valor exento
+            declaracion-62:
+              help: null
+              label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
+                Valor no exento
+            declaracion-63:
+              help: null
+              label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
+                Otros inmuebles - Total
+            declaracion-a:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Impuestos efectivamente satisfechos en el extranjero
+            declaracion-b:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Parte de la base liquidable gravada en el extranjero
+            declaracion-i:
+              help: null
+              label: Ingreso - Importe del ingreso
+            declaracion-negativa:
+              help: null
+              label: Declaración negativa
+            identificacion-1:
+              help: null
+              label: Modalidades especiales de tributación - En 2023 ha tenido su
+                residencia habitual fuera del territorio español y tributa por obligación
+                real
+            identificacion-10:
+              help: null
+              label: Declaración Complementaria
+            identificacion-12:
+              help: null
+              label: Si ha consignado la modalidad de la casilla 4 y desea optar por
+                la aplicación de la normativa autonómica
+            identificacion-15:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Tipo de Vía
+            identificacion-16:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Nombre de la Vía Pública
+            identificacion-17:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Tipo de numeración
+            identificacion-18:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Número de Casa
+            identificacion-19:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Calificador del número
+            identificacion-2:
+              help: null
+              label: Modalidades especiales de tributación - En 2023 ha dejado de
+                ser residente en territorio español pero sigue tributando por obligación
+                personal
+            identificacion-20:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Bloque
+            identificacion-21:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Portal
+            identificacion-22:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Escalera
+            identificacion-23:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Planta
+            identificacion-24:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Puerta
+            identificacion-25:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Datos complementarios del
+                domicilio
+            identificacion-26:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Localidad / Población (si
+                es distinta del municipio)
+            identificacion-27:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Código Postal
+            identificacion-28:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Nombre del Municipio
+            identificacion-29:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Provincia
+            identificacion-3:
+              help: null
+              label: Modalidades especiales de tributación - Comunidad Autónoma donde
+                radique el mayor de los bienes o derechos
+            identificacion-35:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Domicilio / Address
+            identificacion-36:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Datos complementarios
+                del domicilio
+            identificacion-37:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Población / Ciudad
+            identificacion-39:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Código Postal [ZIP]
+            identificacion-4:
+              help: null
+              label: Modalidades especiales de tributación - En 2023 ha tenido su
+                residencia fiscal en España, pero está sujeto por obligación real
+                al Impuesto sobre el Patrimonio por haber optado por el régimen especial,
+                artículo 93 Ley 35/2006, IRPF
+            identificacion-40:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Provincia / Región / Estado
+            identificacion-41:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - País
+            identificacion-42:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Código País
+            identificacion-8:
+              help: null
+              label: Comunidad o Ciudad Autónoma de residencia en 2023
+            x-c9kmarj5ecn66c9dehnn8obc:
+              help: null
+              label: Bienes y derechos - C1. No exentos afectos activ. empres. y profes.
+                (no inmuebles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              help: null
+              label: Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ.
+                empres. y profes. - Total
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaracion
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Idioma de la declaración
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Sujeto pasivo - Domicilio habitual - Código de provincia
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaración complementaria - Cuotas a ingresar de anteriores
+                autoliquidaciones o liquidaciones administrativas
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Clase de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Porcentaje de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Sujeto pasivo - Estado civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Fecha de la declaración - Año
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Fecha de la declaración - Día
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Fecha de la declaración - Localidad
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Fecha de la declaración - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Sujeto pasivo - Fecha de nacimiento
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Sujeto pasivo - Nacionalidad
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Régimen económico del matrimonio
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representante - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representante - Apellidos y nombre o razón social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Sujeto pasivo - Sexo
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingreso - Forma de pago
+            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Parte de la base imponible
+                del ahorro del IRPF
+            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Base Imponible'
+            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Base liquidable'
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
+              help: null
+              label: Liquidación - Cuota a ingresar - Cuota a ingresar
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
+              help: null
+              label: Liquidación - Cuota íntegra - Cuota íntegra
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Parte cuota íntegra del
+                Impuesto sobre el Patrimonio susceptible de limitación
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
+              help: null
+              label: Liquidación - Cuota minorada - Cuota minorada
+            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Dividendos y participaciones
+                en beneficios, no integrados en el IRPF
+            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
+              help: null
+              label: Liquidación - Límite cuota íntegra - a) Exceso
+            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Suma de las bases imponibles
+                del IRPF
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Parte cuotas íntegras IRPF,
+                saldo positivo ganancias y pérdidas patrimoniales...
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Cuotas íntegras del IRPF
+            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Límite conjunto de cuotas
+                del Impuesto sobre el Patrimonio y del IRPF
+            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
+              help: null
+              label: Liquidación - Límite cuota íntegra - b) 80% de la cuota íntegra
+                del Impuesto sobre el Patrimonio
+            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Suma de cuotas a efectos
+                del límite conjunto
+            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
+              help: null
+              label: Liquidación - Total cuota íntegra - Total cuota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Modelo 714 Impuesto sobre el Patrimonio cuota
+          field:
+            label: Impuesto sobre el Patrimonio 2023
+        '2024':
+          casilla:
+            declaracion-01:
+              help: null
+              label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
+                Otros inmuebles - Total bienes inmuebles naturaleza urbana
+            declaracion-02:
+              help: null
+              label: Bienes y derechos - B. Bienes inmuebles naturaleza rústica -
+                Total
+            declaracion-03:
+              help: null
+              label: Bienes y derechos - C. Bienes y derechos no exentos afectos activ.
+                empres. y profes. - Total
+            declaracion-04:
+              help: null
+              label: Bienes y derechos - D. Bienes y derechos exentos afectos activ.
+                empres. y profes. - Total (neto de deudas)
+            declaracion-05:
+              help: null
+              label: Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras,
+                imposiciones... - Total
+            declaracion-06:
+              help: null
+              label: Bienes y derechos - F1. Valores cesión terceros - Deuda pública,
+                obligaciones, bonos... - Total
+            declaracion-07:
+              help: null
+              label: Bienes y derechos - F2. Valores cesión terceros - Obligaciones,
+                bonos, certificados, pagarés...- Total
+            declaracion-08:
+              help: null
+              label: Bienes y derechos - G1. Valores no exentos - Acciones y particip.
+                Inst. Invers. Colectiva negociadas - Total
+            declaracion-09:
+              help: null
+              label: Bienes y derechos - G2. Valores no exentos - Acciones y particip.
+                fondos otras entidades - Total
+            declaracion-10:
+              help: null
+              label: Bienes y derechos - G3. Valores no exentos - Acciones y particip.
+                Inst. Invers. Colectiva no negociadas.- Total
+            declaracion-11:
+              help: null
+              label: Bienes y derechos - G4.Valores no exentos - Acciones y particip.
+                otras entidades jurídicas no negociadas - Total
+            declaracion-12:
+              help: null
+              label: Bienes y derechos - H1. Valores exentos - Acciones y particip.
+                entidades jurídicas negociadas - Total (neto deudas)
+            declaracion-13:
+              help: null
+              label: Bienes y derechos - H2. Valores exentos - Acciones y particip.
+                exentas entidades jurídicas no negociadas - Total (neto deudas)
+            declaracion-14:
+              help: null
+              label: Bienes y derechos - I. Seguros de vida - Total
+            declaracion-15:
+              help: null
+              label: Bienes y derechos - J. Rentas temporales y vitalicias - Total
+            declaracion-16:
+              help: null
+              label: Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario,
+                embarcaciones y aeronaves - Total
+            declaracion-17:
+              help: null
+              label: Bienes y derechos - L. Objetos de arte y antigüedades - Total
+            declaracion-18:
+              help: null
+              label: Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos
+                vivienda habitual) - Total
+            declaracion-19:
+              help: null
+              label: Bienes y derechos - N. Concesiones administrativas - Total
+            declaracion-20:
+              help: null
+              label: Bienes y derechos - O. Derechos derivados de la propiedad intelectual
+                o industrial - Total
+            declaracion-21:
+              help: null
+              label: Bienes y derechos - P. Opciones contractuales - Total
+            declaracion-22:
+              help: null
+              label: Bienes y derechos - R. Demás bienes y derechos de contenido económico
+                - Total
+            declaracion-23:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Total bienes y derechos
+                no exentos'
+            declaracion-24:
+              help: null
+              label: Deudas deducibles - Total
+            declaracion-26:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Reducción en concepto
+                de mínimo exento'
+            declaracion-28:
+              help: null
+              label: Patrimonio exento con progresividad - Bienes y derechos exentos,
+                excepto determinar tipo gravamen aplicable resto
+            declaracion-41:
+              help: null
+              label: Liquidación - Deducción impuestos extranjero - Importe de la
+                deducción
+            declaracion-42:
+              help: null
+              label: Liquidación - Bonificación cuota en Ceuta y Melilla - Valor neto
+                de los bienes y derechos en Ceuta y Melilla
+            declaracion-43:
+              help: null
+              label: Liquidación - Bonificación cuota en Ceuta y Melilla - Parte cuota
+                proporcional. corresponde dichos bienes y derechos
+            declaracion-44:
+              help: null
+              label: Liquidación - Bonificación cuota en Ceuta y Melilla - Importe
+                de la bonificación
+            declaracion-46:
+              help: null
+              label: Bienes y derechos - Q. Saldos en monedas virtuales - Total
+            declaracion-48:
+              help: null
+              label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
+                autonómicas - Importe total con derecho a deducción
+            declaracion-49:
+              help: null
+              label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
+                autonómicas - Importe aplicado
+            declaracion-50:
+              help: null
+              label: Liquidación - Deducciones y bonificaciones autonómicas - Bonificación
+                autonómica - Importe aplicado
+            declaracion-56:
+              help: null
+              label: Regularización declaración complementaria - Cuota ingresar anteriores
+                autoliquidaciones/liquidaciones
+            declaracion-57:
+              help: null
+              label: Regularización declaración complementaria - Diferencia a ingresar
+                resultado declaración complementaria
+            declaracion-60:
+              help: null
+              label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
+                Valor total vivienda habitual susceptible exención
+            declaracion-61:
+              help: null
+              label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
+                Valor exento
+            declaracion-62:
+              help: null
+              label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
+                Valor no exento
+            declaracion-63:
+              help: null
+              label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
+                Otros inmuebles - Total
+            declaracion-a:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Impuestos efectivamente satisfechos en el extranjero
+            declaracion-b:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Parte de la base liquidable gravada en el extranjero
+            declaracion-i:
+              help: null
+              label: Ingreso - Importe del ingreso
+            declaracion-negativa:
+              help: null
+              label: Declaración negativa
+            identificacion-1:
+              help: null
+              label: Modalidades especiales de tributación - En 2024 ha tenido su
+                residencia habitual fuera del territorio español y tributa por obligación
+                real
+            identificacion-10:
+              help: null
+              label: Declaración Complementaria
+            identificacion-12:
+              help: null
+              label: Si ha consignado la modalidad de la casilla 4 y desea optar por
+                la aplicación de la normativa autonómica
+            identificacion-15:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Tipo de Vía
+            identificacion-16:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Nombre de la Vía Pública
+            identificacion-17:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Tipo de numeración
+            identificacion-18:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Número de Casa
+            identificacion-19:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Calificador del número
+            identificacion-2:
+              help: null
+              label: Modalidades especiales de tributación - En 2024 ha dejado de
+                ser residente en territorio español pero sigue tributando por obligación
+                personal
+            identificacion-20:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Bloque
+            identificacion-21:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Portal
+            identificacion-22:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Escalera
+            identificacion-23:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Planta
+            identificacion-24:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Puerta
+            identificacion-25:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Datos complementarios del
+                domicilio
+            identificacion-26:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Localidad / Población (si
+                es distinta del municipio)
+            identificacion-27:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Código Postal
+            identificacion-28:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Nombre del Municipio
+            identificacion-29:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Provincia
+            identificacion-3:
+              help: null
+              label: Modalidades especiales de tributación - Comunidad Autónoma donde
+                radique el mayor de los bienes o derechos
+            identificacion-35:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Domicilio / Address
+            identificacion-36:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Datos complementarios
+                del domicilio
+            identificacion-37:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Población / Ciudad
+            identificacion-39:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Código Postal [ZIP]
+            identificacion-4:
+              help: null
+              label: Modalidades especiales de tributación - En 2024 ha tenido su
+                residencia fiscal en España, pero está sujeto por obligación real
+                al Impuesto sobre el Patrimonio por haber optado por el régimen especial,
+                artículo 93 Ley 35/2006, IRPF
+            identificacion-40:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Provincia / Región / Estado
+            identificacion-41:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - País
+            identificacion-42:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Código País
+            identificacion-8:
+              help: null
+              label: Comunidad o Ciudad Autónoma de residencia en 2024
+            x-c9kmarj5ecn66c9dehnn8obc:
+              help: null
+              label: Bienes y derechos - C1. No exentos afectos activ. empres. y profes.
+                (no inmuebles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              help: null
+              label: Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ.
+                empres. y profes. - Total
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaracion
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Idioma de la declaración
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Sujeto pasivo - Domicilio habitual - Código de provincia
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaración complementaria - Cuotas a ingresar de anteriores
+                autoliquidaciones o liquidaciones administrativas
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Clase de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Porcentaje de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Sujeto pasivo - Estado civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Fecha de la declaración - Año
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Fecha de la declaración - Día
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Fecha de la declaración - Localidad
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Fecha de la declaración - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Sujeto pasivo - Fecha de nacimiento
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Sujeto pasivo - Nacionalidad
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Régimen económico del matrimonio
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representante - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representante - Apellidos y nombre o razón social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Sujeto pasivo - Sexo
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingreso - Forma de pago
+            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Parte de la base imponible
+                del ahorro del IRPF
+            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Base Imponible'
+            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Base liquidable'
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
+              help: null
+              label: Liquidación - Cuota a ingresar - Cuota a ingresar
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
+              help: null
+              label: Liquidación - Cuota íntegra - Cuota íntegra
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Parte cuota íntegra del
+                Impuesto sobre el Patrimonio susceptible de limitación
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
+              help: null
+              label: Liquidación - Cuota minorada - Cuota minorada
+            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Dividendos y participaciones
+                en beneficios, no integrados en el IRPF
+            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
+              help: null
+              label: Liquidación - Límite cuota íntegra - a) Exceso
+            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Suma de las bases imponibles
+                del IRPF
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Parte cuotas íntegras IRPF,
+                saldo positivo ganancias y pérdidas patrimoniales...
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Cuotas íntegras del IRPF
+            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Límite conjunto de cuotas
+                del Impuesto sobre el Patrimonio y del IRPF
+            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
+              help: null
+              label: Liquidación - Límite cuota íntegra - b) 80% de la cuota íntegra
+                del Impuesto sobre el Patrimonio
+            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Suma de cuotas a efectos
+                del límite conjunto
+            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
+              help: null
+              label: Liquidación - Total cuota íntegra - Total cuota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Modelo 714 Impuesto sobre el Patrimonio cuota
+          field:
+            label: Impuesto sobre el Patrimonio 2024
+        '2025':
+          casilla:
+            declaracion-01:
+              help: null
+              label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
+                Otros inmuebles - Total bienes inmuebles naturaleza urbana
+            declaracion-02:
+              help: null
+              label: Bienes y derechos - B. Bienes inmuebles naturaleza rústica -
+                Total
+            declaracion-03:
+              help: null
+              label: Bienes y derechos - C. Bienes y derechos no exentos afectos activ.
+                empres. y profes. - Total
+            declaracion-04:
+              help: null
+              label: Bienes y derechos - D. Bienes y derechos exentos afectos activ.
+                empres. y profes. - Total (neto de deudas)
+            declaracion-05:
+              help: null
+              label: Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras,
+                imposiciones... - Total
+            declaracion-06:
+              help: null
+              label: Bienes y derechos - F1. Valores cesión terceros - Deuda pública,
+                obligaciones, bonos... - Total
+            declaracion-07:
+              help: null
+              label: Bienes y derechos - F2. Valores cesión terceros - Obligaciones,
+                bonos, certificados, pagarés...- Total
+            declaracion-08:
+              help: null
+              label: Bienes y derechos - G1. Valores no exentos - Acciones y particip.
+                Inst. Invers. Colectiva negociadas - Total
+            declaracion-09:
+              help: null
+              label: Bienes y derechos - G2. Valores no exentos - Acciones y particip.
+                fondos otras entidades - Total
+            declaracion-10:
+              help: null
+              label: Bienes y derechos - G3. Valores no exentos - Acciones y particip.
+                Inst. Invers. Colectiva no negociadas.- Total
+            declaracion-11:
+              help: null
+              label: Bienes y derechos - G4.Valores no exentos - Acciones y particip.
+                otras entidades jurídicas no negociadas - Total
+            declaracion-12:
+              help: null
+              label: Bienes y derechos - H1. Valores exentos - Acciones y particip.
+                entidades jurídicas negociadas - Total (neto deudas)
+            declaracion-13:
+              help: null
+              label: Bienes y derechos - H2. Valores exentos - Acciones y particip.
+                exentas entidades jurídicas no negociadas - Total (neto deudas)
+            declaracion-14:
+              help: null
+              label: Bienes y derechos - I. Seguros de vida - Total
+            declaracion-15:
+              help: null
+              label: Bienes y derechos - J. Rentas temporales y vitalicias - Total
+            declaracion-16:
+              help: null
+              label: Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario,
+                embarcaciones y aeronaves - Total
+            declaracion-17:
+              help: null
+              label: Bienes y derechos - L. Objetos de arte y antigüedades - Total
+            declaracion-18:
+              help: null
+              label: Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos
+                vivienda habitual) - Total
+            declaracion-19:
+              help: null
+              label: Bienes y derechos - N. Concesiones administrativas - Total
+            declaracion-20:
+              help: null
+              label: Bienes y derechos - O. Derechos derivados de la propiedad intelectual
+                o industrial - Total
+            declaracion-21:
+              help: null
+              label: Bienes y derechos - P. Opciones contractuales - Total
+            declaracion-22:
+              help: null
+              label: Bienes y derechos - R. Demás bienes y derechos de contenido económico
+                - Total
+            declaracion-23:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Total bienes y derechos
+                no exentos'
+            declaracion-24:
+              help: null
+              label: Deudas deducibles - Total
+            declaracion-26:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Reducción en concepto
+                de mínimo exento'
+            declaracion-28:
+              help: null
+              label: Patrimonio exento con progresividad - Bienes y derechos exentos,
+                excepto determinar tipo gravamen aplicable resto
+            declaracion-41:
+              help: null
+              label: Liquidación - Deducción impuestos extranjero - Importe de la
+                deducción
+            declaracion-42:
+              help: null
+              label: Liquidación - Bonificación cuota en Ceuta y Melilla - Valor neto
+                de los bienes y derechos en Ceuta y Melilla
+            declaracion-43:
+              help: null
+              label: Liquidación - Bonificación cuota en Ceuta y Melilla - Parte cuota
+                proporcional. corresponde dichos bienes y derechos
+            declaracion-44:
+              help: null
+              label: Liquidación - Bonificación cuota en Ceuta y Melilla - Importe
+                de la bonificación
+            declaracion-46:
+              help: null
+              label: Bienes y derechos - Q. Saldos en monedas virtuales - Total
+            declaracion-48:
+              help: null
+              label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
+                autonómicas - Importe total con derecho a deducción
+            declaracion-49:
+              help: null
+              label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
+                autonómicas - Importe aplicado
+            declaracion-50:
+              help: null
+              label: Liquidación - Deducciones y bonificaciones autonómicas - Bonificación
+                autonómica - Importe aplicado
+            declaracion-56:
+              help: null
+              label: Regularización declaración complementaria - Cuota ingresar anteriores
+                autoliquidaciones/liquidaciones
+            declaracion-57:
+              help: null
+              label: Regularización declaración complementaria - Diferencia a ingresar
+                resultado declaración complementaria
+            declaracion-60:
+              help: null
+              label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
+                Valor total vivienda habitual susceptible exención
+            declaracion-61:
+              help: null
+              label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
+                Valor exento
+            declaracion-62:
+              help: null
+              label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
+                Valor no exento
+            declaracion-63:
+              help: null
+              label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
+                Otros inmuebles - Total
+            declaracion-a:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Impuestos efectivamente satisfechos en el extranjero
+            declaracion-b:
+              help: null
+              label: Liquidación - Deducción por impuestos satisfechos en el extranjero
+                - Parte de la base liquidable gravada en el extranjero
+            declaracion-i:
+              help: null
+              label: Ingreso - Importe del ingreso
+            declaracion-negativa:
+              help: null
+              label: Declaración negativa
+            identificacion-1:
+              help: null
+              label: Modalidades especiales de tributación - En 2025 ha tenido su
+                residencia habitual fuera del territorio español y tributa por obligación
+                real
+            identificacion-10:
+              help: null
+              label: Declaración Complementaria
+            identificacion-12:
+              help: null
+              label: Si ha consignado la modalidad de la casilla 4 y desea optar por
+                la aplicación de la normativa autonómica
+            identificacion-15:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Tipo de Vía
+            identificacion-16:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Nombre de la Vía Pública
+            identificacion-17:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Tipo de numeración
+            identificacion-18:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Número de Casa
+            identificacion-19:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Calificador del número
+            identificacion-2:
+              help: null
+              label: Modalidades especiales de tributación - En 2025 o anterior ha
+                dejado de ser residente en territorio español pero sigue tributando
+                por obligación personal
+            identificacion-20:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Bloque
+            identificacion-21:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Portal
+            identificacion-22:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Escalera
+            identificacion-23:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Planta
+            identificacion-24:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Puerta
+            identificacion-25:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Datos complementarios del
+                domicilio
+            identificacion-26:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Localidad / Población (si
+                es distinta del municipio)
+            identificacion-27:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Código Postal
+            identificacion-28:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Nombre del Municipio
+            identificacion-29:
+              help: null
+              label: Sujeto Pasivo - Domicilio habitual - Provincia
+            identificacion-3:
+              help: null
+              label: Modalidades especiales de tributación - Comunidad Autónoma donde
+                radique el mayor de los bienes o derechos
+            identificacion-35:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Domicilio / Address
+            identificacion-36:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Datos complementarios
+                del domicilio
+            identificacion-37:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Población / Ciudad
+            identificacion-39:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Código Postal [ZIP]
+            identificacion-4:
+              help: null
+              label: Modalidades especiales de tributación - En 2025 ha tenido su
+                residencia fiscal en España, pero está sujeto por obligación real
+                al Impuesto sobre el Patrimonio por haber optado por el régimen especial,
+                artículo 93 Ley 35/2006, IRPF
+            identificacion-40:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Provincia / Región / Estado
+            identificacion-41:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - País
+            identificacion-42:
+              help: null
+              label: Sujeto Pasivo - Domicilio extranjero - Código País
+            identificacion-8:
+              help: null
+              label: Comunidad o Ciudad Autónoma de residencia en 2025
+            x-c9kmarj5ecn66c9dehnn8obc:
+              help: null
+              label: Bienes y derechos - C1. No exentos afectos activ. empres. y profes.
+                (no inmuebles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              help: null
+              label: Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ.
+                empres. y profes. - Total
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaracion
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Idioma de la declaración
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Sujeto pasivo - Domicilio habitual - Código de provincia
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaración complementaria - Cuotas a ingresar de anteriores
+                autoliquidaciones o liquidaciones administrativas
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Clase de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Sujeto pasivo - Discapacidad - Porcentaje de discapacidad
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Sujeto pasivo - Estado civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Fecha de la declaración - Año
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Fecha de la declaración - Día
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Fecha de la declaración - Localidad
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Fecha de la declaración - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Sujeto pasivo - Fecha de nacimiento
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Sujeto pasivo - Nacionalidad
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Régimen económico del matrimonio
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representante - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representante - Apellidos y nombre o razón social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Sujeto pasivo - Sexo
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingreso - Forma de pago
+            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Parte de la base imponible
+                del ahorro del IRPF
+            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Base Imponible'
+            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
+              help: null
+              label: 'Resumen patrimonio neto: base liquidable - Base liquidable'
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
+              help: null
+              label: Liquidación - Cuota a ingresar - Cuota a ingresar
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
+              help: null
+              label: Liquidación - Cuota íntegra - Cuota íntegra
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Parte cuota íntegra del
+                Impuesto sobre el Patrimonio susceptible de limitación
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
+              help: null
+              label: Liquidación - Cuota minorada - Cuota minorada
+            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Dividendos y participaciones
+                en beneficios, no integrados en el IRPF
+            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
+              help: null
+              label: Liquidación - Límite cuota íntegra - a) Exceso
+            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Suma de las bases imponibles
+                del IRPF
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Parte cuotas íntegras IRPF,
+                saldo positivo ganancias y pérdidas patrimoniales...
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Cuotas íntegras del IRPF
+            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Límite conjunto de cuotas
+                del Impuesto sobre el Patrimonio y del IRPF
+            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
+              help: null
+              label: Liquidación - Límite cuota íntegra - b) 80% de la cuota íntegra
+                del Impuesto sobre el Patrimonio
+            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
+              help: null
+              label: Liquidación - Límite cuota íntegra - Suma de cuotas a efectos
+                del límite conjunto
+            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
+              help: null
+              label: Liquidación - Total cuota íntegra - Total cuota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Modelo 714 Impuesto sobre el Patrimonio cuota
+          field:
+            label: Impuesto sobre el Patrimonio 2025

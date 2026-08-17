@@ -1,0 +1,301 @@
+modelo:
+  schema:
+    '180':
+      casilla:
+        continuidad:
+          devengo-year:
+            help: null
+            label: Accrual tax year
+          payee-inmueble-bloque:
+            help: null
+            label: Block of the leased property
+          payee-inmueble-calificador-numero:
+            help: null
+            label: Qualifier of the leased property's house number
+          payee-inmueble-codigo-municipio:
+            help: null
+            label: Municipality code of the leased property
+          payee-inmueble-codigo-postal:
+            help: null
+            label: Postal code of the leased property
+          payee-inmueble-complemento:
+            help: null
+            label: Address complement of the leased property
+          payee-inmueble-escalera:
+            help: null
+            label: Staircase of the leased property
+          payee-inmueble-localidad:
+            help: null
+            label: Locality of the leased property
+          payee-inmueble-municipio:
+            help: null
+            label: Municipality of the leased property
+          payee-inmueble-nombre-via:
+            help: null
+            label: Name of the public thoroughfare of the leased property
+          payee-inmueble-numero-casa:
+            help: null
+            label: House number of the leased property
+          payee-inmueble-planta:
+            help: null
+            label: Floor of the leased property
+          payee-inmueble-portal:
+            help: null
+            label: Building entrance of the leased property
+          payee-inmueble-provincia:
+            help: null
+            label: Province code of the leased property
+          payee-inmueble-puerta:
+            help: null
+            label: Door of the leased property
+          payee-inmueble-referencia-catastral:
+            help: null
+            label: Cadastral reference of the leased property
+          payee-inmueble-situacion:
+            help: null
+            label: Status of the property
+          payee-inmueble-tipo-numeracion:
+            help: null
+            label: Numbering type of the leased property
+          payee-inmueble-tipo-via:
+            help: null
+            label: Thoroughfare type of the leased property
+          payee-modalidad-renta:
+            help: null
+            label: Type of income
+          payee-name:
+            help: null
+            label: Recipient's surname and first name, business name or designation
+          payee-nif:
+            help: null
+            label: Recipient's NIF
+          payee-province:
+            help: null
+            label: Province code of the recipient's address
+          payee-representative-nif:
+            help: null
+            label: NIF of the recipient's legal representative
+          porcentaje-retencion:
+            help: null
+            label: Withholding percentage applied
+          total-perceptores-count:
+            help: null
+            label: Total number of recipients
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-2022:
+          casilla:
+            x-chim6r1ec9gn6p9dehnn8obc:
+              help: null
+              label: Total base for withholdings and payments on account
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: null
+              label: Supplementary or replacement declaration
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: null
+              label: Declaration identification number
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: null
+              label: Identification number of the previous declaration
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: null
+              label: Total withholdings and payments on account
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: null
+              label: Total number of recipients
+            x-e1in4opec9gn6p8:
+              help: null
+              label: Recipient's base for withholdings and payments on account
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: null
+              label: Accrual tax year
+            x-e1in4oped5n6qtb5c9m6abb2dhnn2tb5:
+              help: null
+              label: Block of the leased property
+            x-e1in4oped5n6qtb5c9m6abb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: null
+              label: Qualifier of the leased property's house number
+            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lmnarj9cdkn0qbf:
+              help: null
+              label: Municipality code of the leased property
+            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lo6usrkc5m0:
+              help: null
+              label: Postal code of the leased property
+            x-e1in4oped5n6qtb5c9m6abb3dtmn0r35dlimst3f:
+              help: null
+              label: Address complement of the leased property
+            x-e1in4oped5n6qtb5c9m6abb5edhm2r35e9gg:
+              help: null
+              label: Staircase of the leased property
+            x-e1in4oped5n6qtb5c9m6abbcdthm2r39chgm8:
+              help: null
+              label: Locality of the leased property
+            x-e1in4oped5n6qtb5c9m6abbdeln6ior9e1kmu:
+              help: null
+              label: Municipality of the leased property
+            x-e1in4oped5n6qtb5c9m6abbedtmm4sj55lr6io8:
+              help: null
+              label: Name of the public thoroughfare of the leased property
+            x-e1in4oped5n6qtb5c9m6abbeelmmasjf5lhm2sr1:
+              help: null
+              label: House number of the leased property
+            x-e1in4oped5n6qtb5c9m6abbgdhgmst31:
+              help: null
+              label: Floor of the leased property
+            x-e1in4oped5n6qtb5c9m6abbgdtp78obc:
+              help: null
+              label: Building entrance of the leased property
+            x-e1in4oped5n6qtb5c9m6abbge9nncqbecdkm2:
+              help: null
+              label: Province code of the leased property
+            x-e1in4oped5n6qtb5c9m6abbgelin4t31:
+              help: null
+              label: Door of the leased property
+            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbeelmmasj1cdkmurg:
+              help: null
+              label: Numbering type of the leased property
+            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbmd5gg:
+              help: null
+              label: Thoroughfare type of the leased property
+            x-e1in4opedlnm8obcd5i62p0:
+              help: null
+              label: Type of income
+            x-e1in4opedpkmc:
+              help: null
+              label: Recipient's NIF
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: null
+              label: NIF of the recipient's legal representative
+            x-e1in4opedpnmqojick:
+              help: null
+              label: Recipient's surname and first name, business name or designation
+            x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
+              help: null
+              label: Withholding percentage applied
+            x-e1in4opee1p6utj9dphmio8:
+              help: null
+              label: Province code of the recipient's address
+            x-e1in4opee9imcpbicln66qb15lhm2t31edq74obc:
+              help: null
+              label: Cadastral reference of the leased property
+            x-e1in4opee9in8pbecdkmurj5ec:
+              help: null
+              label: Recipient's withholdings and payments on account
+            x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
+              help: null
+              label: Status of the property
+          construct:
+            modelo-180-annual-summary:
+              field:
+                title: null
+          field:
+            label: null
+        2023-y-siguientes:
+          casilla:
+            x-chim6r1ec9gn6p9dehnn8obc:
+              help: null
+              label: Total base for withholdings and payments on account
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: null
+              label: Supplementary or replacement declaration
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: null
+              label: Declaration identification number
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: null
+              label: Identification number of the previous declaration
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: null
+              label: Total withholdings and payments on account
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: null
+              label: Total number of recipients
+            x-e1in4opec9gn6p8:
+              help: null
+              label: Recipient's base for withholdings and payments on account
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: null
+              label: Accrual tax year
+            x-e1in4oped5n6qtb5c9m6abb2dhnn2tb5:
+              help: null
+              label: Block of the leased property
+            x-e1in4oped5n6qtb5c9m6abb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: null
+              label: Qualifier of the leased property's house number
+            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lmnarj9cdkn0qbf:
+              help: null
+              label: Municipality code of the leased property
+            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lo6usrkc5m0:
+              help: null
+              label: Postal code of the leased property
+            x-e1in4oped5n6qtb5c9m6abb3dtmn0r35dlimst3f:
+              help: null
+              label: Address complement of the leased property
+            x-e1in4oped5n6qtb5c9m6abb5edhm2r35e9gg:
+              help: null
+              label: Staircase of the leased property
+            x-e1in4oped5n6qtb5c9m6abbcdthm2r39chgm8:
+              help: null
+              label: Locality of the leased property
+            x-e1in4oped5n6qtb5c9m6abbdeln6ior9e1kmu:
+              help: null
+              label: Municipality of the leased property
+            x-e1in4oped5n6qtb5c9m6abbedtmm4sj55lr6io8:
+              help: null
+              label: Name of the public thoroughfare of the leased property
+            x-e1in4oped5n6qtb5c9m6abbeelmmasjf5lhm2sr1:
+              help: null
+              label: House number of the leased property
+            x-e1in4oped5n6qtb5c9m6abbgdhgmst31:
+              help: null
+              label: Floor of the leased property
+            x-e1in4oped5n6qtb5c9m6abbgdtp78obc:
+              help: null
+              label: Building entrance of the leased property
+            x-e1in4oped5n6qtb5c9m6abbge9nncqbecdkm2:
+              help: null
+              label: Province code of the leased property
+            x-e1in4oped5n6qtb5c9m6abbgelin4t31:
+              help: null
+              label: Door of the leased property
+            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbeelmmasj1cdkmurg:
+              help: null
+              label: Numbering type of the leased property
+            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbmd5gg:
+              help: null
+              label: Thoroughfare type of the leased property
+            x-e1in4opedlnm8obcd5i62p0:
+              help: null
+              label: Type of income
+            x-e1in4opedpkmc:
+              help: null
+              label: Recipient's NIF
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: null
+              label: NIF of the recipient's legal representative
+            x-e1in4opedpnmqojick:
+              help: null
+              label: Recipient's surname and first name, business name or designation
+            x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
+              help: null
+              label: Withholding percentage applied
+            x-e1in4opee1p6utj9dphmio8:
+              help: null
+              label: Province code of the recipient's address
+            x-e1in4opee9imcpbicln66qb15lhm2t31edq74obc:
+              help: null
+              label: Cadastral reference of the leased property
+            x-e1in4opee9in8pbecdkmurj5ec:
+              help: null
+              label: Recipient's withholdings and payments on account
+            x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
+              help: null
+              label: Status of the property
+          construct:
+            modelo-180-annual-summary:
+              field:
+                title: null
+          field:
+            label: null

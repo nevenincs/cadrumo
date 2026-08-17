@@ -44,7 +44,7 @@ _GENERIC_CHECK = "taxpayer_projection_invalid"
 
 # Each named legal check carries its own localized verdict key. An
 # unclassified failure still rides the generic fallback above.
-_CHECK_MESSAGE_KEYS: dict[str, str] = {
+_CHECK_MESSAGE_LOCALE_KEYS: dict[str, str] = {
     "impatriado_requires_start_date": "wizard.setup.verifier.impatriado_requires_start_date",
     "non_resident_requires_country": "wizard.setup.verifier.non_resident_requires_country",
     "non_resident_requires_representante": "wizard.setup.verifier.non_resident_requires_representante",
@@ -104,7 +104,7 @@ def _verdicts_from_validation_error(error: ValidationError) -> tuple[ValidationV
     verdicts: list[ValidationVerdict] = []
     for entry in error.errors():
         check, fields = _classify_error(entry)
-        message_key = _CHECK_MESSAGE_KEYS.get(check, _FALLBACK_MESSAGE_KEY)
+        message_key = _CHECK_MESSAGE_LOCALE_KEYS.get(check, _FALLBACK_MESSAGE_KEY)
         verdicts.append(
             ValidationVerdict.failed(message_key, check=check, fields=list(fields)),
         )

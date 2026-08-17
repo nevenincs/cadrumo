@@ -1,0 +1,21 @@
+modelo:
+  schema:
+    038:
+      field:
+        official_name: null
+        title: null
+      revision:
+        2002-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the return relates
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-038-informative:
+              field:
+                title: null
+          field:
+            label: null

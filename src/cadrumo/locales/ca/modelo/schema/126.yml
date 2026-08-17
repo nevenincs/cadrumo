@@ -1,0 +1,53 @@
+modelo:
+  schema:
+    '126':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Base de retencions i ingressos a compte
+            '02':
+              help: null
+              label: Retencions i ingressos a compte
+            '03':
+              help: null
+              label: 'Periodificació: base de retencions i ingressos a compte'
+            '04':
+              help: null
+              label: 'Periodificació: retencions i ingressos a compte'
+            '05':
+              help: null
+              label: Ingressos d'exercicis anteriors
+            '06':
+              help: null
+              label: Regularització
+            '07':
+              help: null
+              label: 'Periodificació: base de retencions i ingressos a compte addicional'
+            08:
+              help: null
+              label: 'Periodificació: retencions i ingressos a compte addicional'
+            09:
+              help: null
+              label: Ingressos d'exercicis anteriors addicionals
+            '10':
+              help: null
+              label: 'Liquidació total: suma de retencions i ingressos a compte i
+                regularització'
+            '11':
+              help: null
+              label: Resultats a ingressar de declaracions anteriors pel mateix concepte,
+                exercici i període
+            '12':
+              help: null
+              label: Resultat a ingressar
+          construct:
+            modelo-126-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null

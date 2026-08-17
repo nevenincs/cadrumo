@@ -1,0 +1,24 @@
+modelo:
+  schema:
+    '185':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2003-2025:
+          field:
+            label: null
+        2025-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-185-informative:
+              field:
+                title: null
+          field:
+            label: null

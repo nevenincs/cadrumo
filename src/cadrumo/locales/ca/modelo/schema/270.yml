@@ -1,0 +1,148 @@
+modelo:
+  schema:
+    '270':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2013-y-siguientes:
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: Es consigna una C quan la declaració inclou registres completament
+                omesos en una altra del mateix exercici presentada anteriorment.
+              label: Declaració complementària
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: Número seqüencial de 13 posicions els tres primers dígits del
+                qual es corresponen amb el codi 270.
+              label: Número identificatiu de la declaració
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: Número identificatiu de la declaració a què aquesta complementa
+                o substitueix. En qualsevol altre cas s'omple amb zeros.
+              label: Número identificatiu de la declaració anterior
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              help: Primer cognom, un espai, segon cognom, un espai i nom complet,
+                necessàriament en aquest ordre.
+              label: Cognoms i nom de la persona amb qui relacionar-se
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              help: Camp numèric de 9 posicions amb el telèfon de contacte del declarant.
+              label: Telèfon de la persona amb qui relacionar-se
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              help: Es consigna una S quan la presentació anul·la i substitueix completament
+                una única declaració anterior del mateix exercici.
+              label: Declaració substitutiva
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració (originària / substitutiva / complementària)
+            x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
+              help: Suma de les bases de retenció o ingrés a compte reflectides en
+                els registres de perceptor, en euros.
+              label: Total import base de retenció o ingrés a compte
+            x-chim6r1eehnn8obc5lkmqs3fe9q6abbge9imqqbfec:
+              help: Suma dels imports íntegres dels premis reflectits en els registres
+                de perceptor, en euros, sense signe ni coma decimal.
+              label: Total import o valoració dels premis
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: Nombre total de perceptors relacionats en els registres de detall
+                de tipus 2. Si un mateix perceptor figura en diversos registres, es
+                computa tantes vegades com hi figuri.
+              label: Nombre total de registres de perceptor declarats
+            x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
+              help: Suma de les retencions o ingressos a compte reflectits en els
+                registres de perceptor, en euros.
+              label: Total import de la retenció o ingrés a compte
+            x-e1in4opec9gn6p9de9in8pbecdkmurg:
+              help: Base de retenció o ingrés a compte determinada conforme als apartats
+                3 i 6 de la disposició addicional trenta-tresena de la Llei 35/2006,
+                reguladora de l'IRPF.
+              label: Base de retenció o ingrés a compte
+            x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
+              help: 'Només s''emplena quan el tipus de perceptor és la clau 5: F si
+                el perceptor és persona física i J si es tracta d''una persona jurídica
+                o una entitat.'
+              label: Clau de personalitat del perceptor no resident
+            x-e1in4opecpim6q315ln62or9dlkmarjkds:
+              help: Només s'emplena quan el tipus de perceptor és la clau 5 i la clau
+                de personalitat és F.
+              label: Data de naixement del perceptor no resident
+            x-e1in4opecpim6q315lo62prf:
+              help: Data en què s'hagi satisfet o abonat al perceptor el premi obtingut.
+              label: Data de pagament del premi
+            x-e1in4opecpim6q315lpmusjkclng:
+              help: Data en què s'hagi celebrat el sorteig o hagi tingut lloc l'esdeveniment
+                sobre el qual s'hagi fet l'aposta que determina l'obtenció del premi.
+              label: Data de celebració del sorteig o aposta
+            x-e1in4opectin6t3fe8mm6rr2e9ng:
+              help: Es consigna una X exclusivament quan es presenten al cobrament
+                premis prèviament distribuïts en forma de participacions, de manera
+                que qui cobra el premi no n'és el beneficiari últim.
+              label: Gestor de cobrament del premi
+            x-e1in4oped5mn0rriehiiqs3iclmmiro:
+              help: Part de l'import íntegre del premi dinerari o del valor del premi
+                en espècie que correspon individualment al perceptor. Si en un mateix
+                sorteig va obtenir diversos premis, la suma de tots.
+              label: Import íntegre del premi o valor individual del premi en espècie
+            x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
+              help: Només quan el tipus de perceptor és la clau 5 i la clau de personalitat
+                és F. Municipi i, si escau, província, regió o departament del lloc
+                de naixement, seguits del codi de país o territori de l'Annex II de
+                l'Ordre EHA/3496/2011.
+              label: Lloc de naixement del perceptor no resident
+            x-e1in4opedpkmc:
+              help: NIF del perceptor del premi. Només es deixa en blanc si el tipus
+                de perceptor és la clau 5 i el perceptor no disposa de NIF espanyol,
+                cas en què s'ha d'emplenar obligatòriament el número d'identificació
+                fiscal al país de residència.
+              label: Número d'identificació fiscal (NIF) del perceptor
+            x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
+              help: 'Només quan el tipus de perceptor és la clau 5 i no disposa de
+                NIF espanyol: número de passaport o, si no, del document d''identitat
+                vàlid al país d''origen si és persona física, o el número o codi identificador
+                assignat per l''autoritat fiscal del país d''origen si és entitat.'
+              label: Número d'identificació fiscal al país de residència fiscal
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: NIF de la persona o entitat que, si escau, intervingui com a representant
+                del perceptor. En qualsevol altre cas s'omple amb blancs.
+              label: NIF del representant legal del perceptor
+            x-e1in4opedpnmqojick:
+              help: Per a persones físiques, primer cognom, un espai, segon cognom,
+                un espai i nom complet, en aquest ordre. Per a persones jurídiques
+                o entitats, la denominació o raó social completa, sense anagrames.
+              label: Cognoms i nom, raó social o denominació del perceptor
+            x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
+              help: Cognoms i nom del representant si és persona física, o la denominació
+                o raó social completa si és persona jurídica o entitat. En qualsevol
+                altre cas s'omple amb blancs.
+              label: Cognoms i nom, raó social o denominació del representant del
+                perceptor
+            x-e1in4opee1gmispde9in6qb4cln66qb1:
+              help: 'Només quan el tipus de perceptor és la clau 5: dos caràcters
+                alfabètics indicatius del país o territori de residència del perceptor
+                segons l''Annex II de l''Ordre EHA/3496/2011. En qualsevol altre cas
+                s''omple amb blancs.'
+              label: País o territori de residència fiscal del perceptor
+            x-e1in4opee1p6utj9dphmio8:
+              help: Dos dígits de la província o ciutat autònoma del domicili del
+                perceptor. Es consignen els dígits 98 per a contribuents de l'IRPF
+                amb residència habitual a l'estranger i 99 quan el tipus de perceptor
+                és la clau 5.
+              label: Codi de província del domicili del perceptor
+            x-e1in4opee9in8pbecdkmurg:
+              help: Import de la retenció o ingrés a compte efectivament practicats
+                per l'entitat pagadora del premi.
+              label: Import de la retenció o ingrés a compte
+            x-e1in4opeehkn0rpde1in4or5e1q6usg:
+              help: Clau 1 persona física contribuent de l'IRPF, 2 entitat en règim
+                d'atribució de rendes resident en territori espanyol, 3 persona jurídica
+                o entitat resident subjecte passiu de l'Impost sobre Societats, 4
+                establiment permanent en territori espanyol, 5 persona o entitat no
+                resident que opera sense mediació d'establiment permanent.
+              label: Tipus de perceptor
+          construct:
+            modelo-270-informative:
+              field:
+                title: null
+          field:
+            label: null

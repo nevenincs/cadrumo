@@ -1,0 +1,21 @@
+modelo:
+  schema:
+    '840':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2003-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: A bevallás vonatkozási adóéve
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Bevallás típusa (bejegyzés / módosítás / törlés)
+          construct:
+            modelo-840-iae-declaration:
+              field:
+                title: null
+          field:
+            label: null

@@ -1,0 +1,71 @@
+modelo:
+  schema:
+    '165':
+      field:
+        official_name: Modelo 165. Declaración informativa de certificaciones individuales
+          emitidas a los socios o partícipes de entidades de nueva o reciente creación.
+        title: Certificaciones a socios de entidades de nueva o reciente creación
+          (informativa anual)
+      revision:
+        2013-y-siguientes:
+          casilla:
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaracion complementaria o sustitutiva
+            declarante-razon-social:
+              help: null
+              label: Denominacion o razon social del declarante
+            empresa-emergente:
+              help: null
+              label: Empresa emergente
+            fecha-adquisicion:
+              help: null
+              label: Fecha de adquisicion de las acciones o participaciones
+            fecha-constitucion:
+              help: null
+              label: Fecha de constitucion
+            importe-fondos-propios:
+              help: null
+              label: Importe de los fondos propios
+            importe-suscripcion:
+              help: null
+              label: Importe de la suscripcion o adquisicion
+            importe-total-suscripciones:
+              help: null
+              label: Importe total de las suscripciones o adquisiciones
+            numero-identificativo-anterior:
+              help: null
+              label: Numero identificativo de la declaracion anterior
+            numero-identificativo-declaracion:
+              help: null
+              label: Numero identificativo de la declaracion
+            numero-total-declarados:
+              help: null
+              label: Numero total de declarados
+            persona-relacion:
+              help: null
+              label: Persona con quien relacionarse
+            porcentaje-participacion:
+              help: null
+              label: Porcentaje de participacion
+            representante-legal-nif:
+              help: null
+              label: NIF del representante legal
+            socio-nif:
+              help: null
+              label: NIF del socio o participe
+            socio-nombre:
+              help: null
+              label: Apellidos y nombre del socio o participe
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaración
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-165-informative:
+              field:
+                title: Modelo 165 declaración informativa
+          field:
+            label: Modelo 165 (orden-hap-2455-2013), ejercicios 2013 y siguientes

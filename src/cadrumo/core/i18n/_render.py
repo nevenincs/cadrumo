@@ -14,7 +14,6 @@ from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import lru_cache
-from io import StringIO
 from pathlib import Path
 from string import Formatter
 from typing import IO
@@ -481,71 +480,29 @@ def _override_locales_root(root: Path) -> Iterator[None]:
         _I18N_LOCALES_ROOT.reset(token)
 
 
-def _locale_map(locale: str) -> dict[str, str | None]:
+def _locale_map(locale: str) -> Mapping[str, str | None]:
+    from ._lazy_catalogue import LazyLocaleCatalogue
+
     override = _I18N_LOCALES_ROOT.get()
     if override is not None:
-        # Override catalogues are small test fixtures; parse fresh so one
-        # context never serves another context's contents from a cache.
-        with (override / f"{locale}.yml").open("r", encoding="utf-8") as handle:
-            return _flatten_translations(_load_locale_yaml(handle))
+        shard_dir = override / locale
+        if shard_dir.is_dir():
+            return LazyLocaleCatalogue(locale, shard_dir=shard_dir)
+        monolith = override / f"{locale}.yml"
+        if monolith.is_file():
+            with monolith.open("r", encoding="utf-8") as handle:
+                return _flatten_translations(_load_locale_yaml(handle))
     return _packaged_locale_map(locale)
 
 
 @lru_cache(maxsize=len(SUPPORTED_OUTPUT_LANGUAGES))
-def _packaged_locale_map(locale: str) -> dict[str, str | None]:
-    from ._catalogue_cache import compute_source_digest, read_catalogue_cache, write_catalogue_cache
+def _packaged_locale_map(locale: str) -> LazyLocaleCatalogue:
+    from ._lazy_catalogue import LazyLocaleCatalogue
 
-    resource = importlib.resources.files(PRODUCT_IDENTITY.python_package).joinpath("locales", f"{locale}.yml")
-    raw_source = resource.read_bytes()
-    source_digest = compute_source_digest(raw_source)
-
-    # The cache is a pure optimisation over a lookup that must never fail:
-    # `tr()` is called from a MODULE-LEVEL statement in
-    # entrypoints/cli/__init__.py (`help=tr("cli.root.app_help")`), which
-    # runs at import time, before the CLI's own command-dispatch error
-    # boundary (run_standalone_with_error_contract) is active. Resolving the
-    # cache's on-disk location depends on Settings(), which can raise for
-    # reasons that have nothing to do with translation (observed:
-    # FormerProductStateError when the storage root holds a retired
-    # database) -- an exception here would escape uncaught and crash the
-    # whole process, including plain `--help`. Catch broadly and fall back
-    # to the always-available packaged-resource parse rather than risk that;
-    # this restores the can't-fail property `tr()` had before the cache
-    # existed, when it only ever read a packaged resource directly.
-    #
-    # NOTE for a future reader: this is a narrow fix, not a structural one.
-    # The module-level `help=tr(...)` call is still unprotected by the CLI's
-    # error boundary for ANY other exception a future `tr()` dependency
-    # might raise. Moving the boundary earlier (wrapping module import, not
-    # just command dispatch) is a deliberate, separate decision -- it
-    # touches every entrypoint and startup path -- and should not be made
-    # incidentally while fixing this one call site.
-    try:
-        cached = read_catalogue_cache(locale, source_digest=source_digest)
-    except Exception:
-        _log.debug(
-            "Locale catalogue cache lookup failed for %r; falling back to the packaged YAML parse",
-            locale,
-            exc_info=True,
-        )
-        cached = None
-    if cached is not None:
-        return cached
-
-    _log.info(
-        "Locale catalogue cache miss for %r; parsing YAML directly (slower, correct) and rewarming",
-        locale,
-    )
-    flat = _flatten_translations(_load_locale_yaml(StringIO(raw_source.decode("utf-8"))))
-    try:
-        write_catalogue_cache(locale, source_digest=source_digest, flat=flat)
-    except Exception:
-        _log.debug(
-            "Locale catalogue cache write failed for %r; continuing without a warm cache",
-            locale,
-            exc_info=True,
-        )
-    return flat
+    resource = importlib.resources.files(PRODUCT_IDENTITY.python_package).joinpath("locales")
+    locales_root = Path(str(resource))
+    shard_dir = locales_root / locale
+    return LazyLocaleCatalogue(locale, shard_dir=shard_dir)
 
 
 def _load_locale_yaml(handle: IO[str]) -> object:

@@ -1,0 +1,303 @@
+adapters:
+  aeat:
+    clave_movil:
+      errors:
+        pending_petition_blocked: Az AEAT elutasította az új Cl@ve Móvil push kiadását,
+          mert egy korábbi hitelesítési kérelem még szerver oldalon függőben van.
+  auth:
+    authenticator:
+      errors:
+        already_active: Az AeatAuthenticator már rendelkezik aktív munkamenettel;
+          hívja meg a close() vagy reauthenticate() metódust az újabb hitelesítés
+          előtt.
+        already_active_before_resume: Az AeatAuthenticator már aktív munkamenettel
+          rendelkezik; folytatás előtt hívja meg a close() metódust.
+        assertion_failed: Az AEAT hitelesítés nem hozott létre érvényes bejelentkezési
+          állítást.
+        capture_requires_active_session: A capture_storage_state() az aktuálisan aktív
+          hitelesített munkamenetet igényli.
+        capture_requires_certificate: A capture_storage_state() aktív tanúsítványalapú
+          munkamenetet és védett erőforrás-metaadatokat igényel.
+        metadata_parse_failed: A mentett metaadatok nem eredményeztek elemzett modellt.
+        no_active_context: Nincs aktív böngészőkontextus; először hívja meg az authenticate()
+          metódust.
+        no_context_capture_storage: Nincs aktív böngészőkontextus; nem lehet rögzíteni
+          a tárolási állapotot.
+        persisted_session_verification_failed: A tárolt AEAT böngészőmunkamenet nem
+          ment át az élő ellenőrzésen.
+        resume_failed: A mentett AEAT munkamenet folytatása nem eredményezett használható
+          környezetet.
+        session_stale: Az AEAT munkamenet lejárt; az inaktivitási határidő eltelt.
+    clave_movil:
+      errors:
+        already_active: A Cl@ve Móvil már aktív munkamenettel rendelkezik; hitelesítés
+          előtt hívja meg a close() metódust.
+        approval_timeout: A Cl@ve Móvil böngészős hitelesítés nem fejeződött be a
+          beállított időkorláton belül.
+        dni_nie_not_set: Az CADRUMO_CLAVE_MOVIL_DNI_NIE nincs beállítva; hitelesítés
+          előtt adja meg DNI- vagy NIE-számát.
+        initial_navigation_timeout: A Cl@ve Móvil kezdeti navigációja nem fejeződött
+          be a beállított időkorláton belül.
+        metadata_invalid: A Cl@ve Móvil munkamenet-metaadatai érvénytelenek vagy nem
+          elemezhetők.
+        no_persisted_session: Nem található Cl@ve Móvil munkamenet; futtassa először
+          a `aeat config auth status` parancsot.
+        session_expired: A Cl@ve Móvil munkamenet túllépte a tétlenségi határidőt.
+        storage_state_hash_mismatch: A Cl@ve Móvil tárolási állapot hash nem egyezik;
+          a munkamenet adatai sérülhetnek.
+        verify_requires_active_context: A Cl@ve Móvil verify() aktív böngészőkontextust
+          igényel; először hívja meg az authenticate() metódust.
+  google:
+    calc_sheets:
+      errors:
+        api_call_failed: A Google {action} hívás sikertelen.
+        api_call_refused: A Google {action} hívást elutasították (HTTP {status}).
+        api_target_not_found: A Google {action} célpontja nem található.
+        conflicting_duplicate_metadata: A Google-táblázat ellentmondó, duplikált AEAT-metaadatokat
+          tartalmaz.
+        foreign_spreadsheet_not_owned: A Google-táblázat nincs ennek az AEAT-profilnak
+          a tulajdonaként megjelölve.
+        googleapiclient_not_importable: A googleapiclient nem importálható; a Google-adapter
+          nem tud kapcsolódni az API-hoz.
+        spreadsheet_id_blank: A Google-táblázat azonosítója nem lehet üres.
+        workbook_snapshot_mismatch: A Google-táblázat metaadatai nem egyeznek a számítási
+          pillanatképpel.
+    oauth_flow:
+      errors:
+        browser_launcher_refused: Az operációs rendszer böngészőindítója megtagadta
+          az OAuth-hozzájárulási URL megnyitását.
+        client_config_refused: A Google OAuth ügyfélkonfigurációját elutasították.
+        email_claim_missing: A Google id_token ellenőrzése sikeres volt, de nem tartalmaz
+          e-mail-igényt.
+        endpoint_unreachable: A Google OAuth-végpont nem érhető el.
+        id_token_missing: A Google nem adott vissza id_token-t; az OAuth-hozzájárulás
+          nem tartalmazta az openid+email hatókört.
+        id_token_module_not_importable: A google-auth id_token modul nem importálható.
+        id_token_verification_failed: A Google id_token ellenőrzése sikertelen.
+        loopback_bind_failed: A helyi visszahurkos OAuth-vevő nem tudott portot foglalni.
+        non_interactive: 'A Google OAuth elutasítva: az interaktív böngészős hozzájárulási
+          folyamathoz vezérlő terminál szükséges, de ezt a parancsot nem interaktívan
+          futtatták.'
+        oauthlib_not_importable: A google-auth-oauthlib nem importálható; az OAuth-folyamat
+          nem indítható el.
+        profile_state_unresolved: A Google OAuth nem tudja feloldani a kiválasztott
+          AEAT-profil állapotát.
+        scope_missing: A Google hozzájárulási képernyő visszatért anélkül, hogy minden
+          szükséges hatókört megadott volna.
+        unsecured_mode_refused: A Google OAuth megtagadta a hozzáférést, mert a titkos
+          tár nem biztonságos módban fut, és az aktív profil valódi spanyol adóazonosítót
+          tartalmaz.
+    profile_binding:
+      errors:
+        no_active_profile: Nincs aktív AEAT-profil kötve a Google OAuth-hoz.
+  inbound:
+    declaracion:
+      errors:
+        extraction_failed: 'A(z) {profile} profilhoz tartozó bevallás-kinyerés sikertelen:
+          {details}'
+        modelo_conflict: A --modelo {modelo!r} ütközik az észlelt {detected!r} értékkel.
+        period_unresolved: A bevallási időszak nem volt meghatározható a PDF szövegéből.
+        profile_count_invalid: 'Pontosan egy bevallás-PDF-kinyerési profil szükséges
+          a modelo={modelo} nyomtatványhoz; elérhető: {available}.'
+        profile_unavailable: A(z) {profile!r} kinyerési profil nem érhető el a modelo={modelo}
+          nyomtatványhoz.
+        registry_snapshot_required: 'A bevallás-kinyeréshez érvényesített nyilvántartási
+          pillanatkép szükséges: modelo={modelo} year={year} period={period}: {error}'
+        snapshot_modelo_conflict: A nyilvántartási pillanatkép {snapshot_modelo!r}
+          nyomtatványa ütközik az észlelt {detected!r} értékkel.
+        tax_id_unresolved: Az adóazonosító nem volt meghatározható a PDF szövegéből.
+        template_not_detected: A(z) {path} sablona nem észlelhető automatikusan; a
+          felülbíráláshoz adja meg a --modelo és --año értékeket.
+        year_conflict: A --año {year} ütközik az észlelt {detected} értékkel.
+    financial:
+      providers:
+        pdf_n26:
+          errors:
+            parse_failed: Nem sikerült elemezni az N26 PDF-kivonatot. A forrás elérési
+              útja ki lett takarva a diagnosztikából.
+    justificante:
+      errors:
+        parse_failed: Nem sikerült elemezni az igazolás PDF-et. A forrás elérési útja
+          ki lett takarva a diagnosztikából.
+    pdf:
+      errors:
+        hash_failed: Nem sikerült kiszámítani a PDF ellenőrzőösszegét.
+  notificacion:
+    errors:
+      sancion_does_not_reconcile: A szankciós dokumentumon nyomtatott összegek nem
+        egyeznek, ezért a beolvasás elutasításra került. Ellenőrizze a dokumentumot
+        kézzel.
+      sancion_incomplete: A szankciós dokumentumot nem sikerült teljesen beolvasni.
+        Nyissa meg a székhelyen és ellenőrizze kézzel.
+  outbound:
+    storage:
+      factory:
+        errors:
+          drive_root_missing: 'Nincs Google Drive gyökérmappa-azonosító beállítva
+            az aktív profilhoz. Futtassa először: `aeat config google folder set <id>`.'
+          google_auth_import_failed: 'A google-auth függőség nem importálható; futtassa:
+            `uv sync`, majd próbálja újra.'
+          google_client_missing: 'Nincs Google OAuth-kliens regisztrálva az aktív
+            profilhoz. Futtassa először: `aeat config google register --client-json
+            <path>`.'
+          google_token_missing: 'Nincs Google OAuth-token mentve az aktív profilhoz.
+            Futtassa először: `aeat config google login`.'
+          kind_empty: Az CADRUMO_STORAGE_PROVIDER_KIND üres.
+          kind_unhandled: A(z) {kind} tárhelyszolgáltató-típust a factory nem kezeli.
+          kind_unknown: 'A(z) {value} tárhelyszolgáltató-típus nem ismert; várt értékek:
+            {expected}.'
+      google_drive:
+        errors:
+          content_hash_blank: A Google Drive tartalom hash nem lehet üres.
+          content_hash_mismatch: A Google Drive tartalom hash nem egyezik; a letöltött
+            payload integritásellenőrzése sikertelen.
+          create_namespace_no_id: A Google Drive nem adott vissza azonosítót a névtér
+            mappa létrehozásakor.
+          create_vault_folder_no_id: A Google Drive nem adott vissza azonosítót a
+            vault mappa létrehozásakor.
+          folder_not_owned: A Drive mappa {folder_name} nincs az alkalmazás tulajdonaként
+            jelölve; az operátori adatok védelmében az írás megtagadva.
+          former_vault_folder: A Google Drive vault mappa {vault_folder_name} az előző
+            termékhez tartozik és nem használható; használja a Cadrumo vault mappát.
+          googleapiclient_import_failed: 'A google-api-python-client függőség nem
+            importálható; futtassa: `uv sync`, majd próbálja újra.'
+          media_non_bytes: A Google Drive medialetöltés {payload_type} típust adott
+            vissza bytes helyett.
+          modified_time_invalid: A Google Drive nem adott vissza használható módosítási
+            időpontot ehhez az objektumhoz; a metaadatai nem megbízhatók.
+          namespace_blank: A Google Drive tárhely névtere nem lehet üres.
+          namespace_forbidden_characters: A Google Drive névtér {namespace} tiltott
+            útvonal-karaktereket tartalmaz.
+          namespace_not_found: 'A Google Drive névtér nem található: {namespace}.'
+          object_not_found: 'A Google Drive objektum {object_key_hmac} nem található
+            ebben a névtérben: {namespace}.'
+          request_failed: A Google Drive {action} kérés {status} állapottal sikertelen.
+          root_folder_id_blank: A Google Drive gyökérmappa azonosító nem lehet üres.
+          size_invalid: A Google Drive nem adott meg használható méretet ehhez az
+            objektumhoz; a metaadatai nem megbízhatók.
+          vault_entry_not_folder: 'A beállított Drive gyökér tartalmazza ezt: {vault_folder_name},
+            de ez nem mappa.'
+          vault_folder_name_blank: A Google Drive vault mappa neve nem lehet üres.
+          write_non_dict_response: A Google Drive {action} írási válasza váratlan
+            alakú volt.
+      local:
+        errors:
+          byte_length_invalid: 'A helyi sidecar byte_length mezőjének típusa érvénytelen:
+            {actual_type}.'
+          content_hash_blank: A helyi tartalom hash nem lehet üres.
+          content_hash_mismatch: A helyi tartalom hash nem egyezik; a payload integritásellenőrzése
+            sikertelen.
+          namespace_blank: A helyi tárhely névtere nem lehet üres.
+          namespace_create_path_too_long: 'A helyi tárhely nem tudta létrehozni a(z)
+            {namespace} névteret: az elérési út meghaladja a Windows elérésiút-hossz
+            korlátját. Helyezze át az CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb
+            útvonalra, vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat
+            config check`).'
+          namespace_create_permission: 'A helyi tárhely nem tudta létrehozni a névteret:
+            {namespace}.'
+          namespace_forbidden_characters: A helyi tárhely névtere {namespace} tiltott
+            útvonal-karaktereket tartalmaz.
+          namespace_not_found: 'A helyi névtér nem található: {namespace}.'
+          object_delete_permission: A helyi tárhely nem tudta törölni az objektum
+            payloadjat.
+          object_not_found: 'A helyi objektum {object_key_hmac} nem található ebben
+            a névtérben: {namespace}.'
+          payload_commit_failed: A helyi tárhely nem tudta atomikusan véglegesíteni
+            az objektum payloadjat.
+          payload_read_permission: A helyi tárhely nem tudta olvasni az objektum payloadjat.
+          payload_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum
+            tartalmát: az elérési út meghaladja a Windows elérésiút-hossz korlátját.
+            Helyezze át az CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra,
+            vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat config check`).'
+          payload_write_permission: A helyi tárhely nem tudta írni az objektum payloadjat.
+          sidecar_malformed: A helyi sidecar {sidecar_path} nem olvasható vagy hibás.
+          sidecar_missing: A helyi objektum sidecarja hiányzik.
+          sidecar_not_object: A helyi sidecar {sidecar_path} nem JSON objektum.
+          sidecar_write_failed: A helyi tárhely nem tudta írni az objektum sidecarjat.
+          sidecar_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum
+            sidecar fájlját: az elérési út meghaladja a Windows elérésiút-hossz korlátját.
+            Helyezze át az CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra,
+            vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat config check`).'
+          written_at_invalid: 'A helyi sidecar written_at mezője hiányzik, nem értelmezhető,
+            vagy nem tartalmaz időzónát: {actual_value}.'
+  persistence:
+    profile:
+      assets:
+        errors:
+          asset_already_exists: Ez az eszköz már szerepel a titkosított eszköznyilvántartásban.
+          load_amortizacion_ledger_failed: A titkosított amortizációs nyilvántartás
+            nem tölthető be.
+          load_asset_ledger_failed: A titkosított eszköznyilvántartás nem tölthető
+            be.
+      bienes_inversion:
+        errors:
+          load_register_failed: Nem sikerült betölteni a beruházási javak titkosított
+            áfa-korrekciós nyilvántartását.
+          record_already_exists: Ez a beruházási jószág már létezik a titkosított
+            korrekciós nyilvántartásban.
+      inventory:
+        errors:
+          inventory_ledger_already_exists: Ez a készletnyilvántartás már létezik.
+          inventory_ledger_not_found: A kért készletnyilvántartás nem található.
+          load_inventory_ledger_failed: A titkosított készletnyilvántartás nem tölthető
+            be.
+          movement_already_exists: Ez a készletmozgás már létezik.
+  sede:
+    errors:
+      censal_bad_landing: Az AEAT nyilvántartási adatlapja nem töltődött be megfelelően;
+        jelentkezz be újra, és próbáld meg ismét.
+      censal_modification_surface: A nyilvántartási olvasás elutasítva, mert módosító
+        oldalra érkezett; ez az olvasó soha nem módosítja a nyilvántartási adatokat.
+      censal_no_dispatch: Az AEAT hozzáférés-választója nem nyitotta meg a nyilvántartási
+        oldalt működő kiszolgálón; jelentkezz be újra, és próbáld meg ismét.
+      cotejo_nav_failed: Az AEAT cotejo oldalra való navigáció sikertelen volt; a
+        munkamenet lejárhatott. Futtassa a 'aeat config auth test' parancsot és próbálja
+        újra.
+      ejercicio_unavailable: Az AEAT nyilatkozatnyilvántartó nem kínálja a kért adóévet
+        ehhez a modellhez.
+      empty_identity_nif: Az AEAT munkamenet azonosító NIF-je üres; nem lehet kötni
+        az élő benyújtási megfigyelést.
+      form_render_timeout: Az AEAT nyilatkozatnyilvántartó űrlapja nem renderelődött
+        az időkorláton belül; a munkamenet lejárhatott, vagy az AEAT karbantartási
+        oldalt szolgál ki.
+      iva_wallet_empty_amount_cell: Az IVA kompenzációs tárca összeg cellája üres.
+      iva_wallet_empty_period_cell: Az IVA kompenzációs tárca időszak cellája üres.
+      justificante_column_missing: Az AEAT nyilatkozatválasz hiányzik a justificante
+        oszlopból; a táblázat struktúrája megváltozhatott.
+      landing_off_policy: Az AEAT-olvasás elutasítva, mert a betöltött oldal kívül
+        esik a felület engedélyezett kiszolgálóin, vagy írási műveletet nevez meg.
+      landing_off_read_pages: Az AEAT-olvasás elutasítva, mert olyan oldalra érkezett,
+        amelyet ez az olvasó nem olvas; ez az olvasó soha nem jut el AEAT-benyújtási
+        oldalra.
+      landing_unreadable: Az AEAT-olvasás elutasítva, mert a betöltött oldalnak nincs
+        olvasható címe, így nem állapítható meg, hol kötött ki a munkamenet. Jelentkezz
+        be újra, és próbáld meg ismét.
+      listbox_missing: Az AEAT nyilatkozatválasz hiányzik a várt listázó tárolóból;
+        az oldal struktúrája megváltozhatott.
+      listing_nav_failed: Az AEAT nyilatkozatlista navigáció sikertelen volt. Ellenőrizze
+        a hálózati kapcsolatot és próbálja újra.
+      modelo_unavailable: Az AEAT nyilatkozatnyilvántartó nem kínálja a kért modellt.
+      no_auth_session: Az AEAT hitelesítési munkamenet hiányzik vagy nincs perzisztálva;
+        futtassa először a `aeat config auth status` parancsot.
+      notification_content_requires_operator: 'Nem nyitható meg olvasatlan értesítés
+        tartalma: ez a lépés maga a kézbesítés (comparecencia), amely jogilag kézbesítetté
+        teszi és elindítja a határidőket, és az Ön aláírását igényli. Nyissa meg személyesen
+        a Sede felületén.'
+      notifications_bad_landing: Az AEAT értesítési oldala nem töltődött be megfelelően;
+        a munkamenet lejárhatott, vagy az AEAT karbantartás alatt áll. Futtassa a
+        'aeat config auth status' parancsot, és próbálja újra. Ne tekintse ezt üres
+        postafióknak.
+      parse_failed: Nem sikerült elemezni az AEAT nyilatkozatválaszt; az oldal struktúrája
+        megváltozhatott.
+      playwright_alert_modal_failed: Hiba az AEAT riasztási modal folytatásakor.
+      playwright_buscar_click_failed: Hiba a Buscar gombra való kattintáskor a Sede
+        oldalon.
+      playwright_combobox_open_failed: Hiba a Sede legördülő lista megnyitásakor.
+      playwright_combobox_select_failed: Hiba a Sede legördülő lista opciójának kiválasztásakor.
+      session_expired_nav_failed: Az AEAT nyilatkozatnyilvántartó nem töltött be;
+        a munkamenet valószínűleg lejárt. Futtassa a 'aeat config auth test' parancsot
+        és próbálja újra.
+      submitted_file_layout_parse_failed: A benyújtott fájlt nem sikerült beolvasni
+        a modell hivatalos rekordszerkezete szerint, így egyetlen rovatérték sem került
+        ki belőle. A szerkezet és a benyújtott fájl nem ért egyet abban, hogy a fájl
+        mely rekordokat tartalmazza.

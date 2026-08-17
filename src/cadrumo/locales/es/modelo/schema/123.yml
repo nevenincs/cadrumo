@@ -1,0 +1,92 @@
+modelo:
+  schema:
+    '123':
+      field:
+        official_name: Retenciones e ingresos a cuenta del IRPF, Impuesto sobre Sociedades
+          e IRNR establecimientos permanentes. Determinados rendimientos del capital
+          mobiliario o determinadas rentas.
+        title: Retenciones sobre capital mobiliario
+      revision:
+        2019-2023:
+          casilla:
+            '01':
+              help: null
+              label: Numero de perceptores
+            '02':
+              help: null
+              label: Base de retenciones e ingresos a cuenta
+            '03':
+              help: null
+              label: Retenciones e ingresos a cuenta
+            '04':
+              help: null
+              label: Ingresos de ejercicios anteriores
+            '05':
+              help: null
+              label: Regularizacion
+            '06':
+              help: null
+              label: Suma de retenciones y regularizacion
+            '07':
+              help: null
+              label: Resultado de anteriores autoliquidaciones
+            08:
+              help: null
+              label: Resultado a ingresar
+          construct:
+            modelo-123-2019-capital-withholding:
+              field:
+                title: Modelo 123 historical quarterly capital-income withholding
+                  filing
+          field:
+            label: Orden EHA/3435/2007, ejercicios 2019 a 2023
+        2024-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Numero de rentas dividendos y participaciones
+            '02':
+              help: null
+              label: Numero de rentas resto
+            '03':
+              help: null
+              label: Numero de rentas total
+            '04':
+              help: null
+              label: Base dividendos y participaciones
+            '05':
+              help: null
+              label: Base resto de rentas
+            '06':
+              help: null
+              label: Base total
+            '07':
+              help: null
+              label: Retenciones dividendos y participaciones
+            08:
+              help: null
+              label: Retenciones resto de rentas
+            09:
+              help: null
+              label: Retenciones total
+            '10':
+              help: null
+              label: Ingresos de ejercicios anteriores
+            '11':
+              help: null
+              label: Regularizacion
+            '12':
+              help: null
+              label: Suma de retenciones y regularizacion
+            '13':
+              help: null
+              label: Resultado de anteriores autoliquidaciones
+            '14':
+              help: null
+              label: Resultado a ingresar
+          construct:
+            modelo-123-current-capital-withholding:
+              field:
+                title: Modelo 123 current quarterly capital-income withholding filing
+          field:
+            label: Orden HAC/56/2024, ejercicios 2024 y siguientes

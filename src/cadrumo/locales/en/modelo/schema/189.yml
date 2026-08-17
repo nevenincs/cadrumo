@@ -1,0 +1,87 @@
+modelo:
+  schema:
+    '189':
+      field:
+        official_name: null
+        title: null
+      revision:
+        '2025':
+          casilla:
+            clave-identificacion:
+              help: null
+              label: Identification method code
+            clave-mercado:
+              help: null
+              label: Market type code
+            clave-representacion:
+              help: null
+              label: Securities representation code
+            clave-titularidad:
+              help: null
+              label: Ownership type code
+            clave-valor:
+              help: null
+              label: Security type code
+            codigo-pais:
+              help: null
+              label: Country code
+            codigo-provincia:
+              help: null
+              label: Province code
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Supplementary or replacement return
+            declarado-nif:
+              help: null
+              label: Tax ID of the reported holder
+            declarado-nombre:
+              help: null
+              label: Surname and first name, business name or corporate name of the
+                reported holder
+            declarante-nif:
+              help: null
+              label: Tax ID of the filer
+            declarante-razon-social:
+              help: null
+              label: Business name of the filer
+            ejercicio-declaracion:
+              help: null
+              label: Filing year
+            identificacion-valores:
+              help: null
+              label: Securities identifier
+            nominal-unitario-valores:
+              help: null
+              label: Unit nominal value of the securities
+            numero-identificativo-anterior:
+              help: null
+              label: Identifying number of the previous return
+            numero-justificante:
+              help: null
+              label: Filing receipt number
+            numero-total-declarados:
+              help: null
+              label: Total number of reported holders
+            numero-valores:
+              help: null
+              label: Number of securities
+            persona-relacion:
+              help: null
+              label: Contact person
+            porcentaje-participacion:
+              help: null
+              label: Ownership percentage
+            representante-legal-nif:
+              help: null
+              label: Tax ID of the legal representative
+            tipo-soporte:
+              help: null
+              label: Submission medium
+            valoracion:
+              help: null
+              label: Valuation
+            valoracion-total:
+              help: null
+              label: Total valuation
+          field:
+            label: null

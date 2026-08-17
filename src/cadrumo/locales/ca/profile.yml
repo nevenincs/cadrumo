@@ -1,0 +1,409 @@
+profile:
+  descendiente:
+    custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 61 LIRPF)
+      per custòdia compartida en %{count} descendent(s). Cada progenitor declara la
+      meitat del mínim corresponent (caselles 0513/0514 i, si escau, 0515/0516).
+  errors:
+    foral_regime: Els residents a {tax_region} tributen davant la Hisenda Foral corresponent
+      en virtut del Concert Econòmic (Llei 12/2002), no davant l'AEAT. Aquest CLI
+      no modela declaracions forals. Consulteu sede.bizkaia.eus (Biscaia), gipuzkoa.eus/ogasuna
+      (Guipúscoa), araba.eus/ogasun (Àlaba) o hacienda.navarra.es (Navarra) segons
+      el vostre territori.
+    not_configured: No hi ha cap perfil de residència fiscal configurat per a RENTA.
+      Executeu `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` per configurar-lo.
+  keys:
+    description: Claus de configuració del perfil i les seves descripcions
+    tax:
+      id: Tax identifier (NIF/NIE/CIF)
+  schema:
+    field:
+      activities:
+        cnae:
+          label: Codi CNAE
+        description:
+          label: Descripció de l'activitat
+        iae_epigraph:
+          label: Epígraf IAE
+      attribution_entity:
+        legal_form:
+          label: Forma jurídica de l'entitat en atribució
+      attribution_entity_socios:
+        base_imponible_assigned:
+          label: Base imposable atribuïda al soci
+        country_of_residence:
+          label: País de residència (només no resident sense establiment permanent)
+        name:
+          label: Nom del soci
+        nif:
+          label: NIF del soci
+        participe_clave:
+          label: Clau tipus de partícip
+        role:
+          label: Paper del membre
+        share_pct:
+          label: Percentatge de participació
+      attribution_received:
+        base_imponible_attributed:
+          label: Base imposable atribuïda al membre
+        entity_name:
+          label: Nom de l'entitat atribuent
+        entity_nif:
+          label: NIF de l'entitat atribuent
+        filing_year:
+          label: Exercici de l'atribució
+        share_pct:
+          label: Percentatge de participació atribuït
+      auth:
+        clave_movil_route:
+          label: Ruta de Cl@ve Mòbil
+        dni_nie:
+          label: DNI o NIE per a Cl@ve
+        fecha_validez:
+          label: Data de validesa
+        numero_soporte:
+          label: Número de suport
+        provider:
+          label: Mètode d'autenticació
+      capabilities:
+        cloud_evidence_upload:
+          label: Lectura de documents fora de l'equip
+        google_export:
+          label: Exportació a Google
+        llm_vision:
+          label: Lectura d'imatges en local
+      censo:
+        activity_end_date:
+          label: Data de baixa de l'activitat
+        activity_start_date:
+          label: Data d'alta de l'activitat
+        divergencia:
+          label: Divergències de l'acarament censal
+        elected_withholding_pct:
+          label: Tipus de retenció triat
+        establecimiento_type:
+          label: Tipus d'establiment
+        large_company:
+          label: Condició de gran empresa
+        public_administration_budget_gt_6000000:
+          label: Pressupost d'administració pública superior a 6.000.000 EUR
+        status:
+          label: Estat del cens
+      contact:
+        contact_person_name:
+          label: Cognoms i nom de la persona amb qui relacionar-se
+        contact_person_phone:
+          label: Telèfon de la persona amb qui relacionar-se
+        fiscal_address:
+          label: Domicili fiscal
+        fiscal_address_cadastral_reference:
+          label: Referència cadastral del domicili fiscal
+        fiscal_address_is_habitual_vivienda:
+          label: El domicili fiscal és l'habitatge habitual
+        postcode:
+          label: Codi postal
+      identity:
+        email:
+          label: Correu electrònic de contacte
+        legal_name:
+          label: Raó social
+        name:
+          label: Nom
+        notes:
+          label: Anotacions
+        surnames:
+          label: Cognoms
+        tax_id:
+          label: NIF/NIE/CIF d'identificació
+      irpf:
+        activity_kind:
+          label: Tipus d'activitat
+        art109_activity_income_withholding_ge_70pct:
+          label: Compleix l'excepció del 70 % de l'art. 109 RIRPF
+        estimation_regime:
+          label: Règim d'estimació
+        objective_estimation_modulos_iae_epigraph:
+          label: Epígraf IAE (mòduls)
+        objective_estimation_modulos_module_1_units:
+          label: Unitats del mòdul 1
+        objective_estimation_modulos_module_2_units:
+          label: Unitats del mòdul 2
+        objective_estimation_modulos_module_3_units:
+          label: Unitats del mòdul 3
+        objective_estimation_modulos_module_4_units:
+          label: Unitats del mòdul 4
+        objective_estimation_modulos_module_5_units:
+          label: Unitats del mòdul 5
+        objective_estimation_modulos_module_6_units:
+          label: Unitats del mòdul 6
+        objective_estimation_modulos_module_7_units:
+          label: Unitats del mòdul 7
+        objective_estimation_prior_year_agri_livestock_forest_gross_eur:
+          label: Ingressos agrícoles, ramaders i forestals de l'any anterior
+        objective_estimation_prior_year_gross_income_eur:
+          label: Volum d'ingressos de l'any anterior (mòduls)
+        objective_estimation_prior_year_invoice_gross_income_eur:
+          label: Ingressos facturats de l'any anterior (mòduls)
+        objective_estimation_prior_year_purchases_eur:
+          label: Compres de l'any anterior (mòduls)
+        pagadores_count:
+          label: Nombre de pagadors
+        pagadores_secondary_income:
+          label: Ingressos de pagadors secundaris
+        pagadores_total_work_income:
+          label: Rendiments íntegres del treball
+        professional_income_withholding_ge_70pct:
+          label: Retenció professional arriba al 70 %
+        special_regime:
+          label: Règim especial
+        special_regime_start_date:
+          label: Data d'inici del règim especial
+      iva:
+        autoconsumo_promotor_base:
+          label: Base imposable de l'autoconsum (promotor)
+        cash_accounting_regime_enrolled:
+          label: Inscripció al criteri de caixa
+        does_intracomunitario:
+          label: Operacions intracomunitàries
+        group_dominant_entity_enrolled:
+          label: Entitat dominant del grup d'IVA (Model 353)
+        group_member_enrolled:
+          label: Membre de grup d'IVA (Model 322)
+        hydrocarbon_deposit_advance_payment_deduction_entitled:
+          label: Dret a deduir bestretes de dipòsits d'hidrocarburs
+        intracommunity_operations_exceed_50000_eur:
+          label: Operacions intracomunitàries superiors a 50.000 EUR
+        m303_regime_composition:
+          label: Composició de règims del Model 303
+        oss_enrolled:
+          label: Inscripció a l'OSS/IOSS
+        redeme_enrolled:
+          label: Inscripció al REDEME
+        regime:
+          label: Règim d'IVA
+        roi_enrolled:
+          label: Inscripció al ROI/VIES
+        sii_enrolled:
+          label: Inscripció al SII
+        voluntary_sii_enrolled:
+          label: Inscripció voluntària al SII
+      maritime_worker:
+        pending_eu_clearance:
+          label: Pendent d'autorització d'ajudes d'Estat (UE)
+        retmar_registered:
+          label: Inscripció al RETMAR
+        tuna_fleet:
+          label: Flota tonyinaire
+        vessel_flag:
+          label: Pavelló del vaixell
+        vessel_registry:
+          label: Registre del vaixell
+        waters_type:
+          label: Tipus d'aigües
+        worker_class:
+          label: Classificació de treballador del mar
+      obligations:
+        bienes_extranjero_above_threshold:
+          label: Llindar del Model 720 superat
+        monedas_virtuales_extranjero_above_threshold:
+          label: Llindar del Model 721 superat
+        third_party_transactions_above_347_threshold:
+          label: Llindar del Model 347 superat
+      preferences:
+        output_language:
+          label: Idioma de sortida
+      properties:
+        cadastral_reference:
+          label: Referència cadastral
+        use_type:
+          label: Ús de l'immoble
+      provenance:
+        source:
+          label: Origen de la dada
+        valid_from:
+          label: Vàlid des de
+        valid_to:
+          label: Vàlid fins
+      renta_family:
+        anualidades_alimentos_euros:
+          label: Anualitats per aliments a favor dels fills per decisió judicial
+        ascendants:
+          label: Ascendents
+        cotizaciones_ss_madre_2024:
+          label: Cotitzacions a la Seguretat Social de la mare (2024)
+        descendants:
+          label: Descendents
+        descendants_eu_eea_deduction:
+          label: Deducció per descendents UE/EEE
+        descendiente:
+          label: Descendent
+        descendientes_count:
+          label: Nombre de descendents
+        madrid_nacimiento_adopcion_eligible_count:
+          label: Descendents elegibles per a la deducció de Madrid per naixement o
+            adopció
+        minor_children_in_unit:
+          label: Fills menors a la unitat familiar
+        situacion_familiar:
+          label: Situació familiar
+        unidad_familiar_otros_miembros_base:
+          label: Base imposable d'altres membres de la unitat familiar (Madrid)
+      renta_filing:
+        declaration_type:
+          label: Tipus de declaració
+      renta_rental:
+        reduccion_art_23_2_tier_2024:
+          label: Tram de reducció per lloguer (art. 23.2)
+      renta_spouse:
+        birth_date:
+          label: Data de naixement del cònjuge
+        disability_grade:
+          label: Grau de discapacitat del cònjuge
+        eu_eea_country:
+          label: País de residència UE/EEE del cònjuge
+        eu_eea_resident:
+          label: Cònjuge resident a la UE/EEE
+        name:
+          label: Nom del cònjuge
+        non_resident_irpf:
+          label: Cònjuge no resident (no contribuent IRPF)
+        sex:
+          label: Sexe del cònjuge
+        surnames:
+          label: Cognoms del cònjuge
+        tax_id:
+          label: NIF/NIE del cònjuge
+      renta_taxpayer:
+        birth_date:
+          label: Data de naixement
+        death_date:
+          label: Data de defunció
+        disability_grade:
+          label: Grau de discapacitat
+        marital_status:
+          label: Estat civil
+        marriage_date:
+          label: Data d'inici del matrimoni
+        marriage_full_year:
+          label: Matrimoni vigent tot l'any (calculat)
+        marriage_month_end:
+          label: Mes de fi del matrimoni (calculat)
+        marriage_month_start:
+          label: Mes d'inici del matrimoni (calculat)
+        sex:
+          label: Sexe
+      tax_residence:
+        ccaa:
+          label: Comunitat autònoma de residència
+        jurisdiction_scope:
+          label: Règim territorial
+      taxpayer_type:
+        country_of_fiscal_residence:
+          label: País de residència fiscal
+        entity_type:
+          label: Tipus de contribuent
+        fiscal_residency:
+          label: Residència fiscal del contribuent
+        incn_prior_12_months:
+          label: INCN dels 12 mesos anteriors
+        irpf_income_categories:
+          label: Categories de renda IRPF
+        legal_entity_form:
+          label: Forma jurídica de l'entitat
+        ley_49_2002_special_regime_option_date:
+          label: Data d'opció pel règim de la Llei 49/2002
+        ley_49_2002_special_regime_option_declared:
+          label: Opció pel règim de la Llei 49/2002
+        ley_49_2002_special_regime_renunciation_date:
+          label: Data de renúncia al règim de la Llei 49/2002
+        ley_49_2002_special_regime_renunciation_declared:
+          label: Renúncia al règim de la Llei 49/2002
+        new_entity_first_two_profit_periods:
+          label: En un dels dos primers períodes amb benefici
+        representante_fiscal_nif:
+          label: NIF del representant fiscal
+        representante_fiscal_nombre:
+          label: Nom del representant fiscal
+        sal_capital_social:
+          label: Capital social de la societat
+        sal_reserva_especial_dotada:
+          label: Reserva especial ja dotada
+        sal_socios_trabajadores_count:
+          label: Nombre de socis treballadors
+        tributacion_estado_porcentaje:
+          label: Percentatge de tributació a l'Estat
+      usage_ratios:
+        business_ratio:
+          label: Ràtio d'ús empresarial
+        category_id:
+          label: Categoria
+      vivienda_office:
+        office_m2:
+          label: Superfície destinada a oficina (m2)
+        total_m2:
+          label: Superfície total de l'habitatge (m2)
+      withholding:
+        has_employees:
+          label: Té empleats
+        modelo_111_no_retenciones_periods:
+          label: Períodes sense retencions del Model 111
+        pays_capital_income_with_retencion:
+          label: Paga rendiments de capital amb retenció
+        pays_professionals_with_retencion:
+          label: Paga a professionals amb retenció
+        pays_rent_with_retencion:
+          label: Paga lloguers amb retenció
+    section:
+      activities:
+        title: Activitats econòmiques
+      attribution_entity:
+        title: Forma jurídica de l'entitat en atribució
+      attribution_entity_socios:
+        title: Socis de l'entitat en atribució
+      attribution_received:
+        title: Rendes atribuïdes rebudes
+      auth:
+        title: Autenticació amb l'AEAT
+      capabilities:
+        title: Capacitats del servei
+      censo:
+        title: Cens i alta
+      contact:
+        title: Contacte i domicili fiscal
+      identity:
+        title: Identitat
+      irpf:
+        title: IRPF i retencions
+      iva:
+        title: Perfil d'IVA
+      maritime_worker:
+        title: Classificació de treballador del mar
+      obligations:
+        title: Llindars d'obligació de declarar
+      preferences:
+        title: Preferències de l'operador
+      properties:
+        title: Immobles i lloguer
+      provenance:
+        title: Origen i vigència
+      renta_family:
+        title: Família (Renda)
+      renta_filing:
+        title: Context de presentació (Renda)
+      renta_rental:
+        title: Context de lloguer (Renda)
+      renta_spouse:
+        title: Cònjuge (Renda)
+      renta_taxpayer:
+        title: Contribuent (Renda)
+      tax_residence:
+        title: Residència fiscal i jurisdicció
+      taxpayer_type:
+        title: Tipus de contribuent i categories de renda
+      usage_ratios:
+        title: Ràtios d'ús i deduïbilitat
+      vivienda_office:
+        title: Afectació de l'habitatge habitual
+      withholding:
+        title: Obligacions com a pagador amb retenció
+  validation:
+    required_field_missing: Falta un camp obligatori del perfil.

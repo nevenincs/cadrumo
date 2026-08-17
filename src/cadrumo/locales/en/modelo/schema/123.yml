@@ -1,0 +1,89 @@
+modelo:
+  schema:
+    '123':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-2023:
+          casilla:
+            '01':
+              help: null
+              label: Number of recipients
+            '02':
+              help: null
+              label: Withholding and advance payment tax base
+            '03':
+              help: null
+              label: Withholdings and advance payments
+            '04':
+              help: null
+              label: Income from prior years
+            '05':
+              help: null
+              label: Adjustment
+            '06':
+              help: null
+              label: Sum of withholdings and adjustment
+            '07':
+              help: null
+              label: Result of prior self-assessments
+            08:
+              help: null
+              label: Result payable
+          construct:
+            modelo-123-2019-capital-withholding:
+              field:
+                title: null
+          field:
+            label: null
+        2024-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Number of dividend and profit-sharing income items
+            '02':
+              help: null
+              label: Number of other income items
+            '03':
+              help: null
+              label: Total number of income items
+            '04':
+              help: null
+              label: Base for dividends and profit-sharing
+            '05':
+              help: null
+              label: Base for other income
+            '06':
+              help: null
+              label: Total base
+            '07':
+              help: null
+              label: Withholdings on dividends and profit-sharing
+            08:
+              help: null
+              label: Withholdings on other income
+            09:
+              help: null
+              label: Total withholdings
+            '10':
+              help: null
+              label: Income from previous tax years
+            '11':
+              help: null
+              label: Adjustment
+            '12':
+              help: null
+              label: Sum of withholdings and adjustment
+            '13':
+              help: null
+              label: Result of previous self-assessments
+            '14':
+              help: null
+              label: Result payable
+          construct:
+            modelo-123-current-capital-withholding:
+              field:
+                title: null
+          field:
+            label: null

@@ -1,0 +1,26 @@
+modelo:
+  schema:
+    '188':
+      field:
+        official_name: Modelo 188. Retenciones e ingresos a cuenta. Rentas del capital
+          mobiliario de operaciones de capitalización y contratos de seguro de vida
+          o invalidez. Resumen anual.
+        title: Retenciones capitalización y seguros de vida - resumen anual
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '03':
+              help: null
+              label: Base retenciones e ingresos a cuenta
+            '04':
+              help: null
+              label: Retenciones e ingresos a cuenta declarados
+            '05':
+              help: null
+              label: Total retenciones del resumen anual
+          construct:
+            modelo-188-calculation-construct:
+              field:
+                title: Modelo 188 calculation construct
+          field:
+            label: Orden EHA/3377/2011, ejercicios 2019 y siguientes

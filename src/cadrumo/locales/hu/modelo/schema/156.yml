@@ -1,0 +1,84 @@
+modelo:
+  schema:
+    '156':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2003-y-siguientes:
+          casilla:
+            afiliado-nif:
+              help: null
+              label: A tag vagy önsegélyezőpénztári tag adószáma
+            afiliado-nombre:
+              help: null
+              label: A tag vagy önsegélyezőpénztári tag családi és utóneve
+            cotizacion-abril:
+              help: null
+              label: 'Járulék, április: havi állapot és az esedékes járulék összege'
+            cotizacion-agosto:
+              help: null
+              label: 'Járulék, augusztus: havi állapot és az esedékes járulék összege'
+            cotizacion-diciembre:
+              help: null
+              label: 'Járulék, december: havi állapot és az esedékes járulék összege'
+            cotizacion-enero:
+              help: null
+              label: 'Járulék, január: havi állapot és az esedékes járulék összege'
+            cotizacion-febrero:
+              help: null
+              label: 'Járulék, február: havi állapot és az esedékes járulék összege'
+            cotizacion-julio:
+              help: null
+              label: 'Járulék, július: havi állapot és az esedékes járulék összege'
+            cotizacion-junio:
+              help: null
+              label: 'Járulék, június: havi állapot és az esedékes járulék összege'
+            cotizacion-marzo:
+              help: null
+              label: 'Járulék, március: havi állapot és az esedékes járulék összege'
+            cotizacion-mayo:
+              help: null
+              label: 'Járulék, május: havi állapot és az esedékes járulék összege'
+            cotizacion-noviembre:
+              help: null
+              label: 'Járulék, november: havi állapot és az esedékes járulék összege'
+            cotizacion-octubre:
+              help: null
+              label: 'Járulék, október: havi állapot és az esedékes járulék összege'
+            cotizacion-septiembre:
+              help: null
+              label: 'Járulék, szeptember: havi állapot és az esedékes járulék összege'
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Kiegészítő vagy helyettesítő bevallás
+            declarante-razon-social:
+              help: null
+              label: A bejelentő cégneve
+            numero-afiliacion:
+              help: null
+              label: Tagsági azonosító szám
+            numero-identificativo-anterior:
+              help: null
+              label: A korábbi bevallás azonosító száma
+            numero-justificante:
+              help: null
+              label: A bevallás igazolásszáma
+            numero-total-afiliados:
+              help: null
+              label: A tag- és önsegélyezőpénztári rekordok száma összesen
+            persona-relacion:
+              help: null
+              label: Kapcsolattartó személy
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az adóbevallás vonatkozási éve
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-156-informative:
+              field:
+                title: null
+          field:
+            label: null

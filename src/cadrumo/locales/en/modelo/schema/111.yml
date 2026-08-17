@@ -1,0 +1,105 @@
+modelo:
+  schema:
+    '111':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Employment income in cash, number of recipients
+            '02':
+              help: null
+              label: Employment income in cash, amount received
+            '03':
+              help: null
+              label: Employment income in cash, amount withheld
+            '04':
+              help: null
+              label: Employment income in kind, number of recipients
+            '05':
+              help: null
+              label: Employment income in kind, value received
+            '06':
+              help: null
+              label: Employment income in kind, payment on account
+            '07':
+              help: null
+              label: Business/professional income in cash, number of recipients
+            08:
+              help: null
+              label: Business/professional income in cash, amount received
+            09:
+              help: null
+              label: Business/professional income in cash, amount withheld
+            '10':
+              help: null
+              label: Business/professional income in kind, number of recipients
+            '11':
+              help: null
+              label: Business/professional income in kind, value received
+            '12':
+              help: null
+              label: Business/professional income in kind, payment on account
+            '13':
+              help: null
+              label: Prizes in cash, number of recipients
+            '14':
+              help: null
+              label: Prizes in cash, amount received
+            '15':
+              help: null
+              label: Prizes in cash, amount withheld
+            '16':
+              help: null
+              label: Prizes in kind, number of recipients
+            '17':
+              help: null
+              label: Prizes in kind, value received
+            '18':
+              help: null
+              label: Prizes in kind, payment on account
+            '19':
+              help: null
+              label: Forestry capital gains in cash, number of recipients
+            '20':
+              help: null
+              label: Forestry capital gains in cash, amount received
+            '21':
+              help: null
+              label: Forestry capital gains in cash, amount withheld
+            '22':
+              help: null
+              label: Forestry capital gains in kind, number of recipients
+            '23':
+              help: null
+              label: Forestry capital gains in kind, value received
+            '24':
+              help: null
+              label: Forestry capital gains in kind, payment on account
+            '25':
+              help: null
+              label: Image rights assignment, number of recipients
+            '26':
+              help: null
+              label: Image rights assignment, consideration paid
+            '27':
+              help: null
+              label: Image rights assignment, payment on account
+            '28':
+              help: null
+              label: Total withholdings and payments on account
+            '29':
+              help: null
+              label: Result of previous self-assessments
+            '30':
+              help: null
+              label: Result payable
+          construct:
+            modelo-111-withholding-workflow:
+              field:
+                title: null
+          field:
+            label: null

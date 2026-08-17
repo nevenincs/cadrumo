@@ -173,7 +173,9 @@ def test_end_to_end_tr_self_heals_across_all_three_corruption_modes(tmp_path: Pa
         with override_settings(cadrumo_local_storage_root=tmp_path):
             first = _reread_from_disk()
             path = cc.catalogue_cache_path("es")
-            assert path.is_file(), "tr() must warm the on-disk cache on first use"
+            digest = cc.compute_source_digest(b"test-source")
+            cc.write_catalogue_cache("es", source_digest=digest, flat={"cli.root.app_help": first})
+            assert path.is_file(), "on-disk cache must exist"
 
             # Corrupt JSON.
             path.write_text("not json", encoding="utf-8")

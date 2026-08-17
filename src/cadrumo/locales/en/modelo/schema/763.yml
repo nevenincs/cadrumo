@@ -1,0 +1,21 @@
+modelo:
+  schema:
+    '763':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2011-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the self-assessment relates
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (calendar quarter)
+          construct:
+            modelo-763-autoliquidacion:
+              field:
+                title: null
+          field:
+            label: null

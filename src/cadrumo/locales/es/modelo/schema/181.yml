@@ -1,0 +1,146 @@
+modelo:
+  schema:
+    '181':
+      field:
+        official_name: Modelo 181. Declaración informativa de préstamos y créditos,
+          y operaciones financieras relacionadas con bienes inmuebles.
+        title: Préstamos, créditos y operaciones financieras sobre inmuebles (informativa
+          anual)
+      revision:
+        2009-y-siguientes:
+          casilla:
+            cantidades-minorar-principal:
+              help: null
+              label: Cantidades destinadas a minorar el principal del prestamo
+            clave-intervencion:
+              help: null
+              label: Clave de intervencion en la operacion
+            clave-tipo-identificacion:
+              help: null
+              label: Clave tipo de identificacion
+            codigo-provincia:
+              help: null
+              label: Codigo provincia
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaracion complementaria o sustitutiva
+            declarado-nif:
+              help: null
+              label: NIF del declarado
+            declarado-nombre:
+              help: null
+              label: Apellidos y nombre o razon social del declarado
+            declarante-razon-social:
+              help: null
+              label: Razon social del declarante
+            direccion-inmueble:
+              help: null
+              label: Direccion del inmueble
+            duracion-operacion:
+              help: null
+              label: Duracion de la operacion en meses
+            fecha-operacion:
+              help: null
+              label: Fecha de la operacion
+            identificacion-operacion:
+              help: null
+              label: Identificacion del prestamo, credito u otra operacion financiera
+            importe-amortizacion-capital:
+              help: null
+              label: Importe abonado en el ejercicio en concepto de amortizacion de
+                capital
+            importe-gastos-financiacion:
+              help: null
+              label: Importe abonado en el ejercicio en concepto de gastos derivados
+                de la financiacion ajena
+            importe-intereses:
+              help: null
+              label: Importe abonado en el ejercicio en concepto de intereses
+            importe-operacion:
+              help: null
+              label: Importe del prestamo, credito u otra operacion financiera
+            importe-reintegro-intereses:
+              help: null
+              label: Importe devengado en el ejercicio en concepto de reintegro de
+                intereses
+            importe-total-capital-amortizado:
+              help: null
+              label: Importe total del capital amortizado
+            importe-total-gastos-financiacion:
+              help: null
+              label: Importe total de los gastos derivados de la financiacion ajena
+            importe-total-intereses:
+              help: null
+              label: Importe total de los intereses abonados en el ejercicio
+            importe-total-saldos-pendientes:
+              help: null
+              label: Importe total de los saldos pendientes a 31 de diciembre
+            intereses-indemnizatorios:
+              help: null
+              label: Intereses indemnizatorios
+            numero-identificativo-anterior:
+              help: null
+              label: Numero identificativo de la declaracion anterior
+            numero-identificativo-declaracion:
+              help: null
+              label: Numero identificativo de la declaracion
+            numero-total-declarados:
+              help: null
+              label: Numero total de registros declarados
+            origen-operacion:
+              help: null
+              label: Origen de la operacion
+            otras-cantidades-indemnizatorias:
+              help: null
+              label: Otras cantidades indemnizatorias
+            persona-relacion:
+              help: null
+              label: Persona con quien relacionarse
+            porcentaje-financiacion-vivienda-habitual:
+              help: null
+              label: Porcentaje de la financiacion destinado a la vivienda habitual
+            porcentaje-participacion:
+              help: null
+              label: Porcentaje de participacion
+            prefijo-codigo-iban:
+              help: null
+              label: Prefijo del codigo IBAN
+            prestamista-nif:
+              help: null
+              label: NIF del prestamista
+            prestamista-nombre:
+              help: null
+              label: Apellidos y nombre o razon social del prestamista
+            referencia-catastral:
+              help: null
+              label: Referencia catastral
+            representante-legal-nif:
+              help: null
+              label: NIF del representante legal
+            saldo-pendiente:
+              help: null
+              label: Saldo pendiente a 31 de diciembre
+            situacion-inmueble:
+              help: null
+              label: Situacion del inmueble
+            subclave-operacion:
+              help: null
+              label: Subclave de operacion
+            tipo-operacion:
+              help: null
+              label: Tipo de operacion
+            valor-tasacion-inmueble:
+              help: null
+              label: Valor de tasacion del inmueble objeto de garantia
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaración
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-181-informative:
+              field:
+                title: Modelo 181 declaración informativa
+          field:
+            label: Modelo 181 (orden-eha-3514-2009), ejercicios 2009 y siguientes

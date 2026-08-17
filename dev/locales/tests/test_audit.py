@@ -15,7 +15,21 @@ from cadrumo.tests.cli_runner import invoke_typer_app
 
 from .._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from ..cli import app
-from ..manager import LocaleError, LocaleManager, _flatten_leaf_values
+from ..manager import LocaleError, LocaleManager, _flatten_leaf_values, locale_catalogue_source
+
+
+def _catalogue_source(locale: str) -> Path:
+    """Resolve one committed catalogue's source path, shard directory or flat file.
+
+    Constructing ``LOCALES_DIR / f"{locale}.yml"`` here is what silently
+    retired both assertions below when the catalogues were resharded: the
+    gates stopped checking and started raising.
+    """
+    source = locale_catalogue_source(LOCALES_DIR, locale)
+    if source is None:
+        raise AssertionError(f"no committed catalogue found for locale {locale!r}")
+    return source
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -355,7 +369,7 @@ def test_committed_catalogues_follow_contextual_product_identity_contract() -> N
         # vacuously.
         leaves = {
             key: value
-            for key, value in _flatten_leaf_values(manager.load_locale(LOCALES_DIR / f"{locale}.yml")).items()
+            for key, value in _flatten_leaf_values(manager.load_locale(_catalogue_source(locale))).items()
             if value is not None
         }
         assert len(leaves) > 10_000, (
@@ -404,7 +418,7 @@ def test_committed_catalogues_carry_no_em_dash() -> None:
     manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR)
     violations: list[str] = []
     for locale in _LOCALES:
-        leaves = manager.load_locale(LOCALES_DIR / f"{locale}.yml")
+        leaves = manager.load_locale(_catalogue_source(locale))
         for key, value in _flatten_leaf_values(leaves).items():
             if value is None or _EM_DASH not in value:
                 continue

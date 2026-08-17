@@ -1,0 +1,57 @@
+modelo:
+  schema:
+    '117':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Nombre de perceptors per transmissions o reemborsaments d'accions
+                i participacions d'IIC
+            '02':
+              help: null
+              label: Base de retencions i ingressos a compte per transmissions o reemborsaments
+                d'accions i participacions d'IIC
+            '03':
+              help: null
+              label: Retencions i ingressos a compte per transmissions o reemborsaments
+                d'accions i participacions d'IIC
+            '04':
+              help: null
+              label: Nombre de perceptors per transmissions de drets de subscripció
+            '05':
+              help: null
+              label: Base de retencions i ingressos a compte per transmissions de
+                drets de subscripció
+            '06':
+              help: null
+              label: Retencions i ingressos a compte per transmissions de drets de
+                subscripció
+            '07':
+              help: null
+              label: Base del pagament a compte previst a la disposició addicional
+                dinovena de la Ley 35/2006
+            08:
+              help: null
+              label: Pagament a compte previst a la disposició addicional dinovena
+                de la Ley 35/2006
+            09:
+              help: null
+              label: 'Liquidació total: suma de retencions, ingressos a compte, pagaments
+                a compte i regularització'
+            '10':
+              help: null
+              label: Resultats a ingressar de declaracions anteriors pel mateix concepte,
+                exercici i període
+            '11':
+              help: null
+              label: Resultat a ingressar
+          construct:
+            modelo-117-total-liquidacion-calculation:
+              field:
+                title: null
+          field:
+            label: null

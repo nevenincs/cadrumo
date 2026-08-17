@@ -77,19 +77,19 @@ def test_roundtrip_returns_the_same_header_and_payload(tmp_path: Path) -> None:
     write_sealed_archive(
         archive_path,
         header=header,
-        payload_envelope_bytes=_PAYLOAD,
+        payload_bytes=_PAYLOAD,
     )
 
     contents = read_sealed_archive(archive_path)
     assert contents.header == header
-    assert contents.payload_envelope_bytes == _PAYLOAD
+    assert contents.payload_bytes == _PAYLOAD
 
 
 def test_written_archive_carries_exactly_the_canonical_members(tmp_path: Path) -> None:
     """No optional member exists, so the shape is a constant on disk."""
     archive_path = tmp_path / "export.cadrumo-bucket.tar.gz"
 
-    write_sealed_archive(archive_path, header=_header(), payload_envelope_bytes=_PAYLOAD)
+    write_sealed_archive(archive_path, header=_header(), payload_bytes=_PAYLOAD)
 
     with tarfile.open(archive_path, mode="r:gz") as archive:
         assert tuple(member.name for member in archive.getmembers()) == SEALED_ARCHIVE_MEMBER_NAMES
@@ -102,14 +102,14 @@ def test_writer_refuses_to_overwrite_existing_target(tmp_path: Path) -> None:
     header = _header()
 
     with pytest.raises(SealedArchiveWriteError, match="already exists"):
-        write_sealed_archive(archive_path, header=header, payload_envelope_bytes=_PAYLOAD)
+        write_sealed_archive(archive_path, header=header, payload_bytes=_PAYLOAD)
 
 
 def test_reader_rejects_layout_with_extra_member(tmp_path: Path) -> None:
     """An archive with an extra unknown member fast-fails the layout gate."""
     archive_path = tmp_path / "export.cadrumo-bucket.tar.gz"
     header = _header()
-    write_sealed_archive(archive_path, header=header, payload_envelope_bytes=_PAYLOAD)
+    write_sealed_archive(archive_path, header=header, payload_bytes=_PAYLOAD)
 
     # Re-pack the archive with an extra unknown member appended.
     rebuilt_path = tmp_path / "tampered.cadrumo-bucket.tar.gz"
@@ -212,7 +212,7 @@ def test_writer_refuses_former_suffix_without_creating_a_bundle(tmp_path: Path) 
     former_path = tmp_path / "export.aeat-bucket.tar.gz"
 
     with pytest.raises(SealedArchiveWriteError, match="former-product bundle suffix"):
-        write_sealed_archive(former_path, header=_header(), payload_envelope_bytes=_PAYLOAD)
+        write_sealed_archive(former_path, header=_header(), payload_bytes=_PAYLOAD)
 
     assert not former_path.exists()
     assert not (tmp_path / "export.cadrumo-bucket.tar.gz").exists()
@@ -224,8 +224,8 @@ def test_archive_metadata_is_normalised_byte_stable(tmp_path: Path) -> None:
     second_path = tmp_path / "second.cadrumo-bucket.tar.gz"
     header = _header()
 
-    write_sealed_archive(first_path, header=header, payload_envelope_bytes=_PAYLOAD)
-    write_sealed_archive(second_path, header=header, payload_envelope_bytes=_PAYLOAD)
+    write_sealed_archive(first_path, header=header, payload_bytes=_PAYLOAD)
+    write_sealed_archive(second_path, header=header, payload_bytes=_PAYLOAD)
 
     # The gzip stream carries its own mtime in the header which is set
     # to the archive instant; the tar member metadata is normalised.
@@ -283,7 +283,7 @@ def test_failed_write_leaves_no_file_at_the_operator_target(tmp_path: Path) -> N
         write_sealed_archive(
             target,
             header=_header(),
-            payload_envelope_bytes=b"payload-envelope-bytes",
+            payload_bytes=b"payload-envelope-bytes",
         )
 
     # Nothing at the operator's path, and no staging residue anywhere.
@@ -305,7 +305,7 @@ def test_failed_write_preserves_an_unrelated_pre_existing_target(tmp_path: Path)
         write_sealed_archive(
             archive_path,
             header=_header(),
-            payload_envelope_bytes=b"payload-envelope-bytes",
+            payload_bytes=b"payload-envelope-bytes",
         )
 
     assert archive_path.read_bytes() == b"pre-existing-bytes"
@@ -323,12 +323,12 @@ def test_successful_write_leaves_only_the_finished_archive(tmp_path: Path) -> No
     write_sealed_archive(
         archive_path,
         header=_header(),
-        payload_envelope_bytes=b"payload-envelope-bytes",
+        payload_bytes=b"payload-envelope-bytes",
     )
 
     assert [path.name for path in scan_directory(tmp_path)] == ["export.cadrumo-bucket.tar.gz"]
     recovered = read_sealed_archive(archive_path)
-    assert recovered.payload_envelope_bytes == b"payload-envelope-bytes"
+    assert recovered.payload_bytes == b"payload-envelope-bytes"
 
 
 def _member_bytes(archive: tarfile.TarFile, member: tarfile.TarInfo) -> bytes:
@@ -367,7 +367,7 @@ def test_writer_refuses_an_empty_payload_member(tmp_path: Path) -> None:
         write_sealed_archive(
             tmp_path / "export.cadrumo-bucket.tar.gz",
             header=_header(),
-            payload_envelope_bytes=b"",
+            payload_bytes=b"",
         )
 
 
@@ -382,7 +382,7 @@ def test_reader_refuses_an_empty_required_member(tmp_path: Path) -> None:
     write_sealed_archive(
         archive_path,
         header=_header(),
-        payload_envelope_bytes=b"payload-envelope-bytes",
+        payload_bytes=b"payload-envelope-bytes",
     )
     hollowed = tmp_path / "hollowed.cadrumo-bucket.tar.gz"
     with tarfile.open(archive_path, mode="r:gz") as original:
@@ -414,7 +414,7 @@ def test_reader_refuses_a_trailing_member_whatever_it_is_called(tmp_path: Path, 
     write_sealed_archive(
         archive_path,
         header=_header(),
-        payload_envelope_bytes=b"payload-envelope-bytes",
+        payload_bytes=b"payload-envelope-bytes",
     )
     repacked_path = tmp_path / "repacked.cadrumo-bucket.tar.gz"
     _repack_with_extra_member(archive_path, repacked_path, extra_name=extra_name)
@@ -433,7 +433,7 @@ def test_dropping_a_header_field_on_disk_makes_the_read_refuse(tmp_path: Path) -
     validation rather than by the writer and reader agreeing to skip it.
     """
     archive_path = tmp_path / "export.cadrumo-bucket.tar.gz"
-    write_sealed_archive(archive_path, header=_header(), payload_envelope_bytes=_PAYLOAD)
+    write_sealed_archive(archive_path, header=_header(), payload_bytes=_PAYLOAD)
 
     with tarfile.open(archive_path, mode="r:gz") as original:
         stored_header = json.loads(_member_bytes(original, original.getmember(HEADER_MEMBER_NAME)))
@@ -445,3 +445,49 @@ def test_dropping_a_header_field_on_disk_makes_the_read_refuse(tmp_path: Path) -
 
     with pytest.raises(SealedArchiveHeaderError, match="manifest_digest"):
         read_sealed_archive(damaged_path)
+
+
+def test_the_payload_is_opaque_and_carried_verbatim(tmp_path: Path) -> None:
+    """The transport carries any sealed payload byte-for-byte, parsing nothing.
+
+    This pins a contract that was ambiguous long enough to block a caller: the
+    writer's documentation once promised the payload was "already wrapped in an
+    ``Envelope``", while both implementations parsed nothing and the reader's
+    own aggregate called it opaque. A parameter whose docstring and behaviour
+    disagree is one a caller resolves by guessing.
+
+    The ruling is opacity, so it is asserted with payloads that are emphatically
+    NOT an ``Envelope`` and could never be parsed as one -- invalid UTF-8, a
+    lone NUL, a byte range covering every value. If the transport ever starts
+    validating its payload, this fails, which is the point: binding the archive
+    to one payload type would couple it to whichever caller came first, and
+    would let it REFUSE sealed material it merely failed to recognise.
+    """
+    hostile_payloads = (
+        b"\xff\xfe\x00\x01 not utf-8 and not json",
+        b"\x00",
+        bytes(range(256)),
+        b"{",
+    )
+    for index, payload in enumerate(hostile_payloads):
+        archive_path = tmp_path / f"opaque-{index}.cadrumo-bucket.tar.gz"
+        write_sealed_archive(archive_path, header=_header(), payload_bytes=payload)
+
+        contents = read_sealed_archive(archive_path)
+
+        assert contents.payload_bytes == payload, f"payload {index} was not carried verbatim"
+
+
+def test_an_empty_payload_is_the_one_refused_shape(tmp_path: Path) -> None:
+    """Opaque is not unconstrained: nothing-to-decrypt is still refused.
+
+    The single invariant the transport does enforce, kept distinct from the
+    opacity above so a reader does not conclude that "opaque" means the writer
+    accepts anything at all.
+    """
+    archive_path = tmp_path / "empty-payload.cadrumo-bucket.tar.gz"
+
+    with pytest.raises(SealedArchiveWriteError, match="nothing to decrypt"):
+        write_sealed_archive(archive_path, header=_header(), payload_bytes=b"")
+
+    assert not archive_path.exists()

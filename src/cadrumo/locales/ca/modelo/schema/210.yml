@@ -1,0 +1,118 @@
+modelo:
+  schema:
+    '210':
+      field:
+        official_name: null
+        title: null
+      revision:
+        '2025':
+          casilla:
+            base_imponible:
+              help: null
+              label: Base imposable
+            base_imponible_directa_g:
+              help: null
+              label: Base imposable (210 G)
+            base_imponible_directa_i:
+              help: null
+              label: Base imposable (210 I)
+            base_imponible_ganancias_h:
+              help: null
+              label: Base imposable ([12]+[16]) (210 H)
+            coeficiente_imputacion_inmobiliaria:
+              help: null
+              label: Coeficient d'imputació immobiliària
+            convenio_indicador:
+              help: null
+              label: Conveni
+            cuota_diferencial:
+              help: null
+              label: Quota diferencial
+            cuota_integra:
+              help: null
+              label: Quota íntegra
+            cuota_integra_reducida:
+              help: null
+              label: Quota íntegra reduïda ([24]-[27])
+            cuota_ley_irnr:
+              help: null
+              label: Quota Llei IRNR ([22]-[23])
+            deduccion_donativos:
+              help: null
+              label: Deducció per donatius
+            dias_imputacion:
+              help: null
+              label: Dies d'imputació
+            exencion_dividendos:
+              help: null
+              label: Exempció aplicada dividends (límit anual 1.500 euros) (210 R)
+            exenciones_ley_irnr_indicador:
+              help: null
+              label: Exempcions Llei IRNR, excepte dividends (límit anual 1.500 euros)
+            ganancia_diferencia:
+              help: null
+              label: Adquisició. Diferència (210 H)
+            ganancia_importe:
+              help: null
+              label: Adquisició. Guany (210 H)
+            ganancia_valor_adquisicion:
+              help: null
+              label: Adquisició. Valor d'adquisició (actualitzat) (210 H)
+            ganancia_valor_transmision:
+              help: null
+              label: Adquisició. Valor de transmissió (210 H)
+            gastos_deducibles:
+              help: null
+              label: Despeses deduïbles
+            ingreso_devolucion_anterior:
+              help: null
+              label: Ingrés/Devolució anterior (exclusivament autoliquidació complementària)
+            limite_convenio:
+              help: null
+              label: Límit Conveni
+            mejora_diferencia:
+              help: null
+              label: Millora o 2a adquisició. Diferència (210 H)
+            mejora_ganancia:
+              help: null
+              label: Millora o 2a adquisició. Guany (210 H)
+            mejora_valor_adquisicion:
+              help: null
+              label: Millora o 2a adquisició. Valor d'adquisició (actualitzat) (210
+                H)
+            mejora_valor_transmision:
+              help: null
+              label: Millora o 2a adquisició. Valor de transmissió (210 H)
+            porcentaje_convenio:
+              help: null
+              label: Percentatge Conveni (%)
+            reduccion_convenio:
+              help: null
+              label: Reducció per Conveni ([24]-[26])
+            rendimientos_integros:
+              help: null
+              label: Rendiments íntegres
+            retencion_practicada:
+              help: null
+              label: Retenció practicada
+            tipo_gravamen:
+              help: null
+              label: Tipus de gravamen
+            tipo_renta:
+              help: null
+              label: Tipus de renda
+            valor_adquisicion:
+              help: null
+              label: Valor d'adquisició
+            valor_catastral:
+              help: null
+              label: Valor cadastral
+            valor_comprobado_administracion:
+              help: null
+              label: Valor comprovat per l'Administració
+          construct:
+            m210-irnr-calculation:
+              field:
+                title: null
+          field:
+            label: null

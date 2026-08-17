@@ -1,0 +1,81 @@
+modelo:
+  schema:
+    '369':
+      field:
+        official_name: null
+        title: null
+      revision:
+        esquema-exterior:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix l'autoliquidació
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període de la declaració
+            x-d5r62bj5f1q6asj9dtp2sorldtq62bbkdtq62r0:
+              help: null
+              label: Total de quota d'IVA repercutida del Règim exterior (suma de
+                quotes per destinació)
+            x-d5r62bj5f1q6asj9dtp2sp355ppmasjmd5hmaspdcdqmut31:
+              help: null
+              label: Quota d'IVA repercutit a la destinació DE - serveis prestats
+                (Règim exterior)
+          construct:
+            modelo-369-esquema-exterior:
+              field:
+                title: null
+          field:
+            label: null
+        esquema-importacion:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix l'autoliquidació
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període de la declaració
+            x-d5r62bj9dlo6usjkc5hmirre5phnarrkc4mn8rrkc5m0:
+              help: null
+              label: Total de quota d'IVA repercutida del Règim d'importació (IOSS,
+                suma per destinació)
+            x-d5r62bj9dlo6usjkc5hmirre5pi6abjcdtriqtj1dhqmabb3elnn8o8:
+              help: null
+              label: Quota d'IVA IOSS a la destinació DE - vendes a distància de béns
+                importats ≤ 150 EUR (LIVA art. 163 quinvicies)
+          construct:
+            modelo-369-esquema-importacion:
+              field:
+                title: null
+          field:
+            label: null
+        esquema-union:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix l'autoliquidació
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període de la declaració
+            x-d5r62bjldpkmurhecdqmut315lq6ut31dg:
+              help: null
+              label: Total quota d'IVA repercutida de l'Esquema Unió (suma cross-destination,
+                cross-flow)
+            x-d5r62bjldpkmurhechiisprfdti76bb4d5pn8obecdiiqorldtq62:
+              help: null
+              label: Quota d'IVA OSS Unió a la destinació DE - vendes a distància
+                + interfícies electròniques
+            x-d5r62bjldpkmurhechiissr5e9r6ior5ecmm6tbfehgg:
+              help: null
+              label: Quota d'IVA OSS Unió a la destinació DE - serveis prestats (LIVA
+                art. 163 unvicies)
+            x-d5r62bjldpkmurhecpp2ssr5e9r6ior5ecmm6tbfehgg:
+              help: null
+              label: Quota d'IVA OSS Unió a la destinació FR - serveis prestats (LIVA
+                art. 163 unvicies)
+          construct:
+            modelo-369-esquema-union:
+              field:
+                title: null
+          field:
+            label: null

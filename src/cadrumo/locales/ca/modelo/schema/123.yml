@@ -1,0 +1,89 @@
+modelo:
+  schema:
+    '123':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-2023:
+          casilla:
+            '01':
+              help: null
+              label: Nombre de perceptors
+            '02':
+              help: null
+              label: Base de retencions i ingressos a compte
+            '03':
+              help: null
+              label: Retencions i ingressos a compte
+            '04':
+              help: null
+              label: Ingressos d'exercicis anteriors
+            '05':
+              help: null
+              label: Regularització
+            '06':
+              help: null
+              label: Suma de retencions i regularització
+            '07':
+              help: null
+              label: Resultat d'autoliquidacions anteriors
+            08:
+              help: null
+              label: Resultat a ingressar
+          construct:
+            modelo-123-2019-capital-withholding:
+              field:
+                title: null
+          field:
+            label: null
+        2024-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Nombre de rendes dividends i participacions
+            '02':
+              help: null
+              label: Nombre de la resta de rendes
+            '03':
+              help: null
+              label: Nombre total de rendes
+            '04':
+              help: null
+              label: Base dividends i participacions
+            '05':
+              help: null
+              label: Base resta de rendes
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: Retencions dividends i participacions
+            08:
+              help: null
+              label: Retencions resta de rendes
+            09:
+              help: null
+              label: Retencions total
+            '10':
+              help: null
+              label: Ingressos d'exercicis anteriors
+            '11':
+              help: null
+              label: Regularització
+            '12':
+              help: null
+              label: Suma de retencions i regularització
+            '13':
+              help: null
+              label: Resultat d'autoliquidacions anteriors
+            '14':
+              help: null
+              label: Resultat a ingressar
+          construct:
+            modelo-123-current-capital-withholding:
+              field:
+                title: null
+          field:
+            label: null

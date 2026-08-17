@@ -16,7 +16,7 @@ from ......core.config import override_settings
 from ......core.errors import ERROR_REGISTRY, build_error_envelope, render_error_text
 from ......core.i18n import clear_output_language_cache
 from ......tests.master_key import EphemeralMasterKeyProvider
-from ...errors import MasterKeyKeychainLockedError
+from ...bucket import BucketLockedError
 from .._errors import MasterKeyReentrantError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -60,21 +60,28 @@ def test_master_key_reentrant_error_envelope_round_trip() -> None:
 def test_master_key_reentrant_error_carries_provider_name_in_context() -> None:
     """MasterKeyReentrantError surfaces provider_name in its context dict."""
 
-    err = MasterKeyReentrantError("FileFallbackMasterKeyProvider")
+    err = MasterKeyReentrantError("EphemeralMasterKeyProvider")
 
     assert err.context is not None
-    assert err.context["provider_name"] == "FileFallbackMasterKeyProvider"
+    assert err.context["provider_name"] == "EphemeralMasterKeyProvider"
 
 
-def test_master_key_keychain_locked_error_renders_locked_operator_category() -> None:
-    """A locked OS keychain is a locked runtime state, not an auth rejection."""
+def test_a_locked_runtime_state_renders_the_locked_operator_category() -> None:
+    """A locked runtime state is a LOCKED category, not an auth rejection.
 
-    err = MasterKeyKeychainLockedError("keychain locked")
+    Re-founded on the bucket-session lock after the keychain-locked error was
+    deleted with the shared-master key store it reported on. The property is
+    the storage layer's, not that one class's: a lock the operator can clear
+    must reach them as LOCKED, so the envelope steers them to unlocking rather
+    than to re-entering a credential. Keeping the property and moving its
+    subject is the point -- deleting the case with the class would have retired
+    the assertion along with the thing it was merely using to make it.
+    """
+    err = BucketLockedError(bucket_id="2f9a4c61-7b30-4e58-9d12-6a05c8e3b7f4")
     envelope = build_error_envelope(err)
 
-    assert envelope.code == "LOCKED_STORAGE_MASTER_KEY_KEYCHAIN"
+    assert envelope.code == "LOCKED_STORAGE_BUCKET_SESSION"
     assert envelope.category == "LOCKED"
-    assert envelope.retryable is True
     # The rendered prefix is localised and the catalogue default is Spanish, so
     # the operator category is asserted against a pinned language.
     with override_settings(cadrumo_output_language="en"):

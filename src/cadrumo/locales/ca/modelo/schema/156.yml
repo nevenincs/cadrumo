@@ -1,0 +1,90 @@
+modelo:
+  schema:
+    '156':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2003-y-siguientes:
+          casilla:
+            afiliado-nif:
+              help: null
+              label: NIF de l'afiliat o mutualista
+            afiliado-nombre:
+              help: null
+              label: Cognoms i nom de l'afiliat o mutualista
+            cotizacion-abril:
+              help: null
+              label: 'Cotització de abril: situació mensual i import de la quota meritada'
+            cotizacion-agosto:
+              help: null
+              label: 'Cotització de agost: situació mensual i import de la quota meritada'
+            cotizacion-diciembre:
+              help: null
+              label: 'Cotització de desembre: situació mensual i import de la quota
+                meritada'
+            cotizacion-enero:
+              help: null
+              label: 'Cotització de gener: situació mensual i import de la quota meritada'
+            cotizacion-febrero:
+              help: null
+              label: 'Cotització de febrer: situació mensual i import de la quota
+                meritada'
+            cotizacion-julio:
+              help: null
+              label: 'Cotització de juliol: situació mensual i import de la quota
+                meritada'
+            cotizacion-junio:
+              help: null
+              label: 'Cotització de juny: situació mensual i import de la quota meritada'
+            cotizacion-marzo:
+              help: null
+              label: 'Cotització de març: situació mensual i import de la quota meritada'
+            cotizacion-mayo:
+              help: null
+              label: 'Cotització de maig: situació mensual i import de la quota meritada'
+            cotizacion-noviembre:
+              help: null
+              label: 'Cotització de novembre: situació mensual i import de la quota
+                meritada'
+            cotizacion-octubre:
+              help: null
+              label: 'Cotització de octubre: situació mensual i import de la quota
+                meritada'
+            cotizacion-septiembre:
+              help: null
+              label: 'Cotització de setembre: situació mensual i import de la quota
+                meritada'
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaració complementària o substitutiva
+            declarante-razon-social:
+              help: null
+              label: Raó social del declarant
+            numero-afiliacion:
+              help: null
+              label: Número d'afiliació
+            numero-identificativo-anterior:
+              help: null
+              label: Número identificatiu de la declaració anterior
+            numero-justificante:
+              help: null
+              label: Número de justificant de la declaració
+            numero-total-afiliados:
+              help: null
+              label: Nombre total de registres d'afiliats o mutualistes
+            persona-relacion:
+              help: null
+              label: Persona amb qui relacionar-se
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-156-informative:
+              field:
+                title: null
+          field:
+            label: null
