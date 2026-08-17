@@ -1,0 +1,92 @@
+modelo:
+  schema:
+    '130':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: Total cumulative business income for the tax year.
+              label: Income
+            '02':
+              help: Total cumulative business expenses for the tax year.
+              label: Expenses
+            '03':
+              help: Net yield from direct-estimation economic activities, calculated
+                as income minus expenses.
+              label: Net yield
+            '04':
+              help: Fractional payment amount for direct-estimation activities before
+                prior payments and withholdings.
+              label: Fractional payment amount
+            '05':
+              help: Fractional payments already made earlier in the same tax year
+                for direct-estimation activities.
+              label: Prior fractional payments
+            '06':
+              help: Withholdings and payments on account borne during the period for
+                direct-estimation activities.
+              label: Withholdings and payments on account
+            '07':
+              help: Partial Section I result after subtracting prior payments and
+                withholdings from the direct-estimation fractional payment.
+              label: Partial result of Section I
+            08:
+              help: Income volume for the quarter from agricultural, livestock, forestry,
+                or fishing activities.
+              label: Quarterly income volume
+            09:
+              help: Fractional payment amount for agricultural, livestock, forestry,
+                or fishing activities.
+              label: Fractional payment amount
+            '10':
+              help: Withholdings and payments on account borne during the period for
+                agricultural, livestock, forestry, or fishing activities.
+              label: Withholdings and payments on account
+            '11':
+              help: Partial Section II result after subtracting withholdings from
+                the agricultural, livestock, forestry, or fishing fractional payment.
+              label: Partial result of Section II
+            '12':
+              help: Sum of the partial results from Sections I and II.
+              label: Sum of partial results
+            '13':
+              help: Reduction applied when net yields fall within the regulatory threshold
+                for Modelo 130.
+              label: Reduction for net yields
+            '14':
+              help: Amount remaining after applying the net-yield reduction.
+              label: Net amount after reduction
+            '15':
+              help: Deduction for negative results from previous quarters of the same
+                tax year.
+              label: Negative results from previous quarters
+            '16':
+              help: Deduction for investment in the taxpayer's main residence when
+                the transitional regime applies.
+              label: Deduction for investment in main residence
+            '17':
+              help: Difference after applying prior-quarter negative results and any
+                main-residence deduction.
+              label: Difference
+            '18':
+              help: Amount payable already reported in previous self-assessments for
+                the same period and year.
+              label: Amount payable from previous self-assessments
+            '19':
+              help: Final Modelo 130 amount payable after all deductions and prior
+                self-assessments.
+              label: Final result
+            saldo-negativo-fin-periodo:
+              help: Computed carry-forward seed when casilla 17 is negative, used
+                as deductible casilla 15 in a later quarter.
+              label: Negative balance transferable to later periods (max 0, -casilla
+                17)
+          construct:
+            modelo-130-direct-estimation-instalment:
+              field:
+                title: null
+          field:
+            label: null

@@ -1,0 +1,69 @@
+modelo:
+  schema:
+    '190':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2024-y-siguientes:
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: null
+              label: Supplementary declaration
+            x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
+              help: null
+              label: Contact person's email address
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: null
+              label: Declaration identifying number
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: null
+              label: Identifying number of the previous declaration
+            x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
+              help: null
+              label: Total amount of payments made
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              help: null
+              label: Contact person's surnames and given name
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              help: null
+              label: Contact person's telephone number
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: null
+              label: Total amount of withholdings and advance payments
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              help: null
+              label: Replacement declaration
+            x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
+              help: null
+              label: Total number of payments made
+            x-e1in4opecdm62tj5:
+              help: null
+              label: Income key
+            x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
+              help: null
+              label: Payments on account made on in-kind income
+            x-e1in4opedpkmc:
+              help: null
+              label: Recipient's tax ID (NIF)
+            x-e1in4opedpnmqojick:
+              help: null
+              label: Recipient's surnames and given name, or legal name
+            x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
+              help: null
+              label: Gross cash income not arising from work incapacity
+            x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
+              help: null
+              label: Valuation of in-kind income not arising from work incapacity
+            x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
+              help: null
+              label: Withholdings applied to cash income
+            x-e1in4opeedqm4orcc5r6a:
+              help: null
+              label: Income subkey
+          construct:
+            modelo-190-annual-summary:
+              field:
+                title: null
+          field:
+            label: null

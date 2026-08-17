@@ -1,0 +1,414 @@
+modelo:
+  schema:
+    '604':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2021-2023:
+          casilla:
+            x-c5n6au3f5pn7arb5e9niqqjledq6ipj9cdgmst35:
+              help: null
+              label: Informative annex. Receipt number
+            x-cdnmqs3c5pi6aorcc5p62or9dtn2qorfdlo6opbdcln78obid5gg:
+              help: null
+              label: Supplementary return
+            x-cdnmqs3c5pn7arb5e9niqqjledq6ipj9cdgmst355lgmst35e9kmusg:
+              help: null
+              label: Receipt number of the previous return
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the self-assessment relates
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Language of the return
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (calendar month)
+            x-chim6r1eehkn0rpdc5qn8rrcd5onaqb4c5hmirre:
+              help: null
+              label: 'Self-assessment type (I: payable, N: nil)'
+            x-chnmqbb5ecn64r3fe5qma:
+              help: null
+              label: Tax domicile in Spanish territory. Block
+            x-chnmqbb5ecn66obcd5j6ior1chnn4bbeelmmasjf:
+              help: null
+              label: Tax domicile in Spanish territory. Number qualifier
+            x-chnmqbb5ecn66rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Tax domicile in Spanish territory. Postcode
+            x-chnmqbb5ecn66rr4d5jmubbge9nncqbecdkm2:
+              help: null
+              label: Tax domicile in Spanish territory. Province code
+            x-chnmqbb5ecn66rrde1m6arb5dpq6u:
+              help: null
+              label: Tax domicile in Spanish territory. Address supplement
+            x-chnmqbb5ecn6asr3c5m6asj1:
+              help: null
+              label: Tax domicile in Spanish territory. Staircase
+            x-chnmqbb5ecn6orr3c5m6ip31cg:
+              help: null
+              label: Tax domicile in Spanish territory. Locality or town
+            x-chnmqbb5ecn6qtbed5hmis39ds:
+              help: null
+              label: Tax domicile in Spanish territory. Municipality
+            x-chnmqbb5ecn6srrdc9p6abbmd5gg:
+              help: null
+              label: Tax domicile in Spanish territory. Street name
+            x-chnmqbb5ecn6stbdclp6ubb3c5pm2:
+              help: null
+              label: Tax domicile in Spanish territory. House number
+            x-chnmqbb5ecn70r31dpq62:
+              help: null
+              label: Tax domicile in Spanish territory. Floor
+            x-chnmqbb5ecn70rriehgmo:
+              help: null
+              label: Tax domicile in Spanish territory. Entrance
+            x-chnmqbb5ecn70sjfepkmsor9c4:
+              help: null
+              label: Tax domicile in Spanish territory. Province
+            x-chnmqbb5ecn70tb5e9q62:
+              help: null
+              label: Tax domicile in Spanish territory. Door
+            x-chnmqbb5ecn78qbgdsmmstbdclp62or9dtn0:
+              help: null
+              label: Tax domicile in Spanish territory. Numbering type
+            x-chnmqbb5ecn78qbgdsmncqb1:
+              help: null
+              label: Tax domicile in Spanish territory. Street type
+            x-chnmqbb5f0n66rr4d5jmubbgc5kn6:
+              help: null
+              label: Tax domicile abroad. Country code
+            x-chnmqbb5f0n66rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Tax domicile abroad. Postcode (ZIP)
+            x-chnmqbb5f0n66rrde1m6arb5dpq6u:
+              help: null
+              label: Tax domicile abroad. Address supplement
+            x-chnmqbb5f0n68rrdd5hmir39ds:
+              help: null
+              label: Tax domicile abroad. Address
+            x-chnmqbb5f0n70ob9ec:
+              help: null
+              label: Tax domicile abroad. Country
+            x-chnmqbb5f0n70rr2dhgm6qbfdo:
+              help: null
+              label: Tax domicile abroad. Town or city
+            x-chnmqbb5f0n70sjfepkmsor9c4mn4pb7d5nmsbb5edq62p3f:
+              help: null
+              label: Tax domicile abroad. Province, region or state
+            x-dhkn2bhg64mm4objckmmirbgdtn6iojcck:
+              help: null
+              label: Taxable non-exempt transactions for the period. Taxable base
+                [01]
+            x-dhkn2bhg68mm6tbfehgg:
+              help: null
+              label: Taxable non-exempt transactions for the period. Tax [02]
+            x-dhkn2bhg6cmm4objckmn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Adjustments. Taxable base [03]
+            x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsrld9in8obj:
+              help: null
+              label: Taxable non-exempt transactions for the period. Sign of the taxable
+                base [03]
+            x-dhkn2bhg6gmm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Adjustments. Tax [04]
+            x-dhkn2bhg6gmn6qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Adjustments. Sign of the tax [04]
+            x-dhkn2bhg6kmmus35e9gm6qbfdpin6bb5f1imst31ec:
+              help: null
+              label: Exempt transactions carried out in the period [05]
+            x-dhkn2bhg6omm2bb4cli7aor9e8:
+              help: null
+              label: To be deducted [06]
+            x-dhkn2bhg6smn4pbjelm78ob4ds:
+              help: null
+              label: Self-assessment result [07]
+            x-edo2sorfchkmerpdc9km6:
+              help: null
+              label: Taxable person. BIC code
+            x-edo2sorfchkmerpddhimi:
+              help: null
+              label: Taxable person. LEI code (ISO 17442)
+            x-edo2ss35e9pmurj15lhmurjkc5hn8ro:
+              help: null
+              label: Taxable person. Contact person
+            x-edo2st35dhimcrredsmm6rreehgm6t3f:
+              help: null
+              label: Taxable person. Contact telephone
+          construct:
+            modelo-604-autoliquidacion:
+              field:
+                title: null
+          field:
+            label: null
+        2024-y-siguientes:
+          casilla:
+            x-c5n6au3f5pn7arb5e9niqqjledq6ipj9cdgmst35:
+              help: null
+              label: Informative annex. Receipt number
+            x-cdnmqs3c5pi6aorcc5p62or9dtn2qorfdlo6opbdcln78obid5gg:
+              help: null
+              label: Supplementary return
+            x-cdnmqs3c5pn7arb5e9niqqjledq6ipj9cdgmst355lgmst35e9kmusg:
+              help: null
+              label: Receipt number of the previous return
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the self-assessment relates
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Language of the return
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (calendar month)
+            x-chim6r1eehkn0rpdc5qn8rrcd5onaqb4c5hmirre:
+              help: null
+              label: 'Self-assessment type (I: payable, N: nil)'
+            x-chnmqbb5ecn64r3fe5qma:
+              help: null
+              label: Tax domicile in Spanish territory. Block
+            x-chnmqbb5ecn66obcd5j6ior1chnn4bbeelmmasjf:
+              help: null
+              label: Tax domicile in Spanish territory. Number qualifier
+            x-chnmqbb5ecn66rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Tax domicile in Spanish territory. Postcode
+            x-chnmqbb5ecn66rr4d5jmubbge9nncqbecdkm2:
+              help: null
+              label: Tax domicile in Spanish territory. Province code
+            x-chnmqbb5ecn66rrde1m6arb5dpq6u:
+              help: null
+              label: Tax domicile in Spanish territory. Address supplement
+            x-chnmqbb5ecn6asr3c5m6asj1:
+              help: null
+              label: Tax domicile in Spanish territory. Staircase
+            x-chnmqbb5ecn6orr3c5m6ip31cg:
+              help: null
+              label: Tax domicile in Spanish territory. Locality or town
+            x-chnmqbb5ecn6qtbed5hmis39ds:
+              help: null
+              label: Tax domicile in Spanish territory. Municipality
+            x-chnmqbb5ecn6srrdc9p6abbmd5gg:
+              help: null
+              label: Tax domicile in Spanish territory. Street name
+            x-chnmqbb5ecn6stbdclp6ubb3c5pm2:
+              help: null
+              label: Tax domicile in Spanish territory. House number
+            x-chnmqbb5ecn70r31dpq62:
+              help: null
+              label: Tax domicile in Spanish territory. Floor
+            x-chnmqbb5ecn70rriehgmo:
+              help: null
+              label: Tax domicile in Spanish territory. Entrance
+            x-chnmqbb5ecn70sjfepkmsor9c4:
+              help: null
+              label: Tax domicile in Spanish territory. Province
+            x-chnmqbb5ecn70tb5e9q62:
+              help: null
+              label: Tax domicile in Spanish territory. Door
+            x-chnmqbb5ecn78qbgdsmmstbdclp62or9dtn0:
+              help: null
+              label: Tax domicile in Spanish territory. Numbering type
+            x-chnmqbb5ecn78qbgdsmncqb1:
+              help: null
+              label: Tax domicile in Spanish territory. Street type
+            x-chnmqbb5f0n66rr4d5jmubbgc5kn6:
+              help: null
+              label: Tax domicile abroad. Country code
+            x-chnmqbb5f0n66rr4d5jmubbgdtpn8obc:
+              help: null
+              label: Tax domicile abroad. Postcode (ZIP)
+            x-chnmqbb5f0n66rrde1m6arb5dpq6u:
+              help: null
+              label: Tax domicile abroad. Address supplement
+            x-chnmqbb5f0n68rrdd5hmir39ds:
+              help: null
+              label: Tax domicile abroad. Address
+            x-chnmqbb5f0n70ob9ec:
+              help: null
+              label: Tax domicile abroad. Country
+            x-chnmqbb5f0n70rr2dhgm6qbfdo:
+              help: null
+              label: Tax domicile abroad. Town or city
+            x-chnmqbb5f0n70sjfepkmsor9c4mn4pb7d5nmsbb5edq62p3f:
+              help: null
+              label: Tax domicile abroad. Province, region or state
+            x-dhkn2bhg64mm4objckmmirbgdtn6iojcck:
+              help: null
+              label: Taxable non-exempt transactions for the period. Taxable base
+                [01]
+            x-dhkn2bhg68mm6tbfehgg:
+              help: null
+              label: Taxable non-exempt transactions for the period. Tax [02]
+            x-dhkn2bhg6cmm4objckmn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Adjustments. Taxable base [03]
+            x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Adjustments. Sign of the taxable base [03]
+            x-dhkn2bhg6gmm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Adjustments. Tax [04]
+            x-dhkn2bhg6gmn6qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Adjustments. Sign of the tax [04]
+            x-dhkn2bhg6kmmus35e9gm6qbfdpin6bb5f1imst31ec:
+              help: null
+              label: Exempt transactions carried out in the period [05]
+            x-dhkn2bhg6omm2bb4cli7aor9e8:
+              help: null
+              label: To be deducted [06]
+            x-dhkn2bhg6smn4pbjelm78ob4ds:
+              help: null
+              label: Self-assessment result [07]
+            x-dhkn2bhg70mm8qb6clp6arj3d5gg:
+              help: null
+              label: Difference ([02] - [04]) [08]
+            x-dhkn2bhg74mm6tbfehgiqpbjehgm8ro:
+              help: null
+              label: Tax on the period's taxable non-exempt transactions attributable
+                to the State Administration [09]
+            x-dhkn2bhh60mm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6bb5edq62p3f:
+              help: null
+              label: Tax on adjustments made in the period attributable to the State
+                Administration [10]
+            x-dhkn2bhh60mn6qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aspdclpn8ob4ds:
+              help: null
+              label: Sign of the period's adjustment tax attributable to the State
+                Administration [10]
+            x-dhkn2bhh64mn0rricdimst31d9iiqobke9km4tb9c9m6abb5edq62p3f:
+              help: null
+              label: Percentage attributable to the State Administration [11]
+            x-dhkn2bhh68mn4pbjelm78ob4dsmmasrkc5i6u:
+              help: null
+              label: Result attributable to the State Administration ([09] - [10])
+                [12]
+            x-edo2sorfchkmerpdc9km6:
+              help: null
+              label: Taxable person. BIC code
+            x-edo2sorfchkmerpddhimi:
+              help: null
+              label: Taxable person. LEI code (ISO 17442)
+            x-edo2ss35e9pmurj15lhmurjkc5hn8ro:
+              help: null
+              label: Taxable person. Contact person
+            x-edo2st35dhimcrredsmm6rreehgm6t3f:
+              help: null
+              label: Taxable person. Contact telephone
+            x-ehin4shec5m62tj15phnarrkc4mn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Taxation by territory. Álava. Tax on adjustments made in the
+                period [14]
+            x-ehin4shec5m62tj15phnarrkc4mn6tbaclq62spddpniqpbocln78obj:
+              help: null
+              label: Taxation by territory. Álava. Tax on taxable non-exempt transactions
+                for the period [13]
+            x-ehin4shec5m62tj15phnarrkc4mn8rrkc5m2qobke9km4tb9c9m6a:
+              help: null
+              label: Taxation by territory. Álava. Total attributable tax [15]
+            x-ehin4shec5m62tj15pkmqs3fe9q6abbfe1in4ob3d5nmspbj5lingpbeehgn6:
+              help: null
+              label: Taxation by territory. Álava. Amount of exempt transactions [17]
+            x-ehin4shec5m62tj15po6usj3cln78obackmm2t3id5h7aqb2dhig:
+              help: null
+              label: Taxation by territory. Álava. Attributable percentage [16]
+            x-ehin4shec5m62tj15ppmipredsmm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Taxation by territory. Álava. Sign of the adjustment tax for
+                the period [14]
+            x-ehin4sheclpn8ob4dsn66tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Taxation by territory. State. Tax on adjustments made in the
+                period [34]
+            x-ehin4sheclpn8ob4dsn66tbfehgiqsrld9in8obj5ln6ubb5f1imst31ec:
+              help: null
+              label: Taxation by territory. State. Tax on taxable non-exempt transactions
+                for the period [33]
+            x-ehin4sheclpn8ob4dsn66tbfehgiqt3fehgmobb1ehp6iojld5h6op8:
+              help: null
+              label: Taxation by territory. State. Total attributable tax [35]
+            x-ehin4sheclpn8ob4dsn6irbgdtp78p9ddto6asj1cdkmurj5ecmmau35dpq62so:
+              help: null
+              label: Taxation by territory. State. Amount of exempt transactions [37]
+            x-ehin4sheclpn8ob4dsn70rricdimst31d9iiqobke9km4tb9c9m6a:
+              help: null
+              label: Taxation by territory. State. Attributable percentage [36]
+            x-ehin4sheclpn8ob4dsn76qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Taxation by territory. State. Sign of the adjustment tax for
+                the period [34]
+            x-ehin4shectqmis3lf9hmuo9ecdqmut315lp6aorkd5j6ior1cdkmurj5ec:
+              help: null
+              label: Taxation by territory. Gipuzkoa. Tax on adjustments made in the
+                period [19]
+            x-ehin4shectqmis3lf9hmuo9ecdqmut315lpnaqj5ehgn6bbedsmmau35dpq62so:
+              help: null
+              label: Taxation by territory. Gipuzkoa. Tax on taxable non-exempt transactions
+                for the period [18]
+            x-ehin4shectqmis3lf9hmuo9ecdqmut315lq6ut31dgmm2t3id5h7aqb2dhig:
+              help: null
+              label: Taxation by territory. Gipuzkoa. Total attributable tax [20]
+            x-ehin4shectqmis3lf9hmuo9ed5mn0rriehiiqrrgclp62or9dtn6aspdcls6arjkc5pg:
+              help: null
+              label: Taxation by territory. Gipuzkoa. Amount of exempt transactions
+                [22]
+            x-ehin4shectqmis3lf9hmuo9ee1nn4or5dpq62qj55lgn8sj9c9qmiojcck:
+              help: null
+              label: Taxation by territory. Gipuzkoa. Attributable percentage [21]
+            x-ehin4shectqmis3lf9hmuo9eedkmerjf5lhnarrkc4mn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Taxation by territory. Gipuzkoa. Sign of the adjustment tax for
+                the period [19]
+            x-ehin4shedpgncobie9gisorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Taxation by territory. Navarre. Tax on adjustments made in the
+                period [29]
+            x-ehin4shedpgncobie9gisorldtq62bbjell6at31ecmmsrpdcls6arjkc5pg:
+              help: null
+              label: Taxation by territory. Navarre. Tax on taxable non-exempt transactions
+                for the period [28]
+            x-ehin4shedpgncobie9gisorldtq62bbkdtq62r1dc5q74qb2elkm4r35:
+              help: null
+              label: Taxation by territory. Navarre. Total attributable tax [30]
+            x-ehin4shedpgncobie9gisqbde1nn4t355lnn0pbic5hmirreclpiqpbocln78obj:
+              help: null
+              label: Taxation by territory. Navarre. Amount of exempt transactions
+                [32]
+            x-ehin4shedpgncobie9giss3fe9hmarjkc5l6abb1ehp6iojld5h6op8:
+              help: null
+              label: Taxation by territory. Navarre. Attributable percentage [31]
+            x-ehin4shedpgncobie9gissr9ctn6ubb3elnn8o9de9im6t39cpkm6ob3d5nmspbj:
+              help: null
+              label: Taxation by territory. Navarre. Sign of the adjustment tax for
+                the period [29]
+            x-ehin4sheepknkor1f5gisorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
+              help: null
+              label: Taxation by territory. Bizkaia. Tax on adjustments made in the
+                period [24]
+            x-ehin4sheepknkor1f5gisorldtq62bbjell6at31ecmmsrpdcls6arjkc5pg:
+              help: null
+              label: Taxation by territory. Bizkaia. Tax on taxable non-exempt transactions
+                for the period [23]
+            x-ehin4sheepknkor1f5gisorldtq62bbkdtq62r1dc5q74qb2elkm4r35:
+              help: null
+              label: Taxation by territory. Bizkaia. Total attributable tax [25]
+            x-ehin4sheepknkor1f5gisqbde1nn4t355lnn0pbic5hmirreclpiqpbocln78obj:
+              help: null
+              label: Taxation by territory. Bizkaia. Amount of exempt transactions
+                [27]
+            x-ehin4sheepknkor1f5giss3fe9hmarjkc5l6abb1ehp6iojld5h6op8:
+              help: null
+              label: Taxation by territory. Bizkaia. Attributable percentage [26]
+            x-ehin4sheepknkor1f5gissr9ctn6ubb3elnn8o9de9im6t39cpkm6ob3d5nmspbj:
+              help: null
+              label: Taxation by territory. Bizkaia. Sign of the adjustment tax for
+                the period [24]
+          construct:
+            modelo-604-autoliquidacion:
+              field:
+                title: null
+          field:
+            label: null

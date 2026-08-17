@@ -1,0 +1,117 @@
+modelo:
+  schema:
+    '345':
+      field:
+        official_name: null
+        title: null
+      revision:
+        '2025':
+          casilla:
+            anio-nacimiento:
+              help: null
+              label: null
+            beneficiario-nif:
+              help: null
+              label: null
+            clave:
+              help: null
+              label: null
+            codigo-provincia:
+              help: null
+              label: null
+            datos-adicionales-clave-i:
+              help: null
+              label: null
+            datos-adicionales-clave-m:
+              help: null
+              label: null
+            datos-adicionales-claves-abc:
+              help: null
+              label: null
+            datos-identificativos-empleador:
+              help: null
+              label: Identifying details of the employer promoting or holding the
+                social welfare scheme
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Supplementary or replacement return
+            declarado-nif:
+              help: null
+              label: null
+            declarado-nombre:
+              help: null
+              label: null
+            declarante-nif:
+              help: null
+              label: null
+            declarante-razon-social:
+              help: null
+              label: null
+            devoluciones-excesos:
+              help: null
+              label: null
+            ejercicio-declaracion:
+              help: null
+              label: null
+            empleador-nif:
+              help: null
+              label: null
+            empleador-nombre:
+              help: null
+              label: null
+            entidad-aseguradora-nif:
+              help: null
+              label: null
+            fondo-pensiones-nif:
+              help: null
+              label: null
+            fondo-pensiones-numero-registro:
+              help: null
+              label: null
+            importe:
+              help: null
+              label: null
+            importe-total-aportaciones:
+              help: null
+              label: null
+            numero-identificativo-anterior:
+              help: null
+              label: Identifying number of the previous return
+            numero-identificativo-declaracion:
+              help: null
+              label: Declaration identifying number
+            pepp-cuenta-subcuenta:
+              help: null
+              label: null
+            pepp-denominacion:
+              help: null
+              label: null
+            pepp-numero-inscripcion:
+              help: null
+              label: null
+            persona-relacion:
+              help: null
+              label: Contact person
+            pias-fecha-primera-prima:
+              help: null
+              label: null
+            pias-importe-acumulado:
+              help: null
+              label: null
+            plan-pensiones-denominacion:
+              help: null
+              label: null
+            rendimientos-trabajo-superiores-60000:
+              help: null
+              label: null
+            representante-legal-nif:
+              help: null
+              label: Tax ID of the legal representative
+            subclave:
+              help: null
+              label: null
+            total-declarados:
+              help: null
+              label: null
+          field:
+            label: null

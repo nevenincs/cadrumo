@@ -1,0 +1,78 @@
+modelo:
+  schema:
+    '216':
+      field:
+        official_name: Modelo 216. Impuesto sobre la Renta de no Residentes. Rentas
+          obtenidas sin mediación de establecimiento permanente. Retenciones e ingresos
+          a cuenta. Declaración-documento de ingreso.
+        title: IRNR retenciones e ingresos a cuenta
+      revision:
+        2024-y-siguientes:
+          casilla:
+            '05':
+              help: null
+              label: Número de rentas. Dividendos y otras rentas de participación
+                en fondos propios de entidades
+            '06':
+              help: null
+              label: Número de rentas. Resto de rentas
+            '07':
+              help: null
+              label: Número de rentas. Total
+            08:
+              help: null
+              label: Base de retenciones e ingresos a cuenta. Dividendos y otras rentas
+                de participación en fondos propios de entidades
+            09:
+              help: null
+              label: Base de retenciones e ingresos a cuenta. Resto de rentas
+            '10':
+              help: null
+              label: Base de retenciones e ingresos a cuenta. Total
+            '11':
+              help: null
+              label: Retenciones e ingresos a cuenta. Dividendos y otras rentas de
+                participación en fondos propios de entidades
+            '12':
+              help: null
+              label: Retenciones e ingresos a cuenta. Resto de rentas
+            '13':
+              help: null
+              label: Retenciones e ingresos a cuenta. Total
+            '14':
+              help: null
+              label: Rentas no sometidas a retención o ingreso a cuenta. Número de
+                rentas. Dividendos y otras rentas de participación en fondos propios
+                de entidades
+            '15':
+              help: null
+              label: Rentas no sometidas a retención o ingreso a cuenta. Número de
+                rentas. Resto de rentas
+            '16':
+              help: null
+              label: Rentas no sometidas a retención o ingreso a cuenta. Número de
+                rentas. Total
+            '17':
+              help: null
+              label: Rentas no sometidas a retención o ingreso a cuenta. Base. Dividendos
+                y otras rentas de participación en fondos propios de entidades
+            '18':
+              help: null
+              label: Rentas no sometidas a retención o ingreso a cuenta. Base. Resto
+                de rentas
+            '19':
+              help: null
+              label: Rentas no sometidas a retención o ingreso a cuenta. Base. Total
+            '20':
+              help: null
+              label: Resultados a ingresar de anteriores declaraciones por el mismo
+                concepto, ejercicio y período
+            '21':
+              help: null
+              label: Resultado a ingresar
+          construct:
+            modelo-216-calculation-construct:
+              field:
+                title: Modelo 216 calculation construct
+          field:
+            label: Orden HAC/56/2024, ejercicios 2024 y siguientes

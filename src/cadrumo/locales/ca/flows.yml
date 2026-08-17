@@ -1,0 +1,399 @@
+flows:
+  compare_select:
+    candidate: '{label} (origen: {provenance})'
+    defer_label: Decidir-ho més tard
+  confirm:
+    'no': 'No'
+    'yes': Sí
+  errors:
+    blank_required: 'Aquest camp és obligatori: introdueix un valor.'
+    checkbox_required: Selecciona almenys una opció.
+    checkbox_unknown: 'Opció desconeguda; valors acceptats: %{choices}.'
+    checkpoint_store_missing: El flux {flow_id} ofereix desar i sortir en el mode
+      {mode}, però no hi ha cap magatzem de punts de desada connectat, de manera que
+      l'execució s'ha rebutjat en lloc de perdre les teves respostes.
+    invalid_confirm: Respon sí o no.
+    invalid_date: Introdueix una data amb el format AAAA-MM-DD (per exemple 2026-05-14).
+    invalid_decimal: Introdueix un import amb punt decimal (per exemple 1234.56).
+    invalid_integer: Introdueix un nombre enter.
+    select_unknown: 'Tria un dels valors acceptats: %{choices}.'
+    tui_abandoned: El flux {flow_id} s'ha tancat en el mode {mode} abans d'enviar-lo
+      o desar-lo; no s'ha registrat res.
+    unexpected_app_type: La pantalla interactiva no està associada a una aplicació
+      de flux.
+    unsupported_console: Aquesta consola no pot mostrar preguntes interactives. Executa
+      el flux des d'un terminal real o guia'l amb un fitxer de respostes.
+  login:
+    cancel_button: Cancel·la
+    intro: Tria el perfil que vols obrir i escriu la contrasenya que el protegeix.
+      No es desbloqueja res fins que la contrasenya s'accepti.
+    password_hint: La contrasenya que vas triar en crear aquest perfil. No es pot
+      restablir.
+    password_label: Contrasenya
+    profile_label: Perfil
+    refusal:
+      password_required: Escriu la contrasenya d'aquest perfil.
+      unlock_failed: No s'ha pogut obrir el perfil.
+    section: Perfil i contrasenya
+    title: Inicia la sessió al teu perfil
+    unlock_button: Inicia la sessió
+  manager:
+    action:
+      abandoned: Sense canvis.
+      add_row: Afegir una fila
+      add_row_done: S'ha afegit la fila %{index} de %{section}.
+      add_row_empty: No s'ha emplenat res, així que no s'ha afegit cap fila.
+      add_row_incomplete: A la fila li manquen dades obligatòries, així que no s'ha
+        desat res.
+      add_row_none: Aquest esquema de perfil no declara cap secció amb files.
+      add_row_required: És obligatori; la fila no es pot afegir sense aquesta dada.
+      add_row_section: A quina secció s'afegeix
+      auth_clave_incomplete: A Cl@ve encara li falta %{missing}. No s'ha desat res.
+      auth_clave_movil_route_app_request: Sol·licitud a l'aplicació
+      auth_clave_movil_route_qr: Codi QR
+      auth_contraste_missing: 'La sol·licitud a l''aplicació de Cl@ve Mòbil necessita
+        una dada de contrast del document: %{nie_field} per a un NIE o %{dni_field}
+        per a un DNI. Obriu Identificació, empleneu el camp aplicable i torneu a intentar
+        la sincronització.'
+      auth_fecha_validez_invalid: Introduïu la data de validesa com a AAAA-MM-DD,
+        per exemple 1990-01-31.
+      auth_tax_id_invalid: Aquest NIF o NIE no és vàlid. Comproveu la lletra final
+        i introduïu-lo tal com figura al vostre document, per exemple 12345678Z.
+      busy: Encara hi ha una altra operació en curs. Espera que acabi.
+      censal_pull: Emplenar amb les dades censals de l'AEAT
+      censal_pull_auth_incomplete: La vostra identificació és incompleta, així que
+        encara no es pot llegir l'AEAT. Completeu-la primer.
+      censal_pull_cleared: 'L''AEAT encara té un valor per als camps que vau buidar:
+        %{paths}. S''han deixat buits; buidar-los aquí no canvia el registre de l''AEAT.'
+      censal_pull_contested: 'L''AEAT discrepa del que vau declarar a: %{paths}. La
+        vostra resposta es manté; resoleu cada cas vosaltres mateixos.'
+      censal_pull_done: 'Dades censals de l''AEAT llegides: %{adopted} camp(s) emplenats,
+        %{unchanged} ja coincidents, %{diverging} discrepants.'
+      censal_pull_no_provider: Trieu com us identifiqueu davant l'AEAT abans de llegir
+        les vostres dades censals.
+      certificate: Certificat
+      certificate_active: Certificat actiu
+      certificate_done: 'Identificació: %{provider}; certificat actiu: %{name}.'
+      export: Exportar còpia
+      export_destination: Ruta del fitxer de destinació
+      export_done: Còpia xifrada escrita a %{destination}.
+      export_passphrase: Contrasenya que protegirà la còpia
+      failed: L'operació no s'ha completat.
+      filed_history_pull_all: Recollir l'historial de declaracions de l'AEAT
+      filed_history_pull_all_done: '{captured} declaració(ns) capturada(es), {refused}
+        rebutjada(es); cartera d''IVA: {iva_wallet_status}; notificacions: {notificaciones_status}.'
+      filed_history_pull_all_refused: 'No s''han pogut llegir aquests parells i NO
+        s''han declarat buits: {pairs}. Torneu a executar per reintentar-ho.'
+      google_export: Exportar a Google Sheets
+      google_export_done: Model %{modelo} exportat a %{spreadsheet_url}.
+      google_export_modelo: Model
+      google_export_period: Període
+      google_export_year: Any
+      google_export_year_invalid: Introdueix un any entre 2000 i 2099.
+      logout: Tanca la sessió
+      logout_done: Sessió tancada.
+      provider:
+        certificate: Certificat electrònic
+        clave_movil: Cl@ve Mòbil
+        clave_permanente: Cl@ve Permanent
+      working: S'està executant {action}...
+    actions:
+      section: Accions
+    choice_unavailable: Opció no disponible
+    column:
+      field: Camp
+      state: Estat
+      value: Valor
+    edit:
+      cancel: Cancel·la
+      clear: Esborra
+      masked_kept: Aquest valor està ocult, per això el camp comença buit. Deixa'l
+        buit per conservar el valor desat o escriu-ne un de nou per substituir-lo.
+      refused:
+        boolean: '''%{value}'' no és una resposta de sí o no. Respon Sí o No.'
+        date: '''%{value}'' no és una data. Fes servir el format AAAA-MM-DD - per
+          exemple 1978-03-15.'
+        email: '''%{value}'' no és una adreça de correu electrònic. Introdueix-ne
+          una amb la forma nom@exemple.com.'
+        enum: '''%{value}'' no s''accepta aquí. Tria''n un de: %{accepted}.'
+        numeric: '''%{value}'' no és un nombre que aquest camp accepti%{accepted}.
+          Introdueix un nombre, amb punt per als decimals.'
+      required_blank: '{field} és obligatori, així que no pot quedar en blanc. Introdueix
+        un valor o cancel·la per deixar-lo sense canvis.'
+      save: Desa
+      shape:
+        date: 'Format: AAAA-MM-DD - per exemple 1978-03-15.'
+        decimal: Un nombre, amb punt per als decimals - per exemple 1234.56.
+        email: Una adreça de correu electrònic - per exemple nom@exemple.cat.
+        integer: Un nombre enter, sense separador de milers.
+        money: Un import en euros, amb punt per als decimals - per exemple 1234.56.
+      write_failed: No s'ha pogut desar el camp. Torna-ho a provar.
+      write_in_flight: S'està desant el camp anterior. Espera que acabi i torna-ho
+        a provar.
+    field_unavailable: Camp de perfil no disponible
+    language:
+      unavailable: Aquest perfil no ofereix cap configuració d'idioma.
+    namespace_detail: detall {number}
+    next_step_modelo: Les dades declarades d'aquest perfil el dirigeixen al Model
+      {modelo}.
+    required_field_unavailable: Camp obligatori del perfil
+    section_title: '{title} - {present}/{total}'
+    title: 'Perfil: {profile}'
+  modelo_review:
+    column:
+      action: Acció
+      blocked_by: Bloquejada per
+      casilla: Casella
+      casilla_id: ID de casella
+      code: Codi
+      concrete: Origen concret
+      declared: Origen declarat
+      expectation_id: ID d'expectativa
+      facts: Fets
+      grounding: Fonamentació
+      kind: Tipus
+      label: Etiqueta
+      message: Missatge
+      official: Representació oficial
+      realised: Valor materialitzat
+      schema: Esquema
+      severity: Gravetat
+    filter:
+      absent: Absent
+      all: Tots els valors
+      binding_presence: Presència de vincle
+      binding_resolved: Resolució del vincle
+      binding_source: Origen concret del vincle
+      casilla_blocker: Acció bloquejant de casella
+      casilla_blocker_presence: Presència de bloqueig de casella
+      estado_casilla_oficial: Estat de casella oficial
+      filters: Filtres
+      finding_kind: Tipus d'incidència
+      finding_severity: Gravetat de la incidència
+      formula_presence: Presència de fórmula
+      input_kind: Tipus d'entrada declarat
+      no_matching_blockers: Cap bloqueig coincideix amb els filtres actius.
+      no_matching_casillas: Cap casella coincideix amb els filtres actius.
+      no_matching_findings: Cap incidència coincideix amb els filtres actius.
+      option:
+        binding_source:
+          atribucion_member: Membre d'atribució de rendes
+          bienes_inversion_regularizacion: Regularització de béns d'inversió
+          borrador: Esborrany de l'AEAT
+          collectible_invoice: Factura emesa
+          donativo_donor: Donant
+          foreign_asset: Actiu estranger
+          iva_compensation_annual_partition: Compensació anual d'IVA
+          iva_wallet_decision: Decisió de saldo d'IVA
+          ledger_impatriado_income_aggregation: Totals d'ingressos d'impatriats
+          ledger_irnr_income_aggregation: Totals d'ingressos de no residents
+          ledger_iva_aggregation: Totals del llibre d'IVA
+          ledger_oss_aggregation: Totals del llibre OSS
+          ledger_renta_gastos_estimacion_directa_aggregation: Totals de despeses en
+            estimació directa
+          ledger_renta_gastos_pago_fraccionado_aggregation: Totals de despeses del
+            pagament fraccionat
+          ledger_renta_income_aggregation: Totals d'ingressos
+          ledger_transaction: Moviment del llibre
+          m303_regimen_simplificado_annual_summary: Resum règim simplificat (model
+            303)
+          manual_input: Entrada manual
+          payable_invoice: Factura rebuda
+          previous_filing: Declaració anterior
+          profile: Perfil
+          prorrata_regularizacion: Regularització de prorrata
+          purchase_invoice_evidence: Evidència de factura de compra
+          refund_operation: Operació de reemborsament
+          related_party_operation: Operació vinculada
+          relation_prefill: Declaració relacionada
+          retenciones_aggregation: Totals de retencions
+          withholding: Registre de retenció
+        estado_casilla_oficial:
+          addressed: Representada directament
+          represented_via_binding: Representada mitjançant vincle
+          undefined: Sense definir
+        finding_kind:
+          advisory: Avís
+          blocking_rule: Regla bloquejant
+          cross_period_dependency_unclean: Dependència anterior no neta
+          missing_required_casilla: Falta una casella obligatòria
+          reconciliation_mismatch: Discrepància de conciliació
+        finding_severity:
+          blocking: Bloquejant
+          warning: Advertiment
+        input_kind:
+          bound: Vinculada
+          computed: Calculada
+          informational: Informativa
+          manual: Manual
+          projection_only: Només projecció
+        operator_action:
+          capture_external_evidence: Captura evidència externa
+          complete_document_evidence: Completa l'evidència documental
+          confirm_group_membership: Confirma la pertinença al grup
+          file_prior_period: Presenta el període anterior
+          import_ledger_data: Importa dades del llibre
+          re_verify: Torna a verificar
+          resolve_identity: Resol la identitat
+          resolve_revision_mismatch: Resol la discrepància de revisió
+          resolve_value_divergence: Resol la diferència de valor
+          review_advisory: Revisa l'avís
+          set_profile_fact: Completa una dada del perfil
+          supply_manual_input: Aporta una dada manual
+        origin_anomaly:
+          broken_calculation_chain: Cadena de càlcul interrompuda
+          operator_override: Substitució de l'operador
+        realised_kind:
+          COMPUTED: Calculat
+          DEFAULT: Predeterminat
+          EMPTY: Buit
+          INHERITED: Heretat
+          LITERAL: Literal
+        relation_channel:
+          alternate_binding: Vincle alternatiu
+          formula_binding: Vincle de fórmula
+          formula_relation: Relació de fórmula
+          primary_binding: Vincle principal
+      origin_anomaly: Anomalia d'origen
+      origin_anomaly_presence: Presència d'anomalia d'origen
+      present: Present
+      realised_kind: Tipus de valor realitzat
+      record_blocker: Acció bloquejant del registre
+      relation_channel: Canal de relació
+      relation_presence: Presència de relació
+      reset: Restableix els filtres
+      resolved: Resolt
+      unresolved: Sense resoldre
+    summary:
+      calculation_revision: Revisió del càlcul
+      lifecycle_state: Estat del cicle de vida
+      progress: Progrés
+      registry_revision: Revisió del registre
+      verification_outcome: Resultat de la verificació
+      work_unit: Unitat de treball
+    title: Modelo {modelo} · {filing_year} · {period}
+  progress:
+    current_answer: 'Resposta actual: {value}'
+    current_answer_secret: 'Resposta actual: (oculta)'
+    failure_mode: 'Compte: {text}'
+    format_hint: 'Format esperat: {hint}'
+    legal_ref: 'Base legal: %{ref} - %{label}'
+    optional: Opcional
+    page_header: Pregunta {position} de {total} - secció {section}
+    required: Obligatori
+  registration:
+    confirm_label: Repeteix la contrasenya
+    create_button: Crea el perfil
+    intro: 'Tria un nom per a aquest perfil i una contrasenya que el protegeixi. No
+      cal res més: el teu perfil existeix tan bon punt continuïs, i la resta la completes
+      quan vulguis.'
+    password_hint: Com a mínim {minimum_length} caràcters. Unes quantes paraules corrents
+      seguides són més fàcils de recordar i més difícils d'endevinar que una sola
+      paraula curta i complicada.
+    password_label: Contrasenya
+    refusal:
+      confirmation_mismatch: Les dues contrasenyes no coincideixen.
+      username_required: Introdueix un nom per a aquest perfil.
+    section: Nom i contrasenya
+    strength:
+      fair: Raonable.
+      strong: Forta.
+      too_short: 'Massa curta: calen com a mínim {minimum_length} caràcters.'
+      weak: Acceptada, però feble. Allargar-la ajuda més que afegir-hi símbols.
+    title: Crea el teu perfil
+    username_hint: Com apareix aquest perfil a les llistes. El pots canviar més endavant.
+    username_label: Nom del perfil
+    why_password: 'Les teves dades fiscals es queden en aquest ordinador i no s''envien
+      enlloc. La contrasenya les xifra al disc, de manera que no es poden llegir sense
+      tu. No es pot restablir: si la perds, les dades són irrecuperables.'
+  review:
+    action_edit: Edita una resposta
+    action_prompt: Què vols fer?
+    action_restart: Torna a començar
+    action_save_exit: Desa i surt
+    action_submit: Envia
+    column_answer: Resposta
+    column_question: Pregunta
+    column_registered: Registrat
+    column_status: Estat
+    edit_not_editable: La pregunta {page_key} ja no es pot editar.
+    edit_unknown: No hi ha cap pregunta amb el número {number}.
+    edit_which: 'Quin número de pregunta vols editar? '
+    header: Revisió - {answered} preguntes respostes.
+    header_tui: 'Revisió - {answered} respostes, {remaining} obligatòries pendents,
+      a punt per enviar: {eligible}'
+    mode_create: mode de creació
+    mode_modify: mode de modificació
+    orphan_marker: (ja no es pregunta)
+    page_deferred: 'La pregunta %{page_key} està ajornada: decideix abans de presentar.'
+    page_invalid: La pregunta %{page_key} té una resposta no vàlida.
+    page_stale: 'Revisa la pregunta %{page_key}: ha canviat una resposta anterior.'
+    question_unavailable: La pregunta ja no està disponible
+    required_unanswered: La pregunta obligatòria %{page_key} està sense respondre.
+    reset_stale_confirm: La pregunta {page_key} ja no es planteja. Vols esborrar-ne
+      la resposta desada?
+    reset_stale_done: S'ha esborrat la resposta desada de {page_key}.
+    restart_confirm: Vols tornar a començar i descartar totes les respostes?
+    row: '{number}. {page_key} - estat: {status}'
+    save_unavailable: Desar i sortir no està disponible en el mode {mode}; completa
+      el flux d'una sola vegada.
+    section_unavailable: Secció no disponible
+  status:
+    auth:
+      absolute_deadline: Límit absolut de la sessió
+      certificate_source: Origen del certificat
+      idle_deadline: Límit d'inactivitat de la sessió
+      login_not_ready: sense verificar
+      login_ready: a punt
+      provider: Proveïdor
+      provider_none: sense configurar
+      provider_unknown: Proveïdor desconegut
+      status: Accés
+      subject: Titular
+    binding_quit: Surt
+    masked_value: (ocult)
+    profile:
+      column:
+        field: Camp
+        value: Valor
+      field_unavailable: Camp no disponible
+      none: No hi ha cap perfil actiu.
+      repeated_field: '{label} (element {row})'
+      value_unavailable: Valor no disponible
+    profiles:
+      column:
+        active: Actiu
+        label: Perfil
+        status: Estat
+      none: No hi ha perfils registrats.
+      status:
+        complete: complet
+        incomplete: incomplet
+        unknown: desconegut
+    section:
+      auth: Autenticació
+      notices: Avisos
+      profile: Perfil actiu
+      profiles: Perfils
+    title: Estat
+  tui:
+    binding_back: Anterior
+    binding_reset: Restableix
+    binding_restart: Reinicia
+    binding_return: Torna
+    binding_review: Resum
+    binding_save_exit: Desa i surt
+    binding_submit: Presenta
+    button_back: Enrere
+    button_next: Següent
+    button_review: Revisió
+    choice_unavailable: Opció no disponible
+    confirm_restart:
+      cancel: Cancel·lar
+      confirm: Reiniciar
+      message: Això esborra totes les respostes donades fins ara i torna a la primera
+        pàgina. No es pot desfer.
+      title: Reiniciar tot el procés?
+    header: '{flow} - pregunta {position} de {total}, secció {section}'
+    header_single_section: '{flow} - pregunta {position} de {total}'
+    section_unavailable: Secció no disponible

@@ -1,0 +1,23 @@
+modelo:
+  schema:
+    '763':
+      field:
+        official_name: Modelo 763. Impuesto sobre actividades de juego en los supuestos
+          de actividades anuales o plurianuales. Autoliquidación.
+        title: Impuesto sobre actividades de juego - autoliquidación (anuales/plurianuales)
+      revision:
+        2011-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la autoliquidación
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (trimestre natural)
+          construct:
+            modelo-763-autoliquidacion:
+              field:
+                title: Modelo 763 autoliquidación del Impuesto sobre actividades de
+                  juego
+          field:
+            label: Modelo 763 (orden-eha-1881-2011), ejercicios 2011 y siguientes

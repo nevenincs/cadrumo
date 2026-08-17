@@ -1,0 +1,684 @@
+modelo:
+  schema:
+    '202':
+      casilla:
+        continuidad:
+          is-pf-mod-40-2-a-ingresar:
+            help: null
+            label: Mod. 40.2 LIS - A ingresar
+          is-pf-mod-40-2-base-pago-fraccionado:
+            help: null
+            label: Mod. 40.2 LIS - Base del pago fraccionado
+          is-pf-mod-40-2-resultado-declaracion-anterior:
+            help: null
+            label: Mod. 40.2 LIS - Resultado de la declaracion anterior (complementarias)
+          is-pf-mod-40-3-amortizacion-30pct-dism:
+            help: null
+            label: Mod. 40.3 LIS - 30% gastos amortizacion - Disminuciones
+          is-pf-mod-40-3-b1-base-pago-fraccionado:
+            help: null
+            label: Mod. 40.3 LIS B1 - Caso general - Base pago fraccionado
+          is-pf-mod-40-3-b1-compensacion-cuotas-neg-coop:
+            help: null
+            label: Mod. 40.3 LIS B1 - Compensacion de cuotas negativas (cooperativas)
+          is-pf-mod-40-3-b1-dotaciones-art-11-12:
+            help: null
+            label: Mod. 40.3 LIS B1 - Dotaciones del art. 11.12 LIS
+          is-pf-mod-40-3-b1-porcentaje:
+            help: null
+            label: Mod. 40.3 LIS B1 - Caso general - Porcentaje
+          is-pf-mod-40-3-b1-reserva-nivelacion-convertida-aum:
+            help: null
+            label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Aumentos
+          is-pf-mod-40-3-b1-reserva-nivelacion-convertida-dis:
+            help: null
+            label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Disminuciones
+          is-pf-mod-40-3-b1-resultado-previo:
+            help: null
+            label: Mod. 40.3 LIS B1 - Caso general - Resultado previo
+          is-pf-mod-40-3-b2-base-pago-fraccionado:
+            help: null
+            label: Mod. 40.3 LIS B2 - Base del pago fraccionado
+          is-pf-mod-40-3-b2-base-tipo-1:
+            help: null
+            label: Mod. 40.3 LIS B2 - Base a tipo 1
+          is-pf-mod-40-3-b2-base-tipo-2:
+            help: null
+            label: Mod. 40.3 LIS B2 - Base a tipo 2
+          is-pf-mod-40-3-b2-compensacion-cuotas-neg-coop:
+            help: null
+            label: Mod. 40.3 LIS B2 - Compensacion de cuotas negativas (cooperativas)
+          is-pf-mod-40-3-b2-dotaciones-art-11-12-coop:
+            help: null
+            label: Mod. 40.3 LIS B2 - Dotaciones art. 11.12 LIS (cooperativas)
+          is-pf-mod-40-3-b2-porcentaje-1:
+            help: null
+            label: Mod. 40.3 LIS B2 - Porcentaje 1
+          is-pf-mod-40-3-b2-porcentaje-2:
+            help: null
+            label: Mod. 40.3 LIS B2 - Porcentaje 2
+          is-pf-mod-40-3-b2-reserva-nivelacion-aumentos:
+            help: null
+            label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Aumentos
+          is-pf-mod-40-3-b2-reserva-nivelacion-disminuciones:
+            help: null
+            label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Disminuciones
+          is-pf-mod-40-3-b2-resultado-previo:
+            help: null
+            label: Mod. 40.3 LIS B2 - Resultado previo
+          is-pf-mod-40-3-base-imponible-previa:
+            help: null
+            label: Mod. 40.3 LIS - Base imponible previa
+          is-pf-mod-40-3-bonificaciones:
+            help: null
+            label: Mod. 40.3 LIS - Bonificaciones del periodo computado
+          is-pf-mod-40-3-cantidad-a-ingresar:
+            help: null
+            label: Mod. 40.3 LIS - Cantidad a ingresar (mayor de claves [32] y [33])
+          is-pf-mod-40-3-compensacion-bases-negativas:
+            help: null
+            label: Mod. 40.3 LIS - Compensacion de bases negativas de ejercicios anteriores
+          is-pf-mod-40-3-correcciones-is-aumentos:
+            help: null
+            label: Mod. 40.3 LIS - Correcciones por IS - Aumentos
+          is-pf-mod-40-3-correcciones-is-disminuciones:
+            help: null
+            label: Mod. 40.3 LIS - Correcciones por IS - Disminuciones
+          is-pf-mod-40-3-minimo-a-ingresar:
+            help: null
+            label: Mod. 40.3 LIS - Minimo a ingresar (CN >= 10 millones euros)
+          is-pf-mod-40-3-pagos-previos-territorio-comun:
+            help: null
+            label: Mod. 40.3 LIS - Pagos fraccionados de periodos anteriores en Territorio
+              Comun
+          is-pf-mod-40-3-remanente-reserva-capitalizacion:
+            help: null
+            label: Mod. 40.3 LIS - Remanente reserva de capitalizacion no aplicada
+              por insuficiencia de base
+          is-pf-mod-40-3-reserva-nivelacion-aumentos:
+            help: null
+            label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Aumentos
+          is-pf-mod-40-3-reserva-nivelacion-disminuciones:
+            help: null
+            label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Disminuciones
+          is-pf-mod-40-3-resto-correcciones-aumentos:
+            help: null
+            label: Mod. 40.3 LIS - Resto correcciones - Aumentos
+          is-pf-mod-40-3-resto-correcciones-disminuciones:
+            help: null
+            label: Mod. 40.3 LIS - Resto correcciones - Disminuciones
+          is-pf-mod-40-3-resultado:
+            help: null
+            label: Mod. 40.3 LIS - Resultado
+          is-pf-mod-40-3-resultado-contable:
+            help: null
+            label: Mod. 40.3 LIS - Resultado contable despues del IS
+          is-pf-mod-40-3-resultado-declaracion-anterior:
+            help: null
+            label: Mod. 40.3 LIS - Resultado de la declaracion anterior (complementaria)
+          is-pf-mod-40-3-total-correcciones-aumentos:
+            help: null
+            label: Mod. 40.3 LIS - TOTAL correcciones - Aumentos
+          is-pf-mod-40-3-total-correcciones-disminuciones:
+            help: null
+            label: Mod. 40.3 LIS - TOTAL correcciones - Disminuciones
+          is-pf-mod-40-3-volumen-territorio-comun-pct:
+            help: null
+            label: Mod. 40.3 LIS - Volumen operaciones en Territorio Comun (%)
+          retenciones-ingresos-a-cuenta:
+            help: null
+            label: Mod. 40.3 LIS - Retenciones e ingresos a cuenta sobre ingresos
+              del periodo computado
+      field:
+        official_name: Impuesto sobre Sociedades. Impuesto sobre la Renta de no Residentes
+          (establecimientos permanentes y entidades en régimen de atribución de rentas
+          constituidas en el extranjero con presencia en territorio español). Pago
+          fraccionado.
+        title: IS pago fraccionado
+      revision:
+        2019-2022:
+          casilla:
+            '01':
+              help: null
+              label: Mod. 40.2 LIS - Base del pago fraccionado
+            '02':
+              help: null
+              label: Mod. 40.2 LIS - Resultado de la declaracion anterior (complementarias)
+            '03':
+              help: null
+              label: Mod. 40.2 LIS - A ingresar
+            '04':
+              help: null
+              label: Mod. 40.3 LIS - Resultado contable despues del IS
+            '05':
+              help: null
+              label: Mod. 40.3 LIS - Correcciones por IS - Aumentos
+            '06':
+              help: null
+              label: Mod. 40.3 LIS - Correcciones por IS - Disminuciones
+            '07':
+              help: null
+              label: Mod. 40.3 LIS - Resto correcciones - Aumentos
+            08:
+              help: null
+              label: Mod. 40.3 LIS - Resto correcciones - Disminuciones
+            '13':
+              help: null
+              label: Mod. 40.3 LIS - Base imponible previa
+            '14':
+              help: null
+              label: Mod. 40.3 LIS - Compensacion de bases negativas de ejercicios
+                anteriores
+            '16':
+              help: null
+              label: Mod. 40.3 LIS B1 - Caso general - Base pago fraccionado
+            '17':
+              help: null
+              label: Mod. 40.3 LIS B1 - Caso general - Porcentaje
+            '18':
+              help: null
+              label: Mod. 40.3 LIS B1 - Caso general - Resultado previo
+            '19':
+              help: null
+              label: Mod. 40.3 LIS B2 - Base del pago fraccionado
+            '20':
+              help: null
+              label: Mod. 40.3 LIS B2 - Base a tipo 1
+            '21':
+              help: null
+              label: Mod. 40.3 LIS B2 - Porcentaje 1
+            '22':
+              help: null
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 1
+            '23':
+              help: null
+              label: Mod. 40.3 LIS B2 - Base a tipo 2
+            '24':
+              help: null
+              label: Mod. 40.3 LIS B2 - Porcentaje 2
+            '25':
+              help: null
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 2
+            '26':
+              help: null
+              label: Mod. 40.3 LIS B2 - Resultado previo
+            '27':
+              help: null
+              label: Mod. 40.3 LIS - Bonificaciones del periodo computado
+            '28':
+              help: null
+              label: Mod. 40.3 LIS - Retenciones e ingresos a cuenta sobre ingresos
+                del periodo computado
+            '29':
+              help: null
+              label: Mod. 40.3 LIS - Volumen operaciones en Territorio Comun (%)
+            '30':
+              help: null
+              label: Mod. 40.3 LIS - Pagos fraccionados de periodos anteriores en
+                Territorio Comun
+            '31':
+              help: null
+              label: Mod. 40.3 LIS - Resultado de la declaracion anterior (complementaria)
+            '32':
+              help: null
+              label: Mod. 40.3 LIS - Resultado
+            '33':
+              help: null
+              label: Mod. 40.3 LIS - Minimo a ingresar (CN >= 10 millones euros)
+            '34':
+              help: null
+              label: Mod. 40.3 LIS - Cantidad a ingresar (mayor de claves [32] y [33])
+            '37':
+              help: null
+              label: Mod. 40.3 LIS - 30% gastos amortizacion - Disminuciones
+            '38':
+              help: null
+              label: Mod. 40.3 LIS - TOTAL correcciones - Aumentos
+            '39':
+              help: null
+              label: Mod. 40.3 LIS - TOTAL correcciones - Disminuciones
+            '40':
+              help: null
+              label: Mod. 40.3 LIS B1 - Compensacion de cuotas negativas (cooperativas)
+            '42':
+              help: null
+              label: Mod. 40.3 LIS B2 - Compensacion de cuotas negativas (cooperativas)
+            '44':
+              help: null
+              label: Mod. 40.3 LIS - Remanente reserva de capitalizacion no aplicada
+                por insuficiencia de base
+            '45':
+              help: null
+              label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Aumentos
+            '46':
+              help: null
+              label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Disminuciones
+            '47':
+              help: null
+              label: Mod. 40.3 LIS B1 - Dotaciones del art. 11.12 LIS
+            '48':
+              help: null
+              label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Aumentos
+            '49':
+              help: null
+              label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Disminuciones
+            '50':
+              help: null
+              label: Mod. 40.3 LIS B2 - Dotaciones art. 11.12 LIS (cooperativas)
+            '51':
+              help: null
+              label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Aumentos
+            '52':
+              help: null
+              label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Disminuciones
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
+              help: null
+              label: null
+          construct:
+            modelo-202-2019-2022-foundation:
+              field:
+                title: Modelo 202 registry-backed fractional payment construct (ejercicios
+                  2019-2022)
+          field:
+            label: Modelo 202 ejercicios 2019 a 2022 (DR202v52.xlsx, Orden HAC/941/2018)
+        2023-2024:
+          casilla:
+            '01':
+              help: null
+              label: Mod. 40.2 LIS - Base del pago fraccionado
+            '02':
+              help: null
+              label: Mod. 40.2 LIS - Resultado de la declaracion anterior (complementarias)
+            '03':
+              help: null
+              label: Mod. 40.2 LIS - A ingresar
+            '04':
+              help: null
+              label: Mod. 40.3 LIS - Resultado contable despues del IS
+            '05':
+              help: null
+              label: Mod. 40.3 LIS - Correcciones por IS - Aumentos
+            '06':
+              help: null
+              label: Mod. 40.3 LIS - Correcciones por IS - Disminuciones
+            '07':
+              help: null
+              label: Mod. 40.3 LIS - Resto correcciones - Aumentos
+            08:
+              help: null
+              label: Mod. 40.3 LIS - Resto correcciones - Disminuciones
+            '13':
+              help: null
+              label: Mod. 40.3 LIS - Base imponible previa
+            '14':
+              help: null
+              label: Mod. 40.3 LIS - Compensacion de bases negativas de ejercicios
+                anteriores
+            '16':
+              help: null
+              label: Mod. 40.3 LIS B1 - Caso general - Base pago fraccionado
+            '17':
+              help: null
+              label: Mod. 40.3 LIS B1 - Caso general - Porcentaje
+            '18':
+              help: null
+              label: Mod. 40.3 LIS B1 - Caso general - Resultado previo
+            '19':
+              help: null
+              label: Mod. 40.3 LIS B2 - Base del pago fraccionado
+            '20':
+              help: null
+              label: Mod. 40.3 LIS B2 - Base a tipo 1
+            '21':
+              help: null
+              label: Mod. 40.3 LIS B2 - Porcentaje 1
+            '22':
+              help: null
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 1
+            '23':
+              help: null
+              label: Mod. 40.3 LIS B2 - Base a tipo 2
+            '24':
+              help: null
+              label: Mod. 40.3 LIS B2 - Porcentaje 2
+            '25':
+              help: null
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 2
+            '26':
+              help: null
+              label: Mod. 40.3 LIS B2 - Resultado previo
+            '27':
+              help: null
+              label: Mod. 40.3 LIS - Bonificaciones del periodo computado
+            '28':
+              help: null
+              label: Mod. 40.3 LIS - Retenciones e ingresos a cuenta sobre ingresos
+                del periodo computado
+            '29':
+              help: null
+              label: Mod. 40.3 LIS - Volumen operaciones en Territorio Comun (%)
+            '30':
+              help: null
+              label: Mod. 40.3 LIS - Pagos fraccionados de periodos anteriores en
+                Territorio Comun
+            '31':
+              help: null
+              label: Mod. 40.3 LIS - Resultado de la declaracion anterior (complementaria)
+            '32':
+              help: null
+              label: Mod. 40.3 LIS - Resultado
+            '33':
+              help: null
+              label: Mod. 40.3 LIS - Minimo a ingresar (CN >= 10 millones euros)
+            '34':
+              help: null
+              label: Mod. 40.3 LIS - Cantidad a ingresar (mayor de claves [32] y [33])
+            '37':
+              help: null
+              label: Mod. 40.3 LIS - 30% gastos amortizacion - Disminuciones
+            '38':
+              help: null
+              label: Mod. 40.3 LIS - TOTAL correcciones - Aumentos
+            '39':
+              help: null
+              label: Mod. 40.3 LIS - TOTAL correcciones - Disminuciones
+            '40':
+              help: null
+              label: Mod. 40.3 LIS B1 - Compensacion de cuotas negativas (cooperativas)
+            '42':
+              help: null
+              label: Mod. 40.3 LIS B2 - Compensacion de cuotas negativas (cooperativas)
+            '44':
+              help: null
+              label: Mod. 40.3 LIS - Remanente reserva de capitalizacion no aplicada
+                por insuficiencia de base
+            '45':
+              help: null
+              label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Aumentos
+            '46':
+              help: null
+              label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Disminuciones
+            '47':
+              help: null
+              label: Mod. 40.3 LIS B1 - Dotaciones del art. 11.12 LIS
+            '48':
+              help: null
+              label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Aumentos
+            '49':
+              help: null
+              label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Disminuciones
+            '50':
+              help: null
+              label: Mod. 40.3 LIS B2 - Dotaciones art. 11.12 LIS (cooperativas)
+            '51':
+              help: null
+              label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Aumentos
+            '52':
+              help: null
+              label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Disminuciones
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
+              help: null
+              label: null
+          construct:
+            modelo-202-2023-2024-foundation:
+              field:
+                title: Modelo 202 registry-backed fractional payment construct (ejercicios
+                  2023-2024)
+          field:
+            label: Modelo 202 ejercicios 2023 a 2024 (DR202e23.xlsx)
+        2025-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Mod. 40.2 LIS - Base del pago fraccionado
+            '02':
+              help: null
+              label: Mod. 40.2 LIS - Resultado de la declaracion anterior (complementarias)
+            '03':
+              help: null
+              label: Mod. 40.2 LIS - A ingresar
+            '04':
+              help: null
+              label: Mod. 40.3 LIS - Resultado contable despues del IS
+            '05':
+              help: null
+              label: Mod. 40.3 LIS - Correcciones por IS - Aumentos
+            '06':
+              help: null
+              label: Mod. 40.3 LIS - Correcciones por IS - Disminuciones
+            '07':
+              help: null
+              label: Mod. 40.3 LIS - Resto correcciones - Aumentos
+            08:
+              help: null
+              label: Mod. 40.3 LIS - Resto correcciones - Disminuciones
+            '13':
+              help: null
+              label: Mod. 40.3 LIS - Base imponible previa
+            '14':
+              help: null
+              label: Mod. 40.3 LIS - Compensacion de bases negativas de ejercicios
+                anteriores
+            '16':
+              help: null
+              label: Mod. 40.3 LIS B1 - Caso general - Base pago fraccionado
+            '17':
+              help: null
+              label: Mod. 40.3 LIS B1 - Caso general - Porcentaje
+            '18':
+              help: null
+              label: Mod. 40.3 LIS B1 - Caso general - Resultado previo
+            '19':
+              help: null
+              label: Mod. 40.3 LIS B2 - Base del pago fraccionado
+            '20':
+              help: null
+              label: Mod. 40.3 LIS B2 - Base a tipo 1
+            '21':
+              help: null
+              label: Mod. 40.3 LIS B2 - Porcentaje 1
+            '22':
+              help: null
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 1
+            '23':
+              help: null
+              label: Mod. 40.3 LIS B2 - Base a tipo 2
+            '24':
+              help: null
+              label: Mod. 40.3 LIS B2 - Porcentaje 2
+            '25':
+              help: null
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 2
+            '26':
+              help: null
+              label: Mod. 40.3 LIS B2 - Resultado previo
+            '27':
+              help: null
+              label: Mod. 40.3 LIS - Bonificaciones del periodo computado
+            '28':
+              help: null
+              label: Mod. 40.3 LIS - Retenciones e ingresos a cuenta sobre ingresos
+                del periodo computado
+            '29':
+              help: null
+              label: Mod. 40.3 LIS - Volumen operaciones en Territorio Comun (%)
+            '30':
+              help: null
+              label: Mod. 40.3 LIS - Pagos fraccionados de periodos anteriores en
+                Territorio Comun
+            '31':
+              help: null
+              label: Mod. 40.3 LIS - Resultado de la declaracion anterior (complementaria)
+            '32':
+              help: null
+              label: Mod. 40.3 LIS - Resultado
+            '33':
+              help: null
+              label: Mod. 40.3 LIS - Minimo a ingresar (CN >= 10 millones euros)
+            '34':
+              help: null
+              label: Mod. 40.3 LIS - Cantidad a ingresar (mayor de claves [32] y [33])
+            '37':
+              help: null
+              label: Mod. 40.3 LIS - 30% gastos amortizacion - Disminuciones
+            '38':
+              help: null
+              label: Mod. 40.3 LIS - TOTAL correcciones - Aumentos
+            '39':
+              help: null
+              label: Mod. 40.3 LIS - TOTAL correcciones - Disminuciones
+            '40':
+              help: null
+              label: Mod. 40.3 LIS B1 - Compensacion de cuotas negativas (cooperativas)
+            '42':
+              help: null
+              label: Mod. 40.3 LIS B2 - Compensacion de cuotas negativas (cooperativas)
+            '44':
+              help: null
+              label: Mod. 40.3 LIS - Remanente reserva de capitalizacion no aplicada
+                por insuficiencia de base
+            '45':
+              help: null
+              label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Aumentos
+            '46':
+              help: null
+              label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Disminuciones
+            '47':
+              help: null
+              label: Mod. 40.3 LIS B1 - Dotaciones del art. 11.12 LIS
+            '48':
+              help: null
+              label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Aumentos
+            '49':
+              help: null
+              label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Disminuciones
+            '50':
+              help: null
+              label: Mod. 40.3 LIS B2 - Dotaciones art. 11.12 LIS (cooperativas)
+            '51':
+              help: null
+              label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Aumentos
+            '52':
+              help: null
+              label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Disminuciones
+            '61':
+              help: null
+              label: Mod. 40.3 LIS B2 - Base a tipo 3
+            '62':
+              help: null
+              label: Mod. 40.3 LIS B2 - Porcentaje 3
+            '63':
+              help: null
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 3
+            '64':
+              help: null
+              label: Mod. 40.3 LIS B2 - Base a tipo 4
+            '65':
+              help: null
+              label: Mod. 40.3 LIS B2 - Porcentaje 4
+            '66':
+              help: null
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 4
+            '67':
+              help: null
+              label: Mod. 40.3 LIS - Correcciones por Impuesto Complementario (IC)
+                - Aumentos
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
+              help: null
+              label: null
+          construct:
+            modelo-202-foundation:
+              field:
+                title: Modelo 202 registry-backed fractional payment foundation
+          field:
+            label: Modelo 202 vigente, ejercicios 2025 y siguientes (DR202e25.xlsx)

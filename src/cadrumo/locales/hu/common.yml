@@ -1,0 +1,821 @@
+aggregation:
+  grouping:
+    errors:
+      unsupported_modelo: Nincs regisztrált összesítési szerződés a kért modellhez.
+  invoice_retencion:
+    errors:
+      euro_figures_unavailable_after_defect_sweep: Az euróösszegek nem érhetők el
+        egy olyan számlán, amely átment a hibaszűrésen.
+      perceptor_tax_id_unavailable_after_defect_sweep: A kedvezményezett adóazonosítója
+        nem érhető el egy olyan számlán, amely átment a hibaszűrésen.
+      projection_defects_repeat: A számla-visszatartási vetület ugyanazt a hibát ismétli.
+      projection_outcome_ambiguous: A számla-visszatartási vetület vagy megfigyelést,
+        vagy hibákat hordozhat, sosem mindkettőt és sosem egyiket sem.
+  irnr_income_ledger:
+    diagnostics:
+      foreign_source_out_of_scope: A source_jurisdiction %{source_jurisdiction} külföldi
+        forrást jelöl; a TRLIRNR 13. cikke kizárja az M210-es modell spanyol forrású
+        bruttó jövedelem-projekciójából.
+      incomplete_m210_classification: A spanyol forrású bejövő tranzakcióhoz nincs
+        kifejezett M210-es jövedelem-besorolás; az IRNR-projekció soha nem következtet
+        hivatalos tipo-renta kódra az irpf_category mezőből.
+      source_jurisdiction_unresolved: Az M210-es jelölt bejövő tétel source_jurisdiction
+        értéke nincs feloldva (None); a TRLIRNR 13. cikke csak a spanyol forrású jövedelmet
+        engedi ebbe az IRNR-projekcióba.
+      tipo_renta_code_not_declared: Az M210-es modell %{tipo_renta_code} hivatalos
+        tipo-renta kódja nincs deklarálva a kiválasztott %{period} felülvizsgálathoz
+        és benyújtási időszakhoz.
+    errors:
+      official_tipo_renta_parameter_count: Az M210-es modell %{revision_id} felülvizsgálatának
+        pontosan egy hivatalos tipo-renta kódparamétert kell deklarálnia.
+  iva_ledger:
+    errors:
+      bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
+      candidate_outside_period: 'Belső hiba: az IVA-jelölt az aggregálási időszakon
+        kívül esik.'
+      differentiated_sector_inactive_for_filing_year: Egy elkülönített szektor inaktív
+        a bevallási évre.
+      differentiated_sector_without_filing_year_entry: Egy elkülönített szektorhoz
+        nincs nyilvántartási tétel a bevallási évre.
+      differentiated_sector_without_provisional_percentage: Egy elkülönített szektorhoz
+        nincs feloldott ideiglenes százalék.
+      domestic_identification_on_intra_community_transaction: A spanyol héa-azonosító
+        nem érvényes Közösségen belüli ügylethez.
+      eu_member_state_on_export_transaction: 'Export vagy exporttal egy tekintet alá
+        eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
+      injected_repositories_missing_bienes_inversion_authority: A beadott áfa-tárolókhoz
+        kifejezett tárgyi eszköz jogosultság szükséges.
+      input_facts_missing_deduction_authority: A levonható áfa tényeihez pontos levonási
+        jogosultság szükséges.
+      investment_observations_missing_bienes_inversion_authority: A beruházási áfa-megfigyelésekhez
+        kifejezett tárgyi eszköz nyilvántartás és egyező profiljogosultság szükséges.
+      missing_counterparty_establishment_on_export: Az export azért mentes, mert az
+        ügylet elhagyja az Uniót, ezért az számít, hol van az ügyfél LETELEPEDVE.
+        Rögzítse az ügyfél országát; a hiányzó vagy ki nem osztott kód semmit sem
+        állapít meg, és az áfa-azonosítás erre nem ad választ.
+      missing_counterparty_identification_state: A Közösségen belüli ügylethez meg
+        kell adni azt a tagállamot, amelyben a partner héa-azonosítóval rendelkezik.
+      output_facts_carry_deduction_authority: A fizetendő áfa tényei nem hordozhatnak
+        levonási jogosultságot.
+      rectification_consumed_more_than_once: Egy már helyesbített áfa-főkönyvi tény
+        csak egyszer helyesbíthető.
+      sectorized_apportionment_duplicate_sectors: A szektorizált áfa-megosztás ugyanazt
+        a szektort többször deklarálja.
+      sectorized_especial_missing_input_classification: A szektorizált különleges
+        arányosításhoz kifejezett tételbesorolás szükséges.
+      sectorized_input_inactive_sector: Egy szektorizált áfa-tétel inaktív szektorra
+        hivatkozik.
+      sectorized_input_missing_sector_identity: Egy szektorizált áfa-tétel nem hordoz
+        kifejezett szektorazonosítót.
+      sectorized_input_unknown_sector: Egy szektorizált áfa-tétel ismeretlen szektorra
+        hivatkozik.
+      unsupported_iva_category: 'Belső hiba: nem támogatott IVA-kategória az aggregáláshoz.'
+  m303_arrivals:
+    errors:
+      prorrata_register_contradictory_transition_evidence: Az arányosítási nyilvántartás
+        ugyanarra az évre egyszerre rögzít választást és visszavonást.
+      prorrata_register_incomplete_current_year_declaration: Az arányosítási nyilvántartásból
+        hiányzik a tárgyévre vonatkozó teljes, kifejezett nyilatkozat.
+      prorrata_revocacion_without_prior_year_especial: A különleges arányosítás visszavonásához
+        az érintett szektorokban nincs előző évi különleges nyilvántartási állapot.
+      prorrata_transition_contradictory_evidence: A különleges arányosítási átmeneti
+        tételek ellentmondanak a bejelentett átmenetnek.
+      prorrata_transition_entry_without_evidence: Egy különleges arányosítási átmeneti
+        tétel nem hordoz átmeneti bizonyítékot.
+      prorrata_transition_evidence_without_declared_transition: A különleges arányosítási
+        átmenet bizonyítéka bejelentett átmenet nélkül érkezett.
+      prorrata_transition_evidence_wrong_filing_year: A különleges arányosítási átmenet
+        nyilvántartási bizonyítéka másik bevallási évhez tartozik.
+      prorrata_transition_missing_register_evidence: A bejelentett különleges arányosítási
+        átmenethez nem tartozik alátámasztó nyilvántartási bizonyíték.
+      prorrata_transition_not_applicable_for_period: A különleges arányosítási átmenet
+        bizonyítéka csak az év utolsó 303-as modelo időszakában alkalmazható.
+      recipient_fact_disagrees_with_ledger_evidence: A pénzforgalmi elszámolású ügyletek
+        címzettjére vonatkozó adat nem egyezik a szállítói rendszerű főkönyvi bizonyítékkal.
+      supplier_regime_aggregation_period_mismatch: Az áfa-összesítés időszaka nem
+        egyezik a kért bevallási időszakkal.
+      supplier_regime_blank_ledger_identity: A szállítói rendszerű érkezés bizonyítéka
+        üres főkönyvi azonosítót tartalmaz.
+      supplier_regime_duplicate_ledger_evidence: A szállítói rendszerű érkezés bizonyítéka
+        ugyanazt a főkönyvi tételt ismétli.
+      supplier_regime_observations_outside_period: Az áfa-összesítés a kért bevallási
+        időszakon kívüli keltézésű megfigyeléseket tartalmaz.
+  modelo_bindings:
+    errors:
+      invoice_line_currency_unconverted: Egy számlasor külföldi pénznemben van megadva,
+        és nincs feloldott euró árfolyama, ezért nem deklarálható ezen a modelón.
+      unsupported_period: Nem támogatott nyomtatvány-időszak a főkönyvi aggregáláshoz.
+  oss_ioss:
+    errors:
+      invoice_line_currency_unconverted: Egy OSS/IOSS számlasor külföldi pénznemben
+        van megadva, és nincs feloldott euró árfolyama, ezért nem deklarálható ezen
+        a modelón.
+      invoice_line_rate_kind_unclassifiable: Egy OSS/IOSS számlasor olyan áfakulcsot
+        tartalmaz, amely nem sorolható be egyetlen kulcssávba sem, ezért az adóösszege
+        nem deklarálható ezen a modelón.
+      iva_amount_mismatches_destination_rate: A tárolt áfaösszeg az egy centes tűréshatáron
+        túl eltér a rendeltetési tagállam adókulcsától.
+  per_modelo:
+    errors:
+      unsupported_modelo: Nem támogatott nyomtatvány a nyomtatványonkénti aggregáláshoz.
+  renta_ledger:
+    errors:
+      annual_period_required: A Renta főkönyvi aggregáláshoz éves időszak szükséges.
+      bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért Renta főkönyvi vödörrel.
+      invoice_bucket_mismatch: A számlatár vödre nem egyezik a kért Renta főkönyvi
+        vödörrel.
+      modelo_mismatch: Az adónyomtatvány nem egyezik a várt Renta főkönyvi nyomtatvánnyal.
+      period_mismatch: Az időszak nem egyezik a várt Renta főkönyvi időszakkal.
+      quarterly_period_required: Az M130 jövedelemaggregáláshoz negyedéves időszak
+        szükséges (pl. 2024Q1).
+      unsupported_period: A Modelo 100 bevétel-összesítéshez éves időszak szükséges
+        (pl. 2024-0A).
+  retenciones:
+    errors:
+      filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}
+        tartományon kívül van.
+      invoice_retencion_collision: A(z) %{source_object_ids} számlá(k)hoz tartozó
+        levonás-megfigyelés(eke)t kézzel is megadták és a --received-invoice-retencion
+        is irányította; az összesítés előtt szüntesse meg a duplikációt.
+      perceptor_nif_blank: A perceptor NIF nem lehet üres.
+      perceptor_observations_missing: Nincsenek perceptoronkénti retención megfigyelések
+        a(z) %{modelo} %{filing_year} %{period} modellhez; a(z) %{source_kind} forrás
+        nem oldható fel.
+  service:
+    errors:
+      currency_conversion_required: A külföldi pénznemű összeget euróra kell váltani,
+        mielőtt összesíthető lenne.
+      envelope_modelo_mismatch: Az aggregációs modell nem egyezik az eredmény modellel.
+      envelope_period_mismatch: Az aggregációs időszak nem egyezik az eredmény időszakával.
+      envelope_provider_payload_mismatch: A szolgáltató nem egyezik az aggregációs
+        payload típusával.
+      observations_mismatch: Megfigyelések nem adhatók meg a kért modelóhoz.
+      per_modelo_modelos_not_unique: A modelónkénti aggregáció modelóit pontosan egy
+        szolgáltatónak kell birtokolnia.
+      per_modelo_providers_not_unique: A modelónkénti aggregáció szolgáltatóinak egyedinek
+        kell lenniük.
+      provider_modelos_not_unique: A szolgáltató modelóinak egyedinek kell lenniük.
+      result_source_kinds_not_unique: Az eredmény forrástípusainak egyedinek kell
+        lenniük.
+      source_kinds_mismatch: A forrástípusoknak meg kell egyezniük az elfogadott négyelemű
+        taxonómiával.
+  source_mesh:
+    errors:
+      ambiguous_source_disposition: 'Belső hiba: a(z) {source_kind} binding forrástípus
+        egynél több forrásháló-diszpozíció állapotban van, vagy egyikben sem.'
+      annual_summary_handoff_duplicate: 'Egynél több feloldó adta meg a 303-as modell
+        éves összesítőjének változatlan átadását (első: {first_resolver}; második:
+        {second_resolver}).'
+      binding_source_mismatch: A source_kind és a binding_source eltérő binding-forrás
+        családra hivatkozik.
+      duplicate_binding_owner: 'Belső hiba: ismétlődő kötési tulajdonos a forráshálon.'
+      duplicate_bound_casilla_owner: 'Belső hiba: ismétlődő mező-kötési tulajdonos
+        a forráshálon.'
+      duplicate_relation_owner: 'Belső hiba: ismétlődő kapcsolati tulajdonos a forráshálon.'
+      duplicate_row_binding_owner: 'Belső hiba: duplikált sor-binding tulajdonos a
+        forráshálóban.'
+      out_of_window_summary_date_span_invalid: Az ablakon kívüli összesítő legkésőbbi
+        benyújtási dátuma nem előzheti meg a legkorábbi benyújtási dátumot.
+      out_of_window_summary_incomplete: Az ablakon kívüli összesítőnek együtt kell
+        megadnia a számot, a legkorábbi és a legkésőbbi benyújtási dátumot.
+      owned_sources_blank: A forrásháló saját forrásai nem tartalmazhatnak üres forrástípusokat.
+      owned_sources_duplicate: A forrásháló saját forrásainak egyedinek kell lenniük.
+      relation_provenance_incomplete: A kapcsolat eredetének tartalmaznia kell a forrás
+        modellt, évet, időszakokat, mezőket, jogi hivatkozásokat és forráshivatkozásokat.
+      row_binding_index_invalid: 'Belső hiba: a sor-binding sorindexének 1-nek vagy
+        nagyobbnak kell lennie.'
+      row_binding_value_invalid: 'Belső hiba: a sor-binding decimális értéke érvénytelen.'
+      source_transaction_ids_blank: A forrásháló tranzakcióazonosítói nem tartalmazhatnak
+        üres értékeket.
+      source_transaction_ids_duplicate: A forrásháló tranzakcióazonosítóinak egyedinek
+        kell lenniük.
+      unresolved_binding_ids_blank: 'Belső hiba: a feloldatlan binding-azonosítók
+        nem lehetnek üresek.'
+      unresolved_binding_ids_duplicate: 'Belső hiba: a feloldatlan binding-azonosítók
+        nem lehetnek duplikáltak.'
+      unresolved_relation_ids_blank: 'Belső hiba: a feloldatlan reláció-azonosítók
+        nem lehetnek üresek.'
+      unresolved_relation_ids_duplicate: 'Belső hiba: a feloldatlan reláció-azonosítók
+        nem lehetnek duplikáltak.'
+auth:
+  catalogue:
+    certificate_description: X.509 ügyféltanúsítvány-alapú hitelesítés (FNMT-RCM vagy
+      bármely elismert hatóság). Minden Sede-folyamatot támogat.
+    certificate_label: Digitális tanúsítvány
+    clave_movil_description: 'Push-jóváhagyásos hitelesítés a Cl@ve-nél regisztrált
+      telefon segítségével. Szükséges: DNI/NIE, Cl@ve-regisztráció és párosított eszköz.'
+    clave_movil_label: Cl@ve Móvil
+    clave_permanente_description: DNI/NIE- és jelszóalapú hitelesítés a Cl@ve Permanente
+      személyazonosság-szolgáltatón keresztül. Az AEAT olvasási folyamataihoz automatizálható
+      felügyelet nélkül; DNI/NIE és jelszó szükséges.
+    clave_permanente_label: Cl@ve Permanente
+    clave_pin_description: Fenntartott zárt szolgáltatói hely a Cl@ve PIN számára.
+    clave_pin_label: Cl@ve PIN
+    dnie_pkcs_description: Fenntartott zárt szolgáltatói hely a DNI-e PKCS számára.
+    dnie_pkcs_label: DNI-e PKCS
+categories:
+  registry:
+    amortizacion_vivienda_afecto:
+      label: Üzleti célra használt lakás amortizációja
+      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
+        (Ley 35/2006 art. 30.2.5.b szabály 4.ª, üzleti célra használt lakás amortizációja).
+    arrendamiento_local:
+      label: Üzlethelyiség bérleti díja
+      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
+    arrendamiento_vivienda_afecta: Lakás bérleti díjának üzleti hányada
+    arrendamiento_vivienda_afecto:
+      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
+        (Ley 35/2006 art. 29.2 és art. 28.1, üzleti célra használt lakás bérleti díja).
+    asesoria_contable:
+      label: Könyvelési tanácsadási díj
+      notes: Teljes mértékben levonható költség, független szakmai szolgáltatásként
+        (Ley 35/2006 art. 28.1).
+    asesoria_fiscal:
+      label: Adótanácsadási díj
+      notes: Teljes mértékben levonható költség, független szakmai szolgáltatásként
+        (Ley 35/2006 art. 28.1).
+    asesoria_juridica:
+      label: Jogi tanácsadási díj
+      notes: Teljes mértékben levonható költség, független szakmai szolgáltatásként
+        (Ley 35/2006 art. 28.1).
+    comunidad_vivienda_afecto:
+      label: Üzleti célra használt lakás közös költsége
+      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
+        (Ley 35/2006 art. 30.2.5.b szabály 2.ª, lakástulajdonlási költségek).
+    cuotas_autonomos_ss:
+      notes: Teljes mértékben levonható költség; a RETA-járulék a tevékenység folytatásának
+        törvényi feltétele.
+    cuotas_colegiales:
+      label: Szakmai kamarai tagdíjak
+      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
+    cuotas_reta: Önálló vállalkozói társadalombiztosítási járulék (RETA)
+    formacion_profesional:
+      label: Szakmai továbbképzés
+      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
+        szolgáltatások).
+    gastos_bancarios:
+      label: Banki költségek
+      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, pénzügyi és
+        banki költségek).
+    gastos_financieros:
+      label: Pénzügyi költségek
+      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, pénzügyi és
+        banki költségek).
+    hardware_amortizable:
+      label: Amortizálható informatikai eszközök
+      notes: Teljes mértékben levonható az amortizáció útján (Ley 35/2006 art. 28.1,
+        tárgyi eszközök amortizációja).
+    home_office_agua: Otthoni iroda vízdíja
+    home_office_gas: Otthoni iroda gázköltsége
+    home_office_internet: Otthoni iroda internetköltsége
+    home_office_luz: Otthoni iroda villamosenergia-költsége
+    ibi_local_afecto:
+      label: Üzlethelyiség ingatlanadója (IBI)
+      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 14 LIS, hivatkozás
+        útján; tributos fiscalmente deducibles).
+    ibi_vivienda_afecto:
+      label: Üzleti célra használt lakás ingatlanadója (IBI)
+      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
+        (Ley 35/2006 art. 30.2.5.b szabály 2.ª, nem állami adók a lakásra).
+    manutencion_dietas_extranjero:
+      notes: 'Törvényi napi felső határig levonható: 48,08 EUR/nap éjszakai tartózkodás
+        nélkül, 91,35 EUR/nap éjszakai tartózkodással (Ley 6/2017 / Ley IRPF art.
+        30.2.5.c, Reglamento IRPF art. 9.A.3.a).'
+      statutory_cap_variants:
+        con-pernocta:
+          label: Éjszakai tartózkodással
+        sin-pernocta:
+          label: Éjszakai tartózkodás nélkül
+    manutencion_dietas_nacional:
+      notes: 'Törvényi napi felső határig levonható: 26,67 EUR/nap éjszakai tartózkodás
+        nélkül, 53,34 EUR/nap éjszakai tartózkodással (Ley 6/2017 / Ley IRPF art.
+        30.2.5.c, Reglamento IRPF art. 9.A.3.a).'
+      statutory_cap_variants:
+        con-pernocta:
+          label: Éjszakai tartózkodással
+        sin-pernocta:
+          label: Éjszakai tartózkodás nélkül
+    manutencion_extranjero: Külföldi napidíj (étkezés és tartózkodás)
+    manutencion_nacional: Belföldi napidíj (étkezés és tartózkodás)
+    material_oficina:
+      label: Irodaszerek
+      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
+    mobiliario_amortizable:
+      label: Amortizálható bútorzat
+      notes: Teljes mértékben levonható az amortizáció útján (Ley 35/2006 art. 28.1,
+        tárgyi eszközök amortizációja).
+    mutualidad_alternativa:
+      label: Alternatív kölcsönös biztosítói járulék
+      notes: 'Törvényi felső határig levonható: legfeljebb 15 000 EUR/év, adóalanyonként,
+        a RETA-t helyettesítő alternatív mutualidad esetén (AEAT Renta útmutató, Cotizaciones
+        al RETA).'
+    publicidad_marketing:
+      label: Reklám- és marketingköltség
+      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
+        szolgáltatások).
+    reparaciones_conservacion:
+      label: Javítási és karbantartási költségek
+      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
+    seguros_rc: Szakmai felelősségbiztosítás
+    seguros_responsabilidad_civil:
+      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
+    seguros_salud: Önálló vállalkozói egészségbiztosítás
+    seguros_salud_autonomo:
+      notes: 'Törvényi felső határig levonható: legfeljebb 500 EUR/év, adóalanyonként
+        (Ley 35/2006 art. 30.2.5.c szabály 1.ª, betegségbiztosítási díjak).'
+    software_suscripcion:
+      label: Szoftver-előfizetések
+      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
+    subcontratacion:
+      label: Alvállalkozói díj
+      notes: Teljes mértékben levonható költség, független szakmai szolgáltatásként
+        (Ley 35/2006 art. 28.1).
+    suministros_cliente_directos:
+      label: Az ügyfélnek közvetlenül továbbszámlázott ellátások
+      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
+    suministros_home_office_agua:
+      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
+        (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
+        art. 30.2.5.b szabály 4.ª).
+    suministros_home_office_gas:
+      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
+        (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
+        art. 30.2.5.b szabály 4.ª).
+    suministros_home_office_internet:
+      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
+        (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
+        art. 30.2.5.b szabály 4.ª).
+    suministros_home_office_luz:
+      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
+        (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
+        art. 30.2.5.b szabály 4.ª).
+    suministros_local_afecto:
+      label: Uzleti helyiseg kozuzemi koltsegei
+      notes: 'Teljes egeszeben levonhato koltseg: a tevekenyseg vegzesenek helyet
+        ado ingatlan uzleti eszkoznek minosul (Ley 35/2006 art. 29.1.a), ezert kozuzemi
+        koltsegei levonhatok (art. 28.1). A 30 szazalekos szabaly (art. 30.2.5.b)
+        nem alkalmazando, mert az csak a reszben uzleti celra hasznalt lakohelyre
+        vonatkozik.'
+    telefonia_fija:
+      label: Vezetékes telefon-költség
+      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
+        (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
+        art. 30.2.5.b szabály 4.ª).
+    telefonia_movil:
+      label: Mobiltelefon-költség
+      notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
+        IRPF art. 22, a vagyonelem kizárólagos affektációja).
+    tributos_deducibles: Egyéb adózásilag levonható adók és díjak
+    tributos_fiscalmente_deducibles:
+      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 14 LIS, hivatkozás
+        útján).
+    vehiculo_combustible:
+      label: Járműves üzemanyagköltség
+      notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
+        IRPF art. 22, a jármű kizárólagos affektációja).
+    vehiculo_mantenimiento:
+      label: Járműkarbantartási költség
+      notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
+        IRPF art. 22, a jármű kizárólagos affektációja).
+    vehiculo_parking:
+      label: Parkolási költség
+      notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
+        IRPF art. 22, a jármű kizárólagos affektációja).
+    vehiculo_peaje:
+      label: Autópálya-díj
+      notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
+        IRPF art. 22, a jármű kizárólagos affektációja).
+    vehiculo_seguro:
+      label: Járműbiztosítás
+      notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
+        IRPF art. 22, a jármű kizárólagos affektációja).
+    viajes_alojamiento:
+      label: Utazási szállásköltség
+      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
+        szolgáltatások).
+    viajes_transporte:
+      label: Utazási közlekedési költség
+      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
+        szolgáltatások).
+core:
+  profile:
+    errors:
+      output_language_type: A profil kimeneti nyelvének támogatott nyelvi kódnak kell
+        lennie szöveges formában.
+      registration_duplicate_callable: A projektválaszok implementációja kétszer lett
+        regisztrálva eltérő hívható objektummal; pontosan egyszer kell regisztrálni.
+entries:
+  portal_calendario_contribuyente:
+    label: Adófizetői naptár
+    purpose: Az adóhatáridők és -kötelezettségek éves naptára.
+  portal_cert_selection:
+    label: Elektronikus tanúsítvány kiválasztása
+    notes:
+      '0': A böngészőnek rendelkeznie kell a telepített tanúsítvánnyal a tanúsítványtárában.
+    purpose: Átjáró a hitelesítéshez használt digitális tanúsítvány kiválasztásához.
+  portal_cert_validation_rest:
+    label: Elektronikus tanúsítvány érvényesítése
+    purpose: Digitális tanúsítványok érvényességét ellenőrző szolgáltatás.
+  portal_clave_gestiones:
+    label: Cl@ve PIN – Eljárások
+    purpose: Az ideiglenes Cl@ve PIN hitelesítő adat kezelése és kibocsátása.
+  portal_clave_idp_root:
+    label: Cl@ve – Elektronikus azonosítás
+    purpose: Cl@ve azonossági szolgáltató az AEAT-tal való hitelesítéshez.
+  portal_clave_sede_entry:
+    label: Bejelentkezés Cl@ve-vel
+    purpose: Elektronikus iroda belépési pontja a Cl@ve rendszer használatával.
+  portal_consulta_pagos:
+    label: Befizetések és visszatérítések lekérdezése
+    purpose: Az adóbefizetések és visszatérítések állapotának áttekintése.
+  portal_dnie_sede_entry:
+    label: Bejelentkezés elektronikus személyi igazolvánnyal
+    purpose: Elektronikus iroda belépési pontja a spanyol elektronikus személyi igazolvány
+      használatával.
+  portal_domiciliacion_bancaria:
+    label: Közvetlen banki terhelés beállítása befizetésekhez
+    purpose: Közvetlen banki terhelés beállítása önértékelési bevallásokhoz és adóbefizetésekhez.
+  portal_m036_censal:
+    label: 036-os nyomtatvány – Adóhatósági nyilvántartási bevallás
+    purpose: Bejegyzés, módosítás és törlés a vállalkozások és szakemberek nyilvántartásában.
+  portal_m037_censal_simplificada:
+    label: 037-es nyomtatvány – Egyszerűsített nyilvántartási bevallás (megszűnt)
+    notes:
+      '0': A HAC/1526/2024 rendelet hatályon kívül helyezte, 2025-02-03-tól érvényes.
+      '1': A 036-os nyomtatványt kell használni minden további nyilvántartási eljáráshoz.
+    purpose: Egyszerűsített nyilvántartási bevallás önálló vállalkozók számára, 2025-ben
+      megszűnt.
+  portal_m100_renta:
+    label: 100-as nyomtatvány – Személyi jövedelemadó bevallás
+    purpose: Éves személyi jövedelemadó (IRPF) bevallás.
+  portal_m111_retenciones_trabajo:
+    label: 111-es nyomtatvány – Foglalkoztatásból származó jövedelemadó-visszatartás
+    purpose: IRPF-visszatartások és előlegfizetések önértékelése foglalkoztatásból
+      származó jövedelemre.
+  portal_m115_retenciones_arrendamientos:
+    label: 115-ös nyomtatvány – Ingatlan-bérbeadásból való visszatartás
+    purpose: IRPF-visszatartások önértékelése városi ingatlan-bérbeadásból.
+  portal_m123_retenciones_capital:
+    label: 123-as nyomtatvány – Befektetési jövedelemadó-visszatartás
+    purpose: IRPF-visszatartások önértékelése befektetési jövedelemre.
+  portal_m130_pago_fraccionado_ed:
+    label: 130-as nyomtatvány – IRPF részletfizetés (közvetlen becslés)
+    purpose: Negyedéves IRPF részletfizetés közvetlen becslés szerint adózó önálló
+      vállalkozók számára.
+  portal_m131_pago_fraccionado_eo:
+    label: 131-es nyomtatvány – IRPF részletfizetés (objektív becslés)
+    purpose: Negyedéves IRPF részletfizetés objektív becslés (modulok) szerint adózó
+      önálló vállalkozók számára.
+  portal_m180_resumen_arrendamientos:
+    label: 180-as nyomtatvány – Ingatlan-bérbeadás éves összesítő
+    purpose: Városi ingatlan-bérbeadásból való visszatartások éves összesítője.
+  portal_m190_resumen_trabajo:
+    label: 190-es nyomtatvány – Foglalkoztatási visszatartások éves összesítője
+    purpose: Foglalkoztatásból származó jövedelemadó-visszatartások és előlegfizetések
+      éves összesítője.
+  portal_m193_resumen_capital:
+    label: 193-as nyomtatvány – Befektetési visszatartások éves összesítője
+    purpose: Befektetési jövedelemadó-visszatartások éves összesítője.
+  portal_m200_sociedades_anual:
+    label: 200-as nyomtatvány – Társasági adóbevallás
+    purpose: Éves társasági adóbevallás.
+  portal_m202_sociedades_fraccionado:
+    label: 202-es nyomtatvány – Társasági adó részletfizetés
+    purpose: Társasági adó előlege részletfizetés formájában.
+  portal_m232_vinculadas:
+    label: 232-es nyomtatvány – Kapcsolt vállalkozásokkal való ügyletek
+    purpose: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek tájékoztató
+      bevallása.
+  portal_m303_iva_autoliquidacion:
+    label: 303-as nyomtatvány – IVA önértékelés
+    purpose: Időszakos hozzáadottérték-adó (IVA) önértékelés.
+  portal_m347_operaciones_terceros:
+    label: 347-es nyomtatvány – Harmadik felekkel folytatott ügyletek
+    purpose: Éves tájékoztató bevallás harmadik felekkel folytatott, 3 005,06 EUR
+      feletti ügyletekről.
+  portal_m349_intracomunitarias:
+    label: 349-es nyomtatvány – Intraközösségi ügyletek
+    purpose: Összesítő nyilatkozat intraközösségi termékértékesítésekről és -szolgáltatásokról.
+  portal_m369_oss_ioss:
+    label: 369-es nyomtatvány – IVA egyablakos rendszer (OSS/IOSS)
+    purpose: IVA önértékelés az OSS és IOSS egyablakos rendszerek keretein belül.
+  portal_m390_resumen_iva:
+    label: 390-es nyomtatvány – Éves IVA összesítő
+    purpose: Éves összesítő hozzáadottérték-adóra vonatkozó bevallás.
+  portal_m720_bienes_extranjero:
+    label: 720-as nyomtatvány – Külföldi vagyon és jogok
+    purpose: Tájékoztató bevallás külföldön elhelyezett vagyonról és jogokról.
+  portal_m840_iae:
+    label: 840-es nyomtatvány – Gazdasági tevékenységek adója
+    purpose: Bevallás a gazdasági tevékenységek adójára (IAE).
+  portal_mi_area_personal:
+    label: Személyes területem
+    purpose: Hitelesített adózói személyes terület az Elektronikus Irodában.
+  portal_mis_documentos_pendientes_firma:
+    label: Aláírásra váró dokumentumok
+    purpose: Aláírási portfólió az elektronikus aláírásra váró dokumentumokkal.
+  portal_mis_expedientes:
+    label: Ügyeim
+    purpose: Az adózó ügyfájljainak és eljárásainak állapotáttekintése.
+  portal_mis_notificaciones:
+    label: Értesítéseim
+    purpose: Elektronikus postafiók az AEAT értesítéseinek és közleményeinek fogadásához.
+  portal_pago_autoliquidacion_cuenta:
+    label: Önértékelés befizetése bankszámla-terheléssel
+    purpose: Önértékelések befizetése bankszámla-terheléssel.
+  portal_pago_autoliquidacion_tarjeta_bizum:
+    label: Önértékelés befizetése kártyával vagy Bizummal
+    purpose: Önértékelések befizetése bankkártyával vagy Bizummal.
+  portal_pago_liquidaciones_deudas:
+    label: Határozatok és adótartozások befizetése
+    purpose: Az AEAT által kibocsátott határozatok és adótartozások befizetése.
+  portal_pre303_ayuda:
+    label: Pre303 – 303-as nyomtatvány segédszolgáltatás
+    purpose: Pre303 segédszolgáltatás a 303-as nyomtatvány tervezetének előkészítéséhez.
+  portal_presentar_consultar_index:
+    label: Adóbevallások benyújtása és megtekintése
+    purpose: Az adóbevallások benyújtásához vagy megtekintéséhez szükséges nyomtatványok
+      indexe.
+  portal_renta_web_borrador:
+    label: Renta WEB – Jövedelemadó tervezet
+    notes:
+      '0': A tervezetet az AEAT-nál nyilvántartott adóadatokból állítják elő.
+    purpose: Renta WEB szolgáltatás a személyi jövedelemadó tervezetének áttekintéséhez
+      és benyújtásához.
+  portal_sede_root:
+    label: AEAT Elektronikus Iroda
+    purpose: Az AEAT Elektronikus Irodájának kezdőlapja.
+filing:
+  validation:
+    deadline_missed: A benyújtási határidő lejárt.
+    formula_divergence: Eltérés a képletszámításban.
+    out_of_range: Az érték kívül esik az engedélyezett tartományon.
+    required_missing: Kötelező mező hiányzik.
+    schema_mismatch: Eltérés a várt sémától.
+ledger:
+  evidence:
+    reader:
+      operation_failed: A bizonylatolvasó művelete sikertelen volt
+live:
+  errors:
+    expediente_not_found: Az AEAT nyilatkozat-nyilvántartás nem adta vissza a kért
+      expedientét.
+    iva_history_modelo_303_only: Az IVA-kompenzáció előzmények letöltése csak Modelo
+      303 megfigyeléseket fogad el.
+    target_period_year_mismatch: A célidőszak éve nem egyezik.
+    year_range_invalid: A kezdő évnek kisebbnek vagy egyenlőnek kell lennie a záró
+      évvel.
+  filed:
+    pull:
+      submitted_file_extraction_failed: 'A(z) {modelo} modell {period} {ejercicio}
+        bevallása (ügyiratszám: {expediente_id}) nem volt olvasható a benyújtott fájl
+        elrendezésén keresztül. A bevallás PDF-je, ha az AEAT biztosította, továbbra
+        is az egyetlen kinyerési út. Az elemző oka: {reason}'
+    pull_all:
+      denominator_note_profile: A mérés alapja {expected} pár, amelyet az adózó saját
+        bevallott adatai várnak. További {offered_only} pár kizárólag az AEAT felkínált
+        választéklistájából származik, és nem támaszt alá lefedettségi állítást.
+      denominator_note_register_only: 'Nincs az adózóhoz kötött nevező: mind a(z)
+        {offered_only} bejárt pár az AEAT felkínált választéklistájából származik,
+        amelynek ehhez a NIF-hez való tartozása nem igazolt. Ez a futás semmit nem
+        mér.'
+      expected_but_not_found: 'A bevallott profil {count} modelo/év párra vár benyújtást,
+        amelyekre az AEAT nyilvántartása egyet sem adott vissza: {pairs}. Ellenőrizze,
+        benyújtották-e ezeket.'
+      found_more_than_expected: Az AEAT nyilvántartása {raw_count} benyújtást tart
+        nyilván a(z) {modelo} modelóhoz ({period} {ejercicio}); a legutóbbi iktatás
+        ({expediente}) maradt meg, és {superseded} korábbi felülírásra került.
+      recapture_divergence: 'A(z) {modelo} modelo {period} {ejercicio} ismételt lekérése
+        {count} korábban megfigyelt casilla-értéket változtatott meg: {casillas}.
+        Az AEAT helyesbített bevallást tarthat nyilván.'
+llm:
+  evidence:
+    consent:
+      dispatch_refused: 'Elutasítva: ez a kérés az adózó egyik dokumentumát olvassa,
+        és a gépen kívüli %{provider} szolgáltatóhoz küldené az adott híváshoz tartozó
+        kifejezett hozzájárulás nélkül.'
+      mint_refused: 'Elutasítva: az adózó bizonylatainak gépen kívüli olvasása ehhez
+        a híváshoz nem engedélyezett.'
+mcp:
+  call:
+    timeout: A(z) '{command}' túllépte a(z) {tier} szint időkorlátját ({seconds}s),
+      és megszakadt. Próbáld újra, vagy futtasd a megfelelő aeat parancsot a terminálban.
+    timeout_may_complete: A(z) '{command}' túllépte az időkorlátját; előfordulhat,
+      hogy a művelet még a háttérben fejeződik be. Futtasd újra ugyanazzal az idempotenciakulccsal
+      az ellenőrzéshez – az idempotenciavédelem biztonságossá teszi az újrapróbálkozást,
+      és soha nem ír kétszer.
+  elicitation:
+    confirm:
+      consequence_handoff: Ez elkészíti a benyújtásra szánt dokumentumot, amelyet
+        az adózó saját maga nyújt be az AEAT-nál. A megerősítés semmit nem küld be
+        sehová.
+      consequence_local: Ez a művelet az aktív adózói profil helyi adatait módosítja.
+      declined: A(z) '{command}' parancsot a felhasználó nem erősítette meg ({outcome});
+        semmi nem futott le.
+      field_description: Futtatod most a(z) '{command}' parancsot?
+      message: Erősítsd meg a(z) '{command}' futtatását. {consequence} Válaszolj igennel
+        a folytatáshoz vagy nemmel a leállításhoz.
+    refusal:
+      blocked: 'A(z) ''{command}'' véglegesen tiltott: az AEAT felé történő élő benyújtás
+        tervezetten tilos. Exportálj helyben; az adózó maga nyújt be.'
+      no_channel: A(z) '{command}' emberi megerősítést igényel, és ez a kliens nem
+        támogatja a kérdezés (elicitation) funkciót. Futtasd olyan kliensből, amely
+        tud kérdezni, vagy futtasd a megfelelő Cadrumo CLI (`aeat`) parancsot közvetlenül
+        a terminálban.
+  faithfulness:
+    advisory: 'HŰSÉGI FIGYELMEZTETÉS: a hívás argumentumai olyan összeg(ek)et [{values}]
+      hivatkoznak, amelyeket ebben a munkamenetben egyetlen eszközeredmény sem állított
+      elő. Ellenőrizd az összeget calculate/revision olvasással, mielőtt támaszkodnál
+      rá.'
+  harness:
+    off_host_consent: 'Adatvédelmi tájékoztató - olvassa el a folytatás előtt. Ezt
+      a konzolt egy mesterséges intelligencia asszisztens működteti az Ön által választott
+      LLM-szolgáltatón. Az Ön szavai és az asszisztens által kezelt számok (összegek,
+      casilla-értékek, kötelezettségek) elküldésre kerülnek ehhez a szolgáltatóhoz
+      a konzol működtetéséhez. A FORRÁSDOKUMENTUMAI - számlák, bankkivonatok és bármilyen
+      bizonyítékbájt - SOHA nem hagyják el a gépét: titkosított helyi tárolóban maradnak,
+      és soha nem kerülnek továbbításra. Ha harmadik fél (könyvelő vagy szakember)
+      nevében jár el, a folytatás előtt erősítse meg, hogy ez elfogadható.'
+  identity_gate:
+    elicitation_echo: 'Az adóalany-profil nevében eljárva: %{label}.'
+    first_mutation_refused: 'Elutasítva: erősítsd meg az aktív adóalanyt a munkamenet
+      első módosítása előtt. Bevallás vagy szerkesztés soha nem futhat rossz identitás
+      alatt. Futtasd a whoami parancsot (vagy a ''config profile status'' / ''overview
+      status'' parancsot), hogy lásd, melyik adóalany aktív, majd próbáld újra; egyetlen
+      identitásolvasás feloldja ezt a munkamenetre, amíg profilt nem váltasz.'
+  persona:
+    handoff_denied: A(z) '{command}' a benyújtás-átadás visszafordíthatatlan határa,
+      amely a(z) '{owner}' personához tartozik; a(z) '{persona}' persona számára szerkezetileg
+      tiltott. Add át az ellenőrzött munkaegységet a verifier munkamenetnek az export
+      vagy a nyilvántartási jelölő elkészítéséhez.
+  serving:
+    warm_degraded: A(z) '{command}' az alfolyamat-transzporton keresztül lett kiszolgálva,
+      mert a meleg futtatókörnyezet {reason} volt; az eredmény azonos, csak lassabb.
+      A meleg kiszolgálás folytatódik, amint a lassú hívás befejeződik.
+overview:
+  no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
+  no_aeat_history_sociedades: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
+    Az automatikus lekérés nem tudja lekérni a társasági adó (200/202 nyomtatvány)
+    benyújtási előzményeit; ellenőrizze közvetlenül az AEAT elektronikus ügyfélkapuján.
+provisioning:
+  model:
+    licence:
+      non_commercial_advisory: A(z) %{model} modellre a(z) %{licence} vonatkozik,
+        amely nem engedélyezi a kereskedelmi felhasználást. Ön kifejezetten ezt adta
+        meg, ezért a Cadrumo használni fogja, de kereskedelmi könyvelői tevékenységhez
+        külön licencet kell kérni a kiadótól.
+review:
+  adapters:
+    errors:
+      drafts_load_failed: Nem sikerült betölteni a bevallási piszkozatokat a biztonságos
+        háttértárból.
+      invoices_load_failed: A számlakatalógus betöltése a biztonságos háttértárból
+        sikertelen.
+      transactions_load_failed: A tranzakciókatalógus betöltése a biztonságos háttértárból
+        sikertelen.
+  edit:
+    errors:
+      parse_failed: A szerkesztési token nem értelmezhető. A megadott érték el lett
+        rejtve.
+  filing:
+    draft_placeholder_summary: Tervezet függőben
+    finding_summary: Érvényesítési megállapítás a tervezeten
+    stale_approval_summary: A tervezet jóváhagyása elavult.
+  filter:
+    errors:
+      parse_failed: A szűrőtoken nem értelmezhető. A megadott érték el lett rejtve.
+  invoice:
+    summary: Számla felülvizsgálatra vár
+  operator:
+    errors:
+      item_not_found: A felülvizsgálati elem nem található.
+      reserved_kind: A felülvizsgálati típus fenntartott, és nem kibocsátott felülvizsgálati
+        elem.
+      unknown_kind: 'Ismeretlen felülvizsgálati elemtípus. Elfogadott --kind értékek:
+        %{accepted_kinds}.'
+  transaction:
+    summary: Tranzakció besorolásra vár
+sheets:
+  detalle:
+    headers:
+      acquisition_date: Szerzés dátuma
+      amount: Összeg
+      amount_donated: Adományozott összeg
+      asset_class_code: Eszközosztály kód
+      asset_identifier: Eszközazonosító
+      base_imponible: Adóalap
+      base_imponible_assigned: Hozzárendelt adóalap
+      clave: Kulcs
+      counterparty_legal_name: Szerződő fél neve
+      counterparty_tax_id: Szerződő fél adóazonosítója
+      country_code: Országkód
+      currency_code: Pénznemkód
+      deduction_percentage: Levonási százalék
+      donor_legal_name: Adományozó neve
+      donor_tax_id: Adományozó adóazonosítója
+      ingreso_a_cuenta: Természetbeni adójóváírás
+      is_recurrent: Ismétlődő adomány
+      member_legal_name: Tag neve
+      member_state_code: Tagállam
+      member_tax_id: Tag adóazonosítója
+      operation_date: Művelet dátuma
+      operation_kind_code: Művelettípus
+      party_legal_name: Fél neve
+      party_tax_id: Fél adóazonosítója
+      perceptor_legal_name: Kedvezményezett neve
+      perceptor_tax_id: Kedvezményezett adóazonosítója
+      percibido_dinerario: Készpénzes bevétel
+      percibido_especie: Természetbeni bevétel
+      rectified_base_previous: Korábbi alap (helyesbítés)
+      rectified_period: Helyesbített időszak
+      rectified_year: Helyesbített év
+      refund_amount: Visszatérítési összeg
+      retencion_practicada: Alkalmazott visszatartás
+      share_percentage: Részesedési arány
+      subclave: Alkulcs
+      supplier_tax_id: Szállító adóazonosítója
+      transfer_pricing_method_code: Transzferár-módszer
+      valuation_amount: Értékelés
+topic:
+  authentication:
+    body: 'Az AEAT-hitelesítés Cl@ve Móvil (push a regisztrált telefonra) vagy digitális
+      tanúsítvány (FNMT / azzal egyenértékű) segítségével működik. Konfiguráljon egy
+      szolgáltatót: `aeat config auth configure --provider certificate`, majd ellenőrizze:
+      `aeat config auth test`.'
+    title: Hitelesítés az AEAT-nál
+  calendar:
+    body: A naptár adott időtartományon belül mutatja a benyújtási kötelezettségeket
+      (nyomtatványok és időszakok). Az IVA-rezsim beállított profil szükséges, különben
+      a motor csendben alapértelmezésre vált.
+    title: Kötelezettségek naptára
+  casilla:
+    body: A mező egy nyomtatvány számozott rovata. A mezők lehetnek manuálisak, számítottak
+      vagy kötésből származtatottak. A `aeat app modelo casillas <nyomtatvány>` parancs
+      felsorolja azokat.
+    title: Mezők (casillák)
+  formats:
+    body: A CLI szöveges, JSON-, táblázatos vagy CSV-formátumban adja ki a kimenetet
+      a `--format` kapcsoló alapján. Automatizáláshoz a JSON ajánlott, emberi olvasáshoz
+      a szöveges.
+    title: Kimeneti formátumok
+  irpf-regime:
+    body: Önálló vállalkozó IRPF-rezsimje. Közvetlen becslés (normál vagy egyszerűsített)
+      vagy objektív becslés (módszer). Meghatározza, hogy melyik előlegfizetési nyomtatvány
+      alkalmazandó (130 vs. 131).
+    title: IRPF-rezsim
+  iva-regime:
+    body: Az adóalanynál alkalmazandó ÁFA-rezsim. Általános, egyszerűsített, equivalencia-felár,
+      mentes, REAGP vagy REBU. Meghatározza a negyedéves 303-as és az éves 390-es
+      összesítő nyomtatványt.
+    title: IVA-rezsim (ÁFA)
+  modelos:
+    body: Az AEAT adónyomtatványainak katalógusa (303, 130, 100, 347, 349, 111, 115,
+      184 stb.). Mindegyiknek saját naptára, mezői és alkalmazhatósági szabályai vannak.
+      A `aeat app modelo list` parancs felsorolja az elérhető nyomtatványokat.
+    title: Adónyomtatványok (modelók)
+  pago-fraccionado:
+    body: Önálló vállalkozók negyedéves IRPF-előleg-fizetése. Közvetlen becslésnél
+      a 130-as nyomtatvány, objektív becslésnél a 131-es alkalmazandó. A számítás
+      a negyedév adatait és bizonyos esetekben az előző évet veszi alapul.
+    title: IRPF-előlegfizetés
+  profile:
+    body: 'A helyi profil tartalmazza az adóazonosítót (NIF/CIF/DNI/NIE), a fő tevékenységet,
+      az IVA/IRPF-rezsimet és az opcionális regisztrációkat (SII, Verifactu, intrakomunitáris).
+      Szerkessze: `aeat config profile edit NÉV`.'
+    title: Adóalany profilja
+  providers:
+    body: Támogatott hitelesítési szolgáltatók; mindegyiknek eltérő előfeltételei
+      vannak. A `aeat config auth providers` parancs felsorolja azokat a követelményekkel
+      együtt.
+    title: Hitelesítési szolgáltatók
+  recargo-extemporaneo:
+    body: 'A határidő utáni benyújtás – előzetes AEAT-értesítés nélkül – az első évben
+      havonta 1%-os pótdíjat von maga után (legfeljebb 12%-ot), 12 hónap elteltével
+      15%-ot plusz kamatot. Jogalap: Ley 58/2003 27. cikk.'
+    title: Késedelmi pótdíj
+  regimens:
+    body: 'Az önálló vállalkozóra vonatkozó adórezsimek összessége. A két fő tengely:
+      ÁFA (általános, egyszerűsített, equivalencia-felár, mentes) és IRPF (közvetlen,
+      objektív).'
+    title: Adórezsimek
+  sii:
+    body: IVA Suministro Inmediato de Información. A havi IVA-elszámolású adóalanyoknak,
+      köztük a nagyvállalatoknak, IVA-csoportoknak és REDEME-adóalanyoknak az AEAT
+      székhelyén kell vezetniük az IVA nyilvántartási könyveket.
+    title: SII
+  verifactu:
+    body: A RD 1007/2023 követelményei a számlázó informatikai rendszerekre. A jelenlegi
+      határidő 2027. január 1. a 3.1.a cikk szerinti társaságiadó-alanyoknak, és 2027.
+      július 1. a 3.1 cikk szerinti többi kötelezettnek.
+    title: VERI*FACTU
+transactions:
+  import:
+    batch_id_collision: 'Kihagyott sor: ugyanazzal az azonosítóval rendelkezik, mint
+      egy másik sor ebben a fájlban.'
+    message_053465: Ismétlődő tranzakció észlelve az importált fájlban.
+    message_082074: Ismétlődő tranzakció már szerepel a főkönyvben.
+    message_185962: A forrásfájl nem tartalmaz érvényes tranzakciót.
+    message_829073: 'Lehetséges hiány: a tranzakciók között több mint 35 nap telt
+      el.'
+    unreadable: Olvashatatlan fájl vagy nem támogatott formátum.
+    verified: Az import sikeresen ellenőrizve.

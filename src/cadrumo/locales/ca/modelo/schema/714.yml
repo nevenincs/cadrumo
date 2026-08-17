@@ -1,0 +1,1992 @@
+modelo:
+  schema:
+    '714':
+      field:
+        official_name: Impost sobre el Patrimoni. Declaració
+        title: Model 714
+      revision:
+        '2021':
+          casilla:
+            declaracion-01:
+              help: null
+              label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
+                immobles - Total de béns immobles de naturalesa urbana
+            declaracion-02:
+              help: null
+              label: Béns i drets - B. Béns immobles de naturalesa rústica - Total
+            declaracion-03:
+              help: null
+              label: Béns i drets - C. Béns i drets no exempts afectes a activitats
+                empresarials i professionals - Total
+            declaracion-04:
+              help: null
+              label: Béns i drets - D. Béns i drets exempts afectes a activitats empresarials
+                i professionals - Total (net de deutes)
+            declaracion-05:
+              help: null
+              label: Béns i drets - E. Dipòsits en compte corrent, estalvi, financeres,
+                imposicions... - Total
+            declaracion-06:
+              help: null
+              label: Béns i drets - F1. Valors de cessió a tercers - Deute públic,
+                obligacions, bons... - Total
+            declaracion-07:
+              help: null
+              label: Béns i drets - F2. Valors de cessió a tercers - Obligacions,
+                bons, certificats, pagarés... - total
+            declaracion-08:
+              help: null
+              label: Béns i drets - G1. Valors no exempts - Accions i participacions
+                d'institucions d'inversió col·lectiva negociades - Total
+            declaracion-09:
+              help: null
+              label: Béns i drets - G2. Valors no exempts - Accions i participacions
+                en fons d'altres entitats - Total
+            declaracion-10:
+              help: null
+              label: Béns i drets - G3. Valors no exempts - Accions i participacions
+                d'institucions d'inversió col·lectiva no negociades - total
+            declaracion-11:
+              help: null
+              label: Béns i drets - G4. Valors no exempts - Accions i participacions
+                d'altres entitats jurídiques no negociades - Total
+            declaracion-12:
+              help: null
+              label: Béns i drets - H1. Valors exempts - Accions i participacions
+                d'entitats jurídiques negociades - Total (net de deutes)
+            declaracion-13:
+              help: null
+              label: Béns i drets - H2. Valors exempts - Accions i participacions
+                exemptes d'entitats jurídiques no negociades - Total (net de deutes)
+            declaracion-14:
+              help: null
+              label: Béns i drets - I. Assegurances de vida - Total
+            declaracion-15:
+              help: null
+              label: Béns i drets - J. Rendes temporals i vitalícies - Total
+            declaracion-16:
+              help: null
+              label: Béns i drets - K. Vehicles, joies, pells de caràcter sumptuari,
+                embarcacions i aeronaus - Total
+            declaracion-17:
+              help: null
+              label: Béns i drets - L. Objectes d'art i antiguitats - Total
+            declaracion-18:
+              help: null
+              label: Béns i drets - M. Drets reals d'ús i gaudi (exclòs l'habitatge
+                habitual) - Total
+            declaracion-19:
+              help: null
+              label: Béns i drets - N. Concessions administratives - Total
+            declaracion-20:
+              help: null
+              label: Béns i drets - O. Drets derivats de la propietat intel·lectual
+                o industrial - Total
+            declaracion-21:
+              help: null
+              label: Béns i drets - P. Opcions contractuals - Total
+            declaracion-22:
+              help: null
+              label: Béns i drets - R. Altres béns i drets de contingut econòmic -
+                Total
+            declaracion-23:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Total de béns i drets
+                no exempts'
+            declaracion-24:
+              help: null
+              label: Deutes deduïbles - Total
+            declaracion-26:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Reducció en concepte
+                de mínim exempt'
+            declaracion-28:
+              help: null
+              label: Patrimoni exempt amb progressivitat - Béns i drets exempts, excepte
+                els que determinen el tipus de gravamen aplicable a la resta
+            declaracion-41:
+              help: null
+              label: Liquidació - Deducció per impostos a l'estranger - Import de
+                la deducció
+            declaracion-42:
+              help: null
+              label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Valor
+                net dels béns i drets a Ceuta i Melilla
+            declaracion-43:
+              help: null
+              label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Part
+                proporcional de la quota que correspon a aquests béns i drets
+            declaracion-44:
+              help: null
+              label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Import
+                de la bonificació
+            declaracion-46:
+              help: null
+              label: Béns i drets - Q. Saldos en monedes virtuals - Total
+            declaracion-48:
+              help: null
+              label: Liquidació - Deduccions i bonificacions autonòmiques - Deduccions
+                autonòmiques - Import total amb dret a deducció
+            declaracion-49:
+              help: null
+              label: Liquidació - Deduccions i bonificacions autonòmiques - Deduccions
+                autonòmiques - Import aplicat
+            declaracion-50:
+              help: null
+              label: Liquidació - Deduccions i bonificacions autonòmiques - Bonificació
+                autonòmica - Import aplicat
+            declaracion-56:
+              help: null
+              label: Regularització de declaració complementària - Quota a ingressar
+                d'autoliquidacions o liquidacions anteriors
+            declaracion-57:
+              help: null
+              label: Regularització de declaració complementària - Diferència a ingressar
+                com a resultat de la declaració complementària
+            declaracion-60:
+              help: null
+              label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor
+                total de l'habitatge habitual susceptible d'exempció
+            declaracion-61:
+              help: null
+              label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor
+                exempt
+            declaracion-62:
+              help: null
+              label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor
+                no exempt
+            declaracion-63:
+              help: null
+              label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
+                immobles - Total
+            declaracion-a:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Impostos efectivament satisfets a l'estranger
+            declaracion-b:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Part de la base liquidable gravada a l'estranger
+            declaracion-i:
+              help: null
+              label: Ingrés - Import de l'ingrés
+            declaracion-negativa:
+              help: null
+              label: Declaració negativa
+            identificacion-1:
+              help: null
+              label: Modalitats especials de tributació - El 2020 ha tingut la residència
+                habitual fora del territori espanyol i tributa per obligació real
+            identificacion-10:
+              help: null
+              label: Declaració complementària
+            identificacion-12:
+              help: null
+              label: Si ha consignat la modalitat de la casella 4 i vol optar per
+                l'aplicació de la normativa autonòmica
+            identificacion-15:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Tipus de via
+            identificacion-16:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Nom de la via pública
+            identificacion-17:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Tipus de numeració
+            identificacion-18:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Número de casa
+            identificacion-19:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Qualificador del número
+            identificacion-2:
+              help: null
+              label: Modalitats especials de tributació - El 2020 ha deixat de ser
+                resident en territori espanyol però continua tributant per obligació
+                personal
+            identificacion-20:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Bloc
+            identificacion-21:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Portal
+            identificacion-22:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Escala
+            identificacion-23:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Planta
+            identificacion-24:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Porta
+            identificacion-25:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Dades complementàries del
+                domicili
+            identificacion-26:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Localitat / població (si
+                és diferent del municipi)
+            identificacion-27:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Codi postal
+            identificacion-28:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Nom del municipi
+            identificacion-29:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Província
+            identificacion-3:
+              help: null
+              label: Modalitats especials de tributació - Comunitat Autònoma on radiqui
+                el major dels béns o drets
+            identificacion-35:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Domicili
+            identificacion-36:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Dades complementàries
+                del domicili
+            identificacion-37:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Població / ciutat
+            identificacion-39:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Codi postal (ZIP)
+            identificacion-4:
+              help: null
+              label: Modalitats especials de tributació - El 2020 ha tingut la residència
+                fiscal a Espanya, però està subjecte per obligació real a l'Impost
+                sobre el Patrimoni per haver optat pel règim especial de l'article
+                93 de la Llei 35/2006, de l'IRPF
+            identificacion-40:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Província / regió / estat
+            identificacion-41:
+              help: null
+              label: Subjecte passiu - Domicili estranger - País
+            identificacion-42:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Codi de país
+            identificacion-8:
+              help: null
+              label: Comunitat o Ciutat Autònoma de residència el 2020
+            x-c9kmarj5ecn66c9dehnn8obc:
+              help: null
+              label: Béns i drets - C1. No exempts afectes a activitats empresarials
+                i professionals (no immobles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              help: null
+              label: Béns i drets - C2. Béns immobles no exempts afectes a activitats
+                empresarials i professionals - Total
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Idioma de la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Codi de província
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaració complementària - Quotes a ingressar d'anteriors autoliquidacions
+                o liquidacions administratives
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Subjecte passiu - Discapacitat - Classe de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Subjecte passiu - Discapacitat - Percentatge de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Subjecte passiu - Estat civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Data de la declaració - Any
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Data de la declaració - Dia
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Data de la declaració - Localitat
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Data de la declaració - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Subjecte passiu - Data de naixement
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Subjecte passiu - Nacionalitat
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Règim econòmic del matrimoni
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representant - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representant - Cognoms i nom o raó social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Subjecte passiu - Sexe
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingrés - Forma de pagament
+            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Part de la base imposable
+                de l'estalvi de l'IRPF
+            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Base imposable'
+            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Base liquidable'
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
+              help: null
+              label: Liquidació - Quota a ingressar - Quota a ingressar
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
+              help: null
+              label: Liquidació - Quota íntegra - Quota íntegra
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Part de la quota íntegra
+                de l'Impost sobre el Patrimoni susceptible de limitació
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
+              help: null
+              label: Liquidació - Quota minorada - Quota minorada
+            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Dividends i participacions
+                en beneficis, no integrats en l'IRPF
+            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - a) Excés
+            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Suma de les bases imposables
+                de l'IRPF
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Part de les quotes íntegres
+                de l'IRPF, saldo positiu de guanys i pèrdues patrimonials...
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Quotes íntegres de l'IRPF
+            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Límit conjunt de quotes
+                de l'Impost sobre el Patrimoni i de l'IRPF
+            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - b) 80% de la quota íntegra
+                de l'Impost sobre el Patrimoni
+            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Suma de quotes a efectes
+                del límit conjunt
+            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
+              help: null
+              label: Liquidació - Total de la quota íntegra - Total de la quota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Model 714 Impost sobre el Patrimoni quota
+          field:
+            label: Impost sobre el Patrimoni 2021
+        '2022':
+          casilla:
+            declaracion-01:
+              help: null
+              label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
+                immobles - Total de béns immobles de naturalesa urbana
+            declaracion-02:
+              help: null
+              label: Béns i drets - B. Béns immobles de naturalesa rústica - Total
+            declaracion-03:
+              help: null
+              label: Béns i drets - C. Béns i drets no exempts afectes a activitats
+                empresarials i professionals - Total
+            declaracion-04:
+              help: null
+              label: Béns i drets - D. Béns i drets exempts afectes a activitats empresarials
+                i professionals - Total (net de deutes)
+            declaracion-05:
+              help: null
+              label: Béns i drets - E. Dipòsits en compte corrent, estalvi, financeres,
+                imposicions... - Total
+            declaracion-06:
+              help: null
+              label: Béns i drets - F1. Valors de cessió a tercers - Deute públic,
+                obligacions, bons... - Total
+            declaracion-07:
+              help: null
+              label: Béns i drets - F2. Valors de cessió a tercers - Obligacions,
+                bons, certificats, pagarés... - total
+            declaracion-08:
+              help: null
+              label: Béns i drets - G1. Valors no exempts - Accions i participacions
+                d'institucions d'inversió col·lectiva negociades - Total
+            declaracion-09:
+              help: null
+              label: Béns i drets - G2. Valors no exempts - Accions i participacions
+                en fons d'altres entitats - Total
+            declaracion-10:
+              help: null
+              label: Béns i drets - G3. Valors no exempts - Accions i participacions
+                d'institucions d'inversió col·lectiva no negociades - total
+            declaracion-11:
+              help: null
+              label: Béns i drets - G4. Valors no exempts - Accions i participacions
+                d'altres entitats jurídiques no negociades - Total
+            declaracion-12:
+              help: null
+              label: Béns i drets - H1. Valors exempts - Accions i participacions
+                d'entitats jurídiques negociades - Total (net de deutes)
+            declaracion-13:
+              help: null
+              label: Béns i drets - H2. Valors exempts - Accions i participacions
+                exemptes d'entitats jurídiques no negociades - Total (net de deutes)
+            declaracion-14:
+              help: null
+              label: Béns i drets - I. Assegurances de vida - Total
+            declaracion-15:
+              help: null
+              label: Béns i drets - J. Rendes temporals i vitalícies - Total
+            declaracion-16:
+              help: null
+              label: Béns i drets - K. Vehicles, joies, pells de caràcter sumptuari,
+                embarcacions i aeronaus - Total
+            declaracion-17:
+              help: null
+              label: Béns i drets - L. Objectes d'art i antiguitats - Total
+            declaracion-18:
+              help: null
+              label: Béns i drets - M. Drets reals d'ús i gaudi (exclòs l'habitatge
+                habitual) - Total
+            declaracion-19:
+              help: null
+              label: Béns i drets - N. Concessions administratives - Total
+            declaracion-20:
+              help: null
+              label: Béns i drets - O. Drets derivats de la propietat intel·lectual
+                o industrial - Total
+            declaracion-21:
+              help: null
+              label: Béns i drets - P. Opcions contractuals - Total
+            declaracion-22:
+              help: null
+              label: Béns i drets - R. Altres béns i drets de contingut econòmic -
+                Total
+            declaracion-23:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Total de béns i drets
+                no exempts'
+            declaracion-24:
+              help: null
+              label: Deutes deduïbles - Total
+            declaracion-26:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Reducció en concepte
+                de mínim exempt'
+            declaracion-28:
+              help: null
+              label: Patrimoni exempt amb progressivitat - Béns i drets exempts, excepte
+                els que determinen el tipus de gravamen aplicable a la resta
+            declaracion-41:
+              help: null
+              label: Liquidació - Deducció per impostos a l'estranger - Import de
+                la deducció
+            declaracion-42:
+              help: null
+              label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Valor
+                net dels béns i drets a Ceuta i Melilla
+            declaracion-43:
+              help: null
+              label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Part
+                proporcional de la quota que correspon a aquests béns i drets
+            declaracion-44:
+              help: null
+              label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Import
+                de la bonificació
+            declaracion-46:
+              help: null
+              label: Béns i drets - Q. Saldos en monedes virtuals - Total
+            declaracion-48:
+              help: null
+              label: Liquidació - Deduccions i bonificacions autonòmiques - Deduccions
+                autonòmiques - Import total amb dret a deducció
+            declaracion-49:
+              help: null
+              label: Liquidació - Deduccions i bonificacions autonòmiques - Deduccions
+                autonòmiques - Import aplicat
+            declaracion-50:
+              help: null
+              label: Liquidació - Deduccions i bonificacions autonòmiques - Bonificació
+                autonòmica - Import aplicat
+            declaracion-56:
+              help: null
+              label: Regularització de declaració complementària - Quota a ingressar
+                d'autoliquidacions o liquidacions anteriors
+            declaracion-57:
+              help: null
+              label: Regularització de declaració complementària - Diferència a ingressar
+                com a resultat de la declaració complementària
+            declaracion-60:
+              help: null
+              label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor
+                total de l'habitatge habitual susceptible d'exempció
+            declaracion-61:
+              help: null
+              label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor
+                exempt
+            declaracion-62:
+              help: null
+              label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor
+                no exempt
+            declaracion-63:
+              help: null
+              label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
+                immobles - Total
+            declaracion-a:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Impostos efectivament satisfets a l'estranger
+            declaracion-b:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Part de la base liquidable gravada a l'estranger
+            declaracion-i:
+              help: null
+              label: Ingrés - Import de l'ingrés
+            declaracion-negativa:
+              help: null
+              label: Declaració negativa
+            identificacion-1:
+              help: null
+              label: Modalitats especials de tributació - El 2022 ha tingut la residència
+                habitual fora del territori espanyol i tributa per obligació real
+            identificacion-10:
+              help: null
+              label: Declaració complementària
+            identificacion-12:
+              help: null
+              label: Si ha consignat la modalitat de la casella 4 i vol optar per
+                l'aplicació de la normativa autonòmica
+            identificacion-15:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Tipus de via
+            identificacion-16:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Nom de la via pública
+            identificacion-17:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Tipus de numeració
+            identificacion-18:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Número de casa
+            identificacion-19:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Qualificador del número
+            identificacion-2:
+              help: null
+              label: Modalitats especials de tributació - El 2022 ha deixat de ser
+                resident en territori espanyol però continua tributant per obligació
+                personal
+            identificacion-20:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Bloc
+            identificacion-21:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Portal
+            identificacion-22:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Escala
+            identificacion-23:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Planta
+            identificacion-24:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Porta
+            identificacion-25:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Dades complementàries del
+                domicili
+            identificacion-26:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Localitat / població (si
+                és diferent del municipi)
+            identificacion-27:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Codi postal
+            identificacion-28:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Nom del municipi
+            identificacion-29:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Província
+            identificacion-3:
+              help: null
+              label: Modalitats especials de tributació - Comunitat Autònoma on radiqui
+                el major dels béns o drets
+            identificacion-35:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Domicili
+            identificacion-36:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Dades complementàries
+                del domicili
+            identificacion-37:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Població / ciutat
+            identificacion-39:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Codi postal (ZIP)
+            identificacion-4:
+              help: null
+              label: Modalitats especials de tributació - El 2022 ha tingut la residència
+                fiscal a Espanya, però està subjecte per obligació real a l'Impost
+                sobre el Patrimoni per haver optat pel règim especial de l'article
+                93 de la Llei 35/2006, de l'IRPF
+            identificacion-40:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Província / regió / estat
+            identificacion-41:
+              help: null
+              label: Subjecte passiu - Domicili estranger - País
+            identificacion-42:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Codi de país
+            identificacion-8:
+              help: null
+              label: Comunitat o Ciutat Autònoma de residència el 2022
+            x-c9kmarj5ecn66c9dehnn8obc:
+              help: null
+              label: Béns i drets - C1. No exempts afectes a activitats empresarials
+                i professionals (no immobles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              help: null
+              label: Béns i drets - C2. Béns immobles no exempts afectes a activitats
+                empresarials i professionals - Total
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Idioma de la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Codi de província
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaració complementària - Quotes a ingressar d'anteriors autoliquidacions
+                o liquidacions administratives
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Subjecte passiu - Discapacitat - Classe de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Subjecte passiu - Discapacitat - Percentatge de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Subjecte passiu - Estat civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Data de la declaració - Any
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Data de la declaració - Dia
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Data de la declaració - Localitat
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Data de la declaració - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Subjecte passiu - Data de naixement
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Subjecte passiu - Nacionalitat
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Règim econòmic del matrimoni
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representant - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representant - Cognoms i nom o raó social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Subjecte passiu - Sexe
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingrés - Forma de pagament
+            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Part de la base imposable
+                de l'estalvi de l'IRPF
+            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Base imposable'
+            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Base liquidable'
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
+              help: null
+              label: Liquidació - Quota a ingressar - Quota a ingressar
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
+              help: null
+              label: Liquidació - Quota íntegra - Quota íntegra
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Part de la quota íntegra
+                de l'Impost sobre el Patrimoni susceptible de limitació
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
+              help: null
+              label: Liquidació - Quota minorada - Quota minorada
+            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Dividends i participacions
+                en beneficis, no integrats en l'IRPF
+            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - a) Excés
+            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Suma de les bases imposables
+                de l'IRPF
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Part de les quotes íntegres
+                de l'IRPF, saldo positiu de guanys i pèrdues patrimonials...
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Quotes íntegres de l'IRPF
+            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Límit conjunt de quotes
+                de l'Impost sobre el Patrimoni i de l'IRPF
+            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - b) 80% de la quota íntegra
+                de l'Impost sobre el Patrimoni
+            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Suma de quotes a efectes
+                del límit conjunt
+            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
+              help: null
+              label: Liquidació - Total de la quota íntegra - Total de la quota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Model 714 Impost sobre el Patrimoni quota
+          field:
+            label: Impost sobre el Patrimoni 2022
+        '2023':
+          casilla:
+            declaracion-01:
+              help: null
+              label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
+                immobles - Total de béns immobles de naturalesa urbana
+            declaracion-02:
+              help: null
+              label: Béns i drets - B. Béns immobles de naturalesa rústica - Total
+            declaracion-03:
+              help: null
+              label: Béns i drets - C. Béns i drets no exempts afectes a activitats
+                empresarials i professionals - Total
+            declaracion-04:
+              help: null
+              label: Béns i drets - D. Béns i drets exempts afectes a activitats empresarials
+                i professionals - Total (net de deutes)
+            declaracion-05:
+              help: null
+              label: Béns i drets - E. Dipòsits en compte corrent, estalvi, financeres,
+                imposicions... - Total
+            declaracion-06:
+              help: null
+              label: Béns i drets - F1. Valors de cessió a tercers - Deute públic,
+                obligacions, bons... - Total
+            declaracion-07:
+              help: null
+              label: Béns i drets - F2. Valors de cessió a tercers - Obligacions,
+                bons, certificats, pagarés... - total
+            declaracion-08:
+              help: null
+              label: Béns i drets - G1. Valors no exempts - Accions i participacions
+                d'institucions d'inversió col·lectiva negociades - Total
+            declaracion-09:
+              help: null
+              label: Béns i drets - G2. Valors no exempts - Accions i participacions
+                en fons d'altres entitats - Total
+            declaracion-10:
+              help: null
+              label: Béns i drets - G3. Valors no exempts - Accions i participacions
+                d'institucions d'inversió col·lectiva no negociades - total
+            declaracion-11:
+              help: null
+              label: Béns i drets - G4. Valors no exempts - Accions i participacions
+                d'altres entitats jurídiques no negociades - Total
+            declaracion-12:
+              help: null
+              label: Béns i drets - H1. Valors exempts - Accions i participacions
+                d'entitats jurídiques negociades - Total (net de deutes)
+            declaracion-13:
+              help: null
+              label: Béns i drets - H2. Valors exempts - Accions i participacions
+                exemptes d'entitats jurídiques no negociades - Total (net de deutes)
+            declaracion-14:
+              help: null
+              label: Béns i drets - I. Assegurances de vida - Total
+            declaracion-15:
+              help: null
+              label: Béns i drets - J. Rendes temporals i vitalícies - Total
+            declaracion-16:
+              help: null
+              label: Béns i drets - K. Vehicles, joies, pells de caràcter sumptuari,
+                embarcacions i aeronaus - Total
+            declaracion-17:
+              help: null
+              label: Béns i drets - L. Objectes d'art i antiguitats - Total
+            declaracion-18:
+              help: null
+              label: Béns i drets - M. Drets reals d'ús i gaudi (exclòs l'habitatge
+                habitual) - Total
+            declaracion-19:
+              help: null
+              label: Béns i drets - N. Concessions administratives - Total
+            declaracion-20:
+              help: null
+              label: Béns i drets - O. Drets derivats de la propietat intel·lectual
+                o industrial - Total
+            declaracion-21:
+              help: null
+              label: Béns i drets - P. Opcions contractuals - Total
+            declaracion-22:
+              help: null
+              label: Béns i drets - R. Altres béns i drets de contingut econòmic -
+                Total
+            declaracion-23:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Total de béns i drets
+                no exempts'
+            declaracion-24:
+              help: null
+              label: Deutes deduïbles - Total
+            declaracion-26:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Reducció en concepte
+                de mínim exempt'
+            declaracion-28:
+              help: null
+              label: Patrimoni exempt amb progressivitat - Béns i drets exempts, excepte
+                els que determinen el tipus de gravamen aplicable a la resta
+            declaracion-41:
+              help: null
+              label: Liquidació - Deducció per impostos a l'estranger - Import de
+                la deducció
+            declaracion-42:
+              help: null
+              label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Valor
+                net dels béns i drets a Ceuta i Melilla
+            declaracion-43:
+              help: null
+              label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Part
+                proporcional de la quota que correspon a aquests béns i drets
+            declaracion-44:
+              help: null
+              label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Import
+                de la bonificació
+            declaracion-46:
+              help: null
+              label: Béns i drets - Q. Saldos en monedes virtuals - Total
+            declaracion-48:
+              help: null
+              label: Liquidació - Deduccions i bonificacions autonòmiques - Deduccions
+                autonòmiques - Import total amb dret a deducció
+            declaracion-49:
+              help: null
+              label: Liquidació - Deduccions i bonificacions autonòmiques - Deduccions
+                autonòmiques - Import aplicat
+            declaracion-50:
+              help: null
+              label: Liquidació - Deduccions i bonificacions autonòmiques - Bonificació
+                autonòmica - Import aplicat
+            declaracion-56:
+              help: null
+              label: Regularització de declaració complementària - Quota a ingressar
+                d'autoliquidacions o liquidacions anteriors
+            declaracion-57:
+              help: null
+              label: Regularització de declaració complementària - Diferència a ingressar
+                com a resultat de la declaració complementària
+            declaracion-60:
+              help: null
+              label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor
+                total de l'habitatge habitual susceptible d'exempció
+            declaracion-61:
+              help: null
+              label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor
+                exempt
+            declaracion-62:
+              help: null
+              label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor
+                no exempt
+            declaracion-63:
+              help: null
+              label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
+                immobles - Total
+            declaracion-a:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Impostos efectivament satisfets a l'estranger
+            declaracion-b:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Part de la base liquidable gravada a l'estranger
+            declaracion-i:
+              help: null
+              label: Ingrés - Import de l'ingrés
+            declaracion-negativa:
+              help: null
+              label: Declaració negativa
+            identificacion-1:
+              help: null
+              label: Modalitats especials de tributació - El 2023 ha tingut la residència
+                habitual fora del territori espanyol i tributa per obligació real
+            identificacion-10:
+              help: null
+              label: Declaració complementària
+            identificacion-12:
+              help: null
+              label: Si ha consignat la modalitat de la casella 4 i vol optar per
+                l'aplicació de la normativa autonòmica
+            identificacion-15:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Tipus de via
+            identificacion-16:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Nom de la via pública
+            identificacion-17:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Tipus de numeració
+            identificacion-18:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Número de casa
+            identificacion-19:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Qualificador del número
+            identificacion-2:
+              help: null
+              label: Modalitats especials de tributació - El 2023 ha deixat de ser
+                resident en territori espanyol però continua tributant per obligació
+                personal
+            identificacion-20:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Bloc
+            identificacion-21:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Portal
+            identificacion-22:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Escala
+            identificacion-23:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Planta
+            identificacion-24:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Porta
+            identificacion-25:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Dades complementàries del
+                domicili
+            identificacion-26:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Localitat / població (si
+                és diferent del municipi)
+            identificacion-27:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Codi postal
+            identificacion-28:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Nom del municipi
+            identificacion-29:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Província
+            identificacion-3:
+              help: null
+              label: Modalitats especials de tributació - Comunitat Autònoma on radiqui
+                el major dels béns o drets
+            identificacion-35:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Domicili
+            identificacion-36:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Dades complementàries
+                del domicili
+            identificacion-37:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Població / ciutat
+            identificacion-39:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Codi postal (ZIP)
+            identificacion-4:
+              help: null
+              label: Modalitats especials de tributació - El 2023 ha tingut la residència
+                fiscal a Espanya, però està subjecte per obligació real a l'Impost
+                sobre el Patrimoni per haver optat pel règim especial de l'article
+                93 de la Llei 35/2006, de l'IRPF
+            identificacion-40:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Província / regió / estat
+            identificacion-41:
+              help: null
+              label: Subjecte passiu - Domicili estranger - País
+            identificacion-42:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Codi de país
+            identificacion-8:
+              help: null
+              label: Comunitat o Ciutat Autònoma de residència el 2023
+            x-c9kmarj5ecn66c9dehnn8obc:
+              help: null
+              label: Béns i drets - C1. No exempts afectes a activitats empresarials
+                i professionals (no immobles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              help: null
+              label: Béns i drets - C2. Béns immobles no exempts afectes a activitats
+                empresarials i professionals - Total
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Idioma de la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Codi de província
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaració complementària - Quotes a ingressar d'anteriors autoliquidacions
+                o liquidacions administratives
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Subjecte passiu - Discapacitat - Classe de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Subjecte passiu - Discapacitat - Percentatge de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Subjecte passiu - Estat civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Data de la declaració - Any
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Data de la declaració - Dia
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Data de la declaració - Localitat
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Data de la declaració - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Subjecte passiu - Data de naixement
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Subjecte passiu - Nacionalitat
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Règim econòmic del matrimoni
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representant - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representant - Cognoms i nom o raó social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Subjecte passiu - Sexe
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingrés - Forma de pagament
+            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Part de la base imposable
+                de l'estalvi de l'IRPF
+            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Base imposable'
+            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Base liquidable'
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
+              help: null
+              label: Liquidació - Quota a ingressar - Quota a ingressar
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
+              help: null
+              label: Liquidació - Quota íntegra - Quota íntegra
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Part de la quota íntegra
+                de l'Impost sobre el Patrimoni susceptible de limitació
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
+              help: null
+              label: Liquidació - Quota minorada - Quota minorada
+            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Dividends i participacions
+                en beneficis, no integrats en l'IRPF
+            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - a) Excés
+            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Suma de les bases imposables
+                de l'IRPF
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Part de les quotes íntegres
+                de l'IRPF, saldo positiu de guanys i pèrdues patrimonials...
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Quotes íntegres de l'IRPF
+            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Límit conjunt de quotes
+                de l'Impost sobre el Patrimoni i de l'IRPF
+            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - b) 80% de la quota íntegra
+                de l'Impost sobre el Patrimoni
+            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Suma de quotes a efectes
+                del límit conjunt
+            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
+              help: null
+              label: Liquidació - Total de la quota íntegra - Total de la quota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Model 714 Impost sobre el Patrimoni quota
+          field:
+            label: Impost sobre el Patrimoni 2023
+        '2024':
+          casilla:
+            declaracion-01:
+              help: null
+              label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
+                immobles - Total de béns immobles de naturalesa urbana
+            declaracion-02:
+              help: null
+              label: Béns i drets - B. Béns immobles de naturalesa rústica - Total
+            declaracion-03:
+              help: null
+              label: Béns i drets - C. Béns i drets no exempts afectes a activitats
+                empresarials i professionals - Total
+            declaracion-04:
+              help: null
+              label: Béns i drets - D. Béns i drets exempts afectes a activitats empresarials
+                i professionals - Total (net de deutes)
+            declaracion-05:
+              help: null
+              label: Béns i drets - E. Dipòsits en compte corrent, estalvi, financeres,
+                imposicions... - Total
+            declaracion-06:
+              help: null
+              label: Béns i drets - F1. Valors de cessió a tercers - Deute públic,
+                obligacions, bons... - Total
+            declaracion-07:
+              help: null
+              label: Béns i drets - F2. Valors de cessió a tercers - Obligacions,
+                bons, certificats, pagarés... - total
+            declaracion-08:
+              help: null
+              label: Béns i drets - G1. Valors no exempts - Accions i participacions
+                d'institucions d'inversió col·lectiva negociades - Total
+            declaracion-09:
+              help: null
+              label: Béns i drets - G2. Valors no exempts - Accions i participacions
+                en fons d'altres entitats - Total
+            declaracion-10:
+              help: null
+              label: Béns i drets - G3. Valors no exempts - Accions i participacions
+                d'institucions d'inversió col·lectiva no negociades - total
+            declaracion-11:
+              help: null
+              label: Béns i drets - G4. Valors no exempts - Accions i participacions
+                d'altres entitats jurídiques no negociades - Total
+            declaracion-12:
+              help: null
+              label: Béns i drets - H1. Valors exempts - Accions i participacions
+                d'entitats jurídiques negociades - Total (net de deutes)
+            declaracion-13:
+              help: null
+              label: Béns i drets - H2. Valors exempts - Accions i participacions
+                exemptes d'entitats jurídiques no negociades - Total (net de deutes)
+            declaracion-14:
+              help: null
+              label: Béns i drets - I. Assegurances de vida - Total
+            declaracion-15:
+              help: null
+              label: Béns i drets - J. Rendes temporals i vitalícies - Total
+            declaracion-16:
+              help: null
+              label: Béns i drets - K. Vehicles, joies, pells de caràcter sumptuari,
+                embarcacions i aeronaus - Total
+            declaracion-17:
+              help: null
+              label: Béns i drets - L. Objectes d'art i antiguitats - Total
+            declaracion-18:
+              help: null
+              label: Béns i drets - M. Drets reals d'ús i gaudi (exclòs l'habitatge
+                habitual) - Total
+            declaracion-19:
+              help: null
+              label: Béns i drets - N. Concessions administratives - Total
+            declaracion-20:
+              help: null
+              label: Béns i drets - O. Drets derivats de la propietat intel·lectual
+                o industrial - Total
+            declaracion-21:
+              help: null
+              label: Béns i drets - P. Opcions contractuals - Total
+            declaracion-22:
+              help: null
+              label: Béns i drets - R. Altres béns i drets de contingut econòmic -
+                Total
+            declaracion-23:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Total de béns i drets
+                no exempts'
+            declaracion-24:
+              help: null
+              label: Deutes deduïbles - Total
+            declaracion-26:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Reducció en concepte
+                de mínim exempt'
+            declaracion-28:
+              help: null
+              label: Patrimoni exempt amb progressivitat - Béns i drets exempts, excepte
+                els que determinen el tipus de gravamen aplicable a la resta
+            declaracion-41:
+              help: null
+              label: Liquidació - Deducció per impostos a l'estranger - Import de
+                la deducció
+            declaracion-42:
+              help: null
+              label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Valor
+                net dels béns i drets a Ceuta i Melilla
+            declaracion-43:
+              help: null
+              label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Part
+                proporcional de la quota que correspon a aquests béns i drets
+            declaracion-44:
+              help: null
+              label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Import
+                de la bonificació
+            declaracion-46:
+              help: null
+              label: Béns i drets - Q. Saldos en monedes virtuals - Total
+            declaracion-48:
+              help: null
+              label: Liquidació - Deduccions i bonificacions autonòmiques - Deduccions
+                autonòmiques - Import total amb dret a deducció
+            declaracion-49:
+              help: null
+              label: Liquidació - Deduccions i bonificacions autonòmiques - Deduccions
+                autonòmiques - Import aplicat
+            declaracion-50:
+              help: null
+              label: Liquidació - Deduccions i bonificacions autonòmiques - Bonificació
+                autonòmica - Import aplicat
+            declaracion-56:
+              help: null
+              label: Regularització de declaració complementària - Quota a ingressar
+                d'autoliquidacions o liquidacions anteriors
+            declaracion-57:
+              help: null
+              label: Regularització de declaració complementària - Diferència a ingressar
+                com a resultat de la declaració complementària
+            declaracion-60:
+              help: null
+              label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor
+                total de l'habitatge habitual susceptible d'exempció
+            declaracion-61:
+              help: null
+              label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor
+                exempt
+            declaracion-62:
+              help: null
+              label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor
+                no exempt
+            declaracion-63:
+              help: null
+              label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
+                immobles - Total
+            declaracion-a:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Impostos efectivament satisfets a l'estranger
+            declaracion-b:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Part de la base liquidable gravada a l'estranger
+            declaracion-i:
+              help: null
+              label: Ingrés - Import de l'ingrés
+            declaracion-negativa:
+              help: null
+              label: Declaració negativa
+            identificacion-1:
+              help: null
+              label: Modalitats especials de tributació - El 2024 ha tingut la residència
+                habitual fora del territori espanyol i tributa per obligació real
+            identificacion-10:
+              help: null
+              label: Declaració complementària
+            identificacion-12:
+              help: null
+              label: Si ha consignat la modalitat de la casella 4 i vol optar per
+                l'aplicació de la normativa autonòmica
+            identificacion-15:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Tipus de via
+            identificacion-16:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Nom de la via pública
+            identificacion-17:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Tipus de numeració
+            identificacion-18:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Número de casa
+            identificacion-19:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Qualificador del número
+            identificacion-2:
+              help: null
+              label: Modalitats especials de tributació - El 2024 ha deixat de ser
+                resident en territori espanyol però continua tributant per obligació
+                personal
+            identificacion-20:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Bloc
+            identificacion-21:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Portal
+            identificacion-22:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Escala
+            identificacion-23:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Planta
+            identificacion-24:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Porta
+            identificacion-25:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Dades complementàries del
+                domicili
+            identificacion-26:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Localitat / població (si
+                és diferent del municipi)
+            identificacion-27:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Codi postal
+            identificacion-28:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Nom del municipi
+            identificacion-29:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Província
+            identificacion-3:
+              help: null
+              label: Modalitats especials de tributació - Comunitat Autònoma on radiqui
+                el major dels béns o drets
+            identificacion-35:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Domicili
+            identificacion-36:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Dades complementàries
+                del domicili
+            identificacion-37:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Població / ciutat
+            identificacion-39:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Codi postal (ZIP)
+            identificacion-4:
+              help: null
+              label: Modalitats especials de tributació - El 2024 ha tingut la residència
+                fiscal a Espanya, però està subjecte per obligació real a l'Impost
+                sobre el Patrimoni per haver optat pel règim especial de l'article
+                93 de la Llei 35/2006, de l'IRPF
+            identificacion-40:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Província / regió / estat
+            identificacion-41:
+              help: null
+              label: Subjecte passiu - Domicili estranger - País
+            identificacion-42:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Codi de país
+            identificacion-8:
+              help: null
+              label: Comunitat o Ciutat Autònoma de residència el 2024
+            x-c9kmarj5ecn66c9dehnn8obc:
+              help: null
+              label: Béns i drets - C1. No exempts afectes a activitats empresarials
+                i professionals (no immobles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              help: null
+              label: Béns i drets - C2. Béns immobles no exempts afectes a activitats
+                empresarials i professionals - Total
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Idioma de la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Codi de província
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaració complementària - Quotes a ingressar d'anteriors autoliquidacions
+                o liquidacions administratives
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Subjecte passiu - Discapacitat - Classe de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Subjecte passiu - Discapacitat - Percentatge de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Subjecte passiu - Estat civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Data de la declaració - Any
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Data de la declaració - Dia
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Data de la declaració - Localitat
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Data de la declaració - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Subjecte passiu - Data de naixement
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Subjecte passiu - Nacionalitat
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Règim econòmic del matrimoni
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representant - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representant - Cognoms i nom o raó social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Subjecte passiu - Sexe
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingrés - Forma de pagament
+            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Part de la base imposable
+                de l'estalvi de l'IRPF
+            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Base imposable'
+            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Base liquidable'
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
+              help: null
+              label: Liquidació - Quota a ingressar - Quota a ingressar
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
+              help: null
+              label: Liquidació - Quota íntegra - Quota íntegra
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Part de la quota íntegra
+                de l'Impost sobre el Patrimoni susceptible de limitació
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
+              help: null
+              label: Liquidació - Quota minorada - Quota minorada
+            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Dividends i participacions
+                en beneficis, no integrats en l'IRPF
+            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - a) Excés
+            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Suma de les bases imposables
+                de l'IRPF
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Part de les quotes íntegres
+                de l'IRPF, saldo positiu de guanys i pèrdues patrimonials...
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Quotes íntegres de l'IRPF
+            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Límit conjunt de quotes
+                de l'Impost sobre el Patrimoni i de l'IRPF
+            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - b) 80% de la quota íntegra
+                de l'Impost sobre el Patrimoni
+            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Suma de quotes a efectes
+                del límit conjunt
+            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
+              help: null
+              label: Liquidació - Total de la quota íntegra - Total de la quota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Model 714 Impost sobre el Patrimoni quota
+          field:
+            label: Impost sobre el Patrimoni 2024
+        '2025':
+          casilla:
+            declaracion-01:
+              help: null
+              label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
+                immobles - Total de béns immobles de naturalesa urbana
+            declaracion-02:
+              help: null
+              label: Béns i drets - B. Béns immobles de naturalesa rústica - Total
+            declaracion-03:
+              help: null
+              label: Béns i drets - C. Béns i drets no exempts afectes a activitats
+                empresarials i professionals - Total
+            declaracion-04:
+              help: null
+              label: Béns i drets - D. Béns i drets exempts afectes a activitats empresarials
+                i professionals - Total (net de deutes)
+            declaracion-05:
+              help: null
+              label: Béns i drets - E. Dipòsits en compte corrent, estalvi, financeres,
+                imposicions... - Total
+            declaracion-06:
+              help: null
+              label: Béns i drets - F1. Valors de cessió a tercers - Deute públic,
+                obligacions, bons... - Total
+            declaracion-07:
+              help: null
+              label: Béns i drets - F2. Valors de cessió a tercers - Obligacions,
+                bons, certificats, pagarés... - total
+            declaracion-08:
+              help: null
+              label: Béns i drets - G1. Valors no exempts - Accions i participacions
+                d'institucions d'inversió col·lectiva negociades - Total
+            declaracion-09:
+              help: null
+              label: Béns i drets - G2. Valors no exempts - Accions i participacions
+                en fons d'altres entitats - Total
+            declaracion-10:
+              help: null
+              label: Béns i drets - G3. Valors no exempts - Accions i participacions
+                d'institucions d'inversió col·lectiva no negociades - total
+            declaracion-11:
+              help: null
+              label: Béns i drets - G4. Valors no exempts - Accions i participacions
+                d'altres entitats jurídiques no negociades - Total
+            declaracion-12:
+              help: null
+              label: Béns i drets - H1. Valors exempts - Accions i participacions
+                d'entitats jurídiques negociades - Total (net de deutes)
+            declaracion-13:
+              help: null
+              label: Béns i drets - H2. Valors exempts - Accions i participacions
+                exemptes d'entitats jurídiques no negociades - Total (net de deutes)
+            declaracion-14:
+              help: null
+              label: Béns i drets - I. Assegurances de vida - Total
+            declaracion-15:
+              help: null
+              label: Béns i drets - J. Rendes temporals i vitalícies - Total
+            declaracion-16:
+              help: null
+              label: Béns i drets - K. Vehicles, joies, pells de caràcter sumptuari,
+                embarcacions i aeronaus - Total
+            declaracion-17:
+              help: null
+              label: Béns i drets - L. Objectes d'art i antiguitats - Total
+            declaracion-18:
+              help: null
+              label: Béns i drets - M. Drets reals d'ús i gaudi (exclòs l'habitatge
+                habitual) - Total
+            declaracion-19:
+              help: null
+              label: Béns i drets - N. Concessions administratives - Total
+            declaracion-20:
+              help: null
+              label: Béns i drets - O. Drets derivats de la propietat intel·lectual
+                o industrial - Total
+            declaracion-21:
+              help: null
+              label: Béns i drets - P. Opcions contractuals - Total
+            declaracion-22:
+              help: null
+              label: Béns i drets - R. Altres béns i drets de contingut econòmic -
+                Total
+            declaracion-23:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Total de béns i drets
+                no exempts'
+            declaracion-24:
+              help: null
+              label: Deutes deduïbles - Total
+            declaracion-26:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Reducció en concepte
+                de mínim exempt'
+            declaracion-28:
+              help: null
+              label: Patrimoni exempt amb progressivitat - Béns i drets exempts, excepte
+                els que determinen el tipus de gravamen aplicable a la resta
+            declaracion-41:
+              help: null
+              label: Liquidació - Deducció per impostos a l'estranger - Import de
+                la deducció
+            declaracion-42:
+              help: null
+              label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Valor
+                net dels béns i drets a Ceuta i Melilla
+            declaracion-43:
+              help: null
+              label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Part
+                proporcional de la quota que correspon a aquests béns i drets
+            declaracion-44:
+              help: null
+              label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Import
+                de la bonificació
+            declaracion-46:
+              help: null
+              label: Béns i drets - Q. Saldos en monedes virtuals - Total
+            declaracion-48:
+              help: null
+              label: Liquidació - Deduccions i bonificacions autonòmiques - Deduccions
+                autonòmiques - Import total amb dret a deducció
+            declaracion-49:
+              help: null
+              label: Liquidació - Deduccions i bonificacions autonòmiques - Deduccions
+                autonòmiques - Import aplicat
+            declaracion-50:
+              help: null
+              label: Liquidació - Deduccions i bonificacions autonòmiques - Bonificació
+                autonòmica - Import aplicat
+            declaracion-56:
+              help: null
+              label: Regularització de declaració complementària - Quota a ingressar
+                d'autoliquidacions o liquidacions anteriors
+            declaracion-57:
+              help: null
+              label: Regularització de declaració complementària - Diferència a ingressar
+                com a resultat de la declaració complementària
+            declaracion-60:
+              help: null
+              label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor
+                total de l'habitatge habitual susceptible d'exempció
+            declaracion-61:
+              help: null
+              label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor
+                exempt
+            declaracion-62:
+              help: null
+              label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor
+                no exempt
+            declaracion-63:
+              help: null
+              label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
+                immobles - Total
+            declaracion-a:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Impostos efectivament satisfets a l'estranger
+            declaracion-b:
+              help: null
+              label: Liquidació - Deducció per impostos satisfets a l'estranger -
+                Part de la base liquidable gravada a l'estranger
+            declaracion-i:
+              help: null
+              label: Ingrés - Import de l'ingrés
+            declaracion-negativa:
+              help: null
+              label: Declaració negativa
+            identificacion-1:
+              help: null
+              label: Modalitats especials de tributació - El 2025 ha tingut la residència
+                habitual fora del territori espanyol i tributa per obligació real
+            identificacion-10:
+              help: null
+              label: Declaració complementària
+            identificacion-12:
+              help: null
+              label: Si ha consignat la modalitat de la casella 4 i vol optar per
+                l'aplicació de la normativa autonòmica
+            identificacion-15:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Tipus de via
+            identificacion-16:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Nom de la via pública
+            identificacion-17:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Tipus de numeració
+            identificacion-18:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Número de casa
+            identificacion-19:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Qualificador del número
+            identificacion-2:
+              help: null
+              label: Modalitats especials de tributació - El 2025 o abans ha deixat
+                de ser resident en territori espanyol però continua tributant per
+                obligació personal
+            identificacion-20:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Bloc
+            identificacion-21:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Portal
+            identificacion-22:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Escala
+            identificacion-23:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Planta
+            identificacion-24:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Porta
+            identificacion-25:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Dades complementàries del
+                domicili
+            identificacion-26:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Localitat / població (si
+                és diferent del municipi)
+            identificacion-27:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Codi postal
+            identificacion-28:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Nom del municipi
+            identificacion-29:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Província
+            identificacion-3:
+              help: null
+              label: Modalitats especials de tributació - Comunitat Autònoma on radiqui
+                el major dels béns o drets
+            identificacion-35:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Domicili
+            identificacion-36:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Dades complementàries
+                del domicili
+            identificacion-37:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Població / ciutat
+            identificacion-39:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Codi postal (ZIP)
+            identificacion-4:
+              help: null
+              label: Modalitats especials de tributació - El 2025 ha tingut la residència
+                fiscal a Espanya, però està subjecte per obligació real a l'Impost
+                sobre el Patrimoni per haver optat pel règim especial de l'article
+                93 de la Llei 35/2006, de l'IRPF
+            identificacion-40:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Província / regió / estat
+            identificacion-41:
+              help: null
+              label: Subjecte passiu - Domicili estranger - País
+            identificacion-42:
+              help: null
+              label: Subjecte passiu - Domicili estranger - Codi de país
+            identificacion-8:
+              help: null
+              label: Comunitat o Ciutat Autònoma de residència el 2025
+            x-c9kmarj5ecn66c9dehnn8obc:
+              help: null
+              label: Béns i drets - C1. No exempts afectes a activitats empresarials
+                i professionals (no immobles) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              help: null
+              label: Béns i drets - C2. Béns immobles no exempts afectes a activitats
+                empresarials i professionals - Total
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Idioma de la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Període (anual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Subjecte passiu - Domicili habitual - Codi de província
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Declaració complementària - Quotes a ingressar d'anteriors autoliquidacions
+                o liquidacions administratives
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Subjecte passiu - Discapacitat - Classe de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Subjecte passiu - Discapacitat - Percentatge de discapacitat
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Subjecte passiu - Estat civil
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Data de la declaració - Any
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Data de la declaració - Dia
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Data de la declaració - Localitat
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Data de la declaració - Mes
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Subjecte passiu - Data de naixement
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Subjecte passiu - Nacionalitat
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Règim econòmic del matrimoni
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representant - NIF
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representant - Cognoms i nom o raó social
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Subjecte passiu - Sexe
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Ingrés - Forma de pagament
+            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Part de la base imposable
+                de l'estalvi de l'IRPF
+            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Base imposable'
+            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
+              help: null
+              label: 'Resum del patrimoni net: base liquidable - Base liquidable'
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
+              help: null
+              label: Liquidació - Quota a ingressar - Quota a ingressar
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
+              help: null
+              label: Liquidació - Quota íntegra - Quota íntegra
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Part de la quota íntegra
+                de l'Impost sobre el Patrimoni susceptible de limitació
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
+              help: null
+              label: Liquidació - Quota minorada - Quota minorada
+            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Dividends i participacions
+                en beneficis, no integrats en l'IRPF
+            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - a) Excés
+            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Suma de les bases imposables
+                de l'IRPF
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Part de les quotes íntegres
+                de l'IRPF, saldo positiu de guanys i pèrdues patrimonials...
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Quotes íntegres de l'IRPF
+            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Límit conjunt de quotes
+                de l'Impost sobre el Patrimoni i de l'IRPF
+            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - b) 80% de la quota íntegra
+                de l'Impost sobre el Patrimoni
+            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
+              help: null
+              label: Liquidació - Límit de la quota íntegra - Suma de quotes a efectes
+                del límit conjunt
+            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
+              help: null
+              label: Liquidació - Total de la quota íntegra - Total de la quota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Model 714 Impost sobre el Patrimoni quota
+          field:
+            label: Impost sobre el Patrimoni 2025

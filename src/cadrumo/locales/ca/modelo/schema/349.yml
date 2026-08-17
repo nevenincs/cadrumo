@@ -1,0 +1,75 @@
+modelo:
+  schema:
+    '349':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2020-y-siguientes:
+          casilla:
+            x-chim6r1ecdgmqoj9dsmn0pbid5nm8qb3d5i62p0:
+              help: null
+              label: Indicador de canvi de periodicitat en l'obligació de declarar
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: null
+              label: Declaració complementària o substitutiva
+            x-chim6r1ed5mn0rriehiiqrrgclp62or9dtn6aso:
+              help: null
+              label: Import de les operacions intracomunitàries
+            x-chim6r1ed5mn0rriehiiqsj5cdq6ipj9cdgm6qbfdpin6:
+              help: null
+              label: Import de les rectificacions
+            x-chim6r1edpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: null
+              label: NIF del representant legal del declarant
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: null
+              label: Número identificatiu de la declaració
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: null
+              label: Número identificatiu de la declaració anterior
+            x-chim6r1edpqmqpbidsmmus35e9gm8rriclpg:
+              help: null
+              label: Nombre total d'operadors intracomunitaris
+            x-chim6r1edpqmqpbidsmn4pb3ehkmcqb3c5hmirreclpg:
+              help: null
+              label: Nombre total d'operadors intracomunitaris amb rectificacions
+            x-dto2sobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
+              help: null
+              label: Cognoms i nom o raó social de l'operador intracomunitari
+            x-dto2soj1ediiqqbde1nmsqb2dhig:
+              help: null
+              label: Base imposable o import de l'operació intracomunitària
+            x-dto2sorcc5r6abbfe1in4ob3d5nms:
+              help: null
+              label: Clau d'operació intracomunitària
+            x-dto2sorfchkmerpde1gmiso:
+              help: null
+              label: Codi de país de l'operador comunitari
+            x-dto2srj9comm6rrdeln6it31e9kmu:
+              help: null
+              label: NIF de l'operador comunitari
+            x-e9im6t1ec9gn6p9dc5n78pbid5nn4:
+              help: null
+              label: Base imposable declarada anteriorment
+            x-e9im6t1ec9gn6p9de9im6t39cpkm6ob4c4:
+              help: null
+              label: Base imposable o imports rectificats
+            x-e9im6t1ecll6asj3d5hmirpde9im6t39cpkm6ob4ds:
+              help: null
+              label: Exercici rectificat
+            x-e9im6t1ee1in4qbfchniqsj5cdq6ipj9cdgm8ro:
+              help: null
+              label: Període rectificat
+            x-edqn6t39ehqn8rpec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              help: null
+              label: null
+            x-edqn6t39ehqn8rpedpkmc:
+              help: null
+              label: null
+          construct:
+            modelo-349-informative:
+              field:
+                title: null
+          field:
+            label: null

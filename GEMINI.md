@@ -832,7 +832,7 @@ trigger: always_on
 # AEAT locale catalogue CLI
 
 Perform all locale work through the `dev.locales` CLI; never hand-edit the
-`src/cadrumo/locales/{en,es,ca,hu}.yml` files or the `_intentional_identical.json`
+`src/cadrumo/locales/{en,es,ca,hu}/` shard trees or the `_intentional_identical.json`
 allowlist directly. Verbs: `set LOCALE KEY VALUE` / `remove LOCALE KEY` for
 individual leaves, `scaffold` to align catalogues to codebase keys,
 `scaffold --check` as the drift gate, and `audit` for a health report.

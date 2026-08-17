@@ -1,0 +1,40 @@
+modelo:
+  schema:
+    '182':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2007-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az adóbevallás tárgyát képező adóév
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: A bevallás típusa (eredeti / helyettesítő / kiegészítő)
+            x-ehkn0rpi5pi6urj1dpq6abbed5j0:
+              help: null
+              label: Az adományozó adóazonosító száma (magánszemély, jogi személy
+                vagy referencia nonprofit kedvezményezett szervezet)
+            x-ehkn0rpi5pi6urj1dpq6abbedtmm4sj5:
+              help: null
+              label: Az adományozó neve (családi és utónév, vagy cégnév)
+            x-ehkn0rpi5pkmqs3fe9q6abb4dtn62p3f:
+              help: null
+              label: Az adóévben kapott adomány vagy hozzájárulás összege (előjel
+                nélkül, euróban)
+            x-ehkn0rpi5po6usj3cln78obackmm8pb4elhm6qbfdo:
+              help: null
+              label: Az adományra alkalmazandó levonási százalék (az adományozó adózási
+                rendje, LIRPF 68.3 cikk / Ley 49/2002 különleges rendszer)
+            x-ehkn0rpi5pp6aorle9p6arj3d5gg:
+              help: null
+              label: Ismétlődő adomány jelzője (több évre szóló adomány ugyanazon
+                kedvezményezett szervezetnek, két vagy több egymást követő adóévben)
+          construct:
+            modelo-182-informative:
+              field:
+                title: null
+          field:
+            label: null

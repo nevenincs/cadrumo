@@ -1,0 +1,951 @@
+wizard:
+  choices:
+    general: General
+    irpf: IRPF
+    iva: IVA
+    simplificado: Simplificat
+  commands:
+    status:
+      created: creat
+      saved: desat
+      updated: actualitzat
+  demo:
+    description: Una secció de demostració per provar la funcionalitat de l'assistent
+    section:
+      title: Secció de demostració
+    title: Demostració
+  errors:
+    blank_integer: Cal un valor enter per a %{prompt_key}.
+    blank_path: Cal un camí per a %{prompt_key}.
+    blank_secret: Cal un valor secret per a %{prompt_key}.
+    blank_text: Cal un valor per a %{prompt_key}.
+    checkbox_required: Seleccioneu almenys una opció per a %{prompt_key}.
+    checkbox_unknown: 'Valor no reconegut per a %{prompt_key}: %{raw}. Opcions vàlides:
+      %{choices}.'
+    checkbox_without_choices: La pregunta %{prompt_key} no declara opcions de casella.
+    eu_eea_country_required: '%{flag} és obligatori quan %{condition_flag} indica
+      residència a la UE o a l''EEE.'
+    invalid_confirm: 'Resposta booleana no vàlida per a %{prompt_key}: %{raw}.'
+    invalid_date: 'Data no vàlida per a %{flag}: %{got}. Fes servir el format ISO-8601
+      (AAAA-MM-DD).'
+    invalid_decimal: 'Nombre decimal no vàlid per a %{flag}: %{got}. Fes servir el
+      punt com a separador decimal.'
+    invalid_integer: 'Enter no vàlid per a %{prompt_key}: %{raw}.'
+    invalid_postcode: 'Codi postal no vàlid per a %{prompt_key}: %{raw}. Un codi postal
+      espanyol té 5 dígits (codi de província 01-52 seguit de tres dígits).'
+    invalid_tax_id: 'NIF/NIE/CIF no vàlid per a %{prompt_key}: %{raw}. %{detail}'
+    select_unknown: 'Valor no reconegut per a %{prompt_key}: %{raw}. Opcions vàlides:
+      %{choices}.'
+    select_without_choices: La pregunta %{prompt_key} no declara opcions de selecció.
+    spouse_tax_id_required_joint: '%{flag} és obligatori quan %{condition_flag} és
+      tributació conjunta.'
+    unsupported_console: "L'assistent guiat necessita un terminal interactiu, i aquesta\
+      \ execució no en té.\nEncara no s'ha desat res.\n\nPots acabar de crear aquest\
+      \ perfil de dues maneres:\n\n1. Torna a executar l'ordre des d'un terminal interactiu\
+      \ per fer servir l'assistent guiat:\n     aeat config profile create NAME\n\n\
+      2. O crea un perfil de persona física resident IRPF en un sol pas indicant les\
+      \ dades obligatòries com a flags:\n     aeat config profile create NAME --quiet\
+      \ --tax-id NIF --entity-type natural_person --irpf-income-categories actividad_economica\
+      \ --tax-residence-ccaa madrid --name NOM --surnames COGNOMS"
+    unsupported_console_edit: "La configuració guiada no ha pogut obrir una pregunta\
+      \ interactiva en aquesta execució.\nEncara no s'ha desat res.\n\nEdita aquest\
+      \ perfil de manera no interactiva indicant el camp a canviar:\n  aeat config\
+      \ profile edit %{profile_name} --quiet --<camp> VALOR\n\nO torna a executar\
+      \ l'edició guiada des d'una sessió de terminal interactiva:\n  aeat config profile\
+      \ edit %{profile_name}"
+  other:
+    description: Altres opcions de configuració
+    section:
+      title: Altres ajustos
+    title: Altres
+  progress:
+    question_prefix: Pregunta %{q_n} de %{q_total}
+    section_header: 'Pas %{section_n} de %{section_total}: %{title}'
+  setup:
+    actividad:
+      title: Activitat econòmica i cens
+    capabilities:
+      cloud-evidence-upload:
+        prompt: Voleu permetre pujar evidència sensible a proveïdors LLM al núvol?
+          (desactivat per defecte)
+      google-export:
+        prompt: Voleu activar l'exportació a Google Sheets?
+      llm-vision:
+        prompt: Voleu activar la visió LLM local per llegir factures?
+      title: Capacitats de serveis
+    certificate:
+      path:
+        prompt: Introduiu el camí del certificat digital (.p12, .pfx)
+    codes:
+      disability-grade:
+        choices:
+          33-64:
+            description: Discapacitat reconeguda del 33% al 64% - incrementa el mínim
+              personal.
+            label: Discapacitat del 33% al 64%
+          65-plus:
+            description: Discapacitat reconeguda del 65% o més - major increment del
+              mínim personal.
+            label: Discapacitat del 65% o superior
+          assistance-or-mobility:
+            description: Necessitat acreditada d'ajuda de tercers o mobilitat reduïda
+              - afegeix l'increment per assistència.
+            label: Ajuda de tercers o mobilitat reduïda
+          judicial-incapacity:
+            description: Incapacitat declarada judicialment - s'assimila al 65%+ amb
+              independència del grau certificat.
+            label: Incapacitat judicial o equivalent
+      sex:
+        choices:
+          h:
+            label: H - home
+          m:
+            label: M - dona
+    cotejo:
+      adopt:
+        label: Adoptar el valor del certificat
+        provenance: Certificat de Situació Censal (evidència no oficial)
+      compare:
+        help: Conserva la teva resposta, adopta el valor del certificat o ajorna-ho
+          per decidir-ho més tard.
+        prompt: Aquesta dada difereix del certificat. Quin valor conserves?
+      keep:
+        label: Conservar la meva resposta
+        provenance: La teva resposta de l'assistent
+      title: Comprovació amb el Certificat de Situació Censal
+    descendientes:
+      acogimiento-resolucion:
+        help: 'Data de la primera resolució d''acolliment preadoptiu o permanent.
+          Indiqueu-la també si el menor va ser adoptat després: l''augment per menor
+          de tres anys es compta des del primer acolliment i dura tres períodes en
+          total, i l''adopció no el torna a començar.'
+        prompt: Data de la primera resolució d'acolliment
+      alta-posterior-nacimiento-mes:
+        help: Indiqueu un mes de l’1 al 12. Ha de coincidir amb el primer mes declarat
+          als mesos de treball; deixeu-ho en blanc si la mare ja complia el requisit
+          quan va néixer el fill.
+        invalid_range: El mes ha d’estar entre %{minimum} i %{maximum}.
+        prompt: Mes en què la mare va completar els 30 dies de cotització després
+          del naixement
+      birth-date:
+        prompt: Data de naixement
+      convivencia:
+        prompt: Aquest descendent conviu amb vostè?
+      count:
+        help: 'Compti els fills que poden donar dret al mínim per descendents (art.
+          58 LIRPF): menors de 25 anys (o qualsevol edat amb discapacitat) que convisquin
+          amb vostè.'
+        prompt: Quants descendents (fills) vol declarar?
+      custodia-compartida:
+        prompt: La custòdia és compartida amb l'altre progenitor?
+      declaracion-propia:
+        help: Només impedeix el mínim si a més les seves rendes superen el límit legal.
+        prompt: El descendent presenta la seva pròpia declaració de la renda?
+      dependencia-economica:
+        choices:
+          'false':
+            label: No, no hi contribueixo
+          'true':
+            label: Sí, hi contribueixo
+        help: Responeu només si el descendent no conviu amb vós. Un progenitor sense
+          guarda i custòdia, ni tan sols compartida, que no paga anualitats per aliments
+          per decisió judicial però contribueix al manteniment del fill, té dret al
+          mínim per descendents. Si declareu anualitats per aliments, aquesta assimilació
+          no s'aplica a cap descendent mentre l'aplicació no les pugui repartir per
+          fill.
+        prompt: Contribuïu al manteniment econòmic d'aquest descendent?
+      discapacidad:
+        choices:
+          '0':
+            label: Sense discapacitat
+          '33':
+            label: Del 33% al 64%
+          '65':
+            label: 65% o més
+        prompt: Grau de discapacitat
+      entry-event:
+        before_birth: La data d'entrada no pot ser anterior a la data de naixement.
+        in_future: La data d'entrada no pot ser futura.
+        relacion_mismatch: Aquesta data no correspon a la relació indicada. La inscripció
+          al Registre Civil només s'indica per a un descendent adoptat, i la resolució
+          d'acolliment només per a un acolliment preadoptiu o permanent, o per a un
+          adoptat que abans va estar acollit. Corregiu la relació o esborreu la data.
+      fallecimiento:
+        help: Deixeu-ho en blanc si aquest descendent no ha mort.
+        prompt: Data de defunció
+      gastos-guarderia:
+        both_declared: Indiqueu el total anual de llar d'infants o els imports mes
+          a mes d'aquest fill, però no tots dos. El detall mensual és l'únic que pot
+          expressar l'any en què el fill compleix tres anys, així que esborreu el
+          total anual.
+        help: Imports pagats a una llar d'infants o centre d'educació infantil autoritzat
+          (art. 81.2 LIRPF) que incrementen la deducció per maternitat; euros sencers.
+        invalid_negative: Les despeses de llar d'infants no poden ser negatives; introduïu
+          0 o un import positiu en euros (art. 81 bis LIRPF).
+        prompt: Despeses de llar d'infants pagades en l'any de declaració (euros)
+      gastos-guarderia-mensuales:
+        help: 'Feu servir aquesta casella en lloc del total anual quan el fill compleixi
+          tres anys durant l''exercici: només compten els mesos posteriors a l''aniversari
+          i un import anual no es pot repartir entre ells. Escriviu cada mes i el
+          seu import com a MM:IMPORT separats per punt i coma, o un període com a
+          MM-MM:IMPORT, per exemple 9-12:210;1:180. Els mesos amb dret són els que
+          certifica la vostra llar d''infants.'
+        invalid_grammar: Escriviu cada mes i el seu import com a MM:IMPORT separats
+          per punt i coma; un període es pot escriure MM-MM:IMPORT. Per exemple 9-12:210;1:180.
+          Els mesos van de l'1 al 12, els imports són euros sencers i cada mes pot
+          aparèixer una sola vegada.
+        prompt: Despeses de llar d'infants d'aquest fill, mes a mes (opcional)
+      inscripcion-registro-civil:
+        help: Data en què l'adopció es va inscriure al Registre Civil. Si la inscripció
+          no calia, indiqueu la data de la resolució judicial o administrativa. Des
+          d'aquesta data es compta l'augment per menor de tres anys.
+        prompt: Data d'inscripció al Registre Civil
+      meses-madre-trabajo:
+        help: 'Per a la deducció per maternitat (art. 81 LIRPF): QUINS mesos va cotitzar
+          la mare a la Seguretat Social mentre aquest fill donava dret -- menor de
+          3 anys, o (amb independència de l''edat) dins la finestra de data d''entrada
+          d''adopció/acolliment registrada a INSCRIPCION/ACOGIMIENTO. Escriviu MM
+          o MM-MM, separats per '';'' (per exemple 5-8 o 1;2;11;12). Els mesos i no
+          el seu nombre, perquè l''increment per llar d''infants es prorrateja pels
+          mesos que aquests i els de la llar d''infants comparteixen.'
+        invalid_range: Indiqueu els mesos com a MM o MM-MM, separats per ';' (per
+          exemple 5-8 o 1;2;11;12), cadascun entre %{minimum} i %{maximum}.
+        prompt: Quins mesos va treballar la mare amb dret a la deducció -- fill menor
+          de 3 anys, o adopció/acolliment dins la seva finestra de data d'entrada
+          (exercici)
+      nif:
+        prompt: NIF/NIE del descendent (deixi en blanc si no en té)
+      prorrata-minimo:
+        choices:
+          'false':
+            label: No, l'aplico només jo
+          'true':
+            label: Sí, es reparteix entre tots dos
+        help: Deixa-ho en blanc i es deduirà del teu estat civil, del cònjuge registrat
+          i del tipus de declaració.
+        prompt: Un altre contribuent també té dret al mínim per aquest descendent?
+      relacion:
+        choices:
+          acogimiento_preadoptivo_o_permanente:
+            label: Acolliment preadoptiu o permanent
+          acogimiento_temporal:
+            label: Acolliment temporal
+          adoptado:
+            label: Adoptat
+          descendiente:
+            label: Descendent (fill o nét)
+          guarda_y_custodia_judicial:
+            label: Guarda i custòdia per resolució judicial
+          tutela:
+            label: Tutela o representació legal
+        help: Trieu la relació legal. Totes donen dret al mínim per descendents. Només
+          l'adopció i l'acolliment preadoptiu o permanent donen a més dret a l'augment
+          per menor de tres anys amb independència de l'edat; l'acolliment temporal
+          i la tutela no.
+        prompt: Relació amb aquest descendent
+      rentas-anuales:
+        help: Deixa-ho en blanc si no ho saps. Una renda alta pot impedir el mínim
+          per descendents.
+        invalid_negative: Les rendes del descendent no poden ser negatives.
+        prompt: Rendes anuals del descendent, excloses les exemptes (euros)
+      title: Descendents
+    description: Auxiliar de configuració per preparar les declaracions
+    enrollment:
+      enrollment-large-company:
+        prompt: Empresa de gran volum
+      enrollment-public-administration-budget-gt-6000000:
+        prompt: Pressupost administració pública superior a 6.000.000
+      title: Inscripció
+    errors:
+      missing_required_flags: 'Falten paràmetres requerits per a --quiet: %{missing}'
+    familia:
+      title: Situació familiar
+    family:
+      family-descendants-eu-eea-deduction:
+        prompt: Descendents UE/EEE en deducció d'unitat familiar
+      family-minor-children-in-unit:
+        prompt: Fills menors en unitat familiar
+      title: Unitat familiar
+    filing-export:
+      charge-iban:
+        help: IBAN que l AEAT pot carregar quan una declaracio del Model 303 escull
+          la domiciliacio. Es diferent del compte de devolucio.
+        prompt: IBAN per a la domiciliacio de l AEAT
+      title: Compte de carrec del Model 303
+    flags:
+      activity:
+        help: Activitat econòmica en text normal, o epígraf IAE si el coneixes
+      activity-start-date:
+        help: Data d'alta al cens / inici de l'activitat econòmica (AAAA-MM-DD). Opcional;
+          si s'indica, no es mostren obligacions de períodes anteriors a aquesta data.
+      address-postcode:
+        help: Codi postal del domicili fiscal
+      art109-activity-income-withholding-ge-70pct:
+        help: Cobertura Art. 109 - almenys 70% dels ingressos d'activitats professionals,
+          agricoles, ramaderes o forestals subjectes a retenció o ingrés a compte
+      bienes-extranjero-above-threshold:
+        help: Béns a l'estranger superen el llindar legal
+      charge-iban:
+        help: IBAN que l AEAT pot carregar per a una domiciliacio elegida del Model
+          303.
+      cloud-evidence-upload:
+        help: Permetre pujar evidència sensible a proveïdors LLM al núvol (desactivat
+          per defecte).
+      country-of-fiscal-residence:
+        help: Codi ISO 3166-1 alfa-2 del país de residència fiscal (p.ex. GB, DE,
+          FR). Obligatori quan fiscal-residency és non_resident_irnr.
+      descendiente:
+        help: 'Format: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
+      does-intracomunitario:
+        help: Realitza operacions intracomunitàries
+      enrollment-large-company:
+        help: Empresa de gran volum
+      enrollment-public-administration-budget-gt-6000000:
+        help: Pressupost administració pública superior a 6.000.000
+      entity-type:
+        help: Persona física, persona jurídica o entitat en atribució de rendes
+      family-descendants-eu-eea-deduction:
+        help: Descendents UE/EEE en deducció d'unitat familiar
+      family-minor-children-in-unit:
+        help: Fills menors en unitat familiar
+      fiscal-residency:
+        help: 'Categoria de residència fiscal: resident_irpf (resident habitual a
+          Espanya) o non_resident_irnr (no resident, tributació per IRNR RDLeg 5/2004).'
+      google-export:
+        help: Activar l'exportació a Google Sheets.
+      has-employees:
+        help: Té empleats i paga salaris amb retenció
+      incn-prior-12-months:
+        help: Import net de la xifra de negocis dels darrers 12 mesos, en euros. Per
+          sobre de 6.000.000 EUR el Model 202 obliga a la modalitat de l'article 40.3
+          LIS; per sota, totes dues modalitats són possibles. Opcional.
+      irpf-estimation-regime:
+        help: Règim d'estimació IRPF per a la renda d'activitat econòmica
+      irpf-income-categories:
+        help: Categoria de renda IRPF; indiqueu --irpf-income-categories una vegada
+          per categoria
+      irpf-special-regime:
+        help: Règim especial IRPF. "general" per a la majoria de contribuents. "impatriado"
+          per a treballadors desplaçats a Espanya acollits a la Llei Beckham (Art.
+          93 LIRPF), aplicable els primers 6 anys des del trasllat.
+      irpf-special-regime-start-date:
+        help: Data en què el treballador va optar pel règim d'impatriats (AAAA-MM-DD).
+          Només quan irpf-special-regime és "impatriado". RIRPF Art. 116. El règim
+          expira en acabar el 6è any natural.
+      iva-cash-accounting-regime-enrolled:
+        help: Declara la inscripció en el règim especial del criteri de caixa de l'IVA.
+      iva-group-dominant-entity-enrolled:
+        help: Alta com a entitat dominant d'un grup d'IVA
+      iva-group-member-enrolled:
+        help: Alta com a entitat membre d'un grup d'IVA
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        help: Declara el dret a deduir pagaments anticipats del règim de dipòsits
+          fiscals d'hidrocarburs.
+      iva-intracommunity-operations-exceed-50000-eur:
+        help: Operacions intracomunitàries superen 50.000 EUR
+      iva-m303-regime-composition:
+        help: 'Composició de règims del Model 303: general, simplificat o mixt.'
+      iva-oss-enrolled:
+        help: Alta en OSS
+      iva-redeme-enrolled:
+        help: Si el contribuent està inscrit a REDEME
+      iva-regime:
+        help: Règim IVA
+      iva-roi-enrolled:
+        help: Alta en ROI
+      iva-sii-enrolled:
+        help: Si el contribuent està inscrit al SII
+      iva-voluntary-sii-enrolled:
+        help: Declara l'alta voluntària al SII, separada de les causes d'inclusió
+          obligatòria.
+      legal-entity-form:
+        help: Forma jurídica reconeguda quan el tipus d'entitat és persona jurídica
+      legal-name:
+        help: Raó social de la persona jurídica per a capçaleres d'exportació
+      ley-49-2002-option-date:
+        help: Registra la data de la casella 653 del model 036 per a l opció del títol
+          II de la Llei 49/2002.
+      ley-49-2002-option-declared:
+        help: Registra si la casella 651 del model 036 declara l opció pel títol II
+          de la Llei 49/2002.
+      ley-49-2002-renunciation-date:
+        help: Registra la data de la casella 654 del model 036 per a la renúncia al
+          títol II de la Llei 49/2002.
+      ley-49-2002-renunciation-declared:
+        help: Registra si la casella 652 del model 036 declara la renúncia al règim
+          del títol II de la Llei 49/2002.
+      llm-vision:
+        help: Activar la visió LLM local per llegir factures.
+      modelo-111-no-retenciones-periods:
+        help: Períodes Modelo 111 sense obligació, separats per comes, format AAAA:Període
+          (per exemple 2025:2T,2025:3T). Useu-ho només quan no es van pagar rendes
+          subjectes.
+      monedas-virtuales-extranjero-above-threshold:
+        help: Monedes virtuals a l'estranger superen el llindar del Modelo 721
+      name:
+        help: Nom visible mostrat en revisions locals
+      new-entity-first-two-profit-periods:
+        help: Marca-ho si l'entitat de nova creació es troba en un dels dos primers
+          períodes impositius amb beneficis (art. 29 LIS), per aplicar el tipus reduït
+          del 15 per cent. Opcional; sense marcar no s'aplica el tipus reduït.
+      notes:
+        help: Notes per al teu propi record (opcional)
+      objective-estimation-modulos-iae-epigraph:
+        help: Epígraf IAE per a mòduls d'estimació objectiva, per exemple 972.
+      objective-estimation-modulos-module-1-units:
+        help: Unitats anuals del mòdul 1 per a estimació objectiva.
+      objective-estimation-modulos-module-2-units:
+        help: Unitats anuals del mòdul 2 per a estimació objectiva.
+      objective-estimation-modulos-module-3-units:
+        help: Unitats anuals del mòdul 3 per a estimació objectiva.
+      objective-estimation-modulos-module-4-units:
+        help: Unitats anuals del mòdul 4 per a estimació objectiva.
+      objective-estimation-modulos-module-5-units:
+        help: Unitats anuals del mòdul 5 per a estimació objectiva.
+      objective-estimation-modulos-module-6-units:
+        help: Unitats anuals del mòdul 6 per a estimació objectiva.
+      objective-estimation-modulos-module-7-units:
+        help: Unitats anuals del mòdul 7 per a estimació objectiva.
+      output-language:
+        help: Idioma de sortida de la CLI per a aquest perfil
+      pays-capital-income-with-retencion:
+        help: Paga rendes de capital amb retenció
+      pays-professionals-with-retencion:
+        help: Paga a professionals amb retenció
+      pays-rent-with-retencion:
+        help: Paga lloguer de local amb retenció
+      professional-income-withholding-ge-70pct:
+        help: Almenys 70% dels ingressos professionals amb retenció prèvia
+      representante-fiscal-nif:
+        help: NIF/NIE del representant fiscal a Espanya. Obligatori per a no residents
+          fora de la UE/EEE (art. 47 LGT + art. 10 TRLIRNR RDLeg 5/2004).
+      representante-fiscal-nombre:
+        help: Nom i cognoms del representant fiscal a Espanya.
+      situacion-familiar:
+        choices:
+          casado:
+            description: Persona casada
+            label: Casat/ada
+          pareja-hecho-no-registrada:
+            description: Parella de fet no registrada
+            label: Parella no registrada
+          pareja-hecho-registrada:
+            description: Parella de fet registrada
+            label: Parella registrada
+          separado-divorciado:
+            label: Separat/ada o divorciat/ada
+          soltero:
+            label: Solter/a
+        help: 'Situació familiar a efectes de l''Art. 82 LIRPF: determina si es pot
+          optar per la declaració conjunta i quina unitat familiar aplica.'
+        prompt: Indiqueu la situació familiar
+      spouse-birth-date:
+        help: Data de naixement del cònjuge
+      spouse-disability-grade:
+        help: 'Grau de discapacitat del cònjuge (si escau): 1 = 33%-64%, 2 = 65% o
+          superior, 3 = incapacitat judicial, 4 = ajuda de tercers o mobilitat reduïda.'
+      spouse-eu-eea-country:
+        help: País UE/EEE del cònjuge
+      spouse-eu-eea-resident:
+        help: Cònjuge resident UE/EEE
+      spouse-name:
+        help: Nom del cònjuge
+      spouse-non-resident-irpf:
+        help: Cònjuge no resident IRPF
+      spouse-sex:
+        help: 'Sexe del cònjuge: H = home, M = dona.'
+      spouse-surnames:
+        help: Cognoms del cònjuge
+      spouse-tax-id:
+        help: NIF/NIE del cònjuge
+      surnames:
+        help: Cognoms o raó social per a capçaleres d'exportació
+      tax-id:
+        help: Identificador fiscal (NIF/NIE) del perfil actiu
+      tax-residence-ccaa:
+        help: 'Comunitat autònoma de residència fiscal. Una de: %{choices}.'
+      tax-residence-jurisdiction-scope:
+        help: 'Règim territorial declarat: territori comú o territori foral encara
+          no compatible.'
+      taxation-type:
+        help: 'Tipus de declaració de Renda: 1 = individual, 2 = conjunta (unitat
+          familiar).'
+      taxpayer-birth-date:
+        help: Data de naixement del primer declarant
+      taxpayer-death-date:
+        help: Data de defunció del primer declarant
+      taxpayer-disability-grade:
+        help: 'Grau de discapacitat del primer declarant: 1 = 33%-64%, 2 = 65% o superior,
+          3 = incapacitat judicial, 4 = ajuda de tercers o mobilitat reduïda.'
+      taxpayer-marital-status:
+        help: 'Estat civil del primer declarant: 1 = solter/a, 2 = casat/da, 3 = vidu/a,
+          4 = separat/da o divorciat/da, 5 = parella de fet registrada.'
+      taxpayer-marriage-date:
+        help: Data d'inici del matrimoni actual (AAAA-MM-DD). Només quan estat civil
+          = 2 (casat/da). Calcula caselles 0245/0246/0247 (matrimoni sobrevingut,
+          art. 82 LIRPF).
+      taxpayer-sex:
+        help: 'Sexe del primer declarant: H = home, M = dona.'
+      third-party-transactions-above-347-threshold:
+        help: Operacions amb tercers superen el llindar del Modelo 347
+    format:
+      amount-eur: Import en euros amb punt decimal, p. ex. 50000.00.
+      date-iso: Data en format AAAA-MM-DD, p. ex. 2024-03-01.
+      postcode: 'Codi postal espanyol: 5 xifres, p. ex. 28001.'
+      tax-id: 'NIF/DNI: 8 xifres + lletra (12345678Z) · NIE: X/Y/Z + 7 xifres + lletra
+        (X1234567L) · NIF d''entitat: lletra + 7 xifres + control (B12345674).'
+      units-count: Nombre enter d'unitats, p. ex. 2.
+    identidad:
+      title: Identitat
+    intro: 'Configuració guiada del perfil tributari
+
+
+      Això prepara el perfil local que l''app usa per als llibres registre i les comprovacions
+      de models.
+
+      Hi ha %{section_total} passos. Només %{required_total} respostes són obligatòries
+      per començar; pots deixar en blanc el que encara no sàpigues.
+
+      Tingues a mà el NIF/NIE/CIF, una descripció breu de l''activitat, règim d''IVA/IRPF,
+      residència fiscal i dades familiars si apliquen.
+
+      Després de desar, revisa el progrés amb `aeat config profile status`.'
+    iva:
+      iva-cash-accounting-regime-enrolled:
+        prompt: Està inscrit al règim especial del criteri de caixa?
+      iva-group-dominant-entity-enrolled:
+        prompt: Alta com a entitat dominant d'un grup d'IVA
+      iva-group-member-enrolled:
+        prompt: Alta com a entitat membre d'un grup d'IVA
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        prompt: Té dret a deduir pagaments anticipats del règim de dipòsits fiscals
+          d'hidrocarburs?
+      iva-intracommunity-operations-exceed-50000-eur:
+        prompt: Operacions intracomunitàries superen 50.000 EUR
+      iva-oss-enrolled:
+        prompt: Alta en OSS
+      iva-redeme-enrolled:
+        prompt: Inscrit a REDEME (Registre de Devolució Mensual de l'IVA)
+      iva-regime:
+        prompt: Règim IVA
+      iva-roi-enrolled:
+        prompt: Alta en ROI
+      iva-sii-enrolled:
+        prompt: Inscrit al SII (Subministrament Immediat d'Informació)
+      iva-voluntary-sii-enrolled:
+        prompt: Està inscrit voluntàriament al SII?
+      m303-regime-composition:
+        choices:
+          general:
+            label: Només règim general
+          mixed:
+            label: Règims mixtos
+          simplified:
+            label: Només règim simplificat
+        prompt: Quina composició de règims s'aplica al Model 303?
+      title: IVA configuració
+    notes:
+      notes:
+        prompt: Notes per al teu propi record (opcional)
+      title: Notes per al teu propi record
+    obligations:
+      art109-activity-income-withholding-ge-70pct:
+        prompt: Aplica l'excepció Art. 109 per cobertura del 70% dels ingressos d'activitat
+      bienes-extranjero-above-threshold:
+        prompt: Béns a l'estranger superen el llindar legal
+      does-intracomunitario:
+        prompt: Realitza operacions intracomunitàries
+      has-employees:
+        prompt: Té empleats i paga salaris amb retenció
+      irpf-estimation-regime:
+        choices:
+          directa-normal:
+            description: 'Estimació directa normal: comptabilitat per ingressos reals
+              amb llibres complets - obligatòria per sobre de 600.000 EUR.'
+            label: Estimació directa normal
+          directa-simplificada:
+            description: 'Estimació directa simplificada: ingressos reals amb llibres
+              simplificats - l''opció habitual per a la majoria d''autònoms.'
+            label: Estimació directa simplificada
+          objetiva:
+            description: 'Estimació objectiva (mòduls): el rendiment es calcula per
+              indicadors de l''activitat, només per a activitats incloses.'
+            label: Estimació objectiva (mòduls)
+        help: Com es determina el rendiment net de l'activitat econòmica; selecciona
+          Model 130 o 131
+        prompt: Règim d'estimació IRPF
+      irpf-special-regime:
+        choices:
+          general:
+            label: Règim general
+          impatriado:
+            label: Impatriat - Llei Beckham (Art. 93 LIRPF)
+        help: El règim d'impatriats (Llei Beckham) s'aplica durant els primers 6 anys
+          des del trasllat. La majoria tributa en règim general.
+        prompt: Règim especial IRPF (Llei Beckham / Art. 93 LIRPF)
+      irpf-special-regime-start-date:
+        help: Data en què el treballador va optar pel règim d'impatriats (RIRPF Art.
+          116). El règim expira en acabar el 6è any natural.
+        prompt: Data d'inici del règim especial (AAAA-MM-DD)
+      modelo-111-no-retenciones-periods:
+        help: Períodes AAAA:Període en què no es van pagar rendes subjectes a retenció
+          o ingrés a compte, de manera que no es presenta un Modelo 111 en blanc.
+        prompt: Períodes Modelo 111 sense retencions
+      monedas-virtuales-extranjero-above-threshold:
+        prompt: Monedes virtuals a l'estranger superen el llindar del Modelo 721
+      objective-estimation-modulos-iae-epigraph:
+        help: Es desa una vegada al perfil anual. Els coeficients continuen al registre
+          del model.
+        prompt: Epígraf IAE per a mòduls d'estimació objectiva
+      objective-estimation-modulos-module-1-units:
+        prompt: Unitats anuals del mòdul 1
+      objective-estimation-modulos-module-2-units:
+        prompt: Unitats anuals del mòdul 2
+      objective-estimation-modulos-module-3-units:
+        prompt: Unitats anuals del mòdul 3
+      objective-estimation-modulos-module-4-units:
+        prompt: Unitats anuals del mòdul 4
+      objective-estimation-modulos-module-5-units:
+        prompt: Unitats anuals del mòdul 5
+      objective-estimation-modulos-module-6-units:
+        prompt: Unitats anuals del mòdul 6
+      objective-estimation-modulos-module-7-units:
+        prompt: Unitats anuals del mòdul 7
+      objective-estimation-modulos-module-units:
+        help: Recompte anual estable per a aquesta casella de mòdul. L'epígraf IAE
+          seleccionat defineix si significa personal, superfície del local, consum
+          elèctric o un altre mòdul oficial.
+      pays-capital-income-with-retencion:
+        prompt: Paga rendes de capital amb retenció
+      pays-professionals-with-retencion:
+        prompt: Paga a professionals amb retenció
+      pays-rent-with-retencion:
+        prompt: Paga lloguer de local amb retenció
+      professional-income-withholding-ge-70pct:
+        prompt: Almenys 70% dels ingressos professionals amb retenció prèvia
+      third-party-transactions-above-347-threshold:
+        prompt: Operacions amb tercers superen el llindar del Modelo 347
+      title: Obligacions
+    preferencias:
+      title: Preferències i capacitats
+    profile:
+      activity:
+        prompt: Activitat econòmica (text normal; usa l'epígraf IAE si el coneixes)
+      activity-start-date:
+        help: Si la indiques, no es mostren com a vençudes les declaracions de períodes
+          anteriors a aquesta data. Deixa-la en blanc si no la coneixes.
+        prompt: Des de quina data tens obligacions de declaració / quan et vas donar
+          d'alta? (AAAA-MM-DD, opcional)
+      address-postcode:
+        prompt: Codi postal del domicili fiscal
+      iva-regime:
+        choices:
+          exento:
+            description: 'Activitat exempta d''IVA (educació, sanitat, assegurances…):
+              no repercuteix ni dedueix IVA.'
+            label: Exempt/a
+          general:
+            description: 'IVA general: repercuteix IVA en vendes, dedueix IVA suportat
+              i presenta el Model 303 trimestral.'
+            label: Règim general
+          reagp:
+            description: 'Règim especial d''agricultura, ramaderia i pesca (REAGP):
+              compensació a preu fet en lloc de declaracions d''IVA.'
+            label: Règim especial de l'agricultura, ramaderia i pesca (REAGP)
+          recargo-equivalencia:
+            description: 'Per a comerç minorista: el proveïdor aplica un recàrrec
+              addicional i vostè no presenta declaracions d''IVA per aquesta activitat.'
+            label: Recàrrec d'equivalència
+          simplificado:
+            description: Règim simplificat per mòduls per a activitats acollides (vinculat
+              a l'estimació objectiva).
+            label: Règim simplificat
+        prompt: Quin règim d'IVA s'aplica?
+      legal-name:
+        help: Per a persones jurídiques, és el nom fiscal usat a les capçaleres d'exportació.
+          És diferent del nom visible local.
+        prompt: Raó social de l'entitat per a capçaleres d'exportació
+      name:
+        prompt: Nom visible mostrat en revisions locals
+      output-language:
+        choices:
+          ca:
+            label: Català
+          en:
+            label: Anglès
+          es:
+            label: Espanyol
+          hu:
+            label: Hongarès
+        prompt: Idioma de sortida de la CLI per a aquest perfil
+      regimes:
+        prompt: Seleccioneu els règims fiscals aplicables
+      surnames:
+        prompt: Cognoms o raó social per a capçaleres d'exportació
+      tax-id:
+        prompt: Identificador fiscal (NIF/NIE) per a declaracions
+      taxation-type:
+        choices:
+          individual:
+            description: Useu aquest valor quan presenteu només la declaració individual
+            label: 1 - tributació individual
+          joint:
+            description: Useu aquest valor només per a tributació conjunta de la unitat
+              familiar
+            label: 2 - conjunta
+        prompt: Codi del tipus de tributació
+      title: Identitat del perfil
+    residence:
+      ccaa:
+        choices:
+          andalucia:
+            label: Andalusia (CA)
+          aragon:
+            label: Aragó
+          asturias:
+            label: Astúries
+          baleares:
+            label: Illes Balears
+          canarias:
+            label: Illes Canàries
+          cantabria:
+            label: Cantàbria
+          castilla_la_mancha:
+            label: Castella-la Manxa
+          castilla_y_leon:
+            label: Castella i Lleó
+          cataluna:
+            label: Catalunya
+          comunidad_valenciana:
+            label: Comunitat Valenciana
+          extremadura:
+            label: Extremadura (CA)
+          galicia:
+            label: Galícia
+          la_rioja:
+            label: La Rioja (CA)
+          madrid:
+            label: Madrid (CA)
+          murcia:
+            label: Múrcia
+      country-of-fiscal-residence:
+        prompt: País de residència fiscal (codi ISO 3166-1 alfa-2, p.ex. GB, DE, FR)
+      fiscal-residency:
+        choices:
+          non-resident-irnr:
+            description: 'No resident: només tributa la renda de font espanyola, per
+              IRNR (Model 210), i pot requerir-se representant fiscal.'
+            label: No resident - IRNR (RDLeg 5/2004)
+          resident-irpf:
+            description: 'Resident fiscal a Espanya (183+ dies o centre d''interessos):
+              renda mundial per IRPF.'
+            label: Resident habitual a Espanya - IRPF
+        prompt: Categoria de residència fiscal
+      representante-fiscal-nif:
+        prompt: NIF/NIE del representant fiscal a Espanya (obligatori fora UE/EEE)
+      representante-fiscal-nombre:
+        prompt: Nom del representant fiscal a Espanya
+      tax-residence-ccaa:
+        prompt: Comunitat autònoma de residència fiscal
+      tax-residence-jurisdiction-scope:
+        choices:
+          common_regime:
+            label: Territori comú
+          foral_unsupported:
+            label: Territori foral (encara no compatible)
+        prompt: Quin territori tributari s'aplica a aquest Model 303?
+      title: Residència fiscal
+    review:
+      registered-non-official-suffix: ' (del certificat censal - no verificat per
+        l''AEAT)'
+    spouse:
+      spouse-birth-date:
+        prompt: Data de naixement del cònjuge
+      spouse-disability-grade:
+        prompt: Grau de discapacitat del cònjuge (si aplica)
+      spouse-eu-eea-country:
+        prompt: País UE/EEE del cònjuge
+      spouse-eu-eea-resident:
+        prompt: Cònjuge resident UE/EEE
+      spouse-name:
+        prompt: Nom del cònjuge
+      spouse-non-resident-irpf:
+        prompt: Cònjuge no resident IRPF
+      spouse-sex:
+        prompt: Sexe del cònjuge
+      spouse-surnames:
+        prompt: Cognoms del cònjuge
+      spouse-tax-id:
+        prompt: NIF/NIE del cònjuge
+      title: Cònjuge
+    taxpayer:
+      situacion-familiar:
+        choices:
+          casado:
+            description: Matrimoni vigent - tributació conjunta disponible (Art. 82.1.1°)
+            label: Casat/ada
+          pareja-hecho-no-registrada:
+            description: Convivència sense inscripció registral - tributació conjunta
+              NO disponible
+            label: Parella de fet no registrada
+          pareja-hecho-registrada:
+            description: Inscrita al registre autonòmic - tributació conjunta disponible
+              (Art. 82.1.2°)
+            label: Parella de fet registrada
+          separado-divorciado:
+            description: Separat legalment o divorciat - la tributació conjunta només
+              és possible amb fills a la seva unitat familiar.
+            label: Separat/ada o divorciat/ada
+          soltero:
+            description: Solter, vidu o divorciat sense parella registrada - tributació
+              individual, o conjunta només com a família monoparental amb fills.
+            label: Solter/a
+        help: 'Situació familiar a efectes de l''Art. 82 LIRPF: determina si es pot
+          optar per la declaració conjunta i quina unitat familiar s''aplica.'
+        prompt: Situació familiar (Art. 82 LIRPF)
+      taxpayer-birth-date:
+        prompt: Data de naixement del primer declarant
+      taxpayer-death-date:
+        prompt: Data de defunció del primer declarant
+      taxpayer-disability-grade:
+        prompt: Clau de discapacitat del primer declarant
+      taxpayer-marital-status:
+        choices:
+          casado:
+            label: 2 - casat
+          pareja-hecho:
+            label: 5 - parella de fet registrada
+          separado-divorciado:
+            label: 4 - separat o divorciat
+          soltero:
+            label: 1 - solter
+          viudo:
+            label: 3 - vidu
+        prompt: Estat civil del primer declarant
+      taxpayer-marriage-date:
+        prompt: Data d'inici del matrimoni (AAAA-MM-DD)
+      taxpayer-sex:
+        prompt: Sexe del primer declarant
+      title: Primer declarant
+    taxpayer-type:
+      entity-type:
+        choices:
+          attribution-entity:
+            description: 'Una entitat en atribució de rendes (comunitat de béns, societat
+              civil): les rendes s''atribueixen als seus membres.'
+            label: Entitat en atribució de rendes
+          legal-entity:
+            description: Una societat o organització (SL, SA, associació…) que tributa
+              per l'Impost sobre Societats.
+            label: Persona jurídica (societat)
+          natural-person:
+            description: Una persona física (autònom o particular) que tributa per
+              IRPF.
+            label: Persona física
+        help: Persona física (IRPF), persona jurídica (Impost sobre Societats) o entitat
+          en atribució de rendes
+        prompt: Tipus d'entitat
+      incn-prior-12-months:
+        help: Ens cal per saber si el Model 202 t'obliga a la modalitat de l'article
+          40.3 LIS (a partir de 6.000.000 EUR). Deixa-ho en blanc si no ho saps.
+        prompt: Quin va ser el teu import net de la xifra de negocis durant els darrers
+          12 mesos? (en euros, opcional)
+      irpf-income-categories:
+        choices:
+          actividad-economica:
+            description: Activitat econòmica o professional per compte propi - activa
+              el Model 130 trimestral i les obligacions d'IVA.
+            label: Activitat econòmica
+          capital-inmobiliario:
+            description: 'Rendiments del capital immobiliari: lloguers d''immobles
+              de la seva propietat.'
+            label: Rendiments del capital immobiliari
+          capital-mobiliario:
+            description: 'Rendiments del capital mobiliari: interessos, dividends
+              i altres rendes d''inversions.'
+            label: Rendiments del capital mobiliari
+          ganancias-patrimoniales:
+            description: Guanys o pèrdues patrimonials per venda d'actius (accions,
+              immobles, criptomonedes).
+            label: Guanys patrimonials
+          pension:
+            description: Pensions - tributen com a rendiments del treball a l'IRPF.
+            label: Pensió
+          trabajo:
+            description: 'Rendiments del treball: salari o pensió d''un ocupador o
+              de la Seguretat Social.'
+            label: Rendiments del treball
+        help: Selecciona cada categoria de renda IRPF que tinguis; només l'activitat
+          econòmica obliga al Model 130/131
+        prompt: Categories de renda IRPF
+      legal-entity-form:
+        choices:
+          cooperativa:
+            label: Societat cooperativa
+          other:
+            label: Altra forma jurídica
+          sa:
+            label: Societat anònima (S.A.)
+          sal:
+            label: Societat Anònima Laboral (S.A.L.)
+          sin-fines-lucrativos:
+            description: 'Entitat sense finalitats lucratives (Llei 49/2002): pot
+              optar al règim fiscal especial que es pregunta més avall.'
+            label: Entitat sense fins lucratius
+          sl:
+            description: 'Societat Limitada: la forma societària habitual per a pimes,
+              capital mínim 3.000 EUR.'
+            label: Societat de responsabilitat limitada (S.L.)
+          sll:
+            label: Societat Limitada Laboral (S.L.L.)
+          sociedad-civil-mercantil:
+            label: Societat civil amb objecte mercantil
+        prompt: Forma jurídica
+      ley-49-2002-option-date:
+        help: Usa la data ISO corresponent a la casella 653 del model 036.
+        prompt: Data declarada de l opció pel règim especial de la Llei 49/2002
+      ley-49-2002-option-declared:
+        help: Usa el fet declarat a la casella 651 del model 036; l aplicació legal
+          continua condicionada als requisits legals i al fet que no hi hagi renúncia.
+        prompt: L entitat ha presentat al model 036 l opció pel règim fiscal especial
+          del títol II de la Llei 49/2002?
+      ley-49-2002-renunciation-date:
+        help: Usa la data ISO corresponent a la casella 654 del model 036.
+        prompt: Data declarada de la renúncia al règim especial de la Llei 49/2002
+      ley-49-2002-renunciation-declared:
+        help: Usa el fet declarat a la casella 652 del model 036.
+        prompt: L entitat ha presentat al model 036 la renúncia al règim fiscal especial
+          del títol II de la Llei 49/2002?
+      new-entity-first-two-profit-periods:
+        help: S'aplica només a persones jurídiques. Si ho marques, l'entitat tributa
+          al tipus reduït del 15 per cent durant aquests dos períodes.
+        prompt: És una entitat de nova creació en un dels seus dos primers períodes
+          impositius amb beneficis?
+      title: Tipus de contribuent
+    title: Auxiliar de configuració
+    verifier:
+      impatriado_requires_start_date: 'Règim d''impatriats: la data d''inici del règim
+        especial és obligatòria. Afegeix la data d''inici.'
+      monoparental_requires_hijos_warning: 'Unitat familiar monoparental: la tributació
+        conjunta com a monoparental (Art. 82.1.2° LIRPF) requereix fills menors a
+        càrrec a la unitat familiar. Sense fills a càrrec, la declaració conjunta
+        no és possible per a aquesta situació familiar. Activa «fills menors a càrrec»
+        o canvia a tributació individual.'
+      non_resident_requires_country: 'No resident IRNR: el país de residència fiscal
+        és obligatori. Afegeix el país de residència.'
+      non_resident_requires_representante: 'No resident IRNR: cal un representant
+        fiscal. Afegeix el NIF i el nom del representant.'
+  test:
+    description: Prova la configuració i la connectivitat
+    example:
+      choices:
+        'yes':
+          description: Selecciona-ho per confirmar
+          label: Sí
+      help: Text d'ajuda d'exemple per a proves
+      prompt: Pregunta de prova d'exemple
+    main:
+      title: Prova principal
+    section:
+      title: Secció de prova
+    title: Prova

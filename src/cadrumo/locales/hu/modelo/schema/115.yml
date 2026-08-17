@@ -1,0 +1,30 @@
+modelo:
+  schema:
+    '115':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Kedvezményezettek száma
+            '02':
+              help: null
+              label: Forrásadó és előlegfizetés alapja
+            '03':
+              help: null
+              label: Forrásadó és előlegfizetés
+            '04':
+              help: null
+              label: Korábbi bevallások eredménye
+            '05':
+              help: null
+              label: Befizetendő eredmény
+          construct:
+            modelo-115-quarterly-rental-withholding:
+              field:
+                title: null
+          field:
+            label: null

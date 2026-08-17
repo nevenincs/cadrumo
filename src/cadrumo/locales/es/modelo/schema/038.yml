@@ -1,0 +1,23 @@
+modelo:
+  schema:
+    038:
+      field:
+        official_name: Modelo 038. Relación de operaciones realizadas por entidades
+          inscritas en registros públicos. Declaración informativa.
+        title: Operaciones de entidades inscritas en registros públicos (informativa
+          mensual)
+      revision:
+        2002-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaración
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-038-informative:
+              field:
+                title: Modelo 038 declaración informativa
+          field:
+            label: Modelo 038 (orden-hac-66-2002), ejercicios 2002 y siguientes

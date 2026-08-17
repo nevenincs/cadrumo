@@ -1,0 +1,321 @@
+adapters:
+  aeat:
+    clave_movil:
+      errors:
+        pending_petition_blocked: La AEAT rechazó emitir una nueva solicitud push
+          de Cl@ve Móvil porque una petición de autenticación anterior aún está pendiente
+          en el servidor.
+  auth:
+    authenticator:
+      errors:
+        already_active: AeatAuthenticator ya tiene una sesión activa; llame a close()
+          o reauthenticate() antes de autenticar de nuevo.
+        already_active_before_resume: AeatAuthenticator ya tiene una sesión activa;
+          llame a close() antes de reanudar.
+        assertion_failed: La autenticación AEAT no produjo una aserción de inicio
+          de sesión válida.
+        capture_requires_active_session: capture_storage_state() requiere la sesión
+          autenticada actualmente activa.
+        capture_requires_certificate: capture_storage_state() requiere una sesión
+          activa con certificado y metadatos del recurso protegido.
+        metadata_parse_failed: Los metadatos persistidos no produjeron un modelo analizado.
+        no_active_context: No hay contexto de navegador activo; llame a authenticate()
+          primero.
+        no_context_capture_storage: No hay contexto de navegador activo; no se puede
+          capturar el estado de almacenamiento.
+        persisted_session_verification_failed: La sesión persistida del navegador
+          AEAT falló la verificación en vivo.
+        resume_failed: La reanudación de la sesión AEAT persistida no produjo un contexto
+          utilizable.
+        session_stale: La sesión AEAT ha caducado; el plazo de inactividad ha expirado.
+    clave_movil:
+      errors:
+        already_active: Cl@ve Móvil ya tiene una sesión activa; llame a close() antes
+          de autenticarse de nuevo.
+        approval_timeout: La autenticación por navegador Cl@ve Móvil no se completó
+          en el tiempo configurado.
+        dni_nie_not_set: CADRUMO_CLAVE_MOVIL_DNI_NIE no está configurado; configure
+          su DNI o NIE antes de autenticarse.
+        initial_navigation_timeout: La navegación inicial a Cl@ve Móvil no se completó
+          dentro del tiempo configurado.
+        metadata_invalid: Los metadatos de sesión de Cl@ve Móvil son inválidos o no
+          pueden analizarse.
+        no_persisted_session: No se encontró sesión de Cl@ve Móvil; ejecute `aeat
+          config auth status` primero.
+        session_expired: La sesión de Cl@ve Móvil ha superado su plazo de inactividad.
+        storage_state_hash_mismatch: El hash del estado de almacenamiento de Cl@ve
+          Móvil no coincide; los datos de sesión pueden estar corruptos.
+        verify_requires_active_context: Cl@ve Móvil verify() requiere un contexto
+          de navegador activo; llame a authenticate() primero.
+  google:
+    calc_sheets:
+      errors:
+        api_call_failed: La llamada a Google {action} ha fallado.
+        api_call_refused: La llamada a Google {action} fue rechazada (HTTP {status}).
+        api_target_not_found: El destino de Google {action} no se encontró.
+        conflicting_duplicate_metadata: La hoja de Google contiene metadatos AEAT
+          duplicados y contradictorios.
+        foreign_spreadsheet_not_owned: La hoja de Google no está marcada como propiedad
+          de este perfil AEAT.
+        googleapiclient_not_importable: googleapiclient no se puede importar; el adaptador
+          de Google no puede acceder a la API.
+        spreadsheet_id_blank: El id de la hoja de cálculo de Google no puede estar
+          vacío.
+        workbook_snapshot_mismatch: Los metadatos de la hoja de Google no coinciden
+          con la instantánea de cálculo.
+    oauth_flow:
+      errors:
+        browser_launcher_refused: El sistema operativo rechazó abrir la URL de consentimiento
+          OAuth en el navegador.
+        client_config_refused: La configuración del cliente Google OAuth fue rechazada.
+        email_claim_missing: El id_token de Google se verificó pero no incluye la
+          reclamación email.
+        endpoint_unreachable: El endpoint OAuth de Google no es accesible.
+        id_token_missing: Google no devolvió un id_token; el consentimiento OAuth
+          no incluyó los ámbitos openid+email.
+        id_token_module_not_importable: El módulo id_token de google-auth no se puede
+          importar.
+        id_token_verification_failed: La verificación del id_token de Google ha fallado.
+        loopback_bind_failed: El receptor OAuth loopback local no pudo asignar un
+          puerto.
+        non_interactive: 'Google OAuth rechazado: el flujo interactivo de consentimiento
+          en el navegador necesita un terminal interactivo, pero este comando se ejecutó
+          de forma no interactiva.'
+        oauthlib_not_importable: google-auth-oauthlib no se puede importar; el flujo
+          OAuth no puede iniciarse.
+        profile_state_unresolved: Google OAuth no puede resolver el estado del perfil
+          AEAT seleccionado.
+        scope_missing: La pantalla de consentimiento de Google se cerró sin conceder
+          todos los ámbitos requeridos.
+        unsecured_mode_refused: Google OAuth se rechazó porque el almacén de secretos
+          está en modo inseguro y el perfil activo lleva un identificador fiscal español
+          real.
+    profile_binding:
+      errors:
+        no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.
+  inbound:
+    declaracion:
+      errors:
+        extraction_failed: 'Falló la extracción de la declaración con el perfil {profile}:
+          {details}'
+        modelo_conflict: --modelo {modelo!r} entra en conflicto con el modelo detectado
+          {detected!r}.
+        period_unresolved: No se pudo resolver el periodo de la declaración a partir
+          del texto del PDF.
+        profile_count_invalid: 'Se esperaba exactamente un perfil de extracción de
+          PDF de declaración para modelo={modelo}; disponibles: {available}.'
+        profile_unavailable: El perfil de extracción de declaración {profile!r} no
+          está disponible para modelo={modelo}.
+        registry_snapshot_required: 'La extracción de declaración requiere un snapshot
+          validado del registro para modelo={modelo} año={year} periodo={period}:
+          {error}'
+        snapshot_modelo_conflict: El modelo del snapshot del registro {snapshot_modelo!r}
+          entra en conflicto con el detectado {detected!r}.
+        tax_id_unresolved: No se pudo resolver el identificador fiscal de la declaración
+          a partir del texto del PDF.
+        template_not_detected: No se pudo detectar automáticamente la plantilla de
+          {path}; indica --modelo y --año para forzarla.
+        year_conflict: --año {year} entra en conflicto con el año detectado {detected}.
+    financial:
+      providers:
+        pdf_n26:
+          errors:
+            parse_failed: No se pudo analizar el extracto PDF de N26. La ruta de origen
+              se ha ocultado en los diagnósticos.
+    justificante:
+      errors:
+        parse_failed: No se pudo analizar el PDF del justificante. La ruta de origen
+          se ha ocultado en los diagnósticos.
+    pdf:
+      errors:
+        hash_failed: No se pudo calcular la huella del PDF.
+  notificacion:
+    errors:
+      sancion_does_not_reconcile: Los importes impresos en el documento de sanción
+        no cuadran, por lo que se rechazó la lectura. Compruebe el documento a mano.
+      sancion_incomplete: El documento de sanción no se pudo leer por completo. Ábralo
+        en la sede y compruébelo a mano.
+  outbound:
+    storage:
+      factory:
+        errors:
+          drive_root_missing: No hay ningún id de carpeta raíz de Google Drive configurado
+            para el perfil activo. Ejecuta `aeat config google folder set <id>` primero.
+          google_auth_import_failed: La dependencia google-auth no se puede importar;
+            ejecuta `uv sync` y reinténtalo.
+          google_client_missing: No hay ningún cliente OAuth de Google registrado
+            para el perfil activo. Ejecuta `aeat config google register --client-json
+            <path>` primero.
+          google_token_missing: No hay ningún token OAuth de Google persistido para
+            el perfil activo. Ejecuta `aeat config google login` primero.
+          kind_empty: CADRUMO_STORAGE_PROVIDER_KIND esta vacío.
+          kind_unhandled: El tipo de proveedor de almacenamiento {kind} no está gestionado
+            por la factoria.
+          kind_unknown: El tipo de proveedor de almacenamiento {value} no se reconoce;
+            se esperaba uno de {expected}.
+      google_drive:
+        errors:
+          content_hash_blank: El hash de contenido de Google Drive no puede estar
+            vacío.
+          content_hash_mismatch: El hash de contenido de Google Drive no coincide;
+            falló la comprobación de integridad.
+          create_namespace_no_id: Google Drive no devolvió un id al crear la carpeta
+            de espacio de nombres.
+          create_vault_folder_no_id: Google Drive no devolvió un id al crear la carpeta
+            vault.
+          folder_not_owned: La carpeta de Drive {folder_name} no está marcada como
+            propiedad de esta app; se rechaza la escritura para proteger datos del
+            operador.
+          former_vault_folder: La carpeta vault de Google Drive {vault_folder_name}
+            pertenece al producto anterior y no se puede usar; usa la carpeta vault
+            de Cadrumo.
+          googleapiclient_import_failed: La dependencia google-api-python-client no
+            se puede importar; ejecuta `uv sync` y reinténtalo.
+          media_non_bytes: La descarga de medios de Google Drive devolvió {payload_type}
+            en vez de bytes.
+          modified_time_invalid: Google Drive no ha devuelto una fecha de modificación
+            utilizable para este objeto; no se puede confiar en sus metadatos.
+          namespace_blank: El espacio de nombres de almacenamiento de Google Drive
+            no puede estar vacío.
+          namespace_forbidden_characters: El espacio de nombres de Google Drive {namespace}
+            contiene caracteres de ruta prohibidos.
+          namespace_not_found: No se encontró el espacio de nombres de Google Drive
+            {namespace}.
+          object_not_found: No se encontró el objeto de Google Drive {object_key_hmac}
+            en el espacio {namespace}.
+          request_failed: La petición de Google Drive {action} falló con estado {status}.
+          root_folder_id_blank: El id de carpeta raíz de Google Drive no puede estar
+            vacío.
+          size_invalid: Google Drive no ha indicado un tamaño utilizable para este
+            objeto; no se puede confiar en sus metadatos.
+          vault_entry_not_folder: La raíz configurada de Drive contiene {vault_folder_name},
+            pero esa entrada no es una carpeta.
+          vault_folder_name_blank: El nombre de carpeta vault de Google Drive no puede
+            estar vacío.
+          write_non_dict_response: La respuesta de escritura de Google Drive para
+            {action} tuvo una forma inesperada.
+      local:
+        errors:
+          byte_length_invalid: El byte_length del sidecar local tiene tipo inválido
+            {actual_type}.
+          content_hash_blank: El hash de contenido local no puede estar vacío.
+          content_hash_mismatch: El hash de contenido local no coincide; falló la
+            comprobación de integridad.
+          namespace_blank: El espacio de nombres de almacenamiento local no puede
+            estar vacío.
+          namespace_create_path_too_long: 'El almacenamiento local no pudo crear el
+            espacio de nombres {namespace}: la ruta supera el límite de longitud de
+            ruta de Windows. Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta
+            o habilite LongPathsEnabled (véase `aeat config check`).'
+          namespace_create_permission: El almacenamiento local no pudo crear el espacio
+            de nombres {namespace}.
+          namespace_forbidden_characters: El espacio de nombres local {namespace}
+            contiene caracteres de ruta prohibidos.
+          namespace_not_found: No se encontró el espacio de nombres local {namespace}.
+          object_delete_permission: El almacenamiento local no pudo borrar el payload
+            del objeto.
+          object_not_found: No se encontró el objeto local {object_key_hmac} en el
+            espacio {namespace}.
+          payload_commit_failed: El almacenamiento local no pudo confirmar atomicamente
+            el payload del objeto.
+          payload_read_permission: El almacenamiento local no pudo leer el payload
+            del objeto.
+          payload_write_path_too_long: 'El almacenamiento local no pudo escribir la
+            carga del objeto: la ruta supera el límite de longitud de ruta de Windows.
+            Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
+            (véase `aeat config check`).'
+          payload_write_permission: El almacenamiento local no pudo escribir el payload
+            del objeto.
+          sidecar_malformed: El sidecar local {sidecar_path} no se puede leer o esta
+            mal formado.
+          sidecar_missing: Falta el sidecar del objeto local.
+          sidecar_not_object: El sidecar local {sidecar_path} no es un objeto JSON.
+          sidecar_write_failed: El almacenamiento local no pudo escribir el sidecar
+            del objeto.
+          sidecar_write_path_too_long: 'El almacenamiento local no pudo escribir el
+            sidecar del objeto: la ruta supera el límite de longitud de ruta de Windows.
+            Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
+            (véase `aeat config check`).'
+          written_at_invalid: 'El campo written_at del sidecar local falta, no se
+            puede interpretar o no indica zona horaria: {actual_value}.'
+  persistence:
+    profile:
+      assets:
+        errors:
+          asset_already_exists: Ese activo ya existe en el libro cifrado de activos.
+          load_amortizacion_ledger_failed: No se pudo cargar el libro cifrado de amortización.
+          load_asset_ledger_failed: No se pudo cargar el libro cifrado de activos.
+      bienes_inversion:
+        errors:
+          load_register_failed: No se puede cargar el registro cifrado de regularización
+            de IVA por bienes de inversión.
+          record_already_exists: Ese bien de inversión ya existe en el registro cifrado
+            de regularización.
+      inventory:
+        errors:
+          inventory_ledger_already_exists: Ese libro de inventario ya existe.
+          inventory_ledger_not_found: No se encontró el libro de inventario solicitado.
+          load_inventory_ledger_failed: No se pudo cargar el libro cifrado de inventario.
+          movement_already_exists: Ese movimiento de inventario ya existe.
+  sede:
+    errors:
+      censal_bad_landing: La página de datos censales de la AEAT no se cargó correctamente;
+        vuelve a autenticarte e inténtalo de nuevo.
+      censal_modification_surface: Se rechazó la lectura censal porque aterrizó en
+        una página de modificación; este lector nunca modifica los datos censales.
+      censal_no_dispatch: El selector de acceso de la AEAT no abrió la página censal
+        en un servidor operativo; vuelve a autenticarte e inténtalo de nuevo.
+      cotejo_nav_failed: La navegación a la página de cotejo de AEAT falló; la sesión
+        puede haber expirado. Ejecute 'aeat config auth test' y vuelva a intentarlo.
+      ejercicio_unavailable: El registro de declaraciones de AEAT no ofrece el ejercicio
+        solicitado para este modelo.
+      empty_identity_nif: El NIF de identidad de la sesión AEAT está vacío; no se
+        puede vincular la observación de presentación.
+      form_render_timeout: El formulario del registro de declaraciones de AEAT no
+        se renderizó en el tiempo establecido; la sesión puede haber expirado o AEAT
+        está en mantenimiento.
+      iva_wallet_empty_amount_cell: La celda de importe de la cartera de compensación
+        de IVA está vacía.
+      iva_wallet_empty_period_cell: La celda de periodo de la cartera de compensación
+        de IVA está vacía.
+      justificante_column_missing: La respuesta de declaraciones de AEAT no contiene
+        la columna de justificante; la estructura de la tabla puede haber cambiado.
+      landing_off_policy: Se rechazó la lectura de la AEAT porque la página en la
+        que aterrizó está fuera de los hosts permitidos de esta superficie o nombra
+        una acción de escritura.
+      landing_off_read_pages: Se rechazó la lectura de la AEAT porque aterrizó en
+        una página que este lector no consulta; este lector nunca llega a una página
+        de presentación de la AEAT.
+      landing_unreadable: Se rechazó la lectura de la AEAT porque la página en la
+        que aterrizó no tiene una dirección legible, así que no se puede determinar
+        dónde acabó la sesión. Vuelve a autenticarte e inténtalo de nuevo.
+      listbox_missing: La respuesta de declaraciones de AEAT no contiene el contenedor
+        de listado esperado; la estructura de la página puede haber cambiado.
+      listing_nav_failed: La navegación al listado de declaraciones de AEAT falló.
+        Compruebe la conectividad de red y vuelva a intentarlo.
+      modelo_unavailable: El registro de declaraciones de la AEAT no ofrece el modelo
+        solicitado.
+      no_auth_session: La sesión de autenticación de AEAT no existe o no está persistida;
+        ejecute primero `aeat config auth status`.
+      notification_content_requires_operator: 'No se puede abrir el contenido de una
+        notificación no leída: ese mismo paso es la comparecencia, que la da por notificada
+        e inicia sus plazos, y requiere su firma. Ábrala usted en la Sede.'
+      notifications_bad_landing: La página de notificaciones de la AEAT no se cargó
+        correctamente; su sesión puede haber caducado o la AEAT está en mantenimiento.
+        Ejecute 'aeat config auth status' y vuelva a intentarlo. No lo interprete
+        como una bandeja vacía.
+      parse_failed: No se pudo analizar la respuesta de declaraciones de AEAT; la
+        estructura de la página puede haber cambiado.
+      playwright_alert_modal_failed: Error al continuar el modal de alerta de AEAT.
+      playwright_buscar_click_failed: Error al hacer clic en el botón Buscar de la
+        Sede.
+      playwright_combobox_open_failed: Error al abrir el cuadro combinado de la Sede.
+      playwright_combobox_select_failed: Error al seleccionar una opción del cuadro
+        combinado en la Sede.
+      session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
+        la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
+        a intentarlo.
+      submitted_file_layout_parse_failed: No se pudo leer el fichero presentado con
+        el diseño de registro oficial del modelo, así que no se recuperó ningún valor
+        de casilla. El diseño y el fichero presentado no coinciden en qué registros
+        contiene el fichero.

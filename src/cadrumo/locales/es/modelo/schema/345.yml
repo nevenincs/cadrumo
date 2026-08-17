@@ -1,0 +1,119 @@
+modelo:
+  schema:
+    '345':
+      field:
+        official_name: Modelo 345. Declaracion informativa. Planes, fondos de pensiones
+          y sistemas alternativos. Declaracion anual participes, aportaciones y contribuciones.
+        title: Declaracion informativa anual de planes y fondos de pensiones, participes,
+          aportaciones y contribuciones
+      revision:
+        '2025':
+          casilla:
+            anio-nacimiento:
+              help: null
+              label: Ano de nacimiento
+            beneficiario-nif:
+              help: null
+              label: NIF del beneficiario persona con discapacidad
+            clave:
+              help: null
+              label: Clave
+            codigo-provincia:
+              help: null
+              label: Codigo provincia
+            datos-adicionales-clave-i:
+              help: null
+              label: Datos adicionales para la clave I
+            datos-adicionales-clave-m:
+              help: null
+              label: Datos adicionales para la clave M
+            datos-adicionales-claves-abc:
+              help: null
+              label: Datos adicionales para las claves A, B y C
+            datos-identificativos-empleador:
+              help: null
+              label: Datos identificativos del empleador promotor o tomador del sistema
+                de prevision social
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaracion complementaria o sustitutiva
+            declarado-nif:
+              help: null
+              label: NIF del declarado
+            declarado-nombre:
+              help: null
+              label: Apellidos y nombre del declarado
+            declarante-nif:
+              help: null
+              label: NIF del declarante
+            declarante-razon-social:
+              help: null
+              label: Apellidos y nombre o razon social del declarante
+            devoluciones-excesos:
+              help: null
+              label: Devoluciones o reintegros por excesos de aportaciones
+            ejercicio-declaracion:
+              help: null
+              label: Ejercicio de declaracion
+            empleador-nif:
+              help: null
+              label: NIF del empleador promotor o tomador
+            empleador-nombre:
+              help: null
+              label: Apellidos y nombre o razon social del empleador
+            entidad-aseguradora-nif:
+              help: null
+              label: NIF de la entidad aseguradora
+            fondo-pensiones-nif:
+              help: null
+              label: NIF del fondo de pensiones
+            fondo-pensiones-numero-registro:
+              help: null
+              label: Numero de registro del fondo de pensiones
+            importe:
+              help: null
+              label: Importe
+            importe-total-aportaciones:
+              help: null
+              label: Importe total de las aportaciones
+            numero-identificativo-anterior:
+              help: null
+              label: Numero identificativo de la declaracion anterior
+            numero-identificativo-declaracion:
+              help: null
+              label: Numero identificativo de la declaracion
+            pepp-cuenta-subcuenta:
+              help: null
+              label: Cuenta/subcuenta
+            pepp-denominacion:
+              help: null
+              label: Denominacion del PEPP
+            pepp-numero-inscripcion:
+              help: null
+              label: Numero de inscripcion del PEPP
+            persona-relacion:
+              help: null
+              label: Persona con quien relacionarse
+            pias-fecha-primera-prima:
+              help: null
+              label: Fecha de pago de la primera prima
+            pias-importe-acumulado:
+              help: null
+              label: Importe acumulado PIAS
+            plan-pensiones-denominacion:
+              help: null
+              label: Denominacion del plan de pensiones
+            rendimientos-trabajo-superiores-60000:
+              help: null
+              label: Rendimientos integros del trabajo superiores a 60000 euros
+            representante-legal-nif:
+              help: null
+              label: NIF del representante legal
+            subclave:
+              help: null
+              label: Subclave
+            total-declarados:
+              help: null
+              label: Numero total de declarados
+          field:
+            label: Modelo 345 ejercicio 2025 (Orden HFP/823/2022 y Orden HAC/1430/2025)

@@ -1,0 +1,51 @@
+modelo:
+  schema:
+    '341':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2000-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Amount of the operations [01]
+            '02':
+              help: null
+              label: Amount of the operations [02]
+            '03':
+              help: null
+              label: Amount of the operations [03]
+            '04':
+              help: null
+              label: Compensation percentage [04]
+            '05':
+              help: null
+              label: Compensation percentage [05]
+            '06':
+              help: null
+              label: Compensation percentage [06]
+            '07':
+              help: null
+              label: Amount of the compensation [07]
+            08:
+              help: null
+              label: Amount of the compensation [08]
+            09:
+              help: null
+              label: Amount of the compensation [09]
+            '10':
+              help: null
+              label: Total amount of the compensations [10]
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the self-assessment relates
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Settlement period to which the self-assessment relates
+          construct:
+            modelo-341-autoliquidacion:
+              field:
+                title: null
+          field:
+            label: null

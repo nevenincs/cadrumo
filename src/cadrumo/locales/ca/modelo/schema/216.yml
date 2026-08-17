@@ -1,0 +1,75 @@
+modelo:
+  schema:
+    '216':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2024-y-siguientes:
+          casilla:
+            '05':
+              help: null
+              label: Nombre de rendes. Dividends i altres rendes de participació en
+                fons propis d'entitats
+            '06':
+              help: null
+              label: Nombre de rendes. Resta de rendes
+            '07':
+              help: null
+              label: Nombre de rendes. Total
+            08:
+              help: null
+              label: Base de retencions i ingressos a compte. Dividends i altres rendes
+                de participació en fons propis d'entitats
+            09:
+              help: null
+              label: Base de retencions i ingressos a compte. Resta de rendes
+            '10':
+              help: null
+              label: Base de retencions i ingressos a compte. Total
+            '11':
+              help: null
+              label: Retencions i ingressos a compte. Dividends i altres rendes de
+                participació en fons propis d'entitats
+            '12':
+              help: null
+              label: Retencions i ingressos a compte. Resta de rendes
+            '13':
+              help: null
+              label: Retencions i ingressos a compte. Total
+            '14':
+              help: null
+              label: Rendes no sotmeses a retenció o ingrés a compte. Nombre de rendes.
+                Dividends i altres rendes de participació en fons propis d'entitats
+            '15':
+              help: null
+              label: Rendes no sotmeses a retenció o ingrés a compte. Nombre de rendes.
+                Resta de rendes
+            '16':
+              help: null
+              label: Rendes no sotmeses a retenció o ingrés a compte. Nombre de rendes.
+                Total
+            '17':
+              help: null
+              label: Rendes no sotmeses a retenció o ingrés a compte. Base. Dividends
+                i altres rendes de participació en fons propis d'entitats
+            '18':
+              help: null
+              label: Rendes no sotmeses a retenció o ingrés a compte. Base. Resta
+                de rendes
+            '19':
+              help: null
+              label: Rendes no sotmeses a retenció o ingrés a compte. Base. Total
+            '20':
+              help: null
+              label: Resultats a ingressar de declaracions anteriors pel mateix concepte,
+                exercici i període
+            '21':
+              help: null
+              label: Resultat a ingressar
+          construct:
+            modelo-216-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null

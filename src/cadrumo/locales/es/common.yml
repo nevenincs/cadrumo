@@ -1,0 +1,829 @@
+aggregation:
+  grouping:
+    errors:
+      unsupported_modelo: No hay contrato de agregación registrado para el modelo
+        solicitado.
+  invoice_retencion:
+    errors:
+      euro_figures_unavailable_after_defect_sweep: Las cifras en euros no están disponibles
+        en una factura que superó el barrido de defectos.
+      perceptor_tax_id_unavailable_after_defect_sweep: El identificador fiscal del
+        perceptor no está disponible en una factura que superó el barrido de defectos.
+      projection_defects_repeat: Una proyección de retención de factura repite el
+        mismo defecto.
+      projection_outcome_ambiguous: Una proyección de retención de factura debe portar
+        o una observación o defectos, nunca ambos ni ninguno.
+  irnr_income_ledger:
+    diagnostics:
+      foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} es de
+        fuente extranjera; el art. 13 del TRLIRNR la excluye de la proyección de rendimientos
+        íntegros de fuente española del Modelo 210.
+      incomplete_m210_classification: La operación entrante de fuente española no
+        tiene una clasificación expresa de renta del Modelo 210; la proyección del
+        IRNR nunca infiere un código oficial de tipo de renta desde irpf_category.
+      source_jurisdiction_unresolved: source_jurisdiction no está resuelta (None)
+        en una candidata entrante al Modelo 210; el art. 13 del TRLIRNR solo admite
+        rentas de fuente española en esta proyección del IRNR.
+      tipo_renta_code_not_declared: El código oficial de tipo de renta %{tipo_renta_code}
+        del Modelo 210 no está declarado para la revisión y el período de presentación
+        %{period} seleccionados.
+    errors:
+      official_tipo_renta_parameter_count: La revisión %{revision_id} del Modelo 210
+        debe declarar exactamente un parámetro de código oficial de tipo de renta.
+  iva_ledger:
+    errors:
+      bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
+        bucket de agregación solicitado.
+      candidate_outside_period: 'Error interno: el candidato IVA cae fuera del periodo
+        de agregación.'
+      differentiated_sector_inactive_for_filing_year: Un sector diferenciado está
+        inactivo para el ejercicio.
+      differentiated_sector_without_filing_year_entry: Un sector diferenciado no tiene
+        entrada de registro para el ejercicio.
+      differentiated_sector_without_provisional_percentage: Un sector diferenciado
+        no tiene porcentaje provisional resuelto.
+      domestic_identification_on_intra_community_transaction: Una identificación a
+        efectos del IVA española no es válida para una operación intracomunitaria.
+      eu_member_state_on_export_transaction: Las operaciones de exportación o asimiladas
+        no pueden llevar un Estado miembro de la UE; recibido %{member_state}.
+      injected_repositories_missing_bienes_inversion_authority: Los repositorios de
+        IVA inyectados requieren una autoridad explícita de bienes de inversión.
+      input_facts_missing_deduction_authority: Los hechos de IVA soportado requieren
+        una autoridad de deducción exacta.
+      investment_observations_missing_bienes_inversion_authority: Las observaciones
+        de IVA de inversión requieren el registro explícito de bienes de inversión
+        y una autoridad de perfil coincidente.
+      missing_counterparty_establishment_on_export: Una exportación está exenta porque
+        la operación sale de la Unión, por lo que depende de dónde esté ESTABLECIDA
+        la contraparte. Registre el país de la contraparte; un código ausente o no
+        asignado no establece nada, y su identificación a efectos del IVA no puede
+        responder a esto.
+      missing_counterparty_identification_state: Una operación intracomunitaria requiere
+        el Estado miembro en el que la contraparte está identificada a efectos del
+        IVA.
+      output_facts_carry_deduction_authority: Los hechos de IVA repercutido no pueden
+        portar autoridad de deducción.
+      rectification_consumed_more_than_once: Un hecho de IVA ya corregido solo puede
+        rectificarse una vez.
+      sectorized_apportionment_duplicate_sectors: El reparto sectorizado de IVA declara
+        el mismo sector más de una vez.
+      sectorized_especial_missing_input_classification: La prorrata especial sectorizada
+        requiere una clasificación de entrada explícita.
+      sectorized_input_inactive_sector: Una entrada de IVA sectorizada referencia
+        un sector inactivo.
+      sectorized_input_missing_sector_identity: Una entrada de IVA sectorizada no
+        aporta identidad de sector explícita.
+      sectorized_input_unknown_sector: Una entrada de IVA sectorizada referencia un
+        sector desconocido.
+      unsupported_iva_category: 'Error interno: categoría IVA no admitida para la
+        agregación.'
+  m303_arrivals:
+    errors:
+      prorrata_register_contradictory_transition_evidence: El registro de prorrata
+        recoge a la vez una opción y una revocación para el mismo ejercicio.
+      prorrata_register_incomplete_current_year_declaration: El registro de prorrata
+        carece de una declaración explícita y completa para el ejercicio en curso.
+      prorrata_revocacion_without_prior_year_especial: La revocación de prorrata especial
+        no tiene estado de registro especial del ejercicio anterior para los sectores
+        afectados.
+      prorrata_transition_contradictory_evidence: Las entradas de transición de prorrata
+        especial contradicen la transición declarada.
+      prorrata_transition_entry_without_evidence: Una entrada de transición de prorrata
+        especial no aporta evidencia de transición.
+      prorrata_transition_evidence_without_declared_transition: Se aportó evidencia
+        de transición de prorrata especial sin una transición declarada.
+      prorrata_transition_evidence_wrong_filing_year: La evidencia de registro de
+        transición de prorrata especial pertenece a otro ejercicio.
+      prorrata_transition_missing_register_evidence: La transición de prorrata especial
+        declarada no tiene evidencia de registro que la respalde.
+      prorrata_transition_not_applicable_for_period: La evidencia de transición de
+        prorrata especial solo aplica en el último periodo del Modelo 303 del ejercicio.
+      recipient_fact_disagrees_with_ledger_evidence: El dato de destinatario de operaciones
+        en criterio de caja no concuerda con su evidencia de apuntes en régimen del
+        proveedor.
+      supplier_regime_aggregation_period_mismatch: El periodo de la agregación de
+        IVA no coincide con el periodo de declaración solicitado.
+      supplier_regime_blank_ledger_identity: La evidencia de llegada en régimen del
+        proveedor contiene una identidad de apunte en blanco.
+      supplier_regime_duplicate_ledger_evidence: La evidencia de llegada en régimen
+        del proveedor repite el mismo apunte.
+      supplier_regime_observations_outside_period: La agregación de IVA contiene observaciones
+        fechadas fuera del periodo de declaración solicitado.
+  modelo_bindings:
+    errors:
+      invoice_line_currency_unconverted: Una línea de factura está denominada en moneda
+        extranjera sin tipo de cambio a euros resuelto, por lo que no puede declararse
+        en este modelo.
+      unsupported_period: Periodo de modelo no soportado para la agregación del libro.
+  oss_ioss:
+    errors:
+      invoice_line_currency_unconverted: Una línea de factura OSS/IOSS está denominada
+        en moneda extranjera sin tipo de cambio a euros resuelto, por lo que no puede
+        declararse en este modelo.
+      invoice_line_rate_kind_unclassifiable: Una línea de factura OSS/IOSS tiene un
+        tipo de IVA que no puede clasificarse en ningún tramo, por lo que su cuota
+        no puede declararse en este modelo.
+      iva_amount_mismatches_destination_rate: El importe de IVA persistido no concuerda
+        con el tipo del Estado miembro de destino más allá de la tolerancia de un
+        céntimo.
+  per_modelo:
+    errors:
+      unsupported_modelo: Modelo no soportado para la agregación por modelo
+  renta_ledger:
+    errors:
+      annual_period_required: Se requiere un periodo anual para la agregación del
+        libro de Renta.
+      bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
+        bucket solicitado del libro de Renta.
+      invoice_bucket_mismatch: El bucket del repositorio de facturas no coincide con
+        el bucket solicitado del libro de Renta.
+      modelo_mismatch: El modelo tributario no coincide con el modelo esperado del
+        libro de Renta.
+      period_mismatch: El periodo no coincide con el periodo esperado del libro de
+        Renta.
+      quarterly_period_required: Se requiere un periodo trimestral para la agregación
+        de ingresos del Modelo 130 (p.ej. 2024Q1).
+      unsupported_period: Se requiere un periodo anual para la agregación de ingresos
+        del Modelo 100 (p.ej. 2024-0A).
+  retenciones:
+    errors:
+      filing_year_out_of_range: El ejercicio %{filing_year} esta fuera del rango admitido
+        %{min_year}-%{max_year}.
+      invoice_retencion_collision: La(s) observación(es) de retención de la(s) factura(s)
+        %{source_object_ids} se declararon manualmente y también mediante --received-invoice-retencion;
+        elimine el duplicado antes de agregar.
+      perceptor_nif_blank: El NIF del perceptor no puede estar vacío.
+      perceptor_observations_missing: No existen observaciones de retenciones por
+        perceptor para el modelo %{modelo} %{filing_year} %{period}; la fuente %{source_kind}
+        no puede resolverse.
+  service:
+    errors:
+      currency_conversion_required: El importe en moneda extranjera requiere una conversión
+        a euros antes de poder agregarse.
+      envelope_modelo_mismatch: El modelo del envoltorio no coincide con el modelo
+        esperado.
+      envelope_period_mismatch: El periodo del envoltorio no coincide con el periodo
+        esperado.
+      envelope_provider_payload_mismatch: La carga del proveedor del envoltorio no
+        coincide con la esperada.
+      observations_mismatch: Las observaciones devueltas no coinciden con las esperadas.
+      per_modelo_modelos_not_unique: Los modelos por modelo no son únicos.
+      per_modelo_providers_not_unique: Los proveedores por modelo no son únicos.
+      provider_modelos_not_unique: Los modelos del proveedor no son únicos.
+      result_source_kinds_not_unique: Los tipos de fuente del resultado no son únicos.
+      source_kinds_mismatch: Los tipos de fuente no coinciden con la taxonomia aceptada.
+  source_mesh:
+    errors:
+      ambiguous_source_disposition: 'Error interno: el tipo de fuente de vinculación
+        {source_kind} está en más de un estado de la malla de fuentes, o en ninguno.'
+      annual_summary_handoff_duplicate: Más de un resolutor proporcionó el traspaso
+        inmutable del resumen anual del modelo 303 (primero {first_resolver}; segundo
+        {second_resolver}).
+      binding_source_mismatch: source_kind y binding_source se refieren a familias
+        de origen de binding distintas.
+      duplicate_binding_owner: 'Error interno: propietario de vinculación duplicado
+        en la malla de fuentes.'
+      duplicate_bound_casilla_owner: 'Error interno: propietario de casilla vinculada
+        duplicado en la malla de fuentes.'
+      duplicate_relation_owner: 'Error interno: propietario de relación duplicado
+        en la malla de fuentes.'
+      duplicate_row_binding_owner: 'Error interno: propietario de vinculación de fila
+        duplicado en la malla de fuentes.'
+      out_of_window_summary_date_span_invalid: La fecha máxima de presentación de
+        un resumen fuera de ventana no puede ser anterior a su fecha mínima.
+      out_of_window_summary_incomplete: Un resumen fuera de ventana debe establecer
+        conjuntamente el recuento, la fecha mínima de presentación y la fecha máxima
+        de presentación.
+      owned_sources_blank: Las fuentes propiedad del mallado de fuentes no pueden
+        contener tipos de fuente en blanco.
+      owned_sources_duplicate: Las fuentes propiedad del mallado de fuentes deben
+        ser únicas.
+      relation_provenance_incomplete: La procedencia de la relación debe incluir modelo
+        origen, ejercicio, periodos, casillas, referencias legales y referencias de
+        origen.
+      row_binding_index_invalid: 'Error interno: el índice de fila de la vinculación
+        debe ser mayor o igual que 1.'
+      row_binding_value_invalid: 'Error interno: el valor decimal de la vinculación
+        de fila no es válido.'
+      source_transaction_ids_blank: Los identificadores de transacción del mallado
+        de fuentes no pueden contener blancos.
+      source_transaction_ids_duplicate: Los identificadores de transacción del mallado
+        de fuentes deben ser únicos.
+      unresolved_binding_ids_blank: 'Error interno: los ids de vinculación sin resolver
+        no pueden estar en blanco.'
+      unresolved_binding_ids_duplicate: 'Error interno: los ids de vinculación sin
+        resolver no pueden estar duplicados.'
+      unresolved_relation_ids_blank: 'Error interno: los ids de relación sin resolver
+        no pueden estar en blanco.'
+      unresolved_relation_ids_duplicate: 'Error interno: los ids de relación sin resolver
+        no pueden estar duplicados.'
+auth:
+  catalogue:
+    certificate_description: Autenticación basada en un certificado X.509 (FNMT-RCM
+      u otra autoridad reconocida). Compatible con todos los flujos de la sede electrónica.
+    certificate_label: Certificado digital
+    clave_movil_description: Autenticación con aprobación push en el móvil del titular
+      registrado en Cl@ve. Requiere DNI/NIE, registro en Cl@ve, y el dispositivo emparejado.
+    clave_movil_label: Cl@ve Móvil
+    clave_permanente_description: Autenticación con DNI/NIE y contraseña a través
+      del proveedor de identidad Cl@ve Permanente. Automatizable sin intervención
+      para los flujos de lectura de la AEAT; requiere DNI/NIE y contraseña.
+    clave_permanente_label: Cl@ve Permanente
+    clave_pin_description: Hueco reservado y cerrado para Cl@ve PIN.
+    clave_pin_label: Cl@ve PIN
+    dnie_pkcs_description: Hueco reservado y cerrado para DNI-e PKCS.
+    dnie_pkcs_label: DNI-e PKCS
+categories:
+  registry:
+    amortizacion_vivienda_afecto:
+      label: Amortización de la vivienda afecta
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª, amortización de la vivienda afecta).
+    arrendamiento_local:
+      label: Alquiler del local
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
+    arrendamiento_vivienda_afecta: Parte del alquiler de la vivienda afecta a la actividad
+    arrendamiento_vivienda_afecto:
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (Ley 35/2006 art. 29.2 y art. 28.1, arrendamiento de la vivienda afecta).
+    asesoria_contable:
+      label: Honorarios de asesoría contable
+      notes: Gasto totalmente deducible, como servicio de profesional independiente
+        (Ley 35/2006 art. 28.1).
+    asesoria_fiscal:
+      label: Honorarios de asesoría fiscal
+      notes: Gasto totalmente deducible, como servicio de profesional independiente
+        (Ley 35/2006 art. 28.1).
+    asesoria_juridica:
+      label: Honorarios de asesoría jurídica
+      notes: Gasto totalmente deducible, como servicio de profesional independiente
+        (Ley 35/2006 art. 28.1).
+    comunidad_vivienda_afecto:
+      label: Gastos de comunidad de la vivienda afecta
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (Ley 35/2006 art. 30.2.5.b, regla 2ª, gastos de titularidad de la vivienda).
+    cuotas_autonomos_ss:
+      notes: Gasto totalmente deducible; las cuotas del RETA son una condición legal
+        para el ejercicio de la actividad.
+    cuotas_colegiales:
+      label: Cuotas colegiales
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
+    cuotas_reta: Cuotas de autónomos a la Seguridad Social (RETA)
+    formacion_profesional:
+      label: Formación profesional
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
+    gastos_bancarios:
+      label: Gastos bancarios
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, gastos financieros
+        y bancarios).
+    gastos_financieros:
+      label: Gastos financieros
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, gastos financieros
+        y bancarios).
+    hardware_amortizable:
+      label: Hardware amortizable
+      notes: Gasto totalmente deducible mediante amortización (Ley 35/2006 art. 28.1,
+        amortización del inmovilizado).
+    home_office_agua: Agua del despacho en casa
+    home_office_gas: Gas del despacho en casa
+    home_office_internet: Internet del despacho en casa
+    home_office_luz: Electricidad del despacho en casa
+    ibi_local_afecto:
+      label: IBI del local afecto
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 14 LIS por remisión; tributos
+        fiscalmente deducibles).
+    ibi_vivienda_afecto:
+      label: IBI de la vivienda afecta
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (Ley 35/2006 art. 30.2.5.b, regla 2ª, tributos no estatales de la vivienda).
+    manutencion_dietas_extranjero:
+      notes: 'Deducible hasta un límite diario legal: 48,08 EUR/día sin pernocta,
+        91,35 EUR/día con pernocta (Ley 6/2017 / Ley IRPF art. 30.2.5.c, Reglamento
+        IRPF art. 9.A.3.a).'
+      statutory_cap_variants:
+        con-pernocta:
+          label: Con pernocta
+        sin-pernocta:
+          label: Sin pernocta
+    manutencion_dietas_nacional:
+      notes: 'Deducible hasta un límite diario legal: 26,67 EUR/día sin pernocta,
+        53,34 EUR/día con pernocta (Ley 6/2017 / Ley IRPF art. 30.2.5.c, Reglamento
+        IRPF art. 9.A.3.a).'
+      statutory_cap_variants:
+        con-pernocta:
+          label: Con pernocta
+        sin-pernocta:
+          label: Sin pernocta
+    manutencion_extranjero: Dietas de manutención en el extranjero
+    manutencion_nacional: Dietas de manutención nacional
+    material_oficina:
+      label: Material de oficina
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
+    mobiliario_amortizable:
+      label: Mobiliario amortizable
+      notes: Gasto totalmente deducible mediante amortización (Ley 35/2006 art. 28.1,
+        amortización del inmovilizado).
+    mutualidad_alternativa:
+      label: Mutualidad alternativa
+      notes: Deducible hasta un límite legal de 15.000 EUR/año por contribuyente,
+        para una mutualidad alternativa que sustituye al RETA (AEAT ayuda Renta, Cotizaciones
+        al RETA).
+    publicidad_marketing:
+      label: Publicidad y marketing
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
+    reparaciones_conservacion:
+      label: Reparaciones y conservación
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
+    seguros_rc: Seguro de responsabilidad civil profesional
+    seguros_responsabilidad_civil:
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
+    seguros_salud: Seguro de salud del autónomo
+    seguros_salud_autonomo:
+      notes: Deducible hasta un límite legal de 500 EUR/año por contribuyente (Ley
+        35/2006 art. 30.2.5.c, regla 1ª, primas de seguro de enfermedad).
+    software_suscripcion:
+      label: Suscripción de software
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
+    subcontratacion:
+      label: Subcontratación
+      notes: Gasto totalmente deducible, como servicio de profesional independiente
+        (Ley 35/2006 art. 28.1).
+    suministros_cliente_directos:
+      label: Suministros directos del cliente
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
+    suministros_home_office_agua:
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
+    suministros_home_office_gas:
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
+    suministros_home_office_internet:
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
+    suministros_home_office_luz:
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
+    suministros_local_afecto:
+      label: Suministros del local afecto
+      notes: 'Gasto totalmente deducible: el inmueble donde se desarrolla la actividad
+        esta afecto (Ley 35/2006 art. 29.1.a) y sus suministros son gasto deducible
+        (art. 28.1). No se aplica la regla del 30 por ciento del art. 30.2.5.b, reservada
+        a la vivienda habitual parcialmente afecta.'
+    telefonia_fija:
+      label: Telefonía fija
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
+    telefonia_movil:
+      label: Telefonía móvil
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del elemento patrimonial).
+    tributos_deducibles: Otros tributos y tasas fiscalmente deducibles
+    tributos_fiscalmente_deducibles:
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 14 LIS por remisión).
+    vehiculo_combustible:
+      label: Combustible del vehículo
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del vehículo).
+    vehiculo_mantenimiento:
+      label: Mantenimiento del vehículo
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del vehículo).
+    vehiculo_parking:
+      label: Aparcamiento del vehículo
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del vehículo).
+    vehiculo_peaje:
+      label: Peajes del vehículo
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del vehículo).
+    vehiculo_seguro:
+      label: Seguro del vehículo
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del vehículo).
+    viajes_alojamiento:
+      label: Alojamiento en viajes
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
+    viajes_transporte:
+      label: Transporte en viajes
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
+core:
+  profile:
+    errors:
+      output_language_type: El idioma de salida del perfil debe ser un código de idioma
+        admitido en formato texto.
+      registration_duplicate_callable: La implementación de respuestas de proyecto
+        se registró dos veces con distintos invocables; debe registrarse exactamente
+        una vez.
+entries:
+  portal_calendario_contribuyente:
+    label: Calendario del contribuyente
+    purpose: Calendario anual de plazos y obligaciones tributarias.
+  portal_cert_selection:
+    label: Selección de certificado electrónico
+    notes:
+      '0': El navegador debe tener instalado el certificado en su almacén.
+    purpose: Pasarela de selección del certificado digital para autenticarse.
+  portal_cert_validation_rest:
+    label: Validación de certificados electrónicos
+    purpose: Servicio de comprobación de validez de certificados digitales.
+  portal_clave_gestiones:
+    label: Cl@ve PIN - Gestiones
+    purpose: Gestión y obtención del Cl@ve PIN de acceso temporal.
+  portal_clave_idp_root:
+    label: Cl@ve - Identificación electrónica
+    purpose: Proveedor de identidad Cl@ve para autenticación ante la AEAT.
+  portal_clave_sede_entry:
+    label: Acceso con Cl@ve
+    purpose: Punto de acceso a la Sede mediante el sistema Cl@ve.
+  portal_consulta_pagos:
+    label: Consulta de pagos y devoluciones
+    purpose: Consulta del estado de pagos y devoluciones tributarias.
+  portal_dnie_sede_entry:
+    label: Acceso con DNI electrónico
+    purpose: Punto de acceso a la Sede mediante DNIe.
+  portal_domiciliacion_bancaria:
+    label: Domiciliación bancaria de pagos
+    purpose: Domiciliación bancaria de autoliquidaciones y pagos tributarios.
+  portal_m036_censal:
+    label: Modelo 036 - Declaración censal
+    purpose: Alta, modificación y baja en el censo de empresarios y profesionales.
+  portal_m037_censal_simplificada:
+    label: Modelo 037 - Declaración censal simplificada (retirado)
+    notes:
+      '0': Suprimido por la Orden HAC/1526/2024, con efecto desde 2025-02-03.
+      '1': Use el Modelo 036 para cualquier trámite censal posterior.
+    purpose: Declaración censal simplificada para autónomos, suprimida en 2025.
+  portal_m100_renta:
+    label: Modelo 100 - Declaración de la Renta (IRPF)
+    purpose: Declaración anual del Impuesto sobre la Renta de las Personas Físicas.
+  portal_m111_retenciones_trabajo:
+    label: Modelo 111 - Retenciones del trabajo y actividades
+    purpose: Autoliquidación de retenciones e ingresos a cuenta del IRPF sobre rendimientos
+      del trabajo.
+  portal_m115_retenciones_arrendamientos:
+    label: Modelo 115 - Retenciones por arrendamiento de inmuebles
+    purpose: Autoliquidación de retenciones del IRPF por alquiler de inmuebles urbanos.
+  portal_m123_retenciones_capital:
+    label: Modelo 123 - Retenciones del capital mobiliario
+    purpose: Autoliquidación de retenciones del IRPF sobre rendimientos del capital
+      mobiliario.
+  portal_m130_pago_fraccionado_ed:
+    label: Modelo 130 - Pago fraccionado IRPF (estimación directa)
+    purpose: Pago fraccionado trimestral del IRPF para autónomos en estimación directa.
+  portal_m131_pago_fraccionado_eo:
+    label: Modelo 131 - Pago fraccionado IRPF (estimación objetiva)
+    purpose: Pago fraccionado trimestral del IRPF para autónomos en estimación objetiva
+      (módulos).
+  portal_m180_resumen_arrendamientos:
+    label: Modelo 180 - Resumen anual de arrendamientos
+    purpose: Resumen anual de retenciones por arrendamiento de inmuebles urbanos.
+  portal_m190_resumen_trabajo:
+    label: Modelo 190 - Resumen anual de retenciones del trabajo
+    purpose: Resumen anual de retenciones e ingresos a cuenta sobre rendimientos del
+      trabajo.
+  portal_m193_resumen_capital:
+    label: Modelo 193 - Resumen anual de retenciones del capital
+    purpose: Resumen anual de retenciones sobre rendimientos del capital mobiliario.
+  portal_m200_sociedades_anual:
+    label: Modelo 200 - Impuesto sobre Sociedades
+    purpose: Declaración anual del Impuesto sobre Sociedades.
+  portal_m202_sociedades_fraccionado:
+    label: Modelo 202 - Pago fraccionado del Impuesto sobre Sociedades
+    purpose: Pago fraccionado a cuenta del Impuesto sobre Sociedades.
+  portal_m232_vinculadas:
+    label: Modelo 232 - Operaciones vinculadas
+    purpose: Declaración informativa de operaciones con personas o entidades vinculadas.
+  portal_m303_iva_autoliquidacion:
+    label: Modelo 303 - Autoliquidación del IVA
+    purpose: Autoliquidación periódica del Impuesto sobre el Valor Añadido.
+  portal_m347_operaciones_terceros:
+    label: Modelo 347 - Operaciones con terceras personas
+    purpose: Declaración informativa anual de operaciones con terceros superiores
+      a 3.005,06 €.
+  portal_m349_intracomunitarias:
+    label: Modelo 349 - Operaciones intracomunitarias
+    purpose: Declaración recapitulativa de operaciones intracomunitarias de bienes
+      y servicios.
+  portal_m369_oss_ioss:
+    label: Modelo 369 - Ventanilla única IVA (OSS/IOSS)
+    purpose: Autoliquidación del IVA en los regímenes de ventanilla única OSS e IOSS.
+  portal_m390_resumen_iva:
+    label: Modelo 390 - Resumen anual del IVA
+    purpose: Declaración resumen anual del Impuesto sobre el Valor Añadido.
+  portal_m720_bienes_extranjero:
+    label: Modelo 720 - Bienes y derechos en el extranjero
+    purpose: Declaración informativa de bienes y derechos situados en el extranjero.
+  portal_m840_iae:
+    label: Modelo 840 - Impuesto sobre Actividades Económicas
+    purpose: Declaración del Impuesto sobre Actividades Económicas (IAE).
+  portal_mi_area_personal:
+    label: Mi Área Personal
+    purpose: Área personal autenticada del contribuyente en la Sede.
+  portal_mis_documentos_pendientes_firma:
+    label: Documentos pendientes de firma
+    purpose: Portafirmas con los documentos pendientes de firma electrónica.
+  portal_mis_expedientes:
+    label: Mis expedientes
+    purpose: Consulta del estado de los expedientes y trámites del contribuyente.
+  portal_mis_notificaciones:
+    label: Mis notificaciones
+    purpose: Buzón electrónico de notificaciones y comunicaciones de la AEAT.
+  portal_pago_autoliquidacion_cuenta:
+    label: Pago de autoliquidación por cargo en cuenta
+    purpose: Pago de autoliquidaciones mediante cargo en cuenta bancaria.
+  portal_pago_autoliquidacion_tarjeta_bizum:
+    label: Pago de autoliquidación con tarjeta o Bizum
+    purpose: Pago de autoliquidaciones con tarjeta bancaria o Bizum.
+  portal_pago_liquidaciones_deudas:
+    label: Pago de liquidaciones y deudas
+    purpose: Pago de liquidaciones practicadas por la AEAT y deudas tributarias.
+  portal_pre303_ayuda:
+    label: Pre303 - Servicio de ayuda al Modelo 303
+    purpose: Servicio de ayuda Pre303 para preparar el borrador del Modelo 303.
+  portal_presentar_consultar_index:
+    label: Presentar y consultar declaraciones
+    purpose: Índice de modelos para presentar o consultar declaraciones.
+  portal_renta_web_borrador:
+    label: Renta WEB - Borrador IRPF
+    notes:
+      '0': El borrador se genera a partir de los datos fiscales de la AEAT.
+    purpose: Servicio Renta WEB para revisar y presentar el borrador del IRPF.
+  portal_sede_root:
+    label: AEAT Sede Electrónica
+    purpose: Página de inicio de la Sede Electrónica de la AEAT.
+filing:
+  validation:
+    deadline_missed: Plazo de presentación vencido
+    formula_divergence: Divergencia en el cálculo de la fórmula
+    out_of_range: Valor fuera de rango permitido
+    required_missing: Falta campo obligatorio
+    schema_mismatch: Discrepancia con el esquema esperado
+ledger:
+  evidence:
+    reader:
+      operation_failed: Falló la operación del lector de justificantes
+live:
+  errors:
+    expediente_not_found: No se encontró el expediente solicitado en la AEAT.
+    iva_history_modelo_303_only: El historial de IVA solo está disponible para el
+      Modelo 303.
+    target_period_year_mismatch: El año objetivo no coincide con el ejercicio del
+      periodo objetivo.
+    year_range_invalid: El rango de ejercicios indicado no es válido.
+  filed:
+    pull:
+      submitted_file_extraction_failed: 'La declaración del modelo {modelo} {period}
+        {ejercicio} (expediente {expediente_id}) no se pudo leer a través del diseño
+        de fichero presentado. El PDF de la declaración, si AEAT lo proporcionó, sigue
+        siendo la única vía de extracción. Motivo del analizador: {reason}'
+    pull_all:
+      denominator_note_profile: Medido sobre {expected} par(es) que esperan los datos
+        declarados por el propio contribuyente. Otros {offered_only} par(es) proceden
+        solo de la lista de opciones que ofrece la AEAT y no sustentan ninguna afirmación
+        de cobertura.
+      denominator_note_register_only: 'Sin denominador propio del contribuyente: los
+        {offered_only} pares recorridos proceden de la lista de opciones que ofrece
+        la AEAT, cuya vinculación a este NIF no está confirmada. Esta ejecución no
+        mide nada.'
+      expected_but_not_found: 'Su perfil declarado espera una declaración en {count}
+        par(es) modelo/ejercicio para los que el registro de la AEAT no devolvió ninguna:
+        {pairs}. Compruebe si llegaron a presentarse.'
+      found_more_than_expected: El registro de la AEAT contiene {raw_count} declaraciones
+        del modelo {modelo} {period} {ejercicio}; se conservó el registro más reciente
+        ({expediente}) y se sustituyeron {superseded} anterior(es).
+      recapture_divergence: 'Volver a capturar el modelo {modelo} {period} {ejercicio}
+        cambió {count} valor(es) de casilla observados anteriormente: {casillas}.
+        La AEAT puede tener una declaración rectificada.'
+llm:
+  evidence:
+    consent:
+      dispatch_refused: 'Rechazado: esta solicitud lee un documento del contribuyente
+        y lo enviaría al proveedor externo %{provider} sin una autorización de consentimiento
+        para esta invocación.'
+      mint_refused: 'Rechazado: la lectura externa de documentos del contribuyente
+        no está permitida para esta invocación.'
+mcp:
+  call:
+    timeout: '''{command}'' superó el límite de tiempo del nivel {tier} ({seconds}s)
+      y se canceló. Reinténtalo o ejecuta el comando aeat equivalente directamente
+      en un terminal.'
+    timeout_may_complete: '''{command}'' superó su límite de tiempo; puede que la
+      operación siga completándose en segundo plano. Vuelve a ejecutarla con la misma
+      clave de idempotencia para comprobarlo: la garantía de idempotencia hace que
+      el reintento sea seguro y nunca duplica la escritura.'
+  elicitation:
+    confirm:
+      consequence_handoff: Esto genera el documento de presentación que el contribuyente
+        presentará ante la AEAT por sí mismo. Confirmar no envía nada a ninguna parte.
+      consequence_local: Esto modifica datos locales del perfil de contribuyente activo.
+      declined: '''{command}'' no fue confirmado por el usuario ({outcome}); no se
+        ejecutó nada.'
+      field_description: ¿Ejecutar '{command}' ahora?
+      message: Confirma la ejecución de '{command}'. {consequence} Responde sí para
+        continuar o no para detener.
+    refusal:
+      blocked: '''{command}'' está bloqueado permanentemente: la presentación en línea
+        ante la AEAT está prohibida por diseño. Exporta localmente; el contribuyente
+        presenta por sí mismo.'
+      no_channel: '''{command}'' requiere confirmación humana y este cliente no admite
+        la función de preguntas (elicitation). Ejecútalo desde un cliente que pueda
+        hacerte preguntas, o ejecuta el comando equivalente de Cadrumo CLI (`aeat`)
+        directamente en un terminal.'
+  faithfulness:
+    advisory: 'AVISO DE FIDELIDAD: los argumentos de la llamada citan importes [{values}]
+      que ningún resultado de herramienta de esta sesión ha producido. Verifica la
+      cifra con una lectura de calculate/revision antes de confiar en ella.'
+  harness:
+    off_host_consent: 'Aviso de privacidad - léalo antes de continuar. Esta consola
+      la maneja un asistente de IA que se ejecuta en el proveedor de LLM que usted
+      elija. Sus palabras, y las cifras con las que trabaja el asistente (importes,
+      valores de casilla, obligaciones), se envían a ese proveedor para operar la
+      consola. Sus DOCUMENTOS DE ORIGEN - facturas, extractos bancarios y cualquier
+      byte de evidencia - NUNCA salen de su equipo: permanecen en almacenamiento local
+      cifrado y nunca se transmiten. Si actúa por cuenta de un tercero (un gestor
+      o profesional), confirme que esto es aceptable antes de continuar.'
+  identity_gate:
+    elicitation_echo: 'Actuando como el perfil del contribuyente: %{label}.'
+    first_mutation_refused: 'Rechazado: confirma el contribuyente activo antes del
+      primer cambio de esta sesión. Una presentación o edición nunca debe ejecutarse
+      bajo la identidad equivocada. Ejecuta whoami (o ''config profile status'' /
+      ''overview status'') para ver qué contribuyente está activo y vuelve a intentarlo;
+      una sola lectura de identidad lo desbloquea durante la sesión hasta que cambies
+      de perfil.'
+  persona:
+    handoff_denied: '''{command}'' es la frontera irreversible de entrega de la presentación,
+      propiedad de la persona ''{owner}''; la persona ''{persona}'' la tiene denegada
+      estructuralmente. Entrega la unidad de trabajo verificada a la sesión del verificador
+      para producir la exportación o el marcador de registro.'
+  serving:
+    warm_degraded: '''{command}'' se atendió por el transporte de subproceso porque
+      el runtime en caliente estaba {reason}; el resultado es idéntico, solo más lento.
+      El servicio en caliente se reanuda cuando se libera la llamada lenta.'
+overview:
+  no_aeat_history: Este perfil no tiene ninguna presentación confirmada por la AEAT.
+  no_aeat_history_sociedades: Este perfil no tiene ninguna presentación confirmada
+    por la AEAT. La recuperación automática no puede obtener el historial de presentaciones
+    del Impuesto sobre Sociedades (modelo 200/202); consúltelo directamente en la
+    sede electrónica de la AEAT.
+provisioning:
+  model:
+    licence:
+      non_commercial_advisory: El modelo %{model} está sujeto a la %{licence}, que
+        no permite el uso comercial. Lo ha indicado usted de forma explícita, así
+        que Cadrumo lo utilizará, pero una gestoría comercial necesita una licencia
+        aparte del editor.
+review:
+  adapters:
+    errors:
+      drafts_load_failed: No se pudieron cargar los borradores de presentación desde
+        el backend seguro.
+      invoices_load_failed: No se pudieron cargar las facturas del adaptador.
+      transactions_load_failed: No se pudieron cargar las transacciones del adaptador.
+  edit:
+    errors:
+      parse_failed: No se pudo interpretar el token de edición. El valor suministrado
+        se ha ocultado.
+  filing:
+    draft_placeholder_summary: Borrador pendiente
+    finding_summary: Incidencia detectada en el borrador
+    stale_approval_summary: Aprobación obsoleta del borrador
+  filter:
+    errors:
+      parse_failed: No se pudo interpretar el token de filtro. El valor suministrado
+        se ha ocultado.
+  invoice:
+    summary: Justificante pendiente de revisión
+  operator:
+    errors:
+      item_not_found: No se encontró el elemento solicitado en la cola de revisión.
+      reserved_kind: El tipo de revisión está reservado y no es un elemento de revisión
+        emitido.
+      unknown_kind: 'Tipo de elemento de revisión desconocido. Valores --kind admitidos:
+        %{accepted_kinds}.'
+  transaction:
+    summary: Transacción pendiente de clasificación
+sheets:
+  detalle:
+    headers:
+      acquisition_date: Fecha de adquisición
+      amount: Importe
+      amount_donated: Importe donado
+      asset_class_code: Clave del bien
+      asset_identifier: Identificación del bien
+      base_imponible: Base imponible
+      base_imponible_assigned: Base imponible atribuida
+      clave: Clave
+      counterparty_legal_name: Razón social de la contraparte
+      counterparty_tax_id: NIF de la contraparte
+      country_code: Código de país
+      currency_code: Código de divisa
+      deduction_percentage: Porcentaje de deducción
+      donor_legal_name: Nombre o razón social del donante
+      donor_tax_id: NIF del donante
+      ingreso_a_cuenta: Ingreso a cuenta
+      is_recurrent: Donativo recurrente
+      member_legal_name: Razón social del miembro
+      member_state_code: Estado miembro
+      member_tax_id: NIF del miembro
+      operation_date: Fecha de la operación
+      operation_kind_code: Clave de operación
+      party_legal_name: Razón social
+      party_tax_id: NIF
+      perceptor_legal_name: Apellidos y nombre del perceptor
+      perceptor_tax_id: NIF del perceptor
+      percibido_dinerario: Percepciones dinerarias
+      percibido_especie: Percepciones en especie
+      rectified_base_previous: Base imponible anterior (rectificación)
+      rectified_period: Periodo rectificado
+      rectified_year: Ejercicio rectificado
+      refund_amount: Importe a devolver
+      retencion_practicada: Retención practicada
+      share_percentage: Porcentaje de participación
+      subclave: Subclave
+      supplier_tax_id: NIF del proveedor
+      transfer_pricing_method_code: Método de valoración
+      valuation_amount: Valoración
+topic:
+  authentication:
+    body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado
+      digital (FNMT / equivalente). Configura un proveedor con 'aeat config auth configure
+      --provider certificate' y verifica con 'aeat config auth test'.
+    title: Autenticación con la AEAT
+  calendar:
+    body: El calendario muestra las obligaciones de presentación (modelos y periodos)
+      dentro de un rango. Necesita un perfil con régimen IVA declarado para no asumir
+      valores por defecto.
+    title: Calendario de obligaciones
+  casilla:
+    body: Una casilla es un campo numerado de un modelo. Las casillas pueden ser manuales,
+      calculadas (computed) o derivadas de bindings. 'aeat app modelo casillas <modelo>'
+      las lista.
+    title: Casillas
+  formats:
+    body: La CLI emite salida en texto, JSON, table o csv según '--format'. JSON es
+      el formato recomendado para automatización; text para inspección humana.
+    title: Formatos de salida
+  irpf-regime:
+    body: Régimen IRPF de un autónomo. Estimación directa (normal o simplificada)
+      o estimación objetiva (módulos). Determina qué modelos de pago fraccionado aplican
+      (130 vs 131).
+    title: Régimen IRPF
+  iva-regime:
+    body: Régimen IVA aplicable al contribuyente. General, simplificado, recargo de
+      equivalencia, exento, REAGP o REBU. Determina el modelo 303 trimestral y el
+      resumen anual 390.
+    title: Régimen IVA
+  modelos:
+    body: Catálogo de modelos tributarios AEAT (303, 130, 100, 347, 349, 111, 115,
+      184, etc.). Cada modelo tiene su propio calendario, casillas y reglas de aplicabilidad.
+      'aeat app modelo list' enumera los disponibles.
+    title: Modelos tributarios
+  pago-fraccionado:
+    body: Pago a cuenta del IRPF que realiza un autónomo cada trimestre. El modelo
+      130 aplica a estimación directa; el 131 a estimación objetiva. El cálculo usa
+      los datos del trimestre y, para algunos casos, los del ejercicio anterior.
+    title: Pago fraccionado IRPF
+  profile:
+    body: El perfil local contiene tu identificador fiscal (NIF/CIF/DNI/NIE), actividad
+      principal, régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario).
+      Edítalo con 'aeat config profile edit NAME'.
+    title: Perfil del contribuyente
+  providers:
+    body: Proveedores de autenticación soportados; cada uno requiere requisitos distintos.
+      'aeat config auth --help' lista los proveedores con sus prerrequisitos.
+    title: Proveedores de autenticación
+  recargo-extemporaneo:
+    body: La presentación fuera de plazo sin requerimiento previo de la AEAT acumula
+      un recargo del 1% por mes (hasta el 12%) durante el primer año y 15% más intereses
+      tras 12 meses. Base legal Ley 58/2003 art-27.
+    title: Recargo por presentación extemporánea
+  regimens:
+    body: Conjunto de regímenes fiscales aplicables a un autónomo. Las dos dimensiones
+      principales son IVA (general, simplificado, recargo de equivalencia, exento)
+      e IRPF (directa, objetiva).
+    title: Regímenes fiscales
+  sii:
+    body: Suministro Inmediato de Información del IVA. Obliga a quienes liquidan IVA
+      mensualmente, incluidas grandes empresas, grupos de IVA y REDEME, a llevar los
+      libros registro en la Sede de la AEAT.
+    title: SII
+  verifactu:
+    body: Requisitos RD 1007/2023 para sistemas informáticos de facturación. El hito
+      actual es 1 de enero de 2027 para contribuyentes del Impuesto sobre Sociedades
+      del art. 3.1.a y 1 de julio de 2027 para el resto de obligados del art. 3.1.
+    title: VERI*FACTU
+transactions:
+  import:
+    batch_id_collision: 'Fila omitida: tiene el mismo identificador de transacción
+      que otra fila de este archivo.'
+    message_053465: Transacción duplicada detectada dentro del archivo importado.
+    message_082074: Transacción duplicada ya presente en el libro mayor.
+    message_185962: El archivo de origen no contiene transacciones válidas.
+    message_829073: 'Posible hueco en el historial: más de 35 días entre transacciones.'
+    unreadable: Archivo ilegible o formato no soportado
+    verified: Importación verificada con éxito

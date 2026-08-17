@@ -1,0 +1,40 @@
+modelo:
+  schema:
+    '720':
+      field:
+        official_name: Modelo 720. Declaración informativa sobre bienes y derechos
+          situados en el extranjero.
+        title: Bienes y derechos en el extranjero (informativa anual)
+      revision:
+        2013-y-siguientes:
+          casilla:
+            x-cdqmarjkc5pisorfchkmerpdchiiqorlcln78o8:
+              help: null
+              label: Codigo de cuenta en entidad financiera situada en el extranjero
+            x-cdqmarjkc5pistj1dhnn4ob3d5nms:
+              help: null
+              label: Valoracion de cuenta en entidad financiera situada en el extranjero
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la informacion
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaracion (originaria / sustitutiva / complementaria)
+            x-d5n6qtb5c9m6aspeepgmorric5hmirre:
+              help: null
+              label: Valoracion de bienes inmuebles o derechos reales situados en
+                el extranjero
+            x-epgmorriclpisqb4cln78qb6d5hm2or9dtn0:
+              help: null
+              label: Identificacion de valores, derechos, seguros o rentas situados
+                en el extranjero
+            x-epgmorriclpistj1dhnn4ob3d5nms:
+              help: null
+              label: Valoracion de valores, derechos, seguros o rentas situados en
+                el extranjero
+          construct:
+            modelo-720-informative:
+              field:
+                title: Modelo 720 informative declaration of foreign assets and rights
+          field:
+            label: Modelo 720 ejercicios 2012 y siguientes (Orden HAP/72/2013)

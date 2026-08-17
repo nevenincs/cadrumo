@@ -1,0 +1,22 @@
+modelo:
+  schema:
+    '840':
+      field:
+        official_name: Modelo 840. Declaración del Impuesto sobre Actividades Económicas
+          (alta, variación, baja).
+        title: Impuesto sobre Actividades Económicas (declaración censal)
+      revision:
+        2003-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio fiscal al que se refiere la declaración
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración (alta / variación / baja)
+          construct:
+            modelo-840-iae-declaration:
+              field:
+                title: Modelo 840 IAE censal declaration (alta, variacion, baja)
+          field:
+            label: Modelo 840 ejercicios 2003 y siguientes (Orden HAC/2572/2003)

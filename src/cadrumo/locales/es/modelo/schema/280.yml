@@ -1,0 +1,94 @@
+modelo:
+  schema:
+    '280':
+      field:
+        official_name: Modelo 280. Declaracion informativa anual de Planes de Ahorro
+          a Largo Plazo.
+        title: Declaracion informativa anual de Planes de Ahorro a Largo Plazo
+      revision:
+        '2025':
+          casilla:
+            aportaciones-ejercicio:
+              help: null
+              label: Aportaciones efectuadas en el ejercicio
+            base-retencion-practicada:
+              help: null
+              label: Base de la retencion practicada
+            base-retenciones:
+              help: null
+              label: Base de retenciones
+            clave-alta:
+              help: null
+              label: Clave de alta
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaracion complementaria o sustitutiva
+            declarado-nif:
+              help: null
+              label: NIF del declarado
+            declarado-nombre:
+              help: null
+              label: Apellidos y nombre del declarado
+            declarante-nif:
+              help: null
+              label: NIF del declarante
+            declarante-razon-social:
+              help: null
+              label: Razon social del declarante
+            ejercicio-declaracion:
+              help: null
+              label: Ejercicio de declaracion
+            extincion-plan:
+              help: null
+              label: Extincion del Plan de Ahorro a Largo Plazo
+            fecha-apertura:
+              help: null
+              label: Fecha de apertura
+            fecha-extincion:
+              help: null
+              label: Fecha de extincion
+            identificador-producto:
+              help: null
+              label: Identificador del producto contratado
+            importe-total-aportaciones:
+              help: null
+              label: Importe total de aportaciones
+            numero-identificativo-anterior:
+              help: null
+              label: Numero identificativo de la declaracion anterior
+            numero-identificativo-declaracion:
+              help: null
+              label: Numero identificativo de la declaracion
+            numero-total-declarados:
+              help: null
+              label: Numero total de declarados
+            persona-relacion:
+              help: null
+              label: Persona con quien relacionarse
+            rendimientos-negativos-acumulados:
+              help: null
+              label: Rendimientos negativos acumulados
+            rendimientos-negativos-ejercicio:
+              help: null
+              label: Rendimientos negativos obtenidos durante el ejercicio
+            rendimientos-negativos-imputables:
+              help: null
+              label: Rendimientos negativos imputables
+            rendimientos-positivos-acumulados:
+              help: null
+              label: Rendimientos positivos acumulados
+            rendimientos-positivos-ejercicio:
+              help: null
+              label: Rendimientos positivos obtenidos durante el ejercicio
+            representante-legal-nif:
+              help: null
+              label: NIF del representante legal
+            tipo-identificador:
+              help: null
+              label: Tipo de identificador
+            tipo-plan-ahorro:
+              help: null
+              label: Tipo de Plan de Ahorro a Largo Plazo
+          field:
+            label: Modelo 280 ejercicio 2025 (Orden HAP/2118/2015; Ordenes HFP/1822/2016,
+              HAC/1276/2019 y HFP/1192/2022)

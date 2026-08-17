@@ -1,0 +1,53 @@
+modelo:
+  schema:
+    '341':
+      field:
+        official_name: Modelo 341. Solicitud de reintegro de compensaciones en el
+          régimen especial de la agricultura, ganadería y pesca.
+        title: Reintegro de compensaciones del régimen especial de agricultura, ganadería
+          y pesca del IVA
+      revision:
+        2000-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Importe de las operaciones [01]
+            '02':
+              help: null
+              label: Importe de las operaciones [02]
+            '03':
+              help: null
+              label: Importe de las operaciones [03]
+            '04':
+              help: null
+              label: Porcentaje de compensación [04]
+            '05':
+              help: null
+              label: Porcentaje de compensación [05]
+            '06':
+              help: null
+              label: Porcentaje de compensación [06]
+            '07':
+              help: null
+              label: Importe de la compensación [07]
+            08:
+              help: null
+              label: Importe de la compensación [08]
+            09:
+              help: null
+              label: Importe de la compensación [09]
+            '10':
+              help: null
+              label: Importe total de las compensaciones [10]
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la autoliquidación
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo de liquidación al que se refiere la autoliquidación
+          construct:
+            modelo-341-autoliquidacion:
+              field:
+                title: Modelo 341 autoliquidación del IVA
+          field:
+            label: Modelo 341 (orden-min-2000-12-15-m341), ejercicios 2000 y siguientes

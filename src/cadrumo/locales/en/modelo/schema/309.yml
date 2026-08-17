@@ -1,0 +1,33 @@
+modelo:
+  schema:
+    '309':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2004-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the return relates
+            x-chim6r1eehkn0rpdehp6ipr7clp0:
+              help: null
+              label: Trigger type (new means of transport / agricultural regime /
+                equivalence surcharge / enforced execution)
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: Self-charged VAT on intra-Community acquisitions (new means of
+                transport, etc.)
+            x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
+              help: null
+              label: Total non-periodic VAT (self-charged + surcharge input tax)
+            x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
+              help: null
+              label: Input VAT borne by retailers under the equivalence surcharge
+                (traveller refund)
+          construct:
+            modelo-309-iva-no-periodica:
+              field:
+                title: null
+          field:
+            label: null

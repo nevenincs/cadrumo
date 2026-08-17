@@ -1,0 +1,24 @@
+modelo:
+  schema:
+    '193':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2024-y-siguientes:
+          casilla:
+            x-chim6r1ec9gn6p9dehnn8obc:
+              help: null
+              label: A visszatartások és előlegfizetések teljes alapja
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: null
+              label: A visszatartások és előlegfizetések teljes összege
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: null
+              label: A kedvezményezettek teljes száma
+          construct:
+            modelo-193-annual-summary:
+              field:
+                title: null
+          field:
+            label: null

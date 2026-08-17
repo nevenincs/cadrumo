@@ -1,0 +1,38 @@
+modelo:
+  schema:
+    '720':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2013-y-siguientes:
+          casilla:
+            x-cdqmarjkc5pisorfchkmerpdchiiqorlcln78o8:
+              help: null
+              label: Külföldi székhelyű pénzügyi intézménynél vezetett számla kódja
+            x-cdqmarjkc5pistj1dhnn4ob3d5nms:
+              help: null
+              label: Külföldi székhelyű pénzügyi intézménynél vezetett számla értékelése
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az adatszolgáltatás tárgyát képező adóév
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: A bevallás típusa (eredeti / helyettesítő / kiegészítő)
+            x-d5n6qtb5c9m6aspeepgmorric5hmirre:
+              help: null
+              label: Külföldön található ingatlanok vagy dologi jogok értékelése
+            x-epgmorriclpisqb4cln78qb6d5hm2or9dtn0:
+              help: null
+              label: Külföldön található értékpapírok, jogok, biztosítások vagy jövedelmek
+                azonosítása
+            x-epgmorriclpistj1dhnn4ob3d5nms:
+              help: null
+              label: Külföldön található értékpapírok, jogok, biztosítások vagy jövedelmek
+                értékelése
+          construct:
+            modelo-720-informative:
+              field:
+                title: null
+          field:
+            label: null

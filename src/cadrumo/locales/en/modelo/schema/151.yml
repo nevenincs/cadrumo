@@ -1,0 +1,1756 @@
+modelo:
+  schema:
+    '151':
+      casilla:
+        continuidad:
+          filing-period:
+            help: null
+            label: Period (annual, 0A)
+          filing-year:
+            help: null
+            label: Tax year the return refers to
+          impatriado-base-liquidable-general:
+            help: null
+            label: General taxable base (impatriate regime, excluding the savings
+              component under art. 25.1.f TRLIRNR)
+          impatriado-cuota-integra-general:
+            help: null
+            label: 'Gross general tax liability (scale under art. 93.2.e.1: 24% up
+              to €600,000, 47% on the excess)'
+          impatriado-retenciones:
+            help: null
+            label: Withholdings and advance payments (art. 93.2.f)
+      field:
+        official_name: null
+        title: null
+      revision:
+        2015-2022:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Tax year the return refers to
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (annual, 0A)
+            x-chkm8bj3elnn8o9dcdin4ro:
+              help: null
+              label: Zero tax due
+            x-chkm8bj4clr6ur3lcdkmurhdedrmipjk5lh6ioo:
+              help: null
+              label: Refund. SWIFT-BIC
+            x-chkm8bjeelmmasjf5li6abb3elimst315lkm4obe:
+              help: null
+              label: Account number (IBAN)
+            x-chkm8bjicln7arj3d5giqo9ddhgiqp35epnmotb3d4mm2tjfe8mm8pbc5lq6asrfe9niqs3lc9m6iorf:
+              help: null
+              label: Waiver of the refund in favour of the Public Treasury
+            x-chkm8bjjdtm6ior9ehgiqr315li6atjfdhqm6qbfdomn0rri5lq74obeedj6asj5dphmio8:
+              help: null
+              label: Requests the refund by bank transfer
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
+              help: null
+              label: Capital gain
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
+              help: null
+              label: Tax ID of the company or investment fund
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
+              help: null
+              label: Withholding or payment on account
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
+              help: null
+              label: Income type
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
+              help: null
+              label: Total capital gains
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
+              help: null
+              label: Total withholdings and payments on account
+            x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
+              help: null
+              label: General taxable base (impatriate regime, excluding the savings
+                component under art. 25.1.f TRLIRNR)
+            x-d5mn0obke9km2p3f5phnarrkc4mm8qb6clp6arj3d5gmo:
+              help: null
+              label: Net tax liability (gross general tax liability minus withholdings)
+            x-d5mn0obke9km2p3f5phnarrkc4mmirjkcljn4o9dctimspbic5m0:
+              help: null
+              label: 'Gross general tax liability (scale under art. 93.2.e.1: 24%
+                up to €600,000, 47% on the excess)'
+            x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
+              help: null
+              label: Withholdings and advance payments (art. 93.2.f)
+            x-e0o32bj1edkmerj1cdkmurhdchiiqor1dpq6ip31chin6bb15lj6irj5ecmn6rr3d5gmopbj:
+              help: null
+              label: Allocation of amounts to social purposes
+            x-e0o32bj1edkmerj1cdkmurhdehp6iojlehgn4qb15lgiqr315lkmer35edkm2bb3c5q6ur39cdgg:
+              help: null
+              label: Tax allocation to the Catholic Church
+            x-e0o32bj3dtmnarj9chgm8bb1elq6urjfdlgiqp355liiqpbc5limkpbicdkm6qbf5lkmsp39cdgm8ro:
+              help: null
+              label: Autonomous community of residence during the stated tax year
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1k5lq6is3f5li6abbmd5gg:
+              help: null
+              label: Taxpayer. 44 - Street type.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1l5ln6urb2e9iiqp355lm62bbmd5giqs3lc9m6ior1:
+              help: null
+              label: Taxpayer. 45 - Street name.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1m5lq6is3f5li6abbeelmmasj1cdkmurg:
+              help: null
+              label: Taxpayer. 46 - Numbering type.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1n5ln7arb5e9niqp355lhm2sr1:
+              help: null
+              label: Taxpayer. 47 - House number.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1o5lhm2r39cpkm6ob4dtp2qp355ln7arb5e9ng:
+              help: null
+              label: Taxpayer. 48 - Number qualifier.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1p5lh6orrhelig:
+              help: null
+              label: Taxpayer. 49 - Block.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9g5lo6usjkc5m0:
+              help: null
+              label: Taxpayer. 50 - Entrance.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9h5lin6or1dhin4o8:
+              help: null
+              label: Taxpayer. 51 - Stairway.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9i5lo6oobeehgg:
+              help: null
+              label: Taxpayer. 52 - Floor.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9j5lo7apbiehgg:
+              help: null
+              label: Taxpayer. 53 - Door.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9k5li62t3fecmmarb5dpq62sj9dtpiqp355li6urb9cdkmoqbf:
+              help: null
+              label: Taxpayer. 54 - Additional address details.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9l5lm6uor1dhkm8ob45lo6uojcc5hmirre:
+              help: null
+              label: Taxpayer. 55 - Town/locality
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9m5lhmup39ctniqs3fedq62r0:
+              help: null
+              label: Taxpayer. 56 - Postal code.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9n5lhmup39ctniqp355lmnarj9cdkn0qbf:
+              help: null
+              label: Taxpayer. 57 - Municipality code.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9o5lhmup39ctniqp355lo74rrmd5n66qb1:
+              help: null
+              label: Taxpayer. 58 - Province code.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9p5lq6ar35cpnmsrpdcpkmkro:
+              help: null
+              label: Taxpayer. 59 - Landline telephone.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqdhg5lq6ar35cpnmsrpddlnncqbc:
+              help: null
+              label: Taxpayer. 60 - Mobile telephone.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqdhh5ln6ubb4ckmmcobo:
+              help: null
+              label: Taxpayer. 61 - Fax number.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqor1dlh6irpdchiiqp3fdlkm6qbcd5ng:
+              help: null
+              label: Taxpayer. Change of address
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmm2r1de9imcpbicln66qb15lhm2t31edq74obc:
+              help: null
+              label: Taxpayer additional current-dwelling data. Cadastral reference
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmmarj4c4mm2orkelgmobbkd5q7ar31e9km8ob4:
+              help: null
+              label: Taxpayer additional current-dwelling data. Ownership
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmmusj3cln78obackmn0obiehkm6qbgc5hmirre:
+              help: null
+              label: Taxpayer additional current-dwelling data. Participation percentage
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmncqb5dpi62bb1cdq7aobc5lpmit3lc5hmirre:
+              help: null
+              label: Taxpayer additional current-dwelling data. Situation
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mm2rjaclp6ub9n60mn8pbcclj6urjf5lj6iqjf:
+              help: null
+              label: Taxpayer foreign address. 70 - Landline telephone
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmasjf5kr38bbgdth6oob3d5nmsbb3d5qm8ob4:
+              help: null
+              label: Taxpayer foreign address. 64 - Town/city
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmau3ke9gmsqj5e9niqdhi5li6urb9cdkmoqbf:
+              help: null
+              label: Taxpayer foreign address. 62 - Address
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmqs3cclmmarjkc5p6irrj5li6urb9cdkmoqbf:
+              help: null
+              label: Taxpayer foreign address. 63 - Additional address details
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmsqj5e9niqdph5lq6ar35cpnmsrpddlnncqbc:
+              help: null
+              label: Taxpayer foreign address. 71 - Mobile telephone
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mn0sjfepkmsor9c4mn4pb7d5nmsbb5edq62p3f:
+              help: null
+              label: Taxpayer foreign address. 67 - Province/region/state
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mn4rpd6or2qorfchkmerpde1nn6t31dgmnkqbg:
+              help: null
+              label: Taxpayer foreign address. 66 - Postal code/ZIP
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ub9m6kmmarb1d5m0:
+              help: null
+              label: Taxpayer foreign address. 65 - Email
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ub9m70mn0ob9ec:
+              help: null
+              label: Taxpayer foreign address. 68 - Country
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ub9n68mmsrpdcpgng:
+              help: null
+              label: Taxpayer foreign address. 72 - Fax number
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqpj5cdk62bb4ckmmsob3d5mmipbeehng:
+              help: null
+              label: Taxpayer. Date of birth
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqsr5f1ng:
+              help: null
+              label: Taxpayer. Sex
+            x-e0o32bj4clhmoobic5hmirre5lhmurbgdhimqpbeehgn4qb1:
+              help: null
+              label: Supplementary return
+            x-e0o32bj4clhmoobic5hmirre5lhmurbgdhimqpbeehgn4qb15kp0:
+              help: null
+              label: Supplementary return 2
+            x-e0o32bj4clr6arj7dsmn0pbid5nm8ro:
+              help: null
+              label: Accrual - period
+            x-e0o32bjeelmmasjf5li6abbaelpn8qb6d5hm2rjkck:
+              help: null
+              label: Receipt number
+            x-e0o32bjiclo74pbjcln78obeehiiqd1k5lq6is3f5li6abbmd5gg:
+              help: null
+              label: Representative. 44 - Street type.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1l5ln6urb2e9iiqp355lm62bbmd5giqs3lc9m6ior1:
+              help: null
+              label: Representative. 45 - Street name.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1m5lq6is3f5li6abbeelmmasj1cdkmurg:
+              help: null
+              label: Representative. 46 - Numbering type.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1n5ln7arb5e9niqp355lhm2sr1:
+              help: null
+              label: Representative. 47 - House number.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1o5lhm2r39cpkm6ob4dtp2qp355ln7arb5e9ng:
+              help: null
+              label: Representative. 48 - Number qualifier.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1p5lh6orrhelig:
+              help: null
+              label: Representative. 49 - Block.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9g5lo6usjkc5m0:
+              help: null
+              label: Representative. 50 - Entrance.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9h5lin6or1dhin4o8:
+              help: null
+              label: Representative. 51 - Stairway.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9i5lo6oobeehgg:
+              help: null
+              label: Representative. 52 - Floor.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9j5lo7apbiehgg:
+              help: null
+              label: Representative. 53 - Door.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9k5li62t3fecmmarb5dpq62sj9dtpiqp355li6urb9cdkmoqbf:
+              help: null
+              label: Representative. 54 - Additional address details.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9l5lm6uor1dhkm8ob45lo6uojcc5hmirre:
+              help: null
+              label: Representative. 55 - Town/locality
+            x-e0o32bjiclo74pbjcln78obeehiiqd9m5lhmup39ctniqs3fedq62r0:
+              help: null
+              label: Representative. 56 - Postal code.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9n5lhmup39ctniqp355lmnarj9cdkn0qbf:
+              help: null
+              label: Representative. 57 - Municipality code.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9o5lhmup39ctniqp355lo74rrmd5n66qb1:
+              help: null
+              label: Representative. 58 - Province code.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9p5lq6ar35cpnmsrpdcpkmkro:
+              help: null
+              label: Representative. 59 - Landline telephone.
+            x-e0o32bjiclo74pbjcln78obeehiiqdhg5lq6ar35cpnmsrpddlnncqbc:
+              help: null
+              label: Representative. 60 - Mobile telephone.
+            x-e0o32bjiclo74pbjcln78obeehiiqdhh5ln6ubb4ckmmcobo:
+              help: null
+              label: Representative. 61 - Fax number.
+            x-e0o32bjiclo74pbjcln78obeehiiqobgclm6oqb4dtpg:
+              help: null
+              label: Representative. Surnames
+            x-e0o32bjiclo74pbjcln78obeehiiqrj9co:
+              help: null
+              label: Representative. Tax identification number
+            x-e0o32bjiclo74pbjcln78obeehiiqrjfdlh74p8:
+              help: null
+              label: Representative. Given name
+            x-e0o32bjkd5o6ubb4ckmm8pb3dhgn4ob3d5nms:
+              help: null
+              label: Return type
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60og:
+              help: null
+              label: Additional data on income from property and real estate. Ownership
+                (%) [10]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60p0:
+              help: null
+              label: Additional data on income from property and real estate. Ownership
+                (%) [10]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60pg:
+              help: null
+              label: Additional data on income from property and real estate. Ownership
+                (%) [10]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60q0:
+              help: null
+              label: Additional data on income from property and real estate. Ownership
+                (%) [10]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60og:
+              help: null
+              label: Additional data on income from property and real estate. Situation
+                [13]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60p0:
+              help: null
+              label: Additional data on income from property and real estate. Situation
+                [13]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60pg:
+              help: null
+              label: Additional data on income from property and real estate. Situation
+                [13]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60q0:
+              help: null
+              label: Additional data on income from property and real estate. Situation
+                [13]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60og:
+              help: null
+              label: Additional data on income from property and real estate. Usufruct
+                (%) [11]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60p0:
+              help: null
+              label: Additional data on income from property and real estate. Usufruct
+                (%) [11]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60pg:
+              help: null
+              label: Additional data on income from property and real estate. Usufruct
+                (%) [11]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60q0:
+              help: null
+              label: Additional data on income from property and real estate. Usufruct
+                (%) [11]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko32:
+              help: null
+              label: Additional data on income from property and real estate. Cadastral
+                reference [14]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko34:
+              help: null
+              label: Additional data on income from property and real estate. Cadastral
+                reference [14]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko36:
+              help: null
+              label: Additional data on income from property and real estate. Cadastral
+                reference [14]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko38:
+              help: null
+              label: Additional data on income from property and real estate. Cadastral
+                reference [14]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko32:
+              help: null
+              label: Additional data on income from property and real estate. Origin
+                [12]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko34:
+              help: null
+              label: Additional data on income from property and real estate. Origin
+                [12]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko36:
+              help: null
+              label: Additional data on income from property and real estate. Origin
+                [12]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko38:
+              help: null
+              label: Additional data on income from property and real estate. Origin
+                [12]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
+              help: null
+              label: Additional employment-income data. Tax paid abroad [9]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko34:
+              help: null
+              label: Additional employment-income data. Tax paid abroad [9]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko36:
+              help: null
+              label: Additional employment-income data. Tax paid abroad [9]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko38:
+              help: null
+              label: Additional employment-income data. Tax paid abroad [9]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko32:
+              help: null
+              label: Additional employment-income data. Gross income obtained and
+                taxed abroad [8]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko34:
+              help: null
+              label: Additional employment-income data. Gross income obtained and
+                taxed abroad [8]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko36:
+              help: null
+              label: Additional employment-income data. Gross income obtained and
+                taxed abroad [8]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko38:
+              help: null
+              label: Additional employment-income data. Gross income obtained and
+                taxed abroad [8]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g64:
+              help: null
+              label: Payments on account [4]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g68:
+              help: null
+              label: Payments on account [4]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6c:
+              help: null
+              label: Payments on account [4]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6g:
+              help: null
+              label: Payments on account [4]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0c8:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0cg:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0co:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0d0:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o34bjec5q7asj1dhinko9d68mj0c8:
+              help: null
+              label: Nature [2]
+            x-e0o34bjec5q7asj1dhinko9d68mj0cg:
+              help: null
+              label: Nature [2]
+            x-e0o34bjec5q7asj1dhinko9d68mj0co:
+              help: null
+              label: Nature [2]
+            x-e0o34bjec5q7asj1dhinko9d68mj0d0:
+              help: null
+              label: Nature [2]
+            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0c8:
+              help: null
+              label: Payer. Surnames or business name
+            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0cg:
+              help: null
+              label: Payer. Surnames or business name
+            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0co:
+              help: null
+              label: Payer. Surnames or business name
+            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0d0:
+              help: null
+              label: Payer. Surnames or business name
+            x-e0o34bjgc5jm2p3fe8mmcbba5ko32:
+              help: null
+              label: Payer. Natural/legal person
+            x-e0o34bjgc5jm2p3fe8mmcbba5ko34:
+              help: null
+              label: Payer. Natural/legal person
+            x-e0o34bjgc5jm2p3fe8mmcbba5ko36:
+              help: null
+              label: Payer. Natural/legal person
+            x-e0o34bjgc5jm2p3fe8mmcbba5ko38:
+              help: null
+              label: Payer. Natural/legal person
+            x-e0o34bjgc5jm2p3fe8mmsqb65ko32:
+              help: null
+              label: Payer. Tax identification number
+            x-e0o34bjgc5jm2p3fe8mmsqb65ko34:
+              help: null
+              label: Payer. Tax identification number
+            x-e0o34bjgc5jm2p3fe8mmsqb65ko36:
+              help: null
+              label: Payer. Tax identification number
+            x-e0o34bjgc5jm2p3fe8mmsqb65ko38:
+              help: null
+              label: Payer. Tax identification number
+            x-e0o34bjgc5jm2p3fe8mmsrrdc9p6ab9g64:
+              help: null
+              label: Payer. Given name
+            x-e0o34bjgc5jm2p3fe8mmsrrdc9p6ab9g68:
+              help: null
+              label: Payer. Given name
+            x-e0o34bjgc5jm2p3fe8mmsrrdc9p6ab9g6c:
+              help: null
+              label: Payer. Given name
+            x-e0o34bjgc5jm2p3fe8mmsrrdc9p6ab9g6g:
+              help: null
+              label: Payer. Given name
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko32:
+              help: null
+              label: Gross income / imputed real-estate income [6]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko34:
+              help: null
+              label: Gross income / imputed real-estate income [6]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko36:
+              help: null
+              label: Gross income / imputed real-estate income [6]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko38:
+              help: null
+              label: Gross income / imputed real-estate income [6]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko32:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko34:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko36:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko38:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              help: null
+              label: Income type [1]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              help: null
+              label: Income type [1]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              help: null
+              label: Income type [1]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              help: null
+              label: Income type [1]
+            x-e0o34bjmc5m6usj1cdkmurhd6cmj0c8:
+              help: null
+              label: Valuation [3]
+            x-e0o34bjmc5m6usj1cdkmurhd6cmj0cg:
+              help: null
+              label: Valuation [3]
+            x-e0o34bjmc5m6usj1cdkmurhd6cmj0co:
+              help: null
+              label: Valuation [3]
+            x-e0o34bjmc5m6usj1cdkmurhd6cmj0d0:
+              help: null
+              label: Valuation [3]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60og:
+              help: null
+              label: Additional data on income from property and real estate. Ownership
+                (%) [10]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60p0:
+              help: null
+              label: Additional data on income from property and real estate. Ownership
+                (%) [10]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60pg:
+              help: null
+              label: Additional data on income from property and real estate. Ownership
+                (%) [10]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60q0:
+              help: null
+              label: Additional data on income from property and real estate. Ownership
+                (%) [10]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60og:
+              help: null
+              label: Additional data on income from property and real estate. Situation
+                [13]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60p0:
+              help: null
+              label: Additional data on income from property and real estate. Situation
+                [13]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60pg:
+              help: null
+              label: Additional data on income from property and real estate. Situation
+                [13]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60q0:
+              help: null
+              label: Additional data on income from property and real estate. Situation
+                [13]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60og:
+              help: null
+              label: Additional data on income from property and real estate. Usufruct
+                (%) [11]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60p0:
+              help: null
+              label: Additional data on income from property and real estate. Usufruct
+                (%) [11]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60pg:
+              help: null
+              label: Additional data on income from property and real estate. Usufruct
+                (%) [11]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60q0:
+              help: null
+              label: Additional data on income from property and real estate. Usufruct
+                (%) [11]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko32:
+              help: null
+              label: Additional data on income from property and real estate. Cadastral
+                reference [14]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko34:
+              help: null
+              label: Additional data on income from property and real estate. Cadastral
+                reference [14]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko36:
+              help: null
+              label: Additional data on income from property and real estate. Cadastral
+                reference [14]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko38:
+              help: null
+              label: Additional data on income from property and real estate. Cadastral
+                reference [14]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko32:
+              help: null
+              label: Additional data on income from property and real estate. Origin
+                [12]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko34:
+              help: null
+              label: Additional data on income from property and real estate. Origin
+                [12]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko36:
+              help: null
+              label: Additional data on income from property and real estate. Origin
+                [12]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko38:
+              help: null
+              label: Additional data on income from property and real estate. Origin
+                [12]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
+              help: null
+              label: Additional employment-income data. Tax paid abroad [9]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko34:
+              help: null
+              label: Additional employment-income data. Tax paid abroad [9]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko36:
+              help: null
+              label: Additional employment-income data. Tax paid abroad [9]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko38:
+              help: null
+              label: Additional employment-income data. Tax paid abroad [9]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko32:
+              help: null
+              label: Additional employment-income data. Gross income obtained and
+                taxed abroad [8]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko34:
+              help: null
+              label: Additional employment-income data. Gross income obtained and
+                taxed abroad [8]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko36:
+              help: null
+              label: Additional employment-income data. Gross income obtained and
+                taxed abroad [8]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko38:
+              help: null
+              label: Additional employment-income data. Gross income obtained and
+                taxed abroad [8]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g64:
+              help: null
+              label: Payments on account [4]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g68:
+              help: null
+              label: Payments on account [4]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6c:
+              help: null
+              label: Payments on account [4]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6g:
+              help: null
+              label: Payments on account [4]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0c8:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0cg:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0co:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0d0:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o36bjec5q7asj1dhinko9d68mj0c8:
+              help: null
+              label: Nature [2]
+            x-e0o36bjec5q7asj1dhinko9d68mj0cg:
+              help: null
+              label: Nature [2]
+            x-e0o36bjec5q7asj1dhinko9d68mj0co:
+              help: null
+              label: Nature [2]
+            x-e0o36bjec5q7asj1dhinko9d68mj0d0:
+              help: null
+              label: Nature [2]
+            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0c8:
+              help: null
+              label: Payer. Surnames or business name
+            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0cg:
+              help: null
+              label: Payer. Surnames or business name
+            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0co:
+              help: null
+              label: Payer. Surnames or business name
+            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0d0:
+              help: null
+              label: Payer. Surnames or business name
+            x-e0o36bjgc5jm2p3fe8mmcbba5ko32:
+              help: null
+              label: Payer. Natural/legal person
+            x-e0o36bjgc5jm2p3fe8mmcbba5ko34:
+              help: null
+              label: Payer. Natural/legal person
+            x-e0o36bjgc5jm2p3fe8mmcbba5ko36:
+              help: null
+              label: Payer. Natural/legal person
+            x-e0o36bjgc5jm2p3fe8mmcbba5ko38:
+              help: null
+              label: Payer. Natural/legal person
+            x-e0o36bjgc5jm2p3fe8mmsqb65ko32:
+              help: null
+              label: Payer. Tax identification number
+            x-e0o36bjgc5jm2p3fe8mmsqb65ko34:
+              help: null
+              label: Payer. Tax identification number
+            x-e0o36bjgc5jm2p3fe8mmsqb65ko36:
+              help: null
+              label: Payer. Tax identification number
+            x-e0o36bjgc5jm2p3fe8mmsqb65ko38:
+              help: null
+              label: Payer. Tax identification number
+            x-e0o36bjgc5jm2p3fe8mmsrrdc9p6ab9g64:
+              help: null
+              label: Payer. Given name
+            x-e0o36bjgc5jm2p3fe8mmsrrdc9p6ab9g68:
+              help: null
+              label: Payer. Given name
+            x-e0o36bjgc5jm2p3fe8mmsrrdc9p6ab9g6c:
+              help: null
+              label: Payer. Given name
+            x-e0o36bjgc5jm2p3fe8mmsrrdc9p6ab9g6g:
+              help: null
+              label: Payer. Given name
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko32:
+              help: null
+              label: Gross income / imputed real-estate income [6]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko34:
+              help: null
+              label: Gross income / imputed real-estate income [6]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko36:
+              help: null
+              label: Gross income / imputed real-estate income [6]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko38:
+              help: null
+              label: Gross income / imputed real-estate income [6]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko32:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko34:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko36:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko38:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o36bjiclpn8rpde9imsp39dlkmarjkdsmmirjkckmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m:
+              help: null
+              label: REMAINDER. Gross income / imputed real-estate income [6]
+            x-e0o36bjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d6s:
+              help: null
+              label: REMAINDER. Withholding or payment on account [7]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              help: null
+              label: Income type [1]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              help: null
+              label: Income type [1]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              help: null
+              label: Income type [1]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              help: null
+              label: Income type [1]
+            x-e0o36bjkdtq62r1de9imsp39dlkmarjkdtpiqqbeegmmsrbfc9kmoqb1e9km2bb9dlo7at31chgiqc9l:
+              help: null
+              label: Total gross income / imputed real-estate income [15]
+            x-e0o36bjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj2dg:
+              help: null
+              label: Total withholdings or payments on account [16]
+            x-e0o36bjmc5m6usj1cdkmurhd6cmj0c8:
+              help: null
+              label: Valuation [3]
+            x-e0o36bjmc5m6usj1cdkmurhd6cmj0cg:
+              help: null
+              label: Valuation [3]
+            x-e0o36bjmc5m6usj1cdkmurhd6cmj0co:
+              help: null
+              label: Valuation [3]
+            x-e0o36bjmc5m6usj1cdkmurhd6cmj0d0:
+              help: null
+              label: Valuation [3]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g64:
+              help: null
+              label: Payments on account [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g68:
+              help: null
+              label: Payments on account [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6c:
+              help: null
+              label: Payments on account [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6g:
+              help: null
+              label: Payments on account [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6k:
+              help: null
+              label: Payments on account [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6o:
+              help: null
+              label: Payments on account [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6s:
+              help: null
+              label: Payments on account [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g70:
+              help: null
+              label: Payments on account [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g74:
+              help: null
+              label: Payments on account [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0c8:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0cg:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0co:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0d0:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0d8:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0dg:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0do:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0e0:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0e8:
+              help: null
+              label: Payments on account passed on [5]
+            x-e0o38bjec5q7asj1dhinko9d68mj0c8:
+              help: null
+              label: Nature [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0cg:
+              help: null
+              label: Nature [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0co:
+              help: null
+              label: Nature [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0d0:
+              help: null
+              label: Nature [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0d8:
+              help: null
+              label: Nature [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0dg:
+              help: null
+              label: Nature [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0do:
+              help: null
+              label: Nature [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0e0:
+              help: null
+              label: Nature [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0e8:
+              help: null
+              label: Nature [2]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko32:
+              help: null
+              label: Gross income [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko34:
+              help: null
+              label: Gross income [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko36:
+              help: null
+              label: Gross income [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko38:
+              help: null
+              label: Gross income [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3a:
+              help: null
+              label: Gross income [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3c:
+              help: null
+              label: Gross income [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3e:
+              help: null
+              label: Gross income [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3g:
+              help: null
+              label: Gross income [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3i:
+              help: null
+              label: Gross income [6]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko32:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko34:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko36:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko38:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3a:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3c:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3e:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3g:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3i:
+              help: null
+              label: Withholding or payment on account [7]
+            x-e0o38bjiclpn8rpde9imsp39dlkmarjkdtpiqqbeehimesjf5kr0:
+              help: null
+              label: REMAINDER. Gross income [6]
+            x-e0o38bjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d6s:
+              help: null
+              label: REMAINDER. Withholding or payment on account [7]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              help: null
+              label: Income type [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              help: null
+              label: Income type [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              help: null
+              label: Income type [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              help: null
+              label: Income type [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60qg:
+              help: null
+              label: Income type [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60r0:
+              help: null
+              label: Income type [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60rg:
+              help: null
+              label: Income type [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60s0:
+              help: null
+              label: Income type [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60sg:
+              help: null
+              label: Income type [1]
+            x-e0o38bjkdtq62r1de9imsp39dlkmarjkdtpiqqbeehimesjfecmjg:
+              help: null
+              label: Total gross income [8]
+            x-e0o38bjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mji:
+              help: null
+              label: Total withholdings or payments on account [9]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0c8:
+              help: null
+              label: Valuation [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0cg:
+              help: null
+              label: Valuation [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0co:
+              help: null
+              label: Valuation [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0d0:
+              help: null
+              label: Valuation [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0d8:
+              help: null
+              label: Valuation [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0dg:
+              help: null
+              label: Valuation [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0do:
+              help: null
+              label: Valuation [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0e0:
+              help: null
+              label: Valuation [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0e8:
+              help: null
+              label: Valuation [3]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0c8:
+              help: null
+              label: Capital gain [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0cg:
+              help: null
+              label: Capital gain [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0co:
+              help: null
+              label: Capital gain [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0d0:
+              help: null
+              label: Capital gain [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0d8:
+              help: null
+              label: Capital gain [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0dg:
+              help: null
+              label: Capital gain [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0do:
+              help: null
+              label: Capital gain [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0e0:
+              help: null
+              label: Capital gain [2]
+            x-e0o3abj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dkmm2r35ecmnibb4ckmn6tbdd5n6isrke9nn6b9k:
+              help: null
+              label: Costs of materials and supplies [4]
+            x-e0o3abj7c5pn8rrj5li6abbgclp76rrec5m2qco:
+              help: null
+              label: Staff costs [3]
+            x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj4:
+              help: null
+              label: Gross receipts [2]
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g64:
+              help: null
+              label: Tax identification number of the investment company or fund
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g68:
+              help: null
+              label: Tax identification number of the investment company or fund
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6c:
+              help: null
+              label: Tax identification number of the investment company or fund
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6g:
+              help: null
+              label: Tax identification number of the investment company or fund
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6k:
+              help: null
+              label: Tax identification number of the investment company or fund
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6o:
+              help: null
+              label: Tax identification number of the investment company or fund
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6s:
+              help: null
+              label: Tax identification number of the investment company or fund
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g70:
+              help: null
+              label: Tax identification number of the investment company or fund
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5kqg:
+              help: null
+              label: Net income [5]
+            x-e0o3abjicln68qbdd5imst3fecmmspb7c5q6itjfecmmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9m:
+              help: null
+              label: Negative income. Withholding or payment on account [6]
+            x-e0o3abjicln68qbdd5imst3fecmmspb7c5q6itjfecmn4pbechkmqqb5dpq6ubbeclq6ub9n:
+              help: null
+              label: Negative income. Net income [7]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko32:
+              help: null
+              label: Withholding or payment on account [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko34:
+              help: null
+              label: Withholding or payment on account [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko36:
+              help: null
+              label: Withholding or payment on account [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko38:
+              help: null
+              label: Withholding or payment on account [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko3a:
+              help: null
+              label: Withholding or payment on account [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko3c:
+              help: null
+              label: Withholding or payment on account [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko3e:
+              help: null
+              label: Withholding or payment on account [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko3g:
+              help: null
+              label: Withholding or payment on account [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9m:
+              help: null
+              label: Withholding or payment on account [6]
+            x-e0o3abjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5kp0:
+              help: null
+              label: REMAINDER. Capital gain [2]
+            x-e0o3abjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d6c:
+              help: null
+              label: REMAINDER. Withholding or payment on account [3]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              help: null
+              label: Income type [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              help: null
+              label: Income type [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              help: null
+              label: Income type [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              help: null
+              label: Income type [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60qg:
+              help: null
+              label: Income type [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60r0:
+              help: null
+              label: Income type [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60rg:
+              help: null
+              label: Income type [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60s0:
+              help: null
+              label: Income type [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60sg:
+              help: null
+              label: Income type [1]
+            x-e0o3abjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9k:
+              help: null
+              label: Total capital gains [4]
+            x-e0o3abjkdtq62r1de9imsp39dlkmarjkdtpiqrj5ehnn6b9o:
+              help: null
+              label: Total net income [8]
+            x-e0o3abjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mja:
+              help: null
+              label: Total withholdings or payments on account [5]
+            x-e0o3abjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mji:
+              help: null
+              label: Total withholdings or payments on account [9]
+            x-e0o3cbhk6gmn8qbgdsmm8p9depkm2b9g64:
+              help: null
+              label: 44 - Street type.
+            x-e0o3cbhk6gmn8qbgdsmm8p9depkm2b9g68:
+              help: null
+              label: 44 - Street type.
+            x-e0o3cbhk6kmmsrrdc9p6abb4ckmmoo9depkm2bbgelh6oqb3c4mj0c8:
+              help: null
+              label: 45 - Street name.
+            x-e0o3cbhk6kmmsrrdc9p6abb4ckmmoo9depkm2bbgelh6oqb3c4mj0cg:
+              help: null
+              label: 45 - Street name.
+            x-e0o3cbhk6omn8qbgdsmm8p9ddpqmqpbic5hmirre5ko32:
+              help: null
+              label: 46 - Numbering type.
+            x-e0o3cbhk6omn8qbgdsmm8p9ddpqmqpbic5hmirre5ko34:
+              help: null
+              label: 46 - Numbering type.
+            x-e0o3cbhk6smmstbdclp6ubb4ckmm6objc4mj0c8:
+              help: null
+              label: 47 - House number.
+            x-e0o3cbhk6smmstbdclp6ubb4ckmm6objc4mj0cg:
+              help: null
+              label: 47 - House number.
+            x-e0o3cbhk70mm6obcd5j6ior1chnn4bb4ckmmstbdclp6ub9g64:
+              help: null
+              label: 48 - Number qualifier.
+            x-e0o3cbhk70mm6obcd5j6ior1chnn4bb4ckmmstbdclp6ub9g68:
+              help: null
+              label: 48 - Number qualifier.
+            x-e0o3cbhk74mm4r3fe5qmab9g64:
+              help: null
+              label: 49 - Block.
+            x-e0o3cbhk74mm4r3fe5qmab9g68:
+              help: null
+              label: 49 - Block.
+            x-e0o3cbhl60mn0rriehgmob9g64:
+              help: null
+              label: 50 - Entrance.
+            x-e0o3cbhl60mn0rriehgmob9g68:
+              help: null
+              label: 50 - Entrance.
+            x-e0o3cbhl64mmasr3c5m6asj15ko32:
+              help: null
+              label: 51 - Stairway.
+            x-e0o3cbhl64mmasr3c5m6asj15ko34:
+              help: null
+              label: 51 - Stairway.
+            x-e0o3cbhl68mn0r31dpq62b9g64:
+              help: null
+              label: 52 - Floor.
+            x-e0o3cbhl68mn0r31dpq62b9g68:
+              help: null
+              label: 52 - Floor.
+            x-e0o3cbhl6cmn0tb5e9q62b9g64:
+              help: null
+              label: 53 - Door.
+            x-e0o3cbhl6cmn0tb5e9q62b9g68:
+              help: null
+              label: 53 - Door.
+            x-e0o3cbhl6gmm8obkdtpiqorfdlo6opbdcln78obid5nn6bb4ckmm8rrdd5hmir39dsmj0c8:
+              help: null
+              label: 54 - Additional address details.
+            x-e0o3cbhl6gmm8obkdtpiqorfdlo6opbdcln78obid5nn6bb4ckmm8rrdd5hmir39dsmj0cg:
+              help: null
+              label: 54 - Additional address details.
+            x-e0o3cbhl6kmmorr3c5m6ip31cgmn0rr2dhgm6qbfdomj0c8:
+              help: null
+              label: 55 - Town/locality
+            x-e0o3cbhl6kmmorr3c5m6ip31cgmn0rr2dhgm6qbfdomj0cg:
+              help: null
+              label: 55 - Town/locality
+            x-e0o3cbhl6omm6rr4d5jmubbgdtpn8obc5ko32:
+              help: null
+              label: 56 - Postal code.
+            x-e0o3cbhl6omm6rr4d5jmubbgdtpn8obc5ko34:
+              help: null
+              label: 56 - Postal code.
+            x-e0o3cbhl6smmqtbed5hmis39dsmj0c8:
+              help: null
+              label: 57 - Municipality
+            x-e0o3cbhl6smmqtbed5hmis39dsmj0cg:
+              help: null
+              label: 57 - Municipality
+            x-e0o3cbhl70mn0sjfepkmsor9c4mj0c8:
+              help: null
+              label: 58 - Province.
+            x-e0o3cbhl70mn0sjfepkmsor9c4mj0cg:
+              help: null
+              label: 58 - Province.
+            x-e0o3cbhn6cmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc1h:
+              help: null
+              label: 73 - Cadastral reference
+            x-e0o3cbhn6cmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc1i:
+              help: null
+              label: 73 - Cadastral reference
+            x-e0o3cbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lniqsj1f9nmsbbjdthmiobc5ko32:
+              help: null
+              label: Acquirer. Surnames or business name
+            x-e0o3cbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lniqsj1f9nmsbbjdthmiobc5ko34:
+              help: null
+              label: Acquirer. Surnames or business name
+            x-e0o3cbj1chonaqbid5imst355lj2qqhd60og:
+              help: null
+              label: Acquirer. Natural/legal person
+            x-e0o3cbj1chonaqbid5imst355lj2qqhd60p0:
+              help: null
+              label: Acquirer. Natural/legal person
+            x-e0o3cbj1chonaqbid5imst355ln6iphd60og:
+              help: null
+              label: Acquirer. Tax identification number
+            x-e0o3cbj1chonaqbid5imst355ln6iphd60p0:
+              help: null
+              label: Acquirer. Tax identification number
+            x-e0o3cbj1chonaqbid5imst355ln6urb2e9iiqc1h:
+              help: null
+              label: Acquirer. Given name
+            x-e0o3cbj1chonaqbid5imst355ln6urb2e9iiqc1i:
+              help: null
+              label: Acquirer. Given name
+            x-e0o3cbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomj0c8:
+              help: null
+              label: Participation share
+            x-e0o3cbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomj0cg:
+              help: null
+              label: Participation share
+            x-e0o3cbj4d5j6asj5dphmio9dc5i72tb9edkm6qbfdomj8b9g64:
+              help: null
+              label: Difference (acquisition) [4]
+            x-e0o3cbj4d5j6asj5dphmio9dc5i72tb9edkm6qbfdomj8b9g68:
+              help: null
+              label: Difference (acquisition) [4]
+            x-e0o3cbj4d5j6asj5dphmio9ddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9o5ko32:
+              help: null
+              label: Difference (improvement or 2nd acquisition) [8]
+            x-e0o3cbj4d5j6asj5dphmio9ddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9o5ko34:
+              help: null
+              label: Difference (improvement or 2nd acquisition) [8]
+            x-e0o3cbj4dthnarb5dpq6ubbgelh6oqb3dsmmubbge9kncob4dsmj0c8:
+              help: null
+              label: Public or private deed
+            x-e0o3cbj4dthnarb5dpq6ubbgelh6oqb3dsmmubbge9kncob4dsmj0cg:
+              help: null
+              label: Public or private deed
+            x-e0o3cbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60og:
+              help: null
+              label: Acquisition date
+            x-e0o3cbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60p0:
+              help: null
+              label: Acquisition date
+            x-e0o3cbj6clhmgo9dchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0c8:
+              help: null
+              label: Date of the improvement or 2nd acquisition
+            x-e0o3cbj6clhmgo9dchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0cg:
+              help: null
+              label: Date of the improvement or 2nd acquisition
+            x-e0o3cbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60og:
+              help: null
+              label: Transfer date
+            x-e0o3cbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60p0:
+              help: null
+              label: Transfer date
+            x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd6kmj0c8:
+              help: null
+              label: Gain or loss (acquisition) [5]
+            x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd6kmj0cg:
+              help: null
+              label: Gain or loss (acquisition) [5]
+            x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomjib9g64:
+              help: null
+              label: Gain or loss (improvement or 2nd acquisition) [9]
+            x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomjib9g68:
+              help: null
+              label: Gain or loss (improvement or 2nd acquisition) [9]
+            x-e0o3cbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1dehnn8obc5lnm4t35dpkm8o9d64o2qc1h:
+              help: null
+              label: Total capital gain obtained [10]
+            x-e0o3cbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1dehnn8obc5lnm4t35dpkm8o9d64o2qc1i:
+              help: null
+              label: Total capital gain obtained [10]
+            x-e0o3cbjedtq62sj9dsmmubb6cli6at31e9kmub9g64:
+              help: null
+              label: Notary or authenticating officer
+            x-e0o3cbjedtq62sj9dsmmubb6cli6at31e9kmub9g68:
+              help: null
+              label: Notary or authenticating officer
+            x-e0o3cbjeelmmasjf5li6abbge9nn8rr3dtm6ub9g64:
+              help: null
+              label: Protocol number
+            x-e0o3cbjeelmmasjf5li6abbge9nn8rr3dtm6ub9g68:
+              help: null
+              label: Protocol number
+            x-e0o3cbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9g64:
+              help: null
+              label: Receipt number of form 211
+            x-e0o3cbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9g68:
+              help: null
+              label: Receipt number of form 211
+            x-e0o3cbjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5lq6ut31dgmmuojkcln6ip315koj0:
+              help: null
+              label: REMAINDER. Total capital gain obtained [10]
+            x-e0o3cbjiclpn8rpde9in8pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9h64:
+              help: null
+              label: REMAINDER. Withholding or payment on account [11]
+            x-e0o3cbjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc9h5ko32:
+              help: null
+              label: Withholding or payment on account [11]
+            x-e0o3cbjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc9h5ko34:
+              help: null
+              label: Withholding or payment on account [11]
+            x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              help: null
+              label: Income type [1]
+            x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              help: null
+              label: Income type [1]
+            x-e0o3cbjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9h68:
+              help: null
+              label: Total capital gains [12]
+            x-e0o3cbjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj2co:
+              help: null
+              label: Total withholdings or payments on account [13]
+            x-e0o3cbjmc5m6ushdchiiqob4e5qmisr9cdkmurhdc5i72tb9edkm6qbfdomj6b9g64:
+              help: null
+              label: Acquisition value (acquisition) [3]
+            x-e0o3cbjmc5m6ushdchiiqob4e5qmisr9cdkmurhdc5i72tb9edkm6qbfdomj6b9g68:
+              help: null
+              label: Acquisition value (acquisition) [3]
+            x-e0o3cbjmc5m6ushdchiiqrb5d9nn4o9ddsmj4o9dc4mmkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9n5ko32:
+              help: null
+              label: Value of the improvement or 2nd acquisition (improvement or 2nd
+                acquisition) [7]
+            x-e0o3cbjmc5m6ushdchiiqrb5d9nn4o9ddsmj4o9dc4mmkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9n5ko34:
+              help: null
+              label: Value of the improvement or 2nd acquisition (improvement or 2nd
+                acquisition) [7]
+            x-e0o3cbjmc5m6ushdchiiqt3ic5n76rb9edkmurhdc5i72tb9edkm6qbfdomj4b9g64:
+              help: null
+              label: Transfer value (acquisition) [2]
+            x-e0o3cbjmc5m6ushdchiiqt3ic5n76rb9edkmurhdc5i72tb9edkm6qbfdomj4b9g68:
+              help: null
+              label: Transfer value (acquisition) [2]
+            x-e0o3cbjmc5m6ushdchiiqt3ic5n76rb9edkmurhddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9m5ko32:
+              help: null
+              label: Transfer value (improvement or 2nd acquisition) [6]
+            x-e0o3cbjmc5m6ushdchiiqt3ic5n76rb9edkmurhddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9m5ko34:
+              help: null
+              label: Transfer value (improvement or 2nd acquisition) [6]
+            x-e0o3ebj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qc1h:
+              help: null
+              label: Description of the capital gain
+            x-e0o3ebj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qc1i:
+              help: null
+              label: Description of the capital gain
+            x-e0o3ebj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qc1j:
+              help: null
+              label: Description of the capital gain
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko32:
+              help: null
+              label: Description of the asset
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko34:
+              help: null
+              label: Description of the asset
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko36:
+              help: null
+              label: Description of the asset
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko38:
+              help: null
+              label: Description of the asset
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko3a:
+              help: null
+              label: Description of the asset
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0c8:
+              help: null
+              label: Difference [4]
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0cg:
+              help: null
+              label: Difference [4]
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0co:
+              help: null
+              label: Difference [4]
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0d0:
+              help: null
+              label: Difference [4]
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0d8:
+              help: null
+              label: Difference [4]
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60og:
+              help: null
+              label: Acquisition date
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60p0:
+              help: null
+              label: Acquisition date
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60pg:
+              help: null
+              label: Acquisition date
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60q0:
+              help: null
+              label: Acquisition date
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60qg:
+              help: null
+              label: Acquisition date
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60og:
+              help: null
+              label: Transfer date
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60p0:
+              help: null
+              label: Transfer date
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60pg:
+              help: null
+              label: Transfer date
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60q0:
+              help: null
+              label: Transfer date
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60qg:
+              help: null
+              label: Transfer date
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6cmj0c8:
+              help: null
+              label: Capital gain [3]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6cmj0cg:
+              help: null
+              label: Capital gain [3]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6cmj0co:
+              help: null
+              label: Capital gain [3]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0c8:
+              help: null
+              label: Capital gain [5]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0cg:
+              help: null
+              label: Capital gain [5]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0co:
+              help: null
+              label: Capital gain [5]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0d0:
+              help: null
+              label: Capital gain [5]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0d8:
+              help: null
+              label: Capital gain [5]
+            x-e0o3ebjec5q7asj1dhinko9d68mj0c8:
+              help: null
+              label: Nature [2]
+            x-e0o3ebjec5q7asj1dhinko9d68mj0cg:
+              help: null
+              label: Nature [2]
+            x-e0o3ebjec5q7asj1dhinko9d68mj0co:
+              help: null
+              label: Nature [2]
+            x-e0o3ebjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5kpg:
+              help: null
+              label: REMAINDER. Capital gain [3]
+            x-e0o3ebjiclpn8rpde9in8pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9k:
+              help: null
+              label: REMAINDER. Withholding or payment on account [4]
+            x-e0o3ebjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqd1d60og:
+              help: null
+              label: Withholding or payment on account [4]
+            x-e0o3ebjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqd1d60p0:
+              help: null
+              label: Withholding or payment on account [4]
+            x-e0o3ebjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqd1d60pg:
+              help: null
+              label: Withholding or payment on account [4]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              help: null
+              label: Income type [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              help: null
+              label: Income type [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              help: null
+              label: Income type [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              help: null
+              label: Income type [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60qg:
+              help: null
+              label: Income type [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60r0:
+              help: null
+              label: Income type [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60rg:
+              help: null
+              label: Income type [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60s0:
+              help: null
+              label: Income type [1]
+            x-e0o3ebjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9l:
+              help: null
+              label: Total capital gains [5]
+            x-e0o3ebjkdtq62r1de9in8pbecdkmurhddsmmirj7e9in6rrj5lgiqorlcln78o9d6o:
+              help: null
+              label: Total withholdings or payments on account [6]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0c8:
+              help: null
+              label: Acquisition value [3]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0cg:
+              help: null
+              label: Acquisition value [3]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0co:
+              help: null
+              label: Acquisition value [3]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0d0:
+              help: null
+              label: Acquisition value [3]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0d8:
+              help: null
+              label: Acquisition value [3]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0c8:
+              help: null
+              label: Transfer value [2]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0cg:
+              help: null
+              label: Transfer value [2]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0co:
+              help: null
+              label: Transfer value [2]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d0:
+              help: null
+              label: Transfer value [2]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d8:
+              help: null
+              label: Transfer value [2]
+            x-e0o3gbj2c5pmabbcd5onaqb4c5h6op9dchimobb1d1nn4sjf5kojg:
+              help: null
+              label: Savings taxable base [18]
+            x-e0o3gbj3elnn8o9dcdnn4sj5edo6urj4d5imst355liiqpr5dpin4obc5li6ar1dc5k6usjidsmj4c0:
+              help: null
+              label: Tax on the savings taxable base [20]
+            x-e0o3gbj3elnn8o9dd5n78pb7e9giqt3fehgmob9i64:
+              help: null
+              label: Total gross tax [21]
+            x-e0o3gbj3elnn8o9dd5n78pb7e9giqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kp36:
+              help: null
+              label: Total gross tax. Regional share [23]
+            x-e0o3gbj3elnn8o9dd5n78pb7e9giqt3fehgmobbgc5p78p9dclpn8obkc5m2qchi:
+              help: null
+              label: Total gross tax. State share [22]
+            x-e0o3gbj3elnn8o9ddhkn2tb9chgiqt3fehgmob9j60:
+              help: null
+              label: Total net tax [30]
+            x-e0o3gbj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kpj4:
+              help: null
+              label: Total net tax. Regional share [32]
+            x-e0o3gbj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dclpn8obkc5m2qcph:
+              help: null
+              label: Total net tax. State share [31]
+            x-e0o3gbj3elnn8obj5li6ar1dd5mn0tb5edq6ubbjdsmm2spdcln2qr315li6aorcc5p62or9dtn2qcpk:
+              help: null
+              label: Non-resident income tax paid on the income included in this return
+                [34]
+            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dkmm2rjaclp6ubbgc5p78p9dclpn8obkc5m2qcho:
+              help: null
+              label: Deduction for international double taxation on employment income
+                obtained and taxed abroad. State share [28]
+            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dkmm8rrj5limsbb5dgmmau3ke9gmsqj5e9niqchn:
+              help: null
+              label: Deduction for international double taxation on employment income
+                obtained and taxed abroad [27]
+            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dkmmasjf5lo62sjkckmm2tbkdtn6urb9cdgiqchp:
+              help: null
+              label: Deduction for international double taxation on employment income
+                obtained and taxed abroad. Regional share [29]
+            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqchk:
+              help: null
+              label: Deduction for donations [24]
+            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqs31e9q6abb1elq6urjfdlkm6o9d68r0:
+              help: null
+              label: Deduction for donations. Regional share [26]
+            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqs31e9q6abb5edq62t31dgmj4d8:
+              help: null
+              label: Deduction for donations. State share [25]
+            x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko32:
+              help: null
+              label: Description of the asset
+            x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko34:
+              help: null
+              label: Description of the asset
+            x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko36:
+              help: null
+              label: Description of the asset
+            x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko38:
+              help: null
+              label: Description of the asset
+            x-e0o3gbj4clr6ur3lcdkmurj5ecmm2orfe9i62p31ecmmushddhgiqob4dlkmsqbjehp62or9dtn2qd1i:
+              help: null
+              label: Refunds granted by the Administration [42]
+            x-e0o3gbj4d5j6asj5dphmio9d6gmj0c8:
+              help: null
+              label: Difference [4]
+            x-e0o3gbj4d5j6asj5dphmio9d6gmj0cg:
+              help: null
+              label: Difference [4]
+            x-e0o3gbj4d5j6asj5dphmio9d6gmj0co:
+              help: null
+              label: Difference [4]
+            x-e0o3gbj4d5j6asj5dphmio9d6gmj0d0:
+              help: null
+              label: Difference [4]
+            x-e0o3gbj5e1kmesj1cpiiqo9h5kpja:
+              help: null
+              label: Heading A1 [35]
+            x-e0o3gbj5e1kmesj1cpiiqo9i5kpjc:
+              help: null
+              label: Heading A2 [36]
+            x-e0o3gbj5e1kmesj1cpiiqohd6crg:
+              help: null
+              label: Heading B [37]
+            x-e0o3gbj5e1kmesj1cpiiqopd6cs0:
+              help: null
+              label: Heading C [38]
+            x-e0o3gbj5e1kmesj1cpiiqp1d6csg:
+              help: null
+              label: Heading D [39]
+            x-e0o3gbj5e1kmesj1cpiiqp9h5lsiqp9i5kq30:
+              help: null
+              label: Headings E1 and E2 [40]
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60og:
+              help: null
+              label: Acquisition date
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60p0:
+              help: null
+              label: Acquisition date
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60pg:
+              help: null
+              label: Acquisition date
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60q0:
+              help: null
+              label: Acquisition date
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60og:
+              help: null
+              label: Transfer date
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60p0:
+              help: null
+              label: Transfer date
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60pg:
+              help: null
+              label: Transfer date
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60q0:
+              help: null
+              label: Transfer date
+            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0c8:
+              help: null
+              label: Capital gain [5]
+            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0cg:
+              help: null
+              label: Capital gain [5]
+            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0co:
+              help: null
+              label: Capital gain [5]
+            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0d0:
+              help: null
+              label: Capital gain [5]
+            x-e0o3gbjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5kqg:
+              help: null
+              label: REMAINDER. Capital gain [5]
+            x-e0o3gbjiclpnar3kc5i6ubb4ckmmoo9dchim6r31e9gm6qbfdomj8co:
+              help: null
+              label: Result of the return [43]
+            x-e0o3gbjiclpnar3kc5i6uspdc4mmirj7e9in6obi5lhmirre5lgm8rb9dpkn6t3ic5q6itj1ecmj8c8:
+              help: null
+              label: Amounts payable from earlier returns or administrative assessments
+                [41]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              help: null
+              label: Income type [1]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              help: null
+              label: Income type [1]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              help: null
+              label: Income type [1]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              help: null
+              label: Income type [1]
+            x-e0o3gbjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9m:
+              help: null
+              label: Total capital gains [6]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0c8:
+              help: null
+              label: Acquisition value [3]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0cg:
+              help: null
+              label: Acquisition value [3]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0co:
+              help: null
+              label: Acquisition value [3]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0d0:
+              help: null
+              label: Acquisition value [3]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0c8:
+              help: null
+              label: Transfer value [2]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0cg:
+              help: null
+              label: Transfer value [2]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0co:
+              help: null
+              label: Transfer value [2]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d0:
+              help: null
+              label: Transfer value [2]
+          construct:
+            m151-impatriado-calculation:
+              field:
+                title: Form 151 personal income tax, inbound expatriate regime, tax
+                  liability
+          field:
+            label: Form 151, tax years 2015 to 2022 (inbound expatriate regime, flat
+              24/47 general scale following Law 26/2014; the savings component is
+              not modelled in this revision)
+        2025-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the return relates
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (annual, 0A)
+            x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmm2q3fe9p6u:
+              help: null
+              label: 'Savings taxable base (the part of the taxable base from income
+                under TRLIRNR art. 25.1.f: dividends, interest and savings capital
+                gains from Spanish sources)'
+            x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
+              help: null
+              label: General taxable base (impatriate regime, excluding the savings-income
+                part under TRLIRNR art. 25.1.f)
+            x-d5mn0obke9km2p3f5phnarrkc4mm8qb6clp6arj3d5gmo:
+              help: null
+              label: Net tax payable (gross general tax liability plus gross savings
+                tax liability, minus withholdings)
+            x-d5mn0obke9km2p3f5phnarrkc4mmirjkcljn4o9dc5k6usjids:
+              help: null
+              label: 'Gross savings tax liability (art. 93.2.e.2º scale: 19/21/23/27/30
+                on the savings taxable base, wording in force per Ley 7/2024)'
+            x-d5mn0obke9km2p3f5phnarrkc4mmirjkcljn4o9dctimspbic5m0:
+              help: null
+              label: 'Gross general tax liability (art. 93.2.e.1º scale: 24% up to
+                EUR 600,000, 47% on the excess)'
+            x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
+              help: null
+              label: Withholdings and advance payments (payments on account, art.
+                93.2.f)
+          construct:
+            m151-impatriado-calculation:
+              field:
+                title: null
+          field:
+            label: null

@@ -1,0 +1,90 @@
+modelo:
+  schema:
+    '136':
+      field:
+        official_name: null
+        title: null
+      revision:
+        '2026':
+          casilla:
+            '01':
+              help: null
+              label: Amount of the prize obtained from the winning ticket, coupon
+                or bet
+            '02':
+              help: null
+              label: Amount or value of the prize corresponding individually to the
+                declarant
+            '03':
+              help: null
+              label: Amount exempt from the special levy
+            '04':
+              help: null
+              label: Taxable base
+            '05':
+              help: null
+              label: Special levy tax liability
+            '06':
+              help: null
+              label: Amounts payable from previous self-assessments for the same item
+                and relating to the same prize
+            '07':
+              help: null
+              label: Result payable
+            09:
+              help: null
+              label: Amount paid to the Public Treasury
+            autoliquidacion-complementaria:
+              help: null
+              label: Supplementary self-assessment
+            declarante-nif:
+              help: null
+              label: Tax identification number (NIF)
+            declarante-nombre:
+              help: null
+              label: Surname and first name or company name
+            ejercicio-declaracion:
+              help: null
+              label: Tax year
+            fecha-celebracion:
+              help: null
+              label: Draw date
+            fecha-cobro-premio:
+              help: null
+              label: Prize collection date
+            forma-pago:
+              help: null
+              label: Payment method
+            iban:
+              help: null
+              label: IBAN code
+            justificante-anterior:
+              help: null
+              label: Reference number of the previous self-assessment
+            loteria-apuesta-denominacion:
+              help: null
+              label: Name of the lottery or bet
+            organizador-codigo-pais:
+              help: null
+              label: Country code of the organising body or entity
+            organizador-denominacion:
+              help: null
+              label: Name or company name of the organising body or entity
+            organizador-pais:
+              help: null
+              label: Country of the organising body or entity
+            periodo-declaracion:
+              help: null
+              label: Period
+            precio-unitario:
+              help: null
+              label: Unit price
+            provincia-residencia-irpf:
+              help: null
+              label: Code of the taxpayer's habitual residence province for IRPF purposes
+          construct:
+            modelo-136-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null

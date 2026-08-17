@@ -1,0 +1,73 @@
+modelo:
+  schema:
+    '190':
+      field:
+        official_name: Modelo 190. Declaración Informativa. Retenciones e ingresos
+          a cuenta. Rendimientos del trabajo y de actividades económicas, premios
+          y determinadas ganancias patrimoniales e imputaciones de rentas. Resumen
+          anual.
+        title: Resumen anual de retenciones del trabajo y actividades
+      revision:
+        2024-y-siguientes:
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              help: null
+              label: Declaración complementaria
+            x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
+              help: null
+              label: Correo electrónico de la persona con quien relacionarse
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: null
+              label: Número identificativo de la declaración
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: null
+              label: Número identificativo de la declaración anterior
+            x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
+              help: null
+              label: Importe total de las percepciones
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
+              help: null
+              label: Apellidos y nombre de la persona con quien relacionarse
+            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
+              help: null
+              label: Teléfono de la persona con quien relacionarse
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: null
+              label: Importe total de retenciones e ingresos a cuenta
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              help: null
+              label: Declaración sustitutiva
+            x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
+              help: null
+              label: Número total de percepciones
+            x-e1in4opecdm62tj5:
+              help: null
+              label: Clave de percepción
+            x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
+              help: null
+              label: Ingresos a cuenta efectuados sobre las percepciones en especie
+            x-e1in4opedpkmc:
+              help: null
+              label: NIF del perceptor
+            x-e1in4opedpnmqojick:
+              help: null
+              label: Apellidos y nombre o denominación del perceptor
+            x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
+              help: null
+              label: Percepción íntegra dineraria no derivada de incapacidad laboral
+            x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
+              help: null
+              label: Valoración de la percepción en especie no derivada de incapacidad
+                laboral
+            x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
+              help: null
+              label: Retenciones practicadas sobre las percepciones dinerarias
+            x-e1in4opeedqm4orcc5r6a:
+              help: null
+              label: Subclave de percepción
+          construct:
+            modelo-190-annual-summary:
+              field:
+                title: Modelo 190 annual summary from Modelo 111 quarterly filings
+          field:
+            label: Modelo 190 ejercicio 2024 y siguientes

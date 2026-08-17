@@ -1,0 +1,4306 @@
+modelo:
+  schema:
+    '303':
+      casilla:
+        continuidad:
+          dr303-01:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
+              - adóalap
+          dr303-02:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
+              - kulcs százaléka
+          dr303-03:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
+              - ÁFA összeg
+          dr303-04:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs -
+              adóalap
+          dr303-05:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs -
+              kulcs százaléka
+          dr303-06:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs -
+              ÁFA összeg
+          dr303-07:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs - adóalap
+          dr303-08:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs - kulcs
+              százaléka
+          dr303-09:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs - ÁFA
+              összeg
+          dr303-10:
+            help: null
+            label: Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett
+              ÁFA - alap
+          dr303-108:
+            help: null
+            label: Helyesbítő bevallás - egyéb korrekciók közigazgatási állásponttal
+              való eltérés meghatározott eseteiben
+          dr303-109:
+            help: null
+            label: Eredmény - AEAT által jóváhagyott visszatérítések ugyanazon év
+              és időszak korábbi önbevallásaiból
+          dr303-11:
+            help: null
+            label: Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett
+              ÁFA - összeg
+          dr303-111:
+            help: null
+            label: Helyesbítő bevallás - helyesbítés összege
+          dr303-112:
+            help: Az államnak tulajdonított benzin-, gázolaj- és bioüzemanyag-szállítások
+              előlegének kézi összege; csökkenti a 303-as bevallás 71. rovatát.
+            label: Az államnak tulajdonított benzin-, gázolaj- és bioüzemanyag-szállítások
+              előlege
+          dr303-12:
+            help: null
+            label: Egyéb fordított adózású ügyletek után keletkezett ÁFA, Közösségen
+              belüliek nélkül - alap
+          dr303-120:
+            help: null
+            label: Kiegészítő információ - teljesítési hely szabályai miatt nem adóköteles
+              ügyletek, a 123. mező kivételével
+          dr303-122:
+            help: null
+            label: Kiegészítő információ - fordított adózás alá tartozó ügyletek
+          dr303-123:
+            help: null
+            label: Kiegészítő információ - egyablakos különös rendszerek teljesítési
+              hely szabályai szerint nem adóköteles ügyletek
+          dr303-124:
+            help: null
+            label: Kiegészítő információ - egyablakos különös rendszerek alá tartozó
+              adóköteles ügyletek
+          dr303-13:
+            help: null
+            label: Egyéb fordított adózású ügyletek után keletkezett ÁFA, Közösségen
+              belüliek nélkül - összeg
+          dr303-14:
+            help: null
+            label: Keletkezett ÁFA alapjainak és összegeinek módosítása - adóalap
+          dr303-15:
+            help: null
+            label: Keletkezett ÁFA alapjainak és összegeinek módosítása - összeg
+          dr303-150:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - adóalap
+          dr303-151:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - kulcs százaléka
+          dr303-152:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - ÁFA összeg
+          dr303-153:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - adóalap
+          dr303-154:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - kulcs százaléka
+          dr303-155:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - ÁFA összeg
+          dr303-156:
+            help: null
+            label: Egyenértékűségi felár 0,5% - adóalap
+          dr303-157:
+            help: null
+            label: Egyenértékűségi felár 0,5% - kulcs százaléka
+          dr303-158:
+            help: null
+            label: Egyenértékűségi felár 0,5% - felár összege
+          dr303-16:
+            help: null
+            label: Egyenértékűségi felár 1,0% - adóalap
+          dr303-165:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - adóalap
+          dr303-166:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - kulcs
+              százaléka
+          dr303-167:
+            help: null
+            label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - ÁFA
+              összeg
+          dr303-168:
+            help: null
+            label: Új egyenértékűségi felárkulcs 2024-től - adóalap
+          dr303-169:
+            help: null
+            label: Új egyenértékűségi felárkulcs 2024-től - kulcs százaléka
+          dr303-17:
+            help: null
+            label: Egyenértékűségi felár 1,0% - kulcs százaléka
+          dr303-170:
+            help: null
+            label: Új egyenértékűségi felárkulcs 2024-től - felár összege
+          dr303-18:
+            help: null
+            label: Egyenértékűségi felár 1,0% - felár összege
+          dr303-19:
+            help: null
+            label: Egyenértékűségi felár 1,4% - adóalap
+          dr303-20:
+            help: null
+            label: Egyenértékűségi felár 1,4% - kulcs százaléka
+          dr303-21:
+            help: null
+            label: Egyenértékűségi felár 1,4% - felár összege
+          dr303-22:
+            help: null
+            label: Egyenértékűségi felár 5,2% - adóalap
+          dr303-23:
+            help: null
+            label: Egyenértékűségi felár 5,2% - kulcs százaléka
+          dr303-24:
+            help: null
+            label: Egyenértékűségi felár 5,2% - felár összege
+          dr303-25:
+            help: null
+            label: Egyenértékűségi felár alapjainak és összegeinek módosítása - adóalap
+          dr303-26:
+            help: null
+            label: Egyenértékűségi felár alapjainak és összegeinek módosítása - felár
+              összege
+          dr303-27:
+            help: null
+            label: Összes keletkezett ÁFA összeg
+          dr303-28:
+            help: null
+            label: Levonható ÁFA belföldi folyó ügyleteken - alap
+          dr303-29:
+            help: null
+            label: Levonható ÁFA belföldi folyó ügyleteken - összeg
+          dr303-30:
+            help: null
+            label: Levonható ÁFA belföldi beruházási javakon - alap
+          dr303-31:
+            help: null
+            label: Levonható ÁFA belföldi beruházási javakon - összeg
+          dr303-32:
+            help: null
+            label: Levonható ÁFA folyó áruk importján - alap
+          dr303-33:
+            help: null
+            label: Levonható ÁFA folyó áruk importján - összeg
+          dr303-34:
+            help: null
+            label: Levonható ÁFA beruházási javak importján - alap
+          dr303-35:
+            help: null
+            label: Levonható ÁFA beruházási javak importján - összeg
+          dr303-36:
+            help: null
+            label: Levonható ÁFA Közösségen belüli folyó beszerzéseken - alap
+          dr303-37:
+            help: null
+            label: Levonható ÁFA Közösségen belüli folyó beszerzéseken - összeg
+          dr303-38:
+            help: null
+            label: Levonható ÁFA Közösségen belüli beruházási javak beszerzésén -
+              alap
+          dr303-39:
+            help: null
+            label: Levonható ÁFA Közösségen belüli beruházási javak beszerzésén -
+              összeg
+          dr303-40:
+            help: null
+            label: Levonások helyesbítése - alap
+          dr303-41:
+            help: null
+            label: Levonások helyesbítése - összeg
+          dr303-42:
+            help: null
+            label: Mezőgazdasági, állattenyésztési és halászati különös rendszer kompenzációi
+              - összeg
+          dr303-43:
+            help: null
+            label: Beruházási javak korrekciója - összeg
+          dr303-44:
+            help: null
+            label: Levonási hányad korrekciója végleges százalék alapján - összeg
+          dr303-45:
+            help: null
+            label: Összes levonható összeg
+          dr303-47:
+            help: null
+            label: Egyszerűsített rendszer, 1T-2T-3T - minden tevékenység előlegfizetéseinek
+              összege
+          dr303-48:
+            help: null
+            label: Egyszerűsített rendszer, 4T - minden tevékenység származtatott
+              összegeinek összege
+          dr303-49:
+            help: null
+            label: Egyszerűsített rendszer, 4T - az év során teljesített előlegfizetések
+              összege
+          dr303-50:
+            help: null
+            label: Egyszerűsített rendszer, 4T - eredmény ([48] - [49])
+          dr303-51:
+            help: null
+            label: Egyszerűsített rendszer - Közösségen belüli termékbeszerzések után
+              keletkezett ÁFA
+          dr303-52:
+            help: null
+            label: Egyszerűsített rendszer - tárgyi eszközök értékesítése után keletkezett
+              ÁFA
+          dr303-53:
+            help: null
+            label: Egyszerűsített rendszer - fordított adózású ügyletekből keletkezett
+              ÁFA
+          dr303-54:
+            help: null
+            label: Egyszerűsített rendszer - teljes eredményösszeg
+          dr303-55:
+            help: null
+            label: Egyszerűsített rendszer - tárgyi eszköz beszerzésén vagy importján
+              levonható ÁFA
+          dr303-56:
+            help: null
+            label: Egyszerűsített rendszer - beruházási javak korrekciójából levonható
+              ÁFA
+          dr303-57:
+            help: null
+            label: Egyszerűsített rendszer - összes levonható ÁFA ([55] + [56])
+          dr303-58:
+            help: null
+            label: Egyszerűsített rendszer eredménye ([54] - [57])
+          dr303-59:
+            help: null
+            label: Kiegészítő információ - Közösségen belüli termék- és szolgáltatásértékesítések
+          dr303-60:
+            help: null
+            label: Kiegészítő információ - exportok és azokkal egy tekintet alá eső
+              ügyletek
+          dr303-62:
+            help: null
+            label: Kiegészítő információ - pénzforgalmi szemléletű, LIVA 75. cikk
+              szerinti teljesítések - adóalap
+          dr303-63:
+            help: null
+            label: Kiegészítő információ - pénzforgalmi szemléletű, LIVA 75. cikk
+              szerinti teljesítések - ÁFA összeg
+          dr303-65:
+            help: null
+            label: Eredmény - az Állami Adóigazgatásnak tulajdonítható százalék
+          dr303-68:
+            help: null
+            label: Eredmény - közös adózás éves korrekciós eredménye
+          dr303-70:
+            help: null
+            label: Eredmény - ugyanazon év és időszak korábbi önbevallásaiból fizetendő
+              eredmények
+          dr303-74:
+            help: null
+            label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések - adóalap
+          dr303-75:
+            help: null
+            label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések - ÁFA
+              összeg
+          dr303-76:
+            help: null
+            label: Eredmény - LIVA 80. cikk ötödik bekezdés 5a pont szerinti korrekció
+          dr303-77:
+            help: null
+            label: Eredmény - Vámhatóság által megállapított, befizetésre váró import
+              ÁFA
+          filing-period:
+            help: null
+            label: Negyedéves időszak
+          filing-year:
+            help: null
+            label: Az önbevallás adóéve
+          iva-base-autorepercutida-intracomunitaria-devengado:
+            help: Adja össze a Közösségen belüli beszerzések után önszámlázással keletkezett
+              adóalapot.
+            label: Keletkezett fordított adózású ÁFA adóalapja Közösségen belüli beszerzéseknél
+          iva-compensacion-aplicada-periodo:
+            help: null
+            label: Ebben az időszakban alkalmazott korábbi időszaki beszámítások
+          iva-compensacion-disponible-fin-periodo:
+            help: null
+            label: Időszak végén rendelkezésre álló beszámítási egyenleg
+          iva-compensacion-generada-periodo:
+            help: null
+            label: Ebben az időszakban keletkezett beszámítási egyenleg
+          iva-compensacion-pendiente-anteriores:
+            help: null
+            label: Korábbi időszakokból fennmaradó beszámítandó összegek
+          iva-compensacion-pendiente-posteriores:
+            help: null
+            label: Későbbi időszakokra fennmaradó korábbi beszámítások
+          iva-cuota-autorepercutida-interior-deducible:
+            help: null
+            label: Levonható fordított adózású ÁFA belföldi ügyleteknél
+          iva-cuota-autorepercutida-interior-devengado:
+            help: null
+            label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél
+          iva-cuota-autorepercutida-intracomunitaria:
+            help: null
+            label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
+          iva-cuota-autorepercutida-intracomunitaria-deducible:
+            help: null
+            label: Levonható fordított adózású ÁFA Közösségen belüli beszerzéseknél
+          iva-cuota-autorepercutida-intracomunitaria-devengado:
+            help: null
+            label: Keletkezett fordított adózású ÁFA Közösségen belüli beszerzéseknél
+          iva-cuota-deducible-total:
+            help: null
+            label: Összes levonható ÁFA összeg
+          iva-cuota-devengada-total:
+            help: null
+            label: Összes keletkezett ÁFA összeg
+          iva-cuota-repercutida-general:
+            help: A 21%-os általános kulccsal számított felszámított ÁFA teljes összege.
+            label: Felszámított ÁFA összeg általános kulccsal (21%)
+          iva-cuota-repercutida-reducido:
+            help: null
+            label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
+          iva-cuota-repercutida-reducido-transitorio:
+            help: A 4/2024. sz. spanyol királyi törvényerejű rendelet átmeneti tétele
+              a csökkentett kulcshoz, amely a rendes 10%-os csökkentett kulccsal együtt
+              létezik.
+            label: Felszámított ÁFA összeg átmeneti csökkentett kulccsal (5%/7,5%)
+          iva-cuota-repercutida-super-reducido:
+            help: null
+            label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
+          iva-cuota-repercutida-super-reducido-transitorio:
+            help: A 4/2024. sz. spanyol királyi törvényerejű rendelet átmeneti tétele
+              a szupercsökkentett kulcshoz, amely a rendes 4%-os szupercsökkentett
+              kulccsal együtt létezik.
+            label: Felszámított ÁFA összeg átmeneti szupercsökkentett kulccsal (2%)
+          iva-cuota-soportada-importaciones:
+            help: null
+            label: Levonható előzetesen felszámított ÁFA folyó áruk importján
+          iva-cuota-soportada-interiores:
+            help: null
+            label: Levonható ÁFA összeg belföldi folyó ügyletek után
+          iva-prorrata-porcentaje:
+            help: null
+            label: Általános levonási hányad százaléka
+          iva-prorrata-volumen-con-derecho:
+            help: null
+            label: Levonási jogot keletkeztető éves ügyletvolumen
+          iva-prorrata-volumen-total:
+            help: null
+            label: Teljes éves ügyletvolumen
+          iva-regularizacion-inversiones:
+            help: null
+            label: Beruházási javak korrekciója
+          iva-resultado-regimen-general:
+            help: null
+            label: Általános rendszer eredménye
+          m303-deducciones-sector-1-domestic-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-domestic-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-domestic-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-domestic-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-investment-regularisation:
+            help: null
+            label: null
+          m303-deducciones-sector-1-reagp-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-reagp-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-rectification-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-rectification-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-total:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-investment-regularisation:
+            help: null
+            label: null
+          m303-deducciones-sector-2-reagp-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-reagp-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-rectification-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-rectification-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-total:
+            help: null
+            label: null
+          m303-exonerado-390-107:
+            help: null
+            label: null
+          m303-exonerado-390-125:
+            help: null
+            label: null
+          m303-exonerado-390-126:
+            help: null
+            label: null
+          m303-exonerado-390-127:
+            help: null
+            label: null
+          m303-exonerado-390-128:
+            help: null
+            label: null
+          m303-exonerado-390-79:
+            help: null
+            label: null
+          m303-exonerado-390-80:
+            help: null
+            label: null
+          m303-exonerado-390-81:
+            help: null
+            label: null
+          m303-exonerado-390-83:
+            help: null
+            label: null
+          m303-exonerado-390-84:
+            help: null
+            label: null
+          m303-exonerado-390-86:
+            help: null
+            label: null
+          m303-exonerado-390-88:
+            help: null
+            label: null
+          m303-exonerado-390-89:
+            help: null
+            label: null
+          m303-exonerado-390-90:
+            help: null
+            label: null
+          m303-exonerado-390-91:
+            help: null
+            label: null
+          m303-exonerado-390-92:
+            help: null
+            label: null
+          m303-exonerado-390-93:
+            help: null
+            label: null
+          m303-exonerado-390-94:
+            help: null
+            label: null
+          m303-exonerado-390-95:
+            help: null
+            label: null
+          m303-exonerado-390-96:
+            help: null
+            label: null
+          m303-exonerado-390-97:
+            help: null
+            label: null
+          m303-exonerado-390-98:
+            help: null
+            label: null
+          m303-exonerado-390-99:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-tipo:
+            help: null
+            label: null
+      construct:
+        modelo-303-iva-autoliquidacion:
+          field:
+            title: null
+      field:
+        official_name: null
+        title: null
+      revision:
+        2009-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
+                - adóalap
+            '02':
+              help: null
+              label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
+                - kulcs százaléka
+            '03':
+              help: null
+              label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
+                - ÁFA összeg
+            '04':
+              help: null
+              label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs
+                - adóalap
+            '05':
+              help: null
+              label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs
+                - kulcs százaléka
+            '06':
+              help: null
+              label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs
+                - ÁFA összeg
+            '07':
+              help: null
+              label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs -
+                adóalap
+            08:
+              help: null
+              label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs -
+                kulcs százaléka
+            09:
+              help: null
+              label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs -
+                ÁFA összeg
+            '10':
+              help: null
+              label: Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett
+                ÁFA - alap
+            '108':
+              help: null
+              label: Helyesbítő bevallás - egyéb korrekciók közigazgatási állásponttal
+                való eltérés meghatározott eseteiben
+            '109':
+              help: null
+              label: Eredmény - AEAT által jóváhagyott visszatérítések ugyanazon év
+                és időszak korábbi önbevallásaiból
+            '11':
+              help: null
+              label: Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett
+                ÁFA - összeg
+            '111':
+              help: null
+              label: Helyesbítő bevallás - helyesbítés összege
+            '12':
+              help: null
+              label: Egyéb fordított adózású ügyletek után keletkezett ÁFA, Közösségen
+                belüliek nélkül - alap
+            '120':
+              help: null
+              label: Kiegészítő információ - teljesítési hely szabályai miatt nem
+                adóköteles ügyletek, a 123. mező kivételével
+            '122':
+              help: null
+              label: Kiegészítő információ - fordított adózás alá tartozó ügyletek
+            '123':
+              help: null
+              label: Kiegészítő információ - egyablakos különös rendszerek teljesítési
+                hely szabályai szerint nem adóköteles ügyletek
+            '124':
+              help: null
+              label: Kiegészítő információ - egyablakos különös rendszerek alá tartozó
+                adóköteles ügyletek
+            '13':
+              help: null
+              label: Egyéb fordított adózású ügyletek után keletkezett ÁFA, Közösségen
+                belüliek nélkül - összeg
+            '14':
+              help: null
+              label: Keletkezett ÁFA alapjainak és összegeinek módosítása - adóalap
+            '15':
+              help: null
+              label: Keletkezett ÁFA alapjainak és összegeinek módosítása - összeg
+            '150':
+              help: null
+              label: Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - adóalap
+            '151':
+              help: null
+              label: Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - kulcs százaléka
+            '152':
+              help: null
+              label: Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - ÁFA összeg
+            '153':
+              help: null
+              label: Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - adóalap
+            '154':
+              help: null
+              label: Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - kulcs százaléka
+            '155':
+              help: null
+              label: Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - ÁFA összeg
+            '156':
+              help: null
+              label: Egyenértékűségi felár 0,5% - adóalap
+            '157':
+              help: null
+              label: Egyenértékűségi felár 0,5% - kulcs százaléka
+            '158':
+              help: null
+              label: Egyenértékűségi felár 0,5% - felár összege
+            '16':
+              help: null
+              label: Egyenértékűségi felár 1,0% - adóalap
+            '165':
+              help: null
+              label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - adóalap
+            '166':
+              help: null
+              label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - kulcs
+                százaléka
+            '167':
+              help: null
+              label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - ÁFA
+                összeg
+            '168':
+              help: null
+              label: Új egyenértékűségi felárkulcs 2024-től - adóalap
+            '169':
+              help: null
+              label: Új egyenértékűségi felárkulcs 2024-től - kulcs százaléka
+            '17':
+              help: null
+              label: Egyenértékűségi felár 1,0% - kulcs százaléka
+            '170':
+              help: null
+              label: Új egyenértékűségi felárkulcs 2024-től - felár összege
+            '18':
+              help: null
+              label: Egyenértékűségi felár 1,0% - felár összege
+            '19':
+              help: null
+              label: Egyenértékűségi felár 1,4% - adóalap
+            '20':
+              help: null
+              label: Egyenértékűségi felár 1,4% - kulcs százaléka
+            '21':
+              help: null
+              label: Egyenértékűségi felár 1,4% - felár összege
+            '22':
+              help: null
+              label: Egyenértékűségi felár 5,2% - adóalap
+            '23':
+              help: null
+              label: Egyenértékűségi felár 5,2% - kulcs százaléka
+            '24':
+              help: null
+              label: Egyenértékűségi felár 5,2% - felár összege
+            '25':
+              help: null
+              label: Egyenértékűségi felár alapjainak és összegeinek módosítása -
+                adóalap
+            '26':
+              help: null
+              label: Egyenértékűségi felár alapjainak és összegeinek módosítása -
+                felár összege
+            '27':
+              help: null
+              label: Összes keletkezett ÁFA összeg
+            '28':
+              help: null
+              label: Levonható ÁFA belföldi folyó ügyleteken - alap
+            '29':
+              help: null
+              label: Levonható ÁFA belföldi folyó ügyleteken - összeg
+            '30':
+              help: null
+              label: Levonható ÁFA belföldi beruházási javakon - alap
+            '31':
+              help: null
+              label: Levonható ÁFA belföldi beruházási javakon - összeg
+            '32':
+              help: null
+              label: Levonható ÁFA folyó áruk importján - alap
+            '33':
+              help: null
+              label: Levonható ÁFA folyó áruk importján - összeg
+            '34':
+              help: null
+              label: Levonható ÁFA beruházási javak importján - alap
+            '35':
+              help: null
+              label: Levonható ÁFA beruházási javak importján - összeg
+            '36':
+              help: null
+              label: Levonható ÁFA Közösségen belüli folyó beszerzéseken - alap
+            '37':
+              help: null
+              label: Levonható ÁFA Közösségen belüli folyó beszerzéseken - összeg
+            '38':
+              help: null
+              label: Levonható ÁFA Közösségen belüli beruházási javak beszerzésén
+                - alap
+            '39':
+              help: null
+              label: Levonható ÁFA Közösségen belüli beruházási javak beszerzésén
+                - összeg
+            '40':
+              help: null
+              label: Levonások helyesbítése - alap
+            '41':
+              help: null
+              label: Levonások helyesbítése - összeg
+            '42':
+              help: null
+              label: Mezőgazdasági, állattenyésztési és halászati különös rendszer
+                kompenzációi - összeg
+            '43':
+              help: null
+              label: Beruházási javak korrekciója - összeg
+            '44':
+              help: null
+              label: Levonási hányad korrekciója végleges százalék alapján - összeg
+            '45':
+              help: null
+              label: Összes levonható összeg
+            '47':
+              help: null
+              label: Egyszerűsített rendszer, 1T-2T-3T - minden tevékenység előlegfizetéseinek
+                összege
+            '48':
+              help: null
+              label: Egyszerűsített rendszer, 4T - minden tevékenység származtatott
+                összegeinek összege
+            '49':
+              help: null
+              label: Egyszerűsített rendszer, 4T - az év során teljesített előlegfizetések
+                összege
+            '50':
+              help: null
+              label: Egyszerűsített rendszer, 4T - eredmény ([48] - [49])
+            '51':
+              help: null
+              label: Egyszerűsített rendszer - Közösségen belüli termékbeszerzések
+                után keletkezett ÁFA
+            '52':
+              help: null
+              label: Egyszerűsített rendszer - tárgyi eszközök értékesítése után keletkezett
+                ÁFA
+            '53':
+              help: null
+              label: Egyszerűsített rendszer - fordított adózású ügyletekből keletkezett
+                ÁFA
+            '54':
+              help: null
+              label: Egyszerűsített rendszer - teljes eredményösszeg
+            '55':
+              help: null
+              label: Egyszerűsített rendszer - tárgyi eszköz beszerzésén vagy importján
+                levonható ÁFA
+            '56':
+              help: null
+              label: Egyszerűsített rendszer - beruházási javak korrekciójából levonható
+                ÁFA
+            '57':
+              help: null
+              label: Egyszerűsített rendszer - összes levonható ÁFA ([55] + [56])
+            '58':
+              help: null
+              label: Egyszerűsített rendszer eredménye ([54] - [57])
+            '59':
+              help: null
+              label: Kiegészítő információ - Közösségen belüli termék- és szolgáltatásértékesítések
+            '60':
+              help: null
+              label: Kiegészítő információ - exportok és azokkal egy tekintet alá
+                eső ügyletek
+            '62':
+              help: null
+              label: Kiegészítő információ - pénzforgalmi szemléletű, LIVA 75. cikk
+                szerinti teljesítések - adóalap
+            '63':
+              help: null
+              label: Kiegészítő információ - pénzforgalmi szemléletű, LIVA 75. cikk
+                szerinti teljesítések - ÁFA összeg
+            '64':
+              help: null
+              label: Eredmény - eredmények összege ([46] + [58] + [76])
+            '65':
+              help: null
+              label: Eredmény - az Állami Adóigazgatásnak tulajdonítható százalék
+            '66':
+              help: null
+              label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg
+            '68':
+              help: null
+              label: Eredmény - közös adózás éves korrekciós eredménye
+            '70':
+              help: null
+              label: Eredmény - ugyanazon év és időszak korábbi önbevallásaiból fizetendő
+                eredmények
+            '71':
+              help: null
+              label: Végső eredmény ([69] - [70] + [109])
+            '74':
+              help: null
+              label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések -
+                adóalap
+            '75':
+              help: null
+              label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések -
+                ÁFA összeg
+            '76':
+              help: null
+              label: Eredmény - LIVA 80. cikk ötödik bekezdés 5a pont szerinti korrekció
+            '77':
+              help: null
+              label: Eredmény - Vámhatóság által megállapított, befizetésre váró import
+                ÁFA
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az önbevallás adóéve
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Negyedéves időszak
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: Levonható fordított adózású ÁFA belföldi ügyleteknél
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: Levonható fordított adózású ÁFA Közösségen belüli beszerzéseknél
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: Keletkezett fordított adózású ÁFA Közösségen belüli beszerzéseknél
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: Ebben az időszakban alkalmazott korábbi időszaki beszámítások
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: Időszak végén rendelkezésre álló beszámítási egyenleg
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: Ebben az időszakban keletkezett beszámítási egyenleg
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: Korábbi időszakokból fennmaradó beszámítandó összegek
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: Későbbi időszakokra fennmaradó korábbi beszámítások
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: Összes levonható ÁFA összeg
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: Összes keletkezett ÁFA összeg
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: Általános levonási hányad százaléka
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: Levonási jogot keletkeztető éves ügyletvolumen
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: Teljes éves ügyletvolumen
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: Beruházási javak korrekciója
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: Felszámított ÁFA összeg általános kulccsal (21%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: Önbevallás eredménye
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: Általános rendszer eredménye
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: Levonható előzetesen felszámított ÁFA folyó áruk importján
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: Levonható ÁFA összeg belföldi folyó ügyletek után
+          field:
+            label: null
+        '2023':
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '107':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: null
+        2024-desde-09-y-3t:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '107':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: null
+        2024-hasta-08-y-2t:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '107':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: null
+        '2025':
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '107':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: null
+        2026-y-siguientes:
+          casilla:
+            '01':
+              help: '01. mező: keletkezett ÁFA adóalapja az általános rendszer szupercsökkentett
+                4%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
+                - adóalap
+            '02':
+              help: '02. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
+                szupercsökkentett 4%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
+                - kulcs százaléka
+            '03':
+              help: '03. mező: keletkezett ÁFA összege az általános rendszer szupercsökkentett
+                4%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
+                - ÁFA összeg
+            '04':
+              help: '04. mező: keletkezett ÁFA adóalapja az általános rendszer csökkentett
+                10%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs
+                - adóalap
+            '05':
+              help: '05. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
+                csökkentett 10%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs
+                - kulcs százaléka
+            '06':
+              help: '06. mező: keletkezett ÁFA összege az általános rendszer csökkentett
+                10%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs
+                - ÁFA összeg
+            '07':
+              help: '07. mező: keletkezett ÁFA adóalapja az általános rendszer 21%-os
+                általános kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs -
+                adóalap
+            08:
+              help: '08. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
+                21%-os általános kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs -
+                kulcs százaléka
+            09:
+              help: '09. mező: keletkezett ÁFA összege az általános rendszer 21%-os
+                általános kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs -
+                ÁFA összeg
+            '10':
+              help: '10. mező: Közösségen belüli termék- és szolgáltatásbeszerzések
+                után keletkezett ÁFA alapja.'
+              label: Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett
+                ÁFA - alap
+            '107':
+              help: null
+              label: null
+            '108':
+              help: '108. mező: helyesbítő bevallás egyéb korrekciói a közigazgatási
+                állásponttal való eltérés meghatározott eseteiben.'
+              label: Helyesbítő bevallás - egyéb korrekciók közigazgatási állásponttal
+                való eltérés meghatározott eseteiben
+            '109':
+              help: '109. mező: AEAT által jóváhagyott visszatérítések ugyanazon év
+                és időszak korábbi önbevallásaihoz kapcsolódóan.'
+              label: Eredmény - AEAT által jóváhagyott visszatérítések ugyanazon év
+                és időszak korábbi önbevallásaiból
+            '11':
+              help: '11. mező: Közösségen belüli termék- és szolgáltatásbeszerzések
+                után keletkezett ÁFA összege.'
+              label: Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett
+                ÁFA - összeg
+            '111':
+              help: '111. mező: helyesbítő bevallásban szereplő helyesbítés összege.'
+              label: Helyesbítő bevallás - helyesbítés összege
+            '112':
+              help: null
+              label: null
+            '12':
+              help: '12. mező: Közösségen belüli ügyleteken kívüli egyéb fordított
+                adózású ügyletek után keletkezett ÁFA alapja.'
+              label: Egyéb fordított adózású ügyletek után keletkezett ÁFA, Közösségen
+                belüliek nélkül - alap
+            '120':
+              help: '120. mező: kiegészítő információ teljesítési hely szabályai miatt
+                nem adóköteles ügyletekről, a 123. mező kivételével.'
+              label: Kiegészítő információ - teljesítési hely szabályai miatt nem
+                adóköteles ügyletek, a 123. mező kivételével
+            '122':
+              help: '122. mező: kiegészítő információ fordított adózás alá tartozó
+                ügyletekről.'
+              label: Kiegészítő információ - fordított adózás alá tartozó ügyletek
+            '123':
+              help: '123. mező: kiegészítő információ egyablakos különös rendszerek
+                teljesítési hely szabályai szerint nem adóköteles ügyletekről.'
+              label: Kiegészítő információ - egyablakos különös rendszerek teljesítési
+                hely szabályai szerint nem adóköteles ügyletek
+            '124':
+              help: '124. mező: kiegészítő információ egyablakos különös rendszerek
+                alá tartozó adóköteles ügyletekről.'
+              label: Kiegészítő információ - egyablakos különös rendszerek alá tartozó
+                adóköteles ügyletek
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: '13. mező: Közösségen belüli ügyleteken kívüli egyéb fordított
+                adózású ügyletek után keletkezett ÁFA összege.'
+              label: Egyéb fordított adózású ügyletek után keletkezett ÁFA, Közösségen
+                belüliek nélkül - összeg
+            '14':
+              help: '14. mező: keletkezett ÁFA alapjainak és összegeinek módosításához
+                tartozó adóalap.'
+              label: Keletkezett ÁFA alapjainak és összegeinek módosítása - adóalap
+            '15':
+              help: '15. mező: keletkezett ÁFA alapjainak és összegeinek módosításához
+                tartozó ÁFA összeg.'
+              label: Keletkezett ÁFA alapjainak és összegeinek módosítása - összeg
+            '150':
+              help: '150. mező: keletkezett ÁFA adóalapja az általános rendszer új
+                kulcsának 1. sávjában.'
+              label: Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - adóalap
+            '151':
+              help: '151. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
+                új kulcsának 1. sávjában.'
+              label: Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - kulcs százaléka
+            '152':
+              help: '152. mező: keletkezett ÁFA összege az általános rendszer új kulcsának
+                1. sávjában.'
+              label: Keletkezett ÁFA, általános rendszer új kulcs 1. sáv - ÁFA összeg
+            '153':
+              help: '153. mező: keletkezett ÁFA adóalapja az általános rendszer új
+                kulcsának 2. sávjában.'
+              label: Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - adóalap
+            '154':
+              help: '154. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
+                új kulcsának 2. sávjában.'
+              label: Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - kulcs százaléka
+            '155':
+              help: '155. mező: keletkezett ÁFA összege az általános rendszer új kulcsának
+                2. sávjában.'
+              label: Keletkezett ÁFA, általános rendszer új kulcs 2. sáv - ÁFA összeg
+            '156':
+              help: '156. mező: a 0,5%-os egyenértékűségi felár adóalapja.'
+              label: Egyenértékűségi felár 0,5% - adóalap
+            '157':
+              help: '157. mező: a 0,5%-os egyenértékűségi felár kulcsának százaléka.'
+              label: Egyenértékűségi felár 0,5% - kulcs százaléka
+            '158':
+              help: '158. mező: a 0,5%-os egyenértékűségi felár összege.'
+              label: Egyenértékűségi felár 0,5% - felár összege
+            '16':
+              help: '16. mező: az 1,0%-os egyenértékűségi felár adóalapja.'
+              label: Egyenértékűségi felár 1,0% - adóalap
+            '165':
+              help: '165. mező: keletkezett ÁFA adóalapja az általános rendszer 2024-től
+                alkalmazandó 2%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - adóalap
+            '166':
+              help: '166. mező: keletkezett ÁFA kulcsának százaléka az általános rendszer
+                2024-től alkalmazandó 2%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - kulcs
+                százaléka
+            '167':
+              help: '167. mező: keletkezett ÁFA összege az általános rendszer 2024-től
+                alkalmazandó 2%-os kulcsán.'
+              label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - ÁFA
+                összeg
+            '168':
+              help: '168. mező: a 2024-től alkalmazandó új egyenértékűségi felárkulcs
+                adóalapja.'
+              label: Új egyenértékűségi felárkulcs 2024-től - adóalap
+            '169':
+              help: '169. mező: a 2024-től alkalmazandó új egyenértékűségi felárkulcs
+                százaléka.'
+              label: Új egyenértékűségi felárkulcs 2024-től - kulcs százaléka
+            '17':
+              help: '17. mező: az 1,0%-os egyenértékűségi felár kulcsának százaléka.'
+              label: Egyenértékűségi felár 1,0% - kulcs százaléka
+            '170':
+              help: '170. mező: a 2024-től alkalmazandó új egyenértékűségi felár összege.'
+              label: Új egyenértékűségi felárkulcs 2024-től - felár összege
+            '18':
+              help: '18. mező: az 1,0%-os egyenértékűségi felár összege.'
+              label: Egyenértékűségi felár 1,0% - felár összege
+            '19':
+              help: '19. mező: az 1,4%-os egyenértékűségi felár adóalapja.'
+              label: Egyenértékűségi felár 1,4% - adóalap
+            '20':
+              help: '20. mező: az 1,4%-os egyenértékűségi felár kulcsának százaléka.'
+              label: Egyenértékűségi felár 1,4% - kulcs százaléka
+            '21':
+              help: '21. mező: az 1,4%-os egyenértékűségi felár összege.'
+              label: Egyenértékűségi felár 1,4% - felár összege
+            '22':
+              help: '22. mező: az 5,2%-os egyenértékűségi felár adóalapja.'
+              label: Egyenértékűségi felár 5,2% - adóalap
+            '23':
+              help: '23. mező: az 5,2%-os egyenértékűségi felár kulcsának százaléka.'
+              label: Egyenértékűségi felár 5,2% - kulcs százaléka
+            '24':
+              help: '24. mező: az 5,2%-os egyenértékűségi felár összege.'
+              label: Egyenértékűségi felár 5,2% - felár összege
+            '25':
+              help: '25. mező: az egyenértékűségi felár alapjainak és összegeinek
+                módosításához tartozó adóalap.'
+              label: Egyenértékűségi felár alapjainak és összegeinek módosítása -
+                adóalap
+            '26':
+              help: '26. mező: az egyenértékűségi felár alapjainak és összegeinek
+                módosításához tartozó felár összege.'
+              label: Egyenértékűségi felár alapjainak és összegeinek módosítása -
+                felár összege
+            '27':
+              help: '27. mező: összes keletkezett ÁFA összeg.'
+              label: Összes keletkezett ÁFA összeg
+            '28':
+              help: '28. mező: belföldi folyó ügyleteken levonható ÁFA alapja.'
+              label: Levonható ÁFA belföldi folyó ügyleteken - alap
+            '29':
+              help: '29. mező: belföldi folyó ügyleteken levonható ÁFA összege.'
+              label: Levonható ÁFA belföldi folyó ügyleteken - összeg
+            '30':
+              help: '30. mező: belföldi beruházási javakon levonható ÁFA alapja.'
+              label: Levonható ÁFA belföldi beruházási javakon - alap
+            '31':
+              help: '31. mező: belföldi beruházási javakon levonható ÁFA összege.'
+              label: Levonható ÁFA belföldi beruházási javakon - összeg
+            '32':
+              help: '32. mező: folyó áruk importján levonható ÁFA alapja.'
+              label: Levonható ÁFA folyó áruk importján - alap
+            '33':
+              help: '33. mező: folyó áruk importján levonható ÁFA összege.'
+              label: Levonható ÁFA folyó áruk importján - összeg
+            '34':
+              help: '34. mező: beruházási javak importján levonható ÁFA alapja.'
+              label: Levonható ÁFA beruházási javak importján - alap
+            '35':
+              help: '35. mező: beruházási javak importján levonható ÁFA összege.'
+              label: Levonható ÁFA beruházási javak importján - összeg
+            '36':
+              help: '36. mező: Közösségen belüli folyó beszerzéseken levonható ÁFA
+                alapja.'
+              label: Levonható ÁFA Közösségen belüli folyó beszerzéseken - alap
+            '37':
+              help: '37. mező: Közösségen belüli folyó beszerzéseken levonható ÁFA
+                összege.'
+              label: Levonható ÁFA Közösségen belüli folyó beszerzéseken - összeg
+            '38':
+              help: '38. mező: Közösségen belüli beruházási javak beszerzésén levonható
+                ÁFA alapja.'
+              label: Levonható ÁFA Közösségen belüli beruházási javak beszerzésén
+                - alap
+            '39':
+              help: '39. mező: Közösségen belüli beruházási javak beszerzésén levonható
+                ÁFA összege.'
+              label: Levonható ÁFA Közösségen belüli beruházási javak beszerzésén
+                - összeg
+            '40':
+              help: '40. mező: levonások helyesbítésének alapja.'
+              label: Levonások helyesbítése - alap
+            '41':
+              help: '41. mező: levonások helyesbítésének ÁFA összege.'
+              label: Levonások helyesbítése - összeg
+            '42':
+              help: '42. mező: mezőgazdasági, állattenyésztési és halászati különös
+                rendszer szerinti kompenzáció összege.'
+              label: Mezőgazdasági, állattenyésztési és halászati különös rendszer
+                kompenzációi - összeg
+            '43':
+              help: '43. mező: beruházási javak korrekciójának ÁFA összege.'
+              label: Beruházási javak korrekciója - összeg
+            '44':
+              help: '44. mező: levonási hányad végleges százalék alapján végzett korrekciójának
+                ÁFA összege.'
+              label: Levonási hányad korrekciója végleges százalék alapján - összeg
+            '45':
+              help: '45. mező: összes levonható ÁFA összeg.'
+              label: Összes levonható összeg
+            '47':
+              help: '47. mező: egyszerűsített rendszerben az összes tevékenység előlegfizetéseinek
+                összege az 1T, 2T vagy 3T időszakban.'
+              label: Egyszerűsített rendszer, 1T-2T-3T - minden tevékenység előlegfizetéseinek
+                összege
+            '48':
+              help: '48. mező: egyszerűsített rendszerben az összes tevékenységből
+                származó összegek összege a 4T időszakban.'
+              label: Egyszerűsített rendszer, 4T - minden tevékenység származtatott
+                összegeinek összege
+            '49':
+              help: '49. mező: egyszerűsített rendszerben az év során teljesített
+                előlegfizetések összege a 4T időszakban.'
+              label: Egyszerűsített rendszer, 4T - az év során teljesített előlegfizetések
+                összege
+            '50':
+              help: '50. mező: egyszerűsített rendszer 4T eredménye, a 48. mező mínusz
+                a 49. mező.'
+              label: Egyszerűsített rendszer, 4T - eredmény ([48] - [49])
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: '51. mező: egyszerűsített rendszerben Közösségen belüli termékbeszerzések
+                után keletkezett ÁFA.'
+              label: Egyszerűsített rendszer - Közösségen belüli termékbeszerzések
+                után keletkezett ÁFA
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: '52. mező: egyszerűsített rendszerben tárgyi eszközök értékesítése
+                után keletkezett ÁFA.'
+              label: Egyszerűsített rendszer - tárgyi eszközök értékesítése után keletkezett
+                ÁFA
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: '53. mező: egyszerűsített rendszerben fordított adózás alá tartozó
+                ügyletekből keletkezett ÁFA.'
+              label: Egyszerűsített rendszer - fordított adózású ügyletekből keletkezett
+                ÁFA
+            '54':
+              help: '54. mező: egyszerűsített rendszer szerinti teljes eredményösszeg.'
+              label: Egyszerűsített rendszer - teljes eredményösszeg
+            '55':
+              help: '55. mező: egyszerűsített rendszerben tárgyi eszköz beszerzésén
+                vagy importján levonható ÁFA.'
+              label: Egyszerűsített rendszer - tárgyi eszköz beszerzésén vagy importján
+                levonható ÁFA
+            '56':
+              help: '56. mező: egyszerűsített rendszerben beruházási javak korrekciójából
+                levonható ÁFA.'
+              label: Egyszerűsített rendszer - beruházási javak korrekciójából levonható
+                ÁFA
+            '57':
+              help: '57. mező: egyszerűsített rendszerben összes levonható ÁFA, az
+                55. mező és az 56. mező összegeként számítva.'
+              label: Egyszerűsített rendszer - összes levonható ÁFA ([55] + [56])
+            '58':
+              help: '58. mező: egyszerűsített rendszer eredménye, az 54. mező mínusz
+                az 57. mező.'
+              label: Egyszerűsített rendszer eredménye ([54] - [57])
+            '59':
+              help: '59. mező: kiegészítő információ Közösségen belüli termék- és
+                szolgáltatásértékesítésekről.'
+              label: Kiegészítő információ - Közösségen belüli termék- és szolgáltatásértékesítések
+            '60':
+              help: '60. mező: kiegészítő információ exportokról és azokkal egy tekintet
+                alá eső ügyletekről.'
+              label: Kiegészítő információ - exportok és azokkal egy tekintet alá
+                eső ügyletek
+            '62':
+              help: '62. mező: LIVA 75. cikk szerint keletkezett pénzforgalmi szemléletű
+                teljesítések adóalapja.'
+              label: Kiegészítő információ - pénzforgalmi szemléletű, LIVA 75. cikk
+                szerinti teljesítések - adóalap
+            '63':
+              help: '63. mező: LIVA 75. cikk szerint keletkezett pénzforgalmi szemléletű
+                teljesítések ÁFA összege.'
+              label: Kiegészítő információ - pénzforgalmi szemléletű, LIVA 75. cikk
+                szerinti teljesítések - ÁFA összeg
+            '64':
+              help: null
+              label: null
+            '65':
+              help: '65. mező: az eredmény Állami Adóigazgatásnak tulajdonítható százaléka.'
+              label: Eredmény - az Állami Adóigazgatásnak tulajdonítható százalék
+            '66':
+              help: null
+              label: null
+            '68':
+              help: '68. mező: közös adózás éves korrekciós eredménye.'
+              label: Eredmény - közös adózás éves korrekciós eredménye
+            '70':
+              help: '70. mező: ugyanazon év és időszak korábbi önbevallásaiból fizetendő
+                összegek.'
+              label: Eredmény - ugyanazon év és időszak korábbi önbevallásaiból fizetendő
+                eredmények
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: '74. mező: pénzforgalmi szemléletű beszerzések adóalapja.'
+              label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések -
+                adóalap
+            '75':
+              help: '75. mező: pénzforgalmi szemléletű beszerzések ÁFA összege.'
+              label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések -
+                ÁFA összeg
+            '76':
+              help: '76. mező: eredménykorrekció a LIVA 80. cikk ötödik bekezdés 5a
+                pontja szerint.'
+              label: Eredmény - LIVA 80. cikk ötödik bekezdés 5a pont szerinti korrekció
+            '77':
+              help: '77. mező: a Vámhatóság által megállapított, befizetésre váró
+                import ÁFA.'
+              label: Eredmény - Vámhatóság által megállapított, befizetésre váró import
+                ÁFA
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Az az adóév, amelyre az önbevallás vonatkozik.
+              label: Az önbevallás adóéve
+            x-chim6r1ee1in4qbfchng:
+              help: 'Az önbevallás negyedéves időszaka: 1T, 2T, 3T vagy 4T.'
+              label: Negyedéves időszak
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: Fordított adózás alá tartozó belföldi ügyleteknél levonható önadózott
+                ÁFA.
+              label: Levonható fordított adózású ÁFA belföldi ügyleteknél
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: Fordított adózás alá tartozó belföldi ügyleteknél keletkezett
+                önadózott ÁFA.
+              label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: Fordított adózás keretében önadózott ÁFA összeg Közösségen belüli
+                beszerzéseknél.
+              label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: Közösségen belüli termék- és szolgáltatásbeszerzéseknél levonható
+                önadózott ÁFA.
+              label: Levonható fordított adózású ÁFA Közösségen belüli beszerzéseknél
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: Közösségen belüli termék- és szolgáltatásbeszerzéseknél keletkezett
+                önadózott ÁFA.
+              label: Keletkezett fordított adózású ÁFA Közösségen belüli beszerzéseknél
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: Adja össze a Közösségen belüli beszerzések után önszámlázással
+                keletkezett adóalapot.
+              label: Keletkezett fordított adózású ÁFA adóalapja Közösségen belüli
+                beszerzéseknél
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: Korábbi időszakokból fennmaradó ÁFA összegek, amelyeket ebben
+                az időszakban alkalmaznak.
+              label: Ebben az időszakban alkalmazott korábbi időszaki beszámítások
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: Későbbi időszakokra átvihető, az időszak végén rendelkezésre álló
+                ÁFA beszámítási egyenleg.
+              label: Időszak végén rendelkezésre álló beszámítási egyenleg
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: Az adott időszak önbevallása által keletkeztetett ÁFA beszámítási
+                egyenleg.
+              label: Ebben az időszakban keletkezett beszámítási egyenleg
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: Korábbi időszakokból fennmaradó, beszámításra váró ÁFA összegek.
+              label: Korábbi időszakokból fennmaradó beszámítandó összegek
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: Korábbi időszaki ÁFA beszámítások, amelyek későbbi időszakokra
+                fennmaradnak.
+              label: Későbbi időszakokra fennmaradó korábbi beszámítások
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: Összes levonható ÁFA összeg, beleértve a belföldi előzetesen felszámított
+                ÁFÁ-t és a levonható fordított adózású ÁFÁ-t.
+              label: Összes levonható ÁFA összeg
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: Összes keletkezett ÁFA összeg, beleértve a felszámított ÁFÁ-t
+                és az alkalmazandó fordított adózású ÁFÁ-t.
+              label: Összes keletkezett ÁFA összeg
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: Az általános levonási hányad százaléka, a levonási jogot keletkeztető
+                volumen és a teljes volumen alapján.
+              label: Általános levonási hányad százaléka
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: Az éves ügyletvolumen, amely ÁFA-levonási jogot keletkeztet.
+              label: Levonási jogot keletkeztető éves ügyletvolumen
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: Az általános levonási hányad számításához használt teljes éves
+                ügyletvolumen.
+              label: Teljes éves ügyletvolumen
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: Beruházási javakhoz kapcsolódó ÁFA-korrekció.
+              label: Beruházási javak korrekciója
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: Az általános 21%-os kulccsal kiszámított teljes felszámított ÁFA.
+              label: Felszámított ÁFA összeg általános kulccsal (21%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: A 10%-os csökkentett kulccsal kiszámított teljes felszámított
+                ÁFA.
+              label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: A 4%-os szupercsökkentett kulccsal kiszámított teljes felszámított
+                ÁFA.
+              label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: Az általános rendszer eredménye, a keletkezett ÁFA és a levonható
+                ÁFA különbségeként számítva.
+              label: Általános rendszer eredménye
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: Folyó áruk importján előzetesen felszámított levonható ÁFA.
+              label: Levonható előzetesen felszámított ÁFA folyó áruk importján
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: A belföldi termékbeszerzések és szolgáltatásigénybevételek után
+                fizetett, levonható ÁFA.
+              label: Levonható ÁFA összeg belföldi folyó ügyletek után
+          field:
+            label: null

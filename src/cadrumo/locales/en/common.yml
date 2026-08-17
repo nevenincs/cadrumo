@@ -1,0 +1,795 @@
+aggregation:
+  grouping:
+    errors:
+      unsupported_modelo: No aggregation contract is registered for the requested
+        modelo.
+  invoice_retencion:
+    errors:
+      euro_figures_unavailable_after_defect_sweep: Euro figures are unavailable on
+        an invoice that passed the defect sweep.
+      perceptor_tax_id_unavailable_after_defect_sweep: The perceptor tax identifier
+        is unavailable on an invoice that passed the defect sweep.
+      projection_defects_repeat: An invoice retención projection repeats the same
+        defect.
+      projection_outcome_ambiguous: An invoice retención projection must carry either
+        an observation or defects, never both and never neither.
+  irnr_income_ledger:
+    diagnostics:
+      foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} is foreign-source;
+        TRLIRNR Art. 13 excludes it from the Modelo 210 Spanish-source gross-income
+        projection.
+      incomplete_m210_classification: Spanish-source incoming transaction has no explicit
+        Modelo 210 income classification; the IRNR projection never infers an official
+        tipo-renta code from irpf_category.
+      source_jurisdiction_unresolved: source_jurisdiction is unresolved (None) on
+        an incoming Modelo 210 candidate; TRLIRNR Art. 13 admits only Spanish-source
+        income to this IRNR projection.
+      tipo_renta_code_not_declared: Modelo 210 official tipo-renta code %{tipo_renta_code}
+        is not declared for the selected revision and filing period %{period}.
+    errors:
+      official_tipo_renta_parameter_count: Modelo 210 revision %{revision_id} must
+        declare exactly one official tipo-renta code parameter.
+  iva_ledger:
+    errors:
+      bucket_mismatch: Transaction repository bucket does not match the requested
+        aggregation bucket.
+      candidate_outside_period: 'Internal error: IVA candidate falls outside the aggregation
+        period.'
+      differentiated_sector_inactive_for_filing_year: A differentiated sector is inactive
+        for the filing year.
+      differentiated_sector_without_filing_year_entry: A differentiated sector has
+        no register entry for the filing year.
+      differentiated_sector_without_provisional_percentage: A differentiated sector
+        has no resolved provisional percentage.
+      domestic_identification_on_intra_community_transaction: A Spanish VAT identification
+        is not valid for an intra-community transaction.
+      eu_member_state_on_export_transaction: Export or export-assimilated operations
+        must not carry an EU member state; got %{member_state}.
+      injected_repositories_missing_bienes_inversion_authority: Injected IVA repositories
+        require an explicit bienes de inversión authority.
+      input_facts_missing_deduction_authority: Input IVA facts require an exact deduction
+        authority.
+      investment_observations_missing_bienes_inversion_authority: Investment IVA observations
+        require the explicit bienes de inversión register and a matching profile authority.
+      missing_counterparty_establishment_on_export: An export is exempt because the
+        operation leaves the Union, so it turns on where the counterparty is ESTABLISHED.
+        Record the counterparty's country; an absent or unassigned code establishes
+        nothing, and its VAT identification cannot answer this.
+      missing_counterparty_identification_state: An intra-community transaction requires
+        the Member State in which the counterparty is VAT-identified.
+      output_facts_carry_deduction_authority: Output IVA facts cannot carry deduction
+        authority.
+      rectification_consumed_more_than_once: A corrected IVA ledger fact may be rectified
+        only once.
+      sectorized_apportionment_duplicate_sectors: The sectorised IVA apportionment
+        declares the same sector more than once.
+      sectorized_especial_missing_input_classification: Sectorised prorrata especial
+        requires an explicit input classification.
+      sectorized_input_inactive_sector: A sectorised IVA input references an inactive
+        sector.
+      sectorized_input_missing_sector_identity: A sectorised IVA input carries no
+        explicit sector identity.
+      sectorized_input_unknown_sector: A sectorised IVA input references an unknown
+        sector.
+      unsupported_iva_category: 'Internal error: unsupported IVA category for aggregation.'
+  m303_arrivals:
+    errors:
+      prorrata_register_contradictory_transition_evidence: The prorrata register records
+        both an option and a revocation for the same year.
+      prorrata_register_incomplete_current_year_declaration: The prorrata register
+        lacks a complete explicit declaration for the current filing year.
+      prorrata_revocacion_without_prior_year_especial: Prorrata especial revocation
+        has no prior-year especial register state for the affected sectors.
+      prorrata_transition_contradictory_evidence: Prorrata especial transition entries
+        contradict the declared transition.
+      prorrata_transition_entry_without_evidence: A prorrata especial transition entry
+        carries no transition evidence.
+      prorrata_transition_evidence_without_declared_transition: Prorrata especial
+        transition evidence was supplied without a declared transition.
+      prorrata_transition_evidence_wrong_filing_year: Prorrata especial transition
+        register evidence belongs to another filing year.
+      prorrata_transition_missing_register_evidence: The declared prorrata especial
+        transition has no supporting register evidence.
+      prorrata_transition_not_applicable_for_period: Prorrata especial transition
+        evidence applies only in the final Modelo 303 period of the year.
+      recipient_fact_disagrees_with_ledger_evidence: The recipient-of-cash-accounting
+        fact does not agree with its supplier-regime ledger evidence.
+      supplier_regime_aggregation_period_mismatch: The IVA aggregation period does
+        not match the requested filing period.
+      supplier_regime_blank_ledger_identity: Supplier-regime arrival evidence contains
+        a blank ledger identity.
+      supplier_regime_duplicate_ledger_evidence: Supplier-regime arrival evidence
+        repeats the same ledger entry.
+      supplier_regime_observations_outside_period: The IVA aggregation carries observations
+        dated outside the requested filing period.
+  modelo_bindings:
+    errors:
+      invoice_line_currency_unconverted: An invoice line is denominated in a foreign
+        currency with no resolved euro rate, so it cannot be declared on this modelo.
+      unsupported_period: Unsupported modelo period for ledger aggregation.
+  oss_ioss:
+    errors:
+      invoice_line_currency_unconverted: An OSS/IOSS invoice line is denominated in
+        a foreign currency with no resolved euro rate, so it cannot be declared on
+        this modelo.
+      invoice_line_rate_kind_unclassifiable: An OSS/IOSS invoice line carries an IVA
+        rate that cannot be classified into a rate tier, so its cuota cannot be declared
+        on this modelo.
+      iva_amount_mismatches_destination_rate: The persisted IVA amount disagrees with
+        the destination member state rate beyond the one-cent tolerance.
+  per_modelo:
+    errors:
+      unsupported_modelo: Unsupported modelo for per-modelo aggregation
+  renta_ledger:
+    errors:
+      annual_period_required: Annual period is required for Renta ledger aggregation.
+      bucket_mismatch: Transaction repository bucket does not match the requested
+        Renta ledger bucket.
+      invoice_bucket_mismatch: Invoice repository bucket does not match the requested
+        Renta ledger bucket.
+      modelo_mismatch: Tax model does not match the expected Renta ledger model.
+      period_mismatch: Period does not match the expected Renta ledger period.
+      quarterly_period_required: Quarterly period is required for M130 income aggregation
+        (e.g. 2024Q1).
+      unsupported_period: Annual period is required for Modelo 100 income aggregation
+        (e.g. 2024-0A).
+  retenciones:
+    errors:
+      filing_year_out_of_range: Filing year %{filing_year} is outside the supported
+        range %{min_year}-%{max_year}.
+      invoice_retencion_collision: Retención observation(s) for invoice(s) %{source_object_ids}
+        were declared both manually and by --received-invoice-retencion; remove the
+        duplicate before aggregating.
+      perceptor_nif_blank: Perceptor NIF must not be blank.
+      perceptor_observations_missing: No per-perceptor retention observations exist
+        for modelo %{modelo} %{filing_year} %{period}; source %{source_kind} cannot
+        resolve.
+  service:
+    errors:
+      currency_conversion_required: Foreign-currency amount requires an EUR conversion
+        before it can be aggregated.
+      envelope_modelo_mismatch: Aggregation modelo does not match result modelo.
+      envelope_period_mismatch: Aggregation period does not match result period.
+      envelope_provider_payload_mismatch: Provider does not match aggregation payload
+        type.
+      observations_mismatch: Observations cannot be supplied for the requested modelo.
+      per_modelo_modelos_not_unique: Per-modelo aggregation modelos must be owned
+        by exactly one provider.
+      per_modelo_providers_not_unique: Per-modelo aggregation providers must be unique.
+      provider_modelos_not_unique: Provider modelos must be unique.
+      result_source_kinds_not_unique: Result source kinds must be unique.
+      source_kinds_mismatch: Source kinds must match the accepted four-kind taxonomy.
+  source_mesh:
+    errors:
+      ambiguous_source_disposition: 'Internal error: binding source kind {source_kind}
+        is in more than one source-mesh disposition state, or in none.'
+      annual_summary_handoff_duplicate: More than one resolver supplied the immutable
+        Modelo 303 annual-summary handoff (first {first_resolver}; second {second_resolver}).
+      binding_source_mismatch: source_kind and binding_source refer to different binding-source
+        families.
+      duplicate_binding_owner: 'Internal error: duplicate binding owner in source
+        mesh.'
+      duplicate_bound_casilla_owner: 'Internal error: duplicate bound-casilla owner
+        in source mesh.'
+      duplicate_relation_owner: 'Internal error: duplicate relation owner in source
+        mesh.'
+      duplicate_row_binding_owner: 'Internal error: duplicate row-binding owner in
+        the source mesh.'
+      out_of_window_summary_date_span_invalid: An out-of-window summary's maximum
+        filing date must not precede its minimum filing date.
+      out_of_window_summary_incomplete: An out-of-window summary must set the count,
+        minimum filing date, and maximum filing date together.
+      owned_sources_blank: Source mesh owned sources must not contain blank source
+        kinds.
+      owned_sources_duplicate: Source mesh owned sources must be unique.
+      relation_provenance_incomplete: Relation provenance must include source modelo,
+        filing year, periods, casillas, legal refs, and source refs.
+      row_binding_index_invalid: 'Internal error: the row-binding row index must be
+        1 or greater.'
+      row_binding_value_invalid: 'Internal error: the row-binding decimal value is
+        not valid.'
+      source_transaction_ids_blank: Source mesh transaction ids must not contain blanks.
+      source_transaction_ids_duplicate: Source mesh transaction ids must be unique.
+      unresolved_binding_ids_blank: 'Internal error: unresolved binding ids cannot
+        be blank.'
+      unresolved_binding_ids_duplicate: 'Internal error: unresolved binding ids cannot
+        be duplicated.'
+      unresolved_relation_ids_blank: 'Internal error: unresolved relation ids cannot
+        be blank.'
+      unresolved_relation_ids_duplicate: 'Internal error: unresolved relation ids
+        cannot be duplicated.'
+auth:
+  catalogue:
+    certificate_description: X.509 client certificate authentication (FNMT-RCM or
+      any recognised authority). Supports every Sede flow.
+    certificate_label: Digital certificate
+    clave_movil_description: Push-approval authentication via the holder's phone registered
+      with Cl@ve. Requires DNI/NIE, Cl@ve enrolment, and a paired device.
+    clave_movil_label: Cl@ve Móvil
+    clave_permanente_description: DNI/NIE and password authentication via the Cl@ve
+      Permanente identity provider. Headless-automatable for AEAT read paths; requires
+      DNI/NIE and password.
+    clave_permanente_label: Cl@ve Permanente
+    clave_pin_description: Reserved closed provider slot for Cl@ve PIN.
+    clave_pin_label: Cl@ve PIN
+    dnie_pkcs_description: Reserved closed provider slot for DNI-e PKCS.
+    dnie_pkcs_label: DNI-e PKCS
+categories:
+  registry:
+    amortizacion_vivienda_afecto:
+      label: Depreciation of home used for business
+      notes: Deductible in proportion to the home's business-use floor area (Ley 35/2006
+        art. 30.2.5.b rule 4, depreciation of the home used for business).
+    arrendamiento_local:
+      label: Business premises rent
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1).
+    arrendamiento_vivienda_afecta: Business-use share of home rent
+    arrendamiento_vivienda_afecto:
+      notes: Deductible in proportion to the home's business-use floor area (Ley 35/2006
+        art. 29.2 and art. 28.1, rent of the home used for business).
+    asesoria_contable:
+      label: Accounting advisory fees
+      notes: Fully deductible expense, as an independent professional service (Ley
+        35/2006 art. 28.1).
+    asesoria_fiscal:
+      label: Tax advisory fees
+      notes: Fully deductible expense, as an independent professional service (Ley
+        35/2006 art. 28.1).
+    asesoria_juridica:
+      label: Legal advisory fees
+      notes: Fully deductible expense, as an independent professional service (Ley
+        35/2006 art. 28.1).
+    comunidad_vivienda_afecto:
+      label: Community/condo fees on home used for business
+      notes: Deductible in proportion to the home's business-use floor area (Ley 35/2006
+        art. 30.2.5.b rule 2, home-ownership costs).
+    cuotas_autonomos_ss:
+      notes: Fully deductible expense; RETA contributions are a statutory condition
+        of carrying on the activity.
+    cuotas_colegiales:
+      label: Professional association fees
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1).
+    cuotas_reta: Self-employed social security contributions (RETA)
+    formacion_profesional:
+      label: Professional training
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
+    gastos_bancarios:
+      label: Bank charges
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1, financial and banking
+        expenses).
+    gastos_financieros:
+      label: Financial expenses
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1, financial and banking
+        expenses).
+    hardware_amortizable:
+      label: Depreciable computer hardware
+      notes: Fully deductible through depreciation (Ley 35/2006 art. 28.1, depreciation
+        of fixed assets).
+    home_office_agua: Home-office water
+    home_office_gas: Home-office gas
+    home_office_internet: Home-office internet
+    home_office_luz: Home-office electricity
+    ibi_local_afecto:
+      label: Property tax (IBI) on business premises
+      notes: Fully deductible expense (Ley 35/2006 art. 14 LIS, by reference; fiscally
+        deductible taxes).
+    ibi_vivienda_afecto:
+      label: Property tax (IBI) on home used for business
+      notes: Deductible in proportion to the home's business-use floor area (Ley 35/2006
+        art. 30.2.5.b rule 2, non-state taxes on the home).
+    manutencion_dietas_extranjero:
+      notes: 'Deductible up to a statutory daily cap: 48.08 EUR/day without an overnight
+        stay, 91.35 EUR/day with an overnight stay (Ley 6/2017 / Ley IRPF art. 30.2.5.c,
+        Reglamento IRPF art. 9.A.3.a).'
+      statutory_cap_variants:
+        con-pernocta:
+          label: With overnight stay
+        sin-pernocta:
+          label: Without overnight stay
+    manutencion_dietas_nacional:
+      notes: 'Deductible up to a statutory daily cap: 26.67 EUR/day without an overnight
+        stay, 53.34 EUR/day with an overnight stay (Ley 6/2017 / Ley IRPF art. 30.2.5.c,
+        Reglamento IRPF art. 9.A.3.a).'
+      statutory_cap_variants:
+        con-pernocta:
+          label: With overnight stay
+        sin-pernocta:
+          label: Without overnight stay
+    manutencion_extranjero: Foreign subsistence allowance (meals and stay)
+    manutencion_nacional: Domestic subsistence allowance (meals and stay)
+    material_oficina:
+      label: Office supplies
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1).
+    mobiliario_amortizable:
+      label: Depreciable furniture
+      notes: Fully deductible through depreciation (Ley 35/2006 art. 28.1, depreciation
+        of fixed assets).
+    mutualidad_alternativa:
+      label: Alternative mutual-insurance contribution
+      notes: Deductible up to a statutory cap of 15,000 EUR/year per taxpayer, for
+        an alternative mutualidad replacing RETA (AEAT Renta guide, Cotizaciones al
+        RETA).
+    publicidad_marketing:
+      label: Advertising and marketing
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
+    reparaciones_conservacion:
+      label: Repairs and maintenance
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1).
+    seguros_rc: Professional civil-liability insurance
+    seguros_responsabilidad_civil:
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1).
+    seguros_salud: Self-employed health insurance
+    seguros_salud_autonomo:
+      notes: Deductible up to a statutory cap of 500 EUR/year per taxpayer (Ley 35/2006
+        art. 30.2.5.c rule 1, sickness-insurance premiums).
+    software_suscripcion:
+      label: Software subscriptions
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1).
+    subcontratacion:
+      label: Subcontracting fees
+      notes: Fully deductible expense, as an independent professional service (Ley
+        35/2006 art. 28.1).
+    suministros_cliente_directos:
+      label: Supplies billed directly to the client
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1).
+    suministros_home_office_agua:
+      notes: Deductible in proportion to the home's business-use floor area (default
+        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
+        art. 30.2.5.b rule 4).
+    suministros_home_office_gas:
+      notes: Deductible in proportion to the home's business-use floor area (default
+        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
+        art. 30.2.5.b rule 4).
+    suministros_home_office_internet:
+      notes: Deductible in proportion to the home's business-use floor area (default
+        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
+        art. 30.2.5.b rule 4).
+    suministros_home_office_luz:
+      notes: Deductible in proportion to the home's business-use floor area (default
+        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
+        art. 30.2.5.b rule 4).
+    suministros_local_afecto:
+      label: Utilities for business premises
+      notes: 'Fully deductible expense: the premises where the activity is carried
+        on are business assets (Ley 35/2006 art. 29.1.a) and their utilities are deductible
+        expense (art. 28.1). The 30 per cent rule of art. 30.2.5.b does not apply,
+        as it covers only a home partly used for the activity.'
+    telefonia_fija:
+      label: Landline phone expense
+      notes: Deductible in proportion to the home's business-use floor area (default
+        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
+        art. 30.2.5.b rule 4).
+    telefonia_movil:
+      label: Mobile phone expense
+      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
+        exclusive affectation of the asset).
+    tributos_deducibles: Other fiscally deductible taxes and levies
+    tributos_fiscalmente_deducibles:
+      notes: Fully deductible expense (Ley 35/2006 art. 14 LIS, by reference).
+    vehiculo_combustible:
+      label: Vehicle fuel
+      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
+        exclusive affectation of the vehicle).
+    vehiculo_mantenimiento:
+      label: Vehicle maintenance
+      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
+        exclusive affectation of the vehicle).
+    vehiculo_parking:
+      label: Parking charges
+      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
+        exclusive affectation of the vehicle).
+    vehiculo_peaje:
+      label: Toll charges
+      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
+        exclusive affectation of the vehicle).
+    vehiculo_seguro:
+      label: Vehicle insurance
+      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
+        exclusive affectation of the vehicle).
+    viajes_alojamiento:
+      label: Travel accommodation
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
+    viajes_transporte:
+      label: Travel transport
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
+core:
+  profile:
+    errors:
+      output_language_type: The profile output language must be a supported language
+        code in text form.
+      registration_duplicate_callable: Project answers implementation registered twice
+        with different callables; it must be registered exactly once.
+entries:
+  portal_calendario_contribuyente:
+    label: Taxpayer Calendar
+    purpose: Annual calendar of tax deadlines and obligations.
+  portal_cert_selection:
+    label: Electronic Certificate Selection
+    notes:
+      '0': The browser must have the certificate installed in its store.
+    purpose: Gateway for selecting the digital certificate used to authenticate.
+  portal_cert_validation_rest:
+    label: Electronic Certificate Validation
+    purpose: Service that checks the validity of digital certificates.
+  portal_clave_gestiones:
+    label: Cl@ve PIN - Procedures
+    purpose: Management and issuance of the temporary Cl@ve PIN credential.
+  portal_clave_idp_root:
+    label: Cl@ve - Electronic Identification
+    purpose: Cl@ve identity provider for authentication with the AEAT.
+  portal_clave_sede_entry:
+    label: Sign in with Cl@ve
+    purpose: Electronic Office entry point using the Cl@ve system.
+  portal_consulta_pagos:
+    label: Payment and Refund Lookup
+    purpose: Review of the status of tax payments and refunds.
+  portal_dnie_sede_entry:
+    label: Sign in with the Electronic ID Card
+    purpose: Electronic Office entry point using the Spanish electronic ID card.
+  portal_domiciliacion_bancaria:
+    label: Set Up Direct Debit for Payments
+    purpose: Direct-debit setup for self-assessments and tax payments.
+  portal_m036_censal:
+    label: Form 036 - Censo Declaration
+    purpose: Registration, amendment and deregistration in the censo of businesses
+      and professionals.
+  portal_m037_censal_simplificada:
+    label: Form 037 - Simplified Censo Declaration (retired)
+    notes:
+      '0': Abolished by Order HAC/1526/2024, effective from 2025-02-03.
+      '1': Use Form 036 for any subsequent censo procedure.
+    purpose: Simplified censo declaration for sole traders, abolished in 2025.
+  portal_m100_renta:
+    label: Form 100 - Personal Income Tax Return
+    purpose: Annual personal income tax (IRPF) return.
+  portal_m111_retenciones_trabajo:
+    label: Form 111 - Withholdings on Employment Income
+    purpose: Self-assessment of IRPF withholdings and payments on account for employment
+      income.
+  portal_m115_retenciones_arrendamientos:
+    label: Form 115 - Withholdings on Property Rental
+    purpose: Self-assessment of IRPF withholdings on urban property rentals.
+  portal_m123_retenciones_capital:
+    label: Form 123 - Withholdings on Investment Income
+    purpose: Self-assessment of IRPF withholdings on investment income.
+  portal_m130_pago_fraccionado_ed:
+    label: Form 130 - IRPF Instalment Payment (direct assessment)
+    purpose: Quarterly IRPF instalment payment for sole traders under direct assessment.
+  portal_m131_pago_fraccionado_eo:
+    label: Form 131 - IRPF Instalment Payment (objective assessment)
+    purpose: Quarterly IRPF instalment payment for sole traders under objective assessment
+      (modules).
+  portal_m180_resumen_arrendamientos:
+    label: Form 180 - Annual Summary of Property Rentals
+    purpose: Annual summary of withholdings on urban property rentals.
+  portal_m190_resumen_trabajo:
+    label: Form 190 - Annual Summary of Employment Withholdings
+    purpose: Annual summary of withholdings and payments on account for employment
+      income.
+  portal_m193_resumen_capital:
+    label: Form 193 - Annual Summary of Investment Withholdings
+    purpose: Annual summary of withholdings on investment income.
+  portal_m200_sociedades_anual:
+    label: Form 200 - Corporate Income Tax Return
+    purpose: Annual corporate income tax return.
+  portal_m202_sociedades_fraccionado:
+    label: Form 202 - Corporate Income Tax Instalment Payment
+    purpose: Instalment payment on account of corporate income tax.
+  portal_m232_vinculadas:
+    label: Form 232 - Related-Party Transactions
+    purpose: Informational return of transactions with related persons or entities.
+  portal_m303_iva_autoliquidacion:
+    label: Form 303 - IVA Self-Assessment
+    purpose: Periodic IVA self-assessment.
+  portal_m347_operaciones_terceros:
+    label: Form 347 - Transactions with Third Parties
+    purpose: Annual informational return of transactions with third parties above
+      EUR 3,005.06.
+  portal_m349_intracomunitarias:
+    label: Form 349 - Intra-Community Transactions
+    purpose: Recapitulative statement of intra-Community supplies of goods and services.
+  portal_m369_oss_ioss:
+    label: Form 369 - IVA One-Stop Shop (OSS/IOSS)
+    purpose: IVA self-assessment under the OSS and IOSS one-stop-shop schemes.
+  portal_m390_resumen_iva:
+    label: Form 390 - Annual IVA Summary
+    purpose: Annual summary return for IVA.
+  portal_m720_bienes_extranjero:
+    label: Form 720 - Assets and Rights Held Abroad
+    purpose: Informational return of assets and rights located abroad.
+  portal_m840_iae:
+    label: Form 840 - Tax on Economic Activities
+    purpose: Return for the tax on economic activities (IAE).
+  portal_mi_area_personal:
+    label: My Personal Area
+    purpose: Authenticated taxpayer personal area in the Electronic Office.
+  portal_mis_documentos_pendientes_firma:
+    label: Documents Awaiting Signature
+    purpose: Signature portfolio with documents awaiting electronic signature.
+  portal_mis_expedientes:
+    label: My Case Files
+    purpose: Review of the status of the taxpayer's case files and procedures.
+  portal_mis_notificaciones:
+    label: My Notifications
+    purpose: Electronic mailbox for AEAT notifications and communications.
+  portal_pago_autoliquidacion_cuenta:
+    label: Pay Self-Assessment by Bank Account Charge
+    purpose: Payment of self-assessments by charge to a bank account.
+  portal_pago_autoliquidacion_tarjeta_bizum:
+    label: Pay Self-Assessment by Card or Bizum
+    purpose: Payment of self-assessments by bank card or Bizum.
+  portal_pago_liquidaciones_deudas:
+    label: Pay Assessments and Debts
+    purpose: Payment of assessments raised by the AEAT and tax debts.
+  portal_pre303_ayuda:
+    label: Pre303 - Form 303 Assistance Service
+    purpose: Pre303 assistance service for preparing the Form 303 draft.
+  portal_presentar_consultar_index:
+    label: File and Review Tax Returns
+    purpose: Index of forms for filing or reviewing tax returns.
+  portal_renta_web_borrador:
+    label: Renta WEB - Income Tax Draft
+    notes:
+      '0': The draft is generated from the tax data held by the AEAT.
+    purpose: Renta WEB service to review and file the personal income tax draft.
+  portal_sede_root:
+    label: AEAT Electronic Office
+    purpose: Landing page of the AEAT Electronic Office.
+filing:
+  validation:
+    deadline_missed: Submission deadline has passed
+    formula_divergence: Divergence in formula calculation
+    out_of_range: Value out of allowed range
+    required_missing: Required field missing
+    schema_mismatch: Mismatch with expected schema
+ledger:
+  evidence:
+    reader:
+      operation_failed: Evidence reader operation failed
+live:
+  errors:
+    expediente_not_found: AEAT declaration register did not return the requested expediente.
+    iva_history_modelo_303_only: IVA compensation history pull only accepts Modelo
+      303 observations.
+    target_period_year_mismatch: The target year does not match the target period's
+      filing year.
+    year_range_invalid: From-year must be less than or equal to to-year.
+  filed:
+    pull:
+      submitted_file_extraction_failed: 'Modelo {modelo} filing {period} {ejercicio}
+        (expediente {expediente_id}) could not be read through its submitted-file
+        layout. The declaration-PDF fallback, if AEAT provided it, remains the only
+        extraction path. Parser reason: {reason}'
+    pull_all:
+      denominator_note_profile: Measured against {expected} pair(s) the taxpayer's
+        own declared facts expect. A further {offered_only} pair(s) came only from
+        AEAT's offered option list and support no coverage claim.
+      denominator_note_register_only: 'No taxpayer-specific denominator: all {offered_only}
+        walked pair(s) came from AEAT''s offered option list, whose scoping to this
+        NIF is unconfirmed. This run measures nothing.'
+      expected_but_not_found: 'Your declared profile expects a filing for {count}
+        modelo/ejercicio pair(s) where AEAT''s register returned none: {pairs}. Check
+        whether these were filed.'
+      found_more_than_expected: AEAT's register holds {raw_count} filings for modelo
+        {modelo} {period} {ejercicio}; the most recent registration ({expediente})
+        was kept and {superseded} earlier one(s) were superseded.
+      recapture_divergence: 'Re-capturing modelo {modelo} {period} {ejercicio} changed
+        {count} previously observed casilla value(s): {casillas}. AEAT may hold a
+        corrected filing.'
+llm:
+  evidence:
+    consent:
+      dispatch_refused: 'Refused: this request reads a taxpayer document and would
+        send it to the off-host provider %{provider} without a per-invocation consent
+        acknowledgement.'
+      mint_refused: 'Refused: off-host reading of taxpayer evidence is not permitted
+        for this invocation.'
+mcp:
+  call:
+    timeout: '''{command}'' exceeded the {tier}-tier time limit ({seconds}s) and was
+      cancelled. Retry, or run the equivalent aeat command directly in a terminal.'
+    timeout_may_complete: '''{command}'' exceeded its time limit; the operation may
+      still be completing in the background. Re-run it with the same idempotency key
+      to check - the idempotency guard makes the retry safe and never double-writes.'
+  elicitation:
+    confirm:
+      consequence_handoff: This produces the filing-grade artefact the taxpayer will
+        file with AEAT themselves. Nothing is submitted anywhere by confirming.
+      consequence_local: This changes local data for the active taxpayer profile.
+      declined: '''{command}'' was not confirmed by the user ({outcome}); nothing
+        was run.'
+      field_description: Run '{command}' now?
+      message: Confirm running '{command}'. {consequence} Answer yes to proceed or
+        no to stop.
+    refusal:
+      blocked: '''{command}'' is permanently blocked: live submission to AEAT is forbidden
+        by design. Export locally; the taxpayer files themselves.'
+      no_channel: '''{command}'' needs a human confirmation, and this client does
+        not support elicitation. Run it from a client that can ask you questions,
+        or run the equivalent Cadrumo CLI (`aeat`) command directly in a terminal.'
+  faithfulness:
+    advisory: 'FAITHFULNESS ADVISORY: the call''s arguments cite amount(s) [{values}]
+      that no tool result in this session produced. Verify the figure against a calculate/revision
+      read before relying on it.'
+  harness:
+    off_host_consent: 'Privacy notice - read before continuing. This console is operated
+      by an AI assistant running on your chosen LLM provider. Your words, and the
+      figures the assistant works with (amounts, casilla values, obligations), are
+      sent to that provider to operate the console. Your SOURCE DOCUMENTS - invoices,
+      bank statements, and any evidence bytes - NEVER leave your machine: they stay
+      in encrypted local storage and are never transmitted. If you are acting for
+      a third party (a gestor or professional), confirm this is acceptable before
+      you proceed.'
+  identity_gate:
+    elicitation_echo: 'Acting as the taxpayer profile: %{label}.'
+    first_mutation_refused: 'Refused: confirm the active taxpayer before the first
+      change of this session. A filing or edit must never run under the wrong identity.
+      Call whoami (or ''config profile status'' / ''overview status'') to see which
+      taxpayer is active, then retry - one identity read clears this for the session
+      until you switch profiles.'
+  persona:
+    handoff_denied: '''{command}'' is the irreversible filing-handoff boundary, owned
+      by the ''{owner}'' persona; the ''{persona}'' persona is structurally denied
+      it. Hand the verified work unit to the verifier session to produce the export
+      or record marker.'
+  serving:
+    warm_degraded: '''{command}'' was served through the subprocess transport because
+      the warm in-process runtime was {reason}; the result is identical, only slower.
+      Warm serving resumes once the slow call clears.'
+overview:
+  no_aeat_history: This profile holds no filing evidence AEAT confirmed.
+  no_aeat_history_sociedades: This profile holds no filing evidence AEAT confirmed.
+    The automated retrieval sweep cannot fetch Impuesto sobre Sociedades filing history
+    (modelo 200/202); check it directly at the AEAT sede.
+provisioning:
+  model:
+    licence:
+      non_commercial_advisory: Model %{model} is covered by the %{licence}, which
+        does not permit commercial use. You named it explicitly, so Cadrumo will use
+        it, but a commercial filing practice needs a separate licence from the publisher.
+review:
+  adapters:
+    errors:
+      drafts_load_failed: Failed to load filing drafts from secure backend.
+      invoices_load_failed: Failed to load invoices catalogue from secure backend.
+      transactions_load_failed: Failed to load transactions catalogue from secure
+        backend.
+  edit:
+    errors:
+      parse_failed: Could not parse the edit token. The supplied value has been redacted.
+  filing:
+    draft_placeholder_summary: Draft pending
+    finding_summary: Validation finding on draft
+    stale_approval_summary: Draft approval is stale
+  filter:
+    errors:
+      parse_failed: Could not parse the filter token. The supplied value has been
+        redacted.
+  invoice:
+    summary: Invoice pending review
+  operator:
+    errors:
+      item_not_found: Review item not found.
+      reserved_kind: Review kind is reserved and is not an emitted review item.
+      unknown_kind: 'Unknown review kind. Accepted --kind values: %{accepted_kinds}.'
+  transaction:
+    summary: Transaction pending classification
+sheets:
+  detalle:
+    headers:
+      acquisition_date: Acquisition date
+      amount: Amount
+      amount_donated: Amount donated
+      asset_class_code: Asset class code
+      asset_identifier: Asset identifier
+      base_imponible: Tax base
+      base_imponible_assigned: Tax base assigned
+      clave: Clave
+      counterparty_legal_name: Counterparty legal name
+      counterparty_tax_id: Counterparty tax id
+      country_code: Country code
+      currency_code: Currency code
+      deduction_percentage: Deduction percentage
+      donor_legal_name: Donor legal name
+      donor_tax_id: Donor tax id
+      ingreso_a_cuenta: In-kind tax credit
+      is_recurrent: Recurrent donation
+      member_legal_name: Member legal name
+      member_state_code: Member state
+      member_tax_id: Member tax id
+      operation_date: Operation date
+      operation_kind_code: Operation kind
+      party_legal_name: Party legal name
+      party_tax_id: Party tax id
+      perceptor_legal_name: Perceptor legal name
+      perceptor_tax_id: Perceptor tax id
+      percibido_dinerario: Cash income
+      percibido_especie: In-kind income
+      rectified_base_previous: Prior base (rectification)
+      rectified_period: Rectified period
+      rectified_year: Rectified year
+      refund_amount: Refund amount
+      retencion_practicada: Withholding applied
+      share_percentage: Share percentage
+      subclave: Subclave
+      supplier_tax_id: Supplier tax id
+      transfer_pricing_method_code: Transfer pricing method
+      valuation_amount: Valuation
+topic:
+  authentication:
+    body: AEAT authentication uses Cl@ve Móvil (push to registered phone) or a digital
+      certificate (FNMT / equivalent). Configure a provider with 'aeat config auth
+      configure --provider certificate' and verify with 'aeat config auth test'.
+    title: Authentication with AEAT
+  calendar:
+    body: The calendar shows filing obligations (modelos and periods) within a range.
+      Requires a profile with an IVA regime declared so the engine does not default
+      silently.
+    title: Obligations calendar
+  casilla:
+    body: A casilla is a numbered field in a modelo. Casillas can be manual, computed,
+      or derived from bindings. 'aeat app modelo casillas <modelo>' lists them.
+    title: Casillas
+  formats:
+    body: The CLI emits output in text, JSON, table, or csv based on '--format'. JSON
+      is recommended for automation; text for human inspection.
+    title: Output formats
+  irpf-regime:
+    body: An autonomo's IRPF regime. Estimación directa (normal or simplified) or
+      estimación objetiva (módulos). Determines which pago-fraccionado modelos apply
+      (130 vs 131).
+    title: IRPF regime
+  iva-regime:
+    body: IVA regime applicable to the taxpayer. General, simplified, recargo de equivalencia,
+      exempt, REAGP, or REBU. Determines the quarterly modelo 303 and the annual summary
+      390.
+    title: IVA regime
+  modelos:
+    body: Catalogue of AEAT tax forms (303, 130, 100, 347, 349, 111, 115, 184, etc.).
+      Each has its own calendar, casillas, and applicability rules. 'aeat app modelo
+      list' enumerates the available ones.
+    title: Tax forms (modelos)
+  pago-fraccionado:
+    body: Quarterly IRPF advance payment for an autonomo. Modelo 130 applies to estimación
+      directa; 131 to estimación objetiva. Calculation uses the quarter's data and,
+      in some cases, the prior year.
+    title: IRPF advance payment
+  profile:
+    body: The local profile carries your tax identifier (NIF/CIF/DNI/NIE), main activity,
+      IVA/IRPF regime, and optional enrolments (SII, Verifactu, intracomunitario).
+      Edit it with 'aeat config profile edit NAME'.
+    title: Taxpayer profile
+  providers:
+    body: Supported authentication providers; each has distinct prerequisites. 'aeat
+      config auth providers' lists them with requirements.
+    title: Authentication providers
+  recargo-extemporaneo:
+    body: Filing after the deadline without prior AEAT notice accrues 1% per month
+      (up to 12%) during the first year and 15% plus interest after 12 months. Legal
+      basis Ley 58/2003 art-27.
+    title: Late-filing surcharge
+  regimens:
+    body: Set of tax regimes applicable to an autonomo. The two main axes are IVA
+      (general, simplified, recargo de equivalencia, exempt) and IRPF (direct, objective).
+    title: Tax regimes
+  sii:
+    body: IVA Suministro Inmediato de Información. It requires taxpayers on monthly
+      IVA settlement, including large companies, IVA groups, and REDEME taxpayers,
+      to keep VAT record books through AEAT Sede.
+    title: SII
+  verifactu:
+    body: RD 1007/2023 requirements for invoicing software systems. The current milestone
+      is 1 January 2027 for Corporate Income Tax taxpayers under art. 3.1.a and 1
+      July 2027 for the other obligated taxpayers under art. 3.1.
+    title: VERI*FACTU
+transactions:
+  import:
+    batch_id_collision: 'Row skipped: it carries the same transaction identifier as
+      another row in this file.'
+    message_053465: Repeated transaction signature within the imported file; both
+      rows import - review for a double-count.
+    message_082074: Duplicate transaction already in ledger.
+    message_185962: The source file contains no valid transactions.
+    message_829073: 'Potential gap: more than 35 days between transactions.'
+    unreadable: Unreadable file or unsupported format
+    verified: Import verified successfully

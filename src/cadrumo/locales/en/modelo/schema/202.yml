@@ -1,0 +1,759 @@
+modelo:
+  schema:
+    '202':
+      casilla:
+        continuidad:
+          is-pf-mod-40-2-a-ingresar:
+            help: null
+            label: Method under art. 40.2 LIS - Payable
+          is-pf-mod-40-2-base-pago-fraccionado:
+            help: null
+            label: Method under art. 40.2 LIS - Instalment payment base
+          is-pf-mod-40-2-resultado-declaracion-anterior:
+            help: null
+            label: Method under art. 40.2 LIS - Result of the previous return (supplementary)
+          is-pf-mod-40-3-amortizacion-30pct-dism:
+            help: null
+            label: Method under art. 40.3 LIS - 30% depreciation expense - Decreases
+          is-pf-mod-40-3-b1-base-pago-fraccionado:
+            help: null
+            label: Method under art. 40.3 LIS, block B1 - General case - Instalment
+              payment base
+          is-pf-mod-40-3-b1-compensacion-cuotas-neg-coop:
+            help: null
+            label: Method under art. 40.3 LIS, block B1 - Offset of negative tax liabilities
+              (cooperatives)
+          is-pf-mod-40-3-b1-dotaciones-art-11-12:
+            help: null
+            label: Method under art. 40.3 LIS, block B1 - Provisions under art. 11.12
+              LIS
+          is-pf-mod-40-3-b1-porcentaje:
+            help: null
+            label: Method under art. 40.3 LIS, block B1 - General case - Percentage
+          is-pf-mod-40-3-b1-reserva-nivelacion-convertida-aum:
+            help: null
+            label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
+              - Increases
+          is-pf-mod-40-3-b1-reserva-nivelacion-convertida-dis:
+            help: null
+            label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
+              - Decreases
+          is-pf-mod-40-3-b1-resultado-previo:
+            help: null
+            label: Method under art. 40.3 LIS, block B1 - General case - Preliminary
+              result
+          is-pf-mod-40-3-b2-base-pago-fraccionado:
+            help: null
+            label: Method under art. 40.3 LIS, block B2 - Instalment payment base
+          is-pf-mod-40-3-b2-base-tipo-1:
+            help: null
+            label: Method under art. 40.3 LIS, block B2 - Base at rate 1
+          is-pf-mod-40-3-b2-base-tipo-2:
+            help: null
+            label: Method under art. 40.3 LIS, block B2 - Base at rate 2
+          is-pf-mod-40-3-b2-compensacion-cuotas-neg-coop:
+            help: null
+            label: Method under art. 40.3 LIS, block B2 - Offset of negative tax liabilities
+              (cooperatives)
+          is-pf-mod-40-3-b2-dotaciones-art-11-12-coop:
+            help: null
+            label: Method under art. 40.3 LIS, block B2 - Provisions under art. 11.12
+              LIS (cooperatives)
+          is-pf-mod-40-3-b2-porcentaje-1:
+            help: null
+            label: Method under art. 40.3 LIS, block B2 - Percentage 1
+          is-pf-mod-40-3-b2-porcentaje-2:
+            help: null
+            label: Method under art. 40.3 LIS, block B2 - Percentage 2
+          is-pf-mod-40-3-b2-reserva-nivelacion-aumentos:
+            help: null
+            label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
+              105 LIS) - Increases
+          is-pf-mod-40-3-b2-reserva-nivelacion-disminuciones:
+            help: null
+            label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
+              105 LIS) - Decreases
+          is-pf-mod-40-3-b2-resultado-previo:
+            help: null
+            label: Method under art. 40.3 LIS, block B2 - Preliminary result
+          is-pf-mod-40-3-base-imponible-previa:
+            help: null
+            label: Method under art. 40.3 LIS - Preliminary taxable base
+          is-pf-mod-40-3-bonificaciones:
+            help: null
+            label: Method under art. 40.3 LIS - Tax credits for the computed period
+          is-pf-mod-40-3-cantidad-a-ingresar:
+            help: null
+            label: Method under art. 40.3 LIS - Amount payable (greater of boxes [32]
+              and [33])
+          is-pf-mod-40-3-compensacion-bases-negativas:
+            help: null
+            label: Method under art. 40.3 LIS - Offset of negative bases from prior
+              tax years
+          is-pf-mod-40-3-correcciones-is-aumentos:
+            help: null
+            label: Method under art. 40.3 LIS - Corporate income tax adjustments -
+              Increases
+          is-pf-mod-40-3-correcciones-is-disminuciones:
+            help: null
+            label: Method under art. 40.3 LIS - Corporate income tax adjustments -
+              Decreases
+          is-pf-mod-40-3-minimo-a-ingresar:
+            help: null
+            label: Method under art. 40.3 LIS - Minimum payable (turnover >= EUR 10
+              million)
+          is-pf-mod-40-3-pagos-previos-territorio-comun:
+            help: null
+            label: Method under art. 40.3 LIS - Instalment payments from prior periods
+              in Common Territory
+          is-pf-mod-40-3-remanente-reserva-capitalizacion:
+            help: null
+            label: Method under art. 40.3 LIS - Capitalisation reserve remainder not
+              applied due to insufficient base
+          is-pf-mod-40-3-reserva-nivelacion-aumentos:
+            help: null
+            label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS) -
+              Increases
+          is-pf-mod-40-3-reserva-nivelacion-disminuciones:
+            help: null
+            label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS) -
+              Decreases
+          is-pf-mod-40-3-resto-correcciones-aumentos:
+            help: null
+            label: Method under art. 40.3 LIS - Other adjustments - Increases
+          is-pf-mod-40-3-resto-correcciones-disminuciones:
+            help: null
+            label: Method under art. 40.3 LIS - Other adjustments - Decreases
+          is-pf-mod-40-3-resultado:
+            help: null
+            label: Method under art. 40.3 LIS - Result
+          is-pf-mod-40-3-resultado-contable:
+            help: null
+            label: Method under art. 40.3 LIS - Accounting result after corporate
+              income tax
+          is-pf-mod-40-3-resultado-declaracion-anterior:
+            help: null
+            label: Method under art. 40.3 LIS - Result of the previous return (supplementary)
+          is-pf-mod-40-3-total-correcciones-aumentos:
+            help: null
+            label: Method under art. 40.3 LIS - TOTAL adjustments - Increases
+          is-pf-mod-40-3-total-correcciones-disminuciones:
+            help: null
+            label: Method under art. 40.3 LIS - TOTAL adjustments - Decreases
+          is-pf-mod-40-3-volumen-territorio-comun-pct:
+            help: null
+            label: Method under art. 40.3 LIS - Volume of transactions in Common Territory
+              (%)
+          retenciones-ingresos-a-cuenta:
+            help: null
+            label: Method under art. 40.3 LIS - Withholdings and payments on account
+              on income for the computed period
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-2022:
+          casilla:
+            '01':
+              help: null
+              label: Method under art. 40.2 LIS - Instalment payment base
+            '02':
+              help: null
+              label: Method under art. 40.2 LIS - Result of the previous return (supplementary)
+            '03':
+              help: null
+              label: Method under art. 40.2 LIS - Payable
+            '04':
+              help: null
+              label: Method under art. 40.3 LIS - Accounting result after corporate
+                income tax
+            '05':
+              help: null
+              label: Method under art. 40.3 LIS - Corporate income tax adjustments
+                - Increases
+            '06':
+              help: null
+              label: Method under art. 40.3 LIS - Corporate income tax adjustments
+                - Decreases
+            '07':
+              help: null
+              label: Method under art. 40.3 LIS - Other adjustments - Increases
+            08:
+              help: null
+              label: Method under art. 40.3 LIS - Other adjustments - Decreases
+            '13':
+              help: null
+              label: Method under art. 40.3 LIS - Preliminary taxable base
+            '14':
+              help: null
+              label: Method under art. 40.3 LIS - Offset of negative bases from prior
+                tax years
+            '16':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - General case - Instalment
+                payment base
+            '17':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - General case - Percentage
+            '18':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - General case - Preliminary
+                result
+            '19':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment base
+            '20':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Base at rate 1
+            '21':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Percentage 1
+            '22':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
+                rate 1
+            '23':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Base at rate 2
+            '24':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Percentage 2
+            '25':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
+                rate 2
+            '26':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Preliminary result
+            '27':
+              help: null
+              label: Method under art. 40.3 LIS - Tax credits for the computed period
+            '28':
+              help: null
+              label: Method under art. 40.3 LIS - Withholdings and payments on account
+                on income for the computed period
+            '29':
+              help: null
+              label: Method under art. 40.3 LIS - Volume of transactions in Common
+                Territory (%)
+            '30':
+              help: null
+              label: Method under art. 40.3 LIS - Instalment payments from prior periods
+                in Common Territory
+            '31':
+              help: null
+              label: Method under art. 40.3 LIS - Result of the previous return (supplementary)
+            '32':
+              help: null
+              label: Method under art. 40.3 LIS - Result
+            '33':
+              help: null
+              label: Method under art. 40.3 LIS - Minimum payable (turnover >= EUR
+                10 million)
+            '34':
+              help: null
+              label: Method under art. 40.3 LIS - Amount payable (greater of boxes
+                [32] and [33])
+            '37':
+              help: null
+              label: Method under art. 40.3 LIS - 30% depreciation expense - Decreases
+            '38':
+              help: null
+              label: Method under art. 40.3 LIS - TOTAL adjustments - Increases
+            '39':
+              help: null
+              label: Method under art. 40.3 LIS - TOTAL adjustments - Decreases
+            '40':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - Offset of negative tax
+                liabilities (cooperatives)
+            '42':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Offset of negative tax
+                liabilities (cooperatives)
+            '44':
+              help: null
+              label: Method under art. 40.3 LIS - Capitalisation reserve remainder
+                not applied due to insufficient base
+            '45':
+              help: null
+              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
+                - Increases
+            '46':
+              help: null
+              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
+                - Decreases
+            '47':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - Provisions under art.
+                11.12 LIS
+            '48':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
+                - Increases
+            '49':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
+                - Decreases
+            '50':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Provisions under art.
+                11.12 LIS (cooperatives)
+            '51':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
+                105 LIS) - Increases
+            '52':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
+                105 LIS) - Decreases
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
+              help: null
+              label: null
+          construct:
+            modelo-202-2019-2022-foundation:
+              field:
+                title: null
+          field:
+            label: null
+        2023-2024:
+          casilla:
+            '01':
+              help: null
+              label: Method under art. 40.2 LIS - Instalment payment base
+            '02':
+              help: null
+              label: Method under art. 40.2 LIS - Result of the previous return (supplementary)
+            '03':
+              help: null
+              label: Method under art. 40.2 LIS - Payable
+            '04':
+              help: null
+              label: Method under art. 40.3 LIS - Accounting result after corporate
+                income tax
+            '05':
+              help: null
+              label: Method under art. 40.3 LIS - Corporate income tax adjustments
+                - Increases
+            '06':
+              help: null
+              label: Method under art. 40.3 LIS - Corporate income tax adjustments
+                - Decreases
+            '07':
+              help: null
+              label: Method under art. 40.3 LIS - Other adjustments - Increases
+            08:
+              help: null
+              label: Method under art. 40.3 LIS - Other adjustments - Decreases
+            '13':
+              help: null
+              label: Method under art. 40.3 LIS - Preliminary taxable base
+            '14':
+              help: null
+              label: Method under art. 40.3 LIS - Offset of negative bases from prior
+                tax years
+            '16':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - General case - Instalment
+                payment base
+            '17':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - General case - Percentage
+            '18':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - General case - Preliminary
+                result
+            '19':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment base
+            '20':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Base at rate 1
+            '21':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Percentage 1
+            '22':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
+                rate 1
+            '23':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Base at rate 2
+            '24':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Percentage 2
+            '25':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
+                rate 2
+            '26':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Preliminary result
+            '27':
+              help: null
+              label: Method under art. 40.3 LIS - Tax credits for the computed period
+            '28':
+              help: null
+              label: Method under art. 40.3 LIS - Withholdings and payments on account
+                on income for the computed period
+            '29':
+              help: null
+              label: Method under art. 40.3 LIS - Volume of transactions in Common
+                Territory (%)
+            '30':
+              help: null
+              label: Method under art. 40.3 LIS - Instalment payments from prior periods
+                in Common Territory
+            '31':
+              help: null
+              label: Method under art. 40.3 LIS - Result of the previous return (supplementary)
+            '32':
+              help: null
+              label: Method under art. 40.3 LIS - Result
+            '33':
+              help: null
+              label: Method under art. 40.3 LIS - Minimum payable (turnover >= EUR
+                10 million)
+            '34':
+              help: null
+              label: Method under art. 40.3 LIS - Amount payable (greater of boxes
+                [32] and [33])
+            '37':
+              help: null
+              label: Method under art. 40.3 LIS - 30% depreciation expense - Decreases
+            '38':
+              help: null
+              label: Method under art. 40.3 LIS - TOTAL adjustments - Increases
+            '39':
+              help: null
+              label: Method under art. 40.3 LIS - TOTAL adjustments - Decreases
+            '40':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - Offset of negative tax
+                liabilities (cooperatives)
+            '42':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Offset of negative tax
+                liabilities (cooperatives)
+            '44':
+              help: null
+              label: Method under art. 40.3 LIS - Capitalisation reserve remainder
+                not applied due to insufficient base
+            '45':
+              help: null
+              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
+                - Increases
+            '46':
+              help: null
+              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
+                - Decreases
+            '47':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - Provisions under art.
+                11.12 LIS
+            '48':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
+                - Increases
+            '49':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
+                - Decreases
+            '50':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Provisions under art.
+                11.12 LIS (cooperatives)
+            '51':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
+                105 LIS) - Increases
+            '52':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
+                105 LIS) - Decreases
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
+              help: null
+              label: null
+          construct:
+            modelo-202-2023-2024-foundation:
+              field:
+                title: null
+          field:
+            label: null
+        2025-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Method under art. 40.2 LIS - Instalment payment base
+            '02':
+              help: null
+              label: Method under art. 40.2 LIS - Result of the previous return (supplementary)
+            '03':
+              help: null
+              label: Method under art. 40.2 LIS - Payable
+            '04':
+              help: null
+              label: Method under art. 40.3 LIS - Accounting result after corporate
+                income tax
+            '05':
+              help: null
+              label: Method under art. 40.3 LIS - Corporate income tax adjustments
+                - Increases
+            '06':
+              help: null
+              label: Method under art. 40.3 LIS - Corporate income tax adjustments
+                - Decreases
+            '07':
+              help: null
+              label: Method under art. 40.3 LIS - Other adjustments - Increases
+            08:
+              help: null
+              label: Method under art. 40.3 LIS - Other adjustments - Decreases
+            '13':
+              help: null
+              label: Method under art. 40.3 LIS - Preliminary taxable base
+            '14':
+              help: null
+              label: Method under art. 40.3 LIS - Offset of negative bases from prior
+                tax years
+            '16':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - General case - Instalment
+                payment base
+            '17':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - General case - Percentage
+            '18':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - General case - Preliminary
+                result
+            '19':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment base
+            '20':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Base at rate 1
+            '21':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Percentage 1
+            '22':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
+                rate 1
+            '23':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Base at rate 2
+            '24':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Percentage 2
+            '25':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
+                rate 2
+            '26':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Preliminary result
+            '27':
+              help: null
+              label: Method under art. 40.3 LIS - Tax credits for the computed period
+            '28':
+              help: null
+              label: Method under art. 40.3 LIS - Withholdings and payments on account
+                on income for the computed period
+            '29':
+              help: null
+              label: Method under art. 40.3 LIS - Volume of transactions in Common
+                Territory (%)
+            '30':
+              help: null
+              label: Method under art. 40.3 LIS - Instalment payments from prior periods
+                in Common Territory
+            '31':
+              help: null
+              label: Method under art. 40.3 LIS - Result of the previous return (supplementary)
+            '32':
+              help: null
+              label: Method under art. 40.3 LIS - Result
+            '33':
+              help: null
+              label: Method under art. 40.3 LIS - Minimum payable (turnover >= EUR
+                10 million)
+            '34':
+              help: null
+              label: Method under art. 40.3 LIS - Amount payable (greater of boxes
+                [32] and [33])
+            '37':
+              help: null
+              label: Method under art. 40.3 LIS - 30% depreciation expense - Decreases
+            '38':
+              help: null
+              label: Method under art. 40.3 LIS - TOTAL adjustments - Increases
+            '39':
+              help: null
+              label: Method under art. 40.3 LIS - TOTAL adjustments - Decreases
+            '40':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - Offset of negative tax
+                liabilities (cooperatives)
+            '42':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Offset of negative tax
+                liabilities (cooperatives)
+            '44':
+              help: null
+              label: Method under art. 40.3 LIS - Capitalisation reserve remainder
+                not applied due to insufficient base
+            '45':
+              help: null
+              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
+                - Increases
+            '46':
+              help: null
+              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
+                - Decreases
+            '47':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - Provisions under art.
+                11.12 LIS
+            '48':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
+                - Increases
+            '49':
+              help: null
+              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
+                - Decreases
+            '50':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Provisions under art.
+                11.12 LIS (cooperatives)
+            '51':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
+                105 LIS) - Increases
+            '52':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
+                105 LIS) - Decreases
+            '61':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Base at rate 3
+            '62':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Percentage 3
+            '63':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
+                rate 3
+            '64':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Base at rate 4
+            '65':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Percentage 4
+            '66':
+              help: null
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
+                rate 4
+            '67':
+              help: null
+              label: Method under art. 40.3 LIS - Top-up Tax (IC) adjustments - Increases
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
+              help: null
+              label: null
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
+              help: null
+              label: null
+          construct:
+            modelo-202-foundation:
+              field:
+                title: null
+          field:
+            label: null

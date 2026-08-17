@@ -1,0 +1,411 @@
+profile:
+  descendiente:
+    custodia_compartida_prorrata_applied: 50%-os arányosítás alkalmazva (LIRPF 61.
+      cikk) megosztott felügyelet esetén %{count} eltartott(ak)nál. Minden szülő a
+      vonatkozó minimum felét vallja be (0513/0514. mező, és ahol alkalmazható, 0515/0516.
+      mező).
+  errors:
+    foral_regime: '{tax_region} lakosai az illetékes Hacienda Foralnál kötelesek adóbevallást
+      benyújtani a Gazdasági Megállapodás (Ley 12/2002) alapján, nem az AEAT-nél.
+      Ez a CLI nem kezeli a forális adóbevallásokat. Lásd: sede.bizkaia.eus (Vizcaya),
+      gipuzkoa.eus/ogasuna (Guipúzcoa), araba.eus/ogasun (Álava) vagy hacienda.navarra.es
+      (Navarra) az Ön területének megfelelően.'
+    not_configured: Nincs RENTA-hoz konfigurált adóilletékességi profil. Futtassa
+      a(z) `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` parancsot a
+      beállításához.
+  keys:
+    description: Profilkonfigurációs kulcsok és leírásaik
+    tax:
+      id: Adóazonosító (NIF/CIF/DNI/NIE)
+  schema:
+    field:
+      activities:
+        cnae:
+          label: CNAE-kód
+        description:
+          label: Tevékenység leírása
+        iae_epigraph:
+          label: IAE-epigrafus
+      attribution_entity:
+        legal_form:
+          label: Hozzárendelő entitás jogi formája
+      attribution_entity_socios:
+        base_imponible_assigned:
+          label: Tagra jutó adóalap
+        country_of_residence:
+          label: Illetőség szerinti ország (csak állandó telephely nélküli külföldi
+            illetőségű esetén)
+        name:
+          label: Tag neve
+        nif:
+          label: Tag NIF-je
+        participe_clave:
+          label: Tagsági típus kódja
+        role:
+          label: Tagi szerepkör
+        share_pct:
+          label: Részesedés aránya
+      attribution_received:
+        base_imponible_attributed:
+          label: Tagra jutó hozzárendelt adóalap
+        entity_name:
+          label: Hozzárendelő entitás neve
+        entity_nif:
+          label: Hozzárendelő entitás NIF-je
+        filing_year:
+          label: Hozzárendelés adóéve
+        share_pct:
+          label: Hozzárendelt részesedés aránya
+      auth:
+        clave_movil_route:
+          label: Cl@ve Móvil útvonal
+        dni_nie:
+          label: DNI vagy NIE a Cl@ve-hoz
+        fecha_validez:
+          label: Érvényességi dátum
+        numero_soporte:
+          label: Támogatási szám
+        provider:
+          label: Hitelesítési mód
+      capabilities:
+        cloud_evidence_upload:
+          label: Dokumentumolvasás a gépen kívül
+        google_export:
+          label: Google-exportálás
+        llm_vision:
+          label: Helyi képfelismerés
+      censo:
+        activity_end_date:
+          label: Tevékenység vége
+        activity_start_date:
+          label: Tevékenység kezdete
+        divergencia:
+          label: Censo-eltérések
+        elected_withholding_pct:
+          label: Választott forrásadókulcs
+        establecimiento_type:
+          label: Telephely típusa
+        large_company:
+          label: Nagyvállalati minősítés
+        public_administration_budget_gt_6000000:
+          label: Közigazgatási költségvetés 6.000.000 EUR felett
+        status:
+          label: Censo állapota
+      contact:
+        contact_person_name:
+          label: Kapcsolattartó vezeték- és keresztneve
+        contact_person_phone:
+          label: Kapcsolattartó telefonszáma
+        fiscal_address:
+          label: Adóügyi cím
+        fiscal_address_cadastral_reference:
+          label: Az adóügyi cím kataszteri hivatkozása
+        fiscal_address_is_habitual_vivienda:
+          label: Az adóügyi cím az állandó lakóhely
+        postcode:
+          label: Irányítószám
+      identity:
+        email:
+          label: Kapcsolattartó e-mail
+        legal_name:
+          label: Cégnév
+        name:
+          label: Utónév
+        notes:
+          label: Megjegyzések
+        surnames:
+          label: Vezetéknevek
+        tax_id:
+          label: Adóazonosító (NIF/NIE/CIF)
+      irpf:
+        activity_kind:
+          label: Tevékenység típusa
+        art109_activity_income_withholding_ge_70pct:
+          label: Megfelel a RIRPF 109. cikk 70%-os kivételének
+        estimation_regime:
+          label: Becslési rendszer
+        objective_estimation_modulos_iae_epigraph:
+          label: IAE-epigrafus (modulok)
+        objective_estimation_modulos_module_1_units:
+          label: 1. modul egységei
+        objective_estimation_modulos_module_2_units:
+          label: 2. modul egységei
+        objective_estimation_modulos_module_3_units:
+          label: 3. modul egységei
+        objective_estimation_modulos_module_4_units:
+          label: 4. modul egységei
+        objective_estimation_modulos_module_5_units:
+          label: 5. modul egységei
+        objective_estimation_modulos_module_6_units:
+          label: 6. modul egységei
+        objective_estimation_modulos_module_7_units:
+          label: 7. modul egységei
+        objective_estimation_prior_year_agri_livestock_forest_gross_eur:
+          label: Előző évi mezőgazdasági, állattenyésztési és erdészeti bevétel
+        objective_estimation_prior_year_gross_income_eur:
+          label: Előző évi bruttó bevétel (modulok)
+        objective_estimation_prior_year_invoice_gross_income_eur:
+          label: Előző évi számlázott bevétel (modulok)
+        objective_estimation_prior_year_purchases_eur:
+          label: Előző évi beszerzések (modulok)
+        pagadores_count:
+          label: Kifizetők száma
+        pagadores_secondary_income:
+          label: Másodlagos kifizetőktől származó jövedelem
+        pagadores_total_work_income:
+          label: Munkajövedelem összesen
+        professional_income_withholding_ge_70pct:
+          label: Szakmai forrásadó eléri a 70%-ot
+        special_regime:
+          label: Különleges adózási rend
+        special_regime_start_date:
+          label: Különleges rendszer kezdő dátuma
+      iva:
+        autoconsumo_promotor_base:
+          label: Ingatlanfejlesztői önadóztatás adóalapja
+        cash_accounting_regime_enrolled:
+          label: Pénzforgalmi rendszerbeli tagság
+        does_intracomunitario:
+          label: Közösségen belüli ügyletek
+        group_dominant_entity_enrolled:
+          label: IVA-csoport domináns tagja (353-as nyomtatvány)
+        group_member_enrolled:
+          label: IVA-csoporttag (322-es nyomtatvány)
+        hydrocarbon_deposit_advance_payment_deduction_entitled:
+          label: Szénhidrogén-adóraktári előleglevonási jogosultság
+        intracommunity_operations_exceed_50000_eur:
+          label: Közösségen belüli ügyletek 50.000 EUR felett
+        m303_regime_composition:
+          label: A Modelo 303 rendszerösszetétele
+        oss_enrolled:
+          label: OSS/IOSS-regisztráció
+        redeme_enrolled:
+          label: REDEME-regisztráció
+        regime:
+          label: IVA-rendszer
+        roi_enrolled:
+          label: ROI/VIES-regisztráció
+        sii_enrolled:
+          label: SII-regisztráció
+        voluntary_sii_enrolled:
+          label: Önkéntes SII-tagság
+      maritime_worker:
+        pending_eu_clearance:
+          label: EU állami támogatási jóváhagyásra vár
+        retmar_registered:
+          label: RETMAR-regisztráció
+        tuna_fleet:
+          label: Tonhalflotta
+        vessel_flag:
+          label: Hajó lobogója
+        vessel_registry:
+          label: Hajólajstrom
+        waters_type:
+          label: Vízterület típusa
+        worker_class:
+          label: Trabajador del mar (besorolás)
+      obligations:
+        bienes_extranjero_above_threshold:
+          label: Modelo 720 küszöbérték túllépve
+        monedas_virtuales_extranjero_above_threshold:
+          label: Modelo 721 küszöbérték túllépve
+        third_party_transactions_above_347_threshold:
+          label: Modelo 347 küszöbérték túllépve
+      preferences:
+        output_language:
+          label: Kimeneti nyelv
+      properties:
+        cadastral_reference:
+          label: Kataszteri hivatkozás
+        use_type:
+          label: Ingatlan hasznosítása
+      provenance:
+        source:
+          label: Adat eredete
+        valid_from:
+          label: Érvényes ettől
+        valid_to:
+          label: Érvényes eddig
+      renta_family:
+        anualidades_alimentos_euros:
+          label: Bírósági határozat alapján fizetett gyermektartásdíj
+        ascendants:
+          label: Felmenők
+        cotizaciones_ss_madre_2024:
+          label: Anya társadalombiztosítási járulékai (2024)
+        descendants:
+          label: Leszármazottak
+        descendants_eu_eea_deduction:
+          label: EU/EGT-leszármazott kedvezmény
+        descendiente:
+          label: Leszármazott
+        descendientes_count:
+          label: Leszármazottak száma
+        madrid_nacimiento_adopcion_eligible_count:
+          label: Madrid születési/örökbefogadási kedvezményre jogosultak száma
+        minor_children_in_unit:
+          label: Kiskorú gyermekek a családi egységben
+        situacion_familiar:
+          label: Családi helyzet
+        unidad_familiar_otros_miembros_base:
+          label: A családi egység többi tagjának adóalapja (Madrid)
+      renta_filing:
+        declaration_type:
+          label: Bevallás típusa
+      renta_rental:
+        reduccion_art_23_2_tier_2024:
+          label: Bérbeadási kedvezmény sávja (art. 23.2)
+      renta_spouse:
+        birth_date:
+          label: Házastárs születési dátuma
+        disability_grade:
+          label: Házastárs fogyatékosságának mértéke
+        eu_eea_country:
+          label: Házastárs EU/EGT országa
+        eu_eea_resident:
+          label: Házastárs EU/EGT-rezidens
+        name:
+          label: Házastárs utóneve
+        non_resident_irpf:
+          label: Házastárs nem rezidens (nem IRPF-adózó)
+        sex:
+          label: Házastárs neme
+        surnames:
+          label: Házastárs vezetéknevei
+        tax_id:
+          label: Házastárs adóazonosítója (NIF/NIE)
+      renta_taxpayer:
+        birth_date:
+          label: Születési dátum
+        death_date:
+          label: Elhalálozás dátuma
+        disability_grade:
+          label: Fogyatékosság mértéke
+        marital_status:
+          label: Családi állapot
+        marriage_date:
+          label: Házasságkötés dátuma
+        marriage_full_year:
+          label: Egész évben fennálló házasság (számított)
+        marriage_month_end:
+          label: Házasság záró hónapja (számított)
+        marriage_month_start:
+          label: Házasság kezdő hónapja (számított)
+        sex:
+          label: Nem
+      tax_residence:
+        ccaa:
+          label: Lakóhely szerinti autonóm közösség
+        jurisdiction_scope:
+          label: Területi adórendszer
+      taxpayer_type:
+        country_of_fiscal_residence:
+          label: Adóügyi illetőség országa
+        entity_type:
+          label: Adózó típusa
+        fiscal_residency:
+          label: Adóügyi illetőség
+        incn_prior_12_months:
+          label: Előző 12 hónap nettó árbevétele
+        irpf_income_categories:
+          label: IRPF-jövedelemkategóriák
+        legal_entity_form:
+          label: Jogi forma
+        ley_49_2002_special_regime_option_date:
+          label: Ley 49/2002 választásának dátuma
+        ley_49_2002_special_regime_option_declared:
+          label: Ley 49/2002 rendszer választva
+        ley_49_2002_special_regime_renunciation_date:
+          label: Ley 49/2002 lemondásának dátuma
+        ley_49_2002_special_regime_renunciation_declared:
+          label: Ley 49/2002 rendszerről lemondva
+        new_entity_first_two_profit_periods:
+          label: Az első két nyereséges időszak egyikében
+        representante_fiscal_nif:
+          label: Adóügyi képviselő NIF-je
+        representante_fiscal_nombre:
+          label: Adóügyi képviselő neve
+        sal_capital_social:
+          label: Jegyzett tőke
+        sal_reserva_especial_dotada:
+          label: Már képzett különleges tartalék
+        sal_socios_trabajadores_count:
+          label: Dolgozó tagok száma
+        tributacion_estado_porcentaje:
+          label: Államnak fizetett adó aránya
+      usage_ratios:
+        business_ratio:
+          label: Üzleti használati arány
+        category_id:
+          label: Kategória
+      vivienda_office:
+        office_m2:
+          label: Irodai célra használt alapterület (m2)
+        total_m2:
+          label: Lakás teljes alapterülete (m2)
+      withholding:
+        has_employees:
+          label: Van alkalmazottja
+        modelo_111_no_retenciones_periods:
+          label: Modelo 111 forrásadó nélküli időszakok
+        pays_capital_income_with_retencion:
+          label: Tőkejövedelmet forrásadóval fizet
+        pays_professionals_with_retencion:
+          label: Szakembereknek forrásadóval fizet
+        pays_rent_with_retencion:
+          label: Bérleti díjat forrásadóval fizet
+    section:
+      activities:
+        title: Gazdasági tevékenységek
+      attribution_entity:
+        title: Jövedelem-hozzárendelő entitás jogi formája
+      attribution_entity_socios:
+        title: A hozzárendelő entitás tagjai
+      attribution_received:
+        title: Kapott hozzárendelt jövedelem
+      auth:
+        title: AEAT-hitelesítés
+      capabilities:
+        title: Szolgáltatási képességek
+      censo:
+        title: Censo és bejelentkezés
+      contact:
+        title: Kapcsolat és adóügyi cím
+      identity:
+        title: Azonosítás
+      irpf:
+        title: IRPF és forrásadó
+      iva:
+        title: IVA-profil
+      maritime_worker:
+        title: Trabajador del mar (besorolás)
+      obligations:
+        title: Bevallási kötelezettség küszöbértékei
+      preferences:
+        title: Kezelői beállítások
+      properties:
+        title: Ingatlanok és bérbeadás
+      provenance:
+        title: Eredet és érvényesség
+      renta_family:
+        title: Család (Renta)
+      renta_filing:
+        title: Bevallási környezet (Renta)
+      renta_rental:
+        title: Bérbeadási környezet (Renta)
+      renta_spouse:
+        title: Házastárs (Renta)
+      renta_taxpayer:
+        title: Adózó (Renta)
+      tax_residence:
+        title: Adóügyi illetőség és joghatóság
+      taxpayer_type:
+        title: Adózó típusa és jövedelemkategóriák
+      usage_ratios:
+        title: Használati arányok és levonhatóság
+      vivienda_office:
+        title: Állandó lakás irodai hasznosítása
+      withholding:
+        title: Forrásadó-fizetői kötelezettségek
+  validation:
+    required_field_missing: Hiányzik egy kötelező profilmező.

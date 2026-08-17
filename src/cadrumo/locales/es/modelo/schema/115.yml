@@ -1,0 +1,32 @@
+modelo:
+  schema:
+    '115':
+      field:
+        official_name: Retenciones e ingresos a cuenta. Rentas o rendimientos procedentes
+          del arrendamiento o subarrendamiento de inmuebles urbanos.
+        title: IRPF retenciones sobre arrendamientos urbanos
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Numero de perceptores
+            '02':
+              help: null
+              label: Base de retenciones e ingresos a cuenta
+            '03':
+              help: null
+              label: Retenciones e ingresos a cuenta
+            '04':
+              help: null
+              label: Resultado de anteriores declaraciones
+            '05':
+              help: null
+              label: Resultado a ingresar
+          construct:
+            modelo-115-quarterly-rental-withholding:
+              field:
+                title: Modelo 115 quarterly urban rental withholding filing
+          field:
+            label: Modelo 115 vigente (Orden de 20 de noviembre de 2000, BOE-A-2000-21430),
+              ejercicios 2019 y siguientes

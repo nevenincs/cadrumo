@@ -1,0 +1,1987 @@
+modelo:
+  schema:
+    '714':
+      field:
+        official_name: Wealth Tax. Return
+        title: Form 714
+      revision:
+        '2021':
+          casilla:
+            declaracion-01:
+              help: null
+              label: Assets and rights - A2. Urban immovable property - Other properties
+                - Total urban immovable property
+            declaracion-02:
+              help: null
+              label: Assets and rights - B. Rural immovable property - Total
+            declaracion-03:
+              help: null
+              label: Assets and rights - C. Non-exempt assets and rights used in business
+                and professional activities - Total
+            declaracion-04:
+              help: null
+              label: Assets and rights - D. Exempt assets and rights used in business
+                and professional activities - Total (net of debts)
+            declaracion-05:
+              help: null
+              label: Assets and rights - E. Current and savings account deposits,
+                financial accounts and term deposits - Total
+            declaracion-06:
+              help: null
+              label: Assets and rights - F1. Securities representing capital lent
+                to third parties - Government debt, debentures, bonds and other traded
+                securities - Total
+            declaracion-07:
+              help: null
+              label: Assets and rights - F2. Securities representing capital lent
+                to third parties - Debentures, bonds, certificates of deposit and
+                promissory notes - total
+            declaracion-08:
+              help: null
+              label: Assets and rights - G1. Non-exempt securities - Traded shares
+                and units in collective investment institutions - Total
+            declaracion-09:
+              help: null
+              label: Assets and rights - G2. Non-exempt securities - Shares and holdings
+                in the funds of other entities - Total
+            declaracion-10:
+              help: null
+              label: Assets and rights - G3. Non-exempt securities - Untraded shares
+                and units in collective investment institutions - total
+            declaracion-11:
+              help: null
+              label: Assets and rights - G4. Non-exempt securities - Untraded shares
+                and holdings in other legal entities - Total
+            declaracion-12:
+              help: null
+              label: Assets and rights - H1. Exempt securities - Traded shares and
+                holdings in legal entities - Total (net of debts)
+            declaracion-13:
+              help: null
+              label: Assets and rights - H2. Exempt securities - Exempt untraded shares
+                and holdings in legal entities - Total (net of debts)
+            declaracion-14:
+              help: null
+              label: Assets and rights - I. Life insurance policies - Total
+            declaracion-15:
+              help: null
+              label: Assets and rights - J. Temporary and life annuities - Total
+            declaracion-16:
+              help: null
+              label: Assets and rights - K. Vehicles, jewellery, luxury furs, vessels
+                and aircraft - Total
+            declaracion-17:
+              help: null
+              label: Assets and rights - L. Works of art and antiques - Total
+            declaracion-18:
+              help: null
+              label: Assets and rights - M. Rights of use and enjoyment (habitual
+                dwelling excluded) - Total
+            declaracion-19:
+              help: null
+              label: Assets and rights - N. Administrative concessions - Total
+            declaracion-20:
+              help: null
+              label: Assets and rights - O. Rights arising from intellectual or industrial
+                property - Total
+            declaracion-21:
+              help: null
+              label: Assets and rights - P. Contractual options - Total
+            declaracion-22:
+              help: null
+              label: Assets and rights - R. Other assets and rights of economic value
+                - Total
+            declaracion-23:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Total non-exempt
+                assets and rights'
+            declaracion-24:
+              help: null
+              label: Deductible debts - Total
+            declaracion-26:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Reduction
+                for the exempt minimum'
+            declaracion-28:
+              help: null
+              label: Exempt wealth taken into account for progressivity - Exempt assets
+                and rights, other than those setting the rate applicable to the remainder
+            declaracion-41:
+              help: null
+              label: Assessment - Relief for foreign taxes - Amount of the relief
+            declaracion-42:
+              help: null
+              label: Assessment - Ceuta and Melilla tax reduction - Net value of assets
+                and rights in Ceuta and Melilla
+            declaracion-43:
+              help: null
+              label: Assessment - Ceuta and Melilla tax reduction - Proportional share
+                of the liability attributable to those assets and rights
+            declaracion-44:
+              help: null
+              label: Assessment - Ceuta and Melilla tax reduction - Amount of the
+                reduction
+            declaracion-46:
+              help: null
+              label: Assets and rights - Q. Virtual currency balances - Total
+            declaracion-48:
+              help: null
+              label: Assessment - Regional deductions and reductions - Regional deductions
+                - Total amount qualifying for the deduction
+            declaracion-49:
+              help: null
+              label: Assessment - Regional deductions and reductions - Regional deductions
+                - Amount applied
+            declaracion-50:
+              help: null
+              label: Assessment - Regional deductions and reductions - Regional reduction
+                - Amount applied
+            declaracion-56:
+              help: null
+              label: Supplementary return adjustment - Tax payable per earlier self-assessments
+                or assessments
+            declaracion-57:
+              help: null
+              label: Supplementary return adjustment - Additional amount payable as
+                a result of the supplementary return
+            declaracion-60:
+              help: null
+              label: Assets and rights - A1. Urban immovable property - Total value
+                of the habitual dwelling eligible for exemption
+            declaracion-61:
+              help: null
+              label: Assets and rights - A1. Urban immovable property - Exempt value
+            declaracion-62:
+              help: null
+              label: Assets and rights - A1. Urban immovable property - Non-exempt
+                value
+            declaracion-63:
+              help: null
+              label: Assets and rights - A2. Urban immovable property - Other properties
+                - Total
+            declaracion-a:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Taxes actually
+                paid abroad
+            declaracion-b:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Part of the
+                taxable base taxed abroad
+            declaracion-i:
+              help: null
+              label: Payment - Payment amount
+            declaracion-negativa:
+              help: null
+              label: Nil return
+            identificacion-1:
+              help: null
+              label: Special taxation arrangements - Habitual residence was outside
+                Spanish territory in 2020 and tax is charged on a limited basis
+            identificacion-10:
+              help: null
+              label: Supplementary return
+            identificacion-12:
+              help: null
+              label: Where box 4 has been ticked and the regional rules are elected
+            identificacion-15:
+              help: null
+              label: Taxpayer - Habitual residence address - Street type
+            identificacion-16:
+              help: null
+              label: Taxpayer - Habitual residence address - Street name
+            identificacion-17:
+              help: null
+              label: Taxpayer - Habitual residence address - Numbering type
+            identificacion-18:
+              help: null
+              label: Taxpayer - Habitual residence address - House number
+            identificacion-19:
+              help: null
+              label: Taxpayer - Habitual residence address - Number qualifier
+            identificacion-2:
+              help: null
+              label: Special taxation arrangements - Residence in Spanish territory
+                ceased in 2020 but tax remains charged on a worldwide basis
+            identificacion-20:
+              help: null
+              label: Taxpayer - Habitual residence address - Block
+            identificacion-21:
+              help: null
+              label: Taxpayer - Habitual residence address - Entrance
+            identificacion-22:
+              help: null
+              label: Taxpayer - Habitual residence address - Stairway
+            identificacion-23:
+              help: null
+              label: Taxpayer - Habitual residence address - Floor
+            identificacion-24:
+              help: null
+              label: Taxpayer - Habitual residence address - Door
+            identificacion-25:
+              help: null
+              label: Taxpayer - Habitual residence address - Further address details
+            identificacion-26:
+              help: null
+              label: Taxpayer - Habitual residence address - Locality or settlement
+                (where different from the municipality)
+            identificacion-27:
+              help: null
+              label: Taxpayer - Habitual residence address - Postcode
+            identificacion-28:
+              help: null
+              label: Taxpayer - Habitual residence address - Municipality name
+            identificacion-29:
+              help: null
+              label: Taxpayer - Habitual residence address - Province
+            identificacion-3:
+              help: null
+              label: Special taxation arrangements - Autonomous Community where the
+                largest of the assets or rights is located
+            identificacion-35:
+              help: null
+              label: Taxpayer - Foreign address - Address
+            identificacion-36:
+              help: null
+              label: Taxpayer - Foreign address - Further address details
+            identificacion-37:
+              help: null
+              label: Taxpayer - Foreign address - Town or city
+            identificacion-39:
+              help: null
+              label: Taxpayer - Foreign address - Postcode (ZIP)
+            identificacion-4:
+              help: null
+              label: Special taxation arrangements - Tax residence was in Spain in
+                2020, but wealth tax is charged on a limited basis because the special
+                regime of article 93 of Law 35/2006 on personal income tax was elected
+            identificacion-40:
+              help: null
+              label: Taxpayer - Foreign address - Province, region or state
+            identificacion-41:
+              help: null
+              label: Taxpayer - Foreign address - Country
+            identificacion-42:
+              help: null
+              label: Taxpayer - Foreign address - Country code
+            identificacion-8:
+              help: null
+              label: Autonomous Community or City of residence in 2020
+            x-c9kmarj5ecn66c9dehnn8obc:
+              help: null
+              label: Assets and rights - C1. Non-exempt assets used in business and
+                professional activities (excluding immovable property) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              help: null
+              label: Assets and rights - C2. Non-exempt immovable property used in
+                business and professional activities - Total
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Tax year the return relates to
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Language of the return
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (annual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Taxpayer - Habitual residence - Province code
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Supplementary return - Amounts payable from previous self-assessments
+                or administrative assessments
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Taxpayer - Disability - Type of disability
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Taxpayer - Disability - Disability percentage
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Taxpayer - Marital status
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Date of the return - Year
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Date of the return - Day
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Date of the return - Town
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Date of the return - Month
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Taxpayer - Date of birth
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Taxpayer - Nationality
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Marital property regime
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representative - Tax identification number
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representative - Surnames and given name, or company name
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Taxpayer - Sex
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Return type
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Payment - Payment method
+            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
+              help: null
+              label: Assessment - Gross tax liability limit - Portion of the personal
+                income tax savings taxable base
+            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Taxable
+                base'
+            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Taxable
+                base after reductions'
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
+              help: null
+              label: Assessment - Tax payable - Tax payable
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
+              help: null
+              label: Assessment - Gross tax liability - Gross tax liability
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
+              help: null
+              label: Assessment - Gross tax liability limit - Portion of the gross
+                wealth tax liability subject to limitation
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
+              help: null
+              label: Assessment - Reduced tax liability - Reduced tax liability
+            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
+              help: null
+              label: Assessment - Gross tax liability limit - Dividends and profit
+                shares not included in personal income tax
+            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
+              help: null
+              label: Assessment - Gross tax liability limit - a) Excess
+            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
+              help: null
+              label: Assessment - Gross tax liability limit - Sum of the personal
+                income tax taxable bases
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
+              help: null
+              label: Assessment - Gross tax liability limit - Portion of gross personal
+                income tax liabilities on the positive balance of capital gains and
+                losses
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
+              help: null
+              label: Assessment - Gross tax liability limit - Gross personal income
+                tax liabilities
+            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
+              help: null
+              label: Assessment - Gross tax liability limit - Joint limit on wealth
+                tax and personal income tax liabilities
+            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
+              help: null
+              label: Assessment - Gross tax liability limit - b) 80% of the gross
+                wealth tax liability
+            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
+              help: null
+              label: Assessment - Gross tax liability limit - Sum of liabilities for
+                the purposes of the joint limit
+            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
+              help: null
+              label: Assessment - Total gross tax liability - Total gross tax liability
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Form 714 Wealth Tax liability
+          field:
+            label: Wealth Tax 2021
+        '2022':
+          casilla:
+            declaracion-01:
+              help: null
+              label: Assets and rights - A2. Urban immovable property - Other properties
+                - Total urban immovable property
+            declaracion-02:
+              help: null
+              label: Assets and rights - B. Rural immovable property - Total
+            declaracion-03:
+              help: null
+              label: Assets and rights - C. Non-exempt assets and rights used in business
+                and professional activities - Total
+            declaracion-04:
+              help: null
+              label: Assets and rights - D. Exempt assets and rights used in business
+                and professional activities - Total (net of debts)
+            declaracion-05:
+              help: null
+              label: Assets and rights - E. Current and savings account deposits,
+                financial accounts and term deposits - Total
+            declaracion-06:
+              help: null
+              label: Assets and rights - F1. Securities representing capital lent
+                to third parties - Government debt, debentures, bonds and other traded
+                securities - Total
+            declaracion-07:
+              help: null
+              label: Assets and rights - F2. Securities representing capital lent
+                to third parties - Debentures, bonds, certificates of deposit and
+                promissory notes - total
+            declaracion-08:
+              help: null
+              label: Assets and rights - G1. Non-exempt securities - Traded shares
+                and units in collective investment institutions - Total
+            declaracion-09:
+              help: null
+              label: Assets and rights - G2. Non-exempt securities - Shares and holdings
+                in the funds of other entities - Total
+            declaracion-10:
+              help: null
+              label: Assets and rights - G3. Non-exempt securities - Untraded shares
+                and units in collective investment institutions - total
+            declaracion-11:
+              help: null
+              label: Assets and rights - G4. Non-exempt securities - Untraded shares
+                and holdings in other legal entities - Total
+            declaracion-12:
+              help: null
+              label: Assets and rights - H1. Exempt securities - Traded shares and
+                holdings in legal entities - Total (net of debts)
+            declaracion-13:
+              help: null
+              label: Assets and rights - H2. Exempt securities - Exempt untraded shares
+                and holdings in legal entities - Total (net of debts)
+            declaracion-14:
+              help: null
+              label: Assets and rights - I. Life insurance policies - Total
+            declaracion-15:
+              help: null
+              label: Assets and rights - J. Temporary and life annuities - Total
+            declaracion-16:
+              help: null
+              label: Assets and rights - K. Vehicles, jewellery, luxury furs, vessels
+                and aircraft - Total
+            declaracion-17:
+              help: null
+              label: Assets and rights - L. Works of art and antiques - Total
+            declaracion-18:
+              help: null
+              label: Assets and rights - M. Rights of use and enjoyment (habitual
+                dwelling excluded) - Total
+            declaracion-19:
+              help: null
+              label: Assets and rights - N. Administrative concessions - Total
+            declaracion-20:
+              help: null
+              label: Assets and rights - O. Rights arising from intellectual or industrial
+                property - Total
+            declaracion-21:
+              help: null
+              label: Assets and rights - P. Contractual options - Total
+            declaracion-22:
+              help: null
+              label: Assets and rights - R. Other assets and rights of economic value
+                - Total
+            declaracion-23:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Total non-exempt
+                assets and rights'
+            declaracion-24:
+              help: null
+              label: Deductible debts - Total
+            declaracion-26:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Reduction
+                for the exempt minimum'
+            declaracion-28:
+              help: null
+              label: Exempt wealth taken into account for progressivity - Exempt assets
+                and rights, other than those setting the rate applicable to the remainder
+            declaracion-41:
+              help: null
+              label: Assessment - Relief for foreign taxes - Amount of the relief
+            declaracion-42:
+              help: null
+              label: Assessment - Ceuta and Melilla tax reduction - Net value of assets
+                and rights in Ceuta and Melilla
+            declaracion-43:
+              help: null
+              label: Assessment - Ceuta and Melilla tax reduction - Proportional share
+                of the liability attributable to those assets and rights
+            declaracion-44:
+              help: null
+              label: Assessment - Ceuta and Melilla tax reduction - Amount of the
+                reduction
+            declaracion-46:
+              help: null
+              label: Assets and rights - Q. Virtual currency balances - Total
+            declaracion-48:
+              help: null
+              label: Assessment - Regional deductions and reductions - Regional deductions
+                - Total amount qualifying for the deduction
+            declaracion-49:
+              help: null
+              label: Assessment - Regional deductions and reductions - Regional deductions
+                - Amount applied
+            declaracion-50:
+              help: null
+              label: Assessment - Regional deductions and reductions - Regional reduction
+                - Amount applied
+            declaracion-56:
+              help: null
+              label: Supplementary return adjustment - Tax payable per earlier self-assessments
+                or assessments
+            declaracion-57:
+              help: null
+              label: Supplementary return adjustment - Additional amount payable as
+                a result of the supplementary return
+            declaracion-60:
+              help: null
+              label: Assets and rights - A1. Urban immovable property - Total value
+                of the habitual dwelling eligible for exemption
+            declaracion-61:
+              help: null
+              label: Assets and rights - A1. Urban immovable property - Exempt value
+            declaracion-62:
+              help: null
+              label: Assets and rights - A1. Urban immovable property - Non-exempt
+                value
+            declaracion-63:
+              help: null
+              label: Assets and rights - A2. Urban immovable property - Other properties
+                - Total
+            declaracion-a:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Taxes actually
+                paid abroad
+            declaracion-b:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Part of the
+                taxable base taxed abroad
+            declaracion-i:
+              help: null
+              label: Payment - Payment amount
+            declaracion-negativa:
+              help: null
+              label: Nil return
+            identificacion-1:
+              help: null
+              label: Special taxation arrangements - Habitual residence was outside
+                Spanish territory in 2022 and tax is charged on a limited basis
+            identificacion-10:
+              help: null
+              label: Supplementary return
+            identificacion-12:
+              help: null
+              label: Where box 4 has been ticked and the regional rules are elected
+            identificacion-15:
+              help: null
+              label: Taxpayer - Habitual residence address - Street type
+            identificacion-16:
+              help: null
+              label: Taxpayer - Habitual residence address - Street name
+            identificacion-17:
+              help: null
+              label: Taxpayer - Habitual residence address - Numbering type
+            identificacion-18:
+              help: null
+              label: Taxpayer - Habitual residence address - House number
+            identificacion-19:
+              help: null
+              label: Taxpayer - Habitual residence address - Number qualifier
+            identificacion-2:
+              help: null
+              label: Special taxation arrangements - Residence in Spanish territory
+                ceased in 2022 but tax remains charged on a worldwide basis
+            identificacion-20:
+              help: null
+              label: Taxpayer - Habitual residence address - Block
+            identificacion-21:
+              help: null
+              label: Taxpayer - Habitual residence address - Entrance
+            identificacion-22:
+              help: null
+              label: Taxpayer - Habitual residence address - Stairway
+            identificacion-23:
+              help: null
+              label: Taxpayer - Habitual residence address - Floor
+            identificacion-24:
+              help: null
+              label: Taxpayer - Habitual residence address - Door
+            identificacion-25:
+              help: null
+              label: Taxpayer - Habitual residence address - Further address details
+            identificacion-26:
+              help: null
+              label: Taxpayer - Habitual residence address - Locality or settlement
+                (where different from the municipality)
+            identificacion-27:
+              help: null
+              label: Taxpayer - Habitual residence address - Postcode
+            identificacion-28:
+              help: null
+              label: Taxpayer - Habitual residence address - Municipality name
+            identificacion-29:
+              help: null
+              label: Taxpayer - Habitual residence address - Province
+            identificacion-3:
+              help: null
+              label: Special taxation arrangements - Autonomous Community where the
+                largest of the assets or rights is located
+            identificacion-35:
+              help: null
+              label: Taxpayer - Foreign address - Address
+            identificacion-36:
+              help: null
+              label: Taxpayer - Foreign address - Further address details
+            identificacion-37:
+              help: null
+              label: Taxpayer - Foreign address - Town or city
+            identificacion-39:
+              help: null
+              label: Taxpayer - Foreign address - Postcode (ZIP)
+            identificacion-4:
+              help: null
+              label: Special taxation arrangements - Tax residence was in Spain in
+                2022, but wealth tax is charged on a limited basis because the special
+                regime of article 93 of Law 35/2006 on personal income tax was elected
+            identificacion-40:
+              help: null
+              label: Taxpayer - Foreign address - Province, region or state
+            identificacion-41:
+              help: null
+              label: Taxpayer - Foreign address - Country
+            identificacion-42:
+              help: null
+              label: Taxpayer - Foreign address - Country code
+            identificacion-8:
+              help: null
+              label: Autonomous Community or City of residence in 2022
+            x-c9kmarj5ecn66c9dehnn8obc:
+              help: null
+              label: Assets and rights - C1. Non-exempt assets used in business and
+                professional activities (excluding immovable property) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              help: null
+              label: Assets and rights - C2. Non-exempt immovable property used in
+                business and professional activities - Total
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Tax year the return relates to
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Language of the return
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (annual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Taxpayer - Habitual residence - Province code
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Supplementary return - Amounts payable from previous self-assessments
+                or administrative assessments
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Taxpayer - Disability - Type of disability
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Taxpayer - Disability - Disability percentage
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Taxpayer - Marital status
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Date of the return - Year
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Date of the return - Day
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Date of the return - Town
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Date of the return - Month
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Taxpayer - Date of birth
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Taxpayer - Nationality
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Marital property regime
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representative - Tax identification number
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representative - Surnames and given name, or company name
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Taxpayer - Sex
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Return type
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Payment - Payment method
+            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
+              help: null
+              label: Assessment - Gross tax liability limit - Portion of the personal
+                income tax savings taxable base
+            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Taxable
+                base'
+            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Taxable
+                base after reductions'
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
+              help: null
+              label: Assessment - Tax payable - Tax payable
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
+              help: null
+              label: Assessment - Gross tax liability - Gross tax liability
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
+              help: null
+              label: Assessment - Gross tax liability limit - Portion of the gross
+                wealth tax liability subject to limitation
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
+              help: null
+              label: Assessment - Reduced tax liability - Reduced tax liability
+            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
+              help: null
+              label: Assessment - Gross tax liability limit - Dividends and profit
+                shares not included in personal income tax
+            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
+              help: null
+              label: Assessment - Gross tax liability limit - a) Excess
+            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
+              help: null
+              label: Assessment - Gross tax liability limit - Sum of the personal
+                income tax taxable bases
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
+              help: null
+              label: Assessment - Gross tax liability limit - Portion of gross personal
+                income tax liabilities on the positive balance of capital gains and
+                losses
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
+              help: null
+              label: Assessment - Gross tax liability limit - Gross personal income
+                tax liabilities
+            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
+              help: null
+              label: Assessment - Gross tax liability limit - Joint limit on wealth
+                tax and personal income tax liabilities
+            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
+              help: null
+              label: Assessment - Gross tax liability limit - b) 80% of the gross
+                wealth tax liability
+            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
+              help: null
+              label: Assessment - Gross tax liability limit - Sum of liabilities for
+                the purposes of the joint limit
+            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
+              help: null
+              label: Assessment - Total gross tax liability - Total gross tax liability
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Form 714 Wealth Tax liability
+          field:
+            label: Wealth Tax 2022
+        '2023':
+          casilla:
+            declaracion-01:
+              help: null
+              label: Assets and rights - A2. Urban immovable property - Other properties
+                - Total urban immovable property
+            declaracion-02:
+              help: null
+              label: Assets and rights - B. Rural immovable property - Total
+            declaracion-03:
+              help: null
+              label: Assets and rights - C. Non-exempt assets and rights used in business
+                and professional activities - Total
+            declaracion-04:
+              help: null
+              label: Assets and rights - D. Exempt assets and rights used in business
+                and professional activities - Total (net of debts)
+            declaracion-05:
+              help: null
+              label: Assets and rights - E. Current and savings account deposits,
+                financial accounts and term deposits - Total
+            declaracion-06:
+              help: null
+              label: Assets and rights - F1. Securities representing capital lent
+                to third parties - Government debt, debentures, bonds and other traded
+                securities - Total
+            declaracion-07:
+              help: null
+              label: Assets and rights - F2. Securities representing capital lent
+                to third parties - Debentures, bonds, certificates of deposit and
+                promissory notes - total
+            declaracion-08:
+              help: null
+              label: Assets and rights - G1. Non-exempt securities - Traded shares
+                and units in collective investment institutions - Total
+            declaracion-09:
+              help: null
+              label: Assets and rights - G2. Non-exempt securities - Shares and holdings
+                in the funds of other entities - Total
+            declaracion-10:
+              help: null
+              label: Assets and rights - G3. Non-exempt securities - Untraded shares
+                and units in collective investment institutions - total
+            declaracion-11:
+              help: null
+              label: Assets and rights - G4. Non-exempt securities - Untraded shares
+                and holdings in other legal entities - Total
+            declaracion-12:
+              help: null
+              label: Assets and rights - H1. Exempt securities - Traded shares and
+                holdings in legal entities - Total (net of debts)
+            declaracion-13:
+              help: null
+              label: Assets and rights - H2. Exempt securities - Exempt untraded shares
+                and holdings in legal entities - Total (net of debts)
+            declaracion-14:
+              help: null
+              label: Assets and rights - I. Life insurance policies - Total
+            declaracion-15:
+              help: null
+              label: Assets and rights - J. Temporary and life annuities - Total
+            declaracion-16:
+              help: null
+              label: Assets and rights - K. Vehicles, jewellery, luxury furs, vessels
+                and aircraft - Total
+            declaracion-17:
+              help: null
+              label: Assets and rights - L. Works of art and antiques - Total
+            declaracion-18:
+              help: null
+              label: Assets and rights - M. Rights of use and enjoyment (habitual
+                dwelling excluded) - Total
+            declaracion-19:
+              help: null
+              label: Assets and rights - N. Administrative concessions - Total
+            declaracion-20:
+              help: null
+              label: Assets and rights - O. Rights arising from intellectual or industrial
+                property - Total
+            declaracion-21:
+              help: null
+              label: Assets and rights - P. Contractual options - Total
+            declaracion-22:
+              help: null
+              label: Assets and rights - R. Other assets and rights of economic value
+                - Total
+            declaracion-23:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Total non-exempt
+                assets and rights'
+            declaracion-24:
+              help: null
+              label: Deductible debts - Total
+            declaracion-26:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Reduction
+                for the exempt minimum'
+            declaracion-28:
+              help: null
+              label: Exempt wealth taken into account for progressivity - Exempt assets
+                and rights, other than those setting the rate applicable to the remainder
+            declaracion-41:
+              help: null
+              label: Assessment - Relief for foreign taxes - Amount of the relief
+            declaracion-42:
+              help: null
+              label: Assessment - Ceuta and Melilla tax reduction - Net value of assets
+                and rights in Ceuta and Melilla
+            declaracion-43:
+              help: null
+              label: Assessment - Ceuta and Melilla tax reduction - Proportional share
+                of the liability attributable to those assets and rights
+            declaracion-44:
+              help: null
+              label: Assessment - Ceuta and Melilla tax reduction - Amount of the
+                reduction
+            declaracion-46:
+              help: null
+              label: Assets and rights - Q. Virtual currency balances - Total
+            declaracion-48:
+              help: null
+              label: Assessment - Regional deductions and reductions - Regional deductions
+                - Total amount qualifying for the deduction
+            declaracion-49:
+              help: null
+              label: Assessment - Regional deductions and reductions - Regional deductions
+                - Amount applied
+            declaracion-50:
+              help: null
+              label: Assessment - Regional deductions and reductions - Regional reduction
+                - Amount applied
+            declaracion-56:
+              help: null
+              label: Supplementary return adjustment - Tax payable per earlier self-assessments
+                or assessments
+            declaracion-57:
+              help: null
+              label: Supplementary return adjustment - Additional amount payable as
+                a result of the supplementary return
+            declaracion-60:
+              help: null
+              label: Assets and rights - A1. Urban immovable property - Total value
+                of the habitual dwelling eligible for exemption
+            declaracion-61:
+              help: null
+              label: Assets and rights - A1. Urban immovable property - Exempt value
+            declaracion-62:
+              help: null
+              label: Assets and rights - A1. Urban immovable property - Non-exempt
+                value
+            declaracion-63:
+              help: null
+              label: Assets and rights - A2. Urban immovable property - Other properties
+                - Total
+            declaracion-a:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Taxes actually
+                paid abroad
+            declaracion-b:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Part of the
+                taxable base taxed abroad
+            declaracion-i:
+              help: null
+              label: Payment - Payment amount
+            declaracion-negativa:
+              help: null
+              label: Nil return
+            identificacion-1:
+              help: null
+              label: Special taxation arrangements - Habitual residence was outside
+                Spanish territory in 2023 and tax is charged on a limited basis
+            identificacion-10:
+              help: null
+              label: Supplementary return
+            identificacion-12:
+              help: null
+              label: Where box 4 has been ticked and the regional rules are elected
+            identificacion-15:
+              help: null
+              label: Taxpayer - Habitual residence address - Street type
+            identificacion-16:
+              help: null
+              label: Taxpayer - Habitual residence address - Street name
+            identificacion-17:
+              help: null
+              label: Taxpayer - Habitual residence address - Numbering type
+            identificacion-18:
+              help: null
+              label: Taxpayer - Habitual residence address - House number
+            identificacion-19:
+              help: null
+              label: Taxpayer - Habitual residence address - Number qualifier
+            identificacion-2:
+              help: null
+              label: Special taxation arrangements - Residence in Spanish territory
+                ceased in 2023 but tax remains charged on a worldwide basis
+            identificacion-20:
+              help: null
+              label: Taxpayer - Habitual residence address - Block
+            identificacion-21:
+              help: null
+              label: Taxpayer - Habitual residence address - Entrance
+            identificacion-22:
+              help: null
+              label: Taxpayer - Habitual residence address - Stairway
+            identificacion-23:
+              help: null
+              label: Taxpayer - Habitual residence address - Floor
+            identificacion-24:
+              help: null
+              label: Taxpayer - Habitual residence address - Door
+            identificacion-25:
+              help: null
+              label: Taxpayer - Habitual residence address - Further address details
+            identificacion-26:
+              help: null
+              label: Taxpayer - Habitual residence address - Locality or settlement
+                (where different from the municipality)
+            identificacion-27:
+              help: null
+              label: Taxpayer - Habitual residence address - Postcode
+            identificacion-28:
+              help: null
+              label: Taxpayer - Habitual residence address - Municipality name
+            identificacion-29:
+              help: null
+              label: Taxpayer - Habitual residence address - Province
+            identificacion-3:
+              help: null
+              label: Special taxation arrangements - Autonomous Community where the
+                largest of the assets or rights is located
+            identificacion-35:
+              help: null
+              label: Taxpayer - Foreign address - Address
+            identificacion-36:
+              help: null
+              label: Taxpayer - Foreign address - Further address details
+            identificacion-37:
+              help: null
+              label: Taxpayer - Foreign address - Town or city
+            identificacion-39:
+              help: null
+              label: Taxpayer - Foreign address - Postcode (ZIP)
+            identificacion-4:
+              help: null
+              label: Special taxation arrangements - Tax residence was in Spain in
+                2023, but wealth tax is charged on a limited basis because the special
+                regime of article 93 of Law 35/2006 on personal income tax was elected
+            identificacion-40:
+              help: null
+              label: Taxpayer - Foreign address - Province, region or state
+            identificacion-41:
+              help: null
+              label: Taxpayer - Foreign address - Country
+            identificacion-42:
+              help: null
+              label: Taxpayer - Foreign address - Country code
+            identificacion-8:
+              help: null
+              label: Autonomous Community or City of residence in 2023
+            x-c9kmarj5ecn66c9dehnn8obc:
+              help: null
+              label: Assets and rights - C1. Non-exempt assets used in business and
+                professional activities (excluding immovable property) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              help: null
+              label: Assets and rights - C2. Non-exempt immovable property used in
+                business and professional activities - Total
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Tax year the return relates to
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Language of the return
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (annual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Taxpayer - Habitual residence - Province code
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Supplementary return - Amounts payable from previous self-assessments
+                or administrative assessments
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Taxpayer - Disability - Type of disability
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Taxpayer - Disability - Disability percentage
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Taxpayer - Marital status
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Date of the return - Year
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Date of the return - Day
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Date of the return - Town
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Date of the return - Month
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Taxpayer - Date of birth
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Taxpayer - Nationality
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Marital property regime
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representative - Tax identification number
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representative - Surnames and given name, or company name
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Taxpayer - Sex
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Return type
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Payment - Payment method
+            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
+              help: null
+              label: Assessment - Gross tax liability limit - Portion of the personal
+                income tax savings taxable base
+            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Taxable
+                base'
+            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Taxable
+                base after reductions'
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
+              help: null
+              label: Assessment - Tax payable - Tax payable
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
+              help: null
+              label: Assessment - Gross tax liability - Gross tax liability
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
+              help: null
+              label: Assessment - Gross tax liability limit - Portion of the gross
+                wealth tax liability subject to limitation
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
+              help: null
+              label: Assessment - Reduced tax liability - Reduced tax liability
+            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
+              help: null
+              label: Assessment - Gross tax liability limit - Dividends and profit
+                shares not included in personal income tax
+            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
+              help: null
+              label: Assessment - Gross tax liability limit - a) Excess
+            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
+              help: null
+              label: Assessment - Gross tax liability limit - Sum of the personal
+                income tax taxable bases
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
+              help: null
+              label: Assessment - Gross tax liability limit - Portion of gross personal
+                income tax liabilities on the positive balance of capital gains and
+                losses
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
+              help: null
+              label: Assessment - Gross tax liability limit - Gross personal income
+                tax liabilities
+            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
+              help: null
+              label: Assessment - Gross tax liability limit - Joint limit on wealth
+                tax and personal income tax liabilities
+            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
+              help: null
+              label: Assessment - Gross tax liability limit - b) 80% of the gross
+                wealth tax liability
+            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
+              help: null
+              label: Assessment - Gross tax liability limit - Sum of liabilities for
+                the purposes of the joint limit
+            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
+              help: null
+              label: Assessment - Total gross tax liability - Total gross tax liability
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Form 714 Wealth Tax liability
+          field:
+            label: Wealth Tax 2023
+        '2024':
+          casilla:
+            declaracion-01:
+              help: null
+              label: Assets and rights - A2. Urban immovable property - Other properties
+                - Total urban immovable property
+            declaracion-02:
+              help: null
+              label: Assets and rights - B. Rural immovable property - Total
+            declaracion-03:
+              help: null
+              label: Assets and rights - C. Non-exempt assets and rights used in business
+                and professional activities - Total
+            declaracion-04:
+              help: null
+              label: Assets and rights - D. Exempt assets and rights used in business
+                and professional activities - Total (net of debts)
+            declaracion-05:
+              help: null
+              label: Assets and rights - E. Current and savings account deposits,
+                financial accounts and term deposits - Total
+            declaracion-06:
+              help: null
+              label: Assets and rights - F1. Securities representing capital lent
+                to third parties - Government debt, debentures, bonds and other traded
+                securities - Total
+            declaracion-07:
+              help: null
+              label: Assets and rights - F2. Securities representing capital lent
+                to third parties - Debentures, bonds, certificates of deposit and
+                promissory notes - total
+            declaracion-08:
+              help: null
+              label: Assets and rights - G1. Non-exempt securities - Traded shares
+                and units in collective investment institutions - Total
+            declaracion-09:
+              help: null
+              label: Assets and rights - G2. Non-exempt securities - Shares and holdings
+                in the funds of other entities - Total
+            declaracion-10:
+              help: null
+              label: Assets and rights - G3. Non-exempt securities - Untraded shares
+                and units in collective investment institutions - total
+            declaracion-11:
+              help: null
+              label: Assets and rights - G4. Non-exempt securities - Untraded shares
+                and holdings in other legal entities - Total
+            declaracion-12:
+              help: null
+              label: Assets and rights - H1. Exempt securities - Traded shares and
+                holdings in legal entities - Total (net of debts)
+            declaracion-13:
+              help: null
+              label: Assets and rights - H2. Exempt securities - Exempt untraded shares
+                and holdings in legal entities - Total (net of debts)
+            declaracion-14:
+              help: null
+              label: Assets and rights - I. Life insurance policies - Total
+            declaracion-15:
+              help: null
+              label: Assets and rights - J. Temporary and life annuities - Total
+            declaracion-16:
+              help: null
+              label: Assets and rights - K. Vehicles, jewellery, luxury furs, vessels
+                and aircraft - Total
+            declaracion-17:
+              help: null
+              label: Assets and rights - L. Works of art and antiques - Total
+            declaracion-18:
+              help: null
+              label: Assets and rights - M. Rights of use and enjoyment (habitual
+                dwelling excluded) - Total
+            declaracion-19:
+              help: null
+              label: Assets and rights - N. Administrative concessions - Total
+            declaracion-20:
+              help: null
+              label: Assets and rights - O. Rights arising from intellectual or industrial
+                property - Total
+            declaracion-21:
+              help: null
+              label: Assets and rights - P. Contractual options - Total
+            declaracion-22:
+              help: null
+              label: Assets and rights - R. Other assets and rights of economic value
+                - Total
+            declaracion-23:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Total non-exempt
+                assets and rights'
+            declaracion-24:
+              help: null
+              label: Deductible debts - Total
+            declaracion-26:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Reduction
+                for the exempt minimum'
+            declaracion-28:
+              help: null
+              label: Exempt wealth taken into account for progressivity - Exempt assets
+                and rights, other than those setting the rate applicable to the remainder
+            declaracion-41:
+              help: null
+              label: Assessment - Relief for foreign taxes - Amount of the relief
+            declaracion-42:
+              help: null
+              label: Assessment - Ceuta and Melilla tax reduction - Net value of assets
+                and rights in Ceuta and Melilla
+            declaracion-43:
+              help: null
+              label: Assessment - Ceuta and Melilla tax reduction - Proportional share
+                of the liability attributable to those assets and rights
+            declaracion-44:
+              help: null
+              label: Assessment - Ceuta and Melilla tax reduction - Amount of the
+                reduction
+            declaracion-46:
+              help: null
+              label: Assets and rights - Q. Virtual currency balances - Total
+            declaracion-48:
+              help: null
+              label: Assessment - Regional deductions and reductions - Regional deductions
+                - Total amount qualifying for the deduction
+            declaracion-49:
+              help: null
+              label: Assessment - Regional deductions and reductions - Regional deductions
+                - Amount applied
+            declaracion-50:
+              help: null
+              label: Assessment - Regional deductions and reductions - Regional reduction
+                - Amount applied
+            declaracion-56:
+              help: null
+              label: Supplementary return adjustment - Tax payable per earlier self-assessments
+                or assessments
+            declaracion-57:
+              help: null
+              label: Supplementary return adjustment - Additional amount payable as
+                a result of the supplementary return
+            declaracion-60:
+              help: null
+              label: Assets and rights - A1. Urban immovable property - Total value
+                of the habitual dwelling eligible for exemption
+            declaracion-61:
+              help: null
+              label: Assets and rights - A1. Urban immovable property - Exempt value
+            declaracion-62:
+              help: null
+              label: Assets and rights - A1. Urban immovable property - Non-exempt
+                value
+            declaracion-63:
+              help: null
+              label: Assets and rights - A2. Urban immovable property - Other properties
+                - Total
+            declaracion-a:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Taxes actually
+                paid abroad
+            declaracion-b:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Part of the
+                taxable base taxed abroad
+            declaracion-i:
+              help: null
+              label: Payment - Payment amount
+            declaracion-negativa:
+              help: null
+              label: Nil return
+            identificacion-1:
+              help: null
+              label: Special taxation arrangements - Habitual residence was outside
+                Spanish territory in 2024 and tax is charged on a limited basis
+            identificacion-10:
+              help: null
+              label: Supplementary return
+            identificacion-12:
+              help: null
+              label: Where box 4 has been ticked and the regional rules are elected
+            identificacion-15:
+              help: null
+              label: Taxpayer - Habitual residence address - Street type
+            identificacion-16:
+              help: null
+              label: Taxpayer - Habitual residence address - Street name
+            identificacion-17:
+              help: null
+              label: Taxpayer - Habitual residence address - Numbering type
+            identificacion-18:
+              help: null
+              label: Taxpayer - Habitual residence address - House number
+            identificacion-19:
+              help: null
+              label: Taxpayer - Habitual residence address - Number qualifier
+            identificacion-2:
+              help: null
+              label: Special taxation arrangements - Residence in Spanish territory
+                ceased in 2024 but tax remains charged on a worldwide basis
+            identificacion-20:
+              help: null
+              label: Taxpayer - Habitual residence address - Block
+            identificacion-21:
+              help: null
+              label: Taxpayer - Habitual residence address - Entrance
+            identificacion-22:
+              help: null
+              label: Taxpayer - Habitual residence address - Stairway
+            identificacion-23:
+              help: null
+              label: Taxpayer - Habitual residence address - Floor
+            identificacion-24:
+              help: null
+              label: Taxpayer - Habitual residence address - Door
+            identificacion-25:
+              help: null
+              label: Taxpayer - Habitual residence address - Further address details
+            identificacion-26:
+              help: null
+              label: Taxpayer - Habitual residence address - Locality or settlement
+                (where different from the municipality)
+            identificacion-27:
+              help: null
+              label: Taxpayer - Habitual residence address - Postcode
+            identificacion-28:
+              help: null
+              label: Taxpayer - Habitual residence address - Municipality name
+            identificacion-29:
+              help: null
+              label: Taxpayer - Habitual residence address - Province
+            identificacion-3:
+              help: null
+              label: Special taxation arrangements - Autonomous Community where the
+                largest of the assets or rights is located
+            identificacion-35:
+              help: null
+              label: Taxpayer - Foreign address - Address
+            identificacion-36:
+              help: null
+              label: Taxpayer - Foreign address - Further address details
+            identificacion-37:
+              help: null
+              label: Taxpayer - Foreign address - Town or city
+            identificacion-39:
+              help: null
+              label: Taxpayer - Foreign address - Postcode (ZIP)
+            identificacion-4:
+              help: null
+              label: Special taxation arrangements - Tax residence was in Spain in
+                2024, but wealth tax is charged on a limited basis because the special
+                regime of article 93 of Law 35/2006 on personal income tax was elected
+            identificacion-40:
+              help: null
+              label: Taxpayer - Foreign address - Province, region or state
+            identificacion-41:
+              help: null
+              label: Taxpayer - Foreign address - Country
+            identificacion-42:
+              help: null
+              label: Taxpayer - Foreign address - Country code
+            identificacion-8:
+              help: null
+              label: Autonomous Community or City of residence in 2024
+            x-c9kmarj5ecn66c9dehnn8obc:
+              help: null
+              label: Assets and rights - C1. Non-exempt assets used in business and
+                professional activities (excluding immovable property) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              help: null
+              label: Assets and rights - C2. Non-exempt immovable property used in
+                business and professional activities - Total
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Tax year the return relates to
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Language of the return
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (annual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Taxpayer - Habitual residence - Province code
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Supplementary return - Amounts payable from previous self-assessments
+                or administrative assessments
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Taxpayer - Disability - Type of disability
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Taxpayer - Disability - Disability percentage
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Taxpayer - Marital status
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Date of the return - Year
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Date of the return - Day
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Date of the return - Town
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Date of the return - Month
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Taxpayer - Date of birth
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Taxpayer - Nationality
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Marital property regime
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representative - Tax identification number
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representative - Surnames and given name, or company name
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Taxpayer - Sex
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Return type
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Payment - Payment method
+            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
+              help: null
+              label: Assessment - Gross tax liability limit - Portion of the personal
+                income tax savings taxable base
+            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Taxable
+                base'
+            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Taxable
+                base after reductions'
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
+              help: null
+              label: Assessment - Tax payable - Tax payable
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
+              help: null
+              label: Assessment - Gross tax liability - Gross tax liability
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
+              help: null
+              label: Assessment - Gross tax liability limit - Portion of the gross
+                wealth tax liability subject to limitation
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
+              help: null
+              label: Assessment - Reduced tax liability - Reduced tax liability
+            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
+              help: null
+              label: Assessment - Gross tax liability limit - Dividends and profit
+                shares not included in personal income tax
+            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
+              help: null
+              label: Assessment - Gross tax liability limit - a) Excess
+            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
+              help: null
+              label: Assessment - Gross tax liability limit - Sum of the personal
+                income tax taxable bases
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
+              help: null
+              label: Assessment - Gross tax liability limit - Portion of gross personal
+                income tax liabilities on the positive balance of capital gains and
+                losses
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
+              help: null
+              label: Assessment - Gross tax liability limit - Gross personal income
+                tax liabilities
+            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
+              help: null
+              label: Assessment - Gross tax liability limit - Joint limit on wealth
+                tax and personal income tax liabilities
+            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
+              help: null
+              label: Assessment - Gross tax liability limit - b) 80% of the gross
+                wealth tax liability
+            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
+              help: null
+              label: Assessment - Gross tax liability limit - Sum of liabilities for
+                the purposes of the joint limit
+            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
+              help: null
+              label: Assessment - Total gross tax liability - Total gross tax liability
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Form 714 Wealth Tax liability
+          field:
+            label: Wealth Tax 2024
+        '2025':
+          casilla:
+            declaracion-01:
+              help: null
+              label: Assets and rights - A2. Urban immovable property - Other properties
+                - Total urban immovable property
+            declaracion-02:
+              help: null
+              label: Assets and rights - B. Rural immovable property - Total
+            declaracion-03:
+              help: null
+              label: Assets and rights - C. Non-exempt assets and rights used in business
+                and professional activities - Total
+            declaracion-04:
+              help: null
+              label: Assets and rights - D. Exempt assets and rights used in business
+                and professional activities - Total (net of debts)
+            declaracion-05:
+              help: null
+              label: Assets and rights - E. Current and savings account deposits,
+                financial accounts and term deposits - Total
+            declaracion-06:
+              help: null
+              label: Assets and rights - F1. Securities representing capital lent
+                to third parties - Government debt, debentures, bonds and other traded
+                securities - Total
+            declaracion-07:
+              help: null
+              label: Assets and rights - F2. Securities representing capital lent
+                to third parties - Debentures, bonds, certificates of deposit and
+                promissory notes - total
+            declaracion-08:
+              help: null
+              label: Assets and rights - G1. Non-exempt securities - Traded shares
+                and units in collective investment institutions - Total
+            declaracion-09:
+              help: null
+              label: Assets and rights - G2. Non-exempt securities - Shares and holdings
+                in the funds of other entities - Total
+            declaracion-10:
+              help: null
+              label: Assets and rights - G3. Non-exempt securities - Untraded shares
+                and units in collective investment institutions - total
+            declaracion-11:
+              help: null
+              label: Assets and rights - G4. Non-exempt securities - Untraded shares
+                and holdings in other legal entities - Total
+            declaracion-12:
+              help: null
+              label: Assets and rights - H1. Exempt securities - Traded shares and
+                holdings in legal entities - Total (net of debts)
+            declaracion-13:
+              help: null
+              label: Assets and rights - H2. Exempt securities - Exempt untraded shares
+                and holdings in legal entities - Total (net of debts)
+            declaracion-14:
+              help: null
+              label: Assets and rights - I. Life insurance policies - Total
+            declaracion-15:
+              help: null
+              label: Assets and rights - J. Temporary and life annuities - Total
+            declaracion-16:
+              help: null
+              label: Assets and rights - K. Vehicles, jewellery, luxury furs, vessels
+                and aircraft - Total
+            declaracion-17:
+              help: null
+              label: Assets and rights - L. Works of art and antiques - Total
+            declaracion-18:
+              help: null
+              label: Assets and rights - M. Rights of use and enjoyment (habitual
+                dwelling excluded) - Total
+            declaracion-19:
+              help: null
+              label: Assets and rights - N. Administrative concessions - Total
+            declaracion-20:
+              help: null
+              label: Assets and rights - O. Rights arising from intellectual or industrial
+                property - Total
+            declaracion-21:
+              help: null
+              label: Assets and rights - P. Contractual options - Total
+            declaracion-22:
+              help: null
+              label: Assets and rights - R. Other assets and rights of economic value
+                - Total
+            declaracion-23:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Total non-exempt
+                assets and rights'
+            declaracion-24:
+              help: null
+              label: Deductible debts - Total
+            declaracion-26:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Reduction
+                for the exempt minimum'
+            declaracion-28:
+              help: null
+              label: Exempt wealth taken into account for progressivity - Exempt assets
+                and rights, other than those setting the rate applicable to the remainder
+            declaracion-41:
+              help: null
+              label: Assessment - Relief for foreign taxes - Amount of the relief
+            declaracion-42:
+              help: null
+              label: Assessment - Ceuta and Melilla tax reduction - Net value of assets
+                and rights in Ceuta and Melilla
+            declaracion-43:
+              help: null
+              label: Assessment - Ceuta and Melilla tax reduction - Proportional share
+                of the liability attributable to those assets and rights
+            declaracion-44:
+              help: null
+              label: Assessment - Ceuta and Melilla tax reduction - Amount of the
+                reduction
+            declaracion-46:
+              help: null
+              label: Assets and rights - Q. Virtual currency balances - Total
+            declaracion-48:
+              help: null
+              label: Assessment - Regional deductions and reductions - Regional deductions
+                - Total amount qualifying for the deduction
+            declaracion-49:
+              help: null
+              label: Assessment - Regional deductions and reductions - Regional deductions
+                - Amount applied
+            declaracion-50:
+              help: null
+              label: Assessment - Regional deductions and reductions - Regional reduction
+                - Amount applied
+            declaracion-56:
+              help: null
+              label: Supplementary return adjustment - Tax payable per earlier self-assessments
+                or assessments
+            declaracion-57:
+              help: null
+              label: Supplementary return adjustment - Additional amount payable as
+                a result of the supplementary return
+            declaracion-60:
+              help: null
+              label: Assets and rights - A1. Urban immovable property - Total value
+                of the habitual dwelling eligible for exemption
+            declaracion-61:
+              help: null
+              label: Assets and rights - A1. Urban immovable property - Exempt value
+            declaracion-62:
+              help: null
+              label: Assets and rights - A1. Urban immovable property - Non-exempt
+                value
+            declaracion-63:
+              help: null
+              label: Assets and rights - A2. Urban immovable property - Other properties
+                - Total
+            declaracion-a:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Taxes actually
+                paid abroad
+            declaracion-b:
+              help: null
+              label: Tax calculation - Deduction for taxes paid abroad - Part of the
+                taxable base taxed abroad
+            declaracion-i:
+              help: null
+              label: Payment - Payment amount
+            declaracion-negativa:
+              help: null
+              label: Nil return
+            identificacion-1:
+              help: null
+              label: Special taxation arrangements - Habitual residence was outside
+                Spanish territory in 2025 and tax is charged on a limited basis
+            identificacion-10:
+              help: null
+              label: Supplementary return
+            identificacion-12:
+              help: null
+              label: Where box 4 has been ticked and the regional rules are elected
+            identificacion-15:
+              help: null
+              label: Taxpayer - Habitual residence address - Street type
+            identificacion-16:
+              help: null
+              label: Taxpayer - Habitual residence address - Street name
+            identificacion-17:
+              help: null
+              label: Taxpayer - Habitual residence address - Numbering type
+            identificacion-18:
+              help: null
+              label: Taxpayer - Habitual residence address - House number
+            identificacion-19:
+              help: null
+              label: Taxpayer - Habitual residence address - Number qualifier
+            identificacion-2:
+              help: null
+              label: Special taxation arrangements - Residence in Spanish territory
+                ceased in 2025 or earlier but tax remains charged on a worldwide basis
+            identificacion-20:
+              help: null
+              label: Taxpayer - Habitual residence address - Block
+            identificacion-21:
+              help: null
+              label: Taxpayer - Habitual residence address - Entrance
+            identificacion-22:
+              help: null
+              label: Taxpayer - Habitual residence address - Stairway
+            identificacion-23:
+              help: null
+              label: Taxpayer - Habitual residence address - Floor
+            identificacion-24:
+              help: null
+              label: Taxpayer - Habitual residence address - Door
+            identificacion-25:
+              help: null
+              label: Taxpayer - Habitual residence address - Further address details
+            identificacion-26:
+              help: null
+              label: Taxpayer - Habitual residence address - Locality or settlement
+                (where different from the municipality)
+            identificacion-27:
+              help: null
+              label: Taxpayer - Habitual residence address - Postcode
+            identificacion-28:
+              help: null
+              label: Taxpayer - Habitual residence address - Municipality name
+            identificacion-29:
+              help: null
+              label: Taxpayer - Habitual residence address - Province
+            identificacion-3:
+              help: null
+              label: Special taxation arrangements - Autonomous Community where the
+                largest of the assets or rights is located
+            identificacion-35:
+              help: null
+              label: Taxpayer - Foreign address - Address
+            identificacion-36:
+              help: null
+              label: Taxpayer - Foreign address - Further address details
+            identificacion-37:
+              help: null
+              label: Taxpayer - Foreign address - Town or city
+            identificacion-39:
+              help: null
+              label: Taxpayer - Foreign address - Postcode (ZIP)
+            identificacion-4:
+              help: null
+              label: Special taxation arrangements - Tax residence was in Spain in
+                2025, but wealth tax is charged on a limited basis because the special
+                regime of article 93 of Law 35/2006 on personal income tax was elected
+            identificacion-40:
+              help: null
+              label: Taxpayer - Foreign address - Province, region or state
+            identificacion-41:
+              help: null
+              label: Taxpayer - Foreign address - Country
+            identificacion-42:
+              help: null
+              label: Taxpayer - Foreign address - Country code
+            identificacion-8:
+              help: null
+              label: Autonomous Community or City of residence in 2025
+            x-c9kmarj5ecn66c9dehnn8obc:
+              help: null
+              label: Assets and rights - C1. Non-exempt assets used in business and
+                professional activities (excluding immovable property) - Total
+            x-c9kmarj5ecn66chdehnn8obc:
+              help: null
+              label: Assets and rights - C2. Non-exempt immovable property used in
+                business and professional activities - Total
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Tax year the return relates to
+            x-chim6r1ed5i6irrdc4:
+              help: null
+              label: Language of the return
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Period (annual, 0A)
+            x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
+              help: null
+              label: Taxpayer - Habitual residence - Province code
+            x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
+              help: null
+              label: Supplementary return - Amounts payable from previous self-assessments
+                or administrative assessments
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
+              help: null
+              label: Taxpayer - Disability - Type of disability
+            x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
+              help: null
+              label: Taxpayer - Disability - Disability percentage
+            x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
+              help: null
+              label: Taxpayer - Marital status
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
+              help: null
+              label: Date of the return - Year
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
+              help: null
+              label: Date of the return - Day
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
+              help: null
+              label: Date of the return - Town
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
+              help: null
+              label: Date of the return - Month
+            x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
+              help: null
+              label: Taxpayer - Date of birth
+            x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
+              help: null
+              label: Taxpayer - Nationality
+            x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
+              help: null
+              label: Marital property regime
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
+              help: null
+              label: Representative - Tax identification number
+            x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: null
+              label: Representative - Surnames and given name, or company name
+            x-d5i6arjkd5j6ior1cdkmurheedingro:
+              help: null
+              label: Taxpayer - Sex
+            x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Return type
+            x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
+              help: null
+              label: Payment - Payment method
+            x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
+              help: null
+              label: Assessment - Gross tax liability limit - Portion of the personal
+                income tax savings taxable base
+            x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Taxable
+                base'
+            x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
+              help: null
+              label: 'Net wealth summary: taxable base after reductions - Taxable
+                base after reductions'
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
+              help: null
+              label: Assessment - Tax payable - Tax payable
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
+              help: null
+              label: Assessment - Gross tax liability - Gross tax liability
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
+              help: null
+              label: Assessment - Gross tax liability limit - Portion of the gross
+                wealth tax liability subject to limitation
+            x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
+              help: null
+              label: Assessment - Reduced tax liability - Reduced tax liability
+            x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
+              help: null
+              label: Assessment - Gross tax liability limit - Dividends and profit
+                shares not included in personal income tax
+            x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
+              help: null
+              label: Assessment - Gross tax liability limit - a) Excess
+            x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
+              help: null
+              label: Assessment - Gross tax liability limit - Sum of the personal
+                income tax taxable bases
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
+              help: null
+              label: Assessment - Gross tax liability limit - Portion of gross personal
+                income tax liabilities on the positive balance of capital gains and
+                losses
+            x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
+              help: null
+              label: Assessment - Gross tax liability limit - Gross personal income
+                tax liabilities
+            x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
+              help: null
+              label: Assessment - Gross tax liability limit - Joint limit on wealth
+                tax and personal income tax liabilities
+            x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
+              help: null
+              label: Assessment - Gross tax liability limit - b) 80% of the gross
+                wealth tax liability
+            x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
+              help: null
+              label: Assessment - Gross tax liability limit - Sum of liabilities for
+                the purposes of the joint limit
+            x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
+              help: null
+              label: Assessment - Total gross tax liability - Total gross tax liability
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Form 714 Wealth Tax liability
+          field:
+            label: Wealth Tax 2025

@@ -1,0 +1,30 @@
+modelo:
+  schema:
+    '115':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Nombre de perceptors
+            '02':
+              help: null
+              label: Base de retencions i ingressos a compte
+            '03':
+              help: null
+              label: Retencions i ingressos a compte
+            '04':
+              help: null
+              label: Resultat de declaracions anteriors
+            '05':
+              help: null
+              label: Resultat a ingressar
+          construct:
+            modelo-115-quarterly-rental-withholding:
+              field:
+                title: null
+          field:
+            label: null

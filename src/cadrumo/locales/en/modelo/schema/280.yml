@@ -1,0 +1,92 @@
+modelo:
+  schema:
+    '280':
+      field:
+        official_name: null
+        title: null
+      revision:
+        '2025':
+          casilla:
+            aportaciones-ejercicio:
+              help: null
+              label: null
+            base-retencion-practicada:
+              help: null
+              label: Base of the withholding applied
+            base-retenciones:
+              help: null
+              label: Withholding base
+            clave-alta:
+              help: null
+              label: null
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Supplementary or replacement return
+            declarado-nif:
+              help: null
+              label: null
+            declarado-nombre:
+              help: null
+              label: null
+            declarante-nif:
+              help: null
+              label: null
+            declarante-razon-social:
+              help: null
+              label: Business name of the filer
+            ejercicio-declaracion:
+              help: null
+              label: null
+            extincion-plan:
+              help: null
+              label: null
+            fecha-apertura:
+              help: null
+              label: Opening date
+            fecha-extincion:
+              help: null
+              label: null
+            identificador-producto:
+              help: null
+              label: Identifier of the contracted product
+            importe-total-aportaciones:
+              help: null
+              label: Total amount of contributions
+            numero-identificativo-anterior:
+              help: null
+              label: Identifying number of the previous return
+            numero-identificativo-declaracion:
+              help: null
+              label: Declaration identifying number
+            numero-total-declarados:
+              help: null
+              label: Total number of reported persons
+            persona-relacion:
+              help: null
+              label: Contact person
+            rendimientos-negativos-acumulados:
+              help: null
+              label: null
+            rendimientos-negativos-ejercicio:
+              help: null
+              label: null
+            rendimientos-negativos-imputables:
+              help: null
+              label: Attributable negative returns
+            rendimientos-positivos-acumulados:
+              help: null
+              label: null
+            rendimientos-positivos-ejercicio:
+              help: null
+              label: null
+            representante-legal-nif:
+              help: null
+              label: Tax ID of the legal representative
+            tipo-identificador:
+              help: null
+              label: Identifier type
+            tipo-plan-ahorro:
+              help: null
+              label: Type of long-term savings plan
+          field:
+            label: null

@@ -1,0 +1,141 @@
+modelo:
+  schema:
+    '181':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2009-y-siguientes:
+          casilla:
+            cantidades-minorar-principal:
+              help: null
+              label: A kölcsön tőketartozásának csökkentésére fordított összegek
+            clave-intervencion:
+              help: null
+              label: Az ügyletben betöltött szerep kódja
+            clave-tipo-identificacion:
+              help: null
+              label: Az azonosítás típuskódja
+            codigo-provincia:
+              help: null
+              label: Tartománykód
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Kiegészítő vagy helyettesítő bevallás
+            declarado-nif:
+              help: null
+              label: A bejelentett személy adószáma
+            declarado-nombre:
+              help: null
+              label: A bejelentett személy neve vagy cégneve
+            declarante-razon-social:
+              help: null
+              label: A bejelentő cégneve
+            direccion-inmueble:
+              help: null
+              label: Az ingatlan címe
+            duracion-operacion:
+              help: null
+              label: Az ügylet futamideje hónapban
+            fecha-operacion:
+              help: null
+              label: Az ügylet dátuma
+            identificacion-operacion:
+              help: null
+              label: A kölcsön, hitel vagy egyéb pénzügyi ügylet azonosítója
+            importe-amortizacion-capital:
+              help: null
+              label: Az év során tőketörlesztés címén kifizetett összeg
+            importe-gastos-financiacion:
+              help: null
+              label: Az év során külső finanszírozási költség címén kifizetett összeg
+            importe-intereses:
+              help: null
+              label: Az év során kamat címén kifizetett összeg
+            importe-operacion:
+              help: null
+              label: A kölcsön, hitel vagy egyéb pénzügyi ügylet összege
+            importe-reintegro-intereses:
+              help: null
+              label: Az év során visszatérített kamat címén elszámolt összeg
+            importe-total-capital-amortizado:
+              help: null
+              label: A törlesztett tőke teljes összege
+            importe-total-gastos-financiacion:
+              help: null
+              label: A külső finanszírozásból eredő költségek összege
+            importe-total-intereses:
+              help: null
+              label: Az év során kifizetett kamat teljes összege
+            importe-total-saldos-pendientes:
+              help: null
+              label: A december 31-én fennálló egyenlegek összege
+            intereses-indemnizatorios:
+              help: null
+              label: Kártalanítási kamat
+            numero-identificativo-anterior:
+              help: null
+              label: A korábbi bevallás azonosító száma
+            numero-identificativo-declaracion:
+              help: null
+              label: A bevallás azonosító száma
+            numero-total-declarados:
+              help: null
+              label: A bejelentett rekordok száma összesen
+            origen-operacion:
+              help: null
+              label: Az ügylet eredete
+            otras-cantidades-indemnizatorias:
+              help: null
+              label: Egyéb kártalanítási összegek
+            persona-relacion:
+              help: null
+              label: Kapcsolattartó személy
+            porcentaje-financiacion-vivienda-habitual:
+              help: null
+              label: A finanszírozás állandó lakóingatlanra fordított százaléka
+            porcentaje-participacion:
+              help: null
+              label: A részesedés százaléka
+            prefijo-codigo-iban:
+              help: null
+              label: Az IBAN-kód előtagja
+            prestamista-nif:
+              help: null
+              label: A hitelező adószáma
+            prestamista-nombre:
+              help: null
+              label: A hitelező neve vagy cégneve
+            referencia-catastral:
+              help: null
+              label: Ingatlan-nyilvántartási hivatkozás
+            representante-legal-nif:
+              help: null
+              label: A törvényes képviselő adószáma
+            saldo-pendiente:
+              help: null
+              label: A december 31-én fennálló egyenleg
+            situacion-inmueble:
+              help: null
+              label: Az ingatlan elhelyezkedése
+            subclave-operacion:
+              help: null
+              label: Az ügylet alkódja
+            tipo-operacion:
+              help: null
+              label: Az ügylet típusa
+            valor-tasacion-inmueble:
+              help: null
+              label: A biztosítékul adott ingatlan értékbecslés szerinti értéke
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az adóbevallás vonatkozási éve
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-181-informative:
+              field:
+                title: null
+          field:
+            label: null

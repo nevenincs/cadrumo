@@ -1,0 +1,86 @@
+modelo:
+  schema:
+    '189':
+      field:
+        official_name: null
+        title: null
+      revision:
+        '2025':
+          casilla:
+            clave-identificacion:
+              help: null
+              label: Clau d'identificació
+            clave-mercado:
+              help: null
+              label: Clau de mercat
+            clave-representacion:
+              help: null
+              label: Clau de representació
+            clave-titularidad:
+              help: null
+              label: Clau de titularitat
+            clave-valor:
+              help: null
+              label: Clau de valor
+            codigo-pais:
+              help: null
+              label: Codi de país
+            codigo-provincia:
+              help: null
+              label: Codi de província
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaració complementària o substitutiva
+            declarado-nif:
+              help: null
+              label: NIF del declarat
+            declarado-nombre:
+              help: null
+              label: Cognoms i nom, raó social o denominació del declarat
+            declarante-nif:
+              help: null
+              label: NIF del declarant
+            declarante-razon-social:
+              help: null
+              label: Raó social del declarant
+            ejercicio-declaracion:
+              help: null
+              label: Exercici de declaració
+            identificacion-valores:
+              help: null
+              label: Identificació dels valors
+            nominal-unitario-valores:
+              help: null
+              label: Nominal unitari dels valors
+            numero-identificativo-anterior:
+              help: null
+              label: Número identificatiu de la declaració anterior
+            numero-justificante:
+              help: null
+              label: Número de justificant de la declaració
+            numero-total-declarados:
+              help: null
+              label: Nombre total de declarats
+            numero-valores:
+              help: null
+              label: Nombre de valors
+            persona-relacion:
+              help: null
+              label: Persona amb qui relacionar-se
+            porcentaje-participacion:
+              help: null
+              label: Percentatge de participació
+            representante-legal-nif:
+              help: null
+              label: NIF del representant legal
+            tipo-soporte:
+              help: null
+              label: Tipus de suport
+            valoracion:
+              help: null
+              label: Valoració
+            valoracion-total:
+              help: null
+              label: Valoració total
+          field:
+            label: null

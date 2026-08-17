@@ -28,26 +28,20 @@ _CASES: list[tuple[str, dict[str, object], tuple[str, ...], tuple[str, ...]]] = 
     (
         "cli.app.modelo.work.selector_not_found",
         {},
-        ("Nincs aktív munkaegység", "Futtassa először"),
-        ("aktiv munkaegyseg", "idoszak", "eloszor"),
+        ("Nincs aktív munkaegység", "időszakhoz"),
+        ("aktiv munkaegyseg", "idoszak"),
     ),
     (
         "cli.app.modelo.work.selector_ambiguous",
         {"candidates": "X"},
-        ("Több aktív munkaegység", "nyilvántartási revíziót"),
-        ("Tobb aktiv", "nyilvantartasi reviziot"),
+        ("Több aktív munkaegység", "időszakra"),
+        ("Tobb aktiv", "idoszakra"),
     ),
     (
         "application.modelo.errors.export_period_unmappable",
         {"work_unit_id": "wu", "period": "1T"},
         ("munkaegység", "időszakot"),
         ("munkaegyseg", "idoszakot"),
-    ),
-    (
-        "application.modelo.errors.export_operator_name_missing",
-        {"missing": "name"},
-        ("Az exportáláshoz szükség van", "aktív profilban"),
-        ("exportalashoz szukseg", "aktiv profilban"),
     ),
     (
         "application.modelo.errors.work_unit_revision_divergence",
@@ -63,10 +57,10 @@ _CASES: list[tuple[str, dict[str, object], tuple[str, ...], tuple[str, ...]]] = 
         ("munkaegyseg", "nyilvantartasi revizioval", "torveny altal meghatarozott"),
     ),
     (
-        "errors.storage.runtime.session_expired",
+        "errors.refused.refused_storage_session_expired",
         {},
-        ("Az aktív bucket-munkamenet lejárt", "újraaktiválásához"),
-        ("aktiv bucket-munkamenet lejart", "ujraaktivalasahoz"),
+        ("Az aktív munkamenet", "Aktiválja újra"),
+        ("aktiv munkamenet", "Aktivalja ujra"),
     ),
     (
         "errors.refused.modelo_work_selector_no_active_bucket",

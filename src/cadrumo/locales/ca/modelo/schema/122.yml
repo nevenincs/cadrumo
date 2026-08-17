@@ -1,0 +1,119 @@
+modelo:
+  schema:
+    '122':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2017-y-siguientes:
+          casilla:
+            x-c5pm6pbechkmarjkckmm8rrj5lk6iqjfecn62ojfdpniqobeehkm6qbgc5i6u:
+              help: Import de l'abonament anticipat de la deducció efectivament percebut
+                en el període impositiu. La regularització escau quan el percebut
+                excedeix la deducció a què es tenia dret.
+              label: Regularització ascendent separat legalment o sense vincle matrimonial
+                amb dos fills. Import de l'abonament anticipat
+            x-c5pm6pbechkmarjkckmm8rrj5lk6iqjfecn68pb4elhm6qbfdo:
+              help: Import de la deducció a què el contribuent tenia dret en el període
+                impositiu, conforme a l'article 81 bis de la Llei 35/2006.
+              label: Regularització ascendent separat legalment o sense vincle matrimonial
+                amb dos fills. Import de la deducció
+            x-c5pm6pbechkmarjkclpisob2dtn6ubb1dpq6ior9e1gm8ro:
+              help: Import de l'abonament anticipat de la deducció efectivament percebut
+                en el període impositiu. La regularització escau quan el percebut
+                excedeix la deducció a què es tenia dret.
+              label: Regularització ascendents amb discapacitat. Import de l'abonament
+                anticipat
+            x-c5pm6pbechkmarjkclpisp35chqm6or9dtn0:
+              help: Import de la deducció a què el contribuent tenia dret en el període
+                impositiu, conforme a l'article 81 bis de la Llei 35/2006.
+              label: Regularització ascendents amb discapacitat. Import de la deducció
+            x-c5pm6pbechkmarjkclpisrj9co:
+              help: NIF de l'ascendent amb discapacitat pel qual es va practicar la
+                deducció.
+              label: Regularització ascendents amb discapacitat. NIF de l'ascendent
+            x-c5pm6pbechkmarjkclpisrjfdlh74p8:
+              help: Primer cognom, un espai, segon cognom, un espai i nom complet
+                de l'ascendent amb discapacitat.
+              label: Regularització ascendents amb discapacitat. Cognoms i nom de
+                l'ascendent
+            x-cdnmsublctiisob2dtn6ubb1dpq6ior9e1gm8ro:
+              help: Import de l'abonament anticipat de la deducció efectivament percebut
+                en el període impositiu. La regularització escau quan el percebut
+                excedeix la deducció a què es tenia dret.
+              label: Regularització cònjuge no separat amb discapacitat. Import de
+                l'abonament anticipat
+            x-cdnmsublctiisp35chqm6or9dtn0:
+              help: Import de la deducció a què el contribuent tenia dret en el període
+                impositiu, conforme a l'article 81 bis de la Llei 35/2006.
+              label: Regularització cònjuge no separat amb discapacitat. Import de
+                la deducció
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la regularització
+            x-chim6r1ee1gmeqbec4mm6rrde1m6arb5dpq62sj9c4:
+              help: Es consigna una C quan la pàgina és complementària d'una altra
+                presentada anteriorment; en altre cas es deixa en blanc.
+              label: Indicador de pàgina complementària
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració (originària / substitutiva / complementària)
+            x-chin6or5dpi6ipbeehin6bj1c9nmsrpdc5n78qb3d5o62p3f:
+              help: Import de l'abonament anticipat de la deducció efectivament percebut
+                en el període impositiu. La regularització escau quan el percebut
+                excedeix la deducció a què es tenia dret.
+              label: Regularització descendents amb discapacitat. Import de l'abonament
+                anticipat
+            x-chin6or5dpi6ipbeehin6bj4cli7aor3d5nms:
+              help: Import de la deducció a què el contribuent tenia dret en el període
+                impositiu, conforme a l'article 81 bis de la Llei 35/2006.
+              label: Regularització descendents amb discapacitat. Import de la deducció
+            x-chin6or5dpi6ipbeehin6bjed5j0:
+              help: NIF del descendent amb discapacitat pel qual es va practicar la
+                deducció.
+              label: Regularització descendents amb discapacitat. NIF del descendent
+            x-chin6or5dpi6ipbeehin6bjedtmm4sj5:
+              help: Primer cognom, un espai, segon cognom, un espai i nom complet
+                del descendent amb discapacitat.
+              label: Regularització descendents amb discapacitat. Cognoms i nom del
+                descendent
+            x-cpgmqqbcd5giqrjldlin4rrjc4n62ojfdpniqobeehkm6qbgc5i6u:
+              help: Import de l'abonament anticipat de la deducció efectivament percebut
+                en el període impositiu. La regularització escau quan el percebut
+                excedeix la deducció a què es tenia dret.
+              label: Regularització família nombrosa. Import de l'abonament anticipat
+            x-cpgmqqbcd5giqrjldlin4rrjc4n68pb4elhm6qbfdo:
+              help: Import de la deducció a què el contribuent tenia dret en el període
+                impositiu, conforme a l'article 81 bis de la Llei 35/2006.
+              label: Regularització família nombrosa. Import de la deducció
+            x-cpgmqqbcd5giqrjldlin4rrjc4n78qbkelm6u:
+              help: Número d'identificació que figura en el títol oficial de família
+                nombrosa expedit per la comunitat autònoma.
+              label: Regularització família nombrosa. Número d'identificació del títol
+                de família nombrosa
+            x-e9in0shec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              help: Cognoms del representant si és persona física, o la seva raó social
+                completa si és persona jurídica o entitat.
+              label: Cognoms o raó social del representant
+            x-e9in0shedpkmc:
+              help: NIF de la persona o entitat que presenta l'autoliquidació en representació
+                del contribuent. Es deixa en blanc quan el contribuent presenta per
+                si mateix.
+              label: NIF del representant
+            x-e9in0shedpnmqojick:
+              help: Nom del representant quan es tracta d'una persona física. En altre
+                cas s'omple amb blancs.
+              label: Nom del representant
+            x-e9in6tbcehgm8rpec4mmirj7e9in6obi:
+              help: Import total a ingressar per la regularització. El disseny de
+                registre imprimeix l'expressió (558-557+573-572+589-588+591-590),
+                que no inclou el parell de cònjuge [574]/[575] declarat en el mateix
+                registre; per això aquesta casella es pren del contribuent i no es
+                calcula.
+              label: Resultat de la regularització a ingressar
+          construct:
+            modelo-122-regularizacion:
+              field:
+                title: null
+          field:
+            label: null

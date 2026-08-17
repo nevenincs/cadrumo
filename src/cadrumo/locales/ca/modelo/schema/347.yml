@@ -1,0 +1,146 @@
+modelo:
+  schema:
+    '347':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2008-y-siguientes:
+          casilla:
+            x-cdnmst3ic5o62sjkckn62sjicln68obdd5imst3f5lm6uor1dgmmspb7dthmiro:
+              help: null
+              label: null
+            x-cdnmst3ic5o62sjkckn64qb5dpin6bbmd5n66tbcc5i6uso:
+              help: null
+              label: null
+            x-cdnmst3ic5o62sjkckn66r31epiiqrrgclp62or9dtn0:
+              help: null
+              label: Clau d'operació amb la contrapart (A=lliuraments/prestacions,
+                B=adquisicions/recepcions, ...)
+            x-cdnmst3ic5o62sjkckn66sj9ehin4qbf5lhm2qj1:
+              help: null
+              label: null
+            x-cdnmst3ic5o62sjkckn6aqj5e9hmior9dsmmus35e9gm6qbfdo:
+              help: null
+              label: null
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4og:
+              help: null
+              label: Import d'operacions amb la contrapart en el primer trimestre
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4p0:
+              help: null
+              label: Import d'operacions amb la contrapart en el segon trimestre
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4pg:
+              help: null
+              label: Import d'operacions amb la contrapart en el tercer trimestre
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4q0:
+              help: null
+              label: Import d'operacions amb la contrapart en el quart trimestre
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dc5n7aobc:
+              help: null
+              label: null
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dcdp6it35e9kmubb3c5l62:
+              help: null
+              label: null
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9ddlin8obcd5hmu:
+              help: null
+              label: null
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah64:
+              help: null
+              label: null
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah68:
+              help: null
+              label: null
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah6c:
+              help: null
+              label: null
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah6g:
+              help: null
+              label: null
+            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bb9dpmnapb2dhin6:
+              help: null
+              label: null
+            x-cdnmst3ic5o62sjkckn6irjmclp76qbfdomn6tbaclq6ubbgc5pmitjf:
+              help: null
+              label: null
+            x-cdnmst3ic5o62sjkckn6sqb6:
+              help: null
+              label: NIF de la contrapart declarada
+            x-cdnmst3ic5o62sjkckn6sqb65lnn0pbic5i6ushdcdnmqtbed5q62sj9ds:
+              help: null
+              label: null
+            x-cdnmst3ic5o62sjkckn6srrdc9p6a:
+              help: null
+              label: Nom o raó social de la contrapart declarada
+            x-cdnmst3ic5o62sjkckn6stbdclp6ubb3dtn7crr3c5q6usj9c4mm4p3eec:
+              help: null
+              label: null
+            x-cdnmst3ic5o62sjkckn6us35e9gm6qbfdomn6pb7elp6u:
+              help: null
+              label: null
+            x-cdnmst3ic5o62sjkckn70ob9ecmm6rr4d5jmu:
+              help: null
+              label: Codi de país de la contrapart (ISO 3166-1 alfa-2; buit per a
+                contraparts nacionals)
+            x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
+              help: null
+              label: null
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1ed5mn0rriehiiqt3fehgmobb1dpqm2r0:
+              help: null
+              label: null
+            x-chim6r1ed5mn0rriehiiqt3fehgmobb1e9p6arj4c5mmipbeehniqr3fcdgmopbj:
+              help: null
+              label: null
+            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
+              help: null
+              label: null
+            x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
+              help: null
+              label: null
+            x-chim6r1ee9in0sj5edimst31dpq6abbccljm2r1ddpkmc:
+              help: null
+              label: null
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració (originària / substitutiva / complementària)
+            x-chim6r1eehkn0rpdednn0rriehig:
+              help: null
+              label: null
+            x-chim6r1eehnn8obc5lkmsrblclh6opbj:
+              help: null
+              label: null
+            x-chim6r1eehnn8obc5lo6asjjdtn62spdcln78qb4c5i6aso:
+              help: null
+              label: null
+            x-d5n6qtb5c9m6abj1e9p6arj4c5q62sj9dsmmsqb6:
+              help: null
+              label: null
+            x-d5n6qtb5c9m6abj1e9p6arj4c5q62sj9dsmmsrrdc9p6a:
+              help: null
+              label: null
+            x-d5n6qtb5c9m6abj4d5p6aor3d5nms:
+              help: null
+              label: null
+            x-d5n6qtb5c9m6abj9dlo6usjkckmmus35e9gm6qbfdo:
+              help: null
+              label: null
+            x-d5n6qtb5c9m6abjiclj6asj5dphmio9dcdgn8objehp62r0:
+              help: null
+              label: null
+            x-d5n6qtb5c9m6abjiclo74pbjcln78obeehiiqr35ctgmobbed5j0:
+              help: null
+              label: null
+            x-d5n6qtb5c9m6abjjd5q7aob3d5nms:
+              help: null
+              label: null
+          construct:
+            modelo-347-informative:
+              field:
+                title: null
+          field:
+            label: null

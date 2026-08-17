@@ -1,0 +1,84 @@
+modelo:
+  schema:
+    '156':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2003-y-siguientes:
+          casilla:
+            afiliado-nif:
+              help: null
+              label: Tax ID of the member or mutualist
+            afiliado-nombre:
+              help: null
+              label: Surnames and given name of the member or mutualist
+            cotizacion-abril:
+              help: null
+              label: 'April contribution: monthly status and accrued premium amount'
+            cotizacion-agosto:
+              help: null
+              label: 'August contribution: monthly status and accrued premium amount'
+            cotizacion-diciembre:
+              help: null
+              label: 'December contribution: monthly status and accrued premium amount'
+            cotizacion-enero:
+              help: null
+              label: 'January contribution: monthly status and accrued premium amount'
+            cotizacion-febrero:
+              help: null
+              label: 'February contribution: monthly status and accrued premium amount'
+            cotizacion-julio:
+              help: null
+              label: 'July contribution: monthly status and accrued premium amount'
+            cotizacion-junio:
+              help: null
+              label: 'June contribution: monthly status and accrued premium amount'
+            cotizacion-marzo:
+              help: null
+              label: 'March contribution: monthly status and accrued premium amount'
+            cotizacion-mayo:
+              help: null
+              label: 'May contribution: monthly status and accrued premium amount'
+            cotizacion-noviembre:
+              help: null
+              label: 'November contribution: monthly status and accrued premium amount'
+            cotizacion-octubre:
+              help: null
+              label: 'October contribution: monthly status and accrued premium amount'
+            cotizacion-septiembre:
+              help: null
+              label: 'September contribution: monthly status and accrued premium amount'
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Supplementary or replacement return
+            declarante-razon-social:
+              help: null
+              label: Business name of the filer
+            numero-afiliacion:
+              help: null
+              label: Membership number
+            numero-identificativo-anterior:
+              help: null
+              label: Identifying number of the previous return
+            numero-justificante:
+              help: null
+              label: Filing receipt number
+            numero-total-afiliados:
+              help: null
+              label: Total number of member or mutualist records
+            persona-relacion:
+              help: null
+              label: Contact person
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the return relates
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-156-informative:
+              field:
+                title: null
+          field:
+            label: null

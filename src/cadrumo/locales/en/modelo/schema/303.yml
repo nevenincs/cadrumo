@@ -1,0 +1,4257 @@
+modelo:
+  schema:
+    '303':
+      casilla:
+        continuidad:
+          dr303-01:
+            help: null
+            label: Accrued VAT, general regime super-reduced 4% rate - taxable base
+          dr303-02:
+            help: null
+            label: Accrued VAT, general regime super-reduced 4% rate - rate percentage
+          dr303-03:
+            help: null
+            label: Accrued VAT, general regime super-reduced 4% rate - VAT amount
+          dr303-04:
+            help: null
+            label: Accrued VAT, general regime reduced 10% rate - taxable base
+          dr303-05:
+            help: null
+            label: Accrued VAT, general regime reduced 10% rate - rate percentage
+          dr303-06:
+            help: null
+            label: Accrued VAT, general regime reduced 10% rate - VAT amount
+          dr303-07:
+            help: null
+            label: Accrued VAT, general regime standard 21% rate - taxable base
+          dr303-08:
+            help: null
+            label: Accrued VAT, general regime standard 21% rate - rate percentage
+          dr303-09:
+            help: null
+            label: Accrued VAT, general regime standard 21% rate - VAT amount
+          dr303-10:
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of goods and services
+              - base
+          dr303-108:
+            help: null
+            label: Corrective return - other adjustments in cases determined by discrepancy
+              with administrative criterion
+          dr303-109:
+            help: null
+            label: Result - refunds agreed by AEAT for previous self-assessments for
+              the same year and period
+          dr303-11:
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of goods and services
+              - VAT amount
+          dr303-111:
+            help: null
+            label: Corrective return - correction amount
+          dr303-112:
+            help: Manual amount for the advance payment on gasoline, diesel and biofuel
+              supplies allocated to the State; it reduces Modelo 303 casilla 71.
+            label: Advance payment for gasoline, diesel and biofuels supplies allocated
+              to the State
+          dr303-12:
+            help: null
+            label: Accrued VAT on other reverse-charge transactions excluding intra-Community
+              acquisitions - base
+          dr303-120:
+            help: null
+            label: Additional information - transactions not subject due to place-of-supply
+              rules, excluding box 123
+          dr303-122:
+            help: null
+            label: Additional information - transactions subject to reverse charge
+          dr303-123:
+            help: null
+            label: Additional information - transactions not subject under one-stop
+              shop special schemes place-of-supply rules
+          dr303-124:
+            help: null
+            label: Additional information - transactions subject under one-stop shop
+              special schemes
+          dr303-13:
+            help: null
+            label: Accrued VAT on other reverse-charge transactions excluding intra-Community
+              acquisitions - VAT amount
+          dr303-14:
+            help: null
+            label: Changes to accrued VAT taxable bases and amounts - taxable base
+          dr303-15:
+            help: null
+            label: Changes to accrued VAT taxable bases and amounts - VAT amount
+          dr303-150:
+            help: null
+            label: Accrued VAT, general regime new rate tier 1 - taxable base
+          dr303-151:
+            help: null
+            label: Accrued VAT, general regime new rate tier 1 - rate percentage
+          dr303-152:
+            help: null
+            label: Accrued VAT, general regime new rate tier 1 - VAT amount
+          dr303-153:
+            help: null
+            label: Accrued VAT, general regime new rate tier 2 - taxable base
+          dr303-154:
+            help: null
+            label: Accrued VAT, general regime new rate tier 2 - rate percentage
+          dr303-155:
+            help: null
+            label: Accrued VAT, general regime new rate tier 2 - VAT amount
+          dr303-156:
+            help: null
+            label: Equivalence surcharge at 0.5% - taxable base
+          dr303-157:
+            help: null
+            label: Equivalence surcharge at 0.5% - rate percentage
+          dr303-158:
+            help: null
+            label: Equivalence surcharge at 0.5% - surcharge amount
+          dr303-16:
+            help: null
+            label: Equivalence surcharge at 1.0% - taxable base
+          dr303-165:
+            help: null
+            label: Accrued VAT, general regime 2% rate from 2024 - taxable base
+          dr303-166:
+            help: null
+            label: Accrued VAT, general regime 2% rate from 2024 - rate percentage
+          dr303-167:
+            help: null
+            label: Accrued VAT, general regime 2% rate from 2024 - VAT amount
+          dr303-168:
+            help: null
+            label: New equivalence surcharge rate from 2024 - taxable base
+          dr303-169:
+            help: null
+            label: New equivalence surcharge rate from 2024 - rate percentage
+          dr303-17:
+            help: null
+            label: Equivalence surcharge at 1.0% - rate percentage
+          dr303-170:
+            help: null
+            label: New equivalence surcharge rate from 2024 - surcharge amount
+          dr303-18:
+            help: null
+            label: Equivalence surcharge at 1.0% - surcharge amount
+          dr303-19:
+            help: null
+            label: Equivalence surcharge at 1.4% - taxable base
+          dr303-20:
+            help: null
+            label: Equivalence surcharge at 1.4% - rate percentage
+          dr303-21:
+            help: null
+            label: Equivalence surcharge at 1.4% - surcharge amount
+          dr303-22:
+            help: null
+            label: Equivalence surcharge at 5.2% - taxable base
+          dr303-23:
+            help: null
+            label: Equivalence surcharge at 5.2% - rate percentage
+          dr303-24:
+            help: null
+            label: Equivalence surcharge at 5.2% - surcharge amount
+          dr303-25:
+            help: null
+            label: Changes to equivalence surcharge bases and amounts - taxable base
+          dr303-26:
+            help: null
+            label: Changes to equivalence surcharge bases and amounts - surcharge
+              amount
+          dr303-27:
+            help: null
+            label: Total accrued VAT amount
+          dr303-28:
+            help: null
+            label: Deductible VAT on domestic current transactions - base
+          dr303-29:
+            help: null
+            label: Deductible VAT on domestic current transactions - VAT amount
+          dr303-30:
+            help: null
+            label: Deductible VAT on domestic capital goods - base
+          dr303-31:
+            help: null
+            label: Deductible VAT on domestic capital goods - VAT amount
+          dr303-32:
+            help: null
+            label: Deductible VAT on imports of current goods - base
+          dr303-33:
+            help: null
+            label: Deductible VAT on imports of current goods - VAT amount
+          dr303-34:
+            help: null
+            label: Deductible VAT on imports of capital goods - base
+          dr303-35:
+            help: null
+            label: Deductible VAT on imports of capital goods - VAT amount
+          dr303-36:
+            help: null
+            label: Deductible VAT on intra-Community acquisitions of current goods
+              - base
+          dr303-37:
+            help: null
+            label: Deductible VAT on intra-Community acquisitions of current goods
+              - VAT amount
+          dr303-38:
+            help: null
+            label: Deductible VAT on intra-Community acquisitions of capital goods
+              - base
+          dr303-39:
+            help: null
+            label: Deductible VAT on intra-Community acquisitions of capital goods
+              - VAT amount
+          dr303-40:
+            help: null
+            label: Deduction corrections - base
+          dr303-41:
+            help: null
+            label: Deduction corrections - VAT amount
+          dr303-42:
+            help: null
+            label: Special agriculture, livestock and fisheries scheme compensations
+              - amount
+          dr303-43:
+            help: null
+            label: Capital goods regularization - amount
+          dr303-44:
+            help: null
+            label: Pro rata regularization using final percentage - amount
+          dr303-45:
+            help: null
+            label: Total deductible amount
+          dr303-47:
+            help: null
+            label: Simplified regime, Q1-Q3 - sum of payments on account for all activities
+          dr303-48:
+            help: null
+            label: Simplified regime, Q4 - sum of derived amounts for all activities
+          dr303-49:
+            help: null
+            label: Simplified regime, Q4 - sum of payments on account made in the
+              year
+          dr303-50:
+            help: null
+            label: Simplified regime, Q4 - result ([48] - [49])
+          dr303-51:
+            help: null
+            label: Simplified regime - accrued VAT on intra-Community acquisitions
+              of goods
+          dr303-52:
+            help: null
+            label: Simplified regime - accrued VAT on supplies of fixed assets
+          dr303-53:
+            help: null
+            label: Simplified regime - accrued VAT from reverse-charge transactions
+          dr303-54:
+            help: null
+            label: Simplified regime - total resulting amount
+          dr303-55:
+            help: null
+            label: Simplified regime - deductible VAT on acquisition or import of
+              fixed assets
+          dr303-56:
+            help: null
+            label: Simplified regime - deductible VAT from capital goods regularization
+          dr303-57:
+            help: null
+            label: Simplified regime - total deductible VAT ([55] + [56])
+          dr303-58:
+            help: null
+            label: Simplified regime result ([54] - [57])
+          dr303-59:
+            help: null
+            label: Additional information - intra-Community supplies of goods and
+              services
+          dr303-60:
+            help: null
+            label: Additional information - exports and assimilated transactions
+          dr303-62:
+            help: null
+            label: Additional information - cash accounting supplies accrued under
+              Article 75 LIVA - taxable base
+          dr303-63:
+            help: null
+            label: Additional information - cash accounting supplies accrued under
+              Article 75 LIVA - VAT amount
+          dr303-65:
+            help: null
+            label: Result - percentage attributable to the State Tax Administration
+          dr303-68:
+            help: null
+            label: Result - joint taxation annual regularization result
+          dr303-70:
+            help: null
+            label: Result - amounts payable from previous self-assessments for the
+              same year and period
+          dr303-74:
+            help: null
+            label: Additional information - cash accounting acquisitions - taxable
+              base
+          dr303-75:
+            help: null
+            label: Additional information - cash accounting acquisitions - VAT amount
+          dr303-76:
+            help: null
+            label: Result - regularization under Article 80.Five.5 LIVA
+          dr303-77:
+            help: null
+            label: Result - import VAT assessed by Customs pending payment
+          filing-period:
+            help: null
+            label: Quarterly period
+          filing-year:
+            help: null
+            label: Self-assessment tax year
+          iva-base-autorepercutida-intracomunitaria-devengado:
+            help: Add up the self-charged taxable base accrued on intra-Community
+              acquisitions.
+            label: Taxable base of accrued reverse-charge VAT on intra-Community acquisitions
+          iva-compensacion-aplicada-periodo:
+            help: null
+            label: Prior-period offsets applied in this period
+          iva-compensacion-disponible-fin-periodo:
+            help: null
+            label: Offset balance available at period end
+          iva-compensacion-generada-periodo:
+            help: null
+            label: Offset balance generated in this period
+          iva-compensacion-pendiente-anteriores:
+            help: null
+            label: Amounts to offset pending from prior periods
+          iva-compensacion-pendiente-posteriores:
+            help: null
+            label: Prior-period offsets pending for later periods
+          iva-cuota-autorepercutida-interior-deducible:
+            help: null
+            label: Deductible reverse-charge VAT on domestic transactions
+          iva-cuota-autorepercutida-interior-devengado:
+            help: null
+            label: Accrued reverse-charge VAT on domestic transactions
+          iva-cuota-autorepercutida-intracomunitaria:
+            help: null
+            label: Reverse-charge VAT amount on intra-Community acquisitions
+          iva-cuota-autorepercutida-intracomunitaria-deducible:
+            help: null
+            label: Deductible reverse-charge VAT on intra-Community acquisitions
+          iva-cuota-autorepercutida-intracomunitaria-devengado:
+            help: null
+            label: Accrued reverse-charge VAT on intra-Community acquisitions
+          iva-cuota-deducible-total:
+            help: null
+            label: Total deductible VAT amount
+          iva-cuota-devengada-total:
+            help: null
+            label: Total accrued VAT amount
+          iva-cuota-repercutida-general:
+            help: Total output VAT calculated at the standard 21% rate.
+            label: Output VAT amount at the standard rate (21%)
+          iva-cuota-repercutida-reducido:
+            help: null
+            label: Output VAT amount at the reduced rate (10%)
+          iva-cuota-repercutida-reducido-transitorio:
+            help: Transitional box under RD-ley 4/2024 for the reduced rate, coexisting
+              with the ordinary 10% reduced rate.
+            label: Output VAT amount at the transitional reduced rate (5%/7.5%)
+          iva-cuota-repercutida-super-reducido:
+            help: null
+            label: Output VAT amount at the super-reduced rate (4%)
+          iva-cuota-repercutida-super-reducido-transitorio:
+            help: Transitional box under RD-ley 4/2024 for the super-reduced rate,
+              coexisting with the ordinary 4% super-reduced rate.
+            label: Output VAT amount at the transitional super-reduced rate (2%)
+          iva-cuota-soportada-importaciones:
+            help: null
+            label: Deductible input VAT on imports of current goods
+          iva-cuota-soportada-interiores:
+            help: null
+            label: Deductible input VAT on domestic current transactions
+          iva-prorrata-porcentaje:
+            help: null
+            label: General pro rata percentage
+          iva-prorrata-volumen-con-derecho:
+            help: null
+            label: Annual turnover giving deduction rights
+          iva-prorrata-volumen-total:
+            help: null
+            label: Total annual turnover
+          iva-regularizacion-inversiones:
+            help: null
+            label: Capital goods adjustment
+          iva-resultado-regimen-general:
+            help: null
+            label: General regime result
+          m303-deducciones-sector-1-domestic-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-domestic-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-domestic-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-domestic-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-investment-regularisation:
+            help: null
+            label: null
+          m303-deducciones-sector-1-reagp-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-reagp-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-rectification-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-rectification-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-total:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-investment-regularisation:
+            help: null
+            label: null
+          m303-deducciones-sector-2-reagp-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-reagp-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-rectification-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-rectification-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-total:
+            help: null
+            label: null
+          m303-exonerado-390-107:
+            help: null
+            label: null
+          m303-exonerado-390-125:
+            help: null
+            label: null
+          m303-exonerado-390-126:
+            help: null
+            label: null
+          m303-exonerado-390-127:
+            help: null
+            label: null
+          m303-exonerado-390-128:
+            help: null
+            label: null
+          m303-exonerado-390-79:
+            help: null
+            label: null
+          m303-exonerado-390-80:
+            help: null
+            label: null
+          m303-exonerado-390-81:
+            help: null
+            label: null
+          m303-exonerado-390-83:
+            help: null
+            label: null
+          m303-exonerado-390-84:
+            help: null
+            label: null
+          m303-exonerado-390-86:
+            help: null
+            label: null
+          m303-exonerado-390-88:
+            help: null
+            label: null
+          m303-exonerado-390-89:
+            help: null
+            label: null
+          m303-exonerado-390-90:
+            help: null
+            label: null
+          m303-exonerado-390-91:
+            help: null
+            label: null
+          m303-exonerado-390-92:
+            help: null
+            label: null
+          m303-exonerado-390-93:
+            help: null
+            label: null
+          m303-exonerado-390-94:
+            help: null
+            label: null
+          m303-exonerado-390-95:
+            help: null
+            label: null
+          m303-exonerado-390-96:
+            help: null
+            label: null
+          m303-exonerado-390-97:
+            help: null
+            label: null
+          m303-exonerado-390-98:
+            help: null
+            label: null
+          m303-exonerado-390-99:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-tipo:
+            help: null
+            label: null
+      construct:
+        modelo-303-iva-autoliquidacion:
+          field:
+            title: null
+      field:
+        official_name: null
+        title: null
+      revision:
+        2009-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Accrued VAT, general regime super-reduced 4% rate - taxable base
+            '02':
+              help: null
+              label: Accrued VAT, general regime super-reduced 4% rate - rate percentage
+            '03':
+              help: null
+              label: Accrued VAT, general regime super-reduced 4% rate - VAT amount
+            '04':
+              help: null
+              label: Accrued VAT, general regime reduced 10% rate - taxable base
+            '05':
+              help: null
+              label: Accrued VAT, general regime reduced 10% rate - rate percentage
+            '06':
+              help: null
+              label: Accrued VAT, general regime reduced 10% rate - VAT amount
+            '07':
+              help: null
+              label: Accrued VAT, general regime standard 21% rate - taxable base
+            08:
+              help: null
+              label: Accrued VAT, general regime standard 21% rate - rate percentage
+            09:
+              help: null
+              label: Accrued VAT, general regime standard 21% rate - VAT amount
+            '10':
+              help: null
+              label: Accrued VAT on intra-Community acquisitions of goods and services
+                - base
+            '108':
+              help: null
+              label: Corrective return - other adjustments in cases determined by
+                discrepancy with administrative criterion
+            '109':
+              help: null
+              label: Result - refunds agreed by AEAT for previous self-assessments
+                for the same year and period
+            '11':
+              help: null
+              label: Accrued VAT on intra-Community acquisitions of goods and services
+                - VAT amount
+            '111':
+              help: null
+              label: Corrective return - correction amount
+            '12':
+              help: null
+              label: Accrued VAT on other reverse-charge transactions excluding intra-Community
+                acquisitions - base
+            '120':
+              help: null
+              label: Additional information - transactions not subject due to place-of-supply
+                rules, excluding box 123
+            '122':
+              help: null
+              label: Additional information - transactions subject to reverse charge
+            '123':
+              help: null
+              label: Additional information - transactions not subject under one-stop
+                shop special schemes place-of-supply rules
+            '124':
+              help: null
+              label: Additional information - transactions subject under one-stop
+                shop special schemes
+            '13':
+              help: null
+              label: Accrued VAT on other reverse-charge transactions excluding intra-Community
+                acquisitions - VAT amount
+            '14':
+              help: null
+              label: Changes to accrued VAT taxable bases and amounts - taxable base
+            '15':
+              help: null
+              label: Changes to accrued VAT taxable bases and amounts - VAT amount
+            '150':
+              help: null
+              label: Accrued VAT, general regime new rate tier 1 - taxable base
+            '151':
+              help: null
+              label: Accrued VAT, general regime new rate tier 1 - rate percentage
+            '152':
+              help: null
+              label: Accrued VAT, general regime new rate tier 1 - VAT amount
+            '153':
+              help: null
+              label: Accrued VAT, general regime new rate tier 2 - taxable base
+            '154':
+              help: null
+              label: Accrued VAT, general regime new rate tier 2 - rate percentage
+            '155':
+              help: null
+              label: Accrued VAT, general regime new rate tier 2 - VAT amount
+            '156':
+              help: null
+              label: Equivalence surcharge at 0.5% - taxable base
+            '157':
+              help: null
+              label: Equivalence surcharge at 0.5% - rate percentage
+            '158':
+              help: null
+              label: Equivalence surcharge at 0.5% - surcharge amount
+            '16':
+              help: null
+              label: Equivalence surcharge at 1.0% - taxable base
+            '165':
+              help: null
+              label: Accrued VAT, general regime 2% rate from 2024 - taxable base
+            '166':
+              help: null
+              label: Accrued VAT, general regime 2% rate from 2024 - rate percentage
+            '167':
+              help: null
+              label: Accrued VAT, general regime 2% rate from 2024 - VAT amount
+            '168':
+              help: null
+              label: New equivalence surcharge rate from 2024 - taxable base
+            '169':
+              help: null
+              label: New equivalence surcharge rate from 2024 - rate percentage
+            '17':
+              help: null
+              label: Equivalence surcharge at 1.0% - rate percentage
+            '170':
+              help: null
+              label: New equivalence surcharge rate from 2024 - surcharge amount
+            '18':
+              help: null
+              label: Equivalence surcharge at 1.0% - surcharge amount
+            '19':
+              help: null
+              label: Equivalence surcharge at 1.4% - taxable base
+            '20':
+              help: null
+              label: Equivalence surcharge at 1.4% - rate percentage
+            '21':
+              help: null
+              label: Equivalence surcharge at 1.4% - surcharge amount
+            '22':
+              help: null
+              label: Equivalence surcharge at 5.2% - taxable base
+            '23':
+              help: null
+              label: Equivalence surcharge at 5.2% - rate percentage
+            '24':
+              help: null
+              label: Equivalence surcharge at 5.2% - surcharge amount
+            '25':
+              help: null
+              label: Changes to equivalence surcharge bases and amounts - taxable
+                base
+            '26':
+              help: null
+              label: Changes to equivalence surcharge bases and amounts - surcharge
+                amount
+            '27':
+              help: null
+              label: Total accrued VAT amount
+            '28':
+              help: null
+              label: Deductible VAT on domestic current transactions - base
+            '29':
+              help: null
+              label: Deductible VAT on domestic current transactions - VAT amount
+            '30':
+              help: null
+              label: Deductible VAT on domestic capital goods - base
+            '31':
+              help: null
+              label: Deductible VAT on domestic capital goods - VAT amount
+            '32':
+              help: null
+              label: Deductible VAT on imports of current goods - base
+            '33':
+              help: null
+              label: Deductible VAT on imports of current goods - VAT amount
+            '34':
+              help: null
+              label: Deductible VAT on imports of capital goods - base
+            '35':
+              help: null
+              label: Deductible VAT on imports of capital goods - VAT amount
+            '36':
+              help: null
+              label: Deductible VAT on intra-Community acquisitions of current goods
+                - base
+            '37':
+              help: null
+              label: Deductible VAT on intra-Community acquisitions of current goods
+                - VAT amount
+            '38':
+              help: null
+              label: Deductible VAT on intra-Community acquisitions of capital goods
+                - base
+            '39':
+              help: null
+              label: Deductible VAT on intra-Community acquisitions of capital goods
+                - VAT amount
+            '40':
+              help: null
+              label: Deduction corrections - base
+            '41':
+              help: null
+              label: Deduction corrections - VAT amount
+            '42':
+              help: null
+              label: Special agriculture, livestock and fisheries scheme compensations
+                - amount
+            '43':
+              help: null
+              label: Capital goods regularization - amount
+            '44':
+              help: null
+              label: Pro rata regularization using final percentage - amount
+            '45':
+              help: null
+              label: Total deductible amount
+            '47':
+              help: null
+              label: Simplified regime, Q1-Q3 - sum of payments on account for all
+                activities
+            '48':
+              help: null
+              label: Simplified regime, Q4 - sum of derived amounts for all activities
+            '49':
+              help: null
+              label: Simplified regime, Q4 - sum of payments on account made in the
+                year
+            '50':
+              help: null
+              label: Simplified regime, Q4 - result ([48] - [49])
+            '51':
+              help: null
+              label: Simplified regime - accrued VAT on intra-Community acquisitions
+                of goods
+            '52':
+              help: null
+              label: Simplified regime - accrued VAT on supplies of fixed assets
+            '53':
+              help: null
+              label: Simplified regime - accrued VAT from reverse-charge transactions
+            '54':
+              help: null
+              label: Simplified regime - total resulting amount
+            '55':
+              help: null
+              label: Simplified regime - deductible VAT on acquisition or import of
+                fixed assets
+            '56':
+              help: null
+              label: Simplified regime - deductible VAT from capital goods regularization
+            '57':
+              help: null
+              label: Simplified regime - total deductible VAT ([55] + [56])
+            '58':
+              help: null
+              label: Simplified regime result ([54] - [57])
+            '59':
+              help: null
+              label: Additional information - intra-Community supplies of goods and
+                services
+            '60':
+              help: null
+              label: Additional information - exports and assimilated transactions
+            '62':
+              help: null
+              label: Additional information - cash accounting supplies accrued under
+                Article 75 LIVA - taxable base
+            '63':
+              help: null
+              label: Additional information - cash accounting supplies accrued under
+                Article 75 LIVA - VAT amount
+            '64':
+              help: null
+              label: Result - sum of results ([46] + [58] + [76])
+            '65':
+              help: null
+              label: Result - percentage attributable to the State Tax Administration
+            '66':
+              help: null
+              label: Result - amount attributable to the State Tax Administration
+            '68':
+              help: null
+              label: Result - joint taxation annual regularization result
+            '70':
+              help: null
+              label: Result - amounts payable from previous self-assessments for the
+                same year and period
+            '71':
+              help: null
+              label: Final result ([69] - [70] + [109])
+            '74':
+              help: null
+              label: Additional information - cash accounting acquisitions - taxable
+                base
+            '75':
+              help: null
+              label: Additional information - cash accounting acquisitions - VAT amount
+            '76':
+              help: null
+              label: Result - regularization under Article 80.Five.5 LIVA
+            '77':
+              help: null
+              label: Result - import VAT assessed by Customs pending payment
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Self-assessment tax year
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Quarterly period
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: Deductible reverse-charge VAT on domestic transactions
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: Accrued reverse-charge VAT on domestic transactions
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: Reverse-charge VAT amount on intra-Community acquisitions
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: Deductible reverse-charge VAT on intra-Community acquisitions
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: Accrued reverse-charge VAT on intra-Community acquisitions
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: Prior-period offsets applied in this period
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: Offset balance available at period end
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: Offset balance generated in this period
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: Amounts to offset pending from prior periods
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: Prior-period offsets pending for later periods
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: Total deductible VAT amount
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: Total accrued VAT amount
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: General pro rata percentage
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: Annual turnover giving deduction rights
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: Total annual turnover
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: Capital goods adjustment
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: Output VAT amount at the standard rate (21%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: Output VAT amount at the reduced rate (10%)
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: Output VAT amount at the super-reduced rate (4%)
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: Self-assessment result
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: General regime result
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: Deductible input VAT on imports of current goods
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: Deductible input VAT on domestic current transactions
+          field:
+            label: null
+        '2023':
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '107':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: null
+        2024-desde-09-y-3t:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '107':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: null
+        2024-hasta-08-y-2t:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '107':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: null
+        '2025':
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '107':
+              help: null
+              label: null
+            '108':
+              help: null
+              label: null
+            '109':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '111':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '120':
+              help: null
+              label: null
+            '122':
+              help: null
+              label: null
+            '123':
+              help: null
+              label: null
+            '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            '150':
+              help: null
+              label: null
+            '151':
+              help: null
+              label: null
+            '152':
+              help: null
+              label: null
+            '153':
+              help: null
+              label: null
+            '154':
+              help: null
+              label: null
+            '155':
+              help: null
+              label: null
+            '156':
+              help: null
+              label: null
+            '157':
+              help: null
+              label: null
+            '158':
+              help: null
+              label: null
+            '16':
+              help: null
+              label: null
+            '165':
+              help: null
+              label: null
+            '166':
+              help: null
+              label: null
+            '167':
+              help: null
+              label: null
+            '168':
+              help: null
+              label: null
+            '169':
+              help: null
+              label: null
+            '17':
+              help: null
+              label: null
+            '170':
+              help: null
+              label: null
+            '18':
+              help: null
+              label: null
+            '19':
+              help: null
+              label: null
+            '20':
+              help: null
+              label: null
+            '21':
+              help: null
+              label: null
+            '22':
+              help: null
+              label: null
+            '23':
+              help: null
+              label: null
+            '24':
+              help: null
+              label: null
+            '25':
+              help: null
+              label: null
+            '26':
+              help: null
+              label: null
+            '27':
+              help: null
+              label: null
+            '28':
+              help: null
+              label: null
+            '29':
+              help: null
+              label: null
+            '30':
+              help: null
+              label: null
+            '31':
+              help: null
+              label: null
+            '32':
+              help: null
+              label: null
+            '33':
+              help: null
+              label: null
+            '34':
+              help: null
+              label: null
+            '35':
+              help: null
+              label: null
+            '36':
+              help: null
+              label: null
+            '37':
+              help: null
+              label: null
+            '38':
+              help: null
+              label: null
+            '39':
+              help: null
+              label: null
+            '40':
+              help: null
+              label: null
+            '41':
+              help: null
+              label: null
+            '42':
+              help: null
+              label: null
+            '43':
+              help: null
+              label: null
+            '44':
+              help: null
+              label: null
+            '45':
+              help: null
+              label: null
+            '47':
+              help: null
+              label: null
+            '48':
+              help: null
+              label: null
+            '49':
+              help: null
+              label: null
+            '50':
+              help: null
+              label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: null
+              label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: null
+              label: null
+            '54':
+              help: null
+              label: null
+            '55':
+              help: null
+              label: null
+            '56':
+              help: null
+              label: null
+            '57':
+              help: null
+              label: null
+            '58':
+              help: null
+              label: null
+            '59':
+              help: null
+              label: null
+            '60':
+              help: null
+              label: null
+            '62':
+              help: null
+              label: null
+            '63':
+              help: null
+              label: null
+            '64':
+              help: null
+              label: null
+            '65':
+              help: null
+              label: null
+            '66':
+              help: null
+              label: null
+            '68':
+              help: null
+              label: null
+            '70':
+              help: null
+              label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: null
+              label: null
+            '75':
+              help: null
+              label: null
+            '76':
+              help: null
+              label: null
+            '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: null
+              label: null
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: null
+              label: null
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: null
+              label: null
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: null
+              label: null
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: null
+              label: null
+          field:
+            label: null
+        2026-y-siguientes:
+          casilla:
+            '01':
+              help: 'Box 01: taxable base for accrued VAT under the general regime
+                super-reduced 4% rate.'
+              label: Accrued VAT, general regime super-reduced 4% rate - taxable base
+            '02':
+              help: 'Box 02: rate percentage for accrued VAT under the general regime
+                super-reduced 4% rate.'
+              label: Accrued VAT, general regime super-reduced 4% rate - rate percentage
+            '03':
+              help: 'Box 03: VAT amount for accrued VAT under the general regime super-reduced
+                4% rate.'
+              label: Accrued VAT, general regime super-reduced 4% rate - VAT amount
+            '04':
+              help: 'Box 04: taxable base for accrued VAT under the general regime
+                reduced 10% rate.'
+              label: Accrued VAT, general regime reduced 10% rate - taxable base
+            '05':
+              help: 'Box 05: rate percentage for accrued VAT under the general regime
+                reduced 10% rate.'
+              label: Accrued VAT, general regime reduced 10% rate - rate percentage
+            '06':
+              help: 'Box 06: VAT amount for accrued VAT under the general regime reduced
+                10% rate.'
+              label: Accrued VAT, general regime reduced 10% rate - VAT amount
+            '07':
+              help: 'Box 07: taxable base for accrued VAT under the general regime
+                standard 21% rate.'
+              label: Accrued VAT, general regime standard 21% rate - taxable base
+            08:
+              help: 'Box 08: rate percentage for accrued VAT under the general regime
+                standard 21% rate.'
+              label: Accrued VAT, general regime standard 21% rate - rate percentage
+            09:
+              help: 'Box 09: VAT amount for accrued VAT under the general regime standard
+                21% rate.'
+              label: Accrued VAT, general regime standard 21% rate - VAT amount
+            '10':
+              help: 'Box 10: base for accrued VAT on intra-Community acquisitions
+                of goods and services.'
+              label: Accrued VAT on intra-Community acquisitions of goods and services
+                - base
+            '107':
+              help: null
+              label: null
+            '108':
+              help: 'Box 108: other adjustments in a corrective return for cases determined
+                by discrepancy with administrative criterion.'
+              label: Corrective return - other adjustments in cases determined by
+                discrepancy with administrative criterion
+            '109':
+              help: 'Box 109: refunds agreed by AEAT for previous self-assessments
+                for the same year and period.'
+              label: Result - refunds agreed by AEAT for previous self-assessments
+                for the same year and period
+            '11':
+              help: 'Box 11: VAT amount for accrued VAT on intra-Community acquisitions
+                of goods and services.'
+              label: Accrued VAT on intra-Community acquisitions of goods and services
+                - VAT amount
+            '111':
+              help: 'Box 111: correction amount reported in a corrective return.'
+              label: Corrective return - correction amount
+            '112':
+              help: null
+              label: null
+            '12':
+              help: 'Box 12: base for accrued VAT on other reverse-charge transactions
+                excluding intra-Community acquisitions.'
+              label: Accrued VAT on other reverse-charge transactions excluding intra-Community
+                acquisitions - base
+            '120':
+              help: 'Box 120: additional information on transactions not subject to
+                VAT due to place-of-supply rules, excluding box 123.'
+              label: Additional information - transactions not subject due to place-of-supply
+                rules, excluding box 123
+            '122':
+              help: 'Box 122: additional information on transactions subject to reverse
+                charge.'
+              label: Additional information - transactions subject to reverse charge
+            '123':
+              help: 'Box 123: additional information on transactions not subject under
+                place-of-supply rules for one-stop shop special schemes.'
+              label: Additional information - transactions not subject under one-stop
+                shop special schemes place-of-supply rules
+            '124':
+              help: 'Box 124: additional information on transactions subject under
+                one-stop shop special schemes.'
+              label: Additional information - transactions subject under one-stop
+                shop special schemes
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
+            '13':
+              help: 'Box 13: VAT amount for accrued VAT on other reverse-charge transactions
+                excluding intra-Community acquisitions.'
+              label: Accrued VAT on other reverse-charge transactions excluding intra-Community
+                acquisitions - VAT amount
+            '14':
+              help: 'Box 14: taxable base for changes to accrued VAT taxable bases
+                and amounts.'
+              label: Changes to accrued VAT taxable bases and amounts - taxable base
+            '15':
+              help: 'Box 15: VAT amount for changes to accrued VAT taxable bases and
+                amounts.'
+              label: Changes to accrued VAT taxable bases and amounts - VAT amount
+            '150':
+              help: 'Box 150: taxable base for accrued VAT under the general regime
+                new rate tier 1.'
+              label: Accrued VAT, general regime new rate tier 1 - taxable base
+            '151':
+              help: 'Box 151: rate percentage for accrued VAT under the general regime
+                new rate tier 1.'
+              label: Accrued VAT, general regime new rate tier 1 - rate percentage
+            '152':
+              help: 'Box 152: VAT amount for accrued VAT under the general regime
+                new rate tier 1.'
+              label: Accrued VAT, general regime new rate tier 1 - VAT amount
+            '153':
+              help: 'Box 153: taxable base for accrued VAT under the general regime
+                new rate tier 2.'
+              label: Accrued VAT, general regime new rate tier 2 - taxable base
+            '154':
+              help: 'Box 154: rate percentage for accrued VAT under the general regime
+                new rate tier 2.'
+              label: Accrued VAT, general regime new rate tier 2 - rate percentage
+            '155':
+              help: 'Box 155: VAT amount for accrued VAT under the general regime
+                new rate tier 2.'
+              label: Accrued VAT, general regime new rate tier 2 - VAT amount
+            '156':
+              help: 'Box 156: taxable base for the 0.5% equivalence surcharge.'
+              label: Equivalence surcharge at 0.5% - taxable base
+            '157':
+              help: 'Box 157: rate percentage for the 0.5% equivalence surcharge.'
+              label: Equivalence surcharge at 0.5% - rate percentage
+            '158':
+              help: 'Box 158: surcharge amount for the 0.5% equivalence surcharge.'
+              label: Equivalence surcharge at 0.5% - surcharge amount
+            '16':
+              help: 'Box 16: taxable base for the 1.0% equivalence surcharge.'
+              label: Equivalence surcharge at 1.0% - taxable base
+            '165':
+              help: 'Box 165: taxable base for accrued VAT under the general regime
+                2% rate from 2024.'
+              label: Accrued VAT, general regime 2% rate from 2024 - taxable base
+            '166':
+              help: 'Box 166: rate percentage for accrued VAT under the general regime
+                2% rate from 2024.'
+              label: Accrued VAT, general regime 2% rate from 2024 - rate percentage
+            '167':
+              help: 'Box 167: VAT amount for accrued VAT under the general regime
+                2% rate from 2024.'
+              label: Accrued VAT, general regime 2% rate from 2024 - VAT amount
+            '168':
+              help: 'Box 168: taxable base for the new equivalence surcharge rate
+                from 2024.'
+              label: New equivalence surcharge rate from 2024 - taxable base
+            '169':
+              help: 'Box 169: rate percentage for the new equivalence surcharge rate
+                from 2024.'
+              label: New equivalence surcharge rate from 2024 - rate percentage
+            '17':
+              help: 'Box 17: rate percentage for the 1.0% equivalence surcharge.'
+              label: Equivalence surcharge at 1.0% - rate percentage
+            '170':
+              help: 'Box 170: surcharge amount for the new equivalence surcharge rate
+                from 2024.'
+              label: New equivalence surcharge rate from 2024 - surcharge amount
+            '18':
+              help: 'Box 18: surcharge amount for the 1.0% equivalence surcharge.'
+              label: Equivalence surcharge at 1.0% - surcharge amount
+            '19':
+              help: 'Box 19: taxable base for the 1.4% equivalence surcharge.'
+              label: Equivalence surcharge at 1.4% - taxable base
+            '20':
+              help: 'Box 20: rate percentage for the 1.4% equivalence surcharge.'
+              label: Equivalence surcharge at 1.4% - rate percentage
+            '21':
+              help: 'Box 21: surcharge amount for the 1.4% equivalence surcharge.'
+              label: Equivalence surcharge at 1.4% - surcharge amount
+            '22':
+              help: 'Box 22: taxable base for the 5.2% equivalence surcharge.'
+              label: Equivalence surcharge at 5.2% - taxable base
+            '23':
+              help: 'Box 23: rate percentage for the 5.2% equivalence surcharge.'
+              label: Equivalence surcharge at 5.2% - rate percentage
+            '24':
+              help: 'Box 24: surcharge amount for the 5.2% equivalence surcharge.'
+              label: Equivalence surcharge at 5.2% - surcharge amount
+            '25':
+              help: 'Box 25: taxable base for changes to equivalence surcharge bases
+                and amounts.'
+              label: Changes to equivalence surcharge bases and amounts - taxable
+                base
+            '26':
+              help: 'Box 26: surcharge amount for changes to equivalence surcharge
+                bases and amounts.'
+              label: Changes to equivalence surcharge bases and amounts - surcharge
+                amount
+            '27':
+              help: 'Box 27: total accrued VAT amount.'
+              label: Total accrued VAT amount
+            '28':
+              help: 'Box 28: base for deductible VAT on domestic current transactions.'
+              label: Deductible VAT on domestic current transactions - base
+            '29':
+              help: 'Box 29: VAT amount for deductible VAT on domestic current transactions.'
+              label: Deductible VAT on domestic current transactions - VAT amount
+            '30':
+              help: 'Box 30: base for deductible VAT on domestic capital goods.'
+              label: Deductible VAT on domestic capital goods - base
+            '31':
+              help: 'Box 31: VAT amount for deductible VAT on domestic capital goods.'
+              label: Deductible VAT on domestic capital goods - VAT amount
+            '32':
+              help: 'Box 32: base for deductible VAT on imports of current goods.'
+              label: Deductible VAT on imports of current goods - base
+            '33':
+              help: 'Box 33: VAT amount for deductible VAT on imports of current goods.'
+              label: Deductible VAT on imports of current goods - VAT amount
+            '34':
+              help: 'Box 34: base for deductible VAT on imports of capital goods.'
+              label: Deductible VAT on imports of capital goods - base
+            '35':
+              help: 'Box 35: VAT amount for deductible VAT on imports of capital goods.'
+              label: Deductible VAT on imports of capital goods - VAT amount
+            '36':
+              help: 'Box 36: base for deductible VAT on intra-Community acquisitions
+                of current goods.'
+              label: Deductible VAT on intra-Community acquisitions of current goods
+                - base
+            '37':
+              help: 'Box 37: VAT amount for deductible VAT on intra-Community acquisitions
+                of current goods.'
+              label: Deductible VAT on intra-Community acquisitions of current goods
+                - VAT amount
+            '38':
+              help: 'Box 38: base for deductible VAT on intra-Community acquisitions
+                of capital goods.'
+              label: Deductible VAT on intra-Community acquisitions of capital goods
+                - base
+            '39':
+              help: 'Box 39: VAT amount for deductible VAT on intra-Community acquisitions
+                of capital goods.'
+              label: Deductible VAT on intra-Community acquisitions of capital goods
+                - VAT amount
+            '40':
+              help: 'Box 40: base for deduction corrections.'
+              label: Deduction corrections - base
+            '41':
+              help: 'Box 41: VAT amount for deduction corrections.'
+              label: Deduction corrections - VAT amount
+            '42':
+              help: 'Box 42: compensation amount under the special agriculture, livestock
+                and fisheries scheme.'
+              label: Special agriculture, livestock and fisheries scheme compensations
+                - amount
+            '43':
+              help: 'Box 43: VAT amount for capital goods regularization.'
+              label: Capital goods regularization - amount
+            '44':
+              help: 'Box 44: VAT amount for pro rata regularization using the final
+                percentage.'
+              label: Pro rata regularization using final percentage - amount
+            '45':
+              help: 'Box 45: total deductible VAT amount.'
+              label: Total deductible amount
+            '47':
+              help: 'Box 47: sum of payments on account for all activities under the
+                simplified regime in Q1, Q2, or Q3.'
+              label: Simplified regime, Q1-Q3 - sum of payments on account for all
+                activities
+            '48':
+              help: 'Box 48: sum of amounts derived from all simplified-regime activities
+                in Q4.'
+              label: Simplified regime, Q4 - sum of derived amounts for all activities
+            '49':
+              help: 'Box 49: sum of payments on account made during the year under
+                the simplified regime in Q4.'
+              label: Simplified regime, Q4 - sum of payments on account made in the
+                year
+            '50':
+              help: 'Box 50: simplified-regime Q4 result calculated as box 48 minus
+                box 49.'
+              label: Simplified regime, Q4 - result ([48] - [49])
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
+            '51':
+              help: 'Box 51: accrued VAT on intra-Community acquisitions of goods
+                under the simplified regime.'
+              label: Simplified regime - accrued VAT on intra-Community acquisitions
+                of goods
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
+            '52':
+              help: 'Box 52: accrued VAT on supplies of fixed assets under the simplified
+                regime.'
+              label: Simplified regime - accrued VAT on supplies of fixed assets
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
+            '53':
+              help: 'Box 53: accrued VAT under the simplified regime from transactions
+                subject to reverse charge.'
+              label: Simplified regime - accrued VAT from reverse-charge transactions
+            '54':
+              help: 'Box 54: total resulting VAT amount under the simplified regime.'
+              label: Simplified regime - total resulting amount
+            '55':
+              help: 'Box 55: deductible VAT on acquisition or import of fixed assets
+                under the simplified regime.'
+              label: Simplified regime - deductible VAT on acquisition or import of
+                fixed assets
+            '56':
+              help: 'Box 56: deductible VAT from capital goods regularization under
+                the simplified regime.'
+              label: Simplified regime - deductible VAT from capital goods regularization
+            '57':
+              help: 'Box 57: total deductible VAT under the simplified regime, calculated
+                as box 55 plus box 56.'
+              label: Simplified regime - total deductible VAT ([55] + [56])
+            '58':
+              help: 'Box 58: simplified-regime result calculated as box 54 minus box
+                57.'
+              label: Simplified regime result ([54] - [57])
+            '59':
+              help: 'Box 59: additional information on intra-Community supplies of
+                goods and services.'
+              label: Additional information - intra-Community supplies of goods and
+                services
+            '60':
+              help: 'Box 60: additional information on exports and assimilated transactions.'
+              label: Additional information - exports and assimilated transactions
+            '62':
+              help: 'Box 62: taxable base for cash accounting supplies accrued under
+                Article 75 LIVA.'
+              label: Additional information - cash accounting supplies accrued under
+                Article 75 LIVA - taxable base
+            '63':
+              help: 'Box 63: VAT amount for cash accounting supplies accrued under
+                Article 75 LIVA.'
+              label: Additional information - cash accounting supplies accrued under
+                Article 75 LIVA - VAT amount
+            '64':
+              help: null
+              label: null
+            '65':
+              help: 'Box 65: percentage of the result attributable to the State Tax
+                Administration.'
+              label: Result - percentage attributable to the State Tax Administration
+            '66':
+              help: null
+              label: null
+            '68':
+              help: 'Box 68: annual regularization result for joint taxation.'
+              label: Result - joint taxation annual regularization result
+            '70':
+              help: 'Box 70: amounts payable from previous self-assessments for the
+                same year and period.'
+              label: Result - amounts payable from previous self-assessments for the
+                same year and period
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
+            '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
+              help: null
+              label: null
+            '74':
+              help: 'Box 74: taxable base for acquisitions under the cash accounting
+                scheme.'
+              label: Additional information - cash accounting acquisitions - taxable
+                base
+            '75':
+              help: 'Box 75: VAT amount for acquisitions under the cash accounting
+                scheme.'
+              label: Additional information - cash accounting acquisitions - VAT amount
+            '76':
+              help: 'Box 76: result adjustment for regularization under Article 80.Five.5
+                LIVA.'
+              label: Result - regularization under Article 80.Five.5 LIVA
+            '77':
+              help: 'Box 77: import VAT assessed by Customs that is pending payment.'
+              label: Result - import VAT assessed by Customs pending payment
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Tax year to which the self-assessment refers.
+              label: Self-assessment tax year
+            x-chim6r1ee1in4qbfchng:
+              help: 'Quarterly period for the self-assessment: 1Q, 2Q, 3Q, or 4Q.'
+              label: Quarterly period
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushec9gn6p8:
+              help: null
+              label: null
+            x-d5r62bj1elq6uorfdppnarbf5po74rrddtq6ushecdqmut31:
+              help: null
+              label: null
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: Deductible self-assessed VAT on domestic transactions subject
+                to reverse charge.
+              label: Deductible reverse-charge VAT on domestic transactions
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: Accrued self-assessed VAT on domestic transactions subject to
+                reverse charge.
+              label: Accrued reverse-charge VAT on domestic transactions
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: Self-assessed VAT amount on intra-Community acquisitions under
+                the reverse-charge rules.
+              label: Reverse-charge VAT amount on intra-Community acquisitions
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: Deductible self-assessed VAT on intra-Community acquisitions of
+                goods and services.
+              label: Deductible reverse-charge VAT on intra-Community acquisitions
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: Accrued self-assessed VAT on intra-Community acquisitions of goods
+                and services.
+              label: Accrued reverse-charge VAT on intra-Community acquisitions
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: Add up the self-charged taxable base accrued on intra-Community
+                acquisitions.
+              label: Taxable base of accrued reverse-charge VAT on intra-Community
+                acquisitions
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: VAT amounts pending from prior periods that are applied in this
+                period.
+              label: Prior-period offsets applied in this period
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: VAT offset balance available to carry forward after this period.
+              label: Offset balance available at period end
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: VAT offset balance generated by this period's self-assessment.
+              label: Offset balance generated in this period
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: VAT amounts to offset that remain pending from prior periods.
+              label: Amounts to offset pending from prior periods
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: Prior-period VAT offsets that remain pending for later periods.
+              label: Prior-period offsets pending for later periods
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: Total deductible VAT amount, including domestic input VAT and
+                deductible reverse-charge VAT.
+              label: Total deductible VAT amount
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: Total accrued VAT amount, including output VAT and applicable
+                reverse-charge VAT.
+              label: Total accrued VAT amount
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: General pro rata percentage calculated from deductible-right turnover
+                over total turnover.
+              label: General pro rata percentage
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: Annual transaction volume that gives the right to deduct VAT.
+              label: Annual turnover giving deduction rights
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: Total annual transaction volume used for the general pro rata
+                calculation.
+              label: Total annual turnover
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: VAT adjustment for capital goods under the investment-goods regularization
+                rules.
+              label: Capital goods adjustment
+            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
+              help: Total output VAT calculated at the standard 21% rate.
+              label: Output VAT amount at the standard rate (21%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: Total output VAT calculated at the reduced 10% rate.
+              label: Output VAT amount at the reduced rate (10%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: null
+              label: null
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: Total output VAT calculated at the super-reduced 4% rate.
+              label: Output VAT amount at the super-reduced rate (4%)
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6u:
+              help: null
+              label: null
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: General regime result calculated as accrued VAT minus deductible
+                VAT.
+              label: General regime result
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: Deductible input VAT borne on imports of current goods.
+              label: Deductible input VAT on imports of current goods
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: Deductible input VAT borne on domestic current transactions.
+              label: Deductible input VAT on domestic current transactions
+          field:
+            label: null

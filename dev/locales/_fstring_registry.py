@@ -165,6 +165,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         IrpfSpecialRegime,
         LegalEntityForm,
     )
+    from cadrumo.core.errors._registry import ErrorCategory
     from cadrumo.domain.user_profile import ProfileSetupState
 
     return (
@@ -193,6 +194,11 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         ),
         *_modelo_review_filter_registrations(),
         *_generated_docs_registrations(),
+        FStringKeyRegistration(
+            description="errors.prefix.* (ErrorCategory)",
+            key_factory=lambda v: f"errors.prefix.{v}",
+            values=tuple(c.value.lower() for c in ErrorCategory),
+        ),
     )
 
 

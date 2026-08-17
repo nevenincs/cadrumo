@@ -1,0 +1,575 @@
+modelo:
+  schema:
+    '131':
+      casilla:
+        continuidad:
+          irpf-pf-modulos-1-unidades:
+            help: null
+            label: 'Módulo 1 (Employed staff): number of units'
+          irpf-pf-modulos-1-unidades-anterior:
+            help: null
+            label: 'Módulo 1 (Employed staff): number of units in the previous tax
+              year (2023), for the employment-incentive reduction'
+          irpf-pf-modulos-2-unidades:
+            help: null
+            label: 'Módulo 2 (Non-employed staff): number of units'
+          irpf-pf-modulos-3-unidades:
+            help: null
+            label: 'Módulo 3 (activity-specific unit: floor area, distance travelled
+              or load): number of units'
+          irpf-pf-modulos-4-unidades:
+            help: null
+            label: 'Módulo 4 (activity-specific unit: electricity or other energy
+              consumption): number of units'
+          irpf-pf-modulos-5-unidades:
+            help: null
+            label: 'Módulo 5 (activity-specific unit, e.g. remaining floor area of
+              an independent premises or tables): number of units'
+          irpf-pf-modulos-6-unidades:
+            help: null
+            label: 'Módulo 6 (activity-specific unit, e.g. remaining floor area of
+              a non-independent premises or type A machines): number of units'
+          irpf-pf-modulos-7-unidades:
+            help: null
+            label: 'Módulo 7 (activity-specific unit, e.g. oven surface area or type
+              B machines): number of units'
+          irpf-pf-modulos-diferencia:
+            help: null
+            label: null
+          irpf-pf-modulos-epigrafe-iae:
+            help: null
+            label: IAE heading of the activity under the objective estimation (módulos)
+              regime. For headings 659.4 and 691.9, which group two different activities
+              under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
+              according to the activity - see the coefficient parameter m131-modulos-coeficientes-2024
+              for the exact assignment.
+          irpf-pf-modulos-resultado-declaracion:
+            help: null
+            label: null
+          irpf-pf-modulos-resultados-negativos-anteriores:
+            help: null
+            label: null
+          irpf-pf-modulos-suma-rendimientos:
+            help: null
+            label: null
+          irpf-pf-modulos-total:
+            help: null
+            label: null
+          irpf-pf-modulos-volumen-agrario:
+            help: null
+            label: null
+          irpf-pf-modulos-volumen-sin-datos-base:
+            help: null
+            label: null
+          irpf-pf-saldo-negativo-fin-periodo:
+            help: null
+            label: null
+          minoracion-rendimientos-actividades-economicas:
+            help: null
+            label: null
+          pago-fraccionado-previo:
+            help: null
+            label: null
+          pago-fraccionado-previo-agrario:
+            help: null
+            label: null
+          pago-fraccionado-previo-datos-base:
+            help: null
+            label: null
+          pago-fraccionado-previo-sin-datos-base:
+            help: null
+            label: null
+          prestamo-vivienda-habitual:
+            help: null
+            label: null
+          resultado-anteriores-autoliquidaciones:
+            help: null
+            label: null
+          retenciones-ingresos-a-cuenta:
+            help: null
+            label: null
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-2023:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: null
+            '15':
+              help: null
+              label: null
+            saldo-negativo-fin-periodo:
+              help: null
+              label: null
+          construct:
+            modelo-131-2019-2023-objective-estimation-instalment:
+              field:
+                title: null
+          field:
+            label: null
+        '2024':
+          casilla:
+            '01':
+              help: null
+              label: Sum of net income
+            '02':
+              help: null
+              label: Preliminary instalment payment using base data (datos-base)
+            '03':
+              help: null
+              label: Turnover or income without base data
+            '04':
+              help: null
+              label: Preliminary instalment payment without base data
+            '05':
+              help: null
+              label: Agricultural income for the quarter
+            '06':
+              help: null
+              label: Preliminary agricultural instalment payment
+            '07':
+              help: null
+              label: Sum of preliminary instalment payments
+            08:
+              help: null
+              label: Withholdings and payments on account
+            09:
+              help: null
+              label: Reduction for net income from business/professional activities
+            '10':
+              help: null
+              label: Difference
+            '11':
+              help: null
+              label: Negative results from previous quarters
+            '12':
+              help: null
+              label: Payment of loans for the taxpayer's main home
+            '13':
+              help: null
+              label: Total
+            '14':
+              help: null
+              label: Result payable from previous self-assessments
+            '15':
+              help: null
+              label: Result of the return
+            modulos-1-unidades:
+              help: null
+              label: 'Módulo 1 (Employed staff): number of units'
+            modulos-1-unidades-anterior:
+              help: null
+              label: 'Módulo 1 (Employed staff): number of units in the previous tax
+                year (2023), for the employment-incentive reduction'
+            modulos-2-unidades:
+              help: null
+              label: 'Módulo 2 (Non-employed staff): number of units'
+            modulos-3-unidades:
+              help: null
+              label: 'Módulo 3 (activity-specific unit: floor area, distance travelled
+                or load): number of units'
+            modulos-4-unidades:
+              help: null
+              label: 'Módulo 4 (activity-specific unit: electricity or other energy
+                consumption): number of units'
+            modulos-5-unidades:
+              help: null
+              label: 'Módulo 5 (activity-specific unit, e.g. remaining floor area
+                of an independent premises or tables): number of units'
+            modulos-6-unidades:
+              help: null
+              label: 'Módulo 6 (activity-specific unit, e.g. remaining floor area
+                of a non-independent premises or type A machines): number of units'
+            modulos-7-unidades:
+              help: null
+              label: 'Módulo 7 (activity-specific unit, e.g. oven surface area or
+                type B machines): number of units'
+            modulos-epigrafe:
+              help: null
+              label: IAE heading of the activity under the objective estimation (módulos)
+                regime. For headings 659.4 and 691.9, which group two different activities
+                under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
+                according to the activity - see the coefficient parameter m131-modulos-coeficientes-2024
+                for the exact assignment.
+            modulos-indice-inicio-actividad:
+              help: null
+              label: 'Corrective index for the start of new activities (letter b.4,
+                activity started on or after 1-1-2023 in an exclusive premises). Index
+                declared by the operator (0.80/0.90; 0.60/0.70 with disability ≥33%,
+                Order HFP/1359/2023 Annex II, instruction 2.3.b.4); the engine does
+                not model the start year or the disability. Incompatible with the
+                seasonal index (b.2): if both are declared, the seasonal index prevails.'
+            modulos-indice-pequena-dimension:
+              help: null
+              label: Corrective index for small enterprises (letter b.1 - single municipality,
+                single premises, no staff or up to 2 employees). Index declared by
+                the operator (0.70/0.75/0.80/0.90, Order HFP/1359/2023 Annex II, instruction
+                2.3.b.1); the engine does not model taxpayer facts. Never applies
+                to activities with a special index (721.2, 722).
+            modulos-indice-temporada:
+              help: null
+              label: 'Seasonal corrective index (letter b.2 - seasonal activity, up
+                to 180 days/year). Index declared by the operator (1.50/1.35/1.25
+                depending on duration, Order HFP/1359/2023 Annex II, instruction 2.3.b.2);
+                the engine does not model duration as a taxpayer fact. Incompatible
+                with the new-activity start-up index (b.4): if both are declared,
+                this one prevails.'
+            modulos-minoracion-inversion:
+              help: null
+              label: Reduction for investment incentives (depreciation of tangible
+                or intangible fixed assets in use, per the investment-goods register).
+                Amount declared by the operator; the engine does not model a per-item
+                asset register - see Order HFP/1359/2023 Annex II, instruction 2.2.b)
+                and your own depreciation schedule.
+            modulos-pequena-dimension-ignorado-flag:
+              help: null
+              label: 'Internal indicator (1/0): the declared small-enterprise corrective
+                index (b.1) was ignored due to incompatibility with the activity''s
+                special corrective index (Order HFP/1359/2023 Annex II, instruction
+                2.3.a/b.1).'
+            modulos-rendimiento-neto-actividad:
+              help: null
+              label: 'Net income from the activity (Phase 4: módulos − general 5 percent
+                reduction)'
+            modulos-rendimiento-neto-minorado:
+              help: null
+              label: 'Reduced net income (Phase 2: preliminary − employment-incentive
+                reduction − investment-incentive reduction)'
+            modulos-rendimiento-neto-modulos:
+              help: null
+              label: 'Net income from módulos (Phase 3: reduced amount adjusted by
+                the general corrective indices - small enterprise, seasonal/new-activity
+                start-up, excess - in the order and with the incompatibilities of
+                Order HFP/1359/2023 Annex II, instruction 2.3)'
+            modulos-rendimiento-neto-previo:
+              help: null
+              label: 'Preliminary net income (Phase 1: Σ módulo units × annual yield
+                per unit)'
+            modulos-temporada-inicio-actividad-conflicto-flag:
+              help: null
+              label: 'Internal indicator (1/0): the seasonal corrective index (b.2)
+                and the new-activity start-up corrective index (b.4) were declared
+                simultaneously, which are mutually incompatible (Order HFP/1359/2023
+                Annex II, instruction 2.3).'
+            saldo-negativo-fin-periodo:
+              help: null
+              label: Negative balance carried forward to later periods (max. 0, -box
+                10)
+          construct:
+            modelo-131-2024-objective-estimation-instalment:
+              field:
+                title: null
+          field:
+            label: null
+        '2025':
+          casilla:
+            '01':
+              help: null
+              label: Sum of net income
+            '02':
+              help: null
+              label: Preliminary instalment payment using base data (datos-base)
+            '03':
+              help: null
+              label: Turnover or income without base data
+            '04':
+              help: null
+              label: Preliminary instalment payment without base data
+            '05':
+              help: null
+              label: Agricultural income for the quarter
+            '06':
+              help: null
+              label: Preliminary agricultural instalment payment
+            '07':
+              help: null
+              label: Sum of preliminary instalment payments
+            08:
+              help: null
+              label: Withholdings and payments on account
+            09:
+              help: null
+              label: Reduction for net income from business/professional activities
+            '10':
+              help: null
+              label: Difference
+            '11':
+              help: null
+              label: Negative results from previous quarters
+            '12':
+              help: null
+              label: Payment of loans for the taxpayer's main home
+            '13':
+              help: null
+              label: Total
+            '14':
+              help: null
+              label: Result payable from previous self-assessments
+            '15':
+              help: null
+              label: Result of the return
+            modulos-1-unidades:
+              help: null
+              label: 'Módulo 1 (Employed staff): number of units'
+            modulos-1-unidades-anterior:
+              help: null
+              label: 'Módulo 1 (Employed staff): number of units in the previous tax
+                year (2024), for the employment-incentive reduction'
+            modulos-2-unidades:
+              help: null
+              label: 'Módulo 2 (Non-employed staff): number of units'
+            modulos-3-unidades:
+              help: null
+              label: 'Módulo 3 (activity-specific unit: floor area, distance travelled
+                or load): number of units'
+            modulos-4-unidades:
+              help: null
+              label: 'Módulo 4 (activity-specific unit: electricity or other energy
+                consumption): number of units'
+            modulos-5-unidades:
+              help: null
+              label: 'Módulo 5 (activity-specific unit, e.g. remaining floor area
+                of an independent premises or tables): number of units'
+            modulos-6-unidades:
+              help: null
+              label: 'Módulo 6 (activity-specific unit, e.g. remaining floor area
+                of a non-independent premises or type A machines): number of units'
+            modulos-7-unidades:
+              help: null
+              label: 'Módulo 7 (activity-specific unit, e.g. oven surface area or
+                type B machines): number of units'
+            modulos-epigrafe:
+              help: null
+              label: IAE heading of the activity under the objective estimation (módulos)
+                regime. For headings 659.4 and 691.9, which group two different activities
+                under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
+                according to the activity - see the coefficient parameter m131-modulos-coeficientes-2025
+                for the exact assignment.
+            modulos-indice-inicio-actividad:
+              help: null
+              label: 'Corrective index for the start of new activities (letter b.4,
+                activity started on or after 1-1-2024 in an exclusive premises). Index
+                declared by the operator (0.80/0.90; 0.60/0.70 with disability ≥33%,
+                Order HAC/1347/2024 Annex II, instruction 2.3.b.4); the engine does
+                not model the start year or the disability. Incompatible with the
+                seasonal index (b.2): if both are declared, the seasonal index prevails.'
+            modulos-indice-pequena-dimension:
+              help: null
+              label: Corrective index for small enterprises (letter b.1 - single municipality,
+                single premises, no staff or up to 2 employees). Index declared by
+                the operator (0.70/0.75/0.80/0.90, Order HAC/1347/2024 Annex II, instruction
+                2.3.b.1); the engine does not model taxpayer facts. Never applies
+                to activities with a special index (721.2, 722).
+            modulos-indice-temporada:
+              help: null
+              label: 'Seasonal corrective index (letter b.2 - seasonal activity, up
+                to 180 days/year). Index declared by the operator (1.50/1.35/1.25
+                depending on duration, Order HAC/1347/2024 Annex II, instruction 2.3.b.2);
+                the engine does not model duration as a taxpayer fact. Incompatible
+                with the new-activity start-up index (b.4): if both are declared,
+                this one prevails.'
+            modulos-minoracion-inversion:
+              help: null
+              label: Reduction for investment incentives (depreciation of tangible
+                or intangible fixed assets in use, per the investment-goods register).
+                Amount declared by the operator; the engine does not model a per-item
+                asset register - see Order HAC/1347/2024 Annex II, instruction 2.2.b)
+                and your own depreciation schedule.
+            modulos-pequena-dimension-ignorado-flag:
+              help: null
+              label: 'Internal indicator (1/0): the declared small-enterprise corrective
+                index (b.1) was ignored due to incompatibility with the activity''s
+                special corrective index (Order HAC/1347/2024 Annex II, instruction
+                2.3.a/b.1).'
+            modulos-rendimiento-neto-actividad:
+              help: null
+              label: 'Net income from the activity (Phase 4: módulos − general 5 percent
+                reduction)'
+            modulos-rendimiento-neto-minorado:
+              help: null
+              label: 'Reduced net income (Phase 2: preliminary − employment-incentive
+                reduction − investment-incentive reduction)'
+            modulos-rendimiento-neto-modulos:
+              help: null
+              label: 'Net income from módulos (Phase 3: reduced amount adjusted by
+                the general corrective indices - small enterprise, seasonal/new-activity
+                start-up, excess - in the order and with the incompatibilities of
+                Order HAC/1347/2024 Annex II, instruction 2.3)'
+            modulos-rendimiento-neto-previo:
+              help: null
+              label: 'Preliminary net income (Phase 1: Σ módulo units × annual yield
+                per unit)'
+            modulos-temporada-inicio-actividad-conflicto-flag:
+              help: null
+              label: 'Internal indicator (1/0): the seasonal corrective index (b.2)
+                and the new-activity start-up corrective index (b.4) were declared
+                simultaneously, which are mutually incompatible (Order HAC/1347/2024
+                Annex II, instruction 2.3).'
+            saldo-negativo-fin-periodo:
+              help: null
+              label: Negative balance carried forward to later periods (max. 0, -box
+                10)
+          construct:
+            modelo-131-2025-objective-estimation-instalment:
+              field:
+                title: null
+          field:
+            label: null
+        '2026':
+          casilla:
+            '01':
+              help: null
+              label: Sum of net income
+            '02':
+              help: null
+              label: Preliminary instalment payment using base data (datos-base)
+            '03':
+              help: null
+              label: Turnover or income without base data
+            '04':
+              help: null
+              label: Preliminary instalment payment without base data
+            '05':
+              help: null
+              label: Agricultural income for the quarter
+            '06':
+              help: null
+              label: Preliminary agricultural instalment payment
+            '07':
+              help: null
+              label: Sum of preliminary instalment payments
+            08:
+              help: null
+              label: Withholdings and payments on account
+            09:
+              help: null
+              label: Reduction for net income from business/professional activities
+            '10':
+              help: null
+              label: Difference
+            '11':
+              help: null
+              label: Negative results from previous quarters
+            '12':
+              help: null
+              label: Payment of loans for the taxpayer's main home
+            '13':
+              help: null
+              label: Total
+            '14':
+              help: null
+              label: Result payable from previous self-assessments
+            '15':
+              help: null
+              label: Result of the return
+            modulos-1-unidades:
+              help: null
+              label: 'Módulo 1 (Employed staff): number of units'
+            modulos-1-unidades-anterior:
+              help: null
+              label: 'Módulo 1 (Employed staff): number of units in the previous tax
+                year (2025), for the employment-incentive reduction'
+            modulos-2-unidades:
+              help: null
+              label: 'Módulo 2 (Non-employed staff): number of units'
+            modulos-3-unidades:
+              help: null
+              label: 'Módulo 3 (activity-specific unit: floor area, distance travelled
+                or load): number of units'
+            modulos-4-unidades:
+              help: null
+              label: 'Módulo 4 (activity-specific unit: electricity or other energy
+                consumption): number of units'
+            modulos-5-unidades:
+              help: null
+              label: 'Módulo 5 (activity-specific unit, e.g. remaining floor area
+                of an independent premises or tables): number of units'
+            modulos-6-unidades:
+              help: null
+              label: 'Módulo 6 (activity-specific unit, e.g. remaining floor area
+                of a non-independent premises or type A machines): number of units'
+            modulos-7-unidades:
+              help: null
+              label: 'Módulo 7 (activity-specific unit, e.g. oven surface area or
+                type B machines): number of units'
+            modulos-epigrafe:
+              help: null
+              label: IAE heading of the activity under the objective estimation (módulos)
+                regime. For headings 659.4 and 691.9, which group two different activities
+                under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
+                according to the activity - see the coefficient parameter m131-modulos-coeficientes-2026
+                for the exact assignment.
+            modulos-minoracion-inversion:
+              help: null
+              label: Reduction for investment incentives (depreciation of tangible
+                or intangible fixed assets in use, per the investment-goods register).
+                Amount declared by the operator; the engine does not model a per-item
+                asset register - see Order HAC/1425/2025 Annex II, instruction 2.2.b)
+                and your own depreciation schedule.
+            modulos-rendimiento-neto-actividad:
+              help: null
+              label: 'Net income from the activity (Phase 4: módulos − general 5 percent
+                reduction)'
+            modulos-rendimiento-neto-minorado:
+              help: null
+              label: 'Reduced net income (Phase 2: preliminary − employment-incentive
+                reduction − investment-incentive reduction)'
+            modulos-rendimiento-neto-modulos:
+              help: null
+              label: 'Net income from módulos (Phase 3: reduced amount adjusted by
+                the excess corrective index)'
+            modulos-rendimiento-neto-previo:
+              help: null
+              label: 'Preliminary net income (Phase 1: Σ módulo units × annual yield
+                per unit)'
+            saldo-negativo-fin-periodo:
+              help: null
+              label: Negative balance carried forward to later periods (max. 0, -box
+                10)
+          construct:
+            modelo-131-2026-objective-estimation-instalment:
+              field:
+                title: null
+          field:
+            label: null

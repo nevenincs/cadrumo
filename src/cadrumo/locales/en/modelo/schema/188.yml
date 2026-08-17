@@ -1,0 +1,24 @@
+modelo:
+  schema:
+    '188':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '03':
+              help: null
+              label: Withholding and advance payment tax base
+            '04':
+              help: null
+              label: Withholdings and advance payments declared
+            '05':
+              help: null
+              label: Total withholdings on the annual summary
+          construct:
+            modelo-188-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null

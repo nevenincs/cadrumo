@@ -1,0 +1,265 @@
+docs:
+  casilla:
+    binding_source:
+      atribucion_member: az atribución de rentas tagjaiból
+      bienes_inversion_regularizacion: a beruházási javak korrekciójából
+      borrador: az AEAT borrador tervezetéből
+      collectible_invoice: a kiállított számláiból
+      donativo_donor: a nyilvántartott adományozóiból
+      foreign_asset: a külföldi vagyonelemeiből
+      iva_compensation_annual_partition: az adóév IVA-kompenzációjából
+      iva_wallet_decision: az IVA-kompenzációs döntéséből
+      ledger_impatriado_income_aggregation: az impatriado-rendszer szerinti bevételeiből
+      ledger_irnr_income_aggregation: az IRNR-bevételeiből
+      ledger_iva_aggregation: az IVA-tételeiből
+      ledger_oss_aggregation: az OSS-tételeiből
+      ledger_renta_gastos_estimacion_directa_aggregation: a közvetlen megállapítás
+        szerinti költségeiből
+      ledger_renta_gastos_pago_fraccionado_aggregation: a pago fraccionado költségeiből
+      ledger_renta_income_aggregation: a nyilvántartott bevételeiből
+      ledger_transaction: a nyilvántartott tételeiből
+      m303_regimen_simplificado_annual_summary: a 303-as modelo egyszerűsített rendszerének
+        éves összesítéséből
+      manual_input: az Ön által megadott értékből
+      payable_invoice: a befogadott számláiból
+      previous_filing: a korábbi bevallásából
+      profile: az adózói profiljából
+      prorrata_regularizacion: az arányosítás korrekciójából
+      purchase_invoice_evidence: a beszerzési számlák bizonylataiból
+      refund_operation: a visszatérítési ügyleteiből
+      related_party_operation: a kapcsolt ügyleteiből
+      relation_prefill: egy kapcsolódó modelo eredményéből
+      retenciones_aggregation: a nyilvántartott retenciones tételekből
+      withholding: a levont forrásadókból
+    cadence:
+      ad_hoc: Az esemény bekövetkezésekor benyújtandó
+      annual: Évente benyújtandó
+      monthly: Havonta benyújtandó
+      profile_based: A profilja szerint benyújtandó
+      quarterly: Negyedévente benyújtandó
+    chrome:
+      alternative_join: ', vagy'
+      binding: Adatkötés
+      casilla_count: '{casillas} casilla {sections} szakaszban'
+      casilla_id: Casilla-azonosító
+      casilla_index: Az összes casilla
+      casilla_index_hint: Válasszon egy casillát az odaugráshoz.
+      derived_from: 'ebből:'
+      established_by: Jogszabályi alapja
+      formula: Képlet
+      general_section: Általános
+      index_intro: Modellónként egy oldal. Minden casilla megadja, hogyan töltődik
+        ki (Ön adja meg, más rovatokból számítjuk, vagy a nyilvántartásaiból töltjük
+        ki), hol szerepel a hivatalos nyomtatványon, és melyik jogszabály állapítja
+        meg.
+      index_title: Casilla-referencia
+      legal_basis: Jogalap
+      list_and: és
+      not_on_official_form: Nem szerepel a hivatalos nyomtatványon
+      page_heading: '{modelo}. modelo: {title}'
+      record_design_number: Rekordterv szerinti szám
+      registry_identifiers: Nyilvántartási azonosítók
+      registry_section: Nyilvántartási szakasz
+      required: Kötelező
+      revisions: Változatok
+      sections_nav: A modelo szakaszai
+      segmento: '{segmento} szegmens'
+      semantic_role: Szemantikai szerep
+      sources: Források
+    data_type:
+      bic: BIC
+      boolean: Igen vagy nem
+      ccaa_code: Autonóm közösség kódja
+      country_code: Országkód
+      date: Dátum
+      decimal: Tizedes szám
+      iban: IBAN
+      integer: Egész szám
+      money: Összeg euróban
+      municipality_code: Településkód
+      name: Név
+      nif: NIF
+      nif_iva: Közösségi adószám (NIF-IVA)
+      period_code: Időszak
+      postal_code: Irányítószám
+      province_code: Provincia kódja
+      ratio: Százalék
+      text: Szöveg
+      year: Adóév
+    input_kind:
+      bound: Automatikusan kitöltve
+      computed: Automatikusan számítjuk
+      informational: Csak tájékoztató
+      manual: Ön adja meg
+      projection_only: A forrássorából kitöltve
+    input_kind_count:
+      bound: a nyilvántartásaiból kitöltve
+      computed: számított
+      informational: csak tájékoztató
+      manual: amelyet Ön ad meg
+      projection_only: a forrássorából kitöltve
+    legal_kind:
+      instruction: AEAT-útmutató
+    length:
+      at_least: Legalább {min} karakter
+      at_most: Legfeljebb {max} karakter
+      between: '{min} és {max} karakter között'
+    value_enum: 'Az alábbiak egyike: {values}'
+    value_range:
+      at_least: Legalább {min}
+      at_most: Legfeljebb {max}
+      between: '{min} és {max} között'
+      non_negative: Nulla vagy több
+      non_positive: Nulla vagy kevesebb
+  cli:
+    automation:
+      exit_auth: Hitelesítés szükséges, vagy a hitelesítő adatok lejártak.
+      exit_codes_heading: Kilépési kódok
+      exit_conflict: Ütközés vagy előfeltétel meghiúsulása.
+      exit_forbidden: A szabályzat nem engedélyezi a műveletet.
+      exit_general: Általános hiba vagy elutasított művelet.
+      exit_internal: Váratlan belső hiba.
+      exit_not_found: Az erőforrás nem található.
+      exit_partial: Részleges siker (egyes elemek sikerültek, mások nem).
+      exit_success: Sikeres.
+      exit_unavailable: A külső szolgáltatás nem érhető el.
+      exit_usage: Érvénytelen CLI-használat (hibás kapcsoló, hiányzó argumentum).
+      exit_validation: Érvényesítési hiba a felhasználó által megadott adatokban.
+      intro: 'Ezt az oldalt akkor használja, ha ``aeat`` hívásokat szkriptel: a folyamat
+        kilépési kódjait és a minden parancsra érvényes TTY/JSON kimeneti viselkedést
+        írja le.'
+      output_contract_body: Ha a kimenet TTY-ra megy, a CLI ember által olvasható,
+        formázott szöveget ad. Ha a ``--format json`` kapcsolót megadják (vagy a kimenetet
+        átirányítják), a CLI hívásonként egyetlen JSON-dokumentumot ad. A ``SchemaEnvelope``
+        szerkezetet már használó parancsok az eredményüket ``{envelope}`` alakban
+        csomagolják. A még át nem állított parancsok közvetlenül adják vissza az adataikat.
+      output_contract_heading: TTY és JSON kimeneti szerződés
+      table_code_header: Kód
+      table_meaning_header: Jelentés
+      title: Kilépési kódok és kimeneti szerződés
+    command:
+      bare_payload_note: Ez a parancs csupasz adatot ad vissza (még nincs burkolatba
+        csomagolva). A kimenet szerkezete parancsonként eltér; a részletekért lásd
+        a ``--help`` kimenetét.
+      group_fallback: Parancscsoport.
+      no_description: Nincs leírás.
+      no_description_available: Nem érhető el leírás.
+      output_schema_heading: Kimeneti séma
+      parameters_heading: Paraméterek
+      path_label: Parancs útvonala
+      registry_key_label: Registry-kulcs
+      schema_envelope_note: Ez a parancs ``SchemaEnvelope`` szerkezetet ad vissza,
+        amelynek ``result`` mezőjét a ``{schema}`` séma ellenőrzi.
+    env:
+      default_empty: üres
+      default_unset: nincs beállítva
+      secrets_note: Az alkalmazás soha nem írja ki a titkos értékeket, ezek fent `(secret)`
+        jelöléssel szerepelnek. A `(derived)` jelölésű alapértelmezések futásidőben,
+        a tárolási gyökérből vagy a projekt helyéből számítódnak.
+    family:
+      choose_group_heading: Válasszon parancscsoportot
+      direct_commands_heading: Közvetlen parancsok
+      direct_commands_intro: Ezek a parancsok közvetlenül az ``aeat {family}`` alá
+        tartoznak, közbeiktatott igecsoport nélkül.
+      group_link_line: Nyissa meg a :doc:`{target}` oldalt az ``aeat {family} {group}``
+        parancshoz.
+      index_link_line: Nyissa meg a :doc:`/cli/index` oldalt a CLI-referencia nyitóoldalához.
+      intro: Az ``aeat {family}`` fő igecsoportok szerint rendeződik. Minden csoport
+        saját oldala a csoport valódi ``--help`` kimenetével kezdődik, majd az összes
+        hozzá tartozó végponti parancs következik.
+      open_group_link: Az ``aeat {family} {group}`` referenciájának megnyitása
+      title: '{command}: parancsreferencia'
+    index:
+      app_card: 'Operatív munkafolyamat-parancsok: főkönyvi munka, modelók, bevallási
+        határidőnaptárak, registry-ellenőrzések, élő lekérések és felülvizsgálati
+        sorok.'
+      choose_family_heading: Válasszon parancscsaládot
+      config_card: 'Helyi beállítási és karbantartási parancsok: profilok, hitelesítés,
+        Google-integráció, javító ellenőrzések és visszaállítási felületek.'
+      english_help_note: A súgószövegek angolul jelennek meg. Futásidőben a CLI a
+        beállított kimeneti nyelvet használja (``--language`` / ``CADRUMO_OUTPUT_LANGUAGE``).
+      flag_debug: Bekapcsolja a hibakeresési szintű naplózást.
+      flag_detail: Bővített verzióinformációt ír ki, a registry összegzésével együtt.
+      flag_format: Kimeneti formátum (``text`` vagy ``json``).
+      flag_help: Kiírja a szerkesztett súgódokumentumot, majd kilép.
+      flag_language: Felülírja a kimeneti nyelvet (``es``, ``en``, ``ca``, ``hu``).
+      flag_profile: Megadott nevű profilt aktivál erre a hívásra.
+      flag_quiet: Elnyomja a tájékoztató kimenetet.
+      flag_verbose: Bekapcsolja a részletes kimenetet.
+      flag_version: Kiírja a csomag verzióját, majd kilép.
+      global_flags_heading: Globális kapcsolók
+      global_flags_intro: Ezeket a kapcsolókat az ``aeat`` gyökérparancs fogadja el,
+        és minden hívásra érvényesek.
+      intro: 'Az ``aeat`` CLI két felső szintű parancscsaládot tesz elérhetővé: ``config``
+        (helyi beállítás, profil-életciklus, diagnosztika) és ``app`` (operatív adózási
+        munkafolyamat). Ez a referencia mind a(z) {count} végponti parancsot dokumentálja.'
+      next_app: Nyissa meg a :doc:`app` oldalt az operatív munkafolyamat-parancsokhoz.
+      next_automation: Nyissa meg a :doc:`automation` oldalt a kilépési kódokhoz és
+        a TTY/JSON kimeneti szerződéshez.
+      next_config: Nyissa meg a :doc:`config` oldalt a helyi beállítási és karbantartási
+        parancsokhoz.
+      next_howto: Nyissa meg a :doc:`/how-to/index` oldalt a bevezető végigjátszásokhoz
+        és a feladatútmutatókhoz.
+      next_schemas: Nyissa meg a :doc:`schemas` oldalt a JSON kimeneti sémák nyilvántartásához.
+      open_family_link: Az ``aeat {family}`` referenciájának megnyitása
+      start_here: Kezdje az alábbi család-hivatkozásokkal. A pontos kapcsolók, argumentumok,
+        registry-kulcsok és kimeneti sémák a generált parancscsalád-oldalakon találhatók;
+        ez az oldal a minden parancsra érvényes gyökérszintű viselkedést írja le.
+      title: CLI-referencia
+      where_next_heading: Hogyan tovább
+    param:
+      argument_optional: Argumentum, opcionális.
+      argument_required: Argumentum, kötelező.
+      option_optional: Kapcsoló, opcionális.
+      option_required: Kapcsoló, kötelező.
+    schemas:
+      group_entries: '{count} bejegyzés: {keys}'
+      summary: Az alábbi {count} parancsútvonalhoz tartozik bejegyzett ``OutputSchema``.
+        A csoportszintű visszahívási felületek ({groups}) külön szerepelnek.
+      title: Kimeneti sémák nyilvántartása
+      tooling_note: Ez az oldal elsősorban eszközfejlesztőknek szól. Ha kézzel futtatja
+        a parancsokat, általában a :doc:`családoldalak <index>` a jobb kiindulópont.
+  glossary:
+    entry:
+      broader: Tágabb fogalom
+      domain: Terület
+      legal_basis: Jogalap
+      related: Kapcsolódó
+      undefined: Ezen a nyelven még nincs elérhető meghatározás.
+    intro: A dokumentációban használt spanyol adózási szakkifejezések. Minden kifejezés
+      a jogalapjára mutat, ha van ilyen. Keressen rá egy kifejezésre; a meghatározás
+      mindenütt ugyanaz, ahol a kifejezés előfordul.
+    title: Szójegyzék
+  legal:
+    index:
+      intro: Azok a spanyol törvények, királyi rendeletek és miniszteri rendeletek,
+        amelyeken a Cadrumo számításai alapulnak. Minden oldal egyetlen jogszabály
+        hivatkozott rendelkezéseit sorolja fel, és mindegyiket összekapcsolja a BOE-ban
+        közzétett hivatalos szöveggel.
+      title: Jogszabályi hivatkozások
+    page:
+      intro: A Boletín Oficial del Estado hivatalos lapban {document} számon jelent
+        meg. A Cadrumo számításai e jogszabály {count} rendelkezésére hivatkoznak;
+        mindegyik alább a BOE hivatalos szövegére mutat.
+    provision:
+      boe_is_official: A Boletín Oficial del Estado egységes szerkezetbe foglalt szövege
+        a hivatalos szöveg.
+      in_force_between: Hatályos {start} és {end} között
+      in_force_from: 'Hatályos ettől: {start}'
+      in_force_until: 'Hatályos eddig: {end}'
+      official_wording: Hivatalos szöveg, részlet (spanyolul)
+      published: 'közzétéve: {date}'
+      read_on_boe: '{citation} elolvasása a BOE-ban'
+    record:
+      authority: Kibocsátó hatóság
+      boe_document: BOE-dokumentum
+      bundled_corpus: Mellékelt korpusz
+      catalogue_id: Katalógusazonosító
+      consolidated_as_of: Egységes szerkezet dátuma
+      evidence_tier: Bizonyítéki szint
+      instrument_kind: Jogszabály típusa
+      note: Katalogizáló megjegyzése
+      review_status: Ellenőrzés állapota
+      reviewed_at: Ellenőrzés dátuma
+      reviewed_by: Ellenőrizte
+      title: Katalógusbejegyzés

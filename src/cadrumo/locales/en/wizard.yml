@@ -1,0 +1,931 @@
+wizard:
+  choices:
+    general: General
+    irpf: IRPF
+    iva: IVA
+    simplificado: Simplified
+  commands:
+    status:
+      created: created
+      saved: saved
+      updated: updated
+  demo:
+    description: A demonstration section to test wizard functionality
+    section:
+      title: Demo section
+    title: Demo
+  errors:
+    blank_integer: Integer value required for %{prompt_key}.
+    blank_path: Path required for %{prompt_key}.
+    blank_secret: Secret value required for %{prompt_key}.
+    blank_text: Value required for %{prompt_key}.
+    checkbox_required: Select at least one option for %{prompt_key}.
+    checkbox_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
+      %{choices}.'
+    checkbox_without_choices: Question %{prompt_key} declares no checkbox options.
+    eu_eea_country_required: '%{flag} is required when %{condition_flag} indicates
+      EU or EEA residence.'
+    invalid_confirm: 'Invalid boolean answer for %{prompt_key}: %{raw}.'
+    invalid_date: 'Invalid date for %{flag}: %{got}. Use ISO-8601 format (YYYY-MM-DD).'
+    invalid_decimal: 'Invalid decimal number for %{flag}: %{got}. Use a dot as the
+      decimal separator.'
+    invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
+    invalid_postcode: 'Invalid postcode for %{prompt_key}: %{raw}. A Spanish postcode
+      is 5 digits (province code 01-52 followed by three digits).'
+    invalid_tax_id: 'Invalid NIF/CIF/DNI/NIE for %{prompt_key}: %{raw}. %{detail}'
+    select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
+      %{choices}.'
+    select_without_choices: Question %{prompt_key} declares no select options.
+    spouse_tax_id_required_joint: '%{flag} is required when %{condition_flag} is joint
+      taxation.'
+    unsupported_console: "The guided setup needs an interactive terminal, and this\
+      \ run does not have one.\nNothing has been saved yet.\n\nYou can finish creating\
+      \ this profile in one of two ways:\n\n1. Run the command again from an interactive\
+      \ terminal to use the guided setup:\n     aeat config profile create NAME\n\n\
+      2. Or create a resident IRPF natural-person profile in one step by supplying\
+      \ the required details as flags:\n     aeat config profile create NAME --quiet\
+      \ --tax-id NIF/CIF/DNI/NIE --entity-type natural_person --irpf-income-categories\
+      \ actividad_economica --tax-residence-ccaa madrid --name GIVEN_NAME --surnames\
+      \ FAMILY_NAMES"
+    unsupported_console_edit: "The guided setup could not open an interactive prompt\
+      \ in this run.\nNothing has been saved yet.\n\nEdit this profile non-interactively\
+      \ by naming the field to change:\n  aeat config profile edit %{profile_name}\
+      \ --quiet --<field> VALUE\n\nOr re-run the guided edit from an interactive terminal\
+      \ session:\n  aeat config profile edit %{profile_name}"
+  other:
+    description: Other configuration options
+    section:
+      title: Other settings
+    title: Other
+  progress:
+    question_prefix: Question %{q_n} of %{q_total}
+    section_header: 'Step %{section_n} of %{section_total}: %{title}'
+  setup:
+    actividad:
+      title: Economic activity and censo
+    capabilities:
+      cloud-evidence-upload:
+        prompt: Allow uploading sensitive evidence to cloud LLM providers? (off by
+          default)
+      google-export:
+        prompt: Enable Google Sheets export?
+      llm-vision:
+        prompt: Enable on-host LLM vision for reading invoices?
+      title: Service capabilities
+    certificate:
+      path:
+        prompt: Enter the path to your digital certificate (.p12, .pfx)
+    codes:
+      disability-grade:
+        choices:
+          33-64:
+            description: Recognised disability of 33% to 64% - increases the personal
+              minimum.
+            label: Disability grade 33% to 64%
+          65-plus:
+            description: Recognised disability of 65% or more - higher increase to
+              the personal minimum.
+            label: Disability grade 65% or higher
+          assistance-or-mobility:
+            description: Certified need of third-party assistance or reduced mobility
+              - adds the assistance increase.
+            label: Third-party assistance or reduced mobility
+          judicial-incapacity:
+            description: Judicially declared incapacity - treated as 65%+ regardless
+              of the certified grade.
+            label: Judicial incapacity or equivalent
+      sex:
+        choices:
+          h:
+            label: H - male
+          m:
+            label: M - female
+    cotejo:
+      adopt:
+        label: Adopt the certificate value
+        provenance: Certificado de Situación Censal (non-official evidence)
+      compare:
+        help: Keep your answer, adopt the certificate value, or defer to decide later.
+        prompt: This field differs from the certificate. Which value do you keep?
+      keep:
+        label: Keep my answer
+        provenance: Your setup answer
+      title: Cross-check with your censo certificate
+    descendientes:
+      acogimiento-resolucion:
+        help: 'Date of the first preadoptive or permanent fostering resolution. Give
+          it even if the child was later adopted: the under-three increase is counted
+          from the first fostering and runs for three periods in total, and the adoption
+          does not restart it.'
+        prompt: First fostering resolution date
+      alta-posterior-nacimiento-mes:
+        help: Enter a month from 1 to 12. It must match the first declared work month;
+          leave blank if the mother already met the requirement when the child was
+          born.
+        invalid_range: The month must be between %{minimum} and %{maximum}.
+        prompt: Month when the mother completed 30 contribution days after the birth
+      birth-date:
+        prompt: Date of birth
+      convivencia:
+        prompt: Does this descendant live with you?
+      count:
+        help: 'Count children who may give the mínimo por descendientes (Art. 58 LIRPF):
+          under 25 (or any age with a disability) living with you.'
+        prompt: How many descendants (children) do you want to declare?
+      custodia-compartida:
+        prompt: Is custody shared with the other parent?
+      declaracion-propia:
+        help: This only removes the allowance if their income also exceeds the legal
+          limit.
+        prompt: Does the descendant file their own income tax return?
+      dependencia-economica:
+        choices:
+          'false':
+            label: No, I do not contribute to their upkeep
+          'true':
+            label: Yes, I contribute to their upkeep
+        help: Answer only if the descendant does not live with you. A parent without
+          custody, not even shared, who pays no court-ordered anualidades por alimentos
+          but contributes to the child's upkeep, is entitled to the mínimo por descendientes.
+          If you declare anualidades por alimentos, this assimilation does not apply
+          to any descendant while the application cannot attribute them per child.
+        prompt: Do you contribute to this descendant's economic upkeep?
+      discapacidad:
+        choices:
+          '0':
+            label: No disability
+          '33':
+            label: 33% to 64%
+          '65':
+            label: 65% or more
+        prompt: Disability grade
+      entry-event:
+        before_birth: The entry date cannot be earlier than the date of birth.
+        in_future: The entry date cannot be in the future.
+        relacion_mismatch: This date does not match the relationship you gave. The
+          Registro Civil inscription applies only to an adopted descendant, and the
+          fostering resolution only to preadoptive or permanent fostering, or to an
+          adopted child previously fostered. Correct the relationship or clear the
+          date.
+      fallecimiento:
+        help: Leave blank if this descendant has not died.
+        prompt: Date of death
+      gastos-guarderia:
+        both_declared: Give either the annual guardería total or the month-by-month
+          amounts for this child, not both. The monthly detail is the only one that
+          can express the year the child turns three, so clear the annual total.
+        help: Amounts paid to an authorised nursery (Art. 81.2 LIRPF) that increase
+          the maternity deduction; whole euros.
+        invalid_negative: Nursery expenses cannot be negative; enter 0 or a positive
+          amount in euros.
+        prompt: Nursery expenses paid in the filing year (euros)
+      gastos-guarderia-mensuales:
+        help: 'Use this instead of the annual total when the child turns three during
+          the year: only the months after the birthday count, and an annual figure
+          cannot be split across the birthday. Write each month and its amount as
+          MM:AMOUNT separated by semicolons, or a span as MM-MM:AMOUNT, for example
+          9-12:210;1:180. The eligible months are the ones your childcare centre certifies.'
+        invalid_grammar: Enter each month and its amount as MM:AMOUNT separated by
+          semicolons; a span may be written MM-MM:AMOUNT. For example 9-12:210;1:180.
+          Months run 1 to 12, amounts are whole euros, and each month may appear only
+          once.
+        prompt: Guardería spend for this child, month by month (optional)
+      inscripcion-registro-civil:
+        help: Date the adoption was inscribed in the Registro Civil. Where inscription
+          was not required, give the date of the judicial or administrative resolution
+          instead. The under-three increase is counted from that date.
+        prompt: Registro Civil inscription date
+      meses-madre-trabajo:
+        help: 'For the maternity deduction (Art. 81 LIRPF): WHICH months the mother
+          paid Social Security while this child qualified -- under 3, or (age-independent)
+          inside the adopcion/acogimiento entry-date window recorded via INSCRIPCION/ACOGIMIENTO.
+          Write MM or MM-MM, separated by '';'' (for example 5-8 or 1;2;11;12). The
+          months rather than their number, because the guarderia increase is prorated
+          by the months these and the nursery months share.'
+        invalid_range: Enter months as MM or MM-MM, separated by ';' (for example
+          5-8 or 1;2;11;12), each between %{minimum} and %{maximum}.
+        prompt: Which months the mother worked while entitled -- child under 3, or
+          adopcion/acogimiento inside its entry-date window (filing year)
+      nif:
+        prompt: Descendant's NIF/NIE (leave blank if none)
+      prorrata-minimo:
+        choices:
+          'false':
+            label: No, I claim it alone
+          'true':
+            label: Yes, split between both
+        help: Leave blank to derive it from your marital status, a spouse record and
+          the declaration type.
+        prompt: Is another taxpayer also entitled to the allowance for this descendant?
+      relacion:
+        choices:
+          acogimiento_preadoptivo_o_permanente:
+            label: Preadoptive or permanent fostering
+          acogimiento_temporal:
+            label: Temporary fostering
+          adoptado:
+            label: Adopted
+          descendiente:
+            label: Descendant (child or grandchild)
+          guarda_y_custodia_judicial:
+            label: Custody by court order
+          tutela:
+            label: Guardianship or legal representation
+        help: Choose the legal relationship. All of them entitle you to the mínimo
+          por descendientes. Only adoption and preadoptive or permanent fostering
+          also entitle you to the under-three increase regardless of the child's age;
+          temporary fostering and guardianship do not.
+        prompt: Relationship to this descendant
+      rentas-anuales:
+        help: Leave blank if unknown. High income can remove the descendant allowance.
+        invalid_negative: The descendant's income cannot be negative.
+        prompt: Descendant's annual income, excluding exempt income (euros)
+      title: Descendants
+    description: Operator-facing setup wizard for tax filing readiness
+    enrollment:
+      enrollment-large-company:
+        prompt: Large-company enrollment
+      enrollment-public-administration-budget-gt-6000000:
+        prompt: Public administration budget over 6,000,000
+      title: Enrollment
+    errors:
+      missing_required_flags: 'Missing required flags for --quiet wizard run: %{missing}'
+    familia:
+      title: Family situation
+    family:
+      family-descendants-eu-eea-deduction:
+        prompt: EU/EEA descendants in family-unit deduction
+      family-minor-children-in-unit:
+        prompt: Minor children in family unit
+      title: Family unit
+    filing-export:
+      charge-iban:
+        help: IBAN AEAT may debit when a Modelo 303 filing elects direct debit. This
+          is separate from the refund account.
+        prompt: IBAN for AEAT direct debit
+      title: Modelo 303 direct-debit account
+    flags:
+      activity:
+        help: Business activity as plain text, or the IAE heading if you know it
+      activity-start-date:
+        help: Censo registration / start-of-activity date (YYYY-MM-DD). Optional;
+          when set, obligations for periods before this date are not shown.
+      address-postcode:
+        help: Tax address postcode
+      art109-activity-income-withholding-ge-70pct:
+        help: Art. 109 coverage - at least 70% of covered professional, agricultural,
+          livestock, or forestry activity income subject to withholding or payment
+          on account
+      bienes-extranjero-above-threshold:
+        help: Foreign-held assets above legal threshold
+      charge-iban:
+        help: IBAN AEAT may debit for an elected Modelo 303 direct debit.
+      cloud-evidence-upload:
+        help: Allow uploading sensitive evidence to cloud LLM providers (off by default).
+      country-of-fiscal-residence:
+        help: ISO 3166-1 alpha-2 code of the country of fiscal residence (e.g. GB,
+          DE, FR). Required when fiscal-residency is non_resident_irnr.
+      descendiente:
+        help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]
+      does-intracomunitario:
+        help: Conducts intracomunitario operations
+      enrollment-large-company:
+        help: Large-company enrollment
+      enrollment-public-administration-budget-gt-6000000:
+        help: Public administration budget over 6,000,000
+      entity-type:
+        help: Natural person, legal entity, or attribution entity
+      family-descendants-eu-eea-deduction:
+        help: EU/EEA descendants in family-unit deduction
+      family-minor-children-in-unit:
+        help: Minor children in family unit
+      fiscal-residency:
+        help: 'Fiscal residency category: resident_irpf (habitual resident in Spain)
+          or non_resident_irnr (non-resident, IRNR taxation RDLeg 5/2004).'
+      google-export:
+        help: Enable Google Sheets export.
+      has-employees:
+        help: Has employees and pays salaries with retención
+      incn-prior-12-months:
+        help: Net turnover (importe neto de la cifra de negocios) over the prior 12
+          months, in euros. Above 6,000,000 EUR Modelo 202 mandates the Art. 40.3
+          LIS modality; below it both modalities are available. Optional.
+      irpf-estimation-regime:
+        help: IRPF estimation regime for economic-activity income
+      irpf-income-categories:
+        help: IRPF income category; pass --irpf-income-categories once per category
+      irpf-special-regime:
+        help: IRPF special regime. "general" for most taxpayers. "impatriado" for
+          workers who relocated to Spain and elected the Beckham Law regime (Art.
+          93 LIRPF), available for the first 6 years after relocation.
+      irpf-special-regime-start-date:
+        help: Date the worker elected the inpatriate regime (YYYY-MM-DD). Only when
+          irpf-special-regime is "impatriado". RIRPF Art. 116. The regime expires
+          at the end of the 6th calendar year.
+      iva-cash-accounting-regime-enrolled:
+        help: Declare enrolment in the special IVA cash-accounting regime.
+      iva-group-dominant-entity-enrolled:
+        help: Enrolled as the dominant entity of an IVA group
+      iva-group-member-enrolled:
+        help: Enrolled as a member entity of an IVA group
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        help: Declare entitlement to deduct advance payments under the hydrocarbon
+          tax-deposit regime.
+      iva-intracommunity-operations-exceed-50000-eur:
+        help: Intra-community operations exceed 50,000 EUR
+      iva-m303-regime-composition:
+        help: 'Modelo 303 regime composition: general, simplified, or mixed.'
+      iva-oss-enrolled:
+        help: Enrolled in OSS
+      iva-redeme-enrolled:
+        help: Whether the taxpayer is registered in REDEME
+      iva-regime:
+        help: IVA regime
+      iva-roi-enrolled:
+        help: Enrolled in ROI
+      iva-sii-enrolled:
+        help: Whether the taxpayer is enrolled in the SII
+      iva-voluntary-sii-enrolled:
+        help: Declare voluntary SII enrolment separately from mandatory inclusion
+          triggers.
+      legal-entity-form:
+        help: Recognised legal form when the entity type is a legal entity
+      legal-name:
+        help: Legal or company name for legal-entity export headers
+      ley-49-2002-option-date:
+        help: Record the Modelo 036 casilla 653 date for the Ley 49/2002 Title II
+          option.
+      ley-49-2002-option-declared:
+        help: Record whether Modelo 036 casilla 651 declares the Ley 49/2002 Title
+          II option.
+      ley-49-2002-renunciation-date:
+        help: Record the Modelo 036 casilla 654 date for the Ley 49/2002 Title II
+          renunciation.
+      ley-49-2002-renunciation-declared:
+        help: Record whether Modelo 036 casilla 652 declares renunciation of the Ley
+          49/2002 Title II regime.
+      llm-vision:
+        help: Enable on-host LLM vision for reading invoices.
+      modelo-111-no-retenciones-periods:
+        help: Comma-separated Modelo 111 no-obligation periods, format YYYY:PERIOD
+          (for example 2025:2T,2025:3T). Use only when no subject payments were made.
+      monedas-virtuales-extranjero-above-threshold:
+        help: Virtual currencies held abroad above Modelo 721 threshold
+      name:
+        help: Display name shown in local reviews
+      new-entity-first-two-profit-periods:
+        help: Mark this when a newly-created legal entity is in one of its first two
+          profit-making tax periods (LIS Art. 29) to opt into the 15 percent reduced
+          rate. Optional; unset leaves the entity on its otherwise-applicable rate.
+      notes:
+        help: Notes for your own records (optional)
+      objective-estimation-modulos-iae-epigraph:
+        help: IAE epigraph for objective-estimation modules, such as 972.
+      objective-estimation-modulos-module-1-units:
+        help: Annual module 1 units for objective-estimation modules.
+      objective-estimation-modulos-module-2-units:
+        help: Annual module 2 units for objective-estimation modules.
+      objective-estimation-modulos-module-3-units:
+        help: Annual module 3 units for objective-estimation modules.
+      objective-estimation-modulos-module-4-units:
+        help: Annual module 4 units for objective-estimation modules.
+      objective-estimation-modulos-module-5-units:
+        help: Annual module 5 units for objective-estimation modules.
+      objective-estimation-modulos-module-6-units:
+        help: Annual module 6 units for objective-estimation modules.
+      objective-estimation-modulos-module-7-units:
+        help: Annual module 7 units for objective-estimation modules.
+      output-language:
+        help: CLI output language for this profile
+      pays-capital-income-with-retencion:
+        help: Pays capital income with retención
+      pays-professionals-with-retencion:
+        help: Pays professionals with retención
+      pays-rent-with-retencion:
+        help: Pays local rent with retención
+      professional-income-withholding-ge-70pct:
+        help: At least 70% of professional income with prior retención
+      representante-fiscal-nif:
+        help: NIF/NIE of the fiscal representative in Spain. Required for non-EU/EEA
+          non-residents (Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004).
+      representante-fiscal-nombre:
+        help: Full name of the fiscal representative in Spain.
+      situacion-familiar:
+        choices:
+          casado:
+            description: Valid marriage - joint tax return available (Art. 82.1.1
+              LIRPF)
+            label: Married
+          pareja-hecho-no-registrada:
+            description: Unregistered civil partnership - joint tax return NOT available
+            label: Unregistered civil partnership
+          pareja-hecho-registrada:
+            description: Registered in an autonomous community register - joint tax
+              return available (Art. 82.1.2 LIRPF)
+            label: Registered civil partnership
+          separado-divorciado:
+            label: Separated / divorced
+          soltero:
+            label: Single
+        help: 'Family situation under Art. 82 LIRPF: determines whether joint taxation
+          is available and which family unit variant applies.'
+        prompt: Marital status (LIRPF Art. 82)
+      spouse-birth-date:
+        help: Spouse birth date
+      spouse-disability-grade:
+        help: 'Spouse disability grade (if applicable): 1 = 33%-64%, 2 = 65% or higher,
+          3 = judicial incapacity, 4 = third-party assistance or reduced mobility.'
+      spouse-eu-eea-country:
+        help: Spouse EU/EEA country
+      spouse-eu-eea-resident:
+        help: Spouse is EU/EEA resident
+      spouse-name:
+        help: Spouse given name
+      spouse-non-resident-irpf:
+        help: Spouse is non-resident IRPF
+      spouse-sex:
+        help: 'Spouse sex: H = male, M = female.'
+      spouse-surnames:
+        help: Spouse surnames
+      spouse-tax-id:
+        help: Spouse NIF/NIE
+      surnames:
+        help: Surnames or company name for export headers
+      tax-id:
+        help: Tax identifier (NIF/CIF/DNI/NIE) for the active profile
+      tax-residence-ccaa:
+        help: 'Tax-residence autonomous community. One of: %{choices}.'
+      tax-residence-jurisdiction-scope:
+        help: 'Declared territorial regime: common territory or the not-yet-supported
+          foral territory.'
+      taxation-type:
+        help: 'Income-tax return type: 1 = individual, 2 = joint (family unit).'
+      taxpayer-birth-date:
+        help: First taxpayer birth date
+      taxpayer-death-date:
+        help: First taxpayer death date
+      taxpayer-disability-grade:
+        help: 'First taxpayer disability grade: 1 = 33%-64%, 2 = 65% or higher, 3
+          = judicial incapacity, 4 = third-party assistance or reduced mobility.'
+      taxpayer-marital-status:
+        help: 'First taxpayer marital status: 1 = single, 2 = married, 3 = widowed,
+          4 = separated or divorced, 5 = registered civil partnership.'
+      taxpayer-marriage-date:
+        help: Start date of the current marriage (YYYY-MM-DD). Only when marital status
+          = 2 (married). Derives casillas 0245/0246/0247 (matrimonio sobrevenido,
+          Art. 82 LIRPF).
+      taxpayer-sex:
+        help: 'First taxpayer sex: H = male, M = female.'
+      third-party-transactions-above-347-threshold:
+        help: Third-party transactions exceed Modelo 347 threshold
+    format:
+      amount-eur: Amount in euros with a decimal point, e.g. 50000.00.
+      date-iso: Date as YYYY-MM-DD, e.g. 2024-03-01.
+      postcode: 'Spanish postcode: 5 digits, e.g. 28001.'
+      tax-id: 'NIF/DNI: 8 digits + letter (12345678Z) · NIE: X/Y/Z + 7 digits + letter
+        (X1234567L) · Company NIF: letter + 7 digits + check (B12345674).'
+      units-count: Whole number of units, e.g. 2.
+    identidad:
+      title: Identity
+    intro: 'Guided tax profile setup
+
+      This prepares the local profile the app uses for ledger work and tax-form checks.
+      Expect %{section_total} sections. Only %{required_total} answers are required
+      to start; the rest can be left blank when you do not know them yet. Have your
+      NIF/CIF/DNI/NIE, a short activity description, IVA/IRPF regime details, tax
+      residence, and family details if they apply. After saving, check progress with
+      `aeat config profile status`.'
+    iva:
+      iva-cash-accounting-regime-enrolled:
+        prompt: Are you enrolled in the special IVA cash-accounting regime?
+      iva-group-dominant-entity-enrolled:
+        prompt: Enrolled as an IVA group dominant entity
+      iva-group-member-enrolled:
+        prompt: Enrolled as an IVA group member entity
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        prompt: Are you entitled to deduct advance payments under the hydrocarbon
+          tax-deposit regime?
+      iva-intracommunity-operations-exceed-50000-eur:
+        prompt: Intra-community operations exceed 50,000 EUR
+      iva-oss-enrolled:
+        prompt: Enrolled in OSS
+      iva-redeme-enrolled:
+        prompt: Registered in REDEME (monthly IVA refund register)
+      iva-regime:
+        prompt: IVA regime
+      iva-roi-enrolled:
+        prompt: Enrolled in ROI
+      iva-sii-enrolled:
+        prompt: Enrolled in the SII (immediate information supply)
+      iva-voluntary-sii-enrolled:
+        prompt: Are you voluntarily enrolled in SII?
+      m303-regime-composition:
+        choices:
+          general:
+            label: General regime only
+          mixed:
+            label: Mixed regimes
+          simplified:
+            label: Simplified regime only
+        prompt: Which Modelo 303 regime composition applies?
+      title: IVA
+    notes:
+      notes:
+        prompt: Notes for your own records (optional)
+      title: Notes for your own records
+    obligations:
+      art109-activity-income-withholding-ge-70pct:
+        prompt: Art. 109 70% activity-income coverage exception applies
+      bienes-extranjero-above-threshold:
+        prompt: Foreign-held assets above legal threshold
+      does-intracomunitario:
+        prompt: Conducts intracomunitario operations
+      has-employees:
+        prompt: Has employees and pays salaries with retención
+      irpf-estimation-regime:
+        choices:
+          directa-normal:
+            description: Real-income accounting, full books - required above 600.000
+              EUR turnover.
+            label: Direct estimation, normal
+          directa-simplificada:
+            description: Real-income accounting with simplified books - the usual
+              choice for most autónomos.
+            label: Direct estimation, simplified
+          objetiva:
+            description: 'Module-based (signos, índices, módulos): tax computed from
+              activity indicators, only for listed activities.'
+            label: Objective estimation (módulos)
+        help: How economic-activity net income is determined; selects Modelo 130 vs
+          131
+        prompt: IRPF estimation regime
+      irpf-special-regime:
+        choices:
+          general:
+            label: General regime
+          impatriado:
+            label: Inbound expatriate - Beckham Law (Art. 93 LIRPF)
+        help: The inpatriate (Beckham Law) regime applies for the first 6 tax years
+          after relocation. Most taxpayers are on the general regime.
+        prompt: IRPF special regime (Beckham Law / Art. 93 LIRPF)
+      irpf-special-regime-start-date:
+        help: Date the worker opted into the inpatriate regime (RIRPF Art. 116). The
+          regime expires at the end of the 6th calendar year.
+        prompt: Special regime election date (YYYY-MM-DD)
+      modelo-111-no-retenciones-periods:
+        help: Comma-separated YYYY:PERIOD periods where no rentas subject to retención
+          or ingreso a cuenta were paid, so no all-blank Modelo 111 is filed.
+        prompt: Modelo 111 no-retenciones periods
+      monedas-virtuales-extranjero-above-threshold:
+        prompt: Virtual currencies held abroad above Modelo 721 threshold
+      objective-estimation-modulos-iae-epigraph:
+        help: Stored once per annual profile. Coefficients remain in the modelo registry.
+        prompt: IAE epigraph for objective-estimation modules
+      objective-estimation-modulos-module-1-units:
+        prompt: Annual module 1 units
+      objective-estimation-modulos-module-2-units:
+        prompt: Annual module 2 units
+      objective-estimation-modulos-module-3-units:
+        prompt: Annual module 3 units
+      objective-estimation-modulos-module-4-units:
+        prompt: Annual module 4 units
+      objective-estimation-modulos-module-5-units:
+        prompt: Annual module 5 units
+      objective-estimation-modulos-module-6-units:
+        prompt: Annual module 6 units
+      objective-estimation-modulos-module-7-units:
+        prompt: Annual module 7 units
+      objective-estimation-modulos-module-units:
+        help: Stable annual unit count for this module slot. The selected IAE epigraph
+          defines whether the slot means employees, local surface, electricity consumption,
+          or another official module.
+      pays-capital-income-with-retencion:
+        prompt: Pays capital income with retención
+      pays-professionals-with-retencion:
+        prompt: Pays professionals with retención
+      pays-rent-with-retencion:
+        prompt: Pays local rent with retención
+      professional-income-withholding-ge-70pct:
+        prompt: At least 70% of professional income with prior retención
+      third-party-transactions-above-347-threshold:
+        prompt: Third-party transactions exceed Modelo 347 threshold
+      title: Modelo obligations
+    preferencias:
+      title: Preferences and capabilities
+    profile:
+      activity:
+        prompt: Business activity (plain text is fine; use the IAE heading if you
+          know it)
+      activity-start-date:
+        help: When set, returns for periods before this date are not shown as overdue.
+          Leave blank if you do not know it.
+        prompt: From what date do you have filing obligations / when did you register?
+          (YYYY-MM-DD, optional)
+      address-postcode:
+        prompt: Tax address postcode
+      iva-regime:
+        choices:
+          exento:
+            description: 'IVA-exempt activity (education, healthcare, insurance…):
+              no IVA charged, none deducted.'
+            label: Exempt
+          general:
+            description: 'Standard IVA: charge IVA on sales, deduct IVA on purchases,
+              file Modelo 303 quarterly.'
+            label: General regime
+          reagp:
+            description: 'Special regime for agriculture, livestock and fishing (REAGP):
+              flat-rate compensation instead of IVA returns.'
+            label: Agriculture, livestock and fishing special regime (REAGP)
+          recargo-equivalencia:
+            description: 'For retailers: your supplier charges an extra surcharge
+              and you file no IVA returns for that activity.'
+            label: Equivalence surcharge
+          simplificado:
+            description: Module-based simplified IVA for eligible activities (linked
+              to estimación objetiva).
+            label: Simplified regime
+        prompt: Which IVA regime applies?
+      legal-name:
+        help: For legal entities this is the filing name used in entity-style export
+          headers. It is separate from the local display name.
+        prompt: Legal or company name for export headers
+      name:
+        prompt: Display name shown in local reviews
+      output-language:
+        choices:
+          ca:
+            label: Catalan
+          en:
+            label: English
+          es:
+            label: Spanish
+          hu:
+            label: Hungarian
+        prompt: CLI output language for this profile
+      regimes:
+        prompt: Select your applicable tax regimes
+      surnames:
+        prompt: Surnames or company name for export headers
+      tax-id:
+        prompt: Tax identifier (NIF/CIF/DNI/NIE) for the active profile
+      taxation-type:
+        choices:
+          individual:
+            description: Use when you are filing only your own individual return
+            label: 1 - individual
+          joint:
+            description: Use only for joint family-unit taxation
+            label: 2 - joint
+        prompt: Taxation type code
+      title: Profile identity
+    residence:
+      ccaa:
+        choices:
+          andalucia:
+            label: Andalusia
+          aragon:
+            label: Aragon
+          asturias:
+            label: Asturias
+          baleares:
+            label: Balearic Islands
+          canarias:
+            label: Canary Islands
+          cantabria:
+            label: Cantabria
+          castilla_la_mancha:
+            label: Castile-La Mancha
+          castilla_y_leon:
+            label: Castile and León
+          cataluna:
+            label: Catalonia
+          comunidad_valenciana:
+            label: Valencian Community
+          extremadura:
+            label: Extremadura
+          galicia:
+            label: Galicia
+          la_rioja:
+            label: La Rioja
+          madrid:
+            label: Madrid
+          murcia:
+            label: Murcia
+      country-of-fiscal-residence:
+        prompt: Country of fiscal residence (ISO 3166-1 alpha-2 code, e.g. GB, DE,
+          FR)
+      fiscal-residency:
+        choices:
+          non-resident-irnr:
+            description: 'Non-resident: only Spanish-source income is taxed, under
+              IRNR (Modelo 210), and a fiscal representative may be required.'
+            label: Non-resident - IRNR (RDLeg 5/2004)
+          resident-irpf:
+            description: 'Tax resident in Spain (183+ days or centre of interests):
+              worldwide income under IRPF.'
+            label: Habitual resident in Spain - IRPF
+        prompt: Fiscal residency category
+      representante-fiscal-nif:
+        prompt: NIF/NIE of fiscal representative in Spain (required outside EU/EEA)
+      representante-fiscal-nombre:
+        prompt: Name of fiscal representative in Spain
+      tax-residence-ccaa:
+        prompt: Tax-residence autonomous community
+      tax-residence-jurisdiction-scope:
+        choices:
+          common_regime:
+            label: Common territory
+          foral_unsupported:
+            label: Foral territory (not yet supported)
+        prompt: Which tax territory applies to this Modelo 303?
+      title: Tax residence
+    review:
+      registered-non-official-suffix: ' (from censal certificate - not AEAT-verified)'
+    spouse:
+      spouse-birth-date:
+        prompt: Spouse birth date
+      spouse-disability-grade:
+        prompt: Spouse disability grade (if applicable)
+      spouse-eu-eea-country:
+        prompt: Spouse EU/EEA country
+      spouse-eu-eea-resident:
+        prompt: Spouse is EU/EEA resident
+      spouse-name:
+        prompt: Spouse given name
+      spouse-non-resident-irpf:
+        prompt: Spouse is non-resident IRPF
+      spouse-sex:
+        prompt: Spouse sex code
+      spouse-surnames:
+        prompt: Spouse surnames
+      spouse-tax-id:
+        prompt: Spouse NIF/NIE
+      title: Spouse
+    taxpayer:
+      situacion-familiar:
+        choices:
+          casado:
+            description: Valid marriage - joint taxation available (Art. 82.1.1°)
+            label: Married
+          pareja-hecho-no-registrada:
+            description: De-facto couple without registration - joint taxation NOT
+              available
+            label: Unregistered civil partnership
+          pareja-hecho-registrada:
+            description: Registered in the corresponding autonomic registry - joint
+              taxation available (Art. 82.1.2°)
+            label: Registered civil partnership
+          separado-divorciado:
+            description: Legally separated or divorced - joint taxation is only possible
+              with children in your family unit.
+            label: Separated or divorced
+          soltero:
+            description: Single, widowed, or divorced without a registered partner
+              - individual taxation, or joint only as a single parent with children.
+            label: Single
+        help: 'Family situation under Art. 82 LIRPF: determines whether joint taxation
+          is available and which family unit variant applies.'
+        prompt: Family situation (Art. 82 LIRPF)
+      taxpayer-birth-date:
+        prompt: First taxpayer birth date
+      taxpayer-death-date:
+        prompt: First taxpayer death date
+      taxpayer-disability-grade:
+        prompt: First taxpayer disability code
+      taxpayer-marital-status:
+        choices:
+          casado:
+            label: 2 - married
+          pareja-hecho:
+            label: 5 - registered civil partnership
+          separado-divorciado:
+            label: 4 - separated or divorced
+          soltero:
+            label: 1 - single
+          viudo:
+            label: 3 - widowed
+        prompt: First taxpayer marital status
+      taxpayer-marriage-date:
+        prompt: Marriage start date (YYYY-MM-DD)
+      taxpayer-sex:
+        prompt: First taxpayer sex code
+      title: First taxpayer
+    taxpayer-type:
+      entity-type:
+        choices:
+          attribution-entity:
+            description: 'An income-attribution entity (comunidad de bienes, sociedad
+              civil): income is attributed to its members.'
+            label: Attribution entity
+          legal-entity:
+            description: A company or organisation (SL, SA, association…) filing under
+              Impuesto sobre Sociedades.
+            label: Legal entity (company)
+          natural-person:
+            description: An individual taxpayer (autónomo or private person) filing
+              under IRPF.
+            label: Natural person
+        help: Natural person (IRPF), legal entity (Impuesto sobre Sociedades), or
+          attribution entity
+        prompt: Entity type
+      incn-prior-12-months:
+        help: We need this to decide whether Modelo 202 forces the Art. 40.3 LIS modality
+          (above 6,000,000 EUR). Leave it blank if you do not know.
+        prompt: What was your net turnover over the past 12 months? (in euros, optional)
+      irpf-income-categories:
+        choices:
+          actividad-economica:
+            description: Self-employed business or professional activity - enables
+              quarterly Modelo 130 and IVA obligations.
+            label: Economic activity
+          capital-inmobiliario:
+            description: Rental income from real estate you own.
+            label: Immovable capital income (rental)
+          capital-mobiliario:
+            description: Interest, dividends and other financial investment income.
+            label: Movable capital income
+          ganancias-patrimoniales:
+            description: Capital gains or losses from selling assets (shares, property,
+              crypto).
+            label: Capital gains
+          pension:
+            description: Pension income - treated as employment income under IRPF.
+            label: Pension
+          trabajo:
+            description: Salary or pension income from an employer or Social Security.
+            label: Employment income
+        help: Select every IRPF income category you have; only economic activity triggers
+          Modelo 130/131
+        prompt: IRPF income categories
+      legal-entity-form:
+        choices:
+          cooperativa:
+            label: Cooperative
+          other:
+            label: Other legal form
+          sa:
+            label: Public limited company (S.A.)
+          sal:
+            label: Worker-owned public limited company (S.A.L.)
+          sin-fines-lucrativos:
+            description: 'Non-profit under Ley 49/2002: may opt into the special tax
+              regime asked about below.'
+            label: Non-profit entity
+          sl:
+            description: 'Sociedad Limitada: the standard small-company form, minimum
+              capital 3.000 EUR.'
+            label: Limited liability company (S.L.)
+          sll:
+            label: Worker-owned limited liability company (S.L.L.)
+          sociedad-civil-mercantil:
+            label: Civil partnership with commercial object
+        prompt: Legal form
+      ley-49-2002-option-date:
+        help: Use the ISO date corresponding to Modelo 036 casilla 653.
+        prompt: Date declared for the Ley 49/2002 special-regime option
+      ley-49-2002-option-declared:
+        help: Use the declaration fact from Modelo 036 casilla 651; legal application
+          still depends on the statutory requirements and no renunciation.
+        prompt: Has the entity filed the Modelo 036 option for the Title II Ley 49/2002
+          special fiscal regime?
+      ley-49-2002-renunciation-date:
+        help: Use the ISO date corresponding to Modelo 036 casilla 654.
+        prompt: Date declared for the Ley 49/2002 special-regime renunciation
+      ley-49-2002-renunciation-declared:
+        help: Use the declaration fact from Modelo 036 casilla 652.
+        prompt: Has the entity filed a Modelo 036 renunciation of the Title II Ley
+          49/2002 special fiscal regime?
+      new-entity-first-two-profit-periods:
+        help: Applies only to legal entities. When set, the entity is taxed at the
+          15 percent reduced rate during those two periods.
+        prompt: Is this a newly-created legal entity in one of its first two profit-making
+          tax periods?
+      title: Taxpayer type
+    title: Setup wizard
+    verifier:
+      impatriado_requires_start_date: 'Impatriate regime: the special regime start
+        date is required. Add the start date.'
+      monoparental_requires_hijos_warning: 'Single-parent family unit: joint taxation
+        as a single-parent unit (Art. 82.1.2° LIRPF) requires minor children in the
+        family unit. Without dependent children, joint taxation is not available for
+        this family situation. Enable ''minor children in unit'' or switch to individual
+        taxation.'
+      non_resident_requires_country: 'Non-resident IRNR: the country of fiscal residence
+        is required. Add the country of residence.'
+      non_resident_requires_representante: 'Non-resident IRNR: a fiscal representative
+        is required. Add the representative NIF and name.'
+  test:
+    description: Test your configuration and connectivity
+    example:
+      choices:
+        'yes':
+          description: Select this to confirm
+          label: 'Yes'
+      help: Example help text for testing
+      prompt: Example test question
+    main:
+      title: Main test
+    section:
+      title: Test section
+    title: Test

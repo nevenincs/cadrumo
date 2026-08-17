@@ -1,0 +1,393 @@
+flows:
+  compare_select:
+    candidate: '{label} (source: {provenance})'
+    defer_label: Decide this later
+  confirm:
+    'no': 'No'
+    'yes': 'Yes'
+  errors:
+    blank_required: This field is required - enter a value.
+    checkbox_required: Select at least one option.
+    checkbox_unknown: 'Unknown option - accepted values: %{choices}.'
+    checkpoint_store_missing: Flow {flow_id} offers save-and-exit in mode {mode},
+      but no checkpoint store is wired, so the run was refused instead of losing your
+      answers.
+    invalid_confirm: Answer yes or no.
+    invalid_date: Enter a date as YYYY-MM-DD (for example 2026-05-14).
+    invalid_decimal: Enter an amount using a decimal point (for example 1234.56).
+    invalid_integer: Enter a whole number.
+    select_unknown: 'Choose one of the accepted values: %{choices}.'
+    tui_abandoned: Flow {flow_id} was closed in mode {mode} before it was submitted
+      or saved; nothing was recorded.
+    unexpected_app_type: The interactive screen is not attached to a flow application.
+    unsupported_console: This console cannot host interactive questions. Run the flow
+      from a real terminal, or drive it with a scripted answer file.
+  login:
+    cancel_button: Cancel
+    intro: Choose the profile to open and type the password that protects it. Nothing
+      is unlocked until the password is accepted.
+    password_hint: The password you chose when this profile was created. It cannot
+      be reset.
+    password_label: Password
+    profile_label: Profile
+    refusal:
+      password_required: Type the password for this profile.
+      unlock_failed: The profile could not be opened.
+    section: Profile and password
+    title: Log in to your profile
+    unlock_button: Log in
+  manager:
+    action:
+      abandoned: No changes made.
+      add_row: Add a row
+      add_row_done: Added %{section} row %{index}.
+      add_row_empty: Nothing was filled in, so no row was added.
+      add_row_incomplete: The row is missing required data, so nothing was saved.
+      add_row_none: This profile schema declares no section that holds rows.
+      add_row_required: This is required; the row cannot be added without it.
+      add_row_section: Which section to add to
+      auth_clave_incomplete: Cl@ve still needs %{missing}. Nothing was saved.
+      auth_clave_movil_route_app_request: Request in app
+      auth_clave_movil_route_qr: QR code
+      auth_contraste_missing: 'Cl@ve Móvil Request in app needs one document contrast:
+        %{nie_field} for a NIE, or %{dni_field} for a DNI. Open Identification, fill
+        the applicable field, and retry sync.'
+      auth_fecha_validez_invalid: Enter the validity date as YYYY-MM-DD, for example
+        1990-01-31.
+      auth_tax_id_invalid: That is not a valid NIF or NIE. Check the letter at the
+        end and enter it as it appears on your document, for example 12345678Z.
+      busy: Another operation is still running. Wait for it to finish.
+      censal_pull: Fill in from AEAT censal data
+      censal_pull_auth_incomplete: Your identification is incomplete, so AEAT cannot
+        be read yet. Complete it first.
+      censal_pull_cleared: 'AEAT still holds a value for the fields you cleared: %{paths}.
+        They were left empty; clearing here does not change AEAT''s record.'
+      censal_pull_contested: 'AEAT differs from what you declared at: %{paths}. Your
+        answer stands; resolve each one yourself.'
+      censal_pull_done: 'AEAT censal data read: %{adopted} field(s) filled in, %{unchanged}
+        already matching, %{diverging} differing.'
+      censal_pull_no_provider: Choose how you identify to AEAT before reading your
+        censal data.
+      certificate: Certificate
+      certificate_active: Active certificate
+      certificate_done: 'Identification: %{provider}; active certificate: %{name}.'
+      export: Export a copy
+      export_destination: Destination file path
+      export_done: Encrypted copy written to %{destination}.
+      export_passphrase: Passphrase that will protect the copy
+      failed: The operation did not finish.
+      filed_history_pull_all: Pull AEAT filing history
+      filed_history_pull_all_done: '{captured} filing(s) captured, {refused} refused;
+        IVA wallet: {iva_wallet_status}; notificaciones: {notificaciones_status}.'
+      filed_history_pull_all_refused: 'These pairs could not be read and were NOT
+        reported as empty: {pairs}. Re-run to retry.'
+      google_export: Export to Google Sheets
+      google_export_done: Exported Modelo %{modelo} to %{spreadsheet_url}.
+      google_export_modelo: Modelo
+      google_export_period: Period
+      google_export_year: Year
+      google_export_year_invalid: Enter a year between 2000 and 2099.
+      logout: Log out
+      logout_done: Logged out.
+      provider:
+        certificate: Electronic certificate
+        clave_movil: Cl@ve Móvil
+        clave_permanente: Cl@ve Permanente
+      working: Running {action}...
+    actions:
+      section: Actions
+    choice_unavailable: Unavailable choice
+    column:
+      field: Field
+      state: State
+      value: Value
+    edit:
+      cancel: Cancel
+      clear: Clear
+      masked_kept: This value is hidden, so the box starts empty. Leave it empty to
+        keep the value on record, or type a new one to replace it.
+      refused:
+        boolean: '''%{value}'' is not a yes or no answer. Answer Yes or No.'
+        date: '''%{value}'' is not a date. Use the format YYYY-MM-DD - for example
+          1978-03-15.'
+        email: '''%{value}'' is not an email address. Enter one in the form name@example.com.'
+        enum: '''%{value}'' is not accepted here. Choose one of: %{accepted}.'
+        numeric: '''%{value}'' is not a number this field accepts%{accepted}. Enter
+          a number, using a point for decimals.'
+      required_blank: '{field} is required, so it cannot be left blank. Enter a value,
+        or cancel to leave it unchanged.'
+      save: Save
+      shape:
+        date: 'Format: YYYY-MM-DD - for example 1978-03-15.'
+        decimal: A number, using a point for decimals - for example 1234.56.
+        email: An email address - for example nombre@ejemplo.es.
+        integer: A whole number, with no thousands separator.
+        money: An amount in euros, using a point for decimals - for example 1234.56.
+      write_failed: The field could not be saved. Try again.
+      write_in_flight: Saving the previous field. Wait for it to finish, then try
+        again.
+    field_unavailable: Unavailable profile field
+    language:
+      unavailable: This profile does not offer a language setting.
+    namespace_detail: detail {number}
+    next_step_modelo: This profile's declared facts route it to Modelo {modelo}.
+    required_field_unavailable: Required profile field
+    section_title: '{title} - {present}/{total}'
+    title: 'Profile: {profile}'
+  modelo_review:
+    column:
+      action: Action
+      blocked_by: Blocked by
+      casilla: Casilla
+      casilla_id: Casilla ID
+      code: Code
+      concrete: Concrete origin
+      declared: Declared origin
+      expectation_id: Expectation ID
+      facts: Facts
+      grounding: Grounding
+      kind: Kind
+      label: Label
+      message: Message
+      official: Official representation
+      realised: Realised value
+      schema: Schema
+      severity: Severity
+    filter:
+      absent: Absent
+      all: All values
+      binding_presence: Binding presence
+      binding_resolved: Binding resolution
+      binding_source: Concrete binding source
+      casilla_blocker: Casilla blocker action
+      casilla_blocker_presence: Casilla blocker presence
+      estado_casilla_oficial: Official box status
+      filters: Filters
+      finding_kind: Finding kind
+      finding_severity: Finding severity
+      formula_presence: Formula presence
+      input_kind: Declared input kind
+      no_matching_blockers: No blockers match the active filters.
+      no_matching_casillas: No casillas match the active filters.
+      no_matching_findings: No findings match the active filters.
+      option:
+        binding_source:
+          atribucion_member: Income-attribution member
+          bienes_inversion_regularizacion: Investment-goods adjustment
+          borrador: AEAT draft
+          collectible_invoice: Customer invoice
+          donativo_donor: Donation donor
+          foreign_asset: Foreign asset
+          iva_compensation_annual_partition: Annual VAT compensation
+          iva_wallet_decision: VAT wallet decision
+          ledger_impatriado_income_aggregation: Inbound-expatriate income totals
+          ledger_irnr_income_aggregation: Non-resident income totals
+          ledger_iva_aggregation: VAT ledger totals
+          ledger_oss_aggregation: OSS ledger totals
+          ledger_renta_gastos_estimacion_directa_aggregation: Direct-estimation expense
+            ledger totals
+          ledger_renta_gastos_pago_fraccionado_aggregation: Instalment-payment expense
+            totals
+          ledger_renta_income_aggregation: Income ledger totals
+          ledger_transaction: Ledger transaction
+          m303_regimen_simplificado_annual_summary: Modelo 303 simplified-regime summary
+          manual_input: Manual input
+          payable_invoice: Supplier invoice
+          previous_filing: Previous filing
+          profile: Profile
+          prorrata_regularizacion: Pro-rata adjustment
+          purchase_invoice_evidence: Purchase-invoice evidence
+          refund_operation: Refund operation
+          related_party_operation: Related-party operation
+          relation_prefill: Related filing
+          retenciones_aggregation: Withholding totals
+          withholding: Withholding record
+        estado_casilla_oficial:
+          addressed: Directly addressed
+          represented_via_binding: Represented through binding
+          undefined: Undefined
+        finding_kind:
+          advisory: Advisory
+          blocking_rule: Blocking rule
+          cross_period_dependency_unclean: Prior-period dependency not clean
+          missing_required_casilla: Missing required casilla
+          reconciliation_mismatch: Reconciliation mismatch
+        finding_severity:
+          blocking: Blocking
+          warning: Warning
+        input_kind:
+          bound: Bound
+          computed: Computed
+          informational: Informational
+          manual: Manual
+          projection_only: Projection only
+        operator_action:
+          capture_external_evidence: Capture external evidence
+          complete_document_evidence: Complete document evidence
+          confirm_group_membership: Confirm group membership
+          file_prior_period: File prior period
+          import_ledger_data: Import ledger data
+          re_verify: Verify again
+          resolve_identity: Resolve identity
+          resolve_revision_mismatch: Resolve revision mismatch
+          resolve_value_divergence: Resolve value difference
+          review_advisory: Review advisory
+          set_profile_fact: Set profile fact
+          supply_manual_input: Supply manual input
+        origin_anomaly:
+          broken_calculation_chain: Broken calculation chain
+          operator_override: Operator override
+        realised_kind:
+          COMPUTED: Computed
+          DEFAULT: Default
+          EMPTY: Empty
+          INHERITED: Inherited
+          LITERAL: Literal
+        relation_channel:
+          alternate_binding: Alternate binding
+          formula_binding: Formula binding
+          formula_relation: Formula relation
+          primary_binding: Primary binding
+      origin_anomaly: Origin anomaly
+      origin_anomaly_presence: Origin anomaly presence
+      present: Present
+      realised_kind: Realised value kind
+      record_blocker: Record blocker action
+      relation_channel: Relation channel
+      relation_presence: Relation presence
+      reset: Reset filters
+      resolved: Resolved
+      unresolved: Unresolved
+    summary:
+      calculation_revision: Calculation revision
+      lifecycle_state: Lifecycle state
+      progress: Progress
+      registry_revision: Registry revision
+      verification_outcome: Verification outcome
+      work_unit: Work unit
+    title: Modelo {modelo} · {filing_year} · {period}
+  progress:
+    current_answer: 'Current answer: {value}'
+    current_answer_secret: 'Current answer: (hidden)'
+    failure_mode: 'Watch out: {text}'
+    format_hint: 'Format: {hint}'
+    legal_ref: 'Legal basis: %{ref} - %{label}'
+    optional: Optional
+    page_header: Question {position} of {total} - section {section}
+    required: Required
+  registration:
+    confirm_label: Repeat the password
+    create_button: Create profile
+    intro: 'Choose a name for this profile and a password to protect it. That is all
+      that is needed: your profile exists as soon as you continue, and you fill in
+      the rest whenever you like.'
+    password_hint: At least {minimum_length} characters. A few ordinary words strung
+      together are easier to remember and harder to guess than one short complicated
+      word.
+    password_label: Password
+    refusal:
+      confirmation_mismatch: The two passwords do not match.
+      username_required: Enter a name for this profile.
+    section: Name and password
+    strength:
+      fair: Reasonable.
+      strong: Strong.
+      too_short: 'Too short: at least {minimum_length} characters are required.'
+      weak: Accepted, but weak. Making it longer helps more than adding symbols.
+    title: Create your profile
+    username_hint: How this profile appears in lists. You can change it later.
+    username_label: Profile name
+    why_password: 'Your tax data stays on this computer and is never sent anywhere.
+      The password encrypts it on disk, so it cannot be read without you. It cannot
+      be reset: if you lose it, the data is unrecoverable.'
+  review:
+    action_edit: Edit an answer
+    action_prompt: What do you want to do?
+    action_restart: Start over
+    action_save_exit: Save and exit
+    action_submit: Submit
+    column_answer: Answer
+    column_question: Question
+    column_registered: On record
+    column_status: Status
+    edit_not_editable: Question {page_key} can no longer be edited.
+    edit_unknown: There is no question numbered {number}.
+    edit_which: 'Which question number do you want to edit? '
+    header: Review - {answered} questions answered.
+    header_tui: 'Review - {answered} answered, {remaining} required still open, ready
+      to submit: {eligible}'
+    mode_create: profile creation
+    mode_modify: profile editing
+    orphan_marker: (no longer asked)
+    page_deferred: Question %{page_key} is deferred - decide before submitting.
+    page_invalid: Question %{page_key} has an invalid answer.
+    page_stale: Question %{page_key} needs revisiting - an earlier answer changed.
+    question_unavailable: Question no longer available
+    required_unanswered: Required question %{page_key} is unanswered.
+    reset_stale_confirm: Question {page_key} is no longer asked. Clear its stored
+      answer?
+    reset_stale_done: Cleared the stored answer for {page_key}.
+    restart_confirm: Start over and discard every answer?
+    row: '{number}. {page_key} - status: {status}'
+    save_unavailable: Save and exit is not available in mode {mode}; finish the flow
+      in one sitting.
+    section_unavailable: Unavailable section
+  status:
+    auth:
+      absolute_deadline: Session absolute deadline
+      certificate_source: Certificate source
+      idle_deadline: Session idle deadline
+      login_not_ready: not verified
+      login_ready: ready
+      provider: Provider
+      provider_none: not configured
+      provider_unknown: Unknown provider
+      status: Access
+      subject: Subject
+    binding_quit: Quit
+    masked_value: (hidden)
+    profile:
+      column:
+        field: Field
+        value: Value
+      field_unavailable: Profile field unavailable in this version
+      none: No active profile.
+      repeated_field: '{label} - entry {row}'
+      value_unavailable: Unavailable value
+    profiles:
+      column:
+        active: Active
+        label: Profile
+        status: Status
+      none: No registered profiles.
+      status:
+        complete: Complete
+        incomplete: Incomplete
+        unknown: Unknown
+    section:
+      auth: Authentication
+      notices: Advisories
+      profile: Active profile
+      profiles: Profiles
+    title: Status
+  tui:
+    binding_back: Back
+    binding_reset: Reset
+    binding_restart: Restart
+    binding_return: Return
+    binding_review: Review
+    binding_save_exit: Save and exit
+    binding_submit: Submit
+    button_back: Back
+    button_next: Next
+    button_review: Review
+    choice_unavailable: Unavailable choice
+    confirm_restart:
+      cancel: Cancel
+      confirm: Restart
+      message: This clears every answer given so far and returns to the first page.
+        This cannot be undone.
+      title: Restart the whole flow?
+    header: '{flow} - question {position} of {total}, section {section}'
+    header_single_section: '{flow} - question {position} of {total}'
+    section_unavailable: Unavailable section

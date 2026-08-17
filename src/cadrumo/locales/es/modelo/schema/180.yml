@@ -1,0 +1,303 @@
+modelo:
+  schema:
+    '180':
+      casilla:
+        continuidad:
+          devengo-year:
+            help: null
+            label: Ejercicio de devengo
+          payee-inmueble-bloque:
+            help: null
+            label: Bloque del inmueble arrendado
+          payee-inmueble-calificador-numero:
+            help: null
+            label: Calificador del numero del inmueble arrendado
+          payee-inmueble-codigo-municipio:
+            help: null
+            label: Codigo de municipio del inmueble arrendado
+          payee-inmueble-codigo-postal:
+            help: null
+            label: Codigo postal del inmueble arrendado
+          payee-inmueble-complemento:
+            help: null
+            label: Complemento de domicilio del inmueble arrendado
+          payee-inmueble-escalera:
+            help: null
+            label: Escalera del inmueble arrendado
+          payee-inmueble-localidad:
+            help: null
+            label: Localidad del inmueble arrendado
+          payee-inmueble-municipio:
+            help: null
+            label: Municipio del inmueble arrendado
+          payee-inmueble-nombre-via:
+            help: null
+            label: Nombre de la via publica del inmueble arrendado
+          payee-inmueble-numero-casa:
+            help: null
+            label: Numero de casa del inmueble arrendado
+          payee-inmueble-planta:
+            help: null
+            label: Planta del inmueble arrendado
+          payee-inmueble-portal:
+            help: null
+            label: Portal del inmueble arrendado
+          payee-inmueble-provincia:
+            help: null
+            label: Codigo provincia del inmueble arrendado
+          payee-inmueble-puerta:
+            help: null
+            label: Puerta del inmueble arrendado
+          payee-inmueble-referencia-catastral:
+            help: null
+            label: Referencia catastral del inmueble arrendado
+          payee-inmueble-situacion:
+            help: null
+            label: Situacion del inmueble
+          payee-inmueble-tipo-numeracion:
+            help: null
+            label: Tipo de numeracion del inmueble arrendado
+          payee-inmueble-tipo-via:
+            help: null
+            label: Tipo de via del inmueble arrendado
+          payee-modalidad-renta:
+            help: null
+            label: Modalidad de renta o rendimiento
+          payee-name:
+            help: null
+            label: Apellidos y nombre, razon social o denominacion del perceptor
+          payee-nif:
+            help: null
+            label: NIF del perceptor
+          payee-province:
+            help: null
+            label: Codigo provincia del domicilio del perceptor
+          payee-representative-nif:
+            help: null
+            label: NIF del representante legal del perceptor
+          porcentaje-retencion:
+            help: null
+            label: Porcentaje de retencion aplicado
+          total-perceptores-count:
+            help: null
+            label: Numero total de perceptores
+      field:
+        official_name: Modelo 180. Declaración Informativa. Retenciones e ingresos
+          a cuenta. Rendimientos procedentes del arrendamiento de inmuebles urbanos.
+          Resumen anual.
+        title: Resumen anual de retenciones sobre arrendamientos urbanos
+      revision:
+        2019-2022:
+          casilla:
+            x-chim6r1ec9gn6p9dehnn8obc:
+              help: null
+              label: Base retenciones e ingresos a cuenta total
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: null
+              label: Declaración complementaria o sustitutiva
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: null
+              label: Número identificativo de la declaración
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: null
+              label: Número identificativo de la declaración anterior
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: null
+              label: Retenciones e ingresos a cuenta total
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: null
+              label: Numero total de perceptores
+            x-e1in4opec9gn6p8:
+              help: null
+              label: Base retenciones e ingresos a cuenta del perceptor
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: null
+              label: Ejercicio de devengo
+            x-e1in4oped5n6qtb5c9m6abb2dhnn2tb5:
+              help: null
+              label: Bloque del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: null
+              label: Calificador del numero del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lmnarj9cdkn0qbf:
+              help: null
+              label: Codigo de municipio del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lo6usrkc5m0:
+              help: null
+              label: Codigo postal del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abb3dtmn0r35dlimst3f:
+              help: null
+              label: Complemento de domicilio del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abb5edhm2r35e9gg:
+              help: null
+              label: Escalera del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbcdthm2r39chgm8:
+              help: null
+              label: Localidad del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbdeln6ior9e1kmu:
+              help: null
+              label: Municipio del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbedtmm4sj55lr6io8:
+              help: null
+              label: Nombre de la via publica del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbeelmmasjf5lhm2sr1:
+              help: null
+              label: Numero de casa del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbgdhgmst31:
+              help: null
+              label: Planta del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbgdtp78obc:
+              help: null
+              label: Portal del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbge9nncqbecdkm2:
+              help: null
+              label: Codigo provincia del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbgelin4t31:
+              help: null
+              label: Puerta del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbeelmmasj1cdkmurg:
+              help: null
+              label: Tipo de numeracion del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbmd5gg:
+              help: null
+              label: Tipo de via del inmueble arrendado
+            x-e1in4opedlnm8obcd5i62p0:
+              help: null
+              label: Modalidad de renta o rendimiento
+            x-e1in4opedpkmc:
+              help: null
+              label: NIF del perceptor
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: null
+              label: NIF del representante legal del perceptor
+            x-e1in4opedpnmqojick:
+              help: null
+              label: Apellidos y nombre, razon social o denominacion del perceptor
+            x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
+              help: null
+              label: Porcentaje de retencion aplicado
+            x-e1in4opee1p6utj9dphmio8:
+              help: null
+              label: Codigo provincia del domicilio del perceptor
+            x-e1in4opee9imcpbicln66qb15lhm2t31edq74obc:
+              help: null
+              label: Referencia catastral del inmueble arrendado
+            x-e1in4opee9in8pbecdkmurj5ec:
+              help: null
+              label: Retenciones e ingresos a cuenta del perceptor
+            x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
+              help: null
+              label: Situacion del inmueble
+          construct:
+            modelo-180-annual-summary:
+              field:
+                title: Modelo 180 annual summary from Modelo 115 quarterly filings
+          field:
+            label: Orden HAP/1732/2014, ejercicios 2019 a 2022
+        2023-y-siguientes:
+          casilla:
+            x-chim6r1ec9gn6p9dehnn8obc:
+              help: null
+              label: Base retenciones e ingresos a cuenta total
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: null
+              label: Declaración complementaria o sustitutiva
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: null
+              label: Número identificativo de la declaración
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: null
+              label: Número identificativo de la declaración anterior
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: null
+              label: Retenciones e ingresos a cuenta total
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: null
+              label: Numero total de perceptores
+            x-e1in4opec9gn6p8:
+              help: null
+              label: Base retenciones e ingresos a cuenta del perceptor
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: null
+              label: Ejercicio de devengo
+            x-e1in4oped5n6qtb5c9m6abb2dhnn2tb5:
+              help: null
+              label: Bloque del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: null
+              label: Calificador del numero del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lmnarj9cdkn0qbf:
+              help: null
+              label: Codigo de municipio del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lo6usrkc5m0:
+              help: null
+              label: Codigo postal del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abb3dtmn0r35dlimst3f:
+              help: null
+              label: Complemento de domicilio del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abb5edhm2r35e9gg:
+              help: null
+              label: Escalera del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbcdthm2r39chgm8:
+              help: null
+              label: Localidad del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbdeln6ior9e1kmu:
+              help: null
+              label: Municipio del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbedtmm4sj55lr6io8:
+              help: null
+              label: Nombre de la via publica del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbeelmmasjf5lhm2sr1:
+              help: null
+              label: Numero de casa del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbgdhgmst31:
+              help: null
+              label: Planta del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbgdtp78obc:
+              help: null
+              label: Portal del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbge9nncqbecdkm2:
+              help: null
+              label: Codigo provincia del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbgelin4t31:
+              help: null
+              label: Puerta del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbeelmmasj1cdkmurg:
+              help: null
+              label: Tipo de numeracion del inmueble arrendado
+            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbmd5gg:
+              help: null
+              label: Tipo de via del inmueble arrendado
+            x-e1in4opedlnm8obcd5i62p0:
+              help: null
+              label: Modalidad de renta o rendimiento
+            x-e1in4opedpkmc:
+              help: null
+              label: NIF del perceptor
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: null
+              label: NIF del representante legal del perceptor
+            x-e1in4opedpnmqojick:
+              help: null
+              label: Apellidos y nombre, razon social o denominacion del perceptor
+            x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
+              help: null
+              label: Porcentaje de retencion aplicado
+            x-e1in4opee1p6utj9dphmio8:
+              help: null
+              label: Codigo provincia del domicilio del perceptor
+            x-e1in4opee9imcpbicln66qb15lhm2t31edq74obc:
+              help: null
+              label: Referencia catastral del inmueble arrendado
+            x-e1in4opee9in8pbecdkmurj5ec:
+              help: null
+              label: Retenciones e ingresos a cuenta del perceptor
+            x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
+              help: null
+              label: Situacion del inmueble
+          construct:
+            modelo-180-annual-summary:
+              field:
+                title: Modelo 180 annual summary from Modelo 115 quarterly filings
+          field:
+            label: Orden HAP/1732/2014 actualizada por Orden HFP/1284/2023

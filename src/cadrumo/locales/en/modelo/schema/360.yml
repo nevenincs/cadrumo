@@ -1,0 +1,48 @@
+modelo:
+  schema:
+    '360':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2010-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the request relates
+            x-chim6r1eclpn8ob4dsmmqqb5dlh74ro:
+              help: null
+              label: Member State of refund where the tax was borne
+            x-chincrrcelhmirre5pi6aorcc5p62or9dtn2qrjf5limst3icljm2bb2d5imspbj:
+              help: null
+              label: null
+            x-chincrrcelhmirre5pi6itj9edgg:
+              help: null
+              label: null
+            x-chincrrcelhmirre5pkmqs3fe9q6abbjdtm6ior9ehgm8ro:
+              help: null
+              label: null
+            x-chincrrcelhmirre5pn7arb5e9niqp3fcdqmqpbeehnn6bb9dlo6usjkc5hmirre:
+              help: null
+              label: null
+            x-chincrrcelhmirre5pn7arb5e9niqpj1cdq7asj1ec:
+              help: null
+              label: null
+            x-chincrrcelhmirre5po6asj9dti6ubb6clhmgo9dcpkms:
+              help: null
+              label: null
+            x-chincrrcelhmirre5po6asj9dti6ubb6clhmgo9dd5n6ior9ds:
+              help: null
+              label: null
+            x-e1p6usjic5q62bj4clj6irj9ehknco8:
+              help: null
+              label: null
+            x-e1p6usjic5q62bj5d9in4or9cdkmu:
+              help: null
+              label: null
+          construct:
+            modelo-360-iva-devolucion-ue:
+              field:
+                title: null
+          field:
+            label: null

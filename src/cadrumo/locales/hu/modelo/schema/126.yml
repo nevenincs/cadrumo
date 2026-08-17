@@ -1,0 +1,51 @@
+modelo:
+  schema:
+    '126':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: null
+            '02':
+              help: null
+              label: null
+            '03':
+              help: null
+              label: null
+            '04':
+              help: null
+              label: null
+            '05':
+              help: null
+              label: null
+            '06':
+              help: null
+              label: null
+            '07':
+              help: null
+              label: null
+            08:
+              help: null
+              label: null
+            09:
+              help: null
+              label: null
+            '10':
+              help: null
+              label: null
+            '11':
+              help: null
+              label: null
+            '12':
+              help: null
+              label: null
+          construct:
+            modelo-126-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null

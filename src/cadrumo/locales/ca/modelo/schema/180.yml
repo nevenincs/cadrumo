@@ -1,0 +1,301 @@
+modelo:
+  schema:
+    '180':
+      casilla:
+        continuidad:
+          devengo-year:
+            help: null
+            label: Exercici de meritació
+          payee-inmueble-bloque:
+            help: null
+            label: Bloc de l'immoble arrendat
+          payee-inmueble-calificador-numero:
+            help: null
+            label: Qualificador del número de l'immoble arrendat
+          payee-inmueble-codigo-municipio:
+            help: null
+            label: Codi de municipi de l'immoble arrendat
+          payee-inmueble-codigo-postal:
+            help: null
+            label: Codi postal de l'immoble arrendat
+          payee-inmueble-complemento:
+            help: null
+            label: Complement de domicili de l'immoble arrendat
+          payee-inmueble-escalera:
+            help: null
+            label: Escala de l'immoble arrendat
+          payee-inmueble-localidad:
+            help: null
+            label: Localitat de l'immoble arrendat
+          payee-inmueble-municipio:
+            help: null
+            label: Municipi de l'immoble arrendat
+          payee-inmueble-nombre-via:
+            help: null
+            label: Nom de la via pública de l'immoble arrendat
+          payee-inmueble-numero-casa:
+            help: null
+            label: Número de casa de l'immoble arrendat
+          payee-inmueble-planta:
+            help: null
+            label: Planta de l'immoble arrendat
+          payee-inmueble-portal:
+            help: null
+            label: Portal de l'immoble arrendat
+          payee-inmueble-provincia:
+            help: null
+            label: Codi de província de l'immoble arrendat
+          payee-inmueble-puerta:
+            help: null
+            label: Porta de l'immoble arrendat
+          payee-inmueble-referencia-catastral:
+            help: null
+            label: Referència cadastral de l'immoble arrendat
+          payee-inmueble-situacion:
+            help: null
+            label: Situació de l'immoble
+          payee-inmueble-tipo-numeracion:
+            help: null
+            label: Tipus de numeració de l'immoble arrendat
+          payee-inmueble-tipo-via:
+            help: null
+            label: Tipus de via de l'immoble arrendat
+          payee-modalidad-renta:
+            help: null
+            label: Modalitat de renda o rendiment
+          payee-name:
+            help: null
+            label: Cognoms i nom, raó social o denominació del perceptor
+          payee-nif:
+            help: null
+            label: null
+          payee-province:
+            help: null
+            label: Codi de província del domicili del perceptor
+          payee-representative-nif:
+            help: null
+            label: NIF del representant legal del perceptor
+          porcentaje-retencion:
+            help: null
+            label: Percentatge de retenció aplicat
+          total-perceptores-count:
+            help: null
+            label: Nombre total de perceptors
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-2022:
+          casilla:
+            x-chim6r1ec9gn6p9dehnn8obc:
+              help: null
+              label: Base total de retencions i ingressos a compte
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: null
+              label: Declaració complementària o substitutiva
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: null
+              label: Número identificatiu de la declaració
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: null
+              label: Número identificatiu de la declaració anterior
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: null
+              label: Retencions i ingressos a compte totals
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: null
+              label: Nombre total de perceptors
+            x-e1in4opec9gn6p8:
+              help: null
+              label: Base de retencions i ingressos a compte del perceptor
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: null
+              label: Exercici de meritació
+            x-e1in4oped5n6qtb5c9m6abb2dhnn2tb5:
+              help: null
+              label: Bloc de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: null
+              label: Qualificador del número de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lmnarj9cdkn0qbf:
+              help: null
+              label: Codi de municipi de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lo6usrkc5m0:
+              help: null
+              label: Codi postal de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abb3dtmn0r35dlimst3f:
+              help: null
+              label: Complement de domicili de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abb5edhm2r35e9gg:
+              help: null
+              label: Escala de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbcdthm2r39chgm8:
+              help: null
+              label: Localitat de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbdeln6ior9e1kmu:
+              help: null
+              label: Municipi de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbedtmm4sj55lr6io8:
+              help: null
+              label: Nom de la via pública de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbeelmmasjf5lhm2sr1:
+              help: null
+              label: Número de casa de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbgdhgmst31:
+              help: null
+              label: Planta de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbgdtp78obc:
+              help: null
+              label: Portal de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbge9nncqbecdkm2:
+              help: null
+              label: Codi de província de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbgelin4t31:
+              help: null
+              label: Porta de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbeelmmasj1cdkmurg:
+              help: null
+              label: Tipus de numeració de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbmd5gg:
+              help: null
+              label: Tipus de via de l'immoble arrendat
+            x-e1in4opedlnm8obcd5i62p0:
+              help: null
+              label: Modalitat de renda o rendiment
+            x-e1in4opedpkmc:
+              help: null
+              label: null
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: null
+              label: NIF del representant legal del perceptor
+            x-e1in4opedpnmqojick:
+              help: null
+              label: Cognoms i nom, raó social o denominació del perceptor
+            x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
+              help: null
+              label: Percentatge de retenció aplicat
+            x-e1in4opee1p6utj9dphmio8:
+              help: null
+              label: Codi de província del domicili del perceptor
+            x-e1in4opee9imcpbicln66qb15lhm2t31edq74obc:
+              help: null
+              label: Referència cadastral de l'immoble arrendat
+            x-e1in4opee9in8pbecdkmurj5ec:
+              help: null
+              label: Retencions i ingressos a compte del perceptor
+            x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
+              help: null
+              label: Situació de l'immoble
+          construct:
+            modelo-180-annual-summary:
+              field:
+                title: null
+          field:
+            label: null
+        2023-y-siguientes:
+          casilla:
+            x-chim6r1ec9gn6p9dehnn8obc:
+              help: null
+              label: Base total de retencions i ingressos a compte
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: null
+              label: Declaració complementària o substitutiva
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              help: null
+              label: Número identificatiu de la declaració
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              help: null
+              label: Número identificatiu de la declaració anterior
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: null
+              label: Retencions i ingressos a compte totals
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: null
+              label: Nombre total de perceptors
+            x-e1in4opec9gn6p8:
+              help: null
+              label: Base de retencions i ingressos a compte del perceptor
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: null
+              label: Exercici de meritació
+            x-e1in4oped5n6qtb5c9m6abb2dhnn2tb5:
+              help: null
+              label: Bloc de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
+              help: null
+              label: Qualificador del número de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lmnarj9cdkn0qbf:
+              help: null
+              label: Codi de municipi de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lo6usrkc5m0:
+              help: null
+              label: Codi postal de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abb3dtmn0r35dlimst3f:
+              help: null
+              label: Complement de domicili de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abb5edhm2r35e9gg:
+              help: null
+              label: Escala de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbcdthm2r39chgm8:
+              help: null
+              label: Localitat de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbdeln6ior9e1kmu:
+              help: null
+              label: Municipi de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbedtmm4sj55lr6io8:
+              help: null
+              label: Nom de la via pública de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbeelmmasjf5lhm2sr1:
+              help: null
+              label: Número de casa de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbgdhgmst31:
+              help: null
+              label: Planta de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbgdtp78obc:
+              help: null
+              label: Portal de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbge9nncqbecdkm2:
+              help: null
+              label: Codi de província de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbgelin4t31:
+              help: null
+              label: Porta de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbeelmmasj1cdkmurg:
+              help: null
+              label: Tipus de numeració de l'immoble arrendat
+            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbmd5gg:
+              help: null
+              label: Tipus de via de l'immoble arrendat
+            x-e1in4opedlnm8obcd5i62p0:
+              help: null
+              label: Modalitat de renda o rendiment
+            x-e1in4opedpkmc:
+              help: null
+              label: null
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: null
+              label: NIF del representant legal del perceptor
+            x-e1in4opedpnmqojick:
+              help: null
+              label: Cognoms i nom, raó social o denominació del perceptor
+            x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
+              help: null
+              label: Percentatge de retenció aplicat
+            x-e1in4opee1p6utj9dphmio8:
+              help: null
+              label: Codi de província del domicili del perceptor
+            x-e1in4opee9imcpbicln66qb15lhm2t31edq74obc:
+              help: null
+              label: Referència cadastral de l'immoble arrendat
+            x-e1in4opee9in8pbecdkmurj5ec:
+              help: null
+              label: Retencions i ingressos a compte del perceptor
+            x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
+              help: null
+              label: Situació de l'immoble
+          construct:
+            modelo-180-annual-summary:
+              field:
+                title: null
+          field:
+            label: null

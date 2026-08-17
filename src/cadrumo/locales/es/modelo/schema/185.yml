@@ -1,0 +1,25 @@
+modelo:
+  schema:
+    '185':
+      field:
+        official_name: Modelo 185. Declaración informativa mensual de cotizaciones
+          de afiliados y mutualistas.
+        title: Declaración informativa mensual de cotizaciones de afiliados y mutualistas
+      revision:
+        2003-2025:
+          field:
+            label: null
+        2025-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaración
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-185-informative:
+              field:
+                title: Modelo 185 declaración informativa
+          field:
+            label: Modelo 185 (orden-hac-1197-2025), ejercicios 2025 y siguientes

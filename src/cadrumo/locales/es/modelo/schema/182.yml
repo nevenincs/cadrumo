@@ -1,0 +1,45 @@
+modelo:
+  schema:
+    '182':
+      field:
+        official_name: Modelo 182. Impuesto sobre la Renta de las Personas Fisicas,
+          Impuesto sobre la Renta de no Residentes e Impuesto sobre Sociedades. Declaracion
+          informativa de donativos, donaciones y aportaciones recibidas y disposiciones
+          realizadas.
+        title: Donativos, donaciones y aportaciones recibidas y disposiciones realizadas
+          (informativa anual)
+      revision:
+        2007-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la declaracion
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipo de declaracion (originaria / sustitutiva / complementaria)
+            x-ehkn0rpi5pi6urj1dpq6abbed5j0:
+              help: null
+              label: NIF del donante (persona fisica, juridica o entidad sin fines
+                lucrativos donataria de referencia)
+            x-ehkn0rpi5pi6urj1dpq6abbedtmm4sj5:
+              help: null
+              label: Apellidos y nombre, o razon social, del donante
+            x-ehkn0rpi5pkmqs3fe9q6abb4dtn62p3f:
+              help: null
+              label: Importe del donativo, donacion o aportacion recibida en el ejercicio
+                (sin signo, en euros)
+            x-ehkn0rpi5po6usj3cln78obackmm8pb4elhm6qbfdo:
+              help: null
+              label: Porcentaje de deduccion aplicable al donativo (regimen fiscal
+                del donante, art. 68.3 LIRPF / regimen especial Ley 49/2002)
+            x-ehkn0rpi5pp6aorle9p6arj3d5gg:
+              help: null
+              label: Indicador de donativo recurrente (donativo plurianual a la misma
+                entidad donataria, dos o mas ejercicios consecutivos)
+          construct:
+            modelo-182-informative:
+              field:
+                title: Modelo 182 informative declaration of donativos, donaciones
+                  y aportaciones recibidas
+          field:
+            label: Modelo 182 ejercicios 2007 y siguientes (Orden EHA/3021/2007)

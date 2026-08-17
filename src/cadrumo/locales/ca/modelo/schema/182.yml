@@ -1,0 +1,40 @@
+modelo:
+  schema:
+    '182':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2007-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Exercici a què es refereix la declaració
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Tipus de declaració (originària / substitutiva / complementària)
+            x-ehkn0rpi5pi6urj1dpq6abbed5j0:
+              help: null
+              label: NIF del donant (persona física, jurídica o entitat sense finalitats
+                lucratives donatària de referència)
+            x-ehkn0rpi5pi6urj1dpq6abbedtmm4sj5:
+              help: null
+              label: Cognoms i nom, o raó social, del donant
+            x-ehkn0rpi5pkmqs3fe9q6abb4dtn62p3f:
+              help: null
+              label: Import del donatiu, donació o aportació rebuda en l'exercici
+                (sense signe, en euros)
+            x-ehkn0rpi5po6usj3cln78obackmm8pb4elhm6qbfdo:
+              help: null
+              label: Percentatge de deducció aplicable al donatiu (règim fiscal del
+                donant, art. 68.3 LIRPF / règim especial Llei 49/2002)
+            x-ehkn0rpi5pp6aorle9p6arj3d5gg:
+              help: null
+              label: Indicador de donatiu recurrent (donatiu plurianual a la mateixa
+                entitat donatària, dos o més exercicis consecutius)
+          construct:
+            modelo-182-informative:
+              field:
+                title: null
+          field:
+            label: null

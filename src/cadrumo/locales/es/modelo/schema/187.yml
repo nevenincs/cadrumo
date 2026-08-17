@@ -1,0 +1,27 @@
+modelo:
+  schema:
+    '187':
+      field:
+        official_name: Modelo 187. Declaración informativa de acciones y participaciones
+          representativas del capital o patrimonio de las instituciones de inversión
+          colectiva y resumen anual de retenciones e ingresos a cuenta del IRPF, IS
+          e IRNR en relación con las rentas o ganancias patrimoniales obtenidas.
+        title: Acciones y participaciones de IIC - resumen anual
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '03':
+              help: null
+              label: Base retenciones e ingresos a cuenta
+            '04':
+              help: null
+              label: Retenciones e ingresos a cuenta declarados
+            '05':
+              help: null
+              label: Total retenciones del resumen anual
+          construct:
+            modelo-187-calculation-construct:
+              field:
+                title: Modelo 187 calculation construct
+          field:
+            label: Orden EHA/3377/2011, ejercicios 2019 y siguientes

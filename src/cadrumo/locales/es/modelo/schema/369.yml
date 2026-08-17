@@ -1,0 +1,92 @@
+modelo:
+  schema:
+    '369':
+      field:
+        official_name: Modelo 369. Impuesto sobre el Valor Añadido. Autoliquidación
+          de los regímenes especiales aplicables a los sujetos pasivos que presten
+          servicios a personas que no tengan la condición de sujetos pasivos, que
+          efectúen ventas a distancia de bienes y ciertas entregas interiores de bienes.
+        title: IVA. Autoliquidación regímenes especiales OSS / IOSS
+      revision:
+        esquema-exterior:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la autoliquidación
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo de la declaración
+            x-d5r62bj5f1q6asj9dtp2sorldtq62bbkdtq62r0:
+              help: null
+              label: Total cuota IVA repercutida del Esquema Exterior (suma de cuotas
+                por destino)
+            x-d5r62bj5f1q6asj9dtp2sp355ppmasjmd5hmaspdcdqmut31:
+              help: null
+              label: Cuota IVA repercutido al destino DE - servicios prestados (Esquema
+                Exterior)
+          construct:
+            modelo-369-esquema-exterior:
+              field:
+                title: Modelo 369 - Esquema Exterior (regimen especial servicios prestados
+                  por no establecidos)
+          field:
+            label: Modelo 369 - Esquema Exterior - regimen especial servicios prestados
+              por sujetos pasivos no establecidos en la Comunidad (LIVA art 163 octiesdecies
+              a vicies). Trimestral por HAC/610/2021 art 2(a).
+        esquema-importacion:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la autoliquidación
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo de la declaración
+            x-d5r62bj9dlo6usjkc5hmirre5phnarrkc4mn8rrkc5m0:
+              help: null
+              label: Total cuota IVA repercutida del Esquema Importación (IOSS, suma
+                por destino)
+            x-d5r62bj9dlo6usjkc5hmirre5pi6abjcdtriqtj1dhqmabb3elnn8o8:
+              help: null
+              label: Cuota IVA IOSS al destino DE - ventas a distancia de bienes importados
+                ≤ 150 EUR (LIVA art 163 quinvicies)
+          construct:
+            modelo-369-esquema-importacion:
+              field:
+                title: Modelo 369 - Esquema Importacion (regimen especial IOSS)
+          field:
+            label: Modelo 369 - Esquema Importacion (IOSS) - regimen especial ventas
+              a distancia de bienes importados (LIVA art 163 quinvicies a octovicies).
+              Mensual por HAC/610/2021 art 2(c)/(d).
+        esquema-union:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la autoliquidacion
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo de la declaracion
+            x-d5r62bjldpkmurhecdqmut315lq6ut31dg:
+              help: null
+              label: Total cuota IVA repercutida del Esquema Unión (suma cross-destination,
+                cross-flow)
+            x-d5r62bjldpkmurhechiisprfdti76bb4d5pn8obecdiiqorldtq62:
+              help: null
+              label: Cuota IVA OSS Unión al destino DE - ventas a distancia + interfaces
+                electrónicas
+            x-d5r62bjldpkmurhechiissr5e9r6ior5ecmm6tbfehgg:
+              help: null
+              label: Cuota IVA OSS Unión al destino DE - servicios prestados (LIVA
+                art 163 unvicies)
+            x-d5r62bjldpkmurhecpp2ssr5e9r6ior5ecmm6tbfehgg:
+              help: null
+              label: Cuota IVA OSS Unión al destino FR - servicios prestados (LIVA
+                art 163 unvicies)
+          construct:
+            modelo-369-esquema-union:
+              field:
+                title: Modelo 369 - Esquema Union (regimen especial OSS Union)
+          field:
+            label: Modelo 369 - Esquema Union - regimen especial ventas intracomunitarias
+              a distancia, interfaces electronicas y servicios establecidos en la
+              Comunidad (LIVA art 163 unvicies a quatervicies). Trimestral por HAC/610/2021
+              art 2(b).

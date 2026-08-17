@@ -1,0 +1,37 @@
+modelo:
+  schema:
+    '128':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Nombre de perceptors
+            '02':
+              help: null
+              label: Base de retencions i ingressos a compte
+            '03':
+              help: null
+              label: Retencions i ingressos a compte
+            '04':
+              help: null
+              label: Nombre de perceptors (bloc addicional)
+            '05':
+              help: null
+              label: Base de retencions i ingressos a compte (bloc addicional)
+            '06':
+              help: null
+              label: Resultat a ingressar de declaracions anteriors pel mateix concepte,
+                exercici i període
+            '07':
+              help: null
+              label: Resultat a ingressar
+          construct:
+            modelo-128-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null

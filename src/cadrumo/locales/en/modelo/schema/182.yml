@@ -1,0 +1,40 @@
+modelo:
+  schema:
+    '182':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2007-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Tax year the return refers to
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Type of return (original / replacement / supplementary)
+            x-ehkn0rpi5pi6urj1dpq6abbed5j0:
+              help: null
+              label: Donor's NIF (individual, legal entity, or the reference non-profit
+                donee entity)
+            x-ehkn0rpi5pi6urj1dpq6abbedtmm4sj5:
+              help: null
+              label: Donor's surname and first name, or company name
+            x-ehkn0rpi5pkmqs3fe9q6abb4dtn62p3f:
+              help: null
+              label: Amount of the donation or contribution received in the tax year
+                (unsigned, in euros)
+            x-ehkn0rpi5po6usj3cln78obackmm8pb4elhm6qbfdo:
+              help: null
+              label: Deduction percentage applicable to the donation (donor's tax
+                regime, art. 68.3 LIRPF / special regime Ley 49/2002)
+            x-ehkn0rpi5pp6aorle9p6arj3d5gg:
+              help: null
+              label: Recurring donation indicator (multi-year donation to the same
+                donee entity, two or more consecutive tax years)
+          construct:
+            modelo-182-informative:
+              field:
+                title: null
+          field:
+            label: null

@@ -1,0 +1,120 @@
+modelo:
+  schema:
+    '210':
+      field:
+        official_name: null
+        title: null
+      revision:
+        '2025':
+          casilla:
+            base_imponible:
+              help: null
+              label: Taxable base
+            base_imponible_directa_g:
+              help: null
+              label: Taxable base (210 G)
+            base_imponible_directa_i:
+              help: null
+              label: Taxable base (210 I)
+            base_imponible_ganancias_h:
+              help: null
+              label: Taxable base ([12]+[16]) (210 H)
+            coeficiente_imputacion_inmobiliaria:
+              help: null
+              label: Real-estate imputed income coefficient
+            convenio_indicador:
+              help: null
+              label: Tax treaty
+            cuota_diferencial:
+              help: null
+              label: Differential tax liability
+            cuota_integra:
+              help: null
+              label: Gross tax liability
+            cuota_integra_reducida:
+              help: null
+              label: Reduced gross tax liability ([24]-[27])
+            cuota_ley_irnr:
+              help: null
+              label: IRNR Law tax liability ([22]-[23])
+            deduccion_donativos:
+              help: null
+              label: Deduction for donations
+            dias_imputacion:
+              help: null
+              label: Days of imputation
+            exencion_dividendos:
+              help: null
+              label: Exemption applied to dividends (annual limit EUR 1,500) (210
+                R)
+            exenciones_ley_irnr_indicador:
+              help: null
+              label: Exemptions under the IRNR Law, except dividends (annual limit
+                EUR 1,500)
+            ganancia_diferencia:
+              help: null
+              label: Acquisition. Difference (210 H)
+            ganancia_importe:
+              help: null
+              label: Acquisition. Gain (210 H)
+            ganancia_valor_adquisicion:
+              help: null
+              label: Acquisition. Acquisition value (updated) (210 H)
+            ganancia_valor_transmision:
+              help: null
+              label: Acquisition. Transfer value (210 H)
+            gastos_deducibles:
+              help: null
+              label: Deductible expenses
+            ingreso_devolucion_anterior:
+              help: null
+              label: Previous payment/refund (supplementary self-assessment only)
+            limite_convenio:
+              help: null
+              label: Tax treaty limit
+            mejora_diferencia:
+              help: null
+              label: Improvement or 2nd acquisition. Difference (210 H)
+            mejora_ganancia:
+              help: null
+              label: Improvement or 2nd acquisition. Gain (210 H)
+            mejora_valor_adquisicion:
+              help: null
+              label: Improvement or 2nd acquisition. Acquisition value (updated) (210
+                H)
+            mejora_valor_transmision:
+              help: null
+              label: Improvement or 2nd acquisition. Transfer value (210 H)
+            porcentaje_convenio:
+              help: null
+              label: Tax treaty percentage (%)
+            reduccion_convenio:
+              help: null
+              label: Tax treaty reduction ([24]-[26])
+            rendimientos_integros:
+              help: null
+              label: Gross income
+            retencion_practicada:
+              help: null
+              label: Withholding applied
+            tipo_gravamen:
+              help: null
+              label: Tax rate
+            tipo_renta:
+              help: null
+              label: Type of income
+            valor_adquisicion:
+              help: null
+              label: Acquisition value
+            valor_catastral:
+              help: null
+              label: Cadastral value
+            valor_comprobado_administracion:
+              help: null
+              label: Value assessed by the Tax Administration
+          construct:
+            m210-irnr-calculation:
+              field:
+                title: null
+          field:
+            label: null

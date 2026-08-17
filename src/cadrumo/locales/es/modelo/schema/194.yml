@@ -1,0 +1,29 @@
+modelo:
+  schema:
+    '194':
+      field:
+        official_name: Modelo 194. Impuesto sobre la Renta de las Personas Físicas,
+          Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos
+          permanentes). Retenciones e ingresos a cuenta sobre rendimientos del capital
+          mobiliario y rentas derivadas de la transmisión, amortización, reembolso,
+          canje o conversión de cualquier clase de activos representativos de la captación
+          y utilización de capitales ajenos. Resumen anual.
+        title: Retenciones capital mobiliario y transmisión de activos - resumen anual
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '03':
+              help: null
+              label: Base retenciones e ingresos a cuenta
+            '04':
+              help: null
+              label: Retenciones e ingresos a cuenta declarados
+            '05':
+              help: null
+              label: Total retenciones del resumen anual
+          construct:
+            modelo-194-calculation-construct:
+              field:
+                title: Modelo 194 calculation construct
+          field:
+            label: Orden EHA/3377/2011, ejercicios 2019 y siguientes

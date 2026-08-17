@@ -1,0 +1,117 @@
+modelo:
+  schema:
+    '345':
+      field:
+        official_name: null
+        title: null
+      revision:
+        '2025':
+          casilla:
+            anio-nacimiento:
+              help: null
+              label: Any de naixement
+            beneficiario-nif:
+              help: null
+              label: NIF del beneficiari persona amb discapacitat
+            clave:
+              help: null
+              label: Clau
+            codigo-provincia:
+              help: null
+              label: Codi de província
+            datos-adicionales-clave-i:
+              help: null
+              label: Dades addicionals per a la clau I
+            datos-adicionales-clave-m:
+              help: null
+              label: Dades addicionals per a la clau M
+            datos-adicionales-claves-abc:
+              help: null
+              label: Dades addicionals per a les claus A, B i C
+            datos-identificativos-empleador:
+              help: null
+              label: Dades identificatives de l'ocupador promotor o prenedor del sistema
+                de previsió social
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Declaració complementària o substitutiva
+            declarado-nif:
+              help: null
+              label: NIF del declarat
+            declarado-nombre:
+              help: null
+              label: Cognoms i nom del declarat
+            declarante-nif:
+              help: null
+              label: NIF del declarant
+            declarante-razon-social:
+              help: null
+              label: Cognoms i nom o raó social del declarant
+            devoluciones-excesos:
+              help: null
+              label: Devolucions o reintegraments per excessos d'aportacions
+            ejercicio-declaracion:
+              help: null
+              label: Exercici de declaració
+            empleador-nif:
+              help: null
+              label: NIF de l'ocupador promotor o prenedor
+            empleador-nombre:
+              help: null
+              label: Cognoms i nom o raó social de l'ocupador
+            entidad-aseguradora-nif:
+              help: null
+              label: NIF de l'entitat asseguradora
+            fondo-pensiones-nif:
+              help: null
+              label: NIF del fons de pensions
+            fondo-pensiones-numero-registro:
+              help: null
+              label: Número de registre del fons de pensions
+            importe:
+              help: null
+              label: Import
+            importe-total-aportaciones:
+              help: null
+              label: Import total de les aportacions
+            numero-identificativo-anterior:
+              help: null
+              label: Número identificatiu de la declaració anterior
+            numero-identificativo-declaracion:
+              help: null
+              label: Número identificatiu de la declaració
+            pepp-cuenta-subcuenta:
+              help: null
+              label: Compte/subcompte
+            pepp-denominacion:
+              help: null
+              label: Denominació del PEPP
+            pepp-numero-inscripcion:
+              help: null
+              label: Número d'inscripció del PEPP
+            persona-relacion:
+              help: null
+              label: Persona amb qui relacionar-se
+            pias-fecha-primera-prima:
+              help: null
+              label: Data de pagament de la primera prima
+            pias-importe-acumulado:
+              help: null
+              label: Import acumulat PIAS
+            plan-pensiones-denominacion:
+              help: null
+              label: Denominació del pla de pensions
+            rendimientos-trabajo-superiores-60000:
+              help: null
+              label: Rendiments íntegres del treball superiors a 60000 euros
+            representante-legal-nif:
+              help: null
+              label: NIF del representant legal
+            subclave:
+              help: null
+              label: Subclau
+            total-declarados:
+              help: null
+              label: Nombre total de declarats
+          field:
+            label: null

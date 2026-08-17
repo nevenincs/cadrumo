@@ -1,0 +1,261 @@
+docs:
+  casilla:
+    binding_source:
+      atribucion_member: from the atribución de rentas members you recorded
+      bienes_inversion_regularizacion: from your bienes de inversión regularisation
+      borrador: from the AEAT borrador
+      collectible_invoice: from the invoices you issued
+      donativo_donor: from the donativo donor records
+      foreign_asset: from your foreign-asset records
+      iva_compensation_annual_partition: from the IVA compensación carried across
+        the year
+      iva_wallet_decision: from your IVA compensación decision
+      ledger_impatriado_income_aggregation: from your ledger income under the impatriado
+        regime
+      ledger_irnr_income_aggregation: from your ledger IRNR income
+      ledger_iva_aggregation: from your IVA ledger entries
+      ledger_oss_aggregation: from your OSS ledger entries
+      ledger_renta_gastos_estimacion_directa_aggregation: from your ledger expenses
+        under estimación directa
+      ledger_renta_gastos_pago_fraccionado_aggregation: from your ledger expenses
+        for the pago fraccionado
+      ledger_renta_income_aggregation: from your ledger income
+      ledger_transaction: from your ledger transactions
+      m303_regimen_simplificado_annual_summary: from Modelo 303's simplified-regime
+        annual summary
+      manual_input: from a value you supply
+      payable_invoice: from the invoices you received
+      previous_filing: from your previous filing
+      profile: from your taxpayer profile
+      prorrata_regularizacion: from your prorrata regularisation
+      purchase_invoice_evidence: from your purchase-invoice evidence
+      refund_operation: from your refund operations
+      related_party_operation: from your related-party operations
+      relation_prefill: from a related modelo's result
+      retenciones_aggregation: from the retenciones you recorded
+      withholding: from the withholdings you recorded
+    cadence:
+      ad_hoc: Filed when the event occurs
+      annual: Filed annually
+      monthly: Filed monthly
+      profile_based: Filed when your profile requires it
+      quarterly: Filed quarterly
+    chrome:
+      alternative_join: ', or'
+      binding: Binding
+      casilla_count: '{casillas} casillas in {sections} sections'
+      casilla_id: Casilla id
+      casilla_index: Every casilla
+      casilla_index_hint: Pick a casilla to jump to it.
+      derived_from: from
+      established_by: Established by
+      formula: Formula
+      general_section: General
+      index_intro: One page per modelo. Every casilla says how it is filled (you enter
+        it, it is calculated from other boxes, or it is filled from your records),
+        where it sits on the official form, and the law that establishes it.
+      index_title: Casilla reference
+      legal_basis: Legal basis
+      list_and: and
+      not_on_official_form: Not on the official form
+      page_heading: 'Modelo {modelo}: {title}'
+      record_design_number: Record-design number
+      registry_identifiers: Registry identifiers
+      registry_section: Registry section
+      required: Required
+      revisions: Revisions
+      sections_nav: Sections of this modelo
+      segmento: Segmento {segmento}
+      semantic_role: Semantic role
+      sources: Sources
+    data_type:
+      bic: BIC
+      boolean: Yes or no
+      ccaa_code: Autonomous-community code
+      country_code: Country code
+      date: Date
+      decimal: Decimal number
+      iban: IBAN
+      integer: Whole number
+      money: Amount in euros
+      municipality_code: Municipality code
+      name: Name
+      nif: NIF
+      nif_iva: VAT-registered NIF
+      period_code: Period
+      postal_code: Postcode
+      province_code: Province code
+      ratio: Percentage
+      text: Text
+      year: Year
+    input_kind:
+      bound: Filled automatically
+      computed: Calculated for you
+      informational: Reference only
+      manual: You enter this
+      projection_only: Filled from its source row
+    input_kind_count:
+      bound: filled from your records
+      computed: calculated
+      informational: reference only
+      manual: you enter
+      projection_only: filled from a source row
+    legal_kind:
+      instruction: AEAT instructions
+    length:
+      at_least: At least {min} characters
+      at_most: Up to {max} characters
+      between: '{min} to {max} characters'
+    value_enum: 'One of: {values}'
+    value_range:
+      at_least: At least {min}
+      at_most: At most {max}
+      between: Between {min} and {max}
+      non_negative: Zero or more
+      non_positive: Zero or less
+  cli:
+    automation:
+      exit_auth: Authentication required or credentials expired.
+      exit_codes_heading: Exit codes
+      exit_conflict: Conflict or precondition failure.
+      exit_forbidden: Operation not permitted by policy.
+      exit_general: General error or refused operation.
+      exit_internal: Unexpected internal error.
+      exit_not_found: Resource not found.
+      exit_partial: Partial success (some items succeeded, some failed).
+      exit_success: Success.
+      exit_unavailable: External service unavailable.
+      exit_usage: Invalid CLI usage (bad flag, missing argument).
+      exit_validation: Validation error in user-supplied data.
+      intro: 'Use this page when scripting ``aeat`` invocations: it documents the
+        process exit codes and the TTY/JSON output behavior shared by every command.'
+      output_contract_body: When output is to a TTY the CLI emits human-readable rich
+        text. When ``--format json`` is passed (or when output is redirected) the
+        CLI emits a single JSON document per invocation. Commands that have adopted
+        the ``SchemaEnvelope`` wrap their result as ``{envelope}``. Commands not yet
+        migrated emit their payload directly.
+      output_contract_heading: TTY and JSON output contract
+      table_code_header: Code
+      table_meaning_header: Meaning
+      title: Exit codes and output contract
+    command:
+      bare_payload_note: This command emits a bare payload (not yet envelope-wrapped).
+        Output structure is command-specific; consult ``--help`` for details.
+      group_fallback: Command group.
+      no_description: No description.
+      no_description_available: No description available.
+      output_schema_heading: Output schema
+      parameters_heading: Parameters
+      path_label: Command path
+      registry_key_label: Registry key
+      schema_envelope_note: This command emits a ``SchemaEnvelope`` whose ``result``
+        field is validated against ``{schema}``.
+    env:
+      default_empty: empty
+      default_unset: unset
+      secrets_note: Secrets are never printed by the application and are marked `(secret)`
+        above. Defaults marked `(derived)` are computed from the storage root or project
+        location at runtime.
+    family:
+      choose_group_heading: Choose a command group
+      direct_commands_heading: Direct commands
+      direct_commands_intro: These commands are mounted directly on ``aeat {family}``,
+        with no intervening verb group.
+      group_link_line: Open :doc:`{target}` for ``aeat {family} {group}``.
+      index_link_line: Open :doc:`/cli/index` for the full CLI reference landing page.
+      intro: '``aeat {family}`` is organised by major verb group. Each group''s own
+        page leads with that group''s real ``--help`` output, followed by every leaf
+        command it carries.'
+      open_group_link: Open the ``aeat {family} {group}`` reference
+      title: '{command}: command reference'
+    index:
+      app_card: 'Operational workflow commands: ledger work, modelos, filing calendars,
+        registry checks, live captures, and review queues.'
+      choose_family_heading: Choose a command family
+      config_card: 'Local setup and maintenance commands: profiles, authentication,
+        Google integration, repair checks, and reset surfaces.'
+      english_help_note: Help strings are rendered in English. At runtime the CLI
+        respects the active output-language setting (``--language`` / ``CADRUMO_OUTPUT_LANGUAGE``).
+      flag_debug: Enable debug-level logging.
+      flag_detail: Print extended version information including registry summary.
+      flag_format: Output format (``text`` or ``json``).
+      flag_help: Print the curated help document and exit.
+      flag_language: Override the output language (``es``, ``en``, ``ca``, ``hu``).
+      flag_profile: Activate a named profile for this invocation.
+      flag_quiet: Suppress informational output.
+      flag_verbose: Enable verbose output.
+      flag_version: Print the package version and exit.
+      global_flags_heading: Global flags
+      global_flags_intro: These flags are accepted by the ``aeat`` root command and
+        apply to every invocation.
+      intro: 'The ``aeat`` CLI exposes two top-level command families: ``config``
+        (local configuration, profile lifecycle, diagnostics) and ``app`` (operational
+        tax workflow). This reference documents all {count} leaf commands.'
+      next_app: Open :doc:`app` for the operational workflow commands.
+      next_automation: Open :doc:`automation` for exit codes and the TTY/JSON output
+        contract.
+      next_config: Open :doc:`config` for the local setup and maintenance commands.
+      next_howto: Open :doc:`/how-to/index` for the getting-started run-throughs and
+        task guides.
+      next_schemas: Open :doc:`schemas` for the JSON output-schema registry.
+      open_family_link: Open the ``aeat {family}`` reference
+      start_here: Start with the family links below. Use the generated command-family
+        pages for exact flags, arguments, registry keys, and output schemas; use this
+        page for root-level behavior that applies across commands.
+      title: CLI reference
+      where_next_heading: Where to go next
+    param:
+      argument_optional: Argument, optional.
+      argument_required: Argument, required.
+      option_optional: Option, optional.
+      option_required: Option, required.
+    schemas:
+      group_entries: '{count} entries: {keys}'
+      summary: The following {count} command paths have a registered ``OutputSchema``.
+        Group-callback surfaces ({groups}) are listed separately.
+      title: Output schema registry
+      tooling_note: This page is mainly for tooling authors. If you are running commands
+        manually, the :doc:`family pages <index>` are usually the better entry point.
+  glossary:
+    entry:
+      broader: Broader term
+      domain: Domain
+      legal_basis: Legal basis
+      related: Related
+      undefined: No definition is available in this language yet.
+    intro: Spanish tax terms used across the documentation. Each term links to its
+      legal basis where one applies. Look a term up; the definition is the same wherever
+      the term is referenced.
+    title: Glossary
+  legal:
+    index:
+      intro: The Spanish leyes, reales decretos and órdenes ministeriales that Cadrumo's
+        calculations are grounded in. Each page lists the provisions cited from one
+        text and links every one of them to its official wording in the BOE.
+      title: Legal reference
+    page:
+      intro: Published in the Boletín Oficial del Estado as {document}. Cadrumo's
+        calculations cite {count} provisions of this text; each one links below to
+        its official wording in the BOE.
+    provision:
+      boe_is_official: The consolidated text in the Boletín Oficial del Estado is
+        the official wording.
+      in_force_between: In force from {start} to {end}
+      in_force_from: In force from {start}
+      in_force_until: In force until {end}
+      official_wording: Official text, in extract (in Spanish)
+      published: published on {date}
+      read_on_boe: Read {citation} in the BOE
+    record:
+      authority: Authority
+      boe_document: BOE document
+      bundled_corpus: Bundled corpus
+      catalogue_id: Catalogue identifier
+      consolidated_as_of: Consolidated as of
+      evidence_tier: Evidence tier
+      instrument_kind: Kind of instrument
+      note: Cataloguer's note
+      review_status: Review status
+      reviewed_at: Date reviewed
+      reviewed_by: Reviewed by
+      title: Catalogue record

@@ -1,0 +1,321 @@
+adapters:
+  aeat:
+    clave_movil:
+      errors:
+        pending_petition_blocked: L'AEAT s'ha negat a emetre una nova petició push
+          de Cl@ve Móvil perquè una sol·licitud d'autenticació anterior encara està
+          pendent al servidor.
+  auth:
+    authenticator:
+      errors:
+        already_active: AeatAuthenticator ja té una sessió activa; crideu close()
+          o reauthenticate() abans d'autenticar de nou.
+        already_active_before_resume: AeatAuthenticator ja té una sessió activa; crideu
+          close() abans de reprendre.
+        assertion_failed: L'autenticació AEAT no ha produït una asserció d'inici de
+          sessió vàlida.
+        capture_requires_active_session: capture_storage_state() requereix la sessió
+          autenticada activa.
+        capture_requires_certificate: capture_storage_state() requereix una sessió
+          activa amb certificat i metadades del recurs protegit.
+        metadata_parse_failed: Les metadades persistides no han produït un model analitzat.
+        no_active_context: No hi ha context de navegador actiu; crideu authenticate()
+          primer.
+        no_context_capture_storage: No hi ha context de navegador actiu; no es pot
+          capturar l'estat d'emmagatzematge.
+        persisted_session_verification_failed: La sessió persistida del navegador
+          AEAT ha fallat la verificació en directe.
+        resume_failed: La represa de la sessió AEAT persistida no ha produït un context
+          utilitzable.
+        session_stale: La sessió AEAT ha caducat; el termini d'inactivitat ha expirat.
+    clave_movil:
+      errors:
+        already_active: Cl@ve Móvil ja té una sessió activa; crideu close() abans
+          de tornar a autenticar-vos.
+        approval_timeout: L'autenticació per navegador de Cl@ve Móvil no s'ha completat
+          dins del temps configurat.
+        dni_nie_not_set: CADRUMO_CLAVE_MOVIL_DNI_NIE no està configurat; configureu
+          el vostre DNI o NIE abans d'autenticar-vos.
+        initial_navigation_timeout: La navegació inicial a Cl@ve Móvil no s'ha completat
+          dins del temps configurat.
+        metadata_invalid: Les metadades de sessió de Cl@ve Móvil no són vàlides o
+          no es poden analitzar.
+        no_persisted_session: No s'ha trobat cap sessió de Cl@ve Móvil; executeu `aeat
+          config auth status` primer.
+        session_expired: La sessió de Cl@ve Móvil ha superat el seu termini d'inactivitat.
+        storage_state_hash_mismatch: El hash de l'estat d'emmagatzematge de Cl@ve
+          Móvil no coincideix; les dades de sessió poden estar corrompudes.
+        verify_requires_active_context: Cl@ve Móvil verify() requereix un context
+          de navegador actiu; crideu authenticate() primer.
+  google:
+    calc_sheets:
+      errors:
+        api_call_failed: La crida a Google {action} ha fallat.
+        api_call_refused: La crida a Google {action} ha estat rebutjada (HTTP {status}).
+        api_target_not_found: El destí de Google {action} no s'ha trobat.
+        conflicting_duplicate_metadata: El full de Google conté metadades AEAT duplicades
+          i contradictòries.
+        foreign_spreadsheet_not_owned: El full de Google no està marcat com a propietat
+          d'aquest perfil Cadrumo.
+        googleapiclient_not_importable: googleapiclient no es pot importar; l'adaptador
+          de Google no pot accedir a l'API.
+        spreadsheet_id_blank: L'id del full de càlcul de Google no pot estar buit.
+        workbook_snapshot_mismatch: Les metadades del full de Google no coincideixen
+          amb la instantània de càlcul.
+    oauth_flow:
+      errors:
+        browser_launcher_refused: El sistema operatiu ha rebutjat obrir l'URL de consentiment
+          OAuth al navegador.
+        client_config_refused: La configuració del client Google OAuth ha estat rebutjada.
+        email_claim_missing: L'id_token de Google s'ha verificat però no inclou la
+          reclamació email.
+        endpoint_unreachable: L'endpoint OAuth de Google no és accessible.
+        id_token_missing: Google no ha retornat un id_token; el consentiment OAuth
+          no incloïa els àmbits openid+email.
+        id_token_module_not_importable: El mòdul id_token de google-auth no es pot
+          importar.
+        id_token_verification_failed: La verificació de l'id_token de Google ha fallat.
+        loopback_bind_failed: El receptor OAuth loopback local no ha pogut assignar
+          cap port.
+        non_interactive: 'Google OAuth rebutjat: el flux interactiu de consentiment
+          al navegador necessita un terminal interactiu, però aquesta ordre s''ha
+          executat de manera no interactiva.'
+        oauthlib_not_importable: google-auth-oauthlib no es pot importar; el flux
+          OAuth no es pot iniciar.
+        profile_state_unresolved: Google OAuth no pot resoldre l'estat del perfil
+          Cadrumo seleccionat.
+        scope_missing: La pantalla de consentiment de Google s'ha tancat sense concedir
+          tots els àmbits requerits.
+        unsecured_mode_refused: Google OAuth s'ha rebutjat perquè el magatzem de secrets
+          està en mode insegur i el perfil actiu porta un identificador fiscal espanyol
+          real.
+    profile_binding:
+      errors:
+        no_active_profile: No hi ha cap perfil Cadrumo actiu enllaçat per a Google
+          OAuth.
+  inbound:
+    declaracion:
+      errors:
+        extraction_failed: 'Ha fallat l''extracció de la declaració amb el perfil
+          {profile}: {details}'
+        modelo_conflict: --modelo {modelo!r} entra en conflicte amb el model detectat
+          {detected!r}.
+        period_unresolved: No s'ha pogut resoldre el període de la declaració a partir
+          del text del PDF.
+        profile_count_invalid: 'S''esperava exactament un perfil d''extracció de PDF
+          de declaració per a modelo={modelo}; disponibles: {available}.'
+        profile_unavailable: El perfil d'extracció de declaració {profile!r} no està
+          disponible per a modelo={modelo}.
+        registry_snapshot_required: 'L''extracció de declaració requereix un snapshot
+          validat del registre per a modelo={modelo} any={year} període={period}:
+          {error}'
+        snapshot_modelo_conflict: El model del snapshot del registre {snapshot_modelo!r}
+          entra en conflicte amb el detectat {detected!r}.
+        tax_id_unresolved: No s'ha pogut resoldre l'identificador fiscal de la declaració
+          a partir del text del PDF.
+        template_not_detected: No s'ha pogut detectar automàticament la plantilla
+          de {path}; indica --modelo i --año per forçar-la.
+        year_conflict: --año {year} entra en conflicte amb l'any detectat {detected}.
+    financial:
+      providers:
+        pdf_n26:
+          errors:
+            parse_failed: No s'ha pogut analitzar l'extracte PDF de N26. La ruta d'origen
+              s'ha ocultat als diagnòstics.
+    justificante:
+      errors:
+        parse_failed: No s'ha pogut analitzar el PDF del justificant. La ruta d'origen
+          s'ha ocultat als diagnòstics.
+    pdf:
+      errors:
+        hash_failed: No s'ha pogut calcular l'empremta del PDF.
+  notificacion:
+    errors:
+      sancion_does_not_reconcile: Els imports impresos al document de sanció no quadren,
+        per la qual cosa s'ha rebutjat la lectura. Comproveu el document a mà.
+      sancion_incomplete: El document de sanció no s'ha pogut llegir completament.
+        Obriu-lo a la seu i comproveu-lo a mà.
+  outbound:
+    storage:
+      factory:
+        errors:
+          drive_root_missing: No hi ha cap id de carpeta arrel de Google Drive configurat
+            per al perfil actiu. Executa `aeat config google folder set <id>` primer.
+          google_auth_import_failed: La dependència google-auth no es pot importar;
+            executa `uv sync` i torna-ho a provar.
+          google_client_missing: No hi ha cap client OAuth de Google registrat per
+            al perfil actiu. Executa `aeat config google register --client-json <path>`
+            primer.
+          google_token_missing: No hi ha cap token OAuth de Google persistit per al
+            perfil actiu. Executa `aeat config google login` primer.
+          kind_empty: CADRUMO_STORAGE_PROVIDER_KIND està buit.
+          kind_unhandled: El tipus de proveïdor d emmagatzematge {kind} no està gestionat
+            per la factoria.
+          kind_unknown: El tipus de proveïdor d emmagatzematge {value} no es reconeix;
+            s esperava un de {expected}.
+      google_drive:
+        errors:
+          content_hash_blank: El hash de contingut de Google Drive no pot estar buit.
+          content_hash_mismatch: El hash de contingut de Google Drive no coincideix;
+            ha fallat la comprovació d integritat.
+          create_namespace_no_id: Google Drive no ha retornat cap id en crear la carpeta
+            d espai de noms.
+          create_vault_folder_no_id: Google Drive no ha retornat cap id en crear la
+            carpeta vault.
+          folder_not_owned: La carpeta de Drive {folder_name} no està marcada com
+            a propietat d aquesta app; es rebutja l escriptura per protegir dades
+            de l operador.
+          former_vault_folder: La carpeta vault de Google Drive {vault_folder_name}
+            pertany al producte anterior i no es pot utilitzar; usa la carpeta vault
+            de Cadrumo.
+          googleapiclient_import_failed: La dependència google-api-python-client no
+            es pot importar; executa `uv sync` i torna-ho a provar.
+          media_non_bytes: La descàrrega de mitjans de Google Drive ha retornat {payload_type}
+            en lloc de bytes.
+          modified_time_invalid: Google Drive no ha retornat una data de modificació
+            utilitzable per a aquest objecte; no es poden considerar fiables les seves
+            metadades.
+          namespace_blank: L espai de noms d emmagatzematge de Google Drive no pot
+            estar buit.
+          namespace_forbidden_characters: L espai de noms de Google Drive {namespace}
+            conté caràcters de ruta prohibits.
+          namespace_not_found: No s ha trobat l espai de noms de Google Drive {namespace}.
+          object_not_found: No s ha trobat l objecte de Google Drive {object_key_hmac}
+            a l espai {namespace}.
+          request_failed: La petició de Google Drive {action} ha fallat amb estat
+            {status}.
+          root_folder_id_blank: L id de carpeta arrel de Google Drive no pot estar
+            buit.
+          size_invalid: Google Drive no ha indicat una mida utilitzable per a aquest
+            objecte; no es poden considerar fiables les seves metadades.
+          vault_entry_not_folder: L arrel configurada de Drive conté {vault_folder_name},
+            però aquesta entrada no és una carpeta.
+          vault_folder_name_blank: El nom de carpeta vault de Google Drive no pot
+            estar buit.
+          write_non_dict_response: La resposta d escriptura de Google Drive per a
+            {action} tenia una forma inesperada.
+      local:
+        errors:
+          byte_length_invalid: El byte_length del sidecar local té tipus invàlid {actual_type}.
+          content_hash_blank: El hash de contingut local no pot estar buit.
+          content_hash_mismatch: El hash de contingut local no coincideix; ha fallat
+            la comprovació d integritat.
+          namespace_blank: L espai de noms d emmagatzematge local no pot estar buit.
+          namespace_create_path_too_long: 'L''emmagatzematge local no ha pogut crear
+            l''espai de noms {namespace}: el camí supera el límit de longitud de camí
+            de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
+            activa LongPathsEnabled (vegeu `aeat config check`).'
+          namespace_create_permission: L emmagatzematge local no ha pogut crear l
+            espai de noms {namespace}.
+          namespace_forbidden_characters: L espai de noms local {namespace} conté
+            caràcters de ruta prohibits.
+          namespace_not_found: No s ha trobat l espai de noms local {namespace}.
+          object_delete_permission: L emmagatzematge local no ha pogut esborrar el
+            payload de l objecte.
+          object_not_found: No s ha trobat l objecte local {object_key_hmac} a l espai
+            {namespace}.
+          payload_commit_failed: L emmagatzematge local no ha pogut confirmar atomicament
+            el payload de l objecte.
+          payload_read_permission: L emmagatzematge local no ha pogut llegir el payload
+            de l objecte.
+          payload_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure
+            la càrrega de l''objecte: el camí supera el límit de longitud de camí
+            de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
+            activa LongPathsEnabled (vegeu `aeat config check`).'
+          payload_write_permission: L emmagatzematge local no ha pogut escriure el
+            payload de l objecte.
+          sidecar_malformed: El sidecar local {sidecar_path} no es pot llegir o està
+            mal format.
+          sidecar_missing: Falta el sidecar de l objecte local.
+          sidecar_not_object: El sidecar local {sidecar_path} no és un objecte JSON.
+          sidecar_write_failed: L emmagatzematge local no ha pogut escriure el sidecar
+            de l objecte.
+          sidecar_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure
+            el sidecar de l''objecte: el camí supera el límit de longitud de camí
+            de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
+            activa LongPathsEnabled (vegeu `aeat config check`).'
+          written_at_invalid: 'El camp written_at del sidecar local falta, no es pot
+            interpretar o no indica zona horària: {actual_value}.'
+  persistence:
+    profile:
+      assets:
+        errors:
+          asset_already_exists: Aquest actiu ja existeix al llibre xifrat d'actius.
+          load_amortizacion_ledger_failed: No s'ha pogut carregar el llibre xifrat
+            d'amortització.
+          load_asset_ledger_failed: No s'ha pogut carregar el llibre xifrat d'actius.
+      bienes_inversion:
+        errors:
+          load_register_failed: No es pot carregar el registre xifrat de regularització
+            d'IVA per béns d'inversió.
+          record_already_exists: Aquest bé d'inversió ja existeix en el registre xifrat
+            de regularització.
+      inventory:
+        errors:
+          inventory_ledger_already_exists: Aquest llibre d'inventari ja existeix.
+          inventory_ledger_not_found: No s'ha trobat el llibre d'inventari sol·licitat.
+          load_inventory_ledger_failed: No s'ha pogut carregar el llibre xifrat d'inventari.
+          movement_already_exists: Aquest moviment d'inventari ja existeix.
+  sede:
+    errors:
+      censal_bad_landing: La pàgina de dades censals de l'AEAT no s'ha carregat correctament;
+        torna a autenticar-te i prova-ho de nou.
+      censal_modification_surface: S'ha rebutjat la lectura censal perquè ha aterrat
+        en una pàgina de modificació; aquest lector mai no modifica les dades censals.
+      censal_no_dispatch: El selector d'accés de l'AEAT no ha obert la pàgina censal
+        en un servidor operatiu; torna a autenticar-te i prova-ho de nou.
+      cotejo_nav_failed: La navegació a la pàgina de cotejo d'AEAT ha fallat; la sessió
+        pot haver caducat. Executeu 'aeat config auth test' i torneu-ho a intentar.
+      ejercicio_unavailable: El registre de declaracions d'AEAT no ofereix l'exercici
+        sol·licitat per a aquest model.
+      empty_identity_nif: El NIF d'identitat de la sessió AEAT és buit; no es pot
+        vincular l'observació de presentació.
+      form_render_timeout: El formulari del registre de declaracions d'AEAT no s'ha
+        renderitzat en el temps establert; la sessió pot haver caducat o l'AEAT està
+        en manteniment.
+      iva_wallet_empty_amount_cell: La cel·la d'import de la cartera de compensació
+        d'IVA és buida.
+      iva_wallet_empty_period_cell: La cel·la de període de la cartera de compensació
+        d'IVA és buida.
+      justificante_column_missing: La resposta de declaracions d'AEAT no conté la
+        columna de justificant; l'estructura de la taula pot haver canviat.
+      landing_off_policy: S'ha rebutjat la lectura de l'AEAT perquè la pàgina on ha
+        aterrat és fora dels amfitrions permesos d'aquesta superfície o anomena una
+        acció d'escriptura.
+      landing_off_read_pages: S'ha rebutjat la lectura de l'AEAT perquè ha aterrat
+        en una pàgina que aquest lector no consulta; aquest lector mai no arriba a
+        una pàgina de presentació de l'AEAT.
+      landing_unreadable: S'ha rebutjat la lectura de l'AEAT perquè la pàgina on ha
+        aterrat no té una adreça llegible, de manera que no es pot determinar on ha
+        acabat la sessió. Torna a autenticar-te i prova-ho de nou.
+      listbox_missing: La resposta de declaracions d'AEAT no conté el contenidor de
+        llista esperat; l'estructura de la pàgina pot haver canviat.
+      listing_nav_failed: La navegació al llistat de declaracions d'AEAT ha fallat.
+        Comproveu la connectivitat de xarxa i torneu-ho a intentar.
+      modelo_unavailable: El registre de declaracions de l'AEAT no ofereix el model
+        sol·licitat.
+      no_auth_session: La sessió d'autenticació d'AEAT no existeix o no està persistida;
+        executeu primer `aeat config auth status`.
+      notification_content_requires_operator: 'No es pot obrir el contingut d''una
+        notificació no llegida: aquest mateix pas és la compareixença, que la dóna
+        per notificada i n''inicia els terminis, i requereix la vostra signatura.
+        Obriu-la vós mateix a la Seu.'
+      notifications_bad_landing: La pàgina de notificacions de l'AEAT no s'ha carregat
+        correctament; la vostra sessió pot haver caducat o l'AEAT està en manteniment.
+        Executeu 'aeat config auth status' i torneu-ho a provar. No ho interpreteu
+        com una safata buida.
+      parse_failed: No s'ha pogut analitzar la resposta de declaracions d'AEAT; l'estructura
+        de la pàgina pot haver canviat.
+      playwright_alert_modal_failed: Error en continuar el modal d'alerta de l'AEAT.
+      playwright_buscar_click_failed: Error en fer clic al botó Buscar de la Seu electrònica.
+      playwright_combobox_open_failed: Error en obrir el quadre combinat de la Seu
+        electrònica.
+      playwright_combobox_select_failed: Error en seleccionar una opció del quadre
+        combinat de la Seu electrònica.
+      session_expired_nav_failed: El registre de declaracions d'AEAT no s'ha carregat;
+        la sessió probablement ha caducat. Executeu 'aeat config auth test' i torneu-ho
+        a intentar.
+      submitted_file_layout_parse_failed: No s'ha pogut llegir el fitxer presentat
+        amb el disseny de registre oficial del model, de manera que no s'ha recuperat
+        cap valor de casella. El disseny i el fitxer presentat no coincideixen en
+        quins registres conté el fitxer.

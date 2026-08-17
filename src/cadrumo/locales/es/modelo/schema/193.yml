@@ -1,0 +1,26 @@
+modelo:
+  schema:
+    '193':
+      field:
+        official_name: Modelo 193. Declaración informativa. Retenciones e ingresos
+          a cuenta sobre determinados rendimientos del capital mobiliario y determinadas
+          rentas. Resumen anual.
+        title: Resumen anual de retenciones sobre capital mobiliario
+      revision:
+        2024-y-siguientes:
+          casilla:
+            x-chim6r1ec9gn6p9dehnn8obc:
+              help: null
+              label: Base retenciones e ingresos a cuenta total
+            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
+              help: null
+              label: Retenciones e ingresos a cuenta total
+            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
+              help: null
+              label: Número total de perceptores
+          construct:
+            modelo-193-annual-summary:
+              field:
+                title: Modelo 193 annual summary from Modelo 123 quarterly filings
+          field:
+            label: Modelo 193 ejercicio 2024 y siguientes

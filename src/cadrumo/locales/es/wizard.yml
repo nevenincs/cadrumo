@@ -1,0 +1,959 @@
+wizard:
+  choices:
+    general: General
+    irpf: IRPF
+    iva: IVA
+    simplificado: Simplificado
+  commands:
+    status:
+      created: creado
+      saved: guardado
+      updated: actualizado
+  demo:
+    description: Una sección de demostración para probar la funcionalidad del asistente.
+    section:
+      title: Sección de demostración
+    title: Demostración
+  errors:
+    blank_integer: Valor entero requerido para %{prompt_key}.
+    blank_path: Ruta requerida para %{prompt_key}.
+    blank_secret: Valor secreto requerido para %{prompt_key}.
+    blank_text: Valor obligatorio para %{prompt_key}.
+    checkbox_required: Selecciona al menos una opción para %{prompt_key}.
+    checkbox_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
+      %{choices}.'
+    checkbox_without_choices: La pregunta %{prompt_key} no declara opciones para checkbox.
+    eu_eea_country_required: '%{flag} es obligatorio cuando %{condition_flag} indica
+      residencia en la UE o el EEE.'
+    invalid_confirm: 'Respuesta booleana no válida para %{prompt_key}: %{raw}.'
+    invalid_date: 'Fecha no válida para %{flag}: %{got}. Usa el formato ISO-8601 (AAAA-MM-DD).'
+    invalid_decimal: 'Número decimal no válido para %{flag}: %{got}. Usa el punto
+      como separador decimal.'
+    invalid_integer: 'Entero no válido para %{prompt_key}: %{raw}.'
+    invalid_postcode: 'Código postal no válido para %{prompt_key}: %{raw}. Un código
+      postal español tiene 5 dígitos (código de provincia 01-52 seguido de tres dígitos).'
+    invalid_tax_id: 'NIF/CIF/DNI/NIE no válido para %{prompt_key}: %{raw}. %{detail}'
+    select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
+      %{choices}.'
+    select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
+    spouse_tax_id_required_joint: '%{flag} es obligatorio cuando %{condition_flag}
+      es tributación conjunta.'
+    unsupported_console: "El asistente guiado necesita una terminal interactiva, y\
+      \ esta ejecución no la tiene.\nTodavía no se ha guardado nada.\n\nPuedes terminar\
+      \ de crear este perfil de dos maneras:\n \n1. Ejecuta el comando otra vez desde\
+      \ una terminal interactiva para usar el asistente guiado:\n     aeat config\
+      \ profile create NAME\n\n2. O crea un perfil de persona física residente IRPF\
+      \ en un solo paso indicando los datos obligatorios como flags:\n     aeat config\
+      \ profile create NAME --quiet --tax-id NIF/CIF/DNI/NIE --entity-type natural_person\
+      \ --irpf-income-categories actividad_economica --tax-residence-ccaa madrid --name\
+      \ NOMBRE --surnames APELLIDOS"
+    unsupported_console_edit: "No pude abrir el asistente guiado en esta ejecución.\n\
+      Todavía no se ha guardado nada.\n\nEdita este perfil de forma no interactiva\
+      \ indicando el campo a cambiar:\n  aeat config profile edit %{profile_name}\
+      \ --quiet --<campo> VALOR\n\nO vuelve a ejecutar la edición guiada desde una\
+      \ sesión de terminal interactiva:\n  aeat config profile edit %{profile_name}"
+  other:
+    description: Otras opciones de configuración
+    section:
+      title: Otros ajustes
+    title: Otro
+  progress:
+    question_prefix: Pregunta %{q_n} de %{q_total}
+    section_header: 'Paso %{section_n} de %{section_total}: %{title}'
+  setup:
+    actividad:
+      title: Actividad económica y censo
+    capabilities:
+      cloud-evidence-upload:
+        prompt: ¿Permitir subir evidencia sensible a proveedores LLM en la nube? (desactivado
+          por defecto)
+      google-export:
+        prompt: ¿Activar la exportación a Google Sheets?
+      llm-vision:
+        prompt: ¿Activar la visión LLM local para leer facturas?
+      title: Capacidades de servicios
+    certificate:
+      path:
+        prompt: Introduce la ruta a tu certificado digital (.p12, .pfx)
+    codes:
+      disability-grade:
+        choices:
+          33-64:
+            description: Discapacidad reconocida del 33% al 64% - incrementa el mínimo
+              personal.
+            label: Discapacidad del 33% al 64%
+          65-plus:
+            description: Discapacidad reconocida del 65% o más - mayor incremento
+              del mínimo personal.
+            label: Discapacidad del 65% o superior
+          assistance-or-mobility:
+            description: Necesidad acreditada de ayuda de terceros o movilidad reducida
+              - añade el incremento por asistencia.
+            label: Ayuda de terceros o movilidad reducida
+          judicial-incapacity:
+            description: Incapacidad declarada judicialmente - se asimila al 65%+
+              con independencia del grado certificado.
+            label: Incapacidad judicial o equivalente
+      sex:
+        choices:
+          h:
+            label: H - hombre
+          m:
+            label: M - mujer
+    cotejo:
+      adopt:
+        label: Adoptar el valor del certificado
+        provenance: Certificado de Situación Censal (evidencia no oficial)
+      compare:
+        help: Conserva tu respuesta, adopta el valor del certificado o aplázalo para
+          decidir más tarde.
+        prompt: Este dato difiere del certificado. ¿Qué valor conservas?
+      keep:
+        label: Conservar mi respuesta
+        provenance: Tu respuesta del asistente
+      title: Cotejo con el Certificado de Situación Censal
+    descendientes:
+      acogimiento-resolucion:
+        help: 'Fecha de la primera resolución de acogimiento preadoptivo o permanente.
+          Indíquela también si el menor fue después adoptado: el aumento por menor
+          de tres años se cuenta desde el primer acogimiento y dura tres periodos
+          en total, no vuelve a empezar con la adopción.'
+        prompt: Fecha de la primera resolución de acogimiento
+      alta-posterior-nacimiento-mes:
+        help: Indique un mes del 1 al 12. Debe coincidir con el primer mes declarado
+          en los meses de trabajo; déjelo en blanco si la madre ya cumplía el requisito
+          al nacer.
+        invalid_range: El mes debe estar entre %{minimum} y %{maximum}.
+        prompt: Mes en que la madre completó los 30 días de cotización tras el nacimiento
+      birth-date:
+        prompt: Fecha de nacimiento
+      convivencia:
+        prompt: ¿Este descendiente convive con usted?
+      count:
+        help: 'Cuente los hijos que pueden dar derecho al mínimo por descendientes
+          (art. 58 LIRPF): menores de 25 años (o cualquier edad con discapacidad)
+          que convivan con usted.'
+        prompt: ¿Cuántos descendientes (hijos) quiere declarar?
+      custodia-compartida:
+        prompt: ¿La custodia es compartida con el otro progenitor?
+      declaracion-propia:
+        help: Solo impide el mínimo si además sus rentas superan el límite legal.
+        prompt: ¿Presenta el descendiente su propia declaración de la renta?
+      dependencia-economica:
+        choices:
+          'false':
+            label: No contribuyo a su mantenimiento
+          'true':
+            label: Sí, contribuyo a su mantenimiento
+        help: Responda solo si el descendiente no convive con usted. Un progenitor
+          sin guarda y custodia, ni siquiera compartida, que no paga anualidades por
+          alimentos por decisión judicial pero contribuye al mantenimiento del hijo,
+          tiene derecho al mínimo por descendientes. Si usted declara anualidades
+          por alimentos, esta asimilación no se aplica a ningún descendiente mientras
+          la aplicación no pueda repartirlas por hijo.
+        prompt: ¿Contribuye usted al mantenimiento económico de este descendiente?
+      discapacidad:
+        choices:
+          '0':
+            label: Sin discapacidad
+          '33':
+            label: Del 33% al 64%
+          '65':
+            label: 65% o más
+        prompt: Grado de discapacidad
+      entry-event:
+        before_birth: La fecha de entrada no puede ser anterior a la fecha de nacimiento.
+        in_future: La fecha de entrada no puede ser futura.
+        relacion_mismatch: Esta fecha no corresponde a la relación indicada. La inscripción
+          en el Registro Civil solo se indica para un descendiente adoptado, y la
+          resolución de acogimiento solo para un acogimiento preadoptivo o permanente,
+          o para un adoptado que antes estuvo acogido. Corrija la relación o borre
+          la fecha.
+      fallecimiento:
+        help: Déjelo en blanco si este descendiente no ha fallecido.
+        prompt: Fecha de fallecimiento
+      gastos-guarderia:
+        both_declared: Indique el total anual de guardería o los importes mes a mes
+          de este hijo, pero no ambos. El detalle mensual es el único que puede expresar
+          el año en que el hijo cumple tres años, así que borre el total anual.
+        help: Importes pagados a una guardería o centro de educación infantil autorizado
+          (art. 81.2 LIRPF) que incrementan la deducción por maternidad; euros enteros.
+        invalid_negative: Los gastos de guardería no pueden ser negativos; introduzca
+          0 o un importe positivo en euros (art. 81 bis LIRPF).
+        prompt: Gastos de guardería pagados en el año de declaración (euros)
+      gastos-guarderia-mensuales:
+        help: 'Utilice esta casilla en lugar del total anual cuando el hijo cumpla
+          tres años durante el ejercicio: solo cuentan los meses posteriores al cumpleaños
+          y un importe anual no puede repartirse entre ellos. Escriba cada mes y su
+          importe como MM:IMPORTE separados por punto y coma, o un periodo como MM-MM:IMPORTE,
+          por ejemplo 9-12:210;1:180. Los meses con derecho son los que certifica
+          su guardería.'
+        invalid_grammar: Escriba cada mes y su importe como MM:IMPORTE separados por
+          punto y coma; un periodo puede escribirse MM-MM:IMPORTE. Por ejemplo 9-12:210;1:180.
+          Los meses van del 1 al 12, los importes son euros enteros y cada mes puede
+          aparecer una sola vez.
+        prompt: Gastos de guardería de este hijo, mes a mes (opcional)
+      inscripcion-registro-civil:
+        help: Fecha en que la adopción se inscribió en el Registro Civil. Si la inscripción
+          no era necesaria, indique la fecha de la resolución judicial o administrativa.
+          Desde esa fecha se cuenta el aumento por menor de tres años.
+        prompt: Fecha de inscripción en el Registro Civil
+      meses-madre-trabajo:
+        help: 'Para la deducción por maternidad (art. 81 LIRPF): QUÉ meses cotizó
+          la madre a la Seguridad Social mientras este hijo daba derecho -- menor
+          de 3 años, o (con independencia de la edad) dentro de la ventana de fecha
+          de entrada de adopción/acogimiento registrada en INSCRIPCION/ACOGIMIENTO.
+          Escriba MM o MM-MM, separados por '';'' (por ejemplo 5-8 o 1;2;11;12). Los
+          meses y no su número, porque el incremento por guardería se prorratea por
+          los meses que estos y los de guardería comparten.'
+        invalid_range: Indique los meses como MM o MM-MM, separados por ';' (por ejemplo
+          5-8 o 1;2;11;12), cada uno entre %{minimum} y %{maximum}.
+        prompt: Qué meses trabajó la madre con derecho a la deducción -- hijo menor
+          de 3 años, o adopción/acogimiento dentro de su ventana de fecha de entrada
+          (ejercicio)
+      nif:
+        prompt: NIF/NIE del descendiente (deje en blanco si no tiene)
+      prorrata-minimo:
+        choices:
+          'false':
+            label: No, lo aplico solo yo
+          'true':
+            label: Sí, se reparte entre ambos
+        help: Déjalo en blanco y se deducirá de tu estado civil, del cónyuge registrado
+          y del tipo de declaración.
+        prompt: ¿Otro contribuyente tiene derecho al mínimo por este descendiente?
+      relacion:
+        choices:
+          acogimiento_preadoptivo_o_permanente:
+            label: Acogimiento preadoptivo o permanente
+          acogimiento_temporal:
+            label: Acogimiento temporal
+          adoptado:
+            label: Adoptado
+          descendiente:
+            label: Descendiente (hijo o nieto)
+          guarda_y_custodia_judicial:
+            label: Guarda y custodia por resolución judicial
+          tutela:
+            label: Tutela o representación legal
+        help: Elija la relación legal. Todas dan derecho al mínimo por descendientes.
+          Solo la adopción y el acogimiento preadoptivo o permanente dan además derecho
+          al aumento por menor de tres años con independencia de la edad; el acogimiento
+          temporal y la tutela no.
+        prompt: Relación con este descendiente
+      rentas-anuales:
+        help: Déjalo en blanco si no lo sabes. Una renta alta puede impedir el mínimo
+          por descendientes.
+        invalid_negative: Las rentas del descendiente no pueden ser negativas.
+        prompt: Rentas anuales del descendiente, excluidas las exentas (euros)
+      title: Descendientes
+    description: Asistente de configuración para preparar las declaraciones
+    enrollment:
+      enrollment-large-company:
+        prompt: Empresa de gran volumen
+      enrollment-public-administration-budget-gt-6000000:
+        prompt: Presupuesto administración pública superior a 6.000.000
+      title: Inscripción
+    errors:
+      missing_required_flags: 'Faltan banderas requeridas para --quiet: %{missing}'
+    familia:
+      title: Situación familiar
+    family:
+      family-descendants-eu-eea-deduction:
+        prompt: Descendientes UE/EEE en deducción de unidad familiar
+      family-minor-children-in-unit:
+        prompt: Hijos menores en unidad familiar
+      title: Unidad familiar
+    filing-export:
+      charge-iban:
+        help: IBAN que la AEAT puede cargar cuando una declaracion del Modelo 303
+          elige la domiciliacion. Es distinto de la cuenta de devolucion.
+        prompt: IBAN para la domiciliacion de la AEAT
+      title: Cuenta de cargo del Modelo 303
+    flags:
+      activity:
+        help: Actividad económica en texto normal, o epígrafe IAE si lo conoces
+      activity-start-date:
+        help: Fecha de alta en el censo / inicio de la actividad económica (AAAA-MM-DD).
+          Opcional; si se indica, no se muestran obligaciones de periodos anteriores
+          a esa fecha.
+      address-postcode:
+        help: Código postal del domicilio fiscal
+      art109-activity-income-withholding-ge-70pct:
+        help: Cobertura Art. 109 - al menos 70% de ingresos de actividades profesionales,
+          agricolas, ganaderas o forestales sujetos a retención o ingreso a cuenta
+      bienes-extranjero-above-threshold:
+        help: Bienes en el extranjero superan el umbral legal
+      charge-iban:
+        help: IBAN que la AEAT puede cargar para una domiciliacion elegida del Modelo
+          303.
+      cloud-evidence-upload:
+        help: Permitir subir evidencia sensible a proveedores LLM en la nube (desactivado
+          por defecto).
+      country-of-fiscal-residence:
+        help: Código ISO 3166-1 alfa-2 del país de residencia fiscal (p.ej. GB, DE,
+          FR). Obligatorio cuando fiscal-residency es non_resident_irnr.
+      descendiente:
+        help: 'Formato: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
+      does-intracomunitario:
+        help: Realiza operaciones intracomunitarias
+      enrollment-large-company:
+        help: Empresa de gran volumen
+      enrollment-public-administration-budget-gt-6000000:
+        help: Presupuesto administración pública superior a 6.000.000
+      entity-type:
+        help: Persona física, persona jurídica o entidad en atribución de rentas
+      family-descendants-eu-eea-deduction:
+        help: Descendientes UE/EEE en deducción de unidad familiar
+      family-minor-children-in-unit:
+        help: Hijos menores en unidad familiar
+      fiscal-residency:
+        help: 'Categoría de residencia fiscal: resident_irpf (residente habitual en
+          España) o non_resident_irnr (no residente, tributación por IRNR RDLeg 5/2004).'
+      google-export:
+        help: Activar la exportación a Google Sheets.
+      has-employees:
+        help: Tiene empleados y paga salarios con retención
+      incn-prior-12-months:
+        help: Importe neto de la cifra de negocios de los últimos 12 meses, en euros.
+          Por encima de 6.000.000 EUR el Modelo 202 obliga a la modalidad del art.
+          40.3 LIS; por debajo, ambas modalidades son posibles. Opcional.
+      irpf-estimation-regime:
+        help: Régimen de estimación IRPF para la renta de actividad económica
+      irpf-income-categories:
+        help: Categoría de renta IRPF; indique --irpf-income-categories una vez por
+          categoría
+      irpf-special-regime:
+        help: Régimen especial IRPF. "general" para la mayoría de contribuyentes.
+          "impatriado" para trabajadores desplazados a España acogidos a la Ley Beckham
+          (Art. 93 LIRPF), aplicable los primeros 6 años tras el traslado.
+      irpf-special-regime-start-date:
+        help: Fecha en que el trabajador optó por el régimen de impatriados (AAAA-MM-DD).
+          Solo cuando irpf-special-regime es "impatriado". RIRPF Art. 116. El régimen
+          expira al finalizar el 6.º año natural.
+      iva-cash-accounting-regime-enrolled:
+        help: Declara la inscripción en el régimen especial del criterio de caja del
+          IVA.
+      iva-group-dominant-entity-enrolled:
+        help: Alta como entidad dominante de un grupo de IVA
+      iva-group-member-enrolled:
+        help: Alta como entidad miembro de un grupo de IVA
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        help: Declara el derecho a deducir pagos anticipados del régimen de depósitos
+          fiscales de hidrocarburos.
+      iva-intracommunity-operations-exceed-50000-eur:
+        help: Operaciones intracomunitarias superan 50.000 EUR
+      iva-m303-regime-composition:
+        help: 'Composición de regímenes del Modelo 303: general, simplificado o mixto.'
+      iva-oss-enrolled:
+        help: Alta en OSS
+      iva-redeme-enrolled:
+        help: Si el contribuyente está inscrito en REDEME
+      iva-regime:
+        help: Régimen IVA
+      iva-roi-enrolled:
+        help: Alta en ROI
+      iva-sii-enrolled:
+        help: Si el contribuyente está inscrito en el SII
+      iva-voluntary-sii-enrolled:
+        help: Declara la inscripción voluntaria en el SII, separada de las causas
+          de inclusión obligatoria.
+      legal-entity-form:
+        help: Forma jurídica reconocida cuando el tipo de entidad es persona jurídica
+      legal-name:
+        help: Razón social de la persona jurídica para cabeceras de exportación
+      ley-49-2002-option-date:
+        help: Registra la fecha de la casilla 653 del modelo 036 para la opción del
+          título II de la Ley 49/2002.
+      ley-49-2002-option-declared:
+        help: Registra si la casilla 651 del modelo 036 declara la opción por el título
+          II de la Ley 49/2002.
+      ley-49-2002-renunciation-date:
+        help: Registra la fecha de la casilla 654 del modelo 036 para la renuncia
+          al título II de la Ley 49/2002.
+      ley-49-2002-renunciation-declared:
+        help: Registra si la casilla 652 del modelo 036 declara la renuncia al régimen
+          del título II de la Ley 49/2002.
+      llm-vision:
+        help: Activar la visión LLM local para leer facturas.
+      modelo-111-no-retenciones-periods:
+        help: Periodos Modelo 111 sin obligación, separados por comas, formato AAAA:PERIODO
+          (por ejemplo 2025:2T,2025:3T). Usar solo cuando no se pagaron rentas sujetas.
+      monedas-virtuales-extranjero-above-threshold:
+        help: Monedas virtuales en el extranjero superan el umbral del Modelo 721
+      name:
+        help: Nombre visible mostrado en revisiones locales
+      new-entity-first-two-profit-periods:
+        help: Marca si la entidad de nueva creación se encuentra en uno de los dos
+          primeros periodos impositivos con beneficios (art. 29 LIS), para aplicar
+          el tipo reducido del 15 por ciento. Opcional; sin marcar no se aplica el
+          tipo reducido.
+      notes:
+        help: Notas para tu propio recuerdo (opcional)
+      objective-estimation-modulos-iae-epigraph:
+        help: Epígrafe IAE para módulos de estimación objetiva, por ejemplo 972.
+      objective-estimation-modulos-module-1-units:
+        help: Unidades anuales del módulo 1 para estimación objetiva.
+      objective-estimation-modulos-module-2-units:
+        help: Unidades anuales del módulo 2 para estimación objetiva.
+      objective-estimation-modulos-module-3-units:
+        help: Unidades anuales del módulo 3 para estimación objetiva.
+      objective-estimation-modulos-module-4-units:
+        help: Unidades anuales del módulo 4 para estimación objetiva.
+      objective-estimation-modulos-module-5-units:
+        help: Unidades anuales del módulo 5 para estimación objetiva.
+      objective-estimation-modulos-module-6-units:
+        help: Unidades anuales del módulo 6 para estimación objetiva.
+      objective-estimation-modulos-module-7-units:
+        help: Unidades anuales del módulo 7 para estimación objetiva.
+      output-language:
+        help: Idioma de salida de la CLI para este perfil
+      pays-capital-income-with-retencion:
+        help: Paga rentas de capital con retención
+      pays-professionals-with-retencion:
+        help: Paga a profesionales con retención
+      pays-rent-with-retencion:
+        help: Paga alquiler de local con retención
+      professional-income-withholding-ge-70pct:
+        help: Al menos 70% de los ingresos profesionales con retención previa
+      representante-fiscal-nif:
+        help: NIF/NIE del representante fiscal en España. Obligatorio para no residentes
+          fuera de la UE/EEE (art. 47 LGT + art. 10 TRLIRNR RDLeg 5/2004).
+      representante-fiscal-nombre:
+        help: Nombre y apellidos del representante fiscal en España.
+      situacion-familiar:
+        choices:
+          casado:
+            description: Matrimonio vigente - tributación conjunta disponible (Art.
+              82.1.1°)
+            label: Casado/a
+          pareja-hecho-no-registrada:
+            description: Convivencia sin inscripción registral - tributación conjunta
+              NO disponible
+            label: Pareja de hecho no registrada
+          pareja-hecho-registrada:
+            description: Inscrita en el registro autonómico - tributación conjunta
+              disponible (Art. 82.1.2°)
+            label: Pareja de hecho registrada
+          separado-divorciado:
+            label: Separado/a o divorciado/a
+          soltero:
+            label: Soltero/a
+        help: 'Situación familiar a efectos del Art. 82 LIRPF: determina si puede
+          optarse por la declaración conjunta y qué unidad familiar aplica.'
+        prompt: Situación familiar (Art. 82 LIRPF)
+      spouse-birth-date:
+        help: Fecha de nacimiento del cónyuge
+      spouse-disability-grade:
+        help: 'Grado de discapacidad del cónyuge (si procede): 1 = 33%-64%, 2 = 65%
+          o superior, 3 = incapacidad judicial, 4 = ayuda de terceros o movilidad
+          reducida.'
+      spouse-eu-eea-country:
+        help: País UE/EEE del cónyuge
+      spouse-eu-eea-resident:
+        help: Cónyuge residente UE/EEE
+      spouse-name:
+        help: Nombre del cónyuge
+      spouse-non-resident-irpf:
+        help: Cónyuge no residente IRPF
+      spouse-sex:
+        help: 'Sexo del cónyuge: H = hombre, M = mujer.'
+      spouse-surnames:
+        help: Apellidos del cónyuge
+      spouse-tax-id:
+        help: NIF/NIE del cónyuge
+      surnames:
+        help: Apellidos o razón social para cabeceras de exportación
+      tax-id:
+        help: Identificador fiscal (NIF/CIF/DNI/NIE) del perfil activo
+      tax-residence-ccaa:
+        help: 'Comunidad autónoma de residencia fiscal. Una de: %{choices}.'
+      tax-residence-jurisdiction-scope:
+        help: 'Régimen territorial declarado: territorio común o territorio foral
+          todavía no compatible.'
+      taxation-type:
+        help: 'Tipo de declaración de Renta: 1 = individual, 2 = conjunta (unidad
+          familiar).'
+      taxpayer-birth-date:
+        help: Fecha de nacimiento del primer declarante
+      taxpayer-death-date:
+        help: Fecha de fallecimiento del primer declarante
+      taxpayer-disability-grade:
+        help: 'Grado de discapacidad del primer declarante: 1 = 33%-64%, 2 = 65% o
+          superior, 3 = incapacidad judicial, 4 = ayuda de terceros o movilidad reducida.'
+      taxpayer-marital-status:
+        help: 'Estado civil del primer declarante: 1 = soltero/a, 2 = casado/a, 3
+          = viudo/a, 4 = separado/a o divorciado/a, 5 = pareja de hecho registrada.'
+      taxpayer-marriage-date:
+        help: Fecha de inicio del matrimonio actual (AAAA-MM-DD). Solo cuando estado
+          civil = 2 (casado/a). Calcula casillas 0245/0246/0247 (matrimonio sobrevenido,
+          art. 82 LIRPF).
+      taxpayer-sex:
+        help: 'Sexo del primer declarante: H = hombre, M = mujer.'
+      third-party-transactions-above-347-threshold:
+        help: Operaciones con terceros superan el umbral del Modelo 347
+    format:
+      amount-eur: Importe en euros con punto decimal, p. ej. 50000.00.
+      date-iso: Fecha en formato AAAA-MM-DD, p. ej. 2024-03-01.
+      postcode: 'Código postal español: 5 cifras, p. ej. 28001.'
+      tax-id: 'NIF/DNI: 8 cifras + letra (12345678Z) · NIE: X/Y/Z + 7 cifras + letra
+        (X1234567L) · NIF de entidad: letra + 7 cifras + control (B12345674).'
+      units-count: Número entero de unidades, p. ej. 2.
+    identidad:
+      title: Identidad
+    intro: 'Configuración guiada del perfil tributario
+
+
+      Esto prepara el perfil local que la app usa para los libros registro y las comprobaciones
+      de modelos.
+
+      Hay %{section_total} pasos. Solo %{required_total} respuestas son obligatorias
+      para empezar; puedes dejar en blanco lo que todavía no sepas.
+
+      Ten a mano tu NIF/CIF/DNI/NIE, una descripción breve de la actividad, régimen
+      de IVA/IRPF, residencia fiscal y datos familiares si aplican.
+
+      Después de guardar, revisa el progreso con `aeat config profile status`.'
+    iva:
+      iva-cash-accounting-regime-enrolled:
+        prompt: ¿Está inscrito en el régimen especial del criterio de caja?
+      iva-group-dominant-entity-enrolled:
+        prompt: Alta como entidad dominante de un grupo de IVA
+      iva-group-member-enrolled:
+        prompt: Alta como entidad miembro de un grupo de IVA
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        prompt: ¿Tiene derecho a deducir pagos anticipados del régimen de depósitos
+          fiscales de hidrocarburos?
+      iva-intracommunity-operations-exceed-50000-eur:
+        prompt: Operaciones intracomunitarias superan 50.000 EUR
+      iva-oss-enrolled:
+        prompt: Alta en OSS
+      iva-redeme-enrolled:
+        prompt: Inscrito en REDEME (Registro de Devolución Mensual del IVA)
+      iva-regime:
+        prompt: Régimen IVA
+      iva-roi-enrolled:
+        prompt: Alta en ROI
+      iva-sii-enrolled:
+        prompt: Inscrito en el SII (Suministro Inmediato de Información)
+      iva-voluntary-sii-enrolled:
+        prompt: ¿Está inscrito voluntariamente en el SII?
+      m303-regime-composition:
+        choices:
+          general:
+            label: Solo régimen general
+          mixed:
+            label: Regímenes mixtos
+          simplified:
+            label: Solo régimen simplificado
+        prompt: ¿Qué composición de regímenes se aplica al Modelo 303?
+      title: IVA
+    notes:
+      notes:
+        prompt: Notas para tu propio recuerdo (opcional)
+      title: Notas para tu propio recuerdo
+    obligations:
+      art109-activity-income-withholding-ge-70pct:
+        prompt: Aplica la excepción Art. 109 por cobertura del 70% de ingresos de
+          actividad
+      bienes-extranjero-above-threshold:
+        prompt: Bienes en el extranjero superan el umbral legal
+      does-intracomunitario:
+        prompt: Realiza operaciones intracomunitarias
+      has-employees:
+        prompt: Tiene empleados y paga salarios con retención
+      irpf-estimation-regime:
+        choices:
+          directa-normal:
+            description: 'Estimación directa normal: contabilidad por ingresos reales
+              con libros completos - obligatoria por encima de 600.000 EUR.'
+            label: Estimación directa normal
+          directa-simplificada:
+            description: 'Estimación directa simplificada: ingresos reales con libros
+              simplificados - la opción habitual para la mayoría de autónomos.'
+            label: Estimación directa simplificada
+          objetiva:
+            description: 'Estimación objetiva (módulos): el rendimiento se calcula
+              por indicadores de la actividad, solo para actividades incluidas.'
+            label: Estimación objetiva (módulos)
+        help: Cómo se determina el rendimiento neto de la actividad económica; selecciona
+          Modelo 130 o 131
+        prompt: Régimen de estimación IRPF
+      irpf-special-regime:
+        choices:
+          general:
+            label: Régimen general
+          impatriado:
+            label: Impatriado - Ley Beckham (Art. 93 LIRPF)
+        help: El régimen de impatriados (Ley Beckham) se aplica durante los primeros
+          6 años tras el traslado. La mayoría tributa en régimen general.
+        prompt: Régimen especial IRPF (Ley Beckham / Art. 93 LIRPF)
+      irpf-special-regime-start-date:
+        help: Fecha en que el trabajador optó por el régimen de impatriados (RIRPF
+          Art. 116). El régimen expira al finalizar el 6.º año natural.
+        prompt: Fecha de inicio del régimen especial (AAAA-MM-DD)
+      modelo-111-no-retenciones-periods:
+        help: Periodos AAAA:PERIODO en los que no se pagaron rentas sujetas a retención
+          o ingreso a cuenta, por lo que no se presenta un Modelo 111 en blanco.
+        prompt: Periodos Modelo 111 sin retenciones
+      monedas-virtuales-extranjero-above-threshold:
+        prompt: Monedas virtuales en el extranjero superan el umbral del Modelo 721
+      objective-estimation-modulos-iae-epigraph:
+        help: Se guarda una vez en el perfil anual. Los coeficientes siguen en el
+          registro del modelo.
+        prompt: Epígrafe IAE para módulos de estimación objetiva
+      objective-estimation-modulos-module-1-units:
+        prompt: Unidades anuales del módulo 1
+      objective-estimation-modulos-module-2-units:
+        prompt: Unidades anuales del módulo 2
+      objective-estimation-modulos-module-3-units:
+        prompt: Unidades anuales del módulo 3
+      objective-estimation-modulos-module-4-units:
+        prompt: Unidades anuales del módulo 4
+      objective-estimation-modulos-module-5-units:
+        prompt: Unidades anuales del módulo 5
+      objective-estimation-modulos-module-6-units:
+        prompt: Unidades anuales del módulo 6
+      objective-estimation-modulos-module-7-units:
+        prompt: Unidades anuales del módulo 7
+      objective-estimation-modulos-module-units:
+        help: Recuento anual estable para esta casilla de módulo. El epígrafe IAE
+          seleccionado define si significa personal, superficie del local, consumo
+          eléctrico u otro módulo oficial.
+      pays-capital-income-with-retencion:
+        prompt: Paga rentas de capital con retención
+      pays-professionals-with-retencion:
+        prompt: Paga a profesionales con retención
+      pays-rent-with-retencion:
+        prompt: Paga alquiler de local con retención
+      professional-income-withholding-ge-70pct:
+        prompt: Al menos 70% de los ingresos profesionales con retención previa
+      third-party-transactions-above-347-threshold:
+        prompt: Operaciones con terceros superan el umbral del Modelo 347
+      title: Obligaciones
+    preferencias:
+      title: Preferencias y capacidades
+    profile:
+      activity:
+        prompt: Actividad económica (texto normal; usa el epígrafe IAE si lo conoces)
+      activity-start-date:
+        help: Si la indicas, no se muestran como vencidas las declaraciones de periodos
+          anteriores a esa fecha. Déjala en blanco si no la conoces.
+        prompt: ¿Desde qué fecha tienes obligaciones de declaración / cuándo te diste
+          de alta? (AAAA-MM-DD, opcional)
+      address-postcode:
+        prompt: Código postal del domicilio fiscal
+      iva-regime:
+        choices:
+          exento:
+            description: 'Actividad exenta de IVA (educación, sanidad, seguros…):
+              no repercute ni deduce IVA.'
+            label: Exento
+          general:
+            description: 'IVA general: repercute IVA en ventas, deduce IVA soportado
+              y presenta el Modelo 303 trimestral.'
+            label: Régimen general
+          reagp:
+            description: 'Régimen especial de agricultura, ganadería y pesca (REAGP):
+              compensación a tanto alzado en lugar de declaraciones de IVA.'
+            label: Régimen especial de la agricultura, ganadería y pesca (REAGP)
+          recargo-equivalencia:
+            description: 'Para comercio minorista: el proveedor aplica un recargo
+              adicional y usted no presenta declaraciones de IVA por esa actividad.'
+            label: Recargo de equivalencia
+          simplificado:
+            description: Régimen simplificado por módulos para actividades acogidas
+              (vinculado a la estimación objetiva).
+            label: Régimen simplificado
+        prompt: ¿Qué régimen de IVA aplica?
+      legal-name:
+        help: Para personas jurídicas, este es el nombre fiscal usado en cabeceras
+          de exportación. Es distinto del nombre visible local.
+        prompt: Razón social de la entidad para cabeceras de exportación
+      name:
+        prompt: Nombre visible mostrado en revisiones locales
+      output-language:
+        choices:
+          ca:
+            label: Catalán
+          en:
+            label: Inglés
+          es:
+            label: Español
+          hu:
+            label: Húngaro
+        prompt: Idioma de salida de la CLI para este perfil
+      regimes:
+        prompt: Selecciona tus regímenes fiscales aplicables
+      surnames:
+        prompt: Apellidos o razón social para cabeceras de exportación
+      tax-id:
+        prompt: Identificador fiscal (NIF/CIF/DNI/NIE) para declaraciones
+      taxation-type:
+        choices:
+          individual:
+            description: Use este valor cuando presente solo su declaración individual
+            label: 1 - individual
+          joint:
+            description: Use este valor solo para tributación conjunta de unidad familiar
+            label: 2 - conjunta
+        prompt: Código del tipo de tributación
+      title: Identidad del perfil
+    residence:
+      ccaa:
+        choices:
+          andalucia:
+            label: Andalucía
+          aragon:
+            label: Aragón
+          asturias:
+            label: Asturias
+          baleares:
+            label: Islas Baleares
+          canarias:
+            label: Islas Canarias
+          cantabria:
+            label: Cantabria
+          castilla_la_mancha:
+            label: Castilla-La Mancha
+          castilla_y_leon:
+            label: Castilla y León
+          cataluna:
+            label: Cataluña
+          comunidad_valenciana:
+            label: Comunidad Valenciana
+          extremadura:
+            label: Extremadura
+          galicia:
+            label: Galicia
+          la_rioja:
+            label: La Rioja
+          madrid:
+            label: Madrid
+          murcia:
+            label: Murcia
+      country-of-fiscal-residence:
+        prompt: País de residencia fiscal (código ISO 3166-1 alfa-2, p.ej. GB, DE,
+          FR)
+      fiscal-residency:
+        choices:
+          non-resident-irnr:
+            description: 'No residente: solo tributa la renta de fuente española,
+              por IRNR (Modelo 210), y puede requerirse representante fiscal.'
+            label: No residente - IRNR (RDLeg 5/2004)
+          resident-irpf:
+            description: 'Residente fiscal en España (183+ días o centro de intereses):
+              renta mundial por IRPF.'
+            label: Residente habitual en España - IRPF
+        prompt: Categoría de residencia fiscal
+      representante-fiscal-nif:
+        prompt: NIF/NIE del representante fiscal en España (obligatorio fuera UE/EEE)
+      representante-fiscal-nombre:
+        prompt: Nombre del representante fiscal en España
+      tax-residence-ccaa:
+        prompt: Comunidad autónoma de residencia fiscal
+      tax-residence-jurisdiction-scope:
+        choices:
+          common_regime:
+            label: Territorio común
+          foral_unsupported:
+            label: Territorio foral (todavía no compatible)
+        prompt: ¿Qué territorio tributario se aplica a este Modelo 303?
+      title: Residencia fiscal
+    review:
+      registered-non-official-suffix: ' (del certificado censal - no verificado por
+        la AEAT)'
+    spouse:
+      spouse-birth-date:
+        prompt: Fecha de nacimiento del cónyuge
+      spouse-disability-grade:
+        prompt: Grado de discapacidad del cónyuge (si aplica)
+      spouse-eu-eea-country:
+        prompt: País UE/EEE del cónyuge
+      spouse-eu-eea-resident:
+        prompt: Cónyuge residente UE/EEE
+      spouse-name:
+        prompt: Nombre del cónyuge
+      spouse-non-resident-irpf:
+        prompt: Cónyuge no residente IRPF
+      spouse-sex:
+        prompt: Sexo del cónyuge
+      spouse-surnames:
+        prompt: Apellidos del cónyuge
+      spouse-tax-id:
+        prompt: NIF/NIE del cónyuge
+      title: Cónyuge
+    taxpayer:
+      situacion-familiar:
+        choices:
+          casado:
+            description: Matrimonio vigente - tributación conjunta disponible (Art.
+              82.1.1°)
+            label: Casado/a
+          pareja-hecho-no-registrada:
+            description: Convivencia sin inscripción registral - tributación conjunta
+              NO disponible
+            label: Pareja de hecho no registrada
+          pareja-hecho-registrada:
+            description: Inscrita en el registro autonómico - tributación conjunta
+              disponible (Art. 82.1.2°)
+            label: Pareja de hecho registrada
+          separado-divorciado:
+            description: Separado legalmente o divorciado - la tributación conjunta
+              solo es posible con hijos en su unidad familiar.
+            label: Separado/a o divorciado/a
+          soltero:
+            description: Soltero, viudo o divorciado sin pareja registrada - tributación
+              individual, o conjunta solo como familia monoparental con hijos.
+            label: Soltero/a
+        help: 'Situación familiar a efectos del Art. 82 LIRPF: determina si puede
+          optarse por la declaración conjunta y qué unidad familiar aplica.'
+        prompt: Situación familiar (Art. 82 LIRPF)
+      taxpayer-birth-date:
+        prompt: Fecha de nacimiento del primer declarante
+      taxpayer-death-date:
+        prompt: Fecha de fallecimiento del primer declarante
+      taxpayer-disability-grade:
+        prompt: Clave de discapacidad del primer declarante
+      taxpayer-marital-status:
+        choices:
+          casado:
+            label: 2 - casado
+          pareja-hecho:
+            label: 5 - pareja de hecho registrada
+          separado-divorciado:
+            label: 4 - separado o divorciado
+          soltero:
+            label: 1 - soltero
+          viudo:
+            label: 3 - viudo
+        prompt: Estado civil del primer declarante
+      taxpayer-marriage-date:
+        prompt: Fecha de inicio del matrimonio (AAAA-MM-DD)
+      taxpayer-sex:
+        prompt: Sexo del primer declarante
+      title: Primer declarante
+    taxpayer-type:
+      entity-type:
+        choices:
+          attribution-entity:
+            description: 'Una entidad en atribución de rentas (comunidad de bienes,
+              sociedad civil): las rentas se atribuyen a sus miembros.'
+            label: Entidad en atribución de rentas
+          legal-entity:
+            description: Una sociedad u organización (SL, SA, asociación…) que tributa
+              por el Impuesto sobre Sociedades.
+            label: Persona jurídica (sociedad)
+          natural-person:
+            description: Una persona física (autónomo o particular) que tributa por
+              IRPF.
+            label: Persona física
+        help: Persona física (IRPF), persona jurídica (Impuesto sobre Sociedades)
+          o entidad en atribución de rentas
+        prompt: Tipo de entidad
+      incn-prior-12-months:
+        help: Lo necesitamos para saber si el Modelo 202 te obliga a la modalidad
+          del artículo 40.3 LIS (a partir de 6.000.000 EUR). Déjalo en blanco si no
+          lo conoces.
+        prompt: ¿Cuál fue su importe neto de la cifra de negocios en los últimos 12
+          meses? (en euros, opcional)
+      irpf-income-categories:
+        choices:
+          actividad-economica:
+            description: Actividad económica o profesional por cuenta propia - activa
+              el Modelo 130 trimestral y las obligaciones de IVA.
+            label: Actividad económica
+          capital-inmobiliario:
+            description: 'Rendimientos del capital inmobiliario: alquileres de inmuebles
+              de su propiedad.'
+            label: Rendimientos del capital inmobiliario
+          capital-mobiliario:
+            description: 'Rendimientos del capital mobiliario: intereses, dividendos
+              y otras rentas de inversiones.'
+            label: Rendimientos del capital mobiliario
+          ganancias-patrimoniales:
+            description: Ganancias o pérdidas patrimoniales por venta de activos (acciones,
+              inmuebles, criptomonedas).
+            label: Ganancias patrimoniales
+          pension:
+            description: Pensiones - tributan como rendimientos del trabajo en el
+              IRPF.
+            label: Pensión
+          trabajo:
+            description: 'Rendimientos del trabajo: salario o pensión de un empleador
+              o de la Seguridad Social.'
+            label: Rendimientos del trabajo
+        help: Selecciona cada categoría de renta IRPF que tengas; solo la actividad
+          económica obliga al Modelo 130/131
+        prompt: Categorías de renta IRPF
+      legal-entity-form:
+        choices:
+          cooperativa:
+            label: Sociedad cooperativa
+          other:
+            label: Otra forma jurídica
+          sa:
+            label: Sociedad anónima (S.A.)
+          sal:
+            label: Sociedad Anónima Laboral (S.A.L.)
+          sin-fines-lucrativos:
+            description: 'Entidad sin fines lucrativos (Ley 49/2002): puede optar
+              al régimen fiscal especial que se pregunta más abajo.'
+            label: Entidad sin fines lucrativos
+          sl:
+            description: 'Sociedad Limitada: la forma societaria habitual para pymes,
+              capital mínimo 3.000 EUR.'
+            label: Sociedad de responsabilidad limitada (S.L.)
+          sll:
+            label: Sociedad Limitada Laboral (S.L.L.)
+          sociedad-civil-mercantil:
+            label: Sociedad civil con objeto mercantil
+        prompt: Forma jurídica
+      ley-49-2002-option-date:
+        help: Usa la fecha ISO correspondiente a la casilla 653 del modelo 036.
+        prompt: Fecha declarada de la opción por el régimen especial de la Ley 49/2002
+      ley-49-2002-option-declared:
+        help: Usa el hecho declarado en la casilla 651 del modelo 036; la aplicación
+          legal sigue condicionada a los requisitos legales y a que no exista renuncia.
+        prompt: La entidad ha presentado en el modelo 036 la opción por el régimen
+          fiscal especial del título II de la Ley 49/2002?
+      ley-49-2002-renunciation-date:
+        help: Usa la fecha ISO correspondiente a la casilla 654 del modelo 036.
+        prompt: Fecha declarada de la renuncia al régimen especial de la Ley 49/2002
+      ley-49-2002-renunciation-declared:
+        help: Usa el hecho declarado en la casilla 652 del modelo 036.
+        prompt: La entidad ha presentado en el modelo 036 la renuncia al régimen fiscal
+          especial del título II de la Ley 49/2002?
+      new-entity-first-two-profit-periods:
+        help: Aplica solo a personas jurídicas. Si lo marca, la entidad tributa al
+          tipo reducido del 15 por ciento durante esos dos periodos.
+        prompt: ¿Es una entidad de nueva creación en uno de sus dos primeros periodos
+          impositivos con beneficios?
+      title: Tipo de contribuyente
+    title: Asistente de configuración
+    verifier:
+      impatriado_requires_start_date: 'Régimen de impatriados: la fecha de inicio
+        del régimen especial es obligatoria. Añade la fecha de inicio.'
+      monoparental_requires_hijos_warning: 'Unidad familiar monoparental: la tributación
+        conjunta como monoparental (Art. 82.1.2° LIRPF) requiere hijos menores a cargo
+        en la unidad familiar. Sin hijos a cargo, la declaración conjunta no es posible
+        para esta situación familiar. Activa «hijos menores a cargo» o cambia a tributación
+        individual.'
+      non_resident_requires_country: 'No residente IRNR: el país de residencia fiscal
+        es obligatorio. Añade el país de residencia.'
+      non_resident_requires_representante: 'No residente IRNR: es obligatorio un representante
+        fiscal. Añade el NIF y el nombre del representante.'
+  test:
+    description: Prueba tu configuración y conectividad
+    example:
+      choices:
+        'yes':
+          description: Selecciona esto para confirmar
+          label: Sí
+      help: Texto de ayuda de ejemplo para pruebas
+      prompt: Pregunta de ejemplo para pruebas
+    main:
+      title: Prueba principal
+    section:
+      title: Sección de prueba
+    title: Prueba

@@ -1,0 +1,40 @@
+modelo:
+  schema:
+    '721':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2023-y-siguientes:
+          casilla:
+            ejercicio:
+              help: null
+              label: Exercici a què es refereix la declaració de monedes virtuals
+                a l'estranger
+            tipo-declaracion:
+              help: null
+              label: Tipus de declaració (originària / complementària / substitutiva)
+            x-cdqn6t3fchkmubj3dti6iprf5lo62qbj:
+              help: null
+              label: Codi de país del custodi (ISO 3166-1 alfa-2)
+            x-cdqn6t3fchkmubjedtmm4sj55lp62ujfdomn6rr3d5gmo:
+              help: null
+              label: Nom o raó social del custodi de la moneda virtual a l'estranger
+            x-dlnmspb4c4n66r31epiiqt3fddims:
+              help: null
+              label: Identificador de la moneda virtual (ticker / token ID, p. ex.
+                BTC, ETH)
+            x-dlnmspb4c4n76obcchniqcph5li6ior9clmm4sj5:
+              help: null
+              label: Saldo o valor de la moneda virtual a 31 de desembre expressat
+                en euros
+            x-dlnmspb4c4n76obcchniqqbed5hmiro:
+              help: null
+              label: Saldo o valor de la moneda virtual a l'inici del període (per
+                a variacions significatives)
+          construct:
+            modelo-721-informative:
+              field:
+                title: null
+          field:
+            label: null

@@ -1,0 +1,56 @@
+modelo:
+  schema:
+    '126':
+      field:
+        official_name: Modelo 126. Retenciones e ingresos a cuenta. Rendimientos del
+          capital mobiliario derivados de la contraprestacion de toda clase de cuentas
+          en instituciones financieras.
+        title: Retenciones e ingresos a cuenta - rendimientos del capital mobiliario
+          de cuentas en instituciones financieras
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Base de retenciones e ingresos a cuenta
+            '02':
+              help: null
+              label: Retenciones e ingresos a cuenta
+            '03':
+              help: null
+              label: 'Periodificacion: base de retenciones e ingresos a cuenta'
+            '04':
+              help: null
+              label: 'Periodificacion: retenciones e ingresos a cuenta'
+            '05':
+              help: null
+              label: Ingresos de ejercicios anteriores
+            '06':
+              help: null
+              label: Regularizacion
+            '07':
+              help: null
+              label: 'Periodificacion: base de retenciones e ingresos a cuenta adicional'
+            08:
+              help: null
+              label: 'Periodificacion: retenciones e ingresos a cuenta adicional'
+            09:
+              help: null
+              label: Ingresos de ejercicios anteriores adicionales
+            '10':
+              help: null
+              label: 'Total liquidacion: suma de retenciones e ingresos a cuenta y
+                regularizacion'
+            '11':
+              help: null
+              label: Resultados a ingresar de anteriores declaraciones por el mismo
+                concepto, ejercicio y periodo
+            '12':
+              help: null
+              label: Resultado a ingresar
+          construct:
+            modelo-126-calculation-construct:
+              field:
+                title: Modelo 126 calculation construct
+          field:
+            label: Orden EHA/3435/2007, ejercicios 2019 y siguientes

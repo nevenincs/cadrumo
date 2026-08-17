@@ -1,0 +1,51 @@
+modelo:
+  schema:
+    '341':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2000-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Az ügyletek összege [01]
+            '02':
+              help: null
+              label: Az ügyletek összege [02]
+            '03':
+              help: null
+              label: Az ügyletek összege [03]
+            '04':
+              help: null
+              label: Kompenzációs százalék [04]
+            '05':
+              help: null
+              label: Kompenzációs százalék [05]
+            '06':
+              help: null
+              label: Kompenzációs százalék [06]
+            '07':
+              help: null
+              label: A kompenzáció összege [07]
+            08:
+              help: null
+              label: A kompenzáció összege [08]
+            09:
+              help: null
+              label: A kompenzáció összege [09]
+            '10':
+              help: null
+              label: A kompenzációk teljes összege [10]
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Az önadózás vonatkozási éve
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Az önadózás elszámolási időszaka
+          construct:
+            modelo-341-autoliquidacion:
+              field:
+                title: null
+          field:
+            label: null

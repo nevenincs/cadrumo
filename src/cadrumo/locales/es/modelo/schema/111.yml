@@ -1,0 +1,111 @@
+modelo:
+  schema:
+    '111':
+      field:
+        official_name: Retenciones e ingresos a cuenta del IRPF. Rendimientos del
+          trabajo y de actividades económicas, premios y determinadas ganancias patrimoniales
+          e imputaciones de renta.
+        title: IRPF retenciones e ingresos a cuenta
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Rendimientos del trabajo dinerarios numero de perceptores
+            '02':
+              help: null
+              label: Rendimientos del trabajo dinerarios importe de percepciones
+            '03':
+              help: null
+              label: Rendimientos del trabajo dinerarios importe de retenciones
+            '04':
+              help: null
+              label: Rendimientos del trabajo en especie numero de perceptores
+            '05':
+              help: null
+              label: Rendimientos del trabajo en especie valor de percepciones
+            '06':
+              help: null
+              label: Rendimientos del trabajo en especie importe de ingresos a cuenta
+            '07':
+              help: null
+              label: Rendimientos de actividades economicas dinerarios numero de perceptores
+            08:
+              help: null
+              label: Rendimientos de actividades economicas dinerarios importe de
+                percepciones
+            09:
+              help: null
+              label: Rendimientos de actividades economicas dinerarios importe de
+                retenciones
+            '10':
+              help: null
+              label: Rendimientos de actividades economicas en especie numero de perceptores
+            '11':
+              help: null
+              label: Rendimientos de actividades economicas en especie valor de percepciones
+            '12':
+              help: null
+              label: Rendimientos de actividades economicas en especie importe de
+                ingresos a cuenta
+            '13':
+              help: null
+              label: Premios dinerarios numero de perceptores
+            '14':
+              help: null
+              label: Premios dinerarios importe de percepciones
+            '15':
+              help: null
+              label: Premios dinerarios importe de retenciones
+            '16':
+              help: null
+              label: Premios en especie numero de perceptores
+            '17':
+              help: null
+              label: Premios en especie valor de percepciones
+            '18':
+              help: null
+              label: Premios en especie importe de ingresos a cuenta
+            '19':
+              help: null
+              label: Ganancias patrimoniales forestales dinerarias numero de perceptores
+            '20':
+              help: null
+              label: Ganancias patrimoniales forestales dinerarias importe de percepciones
+            '21':
+              help: null
+              label: Ganancias patrimoniales forestales dinerarias importe de retenciones
+            '22':
+              help: null
+              label: Ganancias patrimoniales forestales en especie numero de perceptores
+            '23':
+              help: null
+              label: Ganancias patrimoniales forestales en especie valor de percepciones
+            '24':
+              help: null
+              label: Ganancias patrimoniales forestales en especie importe de ingresos
+                a cuenta
+            '25':
+              help: null
+              label: Cesion de derechos de imagen numero de perceptores
+            '26':
+              help: null
+              label: Cesion de derechos de imagen contraprestaciones satisfechas
+            '27':
+              help: null
+              label: Cesion de derechos de imagen importe de ingresos a cuenta
+            '28':
+              help: null
+              label: Total retenciones e ingresos a cuenta
+            '29':
+              help: null
+              label: Resultado de anteriores autoliquidaciones
+            '30':
+              help: null
+              label: Resultado a ingresar
+          construct:
+            modelo-111-withholding-workflow:
+              field:
+                title: Modelo 111 withholding filing workflow
+          field:
+            label: Orden EHA/586/2011, ejercicios 2019 y siguientes

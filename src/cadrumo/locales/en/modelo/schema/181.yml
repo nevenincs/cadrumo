@@ -1,0 +1,141 @@
+modelo:
+  schema:
+    '181':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2009-y-siguientes:
+          casilla:
+            cantidades-minorar-principal:
+              help: null
+              label: Amounts applied to reduce the loan principal
+            clave-intervencion:
+              help: null
+              label: Code for the role held in the transaction
+            clave-tipo-identificacion:
+              help: null
+              label: Identification type code
+            codigo-provincia:
+              help: null
+              label: Province code
+            declaracion-complementaria-sustitutiva:
+              help: null
+              label: Supplementary or replacement return
+            declarado-nif:
+              help: null
+              label: Tax ID of the reported person
+            declarado-nombre:
+              help: null
+              label: Surnames and given name or business name of the reported person
+            declarante-razon-social:
+              help: null
+              label: Business name of the filer
+            direccion-inmueble:
+              help: null
+              label: Address of the property
+            duracion-operacion:
+              help: null
+              label: Duration of the transaction in months
+            fecha-operacion:
+              help: null
+              label: Transaction date
+            identificacion-operacion:
+              help: null
+              label: Identifier of the loan, credit or other financial transaction
+            importe-amortizacion-capital:
+              help: null
+              label: Amount paid during the year as repayment of principal
+            importe-gastos-financiacion:
+              help: null
+              label: Amount paid during the year as costs arising from external financing
+            importe-intereses:
+              help: null
+              label: Amount paid during the year as interest
+            importe-operacion:
+              help: null
+              label: Amount of the loan, credit or other financial transaction
+            importe-reintegro-intereses:
+              help: null
+              label: Amount accrued during the year as refunded interest
+            importe-total-capital-amortizado:
+              help: null
+              label: Total amount of principal repaid
+            importe-total-gastos-financiacion:
+              help: null
+              label: Total costs arising from external financing
+            importe-total-intereses:
+              help: null
+              label: Total interest paid during the year
+            importe-total-saldos-pendientes:
+              help: null
+              label: Total balances outstanding at 31 December
+            intereses-indemnizatorios:
+              help: null
+              label: Compensatory interest
+            numero-identificativo-anterior:
+              help: null
+              label: Identifying number of the previous return
+            numero-identificativo-declaracion:
+              help: null
+              label: Declaration identifying number
+            numero-total-declarados:
+              help: null
+              label: Total number of reported records
+            origen-operacion:
+              help: null
+              label: Origin of the transaction
+            otras-cantidades-indemnizatorias:
+              help: null
+              label: Other compensatory amounts
+            persona-relacion:
+              help: null
+              label: Contact person
+            porcentaje-financiacion-vivienda-habitual:
+              help: null
+              label: Percentage of the financing applied to the main residence
+            porcentaje-participacion:
+              help: null
+              label: Percentage of participation
+            prefijo-codigo-iban:
+              help: null
+              label: IBAN code prefix
+            prestamista-nif:
+              help: null
+              label: Tax ID of the lender
+            prestamista-nombre:
+              help: null
+              label: Surnames and given name or business name of the lender
+            referencia-catastral:
+              help: null
+              label: Cadastral reference
+            representante-legal-nif:
+              help: null
+              label: Tax ID of the legal representative
+            saldo-pendiente:
+              help: null
+              label: Balance outstanding at 31 December
+            situacion-inmueble:
+              help: null
+              label: Location status of the property
+            subclave-operacion:
+              help: null
+              label: Transaction subcode
+            tipo-operacion:
+              help: null
+              label: Transaction type
+            valor-tasacion-inmueble:
+              help: null
+              label: Appraised value of the property pledged as security
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the return relates
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-181-informative:
+              field:
+                title: null
+          field:
+            label: null

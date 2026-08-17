@@ -1,0 +1,577 @@
+modelo:
+  schema:
+    '131':
+      casilla:
+        continuidad:
+          irpf-pf-modulos-1-unidades:
+            help: null
+            label: 'Mòdul 1 (Personal assalariat): nombre d''unitats'
+          irpf-pf-modulos-1-unidades-anterior:
+            help: null
+            label: 'Mòdul 1 (Personal assalariat): nombre d''unitats de l''exercici
+              anterior (2023), a efectes de la minoració per incentius a l''ocupació'
+          irpf-pf-modulos-2-unidades:
+            help: null
+            label: 'Mòdul 2 (Personal no assalariat): nombre d''unitats'
+          irpf-pf-modulos-3-unidades:
+            help: null
+            label: 'Mòdul 3 (unitat específica de l''activitat: superfície, distància
+              recorreguda o càrrega): nombre d''unitats'
+          irpf-pf-modulos-4-unidades:
+            help: null
+            label: 'Mòdul 4 (unitat específica de l''activitat: consum d''energia
+              elèctrica o altra): nombre d''unitats'
+          irpf-pf-modulos-5-unidades:
+            help: null
+            label: 'Mòdul 5 (unitat específica de l''activitat, p. ex. resta de superfície
+              del local independent o taules): nombre d''unitats'
+          irpf-pf-modulos-6-unidades:
+            help: null
+            label: 'Mòdul 6 (unitat específica de l''activitat, p. ex. resta de superfície
+              del local no independent o màquines tipus A): nombre d''unitats'
+          irpf-pf-modulos-7-unidades:
+            help: null
+            label: 'Mòdul 7 (unitat específica de l''activitat, p. ex. superfície
+              del forn o màquines tipus B): nombre d''unitats'
+          irpf-pf-modulos-diferencia:
+            help: null
+            label: Diferència
+          irpf-pf-modulos-epigrafe-iae:
+            help: null
+            label: Epígraf IAE de l'activitat en estimació objectiva (mòduls). Per
+              als epígrafs 659.4 i 691.9, que agrupen dues activitats diferents sota
+              un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
+              segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes-2024
+              per a l'assignació exacta.
+          irpf-pf-modulos-resultado-declaracion:
+            help: null
+            label: Resultat de la declaració
+          irpf-pf-modulos-resultados-negativos-anteriores:
+            help: null
+            label: Resultats negatius de trimestres anteriors
+          irpf-pf-modulos-suma-rendimientos:
+            help: null
+            label: Suma de rendiments nets
+          irpf-pf-modulos-total:
+            help: null
+            label: null
+          irpf-pf-modulos-volumen-agrario:
+            help: null
+            label: Volum d'ingressos agraris del trimestre
+          irpf-pf-modulos-volumen-sin-datos-base:
+            help: null
+            label: Volum de vendes o ingressos sense dades-base
+          irpf-pf-saldo-negativo-fin-periodo:
+            help: null
+            label: Saldo negatiu trasladable a períodes posteriors (màx. 0, -casella
+              10)
+          minoracion-rendimientos-actividades-economicas:
+            help: null
+            label: Minoració per rendiments nets d'activitats econòmiques
+          pago-fraccionado-previo:
+            help: null
+            label: Suma de pagaments fraccionats previs
+          pago-fraccionado-previo-agrario:
+            help: null
+            label: Pagament fraccionat previ agrari
+          pago-fraccionado-previo-datos-base:
+            help: null
+            label: Pagament fraccionat previ per dades-base
+          pago-fraccionado-previo-sin-datos-base:
+            help: null
+            label: Pagament fraccionat previ sense dades-base
+          prestamo-vivienda-habitual:
+            help: null
+            label: Pagament de préstecs per a habitatge habitual
+          resultado-anteriores-autoliquidaciones:
+            help: null
+            label: Resultat a ingressar d'autoliquidacions anteriors
+          retenciones-ingresos-a-cuenta:
+            help: null
+            label: Retencions i ingressos a compte
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-2023:
+          casilla:
+            '01':
+              help: null
+              label: Suma de rendiments nets
+            '02':
+              help: null
+              label: Pagament fraccionat previ per dades-base
+            '03':
+              help: null
+              label: Volum de vendes o ingressos sense dades-base
+            '04':
+              help: null
+              label: Pagament fraccionat previ sense dades-base
+            '05':
+              help: null
+              label: Volum d'ingressos agraris del trimestre
+            '06':
+              help: null
+              label: Pagament fraccionat previ agrari
+            '07':
+              help: null
+              label: Suma de pagaments fraccionats previs
+            08:
+              help: null
+              label: Retencions i ingressos a compte
+            09:
+              help: null
+              label: Minoració per rendiments nets d'activitats econòmiques
+            '10':
+              help: null
+              label: Diferència
+            '11':
+              help: null
+              label: Resultats negatius de trimestres anteriors
+            '12':
+              help: null
+              label: Pagament de préstecs per a habitatge habitual
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: Resultat a ingressar d'autoliquidacions anteriors
+            '15':
+              help: null
+              label: Resultat de la declaració
+            saldo-negativo-fin-periodo:
+              help: null
+              label: Saldo negatiu trasladable a períodes posteriors (màx. 0, -casella
+                10)
+          construct:
+            modelo-131-2019-2023-objective-estimation-instalment:
+              field:
+                title: null
+          field:
+            label: null
+        '2024':
+          casilla:
+            '01':
+              help: null
+              label: Suma de rendiments nets
+            '02':
+              help: null
+              label: Pagament fraccionat previ per dades-base
+            '03':
+              help: null
+              label: Volum de vendes o ingressos sense dades-base
+            '04':
+              help: null
+              label: Pagament fraccionat previ sense dades-base
+            '05':
+              help: null
+              label: Volum d'ingressos agraris del trimestre
+            '06':
+              help: null
+              label: Pagament fraccionat previ agrari
+            '07':
+              help: null
+              label: Suma de pagaments fraccionats previs
+            08:
+              help: null
+              label: Retencions i ingressos a compte
+            09:
+              help: null
+              label: Minoració per rendiments nets d'activitats econòmiques
+            '10':
+              help: null
+              label: Diferència
+            '11':
+              help: null
+              label: Resultats negatius de trimestres anteriors
+            '12':
+              help: null
+              label: Pagament de préstecs per a habitatge habitual
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: Resultat a ingressar d'autoliquidacions anteriors
+            '15':
+              help: null
+              label: Resultat de la declaració
+            modulos-1-unidades:
+              help: null
+              label: 'Mòdul 1 (Personal assalariat): nombre d''unitats'
+            modulos-1-unidades-anterior:
+              help: null
+              label: 'Mòdul 1 (Personal assalariat): nombre d''unitats de l''exercici
+                anterior (2023), a efectes de la minoració per incentius a l''ocupació'
+            modulos-2-unidades:
+              help: null
+              label: 'Mòdul 2 (Personal no assalariat): nombre d''unitats'
+            modulos-3-unidades:
+              help: null
+              label: 'Mòdul 3 (unitat específica de l''activitat: superfície, distància
+                recorreguda o càrrega): nombre d''unitats'
+            modulos-4-unidades:
+              help: null
+              label: 'Mòdul 4 (unitat específica de l''activitat: consum d''energia
+                elèctrica o altra): nombre d''unitats'
+            modulos-5-unidades:
+              help: null
+              label: 'Mòdul 5 (unitat específica de l''activitat, p. ex. resta de
+                superfície del local independent o taules): nombre d''unitats'
+            modulos-6-unidades:
+              help: null
+              label: 'Mòdul 6 (unitat específica de l''activitat, p. ex. resta de
+                superfície del local no independent o màquines tipus A): nombre d''unitats'
+            modulos-7-unidades:
+              help: null
+              label: 'Mòdul 7 (unitat específica de l''activitat, p. ex. superfície
+                del forn o màquines tipus B): nombre d''unitats'
+            modulos-epigrafe:
+              help: null
+              label: Epígraf IAE de l'activitat en estimació objectiva (mòduls). Per
+                als epígrafs 659.4 i 691.9, que agrupen dues activitats diferents
+                sota un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
+                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes-2024
+                per a l'assignació exacta.
+            modulos-indice-inicio-actividad:
+              help: null
+              label: 'Índex corrector per inici de noves activitats (lletra b.4, activitat
+                iniciada des de l''1-1-2023 en local exclusiu). Índex declarat per
+                l''operador (0,80/0,90; 0,60/0,70 amb discapacitat ≥33%, Ordre HFP/1359/2023
+                Annex II, instrucció 2.3.b.4); el motor no modela l''exercici d''inici
+                ni la discapacitat. Incompatible amb l''índex de temporada (b.2):
+                si tots dos es declaren, preval la temporada.'
+            modulos-indice-pequena-dimension:
+              help: null
+              label: Índex corrector per a empreses de petita dimensió (lletra b.1
+                - municipi, local únic, sense personal o fins a 2 treballadors). Índex
+                declarat per l'operador (0,70/0,75/0,80/0,90, Ordre HFP/1359/2023
+                Annex II, instrucció 2.3.b.1); el motor no modela fets del contribuent.
+                Mai s'aplica a les activitats amb índex especial (721.2, 722).
+            modulos-indice-temporada:
+              help: null
+              label: 'Índex corrector de temporada (lletra b.2 - activitat de temporada,
+                fins a 180 dies/any). Índex declarat per l''operador (1,50/1,35/1,25
+                segons durada, Ordre HFP/1359/2023 Annex II, instrucció 2.3.b.2);
+                el motor no modela la durada com a fet del contribuent. Incompatible
+                amb l''índex d''inici de noves activitats (b.4): si tots dos es declaren,
+                preval aquest.'
+            modulos-minoracion-inversion:
+              help: null
+              label: Minoració per incentius a l'inversió (amortització de l'immobilitzat
+                material o intangible afecte, segons el seu llibre registre de béns
+                d'inversió). Import declarat per l'operador; el motor no modela un
+                registre de béns per element - consulteu l'Ordre HFP/1359/2023 Annex
+                II, instrucció 2.2.b) i la vostra pròpia taula d'amortització.
+            modulos-pequena-dimension-ignorado-flag:
+              help: null
+              label: 'Indicador intern (1/0): l''índex corrector per a empreses de
+                petita dimensió (b.1) declarat va ser ignorat per incompatibilitat
+                amb l''índex corrector especial de l''activitat (Ordre HFP/1359/2023
+                Annex II, instrucció 2.3.a/b.1).'
+            modulos-rendimiento-neto-actividad:
+              help: null
+              label: 'Rendiment net de l''activitat (Fase 4a: mòduls − reducció general
+                5 per 100)'
+            modulos-rendimiento-neto-minorado:
+              help: null
+              label: 'Rendiment net minorat (Fase 2a: previ − minoració per incentius
+                a l''ocupació − minoració per incentius a l''inversió)'
+            modulos-rendimiento-neto-modulos:
+              help: null
+              label: 'Rendiment net de mòduls (Fase 3a: minorat ajustat pels índexs
+                correctors generals - petita dimensió, temporada/inici de noves activitats,
+                excés - en l''ordre i amb les incompatibilitats de l''Ordre HFP/1359/2023
+                Annex II, instrucció 2.3)'
+            modulos-rendimiento-neto-previo:
+              help: null
+              label: 'Rendiment net previ (Fase 1a: Σ unitats mòdul × rendiment anual
+                per unitat)'
+            modulos-temporada-inicio-actividad-conflicto-flag:
+              help: null
+              label: 'Indicador intern (1/0): es van declarar simultàniament l''índex
+                corrector de temporada (b.2) i l''índex corrector per inici de noves
+                activitats (b.4), incompatibles entre si (Ordre HFP/1359/2023 Annex
+                II, instrucció 2.3).'
+            saldo-negativo-fin-periodo:
+              help: null
+              label: Saldo negatiu trasladable a períodes posteriors (màx. 0, -casella
+                10)
+          construct:
+            modelo-131-2024-objective-estimation-instalment:
+              field:
+                title: null
+          field:
+            label: null
+        '2025':
+          casilla:
+            '01':
+              help: null
+              label: Suma de rendiments nets
+            '02':
+              help: null
+              label: Pagament fraccionat previ per dades-base
+            '03':
+              help: null
+              label: Volum de vendes o ingressos sense dades-base
+            '04':
+              help: null
+              label: Pagament fraccionat previ sense dades-base
+            '05':
+              help: null
+              label: Volum d'ingressos agraris del trimestre
+            '06':
+              help: null
+              label: Pagament fraccionat previ agrari
+            '07':
+              help: null
+              label: Suma de pagaments fraccionats previs
+            08:
+              help: null
+              label: Retencions i ingressos a compte
+            09:
+              help: null
+              label: Minoració per rendiments nets d'activitats econòmiques
+            '10':
+              help: null
+              label: Diferència
+            '11':
+              help: null
+              label: Resultats negatius de trimestres anteriors
+            '12':
+              help: null
+              label: Pagament de préstecs per a habitatge habitual
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: Resultat a ingressar d'autoliquidacions anteriors
+            '15':
+              help: null
+              label: Resultat de la declaració
+            modulos-1-unidades:
+              help: null
+              label: 'Mòdul 1 (Personal assalariat): nombre d''unitats'
+            modulos-1-unidades-anterior:
+              help: null
+              label: 'Mòdul 1 (Personal assalariat): nombre d''unitats de l''exercici
+                anterior (2024), a efectes de la minoració per incentius a l''ocupació'
+            modulos-2-unidades:
+              help: null
+              label: 'Mòdul 2 (Personal no assalariat): nombre d''unitats'
+            modulos-3-unidades:
+              help: null
+              label: 'Mòdul 3 (unitat específica de l''activitat: superfície, distància
+                recorreguda o càrrega): nombre d''unitats'
+            modulos-4-unidades:
+              help: null
+              label: 'Mòdul 4 (unitat específica de l''activitat: consum d''energia
+                elèctrica o altra): nombre d''unitats'
+            modulos-5-unidades:
+              help: null
+              label: 'Mòdul 5 (unitat específica de l''activitat, p. ex. resta de
+                superfície del local independent o taules): nombre d''unitats'
+            modulos-6-unidades:
+              help: null
+              label: 'Mòdul 6 (unitat específica de l''activitat, p. ex. resta de
+                superfície del local no independent o màquines tipus A): nombre d''unitats'
+            modulos-7-unidades:
+              help: null
+              label: 'Mòdul 7 (unitat específica de l''activitat, p. ex. superfície
+                del forn o màquines tipus B): nombre d''unitats'
+            modulos-epigrafe:
+              help: null
+              label: Epígraf IAE de l'activitat en estimació objectiva (mòduls). Per
+                als epígrafs 659.4 i 691.9, que agrupen dues activitats diferents
+                sota un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
+                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes-2025
+                per a l'assignació exacta.
+            modulos-indice-inicio-actividad:
+              help: null
+              label: 'Índex corrector per inici de noves activitats (lletra b.4, activitat
+                iniciada des de l''1-1-2024 en local exclusiu). Índex declarat per
+                l''operador (0,80/0,90; 0,60/0,70 amb discapacitat ≥33%, Ordre HAC/1347/2024
+                Annex II, instrucció 2.3.b.4); el motor no modela l''exercici d''inici
+                ni la discapacitat. Incompatible amb l''índex de temporada (b.2):
+                si tots dos es declaren, preval la temporada.'
+            modulos-indice-pequena-dimension:
+              help: null
+              label: Índex corrector per a empreses de petita dimensió (lletra b.1
+                - municipi, local únic, sense personal o fins a 2 treballadors). Índex
+                declarat per l'operador (0,70/0,75/0,80/0,90, Ordre HAC/1347/2024
+                Annex II, instrucció 2.3.b.1); el motor no modela fets del contribuent.
+                Mai s'aplica a les activitats amb índex especial (721.2, 722).
+            modulos-indice-temporada:
+              help: null
+              label: 'Índex corrector de temporada (lletra b.2 - activitat de temporada,
+                fins a 180 dies/any). Índex declarat per l''operador (1,50/1,35/1,25
+                segons durada, Ordre HAC/1347/2024 Annex II, instrucció 2.3.b.2);
+                el motor no modela la durada com a fet del contribuent. Incompatible
+                amb l''índex d''inici de noves activitats (b.4): si tots dos es declaren,
+                preval aquest.'
+            modulos-minoracion-inversion:
+              help: null
+              label: Minoració per incentius a l'inversió (amortització de l'immobilitzat
+                material o intangible afecte, segons el seu llibre registre de béns
+                d'inversió). Import declarat per l'operador; el motor no modela un
+                registre de béns per element - consulteu l'Ordre HAC/1347/2024 Annex
+                II, instrucció 2.2.b) i la vostra pròpia taula d'amortització.
+            modulos-pequena-dimension-ignorado-flag:
+              help: null
+              label: 'Indicador intern (1/0): l''índex corrector per a empreses de
+                petita dimensió (b.1) declarat va ser ignorat per incompatibilitat
+                amb l''índex corrector especial de l''activitat (Ordre HAC/1347/2024
+                Annex II, instrucció 2.3.a/b.1).'
+            modulos-rendimiento-neto-actividad:
+              help: null
+              label: 'Rendiment net de l''activitat (Fase 4a: mòduls − reducció general
+                5 per 100)'
+            modulos-rendimiento-neto-minorado:
+              help: null
+              label: 'Rendiment net minorat (Fase 2a: previ − minoració per incentius
+                a l''ocupació − minoració per incentius a l''inversió)'
+            modulos-rendimiento-neto-modulos:
+              help: null
+              label: 'Rendiment net de mòduls (Fase 3a: minorat ajustat pels índexs
+                correctors generals - petita dimensió, temporada/inici de noves activitats,
+                excés - en l''ordre i amb les incompatibilitats de l''Ordre HAC/1347/2024
+                Annex II, instrucció 2.3)'
+            modulos-rendimiento-neto-previo:
+              help: null
+              label: 'Rendiment net previ (Fase 1a: Σ unitats mòdul × rendiment anual
+                per unitat)'
+            modulos-temporada-inicio-actividad-conflicto-flag:
+              help: null
+              label: 'Indicador intern (1/0): es van declarar simultàniament l''índex
+                corrector de temporada (b.2) i l''índex corrector per inici de noves
+                activitats (b.4), incompatibles entre si (Ordre HAC/1347/2024 Annex
+                II, instrucció 2.3).'
+            saldo-negativo-fin-periodo:
+              help: null
+              label: Saldo negatiu trasladable a períodes posteriors (màx. 0, -casella
+                10)
+          construct:
+            modelo-131-2025-objective-estimation-instalment:
+              field:
+                title: null
+          field:
+            label: null
+        '2026':
+          casilla:
+            '01':
+              help: null
+              label: Suma de rendiments nets
+            '02':
+              help: null
+              label: Pagament fraccionat previ per dades-base
+            '03':
+              help: null
+              label: Volum de vendes o ingressos sense dades-base
+            '04':
+              help: null
+              label: Pagament fraccionat previ sense dades-base
+            '05':
+              help: null
+              label: Volum d'ingressos agraris del trimestre
+            '06':
+              help: null
+              label: Pagament fraccionat previ agrari
+            '07':
+              help: null
+              label: Suma de pagaments fraccionats previs
+            08:
+              help: null
+              label: Retencions i ingressos a compte
+            09:
+              help: null
+              label: Minoració per rendiments nets d'activitats econòmiques
+            '10':
+              help: null
+              label: Diferència
+            '11':
+              help: null
+              label: Resultats negatius de trimestres anteriors
+            '12':
+              help: null
+              label: Pagament de préstecs per a habitatge habitual
+            '13':
+              help: null
+              label: null
+            '14':
+              help: null
+              label: Resultat a ingressar d'autoliquidacions anteriors
+            '15':
+              help: null
+              label: Resultat de la declaració
+            modulos-1-unidades:
+              help: null
+              label: 'Mòdul 1 (Personal assalariat): nombre d''unitats'
+            modulos-1-unidades-anterior:
+              help: null
+              label: 'Mòdul 1 (Personal assalariat): nombre d''unitats de l''exercici
+                anterior (2025), a efectes de la minoració per incentius a l''ocupació'
+            modulos-2-unidades:
+              help: null
+              label: 'Mòdul 2 (Personal no assalariat): nombre d''unitats'
+            modulos-3-unidades:
+              help: null
+              label: 'Mòdul 3 (unitat específica de l''activitat: superfície, distància
+                recorreguda o càrrega): nombre d''unitats'
+            modulos-4-unidades:
+              help: null
+              label: 'Mòdul 4 (unitat específica de l''activitat: consum d''energia
+                elèctrica o altra): nombre d''unitats'
+            modulos-5-unidades:
+              help: null
+              label: 'Mòdul 5 (unitat específica de l''activitat, p. ex. resta de
+                superfície del local independent o taules): nombre d''unitats'
+            modulos-6-unidades:
+              help: null
+              label: 'Mòdul 6 (unitat específica de l''activitat, p. ex. resta de
+                superfície del local no independent o màquines tipus A): nombre d''unitats'
+            modulos-7-unidades:
+              help: null
+              label: 'Mòdul 7 (unitat específica de l''activitat, p. ex. superfície
+                del forn o màquines tipus B): nombre d''unitats'
+            modulos-epigrafe:
+              help: null
+              label: Epígraf IAE de l'activitat en estimació objectiva (mòduls). Per
+                als epígrafs 659.4 i 691.9, que agrupen dues activitats diferents
+                sota un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
+                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes-2026
+                per a l'assignació exacta.
+            modulos-minoracion-inversion:
+              help: null
+              label: Minoració per incentius a l'inversió (amortització de l'immobilitzat
+                material o intangible afecte, segons el seu llibre registre de béns
+                d'inversió). Import declarat per l'operador; el motor no modela un
+                registre de béns per element - consulteu l'Ordre HAC/1425/2025 Annex
+                II, instrucció 2.2.b) i la vostra pròpia taula d'amortització.
+            modulos-rendimiento-neto-actividad:
+              help: null
+              label: 'Rendiment net de l''activitat (Fase 4a: mòduls − reducció general
+                5 per 100)'
+            modulos-rendimiento-neto-minorado:
+              help: null
+              label: 'Rendiment net minorat (Fase 2a: previ − minoració per incentius
+                a l''ocupació − minoració per incentius a l''inversió)'
+            modulos-rendimiento-neto-modulos:
+              help: null
+              label: 'Rendiment net de mòduls (Fase 3a: minorat ajustat per l''índex
+                corrector d''excés)'
+            modulos-rendimiento-neto-previo:
+              help: null
+              label: 'Rendiment net previ (Fase 1a: Σ unitats mòdul × rendiment anual
+                per unitat)'
+            saldo-negativo-fin-periodo:
+              help: null
+              label: Saldo negatiu trasladable a períodes posteriors (màx. 0, -casella
+                10)
+          construct:
+            modelo-131-2026-objective-estimation-instalment:
+              field:
+                title: null
+          field:
+            label: null

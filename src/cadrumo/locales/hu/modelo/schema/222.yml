@@ -1,0 +1,22 @@
+modelo:
+  schema:
+    '222':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2025-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: A részletfizetés vonatkozási éve
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Részletfizetés módja (40.2. cikk teljes adóösszeg / 40.3. cikk
+                adóalap)
+          construct:
+            modelo-222-declaration-construct:
+              field:
+                title: null
+          field:
+            label: null

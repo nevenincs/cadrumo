@@ -1,0 +1,22 @@
+modelo:
+  schema:
+    '222':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2025-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the instalment payment relates
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: null
+              label: Instalment payment method (art. 40.2 gross tax liability / art.
+                40.3 taxable base)
+          construct:
+            modelo-222-declaration-construct:
+              field:
+                title: null
+          field:
+            label: null

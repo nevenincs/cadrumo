@@ -1,0 +1,90 @@
+modelo:
+  schema:
+    '123':
+      field:
+        official_name: null
+        title: null
+      revision:
+        2019-2023:
+          casilla:
+            '01':
+              help: null
+              label: A kedvezményezettek száma
+            '02':
+              help: null
+              label: Levonások és előlegfizetések adóalapja
+            '03':
+              help: null
+              label: Levonások és előlegfizetések
+            '04':
+              help: null
+              label: Előző évekből származó jövedelem
+            '05':
+              help: null
+              label: Korrekció
+            '06':
+              help: null
+              label: Levonások és korrekció összege
+            '07':
+              help: null
+              label: Korábbi önadózások eredménye
+            08:
+              help: null
+              label: Befizetendő eredmény
+          construct:
+            modelo-123-2019-capital-withholding:
+              field:
+                title: null
+          field:
+            label: null
+        2024-y-siguientes:
+          casilla:
+            '01':
+              help: null
+              label: Osztalékokból és nyereségrészesedésekből származó jövedelmek
+                száma
+            '02':
+              help: null
+              label: Egyéb jövedelmek száma
+            '03':
+              help: null
+              label: Jövedelmek teljes száma
+            '04':
+              help: null
+              label: Osztalékok és nyereségrészesedések alapja
+            '05':
+              help: null
+              label: Egyéb jövedelmek alapja
+            '06':
+              help: null
+              label: Teljes alap
+            '07':
+              help: null
+              label: Osztalékok és nyereségrészesedések forrásadója
+            08:
+              help: null
+              label: Egyéb jövedelmek forrásadója
+            09:
+              help: null
+              label: Forrásadó összesen
+            '10':
+              help: null
+              label: Korábbi adóévek bevételei
+            '11':
+              help: null
+              label: Helyesbítés
+            '12':
+              help: null
+              label: Forrásadó és helyesbítés összege
+            '13':
+              help: null
+              label: Korábbi önadózások eredménye
+            '14':
+              help: null
+              label: Befizetendő eredmény
+          construct:
+            modelo-123-current-capital-withholding:
+              field:
+                title: null
+          field:
+            label: null
