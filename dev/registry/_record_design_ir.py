@@ -9,7 +9,7 @@ the source independently.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from enum import StrEnum
 from pathlib import Path
 from typing import Final, Literal
@@ -23,6 +23,7 @@ from cadrumo.domain.calculations.registry import (
     RecordDesignAuxiliaryEnvelopeHeader,
     RecordDesignAuxiliaryEnvelopeHeaderRole,
     RecordDesignCompositeRelativeClosing,
+    RecordDesignField,
     RecordDesignRelativeSuffixMarker,
     RecordDesignSheet,
     RecordDesignVariableEnvelope,
@@ -362,9 +363,36 @@ def _intermediate_sheet(
                 validation=field.validation,
                 content=field.content,
             )
-            for field in sheet.fields
+            for field in _wire_positions(sheet.fields)
         ),
     )
+
+
+def _wire_positions(fields: Sequence[RecordDesignField]) -> list[RecordDesignField]:
+    """Return the LEAF positions of ``fields``, descending into every desglose.
+
+    Where AEAT desglosa a printed row into sub-fields, the sub-fields are the
+    wire positions and the parent's span is not one -- the same resolution
+    ``_required_positions`` applies in the coverage validator. Emitting the
+    parent instead would hand the renderer one field spanning the whole group,
+    which is the Modelo 576 blob: it covers every sub-position by byte extent, so
+    coverage cannot object, while writing the group as a single value and
+    claiming any bytes AEAT reserves inside it.
+
+    This must descend, not merely tolerate: the parser only began nesting these
+    when it learned to read a desglose AEAT prints WITHOUT dotted ordinals, and
+    before that the children arrived here as flat siblings and the geometry check
+    refused the record outright. Refusing was safe. Silently rendering the parent
+    as one field would not be, so the nesting the parser gained has to be spent
+    here rather than ignored.
+    """
+    positions: list[RecordDesignField] = []
+    for field in fields:
+        if field.components:
+            positions.extend(_wire_positions(field.components))
+            continue
+        positions.append(field)
+    return positions
 
 
 def _source_cell(row: int, workbook_format: RecordDesignWorkbookFormat) -> str | None:

@@ -53,9 +53,9 @@
 
 [meta]
 generated_from = "just audit-duplication (jscpd@4.2.0)"
-observed_groups = 0
-duplicated_pct = "0.00"
-files_analyzed = 1486
+observed_groups = 4
+duplicated_pct = "0.02"
+files_analyzed = 1589
 source_root = "src/cadrumo"
 count_is_advisory = true
 
@@ -85,6 +85,50 @@ count_is_advisory = true
 # sum of `cluster_owned` + `intentional` + `advisory_residue` below.
 [summary]
 cluster_owned = 0
-intentional = 0
+intentional = 3
 advisory_residue = 0
 actionable = 0
+
+# The three groups below are one finding, not three: jscpd is matching the
+# PEP 562 lazy-facade hook that several package `__init__.py` files carry.
+# The matched span is always the same body -- the `_LAZY_EXPORTS` lookup, the
+# missing-loader guard, the `globals()` write-back, and the `__dir__` that
+# reports the unresolved surface alongside `__all__`.
+#
+# It is not consolidatable, and the reason is structural rather than a
+# preference. `__getattr__` is resolved by the interpreter on the MODULE
+# object that defines it, and its body writes into that module's own
+# `globals()`. A shared helper would either have to be handed each caller's
+# `globals()` mapping -- which replaces a legible seventeen-line idiom with an
+# indirection that hides which namespace is being mutated -- or close over the
+# wrong module entirely. The substitutability pre-filter excludes it on the
+# same grounds: the "shared" implementation would need a per-caller namespace
+# argument the current sites do not have, so the candidate replacement carries
+# a constraint the originals do not.
+#
+# Recorded rather than eliminated, per this file's own contract: the count is
+# advisory debt made visible, never a consolidation mandate.
+
+[[group]]
+classification = "intentional"
+rationale = "PEP 562 lazy-facade `__getattr__`/`__dir__` hook; not consolidatable because the hook must resolve on, and write into, its own module namespace."
+where = [
+  "- adapters/persistence/storage/crypto/__init__.py [99:5 - 116:19]",
+  "  adapters/persistence/storage/custody/__init__.py [354:5 - 371:27]",
+]
+
+[[group]]
+classification = "intentional"
+rationale = "PEP 562 lazy-facade `__getattr__`/`__dir__` hook; the storage package facade and its custody subpackage facade each declare their own, as the pattern requires."
+where = [
+  "- adapters/persistence/storage/__init__.py [637:57 - 672:37]",
+  "  adapters/persistence/storage/custody/__init__.py [336:51 - 371:27]",
+]
+
+[[group]]
+classification = "intentional"
+rationale = "PEP 562 lazy-facade `__getattr__`/`__dir__` hook; spans an application package and a persistence package, which cannot share a hook body across the hexagonal boundary in any case."
+where = [
+  "- application/review/__init__.py [185:5 - 202:21]",
+  "  adapters/persistence/storage/custody/__init__.py [354:5 - 371:27]",
+]

@@ -1,0 +1,22 @@
+{
+  "corrections": [
+    {
+      "kind": "single_position",
+      "sheet": "Tipo 2 - Registro De Perceptor",
+      "position": 81,
+      "corrected_type": "Alfanumerico",
+      "description": "SIGNO DE LA PERCEPCION INTEGRA",
+      "reason": "AEAT prints this row as a bare single position with no naturaleza column and its description running on: '81 SIGNO DE LA PERCEPCION INTEGRA: Se cumplimentara este campo cuando las percepciones correspondan a cantidades reintegradas por el perceptor en el ejercicio ... se consignara una <<N>>, en cualquier otro caso el contenido de este campo sera un espacio.' The parser refuses a naturaleza-less single position outright, because that shape is otherwise indistinguishable from a numbered prose sentence. It is a real data position: the enclosing row 81-107 states 'Este campo se subdivide en tres', and 1 + 13 (82-94 percepcion integra) + 13 (95-107 retenciones) covers its 27 bytes exactly.",
+      "editions_read": ["2024-y-siguientes", "2025-y-siguientes"]
+    },
+    {
+      "kind": "single_position",
+      "sheet": "Tipo 2 - Registro De Perceptor",
+      "position": 108,
+      "corrected_type": "Alfanumerico",
+      "description": "SIGNO DE LA PERCEPCION EN ESPECIE",
+      "reason": "The same shape one row down: '108 SIGNO DE LA PERCEPCION EN ESPECIE: Se cumplimentara este campo cuando el perceptor reintegre en este ejercicio percepciones en especie ... se consignara una <<N>>, en cualquier otro caso el contenido de este campo sera un espacio.' Printed as a bare single position with no naturaleza, so the parser refuses it. The enclosing row 108-147 states 'Este campo se subdivide en cuatro', and 1 + 13 + 13 + 13 covers its 40 bytes exactly.",
+      "editions_read": ["2024-y-siguientes", "2025-y-siguientes"]
+    }
+  ]
+}

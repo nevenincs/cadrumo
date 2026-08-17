@@ -1,0 +1,979 @@
+schema_version = 1
+fragment_id = "pagina01"
+modelo = "151"
+design_epoch = "2015"
+source_ref = "aeat-dr-151-2015"
+source_sha256 = "997dc9cf5230a374716d04a5ae9aed0e9c659ee9352451843dbc5232d3f2137a"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f001"
+kind = "literal"
+literal = "<T"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f002"
+kind = "literal"
+literal = "151"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f003"
+kind = "literal"
+literal = "01"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f004"
+kind = "literal"
+literal = "000>"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f005"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f006"
+kind = "casilla"
+casilla_id = "p01.tipo-de-declaracion"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f007"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f008"
+kind = "header"
+producer_key = "taxpayer.surnames"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f009"
+kind = "header"
+producer_key = "taxpayer.given_name"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f010"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f011"
+kind = "casilla"
+casilla_id = "p01.devengo-periodo"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f012"
+kind = "casilla"
+casilla_id = "p01.contribuyente-sexo"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f013"
+kind = "casilla"
+casilla_id = "p01.contribuyente-fecha-de-nacimiento"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f014"
+kind = "casilla"
+casilla_id = "p01.contribuyente-cambio-de-domicilio"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f015"
+kind = "casilla"
+casilla_id = "p01.contribuyente-44-tipo-de-via"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f016"
+kind = "casilla"
+casilla_id = "p01.contribuyente-45-nombre-de-la-via-publica"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f017"
+kind = "casilla"
+casilla_id = "p01.contribuyente-46-tipo-de-numeracion"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f018"
+kind = "casilla"
+casilla_id = "p01.contribuyente-47-numero-de-casa"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f019"
+kind = "casilla"
+casilla_id = "p01.contribuyente-48-calificador-de-numero"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 24
+source_cell = "A24"
+ordinal = "19"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f020"
+kind = "casilla"
+casilla_id = "p01.contribuyente-49-bloque"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f021"
+kind = "casilla"
+casilla_id = "p01.contribuyente-50-portal"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f022"
+kind = "casilla"
+casilla_id = "p01.contribuyente-51-escalera"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f023"
+kind = "casilla"
+casilla_id = "p01.contribuyente-52-planta"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 28
+source_cell = "A28"
+ordinal = "23"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f024"
+kind = "casilla"
+casilla_id = "p01.contribuyente-53-puerta"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 29
+source_cell = "A29"
+ordinal = "24"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f025"
+kind = "casilla"
+casilla_id = "p01.contribuyente-54-datos-ementarios-de-domicilio"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 30
+source_cell = "A30"
+ordinal = "25"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f026"
+kind = "casilla"
+casilla_id = "p01.contribuyente-55-localidad-poblacion"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 31
+source_cell = "A31"
+ordinal = "26"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f027"
+kind = "casilla"
+casilla_id = "p01.contribuyente-56-codigo-postal"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f028"
+kind = "casilla"
+casilla_id = "p01.contribuyente-58-codigo-de-provincia"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 33
+source_cell = "A33"
+ordinal = "28"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f029"
+kind = "casilla"
+casilla_id = "p01.contribuyente-57-codigo-de-municipio"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f030"
+kind = "casilla"
+casilla_id = "p01.contribuyente-59-telefono-fijo"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f031"
+kind = "casilla"
+casilla_id = "p01.contribuyente-60-telefono-movil"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 36
+source_cell = "A36"
+ordinal = "31"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f032"
+kind = "casilla"
+casilla_id = "p01.contribuyente-61-no-de-fax"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 37
+source_cell = "A37"
+ordinal = "32"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f033"
+kind = "casilla"
+casilla_id = "p01.contribuyente-domicili-extranjero-62-domicilio"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 38
+source_cell = "A38"
+ordinal = "33"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f034"
+kind = "casilla"
+casilla_id = "p01.contribuyente-domicili-mplementarios-domicilio"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 39
+source_cell = "A39"
+ordinal = "34"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f035"
+kind = "casilla"
+casilla_id = "p01.contribuyente-domicili-ero-64-poblacion-ciudad"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 40
+source_cell = "A40"
+ordinal = "35"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f036"
+kind = "casilla"
+casilla_id = "p01.contribuyente-domicilio-extranjero-65-email"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 41
+source_cell = "A41"
+ordinal = "36"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f037"
+kind = "casilla"
+casilla_id = "p01.contribuyente-domicili-ro-66-codigo-postal-zip"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 42
+source_cell = "A42"
+ordinal = "37"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f038"
+kind = "casilla"
+casilla_id = "p01.contribuyente-domicili-provincia-region-estado"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 43
+source_cell = "A43"
+ordinal = "38"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f039"
+kind = "casilla"
+casilla_id = "p01.contribuyente-domicilio-extranjero-68-pais"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 44
+source_cell = "A44"
+ordinal = "39"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f040"
+kind = "casilla"
+casilla_id = "p01.contribuyente-domicili-anjero-70-telefono-fijo"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 45
+source_cell = "A45"
+ordinal = "40"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f041"
+kind = "casilla"
+casilla_id = "p01.contribuyente-domicili-njero-71-telefono-movil"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 46
+source_cell = "A46"
+ordinal = "41"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f042"
+kind = "casilla"
+casilla_id = "p01.contribuyente-domicilio-extranjero-72-no-fax"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 47
+source_cell = "A47"
+ordinal = "42"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f043"
+kind = "casilla"
+casilla_id = "p01.contribuyente-datos-ad-enda-actual-titularidad"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 48
+source_cell = "A48"
+ordinal = "43"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f044"
+kind = "casilla"
+casilla_id = "p01.contribuyente-datos-ad-orcentaje-participacion"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 49
+source_cell = "A49"
+ordinal = "44"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f045"
+kind = "casilla"
+casilla_id = "p01.contribuyente-datos-ad-vienda-actual-situacion"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 50
+source_cell = "A50"
+ordinal = "45"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f046"
+kind = "casilla"
+casilla_id = "p01.contribuyente-datos-ad-al-referencia-catastral"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 51
+source_cell = "A51"
+ordinal = "46"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f047"
+kind = "casilla"
+casilla_id = "p01.representante-nif"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 52
+source_cell = "A52"
+ordinal = "47"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f048"
+kind = "casilla"
+casilla_id = "p01.representante-apellidos"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 53
+source_cell = "A53"
+ordinal = "48"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f049"
+kind = "casilla"
+casilla_id = "p01.representante-nombre"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 54
+source_cell = "A54"
+ordinal = "49"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f050"
+kind = "casilla"
+casilla_id = "p01.representante-44-tipo-de-via"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 55
+source_cell = "A55"
+ordinal = "50"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f051"
+kind = "casilla"
+casilla_id = "p01.representante-45-nombre-de-la-via-publica"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 56
+source_cell = "A56"
+ordinal = "51"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f052"
+kind = "casilla"
+casilla_id = "p01.representante-46-tipo-de-numeracion"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 57
+source_cell = "A57"
+ordinal = "52"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f053"
+kind = "casilla"
+casilla_id = "p01.representante-47-numero-de-casa"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 58
+source_cell = "A58"
+ordinal = "53"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f054"
+kind = "casilla"
+casilla_id = "p01.representante-48-calificador-de-numero"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 59
+source_cell = "A59"
+ordinal = "54"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f055"
+kind = "casilla"
+casilla_id = "p01.representante-49-bloque"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 60
+source_cell = "A60"
+ordinal = "55"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f056"
+kind = "casilla"
+casilla_id = "p01.representante-50-portal"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 61
+source_cell = "A61"
+ordinal = "56"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f057"
+kind = "casilla"
+casilla_id = "p01.representante-51-escalera"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 62
+source_cell = "A62"
+ordinal = "57"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f058"
+kind = "casilla"
+casilla_id = "p01.representante-52-planta"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 63
+source_cell = "A63"
+ordinal = "58"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f059"
+kind = "casilla"
+casilla_id = "p01.representante-53-puerta"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 64
+source_cell = "A64"
+ordinal = "59"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f060"
+kind = "casilla"
+casilla_id = "p01.representante-54-datos-ementarios-de-domicilio"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 65
+source_cell = "A65"
+ordinal = "60"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f061"
+kind = "casilla"
+casilla_id = "p01.representante-55-localidad-poblacion"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 66
+source_cell = "A66"
+ordinal = "61"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f062"
+kind = "casilla"
+casilla_id = "p01.representante-56-codigo-postal"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 67
+source_cell = "A67"
+ordinal = "62"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f063"
+kind = "casilla"
+casilla_id = "p01.representante-58-codigo-de-provincia"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 68
+source_cell = "A68"
+ordinal = "63"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f064"
+kind = "casilla"
+casilla_id = "p01.representante-57-codigo-de-municipio"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 69
+source_cell = "A69"
+ordinal = "64"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f065"
+kind = "casilla"
+casilla_id = "p01.representante-59-telefono-fijo"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 70
+source_cell = "A70"
+ordinal = "65"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f066"
+kind = "casilla"
+casilla_id = "p01.representante-60-telefono-movil"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 71
+source_cell = "A71"
+ordinal = "66"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f067"
+kind = "casilla"
+casilla_id = "p01.representante-61-no-de-fax"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 72
+source_cell = "A72"
+ordinal = "67"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f068"
+kind = "casilla"
+casilla_id = "p01.comunidad-autonoma-de-e-el-ejercicio-indicado"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 73
+source_cell = "A73"
+ordinal = "68"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f069"
+kind = "casilla"
+casilla_id = "p01.asignacion-tributaria-a-la-iglesia-catolica"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 74
+source_cell = "A74"
+ordinal = "69"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f070"
+kind = "casilla"
+casilla_id = "p01.asignacion-de-cantidades-a-fines-sociales"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 75
+source_cell = "A75"
+ordinal = "70"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f071"
+kind = "casilla"
+casilla_id = "p01.declaracion-complementaria"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 76
+source_cell = "A76"
+ordinal = "71"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f072"
+kind = "casilla"
+casilla_id = "p01.declaracion-complementaria-2"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 77
+source_cell = "A77"
+ordinal = "72"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f073"
+kind = "casilla"
+casilla_id = "p01.numero-de-justificante"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 78
+source_cell = "A78"
+ordinal = "73"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f074"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 79
+source_cell = "A79"
+ordinal = "74"
+record_identity = "M15101000"
+
+[[entries]]
+export_field_id = "m151-2015.pagina01.f075"
+kind = "literal"
+literal = "</T15101000>"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
+source_refs = ["aeat-dr-151-2015"]
+[entries.anchor]
+sheet = "M15101000"
+source_row = 80
+source_cell = "A80"
+ordinal = "75"
+record_identity = "M15101000"

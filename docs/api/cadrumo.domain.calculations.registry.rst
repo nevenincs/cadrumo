@@ -72,6 +72,7 @@ Submodules
    cadrumo.domain.calculations.registry._loader_fingerprints
    cadrumo.domain.calculations.registry._m303_differentiated_deduction_projection
    cadrumo.domain.calculations.registry._m303_exonerado_390_projection
+   cadrumo.domain.calculations.registry._m303_orden_census_artefact
    cadrumo.domain.calculations.registry._m303_orden_constants
    cadrumo.domain.calculations.registry._m303_orden_keys
    cadrumo.domain.calculations.registry._m303_orden_legal

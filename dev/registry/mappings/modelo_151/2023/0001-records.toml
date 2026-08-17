@@ -1,0 +1,215 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "151"
+design_epoch = "2023"
+source_ref = "aeat-dr-151-2023"
+source_sha256 = "7680e5a21935c22f4b63deb0c96956d63fbcb287c5eb67a552daa7768ca0fcb9"
+
+[[records]]
+sheet = "M15101000"
+record_identity = "M15101000"
+export_record_id = "m151-page-01"
+record_type = "page-01"
+
+[[records]]
+sheet = "M15102000"
+record_identity = "M15102000"
+export_record_id = "m151-page-02"
+record_type = "page-02"
+
+[[records]]
+sheet = "M15103000"
+record_identity = "M15103000"
+export_record_id = "m151-page-03"
+record_type = "page-03"
+
+[[records]]
+sheet = "M15104000"
+record_identity = "M15104000"
+export_record_id = "m151-page-04"
+record_type = "page-04"
+
+[[records]]
+sheet = "M15105000"
+record_identity = "M15105000"
+export_record_id = "m151-page-05"
+record_type = "page-05"
+
+[[records]]
+sheet = "M15106000"
+record_identity = "M15106000"
+export_record_id = "m151-page-06"
+record_type = "page-06"
+
+[[records]]
+sheet = "M15107000"
+record_identity = "M15107000"
+export_record_id = "m151-page-07"
+record_type = "page-07"
+
+[[records]]
+sheet = "M15108000"
+record_identity = "M15108000"
+export_record_id = "m151-page-08"
+record_type = "page-08"
+
+[[records]]
+sheet = "M15109000"
+record_identity = "M15109000"
+export_record_id = "m151-page-09"
+record_type = "page-09"
+
+[[records]]
+sheet = "M15100000"
+record_identity = "M15100000"
+export_record_id = "m151-page-10"
+record_type = "page-10"
+
+[[records]]
+sheet = "M151DID00"
+record_identity = "M151DID00"
+export_record_id = "m151-did"
+record_type = "did"
+
+[[variable_envelopes]]
+source_ref = "aeat-dr-151-2023"
+source_sha256 = "7680e5a21935c22f4b63deb0c96956d63fbcb287c5eb67a552daa7768ca0fcb9"
+record_identity = "M15100"
+body_record_ids = ["m151-page-01", "m151-page-02", "m151-page-03", "m151-page-04", "m151-page-05", "m151-page-06", "m151-page-07", "m151-page-08", "m151-page-09", "m151-page-10", "m151-did"]
+
+[[variable_envelopes.prefix_fields]]
+role = "opening_tag"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M15100"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "M15100"
+
+[[variable_envelopes.prefix_fields]]
+role = "modelo"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M15100"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "M15100"
+
+[[variable_envelopes.prefix_fields]]
+role = "discriminant"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M15100"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "M15100"
+
+[[variable_envelopes.prefix_fields]]
+role = "filing_year"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M15100"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "M15100"
+
+[[variable_envelopes.prefix_fields]]
+role = "period"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M15100"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "M15100"
+
+[[variable_envelopes.prefix_fields]]
+role = "record_type"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M15100"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "M15100"
+
+[[variable_envelopes.prefix_fields]]
+role = "aux_opening_tag"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M15100"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "M15100"
+
+[[variable_envelopes.prefix_fields]]
+role = "pre_program_filler"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M15100"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+record_identity = "M15100"
+
+[[variable_envelopes.prefix_fields]]
+role = "program_identifier"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M15100"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "M15100"
+
+[[variable_envelopes.prefix_fields]]
+role = "between_identities_filler"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M15100"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "M15100"
+
+[[variable_envelopes.prefix_fields]]
+role = "developer_tax_id"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M15100"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "M15100"
+
+[[variable_envelopes.prefix_fields]]
+role = "post_developer_filler"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M15100"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "M15100"
+
+[[variable_envelopes.prefix_fields]]
+role = "aux_closing_tag"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M15100"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "M15100"
+
+[variable_envelopes.body_anchor]
+sheet = "M15100"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "M15100"
+
+[variable_envelopes.closer_anchor]
+sheet = "M15100"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "M15100"
+
+[variable_envelopes.total_anchor]
+source_row = 21
+source_cell = "A21"
+label = "total"
+length = "Variable"

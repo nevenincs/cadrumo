@@ -85,12 +85,41 @@ class SemanticMapAnchor(_StrictModel):
     #: :class:`RecordDesignIntermediateField.ordinal` is a straight 1:1
     #: projection of; this anchor field is the same value one join step later.
     #: The type permits ``None`` to match the parser exactly, but stays
-    #: REQUIRED (no default): every currently-authored anchor names a real
-    #: field with a real printed ordinal, and TOML has no way to author an
-    #: explicit null, so an omitted key refuses at load rather than silently
-    #: defaulting into an anchor no parser field can ever match.
-    ordinal: _AnchorOrdinal = Field(min_length=1)
+    #: REQUIRED (no default): every anchor naming a printed field names a real
+    #: printed ordinal, and TOML has no way to author an explicit null, so an
+    #: omitted key refuses at load rather than silently defaulting into an
+    #: anchor no parser field can ever match. The ONE field that legitimately
+    #: has no ordinal declares :attr:`ordinal_absent` instead -- see there.
+    ordinal: _AnchorOrdinal | None = Field(default=None, min_length=1)
+    #: Declares that AEAT printed this row with NO ordinal, so the anchor's
+    #: ``ordinal`` is genuinely ``None`` rather than merely unauthored.
+    #:
+    #: Required because the parser can now produce such a field and could not
+    #: before. A row AEAT prints without a naturaleza is staged as an unnamed
+    #: position candidate and admitted only by a gap fill, which cannot invent
+    #: the ordinal AEAT never printed: Modelo 184's ``151-155 PORCENTAJE DE
+    #: RENTA ATRIBUIBLE A MIEMBROS RESIDENTES`` is the worked case. Giving it a
+    #: synthetic ordinal would fabricate a printed LABEL, which is exactly what
+    #: the ``ordinal`` field's own contract forbids.
+    #:
+    #: This stays an EXPLICIT opt-in rather than a default so the safety the
+    #: required key bought is kept: omitting both keys still refuses, and only
+    #: an author stating "this row has no printed ordinal" reaches ``None``.
+    ordinal_absent: bool = False
     record_identity: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _require_ordinal_or_declared_absence(self) -> SemanticMapAnchor:
+        if self.ordinal_absent and self.ordinal is not None:
+            msg = "anchor declares ordinal_absent but also names an ordinal"
+            raise ValueError(msg)
+        if not self.ordinal_absent and self.ordinal is None:
+            msg = (
+                "anchor names no ordinal; author the ordinal AEAT printed, or declare "
+                "ordinal_absent = true when the design printed the row without one"
+            )
+            raise ValueError(msg)
+        return self
 
 
 def _coerce_envelope_prefix_role(value: object) -> object:

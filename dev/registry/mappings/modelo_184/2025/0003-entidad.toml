@@ -1,0 +1,906 @@
+schema_version = 1
+fragment_id = "entidad"
+modelo = "184"
+design_epoch = "2025"
+source_ref = "aeat-dr-184-2025"
+source_sha256 = "b1e2b7884946061d5584f03253745b2936bcd99359f4b096acfe238c42bc9fba"
+
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f001"
+kind = "literal"
+literal = "2"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 289
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f002"
+kind = "literal"
+literal = "184"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 292
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f003"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 294
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f004"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 297
+ordinal = "4"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f005"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 300
+ordinal = "5"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f006"
+kind = "filler"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 303
+ordinal = "6"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f007"
+kind = "header"
+producer_key = "taxpayer.surnames_or_legal_name"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 304
+ordinal = "7"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f008"
+kind = "casilla"
+casilla_id = "tipo2.tipo-hoja"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 308
+ordinal = "8"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f009"
+kind = "casilla"
+casilla_id = "tipo2.clave"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 314
+ordinal = "9"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f010"
+kind = "casilla"
+casilla_id = "tipo2.subclave"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 404
+ordinal = "10"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f011"
+kind = "casilla"
+casilla_id = "tipo2.clave-pais"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 499
+ordinal = "11"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f012"
+kind = "casilla"
+casilla_id = "tipo2.regimen-determinacion-rendimientos"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 554
+ordinal = "12"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f013"
+kind = "casilla"
+casilla_id = "tipo2.tipo-actividad"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 570
+ordinal = "13"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f014"
+kind = "casilla"
+casilla_id = "tipo2.epigrafe-iae"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 583
+ordinal = "14"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f015"
+kind = "casilla"
+casilla_id = "tipo2.cesionario-nif"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 590
+ordinal = "15"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f016"
+kind = "casilla"
+casilla_id = "tipo2.cesionario-denominacion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 601
+ordinal = "16"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f017"
+kind = "casilla"
+casilla_id = "tipo2.fecha-adquisicion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 621
+ordinal = "18"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f018"
+kind = "casilla"
+casilla_id = "tipo2.fecha-adquisicion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 622
+ordinal = "19"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f019"
+kind = "casilla"
+casilla_id = "tipo2.fecha-adquisicion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 623
+ordinal = "20"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f020"
+kind = "casilla"
+casilla_id = "tipo2.valor-liquidativo"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 625
+ordinal = "21"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f021"
+kind = "casilla"
+casilla_id = "tipo2.valor-adquisicion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 646
+ordinal = "22"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f022"
+kind = "casilla"
+casilla_id = "tipo2.ingresos-integros"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 671
+ordinal = "23"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f023"
+kind = "casilla"
+casilla_id = "tipo2.gastos"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 760
+ordinal = "24"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f024"
+kind = "casilla"
+casilla_id = "tipo2.renta-atribuible-importe"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 828
+ordinal = "25"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f025"
+kind = "casilla"
+casilla_id = "tipo2.porcentaje-reduccion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 913
+ordinal = "26"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f026"
+kind = "casilla"
+casilla_id = "tipo2.renta-atribuible-con-reduccion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 949
+ordinal = "27"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f027"
+kind = "casilla"
+casilla_id = "tipo2.ganancias-perdidas"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1000
+ordinal = "28"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f028"
+kind = "casilla"
+casilla_id = "tipo2.base-deduccion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1113
+ordinal = "29"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f029"
+kind = "casilla"
+casilla_id = "tipo2.retenciones"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1228
+ordinal = "30"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f030"
+kind = "casilla"
+casilla_id = "tipo2.situacion-inmueble"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1286
+ordinal = "31"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f031"
+kind = "casilla"
+casilla_id = "tipo2.referencia-catastral"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1306
+ordinal = "32"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f032"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.gastos-personal"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1330
+ordinal = "34"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f033"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.gastos-personal"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1333
+ordinal = "35"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f034"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.consumos-explotacion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1345
+ordinal = "36"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f035"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.consumos-explotacion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1348
+ordinal = "37"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f036"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.tributos-deducibles"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1356
+ordinal = "38"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f037"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.tributos-deducibles"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1359
+ordinal = "39"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f038"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.arrendamientos-canones"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1370
+ordinal = "40"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f039"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.arrendamientos-canones"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1373
+ordinal = "41"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f040"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.reparaciones-conservacion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1384
+ordinal = "42"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f041"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.reparaciones-conservacion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1387
+ordinal = "43"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f042"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.servicios-profesionales"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1399
+ordinal = "44"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f043"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.servicios-profesionales"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1402
+ordinal = "45"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f044"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.suministros"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1411
+ordinal = "46"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f045"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.suministros"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1414
+ordinal = "47"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f046"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.gastos-financieros"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1427
+ordinal = "48"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f047"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.gastos-financieros"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1430
+ordinal = "49"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f048"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.amortizaciones"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1441
+ordinal = "50"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f049"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.amortizaciones"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1444
+ordinal = "51"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f050"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.provisiones"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1476
+ordinal = "52"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f051"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.provisiones"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1479
+ordinal = "53"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f052"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.otros-gastos-deducibles"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1489
+ordinal = "54"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f053"
+kind = "casilla"
+casilla_id = "tipo2.gastos-actividad.otros-gastos-deducibles"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1492
+ordinal = "55"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f054"
+kind = "casilla"
+casilla_id = "tipo2.criterio-cobros-pagos"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1495
+ordinal = "56"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f055"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.intereses-financiacion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1523
+ordinal = "58"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f056"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.intereses-financiacion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1526
+ordinal = "59"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f057"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.conservacion-reparacion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1534
+ordinal = "60"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f058"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.conservacion-reparacion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1537
+ordinal = "61"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f059"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.intereses-gastos-reparacion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1551
+ordinal = "62"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f060"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.intereses-gastos-reparacion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1554
+ordinal = "63"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f061"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.tributos-recargos"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1563
+ordinal = "64"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f062"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.tributos-recargos"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1566
+ordinal = "65"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f063"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.saldos-dudoso-cobro"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1573
+ordinal = "66"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f064"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.saldos-dudoso-cobro"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1576
+ordinal = "67"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f065"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.cantidades-devengadas-terceros"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1586
+ordinal = "68"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f066"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.cantidades-devengadas-terceros"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1589
+ordinal = "69"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f067"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.primas-seguros"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1602
+ordinal = "70"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f068"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.primas-seguros"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1605
+ordinal = "71"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f069"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.amortizacion-inmueble"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1613
+ordinal = "72"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f070"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.amortizacion-inmueble"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1616
+ordinal = "73"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f071"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.amortizacion-bienes-muebles"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1625
+ordinal = "74"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f072"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.amortizacion-bienes-muebles"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1628
+ordinal = "75"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f073"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.otros-gastos-deducibles"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1640
+ordinal = "76"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f074"
+kind = "casilla"
+casilla_id = "tipo2.gastos-inmobiliario.otros-gastos-deducibles"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1644
+ordinal = "77"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[[entries]]
+export_field_id = "m184-2025.entidad.f075"
+kind = "casilla"
+casilla_id = "tipo2.dias-arrendamiento"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1648
+ordinal = "78"
+record_identity = "Tipo 2 - Registro De Rentas De La"

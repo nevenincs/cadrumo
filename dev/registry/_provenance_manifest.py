@@ -74,7 +74,7 @@ EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 6
 EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION: Final[int] = 2
 """Reviewed parser-to-wire normalization contract recorded for every field."""
 
-_LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 5
+_LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 6
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "_generation.provenance.json"
 """Internal JSON member ignored by the TOML-only registry loader."""
@@ -103,8 +103,13 @@ _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
         "source_refs",
     },
 )
+#: ``ordinal_absent`` joined this set when the parser gained the ability to
+#: read a row AEAT printed with NO ordinal -- a gap-filled position whose
+#: naturaleza cell was empty. It is part of the anchor identity, so it is
+#: normalised into the digest rather than dropped: two anchors differing only
+#: in whether the design printed an ordinal are different anchors.
 _SEMANTIC_MAP_ANCHOR_KEYS: Final[frozenset[str]] = frozenset(
-    {"sheet", "source_row", "source_cell", "ordinal", "record_identity"},
+    {"sheet", "source_row", "source_cell", "ordinal", "ordinal_absent", "record_identity"},
 )
 _VARIABLE_ENVELOPE_KEYS: Final[frozenset[str]] = frozenset(
     {
@@ -787,6 +792,7 @@ def _require_manifest_matches_current_authorities(
         raise RegistryValidationError("export provenance variable-envelope authority does not match generation")
 
 
+
 def _require_field_derivations_match_layout(
     field_derivations: tuple[ExportFieldDerivation, ...],
     loaded_layout: ExportLayoutDefinition,
@@ -865,6 +871,7 @@ def _normalise_semantic_map_entry(payload: Mapping[str, object]) -> dict[str, ob
             "source_row": anchor["source_row"],
             "source_cell": anchor["source_cell"],
             "ordinal": anchor["ordinal"],
+            "ordinal_absent": anchor["ordinal_absent"],
             "record_identity": anchor["record_identity"],
         },
         "export_field_id": payload["export_field_id"],
@@ -898,6 +905,7 @@ def _normalise_variable_envelope_contract(payload: Mapping[str, object]) -> dict
                     "source_row": anchor["source_row"],
                     "source_cell": anchor["source_cell"],
                     "ordinal": anchor["ordinal"],
+                    "ordinal_absent": anchor["ordinal_absent"],
                     "record_identity": anchor["record_identity"],
                 },
             },
@@ -919,6 +927,7 @@ def _normalise_variable_envelope_contract(payload: Mapping[str, object]) -> dict
             "source_row": body_anchor["source_row"],
             "source_cell": body_anchor["source_cell"],
             "ordinal": body_anchor["ordinal"],
+            "ordinal_absent": body_anchor["ordinal_absent"],
             "record_identity": body_anchor["record_identity"],
         },
         "body_record_ids": body_record_ids,
@@ -927,6 +936,7 @@ def _normalise_variable_envelope_contract(payload: Mapping[str, object]) -> dict
             "source_row": closer_anchor["source_row"],
             "source_cell": closer_anchor["source_cell"],
             "ordinal": closer_anchor["ordinal"],
+            "ordinal_absent": closer_anchor["ordinal_absent"],
             "record_identity": closer_anchor["record_identity"],
         },
         "total_anchor": {

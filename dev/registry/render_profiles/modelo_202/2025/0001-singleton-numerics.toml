@@ -1,0 +1,39 @@
+schema_version = 1
+fragment_id = "singleton-numerics"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "dr M202 (1)"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "dr M202 (1)"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m202-2025-devengo-ejercicio-year-yyyy"
+decision_statement = "The Devengo ejercicio renders as the four-digit filing year, unsigned, with no decimal component."
+justification = "The design leaves this field's Contenido cell blank while its own Descripcion names it Ejercicio. At four Num positions the only reading available is the four-digit year the export codec already owns."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "dr M202 (1)"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "dr M202 (1)"
+
+[design_identity]
+modelo = "202"
+design_epoch = "2025"
+source_ref = "aeat-dr-202-2025"
+source_sha256 = "04e7b349b24b982d985195d4ae38b68e72e75d606cf66c7ef30b62b281c7f82c"
