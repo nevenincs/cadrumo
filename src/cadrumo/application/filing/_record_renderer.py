@@ -73,6 +73,7 @@ def render_layout_records(
             layout=layout,
             registry_snapshot=registry_snapshot,
             binding_values=binding_values,
+            casilla_values=casilla_values,
             projection_plan=projection_plan,
         )
         if record.required and not rows:
@@ -105,6 +106,7 @@ def _render_rows_for_record(
     layout: ExportLayoutDefinition,
     registry_snapshot: RegistrySnapshot,
     binding_values: dict[tuple[BindingId, int | None], object],
+    casilla_values: dict[CasillaId, object],
     projection_plan: FilingProjectionPlan,
 ) -> tuple[tuple[RecordRenderRow, FilingRecordRenderContext], ...]:
     if record.repeat == "projection_rows":
@@ -123,7 +125,7 @@ def _render_rows_for_record(
                 occurrence=occurrence,
             ),
         )
-        for occurrence, row in enumerate(_record_render_rows(record, binding_values), 1)
+        for occurrence, row in enumerate(_record_render_rows(record, binding_values, casilla_values), 1)
     )
 
 
@@ -157,17 +159,37 @@ def _render_record_bytes(
 def _record_render_rows(
     record: ExportRecordDefinition,
     binding_values: dict[tuple[BindingId, int | None], object],
+    casilla_values: dict[CasillaId, object],
 ) -> tuple[RecordRenderRow, ...]:
     if record.repeat != "binding_rows":
-        return _single_record_render_row(record, binding_values)
+        return _single_record_render_row(record, binding_values, casilla_values)
     return _binding_record_render_rows(record, binding_values)
 
 
 def _single_record_render_row(
     record: ExportRecordDefinition,
     binding_values: dict[tuple[BindingId, int | None], object],
+    casilla_values: dict[CasillaId, object],
 ) -> tuple[RecordRenderRow, ...]:
-    if record.binding_record is not None and not _record_has_binding_value(record, binding_values):
+    """Emit the one occurrence of a non-repeating record, unless it carries nothing.
+
+    A fixed record deriving fields from a ``binding_record`` is suppressed only
+    when it would carry NO operator data at all. Both channels must be consulted,
+    because a page can mix them: Modelo 390's pagina 7 files eleven apartado 11
+    casillas alongside the apartado 12 prorrata bindings. Testing the binding
+    channel alone drops that page for every declarant who has operaciones
+    especificas but no prorrata -- and where the record is ``required``, turns the
+    whole export into a refusal rather than a silent omission.
+
+    Literal and structural fields deliberately do NOT keep a page alive: an
+    otherwise-empty page carrying only its own identifier constants is exactly
+    the page this suppression exists to leave out of the fichero.
+    """
+    if (
+        record.binding_record is not None
+        and not _record_has_binding_value(record, binding_values)
+        and not _record_has_casilla_value(record, casilla_values)
+    ):
         return ()
     return (RecordRenderRow(row_index=None, active_binding_ids=frozenset()),)
 
@@ -320,6 +342,18 @@ def _record_has_binding_value(
     binding_ids = {field.binding for field in _record_binding_fields(record)}
     return any(
         binding_id in binding_ids and value not in {None, ""} for (binding_id, _), value in binding_values.items()
+    )
+
+
+def _record_has_casilla_value(
+    record: ExportRecordDefinition,
+    casilla_values: dict[CasillaId, object],
+) -> bool:
+    return any(
+        field.kind == CasillaFieldKind.CASILLA
+        and field.casilla_id is not None
+        and casilla_values.get(field.casilla_id) not in {None, ""}
+        for field in record.fields
     )
 
 

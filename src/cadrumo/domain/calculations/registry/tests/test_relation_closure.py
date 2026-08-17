@@ -310,7 +310,7 @@ def test_m303_first_quarter_history_requires_an_observation_backed_target() -> N
     """2009/1T may read filed 2008/4T, but only as historical observation data."""
     modelos, catalogues = _committed_tree()
     modelo_303 = _modelo(modelos, "303")
-    revision = modelo_303.revisions["2009-y-siguientes"]
+    revision = modelo_303.revisions["2009-2022"]
     binding_id = "modelo-303-compensacion-pendiente-anteriores"
     bindings = tuple(
         binding.model_copy(update={"source": BindingSourceKind.MANUAL_INPUT}) if binding.id == binding_id else binding
@@ -347,7 +347,7 @@ def test_registry_validator_rejects_relation_source_casilla_id_that_is_only_a_bi
     target_modelo = _modelo(modelos, "390")
     source_modelo = _modelo(modelos, "303")
     revision = target_modelo.revisions["2010-y-siguientes"]
-    source_revision = source_modelo.revisions["2009-y-siguientes"]
+    source_revision = source_modelo.revisions["2009-2022"]
     binding_id = source_revision.bindings[0].id
     assert binding_id not in {casilla.id for casilla in source_revision.casillas}
 
@@ -366,7 +366,7 @@ def test_registry_validator_rejects_relation_source_casilla_display_token() -> N
     target_modelo = _modelo(modelos, "390")
     source_modelo = _modelo(modelos, "303")
     revision = target_modelo.revisions["2010-y-siguientes"]
-    source_revision = source_modelo.revisions["2009-y-siguientes"]
+    source_revision = source_modelo.revisions["2009-2022"]
     relation = next(item for item in revision.relations if item.id == "modelo-390-rel-303-cuota-devengada-total")
     source_casilla = next(item for item in source_revision.casillas if item.number != item.id)
     assert source_casilla.number != source_casilla.id
@@ -415,7 +415,7 @@ def test_registry_validator_rejects_previous_filing_source_casilla_id_missing_fr
 def test_registry_validator_rejects_previous_filing_source_casilla_display_token() -> None:
     modelos, catalogues = _committed_tree()
     modelo = _modelo(modelos, "303")
-    revision = modelo.revisions["2009-y-siguientes"]
+    revision = modelo.revisions["2009-2022"]
     binding = next(item for item in revision.bindings if item.id == "modelo-303-compensacion-pendiente-anteriores")
     selector = selector_as_dict(binding)
     source_casilla = next(item for item in revision.casillas if item.id == selector["source_casilla_id"])
@@ -497,7 +497,7 @@ def test_slot_hygiene_rejects_non_wallet_relation_reusing_wallet_binding() -> No
     """A wallet binding cannot exempt a second relation from the collision gate."""
     modelos, _catalogues = _committed_tree()
     modelo = _modelo(modelos, "303")
-    revision = modelo.revisions["2009-y-siguientes"]
+    revision = modelo.revisions["2009-2022"]
     wallet_relation = next(
         relation for relation in revision.relations if relation.id == "modelo-303-rel-self-compensacion-anteriores"
     )

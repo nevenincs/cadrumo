@@ -292,6 +292,11 @@ _VALUE_POLICY_SHAPES: Mapping[ExportValuePolicy, tuple[str, str, str, bool, str 
     ExportValuePolicy.DDMMYYYY: ("date", "none", "none", False, "ddmmaaaa"),
     ExportValuePolicy.DIGIT_STRING: ("text", "none", "none", False, None),
     ExportValuePolicy.IDENTIFIER_DIGITS: ("text", "none", "none", False, None),
+    # Blank-filled and left-justified, like every other alphanumeric slot. The
+    # digit-identity policies above take "none"/"none" because an identifier
+    # must fill its slot exactly; prose does not, and zero-filling it would
+    # corrupt the value rather than pad it.
+    ExportValuePolicy.MISTYPED_ALPHANUMERIC_TEXT: ("text", "right_space", "left", False, None),
 }
 
 _VALUE_POLICY_UNRENDERABLE_KINDS = {CasillaFieldKind.FILLER, CasillaFieldKind.LITERAL, CasillaFieldKind.CHECKSUM}

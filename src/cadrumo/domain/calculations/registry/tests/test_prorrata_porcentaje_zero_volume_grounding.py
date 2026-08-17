@@ -24,7 +24,7 @@ asserts a total loss of the deduction right on a taxpayer who declared no fact
 supporting it.
 
 The two live revision families disagreed on exactly this branch: the post-2022 family
-returned 100 while ``2009-y-siguientes`` still returned 0, so a fully-taxable
+returned 100 while ``2009-2022`` still returned 0, so a fully-taxable
 trader amending a 2009-2022 filing had every deduction zeroed. The applicable
 law is identical across both windows — art. 102 was last amended by Ley 3/2006
 (in force 01/01/2006, before the earlier window opens) and art. 104's only
@@ -68,7 +68,7 @@ _VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
     surface="test casilla id",
 )
 
-#: 2020 resolves to the 2009-y-siguientes revision (period_selector 2009-2022),
+#: 2020 resolves to the 2009-2022 revision (period_selector 2009-2022),
 #: 2024 to its early-period epoch. Both windows sit entirely inside the unamended
 #: art. 102.Uno / art. 104.Uno text, so both are bound by the same reading.
 _LIVE_FILING_YEARS = (2020, 2024)

@@ -33,6 +33,8 @@ from ...application.modelo import (
     ModeloCalculationRevisionSelector,
     ModeloVerifySelector,
     file_modelo_revision,
+    get_calculation_revision,
+    get_work_unit,
     require_profile_ready_for_work_unit,
     verify_modelo_revision_with_preconditions,
 )
@@ -45,7 +47,6 @@ from ...core.resources import resources
 from ...domain.calculations.registry import RegistrySnapshotError, derive_taxpayer_files_economic_activity
 from ...domain.modelos import CalculationRevisionState
 from ._common import _emit_envelope, _filing_taxpayer_or_refuse
-from ._modelo_cli_support import load_calculation_revision, load_work_unit
 from ._modelo_payloads import (
     CrossPeriodCleanStatePayload,
     CrossPeriodDependencyEvidencePayload,
@@ -167,7 +168,7 @@ def _register_work_verify_command(work_app: typer.Typer, *, deps: _VerificationD
             selector=select.to_calculation_revision_selector().value,
             default_for="verify",
         )
-        require_profile_ready_for_work_unit(load_work_unit(selected_revision.work_unit_id))
+        require_profile_ready_for_work_unit(get_work_unit(selected_revision.work_unit_id))
         workflow_profile = _filing_taxpayer_or_refuse(workflow_state_repository().load())
         # A revision already out of BORRADOR is the current verified answer, so
         # the verify call is a guarded-idempotent no-op that returns the
@@ -211,7 +212,7 @@ def _register_work_verify_command(work_app: typer.Typer, *, deps: _VerificationD
             )
             lines.append(noop_message)
         notices.extend(
-            m184_socio_handoff_notices(load_calculation_revision(selected_revision.calculation_revision_id)),
+            m184_socio_handoff_notices(get_calculation_revision(selected_revision.calculation_revision_id)),
         )
         _emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines, notices=notices)
 
@@ -457,7 +458,7 @@ def _register_work_file_command(work_app: typer.Typer, *, deps: _VerificationDep
             selector=select,
             default_for="file",
         )
-        require_profile_ready_for_work_unit(load_work_unit(selected_revision.work_unit_id))
+        require_profile_ready_for_work_unit(get_work_unit(selected_revision.work_unit_id))
         workflow_profile = _filing_taxpayer_or_refuse(workflow_state_repository().load())
         # A revision already in PRESENTADO is the current filed answer, so the
         # file call is a guarded-idempotent no-op that returns the existing
@@ -495,7 +496,7 @@ def _register_work_file_command(work_app: typer.Typer, *, deps: _VerificationDep
             )
             lines.append(noop_message)
         notices.extend(
-            m184_socio_handoff_notices(load_calculation_revision(record.calculation_revision_id)),
+            m184_socio_handoff_notices(get_calculation_revision(record.calculation_revision_id)),
         )
         _emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines, notices=notices or None)
 

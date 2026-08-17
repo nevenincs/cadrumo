@@ -823,6 +823,79 @@ def _fold_untagged_desglose_components(fields: list[RecordDesignField]) -> list[
     return folded
 
 
+#: Spanish number words AEAT spells a subdivision count with, beside the digits.
+_SUBDIVISION_COUNT_WORDS: Final = {
+    "dos": 2,
+    "tres": 3,
+    "cuatro": 4,
+    "cinco": 5,
+    "seis": 6,
+    "siete": 7,
+    "ocho": 8,
+    "nueve": 9,
+    "diez": 10,
+}
+#: AEAT stating how many sub-fields a printed row divides into -- "Este campo se
+#: subdivide en cuatro:", "se subdivide en otros dos:", "se desglosa en 3". Read
+#: from description and content together, because AEAT puts it in either.
+_DECLARED_SUBDIVISION: Final = re.compile(
+    r"se\s+(?:subdivide|desglosa|divide)\s+en\s+(?:otros\s+|los\s+)?"
+    rf"(\d+|{'|'.join(_SUBDIVISION_COUNT_WORDS)})\b",
+    re.IGNORECASE,
+)
+
+
+def _declared_subdivision_count(field: RecordDesignField) -> int | None:
+    """Return how many sub-fields ``field`` says it divides into, else ``None``."""
+    text = f"{field.description or ''} {field.content or ''}"
+    normalised = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
+    match = _DECLARED_SUBDIVISION.search(normalised)
+    if match is None:
+        return None
+    token = match.group(1).lower()
+    return int(token) if token.isdigit() else _SUBDIVISION_COUNT_WORDS[token]
+
+
+def _solve_declared_desglose_holes(
+    *,
+    parent: RecordDesignField,
+    covered: set[int],
+    by_offset: Mapping[int, list[_PdfRow]],
+    wanted: int,
+) -> list[_PdfRow] | None:
+    """Return the ``wanted`` staged candidates that exactly fill ``parent``'s holes.
+
+    A search rather than a walk, because AEAT nests these declarations and
+    stages overlapping candidates at one offset: Modelo 184 holds both
+    ``151-155 PORCENTAJE...`` and the ``151- 153 ENTERO`` inside it, and only the
+    first yields the declared count. Taking whichever was read last picks the
+    wrong one silently, so every candidate at a hole's first byte is tried and
+    the solution must consume every hole byte in exactly ``wanted`` fields.
+
+    Returns ``None`` unless the fill is unambiguous in that arithmetic sense.
+    The search is bounded by the parent's own span, which is a printed row.
+    """
+    end = parent.offset + parent.length
+
+    def walk(position: int, remaining: int) -> list[_PdfRow] | None:
+        while position < end and position in covered:
+            position += 1
+        if position >= end:
+            return [] if remaining == 0 else None
+        if remaining == 0:
+            return None
+        for candidate in by_offset.get(position, ()):
+            stop = position + candidate.length
+            if stop > end or any(byte in covered for byte in range(position, stop)):
+                continue
+            tail = walk(stop, remaining - 1)
+            if tail is not None:
+                return [candidate, *tail]
+        return None
+
+    return walk(parent.offset, wanted)
+
+
 def _tiles_exactly(parent: RecordDesignField, run: list[RecordDesignField]) -> bool:
     """Return whether ``run`` covers ``parent``'s span end to end with no gap."""
     expected = parent.offset
@@ -1764,9 +1837,111 @@ class _PdfSheetDraft:
         if admitted:
             self.fields = sorted([*self.fields, *admitted], key=lambda read: read.offset)
 
+    def fill_declared_desglose_gaps(self) -> None:
+        """Admit a dropped sub-field whose absence AEAT's own declared COUNT proves.
+
+        :meth:`fill_unread_gaps` admits only into a span NO read row claims, and
+        that guard is deliberately conservative: the candidate shape is
+        overwhelmingly prose, because AEAT routinely opens a field's description
+        with that field's own range, and 41 bundled designs do. Admitting into a
+        claimed span on containment alone would turn that prose into invented
+        positions -- the Modelo 190 ``@108+1`` and Modelo 156 one-byte
+        ``APELLIDOS`` class of fabrication, the worst failure available here.
+
+        A desglose parent's span is the one place that guard is too strong, and
+        only when the design itself supplies the arithmetic. Where AEAT writes
+        "Este campo se subdivide en cuatro", the count is the authority stating
+        how many sub-fields exist. If fewer were read, the run leaves a hole, and
+        a staged candidate fills that hole EXACTLY such that the sub-fields then
+        tile the parent end to end AND number exactly the declared count, then
+        the candidate is the dropped row and nothing else fits: three
+        independent facts -- the count, the tiling, and the exact hole -- all have
+        to agree at once.
+
+        Modelo 184 is the worked case and, measured across every bundled PDF
+        design, the ONLY site where all three agree. Its ``@147+9`` says "se
+        subdivide en cuatro:" over sub-fields at 147, 148 and 149-150, leaving
+        151-155 unread, because AEAT printed ``151-155 PORCENTAJE DE RENTA
+        ATRIBUIBLE A MIEMBROS RESIDENTES`` with no naturaleza on the naming row
+        while its neighbour ``149-150 Alfabetico CLAVE PAIS:`` carries one -- the
+        same omission that cost Modelo 296 its ``413-432 CODIGO LEI``.
+
+        The conjunction is what keeps this safe, and each clause excludes real
+        sites. Modelo 038's eleven chart-geometry artefacts declare no count and
+        are refused at the first clause. Modelos 165 and 280 declare TWO, already
+        read two, and hold a one-byte gap: admitting there would make three where
+        AEAT says two, so the count clause refuses them and their genuine
+        one-byte defect is left visible rather than papered over.
+        """
+        if not self.unnamed_candidates or not self.fields:
+            return
+        # Grouped, never a single candidate per offset: AEAT nests these. Modelo
+        # 184 stages BOTH "151-155 PORCENTAJE..." and the "151- 153 ENTERO" it
+        # subdivides into, so keying one candidate per offset silently picks
+        # whichever was read last and loses the one that actually fits.
+        by_offset: dict[int, list[_PdfRow]] = {}
+        for candidate in self.unnamed_candidates:
+            by_offset.setdefault(candidate.offset, []).append(candidate)
+        admitted: list[RecordDesignField] = []
+        index = 0
+        while index < len(self.fields):
+            parent = self.fields[index]
+            run: list[RecordDesignField] = []
+            cursor = index + 1
+            while cursor < len(self.fields):
+                child = self.fields[cursor]
+                if (
+                    child.offset >= parent.offset
+                    and child.offset + child.length <= parent.offset + parent.length
+                    and (child.offset, child.length) != (parent.offset, parent.length)
+                ):
+                    run.append(child)
+                    cursor += 1
+                else:
+                    break
+            index = cursor if run else index + 1
+            declared = _declared_subdivision_count(parent)
+            # ``run`` may be EMPTY. Modelo 190's 81-107 and 108-147 each say
+            # "Este campo se subdivide en tres/cuatro" and NONE of their
+            # sub-rows was read, so requiring an already-read child would
+            # skip exactly the designs where the whole desglose went unread.
+            # The declared count still carries the proof: the candidates must
+            # tile the parent end to end AND number exactly what it declares.
+            if declared is None or _tiles_exactly(parent, run) or len(run) >= declared:
+                continue
+            covered: set[int] = set()
+            for child in run:
+                covered.update(range(child.offset, child.offset + child.length))
+            chosen = _solve_declared_desglose_holes(
+                parent=parent,
+                covered=covered,
+                by_offset=by_offset,
+                wanted=declared - len(run),
+            )
+            if chosen is None:
+                continue
+            fillers = [
+                RecordDesignField(
+                    sheet=self.name,
+                    row=candidate.source_row,
+                    ordinal=None,
+                    offset=candidate.offset,
+                    length=candidate.length,
+                    type_code=candidate.type_code,
+                    description=candidate.description,
+                )
+                for candidate in chosen
+            ]
+            if not _tiles_exactly(parent, sorted([*run, *fillers], key=lambda read: read.offset)):
+                continue
+            admitted.extend(fillers)
+        if admitted:
+            self.fields = sorted([*self.fields, *admitted], key=lambda read: read.offset)
+
     def finish(self, *, source_label: str) -> RecordDesignSheet:
         self.finish_current()
         self.fill_unread_gaps()
+        self.fill_declared_desglose_gaps()
         self.fields = _fold_untagged_desglose_components(self.fields)
         total_positions = max((field.offset + field.length - 1 for field in self.fields), default=None)
         sheet = RecordDesignSheet(
@@ -2317,6 +2492,7 @@ def _unnamed_position_candidate(
     :meth:`_PdfSheetDraft.fill_unread_gaps`, and only into a span no read row
     claims -- so it can add a field the sheet was missing entirely and can never
     displace, override or duplicate one that was read.
+
     """
     narrative = _NARRATIVE_PDF_ROW_RE.match(line)
     if narrative is None or _naturaleza_or_none(narrative.group("type")) is not None:
@@ -2349,7 +2525,7 @@ def _unnamed_position_candidate(
         ordinal=None,
         offset=start,
         length=end - start + 1,
-        type_code=_ABSENT_NATURALEZA_TYPE_CODE,
+        type_code=ABSENT_NATURALEZA_TYPE_CODE,
         description=text,
     )
 
@@ -2770,7 +2946,7 @@ _VISUAL_CHART_TYPE_CODE = "No consta en gráfico"
 #: at all: here the column exists and this one row is blank in it. Never a
 #: guess -- an inferred "Alfanumerico" would be indistinguishable from one AEAT
 #: actually printed.
-_ABSENT_NATURALEZA_TYPE_CODE = "No consta"
+ABSENT_NATURALEZA_TYPE_CODE = "No consta"
 
 _REVERSED_VISUAL_CHART_WORDS = {
     "AICNIVORP",

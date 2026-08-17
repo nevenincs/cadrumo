@@ -35,7 +35,6 @@ from ...application.modelo import (
     WorkUnitNotFoundError,
     build_work_calculate_input_bundle,
     declared_modelo_period_tokens,
-    get_calculation_revision,
     get_work_unit,
     is_detail_casilla_override_key,
     modelo_work_create_refusal_locale_key,
@@ -63,7 +62,7 @@ from ._errors import CliRefusedBoundaryError
 from ._modelo_rendering import short_id
 
 if TYPE_CHECKING:
-    from ...domain.modelos import CalculationRevision, FilingInstanceEvidence, WorkUnit
+    from ...domain.modelos import FilingInstanceEvidence
 
 _log = get_logger(__name__)
 
@@ -715,26 +714,6 @@ def parse_revision_selector(value: str) -> ModeloCalculationRevisionSelector:
         ) from exc
 
 
-def load_work_unit(work_unit_id: str) -> WorkUnit:
-    """Return one work unit by id through the shared CLI support facade.
-
-    Modelo command modules delegate work-unit lookup here so the raw
-    ``get_work_unit`` application selector is called from exactly one CLI
-    site, keeping work/revision selection policy out of the command bodies.
-    """
-    return get_work_unit(work_unit_id)
-
-
-def load_calculation_revision(calculation_revision_id: CalculationRevisionId) -> CalculationRevision:
-    """Return one :class:`CalculationRevision` by id through the shared support facade.
-
-    Companion to :func:`load_work_unit`: the raw ``get_calculation_revision``
-    application selector is reached from this one CLI site, so command modules
-    do not re-derive revision selection policy locally.
-    """
-    return get_calculation_revision(calculation_revision_id)
-
-
 def resolve_explicit_or_active_bucket_id(bucket_id: str | None) -> str:
     """Return an explicit ``--bucket-id``, or the active profile bucket when unset.
 
@@ -816,8 +795,6 @@ __all__ = [
     "OutputLanguageOpt",
     "bad_parameter_from_error",
     "bad_parameter_from_localized_context",
-    "load_calculation_revision",
-    "load_work_unit",
     "optional_decimal_option",
     "parse_binding_override",
     "parse_casilla_override",
