@@ -109,6 +109,7 @@ from ...application.modelo import (
     ensure_recipient_encryption_keypair,
     ensure_review_package_signing_keypair,
     export_modelo_revision,
+    get_work_unit,
     import_feedback_package,
     resolve_modelo_revision_for_operator_target,
     review_package_signing_public_key,
@@ -123,7 +124,6 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
 from ._common import _emit_envelope, _filing_taxpayer_or_refuse
 from ._modelo_cli_support import (
-    load_work_unit,
     parse_revision_selector,
     resolve_default_actor,
     resolve_explicit_or_active_bucket_id,
@@ -291,7 +291,7 @@ def review_package_build(
     target_revision_id = selected_revision.calculation_revision_id
 
     resolved_actor = actor or resolve_default_actor()
-    work_unit = load_work_unit(selected_revision.work_unit_id)
+    work_unit = get_work_unit(selected_revision.work_unit_id)
 
     # Pin staging beside the final destination rather than the OS-shared
     # temp directory: the fichero-BOE draft staged here is plaintext filing

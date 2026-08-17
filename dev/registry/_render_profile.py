@@ -22,6 +22,7 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_valida
 from cadrumo.core import is_link_like, iter_directory
 from cadrumo.core.hashing import content_hash_hex, sha256_file
 from cadrumo.domain.calculations.registry import (
+    ABSENT_NATURALEZA_TYPE_CODE,
     ExportValuePolicy,
     ModeloId,
     RegistryValidationError,
@@ -107,8 +108,26 @@ class RenderProfileAnchor(_StrictModel):
     #: The ordinal AEAT printed, verbatim -- a str because it is a printed LABEL,
     #: never an arithmetic value. Mirrors
     #: :attr:`domain.calculations.registry.RecordDesignField.ordinal`.
-    ordinal: _AnchorOrdinal = Field(min_length=1)
+    ordinal: _AnchorOrdinal | None = Field(default=None, min_length=1)
+    #: Declares that AEAT printed this row with NO ordinal, mirroring
+    #: :attr:`SemanticMapAnchor.ordinal_absent` for the same reason: a row whose
+    #: naturaleza AEAT omitted is admitted by a gap fill that cannot invent the
+    #: ordinal AEAT never printed, and such a row is exactly the one this profile
+    #: must be able to anchor. Kept an EXPLICIT opt-in so omitting both keys
+    #: still refuses rather than defaulting into an anchor nothing can match.
+    ordinal_absent: bool = False
     record_identity: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _require_ordinal_or_declared_absence(self) -> RenderProfileAnchor:
+        if self.ordinal_absent and self.ordinal is not None:
+            raise ValueError("anchor declares ordinal_absent but also names an ordinal")
+        if not self.ordinal_absent and self.ordinal is None:
+            raise ValueError(
+                "anchor names no ordinal; author the ordinal AEAT printed, or declare "
+                "ordinal_absent = true when the design printed the row without one",
+            )
+        return self
 
 
 class OfficialSourceEvidence(_StrictModel):
@@ -226,6 +245,7 @@ class SingletonNumericRule(_StrictModel):
         "year_last_two_digits",
         "month_mm",
         "day_dd",
+        "mistyped_alphanumeric_text",
     ]
     value_policy: RequiredExportValuePolicyValue
     integer_digits: int = Field(ge=0)
@@ -263,6 +283,7 @@ class SingletonNumericRule(_StrictModel):
             "year_last_two_digits": ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS,
             "month_mm": ExportValuePolicy.TWO_DIGIT_MONTH,
             "day_dd": ExportValuePolicy.TWO_DIGIT_DAY,
+            "mistyped_alphanumeric_text": ExportValuePolicy.MISTYPED_ALPHANUMERIC_TEXT,
         }[self.semantic_kind]
         if self.value_policy != required_policy:
             raise ValueError(f"{self.semantic_kind} requires value_policy {required_policy!r}")
@@ -286,6 +307,10 @@ class SingletonNumericRule(_StrictModel):
         if self.semantic_kind == "enumeration" and any(len(item) > self.integer_digits for item in self.allowed_values):
             raise ValueError("enumeration allowed_values must fit the declared integer width")
         exact_shapes = {
+            # Zero digits in both positions, because the slot has no numeric
+            # reading at all. Declaring a width here would re-assert the very
+            # naturaleza this kind exists to contradict.
+            "mistyped_alphanumeric_text": (0, 0),
             "checkbox": (1, 0),
             "year_yyyy": (4, 0),
             "year_last_two_digits": (2, 0),
@@ -575,9 +600,25 @@ def validate_render_profile_authority(
         # equality here would refuse every PDF design, whose naturaleza the
         # parser canonicalises to ``Numerico``, leaving those fields eligible for
         # a rule that could never be written.
-        if field.length == 17 or not _is_numeric_aeat_type(field.aeat_type):
+        # An absent naturaleza is admitted for the same reason it is eligible:
+        # AEAT printed the type cell EMPTY, so there is no naturaleza to agree
+        # with, and the reviewed rule is the only thing that can state the wire
+        # representation. Refusing here would make that field eligible for a
+        # rule the validator then rejects, which is the contradiction the
+        # comment above warns about, one case further along.
+        if field.length == 17 or not (
+            _is_numeric_aeat_type(field.aeat_type) or _has_absent_naturaleza(field)
+        ):
             raise RegistryValidationError(f"smaller singleton rule conflicts with official field at {rule.anchor!r}")
-        if rule.integer_digits + rule.decimal_digits != field.length:
+        # A digit budget is checked against the slot for every kind that HAS
+        # one. The mistyped-alphanumeric kind has none by construction -- it
+        # exists to say the slot carries no number -- so requiring its zeros to
+        # equal a 100-position width would refuse the only rule that can be
+        # written for it, the same contradiction the eligibility comments above
+        # guard against.
+        if rule.semantic_kind != "mistyped_alphanumeric_text" and (
+            rule.integer_digits + rule.decimal_digits != field.length
+        ):
             raise RegistryValidationError(
                 f"smaller singleton representation width conflicts with official length at {rule.anchor!r}",
             )
@@ -654,6 +695,27 @@ def _is_source_reserved_field(field: RecordDesignIntermediateField) -> bool:
     return _RESERVED_DESCRIPTION_MARKER in field.normalized_description.casefold()
 
 
+def _has_absent_naturaleza(field: RecordDesignIntermediateField) -> bool:
+    """Whether AEAT printed this row's naturaleza cell EMPTY.
+
+    The strongest case for a reviewed rule there is, and it was excluded. A
+    numeric field at least tells the renderer it is numeric; a row AEAT printed
+    with no naturaleza at all states nothing about its wire representation, and
+    the shipped parser records exactly that by stamping the absent-naturaleza
+    marker rather than guessing a type. Modelo 184's ``151-155 PORCENTAJE DE
+    RENTA ATRIBUIBLE A MIEMBROS RESIDENTES`` is the worked case: its own prose
+    says "campo numerico" and subdivides it into ENTERO and DECIMAL, so the wire
+    fact is knowable and reviewable -- but it lives in the description, which is
+    exactly the evidence a render profile exists to carry.
+
+    Excluding these did not make the renderer safe: it made the field invisible
+    to the profile's exhaustive-coverage check and then crashed the renderer on
+    an unsupported type, so the gap surfaced as a late refusal instead of as the
+    reviewable rule it should have demanded.
+    """
+    return field.aeat_type.strip() == ABSENT_NATURALEZA_TYPE_CODE
+
+
 def _is_numeric_aeat_type(aeat_type: str) -> bool:
     """Whether ``aeat_type`` names a numeric naturaleza, however AEAT spelled it.
 
@@ -709,7 +771,7 @@ def project_render_profile_eligibility(
     eligible = tuple(
         field
         for field in fixed_fields
-        if _is_numeric_aeat_type(field.aeat_type)
+        if (_is_numeric_aeat_type(field.aeat_type) or _has_absent_naturaleza(field))
         and _states_no_wire_fact(field)
         and not _is_source_reserved_field(field)
     )
@@ -800,11 +862,16 @@ def _compile_width_17_rules(rules: Iterable[Width17MembershipRule]) -> tuple[Wid
 
 
 def _field_anchor(field: RecordDesignIntermediateField) -> RenderProfileAnchor:
+    # ``ordinal_absent`` is DERIVED here rather than authored: this anchor is
+    # built from the parser field itself, so a missing ordinal is an observed
+    # fact about the design and not an authoring claim. The authored side keeps
+    # the explicit declaration, which is what the comparison below is against.
     return RenderProfileAnchor(
         sheet=field.sheet,
         source_row=field.source_row,
         source_cell=field.source_cell,
         ordinal=field.ordinal,
+        ordinal_absent=field.ordinal is None,
         record_identity=field.record_identity,
     )
 

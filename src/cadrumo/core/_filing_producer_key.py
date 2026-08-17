@@ -199,6 +199,39 @@ class FilingProducerKey(StrEnum):
     M353_REGIMEN_ESPECIAL_INSCRITO_REDEME = "m353.regimen_especial.inscrito_redeme"
     M353_GRUPO_NORMATIVA_FORAL = "m353.grupo_normativa_foral"
     M353_SIN_ACTIVIDAD = "m353.sin_actividad"
+    #: Modelo 202's identification block asks which Impuesto sobre Sociedades
+    #: regime the entity files under, and the answer decides which of the form's
+    #: two liquidation modalities applies and at what rate. None is a casilla:
+    #: they are facts ABOUT the filer, carried in one-character slots AEAT marks
+    #: "X o blanco" or with its own small enumerations, and no box number is
+    #: printed beside any of them on the diseño.
+    M202_CNAE_ACTIVIDAD_PRINCIPAL = "m202.cnae_actividad_principal"
+    M202_REGIMEN_LEY_11_2009_SOCIMI = "m202.regimen.ley_11_2009_socimi"
+    M202_REGIMEN_LEY_49_2002_SIN_FINES_LUCRATIVOS = "m202.regimen.ley_49_2002_sin_fines_lucrativos"
+    M202_REGIMEN_ENTIDADES_NAVIERAS_TONELAJE = "m202.regimen.entidades_navieras_tonelaje"
+    M202_REGIMEN_ARTICULO_101_LIS_REDUCIDA_DIMENSION = "m202.regimen.articulo_101_lis_reducida_dimension"
+    M202_REGIMEN_ENTIDAD_CAPITAL_RIESGO = "m202.regimen.entidad_capital_riesgo"
+    M202_CIFRA_NEGOCIOS_DOCE_MESES_UMBRAL = "m202.cifra_negocios_doce_meses_umbral"
+    #: AEAT's own slot is "Cooperativa fiscalmente protegida u Otras entidades con
+    #: posibilidad de aplicar dos tipos impositivos", one enumeration answering
+    #: both. Naming it for the cooperativa alone would drop the half of the slot
+    #: that decides whether a second tipo applies at all.
+    M202_COOPERATIVA_O_MULTIPLES_TIPOS = "m202.cooperativa_o_multiples_tipos"
+    #: The 2025 edition splits that one slot in two and adds a third: a low-cifra
+    #: marker and a separate multiple-tipos marker beside the cooperativa flag.
+    M202_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_BAJO_UMBRAL = "m202.cifra_negocios_periodo_anterior_bajo_umbral"
+    M202_MULTIPLES_TIPOS_IMPOSITIVOS = "m202.multiples_tipos_impositivos"
+    M202_COOPERATIVA_FISCALMENTE_PROTEGIDA = "m202.cooperativa_fiscalmente_protegida"
+    M202_TIPO_GRAVAMEN_IMPUESTO_SOCIEDADES = "m202.tipo_gravamen_impuesto_sociedades"
+    M202_IMPORTE_NETO_CIFRA_NEGOCIOS_TRAMO = "m202.importe_neto_cifra_negocios_tramo"
+    M202_MARCA_INSTRUMENTAL = "m202.marca_instrumental"
+    #: The slot AEAT prints for "Liquidación de modalidad A ó B", which selects
+    #: which of the form's two liquidation blocks the filer completed. It is a
+    #: discriminant, not a declared amount, and a negative filing depends on it.
+    M202_DISCRIMINANTE_DECLARACION_NEGATIVA = "m202.discriminante_declaracion_negativa"
+    M202_NORMATIVA_TERRITORIO_FORAL = "m202.normativa_territorio_foral"
+    M202_COMUNICACION_DATOS_ADICIONALES = "m202.comunicacion_datos_adicionales"
+    M202_NUMERO_REFERENCIA_SOCIEDADES = "m202.numero_referencia_sociedades"
     #: IRNR party identities. Modelo 210 separates the person who FILES from the
     #: person the income belongs to, and records in which of six capacities the
     #: filer acts, so neither `taxpayer.*` nor `presenter.*` can carry these:

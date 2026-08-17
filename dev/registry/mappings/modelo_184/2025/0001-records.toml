@@ -1,0 +1,25 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "184"
+design_epoch = "2025"
+source_ref = "aeat-dr-184-2025"
+source_sha256 = "b1e2b7884946061d5584f03253745b2936bcd99359f4b096acfe238c42bc9fba"
+
+
+[[records]]
+sheet = "PDF record design"
+record_identity = "PDF record design"
+export_record_id = "m184-declarante"
+record_type = "declarante"
+
+[[records]]
+sheet = "Tipo 2 - Registro De Rentas De La"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+export_record_id = "m184-entidad"
+record_type = "entidad"
+
+[[records]]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+export_record_id = "m184-socio"
+record_type = "socio"

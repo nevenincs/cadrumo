@@ -44,11 +44,6 @@ class LedgerListProjection:
     lines: list[str]
 
 
-def parse_ledger_list_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:
-    """Parse ``ledger list --filter`` clauses and return a :class:`LedgerReviewFilterSpec`."""
-    return LedgerReviewFilterSpec.from_strings(filters)
-
-
 def _sort_field_value(transaction: Transaction, field: LedgerSortField) -> str:
     """Return a comparable string for ``field`` on ``transaction``.
 
@@ -362,6 +357,5 @@ def _ledger_list_column_header() -> str:
 
 __all__ = [
     "LedgerListProjection",
-    "parse_ledger_list_filter_spec",
     "project_ledger_list",
 ]

@@ -53,7 +53,7 @@ def _m303_casilla(filing_year: int, cid: str):
     return {c.id: c for c in rev.casillas}.get(cid)
 
 
-# 2020 resolves to the 2009-y-siguientes revision; 2024 to its early-period epoch.
+# 2020 resolves to the 2009-2022 revision; 2024 to its early-period epoch.
 @pytest.mark.parametrize("year", [2020, 2024])
 def test_official_casilla_44_grounds_in_prorrata_regularizacion_chapter(year: int) -> None:
     """The official form casilla 44 must cite the binding LIVA arts. 104-105."""

@@ -1,0 +1,237 @@
+schema_version = 1
+fragment_id = "did"
+modelo = "151"
+design_epoch = "2023"
+source_ref = "aeat-dr-151-2023"
+source_sha256 = "7680e5a21935c22f4b63deb0c96956d63fbcb287c5eb67a552daa7768ca0fcb9"
+
+[[entries]]
+export_field_id = "m151-2023.did.f001"
+kind = "literal"
+literal = "<T"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f002"
+kind = "literal"
+literal = "151"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f003"
+kind = "literal"
+literal = "DID"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f004"
+kind = "literal"
+literal = "00>"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f005"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f006"
+kind = "casilla"
+casilla_id = "did.devolucion-renuncia-a-la-devolucion-a-favor-del-tesoro-publi"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f007"
+kind = "casilla"
+casilla_id = "did.devolucion-solicita-la-devolucion-por-transferencia"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f008"
+kind = "casilla"
+casilla_id = "did.ingreso-domiciliacion-devolucion-iban"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f009"
+kind = "casilla"
+casilla_id = "did.devolucion-swift-bic"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f010"
+kind = "casilla"
+casilla_id = "did.devolucion-banco-bank-name"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f011"
+kind = "casilla"
+casilla_id = "did.devolucion-direccion-del-banco-bank-address"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f012"
+kind = "casilla"
+casilla_id = "did.devolucion-ciudad-city"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f013"
+kind = "casilla"
+casilla_id = "did.devolucion-codigo-pais-country-code"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f014"
+kind = "computed"
+computed_key = "sepa_marca"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f015"
+kind = "casilla"
+casilla_id = "did.cuota-cero"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f016"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f017"
+kind = "filler"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+record_identity = "M151DID00"
+
+[[entries]]
+export_field_id = "m151-2023.did.f018"
+kind = "literal"
+literal = "</T151DID00>"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2023"]
+[entries.anchor]
+sheet = "M151DID00"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "M151DID00"

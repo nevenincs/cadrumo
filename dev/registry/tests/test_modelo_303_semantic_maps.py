@@ -484,7 +484,7 @@ def _bundled_design_note_forms() -> tuple[_NoteBearingForm, ...]:
             assert source.record_design_epoch is not None
             assert source.applies_from is not None
             # A revision may open years before the design it currently declares
-            # applies (the 2009-y-siguientes span carries the 2022 design), so
+            # applies (the 2009-2022 span carries the 2022 design), so
             # the probe year is the later of the two rather than the revision's.
             intermediate = load_record_design_intermediate(
                 inspection.source_root,

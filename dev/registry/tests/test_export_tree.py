@@ -1470,17 +1470,19 @@ def test_dash_numeric_enumeration_reads_labels_and_refuses_ranges(
     assert values == expected
 
 
-def test_bare_record_closing_tag_is_recognised_without_a_constante_label() -> None:
-    """A record's closing identifier is readable even when printed unlabelled.
+def test_bare_record_tag_is_recognised_without_a_constante_label() -> None:
+    """A record's own identifier is readable even when printed unlabelled.
 
     Modelo 353 prints `</T35301000>` with neither the `Constante` label nor
-    quotes its own opening tag carries. The pattern keys on the tag's SHAPE, so
-    widening it cannot turn an arbitrary unlabelled cell into a mandated literal.
+    quotes its own opening tag carries; Modelo 322 prints BOTH ends bare. The
+    pattern keys on the tag's SHAPE, so admitting them cannot turn an arbitrary
+    unlabelled cell into a mandated literal.
     """
-    matcher = _export_tree._OFFICIAL_BARE_RECORD_CLOSING_TAG_RE
+    matcher = _export_tree._OFFICIAL_BARE_RECORD_TAG_RE
 
     assert matcher.fullmatch("</T35301000>") is not None
+    assert matcher.fullmatch("<T32201000>") is not None
     assert matcher.fullmatch("</T303DID>") is not None
-    assert matcher.fullmatch("<T35301000>") is None
     assert matcher.fullmatch("blanco o 'C' (compl.)") is None
     assert matcher.fullmatch("BLANCOS") is None
+    assert matcher.fullmatch("15 enteros + 2 decimales") is None

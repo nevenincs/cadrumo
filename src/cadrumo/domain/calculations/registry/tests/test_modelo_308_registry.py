@@ -39,7 +39,7 @@ def test_modelo_308_metadata_matches_orden_eha_3786_2008_art_2() -> None:
 
 def test_modelo_308_revision_starts_at_2009() -> None:
     modelo, _ = _load_modelo_308()
-    revision = modelo.revisions["2009-y-siguientes"]
+    revision = modelo.revisions["2009-2022"]
     assert revision.valid_from == date(2009, 1, 1)
     assert revision.period_selector.year_from == 2009
     assert revision.period_selector.periods == ("AD-HOC",)
@@ -49,7 +49,7 @@ def test_modelo_308_revision_starts_at_2009() -> None:
 def test_modelo_308_snapshot_builds_for_recent_filing_years() -> None:
     for filing_year in (2020, 2024, 2025, 2026):
         snapshot = _committed_snapshot("308", filing_year, "AD-HOC")
-        assert snapshot.revision.id == "2009-y-siguientes"
+        assert snapshot.revision.id == "2009-2022"
 
 
 def test_modelo_308_snapshot_carries_legal_authority() -> None:
@@ -65,7 +65,7 @@ def test_modelo_308_snapshot_carries_legal_authority() -> None:
 
 def test_modelo_308_filing_schedule_is_ad_hoc() -> None:
     modelo, _ = _load_modelo_308()
-    revision = modelo.revisions["2009-y-siguientes"]
+    revision = modelo.revisions["2009-2022"]
     schedule = next(s for s in revision.filing_schedules if s.id == "modelo-308-ad-hoc")
     assert schedule.period_kind == "ad_hoc"
     assert schedule.periods == ("AD-HOC",)
@@ -74,7 +74,7 @@ def test_modelo_308_filing_schedule_is_ad_hoc() -> None:
 
 def test_modelo_308_live_cross_references_forbid_writes() -> None:
     modelo, _ = _load_modelo_308()
-    revision = modelo.revisions["2009-y-siguientes"]
+    revision = modelo.revisions["2009-2022"]
     cross_refs = {ref.id: ref for ref in revision.live_cross_references}
 
     static_ref = cross_refs["modelo-308-static-documentation"]
@@ -90,7 +90,7 @@ def test_modelo_308_live_cross_references_forbid_writes() -> None:
 
 def test_modelo_308_construct_links_filing_workbook_parity() -> None:
     modelo, _ = _load_modelo_308()
-    revision = modelo.revisions["2009-y-siguientes"]
+    revision = modelo.revisions["2009-2022"]
     construct = next(c for c in revision.constructs if c.id == "modelo-308-iva-solicitud-devolucion")
     assert "modelo-308-filing" in construct.application_links
     assert "modelo-308-deadline" in construct.application_links

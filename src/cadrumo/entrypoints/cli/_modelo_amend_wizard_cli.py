@@ -77,6 +77,7 @@ from ...application.modelo import (
     ModeloRecordNotFoundError,
     WorkUnitNotFoundError,
     amend_modelo_revision,
+    get_calculation_revision,
     get_filing_record,
     registry_casillas_for_registry_scope,
 )
@@ -241,7 +242,6 @@ def run_modelo_work_amend_wizard(
     actor: str | None,
     output_language_opt: OutputLanguage | None,
 ) -> None:
-    from ._modelo_cli_support import load_calculation_revision
 
     deps.activate_output_language(ctx, output_language_opt)
     deps.require_active_profile()
@@ -280,7 +280,7 @@ def run_modelo_work_amend_wizard(
     except RegistrySnapshotError as exc:
         raise deps.bad_parameter_from_error(exc) from exc
 
-    baseline_revision: CalculationRevision = load_calculation_revision(baseline.calculation_revision_id)
+    baseline_revision: CalculationRevision = get_calculation_revision(baseline.calculation_revision_id)
     amendable = _amendable_rows(casilla_rows, baseline_revision)
     if not amendable:
         raise typer.BadParameter(

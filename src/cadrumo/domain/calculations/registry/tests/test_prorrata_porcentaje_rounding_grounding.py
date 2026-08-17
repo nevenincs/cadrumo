@@ -69,7 +69,7 @@ _VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
     surface="test casilla id",
 )
 
-#: 2020 resolves to the 2009-y-siguientes revision, 2024 to its early-period epoch.
+#: 2020 resolves to the 2009-2022 revision, 2024 to its early-period epoch.
 #: The art. 104.Dos sentence has stood unamended since BOE-A-1992-28740, so it
 #: binds both.
 _LIVE_FILING_YEARS = (2020, 2024)

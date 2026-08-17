@@ -454,6 +454,16 @@ class LedgerAttachResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger attach`` and ``ledger doclink``."""
 
 
+@register_schema("ledger.detach")
+class LedgerDetachResult(_LedgerMutationResult):
+    """JSON envelope for ``aeat app ledger detach``.
+
+    The same uniform single-transaction mutation shape the attach side returns:
+    detaching is a mutation of one addressable transaction, so it reports the
+    quintet rather than a bespoke payload.
+    """
+
+
 class LedgerDocLinkPullFolderFilePayload(OutputSchema):
     """One Drive folder child's fetch outcome from ``ledger pull-folder``.
 

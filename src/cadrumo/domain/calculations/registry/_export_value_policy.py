@@ -32,6 +32,15 @@ class ExportValuePolicy(StrEnum):
     FOUR_DIGIT_YEAR = "four-digit-year"
     TWO_DIGIT_MONTH = "two-digit-month"
     TWO_DIGIT_DAY = "two-digit-day"
+    #: A slot AEAT typed numeric that carries alphanumeric prose. AEAT's own Nota
+    #: 1 defines the column exactly -- "A (Alfabetico) An (Alfanumerico), Num
+    #: (Numerico sin signo) o N (Numerico con signo)" -- so "Num" on a
+    #: 100-position "Descripcion del elemento patrimonial" is a publication error,
+    #: not a convention. There is no numeric reading of that slot to derive, and
+    #: the surrounding rows are typed identically, so the mistyping is not
+    #: recoverable from the design. This policy is how a REVIEWED profile states
+    #: the real representation; it is never inferred from width or description.
+    MISTYPED_ALPHANUMERIC_TEXT = "mistyped-alphanumeric-text"
 
 
 @dataclass(frozen=True, slots=True)
@@ -265,6 +274,27 @@ def _project_ddmmyyyy(value: object) -> str:
     return value
 
 
+def _project_mistyped_alphanumeric_text(value: object) -> str:
+    if not isinstance(value, str):
+        raise RegistryValidationError(
+            "mistyped-alphanumeric-text export value must be a string; the slot carries prose, "
+            "not the number AEAT's naturaleza column claims",
+        )
+    _validate_mistyped_alphanumeric_text(value)
+    return value
+
+
+def _validate_mistyped_alphanumeric_text(raw: str) -> None:
+    # A fixed-width record is one unbroken line, so a control character in a
+    # prose slot does not merely look wrong -- it tears the record. Everything
+    # else the slot may legitimately carry, digits included: a descripcion
+    # reading "1234" is a description, not a number.
+    if any(character < " " or character == "\x7f" for character in raw):
+        raise RegistryValidationError(
+            "mistyped-alphanumeric-text export field must not contain control characters",
+        )
+
+
 def _require_ascii_digits(raw: str, *, label: str) -> None:
     if not raw or not raw.isascii() or not raw.isdigit():
         raise RegistryValidationError(f"{label} export field must contain only non-empty ASCII digits")
@@ -323,6 +353,7 @@ _PROJECTOR_BY_POLICY: dict[ExportValuePolicy, Callable[[object], object]] = {
     ExportValuePolicy.FOUR_DIGIT_YEAR: _project_full_year,
     ExportValuePolicy.TWO_DIGIT_MONTH: partial(_project_calendar_part, label="month", minimum=1, maximum=12),
     ExportValuePolicy.TWO_DIGIT_DAY: partial(_project_calendar_part, label="day", minimum=1, maximum=31),
+    ExportValuePolicy.MISTYPED_ALPHANUMERIC_TEXT: _project_mistyped_alphanumeric_text,
 }
 
 _WIRE_VALIDATOR_BY_POLICY: dict[ExportValuePolicy, Callable[[str], None]] = {
@@ -344,6 +375,7 @@ _WIRE_VALIDATOR_BY_POLICY: dict[ExportValuePolicy, Callable[[str], None]] = {
     ExportValuePolicy.TWO_DIGIT_DAY: partial(_validate_calendar_part, label="day", minimum=1, maximum=31),
     ExportValuePolicy.YYYYMMDD: _validate_yyyymmdd,
     ExportValuePolicy.DDMMYYYY: _validate_ddmmyyyy,
+    ExportValuePolicy.MISTYPED_ALPHANUMERIC_TEXT: _validate_mistyped_alphanumeric_text,
 }
 
 __all__ = [

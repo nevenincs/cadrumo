@@ -80,6 +80,12 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     _GeneratedTree("232", "2016-2017", "aeat-dr-232-2016", "2016", 2016, "0A"),
     _GeneratedTree("353", "2026-y-siguientes", "aeat-dr-353-2026", "2026", 2026, "01"),
     _GeneratedTree("353", "2008-2025", "aeat-dr-353-2021-2025", "2021", 2021, "01"),
+    _GeneratedTree("322", "2008-2025", "aeat-dr-322-2024-2025", "2024", 2024, "01"),
+    _GeneratedTree("202", "2019-2022", "aeat-dr-202-2019", "2019", 2019, "1P"),
+    _GeneratedTree("202", "2023-2024", "aeat-dr-202-2023", "2023", 2023, "1P"),
+    _GeneratedTree("202", "2025-y-siguientes", "aeat-dr-202-2025", "2025", 2025, "1P"),
+    _GeneratedTree("151", "2015-2022", "aeat-dr-151-2015", "2015", 2015, "0A"),
+    _GeneratedTree("151", "2025-y-siguientes", "aeat-dr-151-2023", "2023", 2023, "0A"),
 )
 
 
@@ -204,14 +210,34 @@ _CHECK_MODE_PENDING: dict[str, str] = {
     "m210-2025": "pending_review",
     "m232-2018-y-siguientes": "registry validation failed",
     "m232-2016-2017": "registry validation failed",
-    # 353 itself validates on both revisions. What check mode still refuses is
-    # Modelo 322, staged beside it because 353's per-member fan-in reads it:
-    # 322 declares no export layout on 2008-2025 and leaves families blocked on
-    # both. That is a real gap in a supporting modelo, not one 353 can close,
-    # and naming it here is what will force this entry to be removed when 322
-    # is authored.
-    "m353-2026-y-siguientes": "modelo 322 revision",
-    "m353-2008-2025": "modelo 322 revision",
+    # 353 and 322 both validate on every revision now, including 322's 2008-2025
+    # export layout, which was the last authoring gap either of them had. What
+    # check mode still refuses is `review_status = "pending_review"` on the
+    # revision itself: a filing-grade snapshot requires a REVIEWED revision, and
+    # that stamp is a human tax reviewer's to make against official sources, not
+    # an authoring step. It is the same wall m210 sits behind.
+    "m353-2026-y-siguientes": "pending_review",
+    "m353-2008-2025": "pending_review",
+    "m322-2008-2025": "pending_review",
+    # 202 is the one tree blocked by a NEIGHBOUR rather than by itself. Its
+    # candidate registry has to carry modelo 200 -- 202's pagos fraccionados are
+    # the Sociedades annual return's instalments, so 200 is a supporting modelo
+    # the isolation must admit -- and 200 declares no export layout at all while
+    # claiming filing grade. Pinning 200's own refusal rather than the generic
+    # envelope keeps the entry honest: the day 200's layout lands, this fails and
+    # 202's remaining blocker (its per-revision singleton semantic roles, present
+    # at HEAD and untouched by the layout work) has to be looked at on its own.
+    "m202-2019-2022": "modelo 200 revision 2024-y-siguientes: declares no export layout",
+    "m202-2023-2024": "modelo 200 revision 2024-y-siguientes: declares no export layout",
+    "m202-2025-y-siguientes": "modelo 200 revision 2024-y-siguientes: declares no export layout",
+    # Both 151 revisions resolve every enrolled family and validate through the
+    # real authority, so what is left is the reviewer stamp -- the same wall
+    # m210, m322 and m353 sit behind. Worth noting for whoever reviews them: the
+    # 2015-2022 layout was a hand transcription until this campaign, and it was
+    # two positions SHORT of AEAT's own envelope, omitting the AUX block's
+    # programa and NIF-desarrollo fields. The generated tree carries both.
+    "m151-2015-2022": "pending_review",
+    "m151-2025-y-siguientes": "pending_review",
 }
 
 

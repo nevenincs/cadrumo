@@ -510,6 +510,7 @@ from ._rate_box_partition import (
     rate_box_unscreened_groups,
 )
 from ._record_design import (
+    ABSENT_NATURALEZA_TYPE_CODE,
     AUXILIARY_ENVELOPE_HEADER_CONTENT,
     AUXILIARY_ENVELOPE_HEADER_LENGTHS,
     AUXILIARY_ENVELOPE_HEADER_ORDINALS,
@@ -869,6 +870,7 @@ def __dir__() -> list[str]:
 
 
 __all__ = [
+    "ABSENT_NATURALEZA_TYPE_CODE",
     "AEAT_WRITE_FORBIDDEN_ACTIONS",
     "AEAT_WRITE_FORBIDDEN_VERB_TOKENS",
     "AUXILIARY_ENVELOPE_HEADER_CONTENT",

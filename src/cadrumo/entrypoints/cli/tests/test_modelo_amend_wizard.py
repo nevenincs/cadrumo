@@ -38,7 +38,7 @@ from pydantic import AnyHttpUrl, TypeAdapter
 from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....application.flows import FlowAnswerError, FlowPage, run_scripted_flow
-from ....application.modelo import get_filing_record
+from ....application.modelo import get_calculation_revision, get_filing_record
 from ....core import STR_KEYED_MAPPING_ADAPTER, Period, resolve_active_bucket_id
 from ....core.flows import FlowMode
 from ....core.resources import resources
@@ -63,7 +63,6 @@ from .._modelo_amend_wizard_cli import (
     _value_page_id,
     _values_kind_reason_definition,
 )
-from .._modelo_cli_support import load_calculation_revision
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_m303_work_unit
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -241,7 +240,7 @@ def _scripted_amend(
         assert unit.current_filing_record_id is not None
         baseline = get_filing_record(unit.current_filing_record_id)
         casilla_rows = _baseline_casilla_rows(unit)
-        baseline_revision = load_calculation_revision(baseline.calculation_revision_id)
+        baseline_revision = get_calculation_revision(baseline.calculation_revision_id)
         amendable = _amendable_rows(casilla_rows, baseline_revision)
         by_number = {row.number: row for row in amendable}
         selected_ids = [by_number[number].casilla_id for number in change_numbers]
@@ -339,7 +338,7 @@ def _permitted_kind_choice_values(
         assert unit.current_filing_record_id is not None
         baseline = get_filing_record(unit.current_filing_record_id)
         casilla_rows = _baseline_casilla_rows(unit)
-        baseline_revision = load_calculation_revision(baseline.calculation_revision_id)
+        baseline_revision = get_calculation_revision(baseline.calculation_revision_id)
         amendable = _amendable_rows(casilla_rows, baseline_revision)
         by_number = {row.number: row for row in amendable}
         selected = tuple(by_number[number] for number in change_numbers)
@@ -685,7 +684,7 @@ def test_amend_wizard_blank_selection_yields_no_corrections() -> None:
         assert unit.current_filing_record_id is not None
         baseline = get_filing_record(unit.current_filing_record_id)
         casilla_rows = _baseline_casilla_rows(unit)
-        baseline_revision = load_calculation_revision(baseline.calculation_revision_id)
+        baseline_revision = get_calculation_revision(baseline.calculation_revision_id)
         amendable = _amendable_rows(casilla_rows, baseline_revision)
         _ACTIVE_RUNS[run_token] = {}
         try:

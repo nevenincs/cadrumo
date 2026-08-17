@@ -126,7 +126,7 @@ from ....core.resources import resolve_corpus_binary
 from .._export_field_kind import CasillaFieldKind
 from ._errors import RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
-from ._record_design import extract_record_design
+from ._record_design import _naturaleza_or_none, extract_record_design
 from ._record_design_schema import RecordDesignField, RecordDesignSheet
 from ._schema import (
     ExportFieldDefinition,
@@ -410,9 +410,44 @@ def _omissible_reason(field: RecordDesignField, sheet: RecordDesignSheet | None 
     for text in (field.description, field.content):
         if text and _DECLARED_FILL.match(text.strip()):
             return "declared fill"
+    if _declared_fill_naturaleza(field):
+        return "declared fill by naturaleza"
     if sheet is not None:
         return _eedd_delegated_reason(field, sheet)
     return None
+
+
+def _declared_fill_naturaleza(field: RecordDesignField) -> bool:
+    """Whether AEAT's NATURALEZA column types this position as fill.
+
+    Read from the typed naturaleza cell, not from prose, which is why it belongs
+    beside the other signals rather than as a widening of :data:`_DECLARED_FILL`.
+    That pattern reads the DESCRIPTION and is deliberately anchored, because the
+    same words appear inside real data positions -- ``"X o blanco"``,
+    ``'"0" - blanco, "1" - Si'`` -- and excusing those would pass hundreds of
+    slots in silence. A naturaleza of ``Blancos`` states no choice: it is the
+    design typing the field itself, the same column that says ``Numerico`` or
+    ``Alfanumerico`` everywhere else.
+
+    Needed because the description cell is not reliably the fill word even when
+    the naturaleza is. Measured across every bundled design, 152 positions carry
+    a ``Blancos`` naturaleza and 146 were already omissible through their
+    description; the SIX this admits are every one a genuine fill run whose
+    description simply says it differently -- Modelo 194's ``CEROS.`` twice,
+    Modelo 296's ``BLANCO MODELO 296``, Modelo 604's English ``BLANK`` twice, and
+    Modelo 349's ``@236+265``, whose description cell caught the page footnote
+    ``* Todos los importes seran positivos.`` instead of the fill word.
+
+    That last one is why this is a correctness fix and not a convenience:
+    Modelo 349's trailing 265 bytes are typed ``Blancos`` and run to the record's
+    declared 500, so the gate was demanding real taxpayer data for a span the
+    design fills with blanks -- a requirement no correct layout can satisfy,
+    which is the incentive inversion this module exists to remove.
+
+    ``OBLIGATORIO`` still wins outright: the caller checks it first, so a
+    position AEAT marks obligatorio stays required whatever its naturaleza says.
+    """
+    return _naturaleza_or_none(field.type_code or "") == "Blancos"
 
 
 def _position(sheet_name: str, field: RecordDesignField) -> _RequiredPosition:

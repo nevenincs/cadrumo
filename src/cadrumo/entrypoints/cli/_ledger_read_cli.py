@@ -34,7 +34,7 @@ from ...application.ledger import (
     summarize_manual_transactions,
 )
 from ...application.operator_actions import ActionReference
-from ...application.review import FilterParseError
+from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core import (
     ActionArgumentSource,
     ActionArgumentStatus,
@@ -72,7 +72,6 @@ from ._common import (
 )
 from ._ledger_list import (
     LLM_DECISION_EVENT_TYPES,
-    parse_ledger_list_filter_spec,
     project_ledger_list,
 )
 from ._ledger_review_cli import register_ledger_review_command
@@ -852,7 +851,7 @@ def _register_ledger_list_command(app: typer.Typer) -> None:
         if year is not None:
             resolved_filters.append(f"year={year}")
         try:
-            spec = parse_ledger_list_filter_spec(resolved_filters)
+            spec = LedgerReviewFilterSpec.from_strings(resolved_filters)
         except FilterParseError as exc:
             from ...application.cli_exception_preconditions import CliExceptionPrecondition
 

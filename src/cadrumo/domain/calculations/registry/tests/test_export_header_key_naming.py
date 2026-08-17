@@ -108,7 +108,14 @@ def header_keys_at_revision(revision: str) -> frozenset[str]:
         listing = subprocess.run(  # noqa: S603 - fixed executable and arguments
             ["git", "grep", "-h", field_name, revision, "--", "src/cadrumo/_data/registry"],  # noqa: S607
             capture_output=True,
-            text=True,
+            # The registry is UTF-8 by contract, and `git grep -h` prints whole
+            # matching LINES -- so a line carrying an accented AEAT name comes
+            # back as UTF-8 bytes. `text=True` alone decodes with the platform's
+            # locale codec, which on Windows is cp1252, where the second byte of
+            # "Á" is undefined: the decode raised, `.stdout` came back None, and
+            # this gate ERRORED instead of gating. Modelo 322's "Álava" line is
+            # the one that does it, and it has been committed for some time.
+            encoding="utf-8",
             check=False,
             cwd=_repository_root(),
         ).stdout
@@ -148,10 +155,20 @@ def test_the_scan_reaches_a_real_population(head_tokens: frozenset[str]) -> None
     A scan that returns nothing because the path moved, the pattern broke or
     the subprocess failed is indistinguishable from a corpus with no header
     keys at all -- and it would make every assertion here pass.
+
+    Gated on the PROPERTY, never on a tally. An earlier version required more
+    than twenty tokens, which encoded the corpus of the day: the count fell to
+    eighteen when nineteen modelos' export layouts were retracted, and the gate
+    then reported a healthy scan as a broken one. What actually distinguishes a
+    real read from a broken one is that what came back is the live producer
+    vocabulary -- a broken parse yields nothing, and a mis-parse yields tokens
+    the closed enum does not carry.
     """
-    assert len(head_tokens) > 20, (
-        f"the header_key scan found {len(head_tokens)} tokens at HEAD; that is not a corpus, it is a broken scan"
-    )
+    from .....core import FilingProducerKey
+
+    assert head_tokens, "the header_key scan found nothing at HEAD; that is a broken scan, not a corpus"
+    unknown = head_tokens - {member.value for member in FilingProducerKey}
+    assert not unknown, f"the header_key scan returned tokens outside the closed producer vocabulary: {sorted(unknown)}"
 
 
 def test_the_gate_detects_a_known_dual_spelling() -> None:
@@ -171,14 +188,18 @@ def test_the_gate_detects_a_known_dual_spelling() -> None:
 def test_no_header_key_spells_a_spanish_concept_in_english(head_tokens: frozenset[str]) -> None:
     """The canonical producer vocabulary keeps only the Spanish AEAT spelling.
 
-    Historical commits intentionally retain the evidence that motivated the
-    migration, so the HEAD scan remains useful to prove the detector fires.
-    The live contract is the closed producer vocabulary: the canonical token
-    must be admitted and the legacy English alias must not be.
+    The committed corpus must carry NO dual spelling. An earlier version of
+    this assertion pinned the `presenter_tax_id`/`presenter_nif` pair as the
+    expected result, which made a live defect the contract: once the pair left
+    HEAD the gate failed for having been FIXED, and while it stood it could
+    never have caught a second offender appearing beside the first. The
+    detector's own proof lives in
+    :func:`test_the_gate_detects_a_known_dual_spelling`, against a hand-built
+    corpus, so nothing is lost by asserting the real contract here.
     """
     from .....core import FilingProducerKey
 
-    assert english_stem_offenders(head_tokens) == (("presenter_tax_id", "presenter_nif"),)
+    assert english_stem_offenders(head_tokens) == ()
     producer_keys = {member.value for member in FilingProducerKey}
     assert "presenter.tax_id" in producer_keys
     assert "presenter_tax_id" not in producer_keys

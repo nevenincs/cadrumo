@@ -69,7 +69,7 @@ def _validate_generated_source_axis_shape(source: _GeneratedSourceShape) -> None
 validate_generated_source_counts = _validate_generated_source_counts
 validate_generated_source_axis_shape = _validate_generated_source_axis_shape
 
-_M303_2022_REVISION_ID = "2009-y-siguientes"
+_M303_2022_REVISION_ID = "2009-2022"
 _M303_2022_ORDEN_SOURCE_REF = "boe-orden-hfp-1335-2021-iva-authority"
 _M303_2022_ORDEN_SOURCE_DIGEST = "3fda96dcf2dcb3b3f0863bc07b0eabd45e21c6850d4b611e635627befb450c46"
 

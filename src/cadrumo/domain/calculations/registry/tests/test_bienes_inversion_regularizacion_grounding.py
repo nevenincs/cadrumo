@@ -45,7 +45,7 @@ def _m303_casilla(filing_year: int, cid: str):
     return {c.id: c for c in rev.casillas}.get(cid)
 
 
-# 2020 resolves to the 2009-y-siguientes revision; 2024 to its early-2024 revision.
+# 2020 resolves to the 2009-2022 revision; 2024 to its early-2024 revision.
 @pytest.mark.parametrize("year", [2020, 2024])
 def test_official_casilla_43_grounds_in_bienes_inversion_chapter(year: int) -> None:
     """The official form casilla 43 must cite the binding LIVA arts. 107-110."""

@@ -52,6 +52,7 @@ from ._render_profile import (
     RenderProfileSourceEvidence,
     SingletonNumericRule,
     Width17MembershipRule,
+    _has_absent_naturaleza,
     _is_numeric_aeat_type,
     validate_render_profile,
 )
@@ -92,8 +93,16 @@ _SLUG_RE: Final[re.Pattern[str]] = re.compile(r"[^a-z0-9]+")
 # 210, covering 24 of its numeric anchors -- refused as ambiguous content. Both
 # spellings are the one grammar and are admitted as alternations rather than as
 # a second pattern, so the two cannot drift apart.
+#
+# `decmales` is not a third spelling of the word -- it is AEAT's typo, which
+# Modelo 151 ships once per design edition beside eighteen correctly spelled
+# siblings in the same 5-position shape. It is admitted by naming that exact
+# misspelling rather than by loosening the word to a fuzzy match: a tolerant
+# pattern would go on to accept spellings AEAT has never written, and the reading
+# is proved anyway, because the declared 3 + 2 digits must equal the slot's own
+# 5 positions before the derivation is accepted.
 _DECIMAL_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
-    r"^(?P<whole>\d+)\s*(?:enteros?|ent\.?)\s*(?:y|\+)?\s*(?P<decimals>\d+)\s*(?:decimales?|dec\.?)"
+    r"^(?P<whole>\d+)\s*(?:enteros?|ent\.?)\s*(?:y|\+)?\s*(?P<decimals>\d+)\s*(?:decimales?|decmales|dec\.?)"
     r"(?:,\s*menor\s+o\s+igual\s+que\s+\d+\.|\.)?$",
     re.IGNORECASE,
 )
@@ -104,6 +113,14 @@ _INTEGER_CONTENT_RE: Final[re.Pattern[str]] = re.compile(
 _QUOTED_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
     r'^"\d+"(?:,\s*"\d+")*$',
 )
+# The same closed set written BARE, without quotes and without labels, which is
+# how Modelo 151 states every one of its single-position code slots: `1,2,3`,
+# `0,1,2`, `1,2,3,4`. Anchored whole and requiring at least two members, so it
+# cannot swallow a lone number -- a bare `1` states a constant, not a choice --
+# and the slot-width check below still refuses any value that does not fit.
+_BARE_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
+    r"^\d+(?:\s*,\s*\d+)+\.?$",
+)
 # A trailing `Nota N` reference annotates official content without altering the
 # wire fact it states: the AEAT note tables govern which value applies in which
 # filing period (Nota 8, Nota 9), whether a slot may be filled at all (Nota 10),
@@ -111,8 +128,14 @@ _QUOTED_NUMERIC_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
 # anchor's canonical typed owner -- casilla 154's transitional-rate parameter
 # encodes Nota 8's two windows exactly -- so the reference is peeled before the
 # value grammar runs rather than tolerated ad hoc inside each pattern.
+#
+# AEAT writes the reference three ways: bare (`Nota 3`), parenthesised
+# (`(Nota 1)`) and parenthesised with a verb (`(ver Nota 5)`), the last often on
+# its own line after the value clause. All three annotate; none states a wire
+# fact, so the peel admits the optional bracket and verb rather than leaving a
+# design refusing as ambiguous because AEAT added two words.
 _TRAILING_NOTE_REFERENCE_RE: Final[re.Pattern[str]] = re.compile(
-    r"[.,;\s]*\bNota\s+\d+\s*\.?\s*$",
+    r"[.,;\s]*\(?\s*(?:ver\s+)?\bNota\s+\d+\s*\.?\s*\)?\s*$",
     re.IGNORECASE,
 )
 _NOTE_NUMBER_RE: Final[re.Pattern[str]] = re.compile(r"Nota\s+(?P<note>\d+)", re.IGNORECASE)
@@ -132,11 +155,43 @@ _QUOTED_NUMERIC_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r'"(?P<value>\d+)"
 # set, and reading it as an enumeration would emit two members where the design
 # means twelve.
 _DASH_NUMERIC_ENUMERATION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r"(?:^|\s)(?P<value>\d+)\s*-\s*(?=\D)")
+#: A third spelling of the same closed set, label FIRST: Modelo 322 writes
+#: "Si=1, No=2". The label must START WITH A LETTER, which is what keeps a
+#: COMPARISON out: Modelo 202 writes tranches as `"1" (>= 10 M y < 20 M €)`, and
+#: a rule that accepted any non-digit before the `=` read `>= 10` as the value
+#: 10 -- three two-character "values" for a one-character slot, which the width
+#: check then refused. A formula (`[65]=[66]`) is excluded for the same reason.
+_EQUALS_NUMERIC_ENUMERATION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?:^|[\s,;])[^\W\d_][^\s,;=]*\s*=\s*(?P<value>\d+)",
+)
+#: The quoted spelling with a FREE-TEXT label after each value, which is the same
+#: closed set as the SI/NO form above with a longer label: Modelo 202 writes
+#: `"0" No consta, "1" Cooperativa, "2" Otras entidades`. Only the values are
+#: quoted, so the label cannot contribute a value however many numbers it names.
+_QUOTED_NUMERIC_LABELLED_ENUMERATION_RE: Final[re.Pattern[str]] = re.compile(
+    r'^"\d+"[^"]*(?:"\d+"[^"]*)+$',
+)
 _DATE_FORMAT_BY_POLICY: Final[Mapping[ExportValuePolicy, str]] = {
     ExportValuePolicy.YYYYMMDD: "aaaammdd",
     ExportValuePolicy.DDMMYYYY: "ddmmaaaa",
 }
-_SINGLETON_POLICY_SHAPES: Final[Mapping[ExportValuePolicy, Literal["integer", "decimal", "date", "digit_identity"]]] = {
+#: AEAT also states a date slot as a QUOTED separator-bearing pattern in the
+#: programmer's vocabulary rather than the Spanish token: Modelo 151 writes
+#: `Formato: "dd/MM/yyyy"` for its fecha de nacimiento. The separators are
+#: presentation only -- the design's own Lon column gives that slot 8 positions,
+#: which the printed pattern does not fit -- so the pattern is folded to the same
+#: Spanish token the policy table already keys on rather than given a second
+#: table that could disagree with it. Case-sensitive on purpose: `MM` is the
+#: month and `mm` the minute in this vocabulary, and a slot spelling minutes is
+#: not a date this grammar should silently accept.
+_QUOTED_DATE_PATTERN_RE: Final[re.Pattern[str]] = re.compile(
+    r'^formato\s*:?\s*"(?P<pattern>[dMy][dMy/.\-]*[dMy])"$',
+    re.IGNORECASE,
+)
+_QUOTED_DATE_PATTERN_LETTERS: Final[Mapping[str, str]] = {"d": "d", "M": "m", "y": "a"}
+_SINGLETON_POLICY_SHAPES: Final[
+    Mapping[ExportValuePolicy, Literal["integer", "decimal", "date", "digit_identity", "text"]]
+] = {
     ExportValuePolicy.SELECTED_1_UNSELECTED_0: "integer",
     ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS: "integer",
     ExportValuePolicy.UNSIGNED_INTEGER: "integer",
@@ -149,6 +204,7 @@ _SINGLETON_POLICY_SHAPES: Final[Mapping[ExportValuePolicy, Literal["integer", "d
     ExportValuePolicy.FOUR_DIGIT_YEAR: "integer",
     ExportValuePolicy.TWO_DIGIT_MONTH: "integer",
     ExportValuePolicy.TWO_DIGIT_DAY: "integer",
+    ExportValuePolicy.MISTYPED_ALPHANUMERIC_TEXT: "text",
 }
 #: Text naturalezas, in both vocabularies AEAT uses. A workbook prints the
 #: abbreviation; a PDF design prints the word, which the shipped parser
@@ -165,13 +221,14 @@ _OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)\.?\s*$",
     re.IGNORECASE,
 )
-#: A record's closing identifier is the one constant some designs print BARE --
-#: Modelo 353 writes `</T35301000>` in the Contenido cell with neither the
-#: `Constante` label nor quotes, where its own opening tag on the same sheet
-#: carries both. The shape is what makes it unambiguous, so this pattern matches
-#: the tag itself rather than relaxing the labelled-constant pattern, which
-#: would turn every unlabelled cell on every design into a mandated literal.
-_OFFICIAL_BARE_RECORD_CLOSING_TAG_RE: Final[re.Pattern[str]] = re.compile(r"</T[0-9A-Z]+>")
+#: A record's own identifier is the one constant some designs print BARE. Modelo
+#: 353 writes `</T35301000>` in the Contenido cell with neither the `Constante`
+#: label nor quotes, where its own opening tag on the same sheet carries both;
+#: Modelo 322 prints BOTH ends bare, `<T32201000>` and `</T32201000>`. The shape
+#: is what makes it unambiguous, so this pattern matches the tag itself rather
+#: than relaxing the labelled-constant pattern, which would turn every unlabelled
+#: cell on every design into a mandated literal.
+_OFFICIAL_BARE_RECORD_TAG_RE: Final[re.Pattern[str]] = re.compile(r"</?T[0-9A-Z]+>")
 #: The quotation marks AEAT wraps a constant in. A workbook prints straight
 #: quotes; a PDF design prints guillemets, and typographic pairs appear in both
 #: -- "Constante «D»." is Modelo 347's, and it read as an ambiguous
@@ -309,6 +366,7 @@ def render_complete_export_tree(
         output_files=output_files,
         provenance_manifest=provenance_manifest,
     )
+
 
 
 def _validate_generated_projection_bijection(
@@ -568,9 +626,41 @@ def _normalise_field(
                 export_record_id=export_record_id,
             )
         return _numeric_derivation(joined_field, export_record_id=export_record_id)
+    if _has_absent_naturaleza(parser_field):
+        # AEAT printed the naturaleza cell EMPTY, so the parser stamped the
+        # absent-naturaleza marker rather than guessing a type. There is nothing
+        # here to derive a representation FROM, which makes this the strongest
+        # case for the reviewed profile rather than a reason to refuse: the
+        # profile's eligibility admits exactly these fields, so a rule for this
+        # anchor is already required to exist and to have been reviewed.
+        return _render_profile_numeric_derivation(
+            joined_field,
+            render_profile,
+            export_record_id=export_record_id,
+        )
     raise RegistryValidationError(
         f"official field {semantic_entry.export_field_id!r} declares unsupported AEAT type {parser_field.aeat_type!r}",
     )
+
+
+def _fold_quoted_date_pattern(content: str) -> str | None:
+    """Fold a quoted separator-bearing date pattern to its Spanish format token.
+
+    Returns ``None`` for anything that is not one, so an unrecognised content
+    form still reaches the ambiguity refusal rather than being read as a date.
+    """
+    match = _QUOTED_DATE_PATTERN_RE.match(content)
+    if match is None:
+        return None
+    folded = "".join(
+        _QUOTED_DATE_PATTERN_LETTERS[character]
+        for character in match.group("pattern")
+        if character in _QUOTED_DATE_PATTERN_LETTERS
+    )
+    # A pattern naming only part of a date, or repeating a component, is not a
+    # calendar date this grammar can encode. The membership test below then
+    # refuses it as ambiguous content, which is the honest answer.
+    return folded if len(folded) == 8 else None
 
 
 def _split_official_note_references(content: str) -> tuple[str, tuple[int, ...]]:
@@ -618,7 +708,7 @@ def _literal_derivation(
         match = _OFFICIAL_LITERAL_RE.fullmatch(folded_content)
         if match is not None:
             official_literal = match.group("literal")
-        elif _OFFICIAL_BARE_RECORD_CLOSING_TAG_RE.fullmatch(folded_content) is not None:
+        elif _OFFICIAL_BARE_RECORD_TAG_RE.fullmatch(folded_content) is not None:
             official_literal = folded_content
         else:
             raise RegistryValidationError(
@@ -667,6 +757,15 @@ def _numeric_derivation(
             f"official numeric field {joined_field.semantic_entry.export_field_id!r} has no unambiguous content form",
         )
     normalised_content = " ".join(content.split())
+    # Modelo 151 brackets the whole clause -- `[15 enteros + 2 decimales]` -- on
+    # every one of its money slots, where 202, 303 and 322 write the same clause
+    # bare. The brackets set the clause off typographically and state nothing, so
+    # they are peeled once here rather than admitted by each value grammar
+    # separately, which is how the note-reference peel below already works.
+    # Peeled only when they wrap the ENTIRE content: a stray bracket inside a
+    # clause is not a wrapper and must still reach the ambiguity refusal.
+    if normalised_content.startswith("[") and normalised_content.endswith("]"):
+        normalised_content = normalised_content[1:-1].strip()
     normalised_content, note_references = _split_official_note_references(normalised_content)
     if not normalised_content and note_references:
         return _schema_field(
@@ -684,8 +783,9 @@ def _numeric_derivation(
     # `aaaammdd`, so a `ddmmaaaa` slot -- which Modelo 210 spells four times --
     # fell through to the ambiguous-content refusal even though the policy, its
     # wire width and its encoder already existed.
+    date_token = _fold_quoted_date_pattern(normalised_content) or normalised_content.casefold()
     for policy, date_format in _DATE_FORMAT_BY_POLICY.items():
-        if normalised_content.casefold() != date_format:
+        if date_token != date_format:
             continue
         expected_length = export_value_policy_wire_length(policy)
         if parser_field.length != expected_length:
@@ -758,14 +858,21 @@ def _numeric_derivation(
     dash_values = tuple(
         match.group("value") for match in _DASH_NUMERIC_ENUMERATION_TOKEN_RE.finditer(normalised_content)
     )
+    equals_values = tuple(
+        match.group("value") for match in _EQUALS_NUMERIC_ENUMERATION_TOKEN_RE.finditer(normalised_content)
+    )
+    labelled_values = dash_values if len(dash_values) > 1 else equals_values
+    if not labelled_values and _BARE_NUMERIC_ENUMERATION_RE.fullmatch(normalised_content) is not None:
+        labelled_values = tuple(value.strip() for value in normalised_content.rstrip(".").split(","))
     if (
         _QUOTED_NUMERIC_ENUMERATION_RE.fullmatch(normalised_content) is not None
         or _QUOTED_NUMERIC_BOOLEAN_ENUMERATION_RE.fullmatch(normalised_content) is not None
-        or len(dash_values) > 1
+        or _QUOTED_NUMERIC_LABELLED_ENUMERATION_RE.fullmatch(normalised_content) is not None
+        or len(labelled_values) > 1
     ):
         raw_values = (
-            dash_values
-            if len(dash_values) > 1
+            labelled_values
+            if len(labelled_values) > 1
             else tuple(match.group("value") for match in _QUOTED_NUMERIC_TOKEN_RE.finditer(normalised_content))
         )
         if any(len(value) != parser_field.length for value in raw_values):
@@ -925,6 +1032,10 @@ def _profile_singleton_derivation(
         data_type = "text"
         padding = ExportPadding.NONE
         justification = ExportJustification.NONE
+    elif policy_shape == "text":
+        data_type = "text"
+        padding = ExportPadding.RIGHT_SPACE
+        justification = ExportJustification.LEFT
     elif policy_shape == "integer":
         data_type = "integer"
         padding = ExportPadding.LEFT_ZERO
@@ -950,11 +1061,15 @@ def _profile_singleton_derivation(
 
 def _render_profile_anchor(joined_field: JoinedRecordDesignField) -> RenderProfileAnchor:
     field = joined_field.parser_field
+    # DERIVED, not authored: this anchor is built from the parser field, so a
+    # missing ordinal is an observed fact about the design rather than a claim,
+    # exactly as in ``_render_profile._field_anchor``.
     return RenderProfileAnchor(
         sheet=field.sheet,
         source_row=field.source_row,
         source_cell=field.source_cell,
         ordinal=field.ordinal,
+        ordinal_absent=field.ordinal is None,
         record_identity=field.record_identity,
     )
 

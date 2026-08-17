@@ -15,6 +15,8 @@ import ast
 
 import pytest
 
+from cadrumo.core import STORAGE_TAXONOMY, StorageCategory
+
 from ..audit.write_site_census import (
     VocabularySite,
     WriteSite,
@@ -308,11 +310,23 @@ def test_literal_tail_is_empty_for_an_expression_with_no_division_at_all() -> No
     assert _literal_tail(node) == ()
 
 
+def test_the_multi_segment_anchor_really_is_multi_segment() -> None:
+    """Pin the property the test below is named for, so a rename cannot make it vacuous.
+
+    The previous anchor was a member that has since been deleted, and the
+    assertion below went red rather than quietly passing -- which is the
+    behaviour wanted. It only stays that way while the replacement anchor
+    genuinely carries a path separator: an anchor flattened to a single segment
+    would let the decomposition assertion pass without decomposing anything.
+    """
+    assert "/" in STORAGE_TAXONOMY[StorageCategory.BUCKET_DATABASE_FILE].subpath
+
+
 def test_taxonomy_subpath_tokens_contains_both_whole_subpaths_and_their_path_components() -> None:
     """A leaf-only injection (``"secrets"``) must match, not only an exact full multi-segment subpath."""
     tokens = _taxonomy_subpath_tokens()
     assert "secrets" in tokens  # SECRETS' own whole declared subpath
-    assert "master.key" in tokens  # a path component of SECRETS_MASTER_KEY's "secrets/master.key"
+    assert "cadrumo.db" in tokens  # a path component of BUCKET_DATABASE_FILE's "db/cadrumo.db"
 
 
 def test_taxonomy_subpath_tokens_does_not_contain_an_unrelated_word() -> None:

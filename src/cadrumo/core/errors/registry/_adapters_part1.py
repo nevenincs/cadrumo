@@ -368,36 +368,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.persistence.storage.errors.MasterKeyKdfVersionError",
-        ErrorCode(
-            code="AUTH_STORAGE_MASTER_KEY_KDF_VERSION",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_storage_master_key_kdf_version",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.persistence.storage.errors.MasterKeyKeychainLockedError",
-        ErrorCode(
-            code="LOCKED_STORAGE_MASTER_KEY_KEYCHAIN",
-            category=ErrorCategory.LOCKED,
-            message_key="errors.locked.locked_storage_master_key_keychain",
-            retryable=True,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.persistence.storage.errors.MasterKeyPassphraseMismatchError",
-        ErrorCode(
-            code="AUTH_STORAGE_MASTER_KEY_PASSPHRASE_MISMATCH",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_storage_master_key_passphrase_mismatch",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.adapters.persistence.storage.errors.MasterKeyMaterialMissingError",
         ErrorCode(
             code="AUTH_STORAGE_MASTER_KEY_MATERIAL_MISSING",
@@ -503,16 +473,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="FAIL_STORAGE_SECRET_NOT_FOUND",
             category=ErrorCategory.FAIL,
             message_key="errors.fail.fail_storage_secret_not_found",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.persistence.storage.errors.PassphraseTooShortError",
-        ErrorCode(
-            code="REFUSED_STORAGE_PASSPHRASE_TOO_SHORT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_storage_passphrase_too_short",
             retryable=False,
             runbook_id=None,
         ),
