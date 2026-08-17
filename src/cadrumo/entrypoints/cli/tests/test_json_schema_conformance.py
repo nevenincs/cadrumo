@@ -78,6 +78,7 @@ from .. import _config_bucket_history_payloads as _config_bucket_history_payload
 from .. import _config_descendiente_payloads as _config_descendiente_payloads
 from .. import _config_payloads as _config_payloads
 from .._command_suggestions import materialise_lazy_subcommands
+from .._verb_input_schema import DECLARED_UNIMPLEMENTED_SURFACES
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -322,12 +323,26 @@ def test_every_cli_leaf_has_a_registered_schema() -> None:
 
     The diagnostic prints both sides so a regression run names the
     work without further investigation.
+
+    Keys listed in :data:`DECLARED_UNIMPLEMENTED_SURFACES` are excluded
+    from the orphan side, because that mapping IS the sanctioned way to
+    declare "this schema is deliberately held while its verb is absent",
+    and each entry carries the reason. Excluding them here is not a
+    weakening: it makes this gate agree with
+    :func:`assert_schema_coverage`, which has always honoured the same
+    declaration. Two gates disagreeing about the same four keys meant one
+    of them was red for a state the other called legal, and a red that
+    cannot be cleared teaches everyone to ignore the gate.
+
+    The companion assertion below keeps the teeth: a declared entry whose
+    verb has since landed is itself a failure, because every entry's
+    stated exit condition is that restoring the verb removes it.
     """
     cli_paths = _walk_cli_command_paths(_live_app())
     registry_keys = set(SCHEMA_REGISTRY.keys())
 
     unregistered = sorted(cli_paths - registry_keys)
-    orphans = sorted(registry_keys - cli_paths)
+    orphans = sorted(registry_keys - cli_paths - set(DECLARED_UNIMPLEMENTED_SURFACES))
 
     diagnostic_lines: list[str] = []
     if unregistered:
@@ -338,6 +353,30 @@ def test_every_cli_leaf_has_a_registered_schema() -> None:
         diagnostic_lines.extend(f"  - {key}" for key in orphans)
 
     assert not diagnostic_lines, "\n".join(diagnostic_lines)
+
+
+def test_no_declared_unimplemented_surface_outlives_its_absent_verb() -> None:
+    """A declared gap whose verb has landed must be removed, not left standing.
+
+    The teeth for the exclusion above. Every
+    :data:`DECLARED_UNIMPLEMENTED_SURFACES` entry states the same exit
+    condition in its own reason -- restoring the verb removes the entry --
+    and nothing enforced it, so a landed verb could leave its "this verb is
+    knowingly absent" declaration in place indefinitely, telling every later
+    reader a capability is missing when it ships.
+
+    That is the failure class this campaign keeps meeting: prose that was
+    true when written, that nothing re-derives, and that the next reader
+    inherits rather than checks.
+    """
+    cli_paths = _walk_cli_command_paths(_live_app())
+    landed = sorted(set(DECLARED_UNIMPLEMENTED_SURFACES) & cli_paths)
+
+    assert not landed, (
+        "DECLARED_UNIMPLEMENTED_SURFACES names verb(s) that now resolve against the live "
+        "command tree; delete each entry, per its own stated exit condition:\n"
+        + "\n".join(f"  - {key}" for key in landed)
+    )
 
 
 @pytest.mark.parametrize("command_path", sorted(SCHEMA_REGISTRY.keys()))

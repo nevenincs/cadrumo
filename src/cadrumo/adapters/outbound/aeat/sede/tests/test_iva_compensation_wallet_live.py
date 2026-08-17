@@ -19,7 +19,6 @@ from ......core import AuthProviderKind, Modelo, Period
 from ......core.config import Settings, load_settings
 from ......core.errors import CadrumoError
 from ......tests.live_gate import requires_live_enabled
-from .....persistence.storage import get_master_key_provider
 from .._errors import SedeError
 from .._iva_compensation_wallet import (
     PRE303_PRESENTATION_SERVICE_URL,
@@ -64,13 +63,12 @@ async def test_fetch_iva_compensation_wallet_live_returns_read_observation() -> 
     requires_live_enabled()
     settings = load_settings()
     try:
-        with get_master_key_provider():
-            auth = await ensure_authenticated_aeat_session(
-                settings,
-                kind=AuthProviderKind.CLAVE_MOVIL,
-                operation="sede-iva-wallet-live-test",
-                target_url=PRE303_PRESENTATION_SERVICE_URL,
-            )
+        auth = await ensure_authenticated_aeat_session(
+            settings,
+            kind=AuthProviderKind.CLAVE_MOVIL,
+            operation="sede-iva-wallet-live-test",
+            target_url=PRE303_PRESENTATION_SERVICE_URL,
+        )
     except CadrumoError as exc:
         pytest.fail(f"Cl@ve-móvil live authentication is not available: {exc}")
 
@@ -78,13 +76,12 @@ async def test_fetch_iva_compensation_wallet_live_returns_read_observation() -> 
     target_year = today.year
     target_period = _quarter_period(target_year, today.month)
     try:
-        with get_master_key_provider():
-            observation = await fetch_iva_compensation_wallet(
-                auth.session,
-                target_year=target_year,
-                target_period=target_period,
-                settings=settings,
-            )
+        observation = await fetch_iva_compensation_wallet(
+            auth.session,
+            target_year=target_year,
+            target_period=target_period,
+            settings=settings,
+        )
     except SedeError as exc:
         pytest.fail(f"live IVA compensation wallet read failed: {exc}")
 
