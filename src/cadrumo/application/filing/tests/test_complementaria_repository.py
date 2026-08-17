@@ -32,6 +32,7 @@ from ....domain.filing import (
 )
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import TestRuntimeProfile
+from ..conftest import _BUCKET_ID
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _AMENDMENT_CASILLA: CasillaId = validated_casilla_id("01", surface="_AMENDMENT_CASILLA")
@@ -113,7 +114,7 @@ def repo() -> ModeloAmendmentRepository:
 def _database_bytes(storage_root: Path) -> bytes:
     from ....tests.secure_sql import read_db_at_rest_bytes
 
-    return read_db_at_rest_bytes(bucket_paths(storage_root, "filing-test").database_file)
+    return read_db_at_rest_bytes(bucket_paths(storage_root, _BUCKET_ID).database_file)
 
 
 class TestEmptyState:

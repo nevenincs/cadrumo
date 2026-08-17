@@ -8,7 +8,7 @@ from hashlib import sha256
 
 import pytest
 
-from ....core import FilingProducerKey, Period
+from ....core import FilingProducerKey, Modelo, Period
 from ....domain.calculations import registry
 from ....domain.calculations.registry import (
     ExportComputedKey,
@@ -145,6 +145,7 @@ def test_m303_envelope_occurrence_and_result_validate_emitted_byte_evidence() ->
         draft_id="draft-303",
         revision_id="2023",
         layout_id="generated-modelo-303-2023-fichero",
+        modelo=Modelo.M303,
         period=period,
         envelope=envelope,
         occurrences=(occurrence,),
@@ -162,6 +163,7 @@ def test_m303_envelope_occurrence_and_result_validate_emitted_byte_evidence() ->
         draft_id="draft-303",
         revision_id="2023",
         layout_id="generated-modelo-303-2023-fichero",
+        modelo=Modelo.M303,
         period=period,
         envelope=envelope,
         occurrences=(),
@@ -182,6 +184,7 @@ def test_m303_envelope_occurrence_and_result_validate_emitted_byte_evidence() ->
         draft_id="draft-303",
         revision_id="2023",
         layout_id="generated-modelo-303-2023-fichero",
+        modelo=Modelo.M303,
         period=period,
         envelope=envelope,
         occurrences=(occurrence, second_occurrence),
@@ -207,6 +210,7 @@ def test_m303_envelope_occurrence_and_result_validate_emitted_byte_evidence() ->
             draft_id="draft-303",
             revision_id="2023",
             layout_id="generated-modelo-303-2023-fichero",
+            modelo=Modelo.M303,
             period=period,
             envelope=envelope,
             occurrences=(occurrence.model_copy(update={"occurrence": 2}),),

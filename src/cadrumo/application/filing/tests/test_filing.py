@@ -47,6 +47,7 @@ from .. import (
     refresh_review_status,
     validate_draft,
 )
+from ..conftest import _BUCKET_ID
 from ..runtime import ModeloOperatorProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -599,7 +600,7 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
 def test_approval_basis_reloads_persisted_transaction_catalogue() -> None:
     schema_provider = _schema_provider()
     draft = _draft(schema_provider)
-    repository = TransactionCatalogueRepository(bucket_id="filing-test")
+    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID)
 
     repository.save(
         TransactionCatalogue.from_transactions(
@@ -614,7 +615,7 @@ def test_approval_basis_reloads_persisted_transaction_catalogue() -> None:
     )
     first_basis = compute_current_approval_basis(
         draft,
-        bucket_id="filing-test",
+        bucket_id=_BUCKET_ID,
         schema_provider=schema_provider,
     )
 
@@ -631,7 +632,7 @@ def test_approval_basis_reloads_persisted_transaction_catalogue() -> None:
     )
     second_basis = compute_current_approval_basis(
         draft,
-        bucket_id="filing-test",
+        bucket_id=_BUCKET_ID,
         schema_provider=schema_provider,
     )
 

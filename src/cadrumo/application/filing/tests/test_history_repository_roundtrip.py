@@ -20,7 +20,7 @@ from .._history_repository import ModeloHistoryRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "filing-runtime"
+_BUCKET_ID = "77777777-7777-4777-8777-777777777777"
 _LATEST_SUBMITTED_AT = datetime(2026, 5, 28, 11, 25, 0, tzinfo=UTC)
 
 
