@@ -39,7 +39,11 @@ import pytest
 
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, reset_secure_object_store
 
-_BUCKET_ID = "filing-test"
+# Capsule publication mints the bucket's identity through ``UUID(str(profile_id))``
+# (:func:`~cadrumo.tests.profile_capsule.publish_test_profile_capsule`), so this
+# constant must stay UUID-shaped -- a human-readable label was never valid here,
+# it simply predates that requirement.
+_BUCKET_ID = "66666666-6666-4666-8666-666666666666"
 
 
 @pytest.fixture(scope="module")
